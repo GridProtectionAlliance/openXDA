@@ -1,0 +1,186 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B3493118-9437-497D-A716-24232CE0D4F2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{6AA858DD-E319-459F-A5A5-FBDB89D63214}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openFLE", "openFLE", "{BC5C2A22-31D3-4887-B798-262244564883}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XDAFileWatcher", "XDAFileWatcher", "{E0A728AA-FC3E-4184-AA89-B421C3EBFD62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultAlgorithms", "Libraries\FaultAlgorithms\FaultAlgorithms.csproj", "{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openFLE", "Applications\openFLE\openFLE\openFLE.csproj", "{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openFLEConsole", "Applications\openFLE\openFLEConsole\openFLEConsole.csproj", "{33FAD525-AAE2-4E26-A790-ECC18697CE45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openFLEManager", "Applications\openFLE\openFLEManager\openFLEManager.csproj", "{8F3E211B-B0C7-49CB-9683-E488E4E6702F}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "openFLESetup", "Applications\openFLE\openFLESetup\openFLESetup.wixproj", "{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAFileWatcher", "Applications\XDAFileWatcher\XDAFileWatcher\XDAFileWatcher.csproj", "{28B2088F-7128-42A0-A752-335D4E4EF98E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAFileWatcherConsole", "Applications\XDAFileWatcher\XDAFileWatcherConsole\XDAFileWatcherConsole.csproj", "{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "XDAFileWatcherSetup", "Applications\XDAFileWatcher\XDAFileWatcherSetup\XDAFileWatcherSetup.wixproj", "{F04EDA71-4C20-4AE4-B348-E53C3F376621}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotNetZip", "DotNetZip", "{847B0BE1-54CD-4A68-B0DB-6EA2CD8F672F}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\DotNetZip\Ionic.Zlib.dll = Dependencies\DotNetZip\Ionic.Zlib.dll
+		Dependencies\DotNetZip\Ionic.Zlib.xml = Dependencies\DotNetZip\Ionic.Zlib.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GSF", "GSF", "{F5BD3958-FFBE-415F-BC25-25C30DD7C26F}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\GSF\Comtrade.dll = Dependencies\GSF\Comtrade.dll
+		Dependencies\GSF\COMTRADE.XML = Dependencies\GSF\COMTRADE.XML
+		Dependencies\GSF\GSF.Communication.dll = Dependencies\GSF\GSF.Communication.dll
+		Dependencies\GSF\GSF.Communication.xml = Dependencies\GSF\GSF.Communication.xml
+		Dependencies\GSF\GSF.Core.dll = Dependencies\GSF\GSF.Core.dll
+		Dependencies\GSF\GSF.Core.xml = Dependencies\GSF\GSF.Core.xml
+		Dependencies\GSF\GSF.PhasorProtocols.dll = Dependencies\GSF\GSF.PhasorProtocols.dll
+		Dependencies\GSF\GSF.PhasorProtocols.xml = Dependencies\GSF\GSF.PhasorProtocols.xml
+		Dependencies\GSF\GSF.PQDIF.dll = Dependencies\GSF\GSF.PQDIF.dll
+		Dependencies\GSF\GSF.PQDIF.xml = Dependencies\GSF\GSF.PQDIF.xml
+		Dependencies\GSF\GSF.Security.dll = Dependencies\GSF\GSF.Security.dll
+		Dependencies\GSF\GSF.Security.xml = Dependencies\GSF\GSF.Security.xml
+		Dependencies\GSF\GSF.ServiceProcess.dll = Dependencies\GSF\GSF.ServiceProcess.dll
+		Dependencies\GSF\GSF.ServiceProcess.xml = Dependencies\GSF\GSF.ServiceProcess.xml
+		Dependencies\GSF\GSF.TimeSeries.dll = Dependencies\GSF\GSF.TimeSeries.dll
+		Dependencies\GSF\GSF.TimeSeries.xml = Dependencies\GSF\GSF.TimeSeries.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WiX", "WiX", "{598B0FE9-B4EA-4797-982D-BF243F3C5BEC}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\WiX\WixUIExtension.dll = Dependencies\WiX\WixUIExtension.dll
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 9
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Libraries\\FaultAlgorithms\\FaultAlgorithms.csproj
+		SccProjectTopLevelParentUniqueName1 = openXDA.sln
+		SccProjectName1 = Libraries/FaultAlgorithms
+		SccLocalPath1 = Libraries\\FaultAlgorithms
+		SccProjectUniqueName2 = Applications\\openFLE\\openFLE\\openFLE.csproj
+		SccProjectTopLevelParentUniqueName2 = openXDA.sln
+		SccProjectName2 = Applications/openFLE/openFLE
+		SccLocalPath2 = Applications\\openFLE\\openFLE
+		SccProjectUniqueName3 = Applications\\openFLE\\openFLEConsole\\openFLEConsole.csproj
+		SccProjectTopLevelParentUniqueName3 = openXDA.sln
+		SccProjectName3 = Applications/openFLE/openFLEConsole
+		SccLocalPath3 = Applications\\openFLE\\openFLEConsole
+		SccProjectUniqueName4 = Applications\\openFLE\\openFLEManager\\openFLEManager.csproj
+		SccProjectTopLevelParentUniqueName4 = openXDA.sln
+		SccProjectName4 = Applications/openFLE/openFLEManager
+		SccLocalPath4 = Applications\\openFLE\\openFLEManager
+		SccProjectUniqueName5 = Applications\\openFLE\\openFLESetup\\openFLESetup.wixproj
+		SccProjectTopLevelParentUniqueName5 = openXDA.sln
+		SccProjectName5 = Applications/openFLE/openFLESetup
+		SccLocalPath5 = Applications\\openFLE\\openFLESetup
+		SccProjectUniqueName6 = Applications\\XDAFileWatcher\\XDAFileWatcher\\XDAFileWatcher.csproj
+		SccProjectTopLevelParentUniqueName6 = openXDA.sln
+		SccProjectName6 = Applications/XDAFileWatcher/XDAFileWatcher
+		SccLocalPath6 = Applications\\XDAFileWatcher\\XDAFileWatcher
+		SccProjectUniqueName7 = Applications\\XDAFileWatcher\\XDAFileWatcherConsole\\XDAFileWatcherConsole.csproj
+		SccProjectTopLevelParentUniqueName7 = openXDA.sln
+		SccProjectName7 = Applications/XDAFileWatcher/XDAFileWatcherConsole
+		SccLocalPath7 = Applications\\XDAFileWatcher\\XDAFileWatcherConsole
+		SccProjectUniqueName8 = Applications\\XDAFileWatcher\\XDAFileWatcherSetup\\XDAFileWatcherSetup.wixproj
+		SccProjectTopLevelParentUniqueName8 = openXDA.sln
+		SccProjectName8 = Applications/XDAFileWatcher/XDAFileWatcherSetup
+		SccLocalPath8 = Applications\\XDAFileWatcher\\XDAFileWatcherSetup
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Debug|x86.Build.0 = Debug|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Release|x86.ActiveCfg = Release|Any CPU
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}.Release|x86.Build.0 = Release|Any CPU
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Debug|x86.ActiveCfg = Debug|x86
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Debug|x86.Build.0 = Debug|x86
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Release|x86.ActiveCfg = Release|x86
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3}.Release|x86.Build.0 = Release|x86
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Debug|x86.ActiveCfg = Debug|x86
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Debug|x86.Build.0 = Debug|x86
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Release|x86.ActiveCfg = Release|x86
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45}.Release|x86.Build.0 = Release|x86
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Debug|x86.ActiveCfg = Debug|x86
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Debug|x86.Build.0 = Debug|x86
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Release|x86.ActiveCfg = Release|x86
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F}.Release|x86.Build.0 = Release|x86
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Debug|x86.ActiveCfg = Debug|x86
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Release|Any CPU.ActiveCfg = Release|x64
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Release|Any CPU.Build.0 = Release|x64
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Release|x86.ActiveCfg = Release|x86
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Release|x86.Build.0 = Release|x86
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|x86.Build.0 = Debug|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|x86.ActiveCfg = Release|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|x86.Build.0 = Release|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Debug|x86.Build.0 = Debug|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Release|x86.ActiveCfg = Release|Any CPU
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2}.Release|x86.Build.0 = Release|Any CPU
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621}.Debug|x86.ActiveCfg = Debug|x64
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621}.Release|Any CPU.ActiveCfg = Release|x64
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621}.Release|Any CPU.Build.0 = Release|x64
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621}.Release|x86.ActiveCfg = Release|x86
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BC5C2A22-31D3-4887-B798-262244564883} = {B3493118-9437-497D-A716-24232CE0D4F2}
+		{E0A728AA-FC3E-4184-AA89-B421C3EBFD62} = {B3493118-9437-497D-A716-24232CE0D4F2}
+		{847B0BE1-54CD-4A68-B0DB-6EA2CD8F672F} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
+		{F5BD3958-FFBE-415F-BC25-25C30DD7C26F} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
+		{598B0FE9-B4EA-4797-982D-BF243F3C5BEC} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3} = {BC5C2A22-31D3-4887-B798-262244564883}
+		{33FAD525-AAE2-4E26-A790-ECC18697CE45} = {BC5C2A22-31D3-4887-B798-262244564883}
+		{8F3E211B-B0C7-49CB-9683-E488E4E6702F} = {BC5C2A22-31D3-4887-B798-262244564883}
+		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62} = {BC5C2A22-31D3-4887-B798-262244564883}
+		{28B2088F-7128-42A0-A752-335D4E4EF98E} = {E0A728AA-FC3E-4184-AA89-B421C3EBFD62}
+		{FD3784A1-A944-41AD-A9C9-BFDD7D5137A2} = {E0A728AA-FC3E-4184-AA89-B421C3EBFD62}
+		{F04EDA71-4C20-4AE4-B348-E53C3F376621} = {E0A728AA-FC3E-4184-AA89-B421C3EBFD62}
+	EndGlobalSection
+EndGlobal

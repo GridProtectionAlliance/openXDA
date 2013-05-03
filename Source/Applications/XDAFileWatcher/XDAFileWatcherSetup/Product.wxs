@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="XDAFileWatcher" Language="1033" Version="!(bind.FileVersion.openFLE_FW.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="abcfa666-fdfe-404c-a483-ef58298f9092">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate EmbedCab="yes" />
+
+		<Feature Id="ProductFeature" Title="FileWatcherSetup" Level="1" ConfigurableDirectory="INSTALLFOLDER">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+
+    <!-- User Interface -->
+    <UIRef Id="WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\INSTALL_LICENSE.rtf" />
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFiles64Folder">
+				<Directory Id="INSTALLFOLDER" Name="XDAFileWatcher" />
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="openFLE_FW">
+        <File Id="openFLE_FW.exe" Name="$(var.XDAFileWatcher.TargetFileName)" Source="$(var.XDAFileWatcher.TargetPath)" />
+        <ServiceInstall Id="openFLE_FWService" Name="XDAFileWatcher" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
+        <ServiceControl Id="openFLE_FWServiceControl" Name="XDAFileWatcher" Start="install" Stop="both" Remove="uninstall" />
+      </Component>
+      <Component Id="openFLE_FWConfig">
+        <File Id="openFLE_FW.exe.config" Name="XDAFileWatcher.exe.config" Source="$(var.XDAFileWatcher.TargetDir)\XDAFileWatcher.exe.config" />
+      </Component>
+      <Component Id="FilewatcherConfig">
+        <File Id="Filewatcher.config" Name="Filewatcher.config" Source="$(var.XDAFileWatcher.TargetDir)\Filewatcher.config" />
+      </Component>
+      
+      <Component Id="openFLE_FWConsole">
+        <File Id="openFLE_FWConsole.exe" Name="$(var.XDAFileWatcherConsole.TargetFileName)" Source="$(var.XDAFileWatcherConsole.TargetPath)" />
+      </Component>
+      <Component Id="openFLE_FWConsoleConfig">
+        <File Id="openFLE_FWConsole.exe.config" Name="XDAFileWatcherConsole.exe.config" Source="$(var.XDAFileWatcherConsole.TargetDir)\XDAFileWatcherConsole.exe.config" />
+      </Component>
+
+      <Component Id="GSF.Communication">
+        <File Id="GSF.Communication.dll" Name="GSF.Communication.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.Communication.dll" />
+      </Component>
+      <Component Id="GSF.Core">
+        <File Id="GSF.Core.dll" Name="GSF.Core.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.Core.dll" />
+      </Component>
+      <Component Id="GSF.Security">
+        <File Id="GSF.Security.dll" Name="GSF.Security.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.Security.dll" />
+      </Component>
+      <Component Id="GSF.ServiceProcess">
+        <File Id="GSF.ServiceProcess.dll" Name="GSF.ServiceProcess.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.ServiceProcess.dll" />
+      </Component>
+      
+      <Component Id="NLog">
+        <File Id="NLog.dll" Name="NLog.dll" Source="$(var.XDAFileWatcher.TargetDir)\NLog.dll" />
+      </Component>
+      <Component Id="NLog.Extended">
+        <File Id="NLog.Extended.dll" Name="NLog.Extended.dll" Source="$(var.XDAFileWatcher.TargetDir)\NLog.Extended.dll" />
+      </Component>
+      <Component Id="NLogConfig">
+        <File Id="NLog.config" Name="NLog.config" Source="$(var.XDAFileWatcher.TargetDir)\NLog.config" />
+      </Component>
+
+      <Component Id="ConfigCrypter">
+        <File Id="ConfigCrypter.exe" Name="ConfigCrypter.exe" Source="$(var.ProjectDir)\ConfigCrypter.exe" />
+      </Component>
+      <Component Id="ConfigCrypterConfig">
+        <File Id="ConfigCrypter.exe.config" Name="ConfigCrypter.exe.config" Source="$(var.ProjectDir)\ConfigCrypter.exe.config" />
+      </Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>

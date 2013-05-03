@@ -1,0 +1,169 @@
+﻿<Window x:Class="openFLEManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fle="clr-namespace:openFLEManager"
+        Title="openFLE Manager" Height="650" Width="600"
+        Loaded="MainWindow_Loaded" Unloaded="MainWindow_Unloaded">
+    
+    <Window.Background>
+        <LinearGradientBrush EndPoint="1,0.5" StartPoint="0,0.5">
+            <GradientStop Color="White" Offset="0" />
+            <GradientStop Color="LightGray" Offset="1" />
+        </LinearGradientBrush>
+    </Window.Background>
+
+    <Window.Resources>
+        <fle:AboutWindow x:Key="AboutWindow" WindowStartupLocation="CenterOwner" Closing="AboutWindow_Closing" />
+        <fle:ViewModel x:Key="ViewModel" />
+        <BitmapImage x:Key="OpenFleBanner" UriSource="openFLE-Manager-Splash-Bar.png" />
+    </Window.Resources>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About..." Click="AboutMenuItem_Click" />
+            </MenuItem>
+        </Menu>
+        
+        <ScrollViewer DockPanel.Dock="Bottom" Margin="10" VerticalScrollBarVisibility="Auto">
+            <Grid DockPanel.Dock="Bottom" Name="Grid" Margin="10" DataContext="{StaticResource ViewModel}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Image Grid.Row="0" Source="{StaticResource OpenFleBanner}" Stretch="Fill" Width="Auto" />
+
+                <GroupBox Grid.Row="1" Margin="0,10" Padding="5" Header="Operational parameters">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Content="Device definitions" />
+                        <Grid Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" Text="{Binding Mode=TwoWay, Path=DeviceDefinitionsFile}" Background="GhostWhite" />
+                            <Button Grid.Column="1" Margin="10,0,5,0" Padding="10,0" Content="Browse..." Click="EventDefinitionsBrowseButton_Click" />
+                        </Grid>
+
+                        <Label Grid.Row="1" Grid.Column="0" Content="Drop folder" />
+                        <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" Text="{Binding Mode=TwoWay, Path=DropFolder}" Background="GhostWhite" />
+                            <Button Grid.Column="1" Margin="10,0,5,0" Padding="10,0" Content="Browse..." Click="DropFolderBrowseButton_Click" />
+                        </Grid>
+
+                        <Label Grid.Row="2" Grid.Column="0" Content="Process delay" />
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Text="{Binding Mode=TwoWay, Path=ProcessDelay, ValidatesOnExceptions=True, UpdateSourceTrigger=PropertyChanged}" Background="GhostWhite" Width="100">
+                                <TextBox.Style>
+                                    <Style TargetType="{x:Type TextBox}">
+                                        <Style.Triggers>
+                                            <Trigger Property="Validation.HasError" Value="true">
+                                                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <Label Content="seconds" />
+                        </StackPanel>
+
+                        <Label Grid.Row="3" Grid.Column="0" Content="Length units" />
+                        <ComboBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Width="100"
+                                  SelectedValue="{Binding Mode=TwoWay, Path=LengthUnits}" SelectedValuePath="Content">
+                            <ComboBoxItem Content="Miles" />
+                            <ComboBoxItem Content="Kilometers" />
+                        </ComboBox>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="2" Margin="0,10" Padding="5" Header="Results writer">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Content="Results assembly" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ResultsAssembly}" Background="GhostWhite" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Content="Results type" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ResultsType}" Background="GhostWhite" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Content="Results parameters" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ResultsParameters}" Background="GhostWhite" />
+
+                        <Label Grid.Row="3" Grid.Column="0" Content="Results writers:" />
+                        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ResultsWriterNames}" SelectedIndex="{Binding Mode=TwoWay, Path=SelectedResultsWriter}" />
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="3" Margin="0,10" Padding="5" Header="Debug">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Content="Debug level" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=DebugLevel}" Background="GhostWhite" HorizontalAlignment="Left" Width="100" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Content="Debug folder" />
+                        <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0" Text="{Binding Mode=TwoWay, Path=DebugFolder}" Background="GhostWhite" />
+                            <Button Grid.Column="1" Margin="10,0,5,0" Padding="10,0" Content="Browse..." Click="DebugFolderBrowseButton_Click" />
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+
+                <StackPanel Grid.Row="4" VerticalAlignment="Bottom" HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Content="Save" Width="70" Padding="0,4" Margin="0,0,10,10" Click="SaveButton_Click" />
+                    <Button Width="70" Margin="0,0,10,10" Click="ConsoleButton_Click">
+                        <TextBlock TextAlignment="Center" FontSize="10">
+                            Console<LineBreak />
+                            Monitor
+                        </TextBlock>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
