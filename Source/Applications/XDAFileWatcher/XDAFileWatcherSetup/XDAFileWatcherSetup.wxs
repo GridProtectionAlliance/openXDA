@@ -27,6 +27,7 @@
 
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Applications -->
       <Component Id="openFLE_FW">
         <File Id="openFLE_FW.exe" Name="$(var.XDAFileWatcher.TargetFileName)" Source="$(var.XDAFileWatcher.TargetPath)" />
         <ServiceInstall Id="openFLE_FWService" Name="XDAFileWatcher" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
@@ -38,7 +39,6 @@
       <Component Id="FilewatcherConfig">
         <File Id="Filewatcher.config" Name="Filewatcher.config" Source="$(var.XDAFileWatcher.TargetDir)\Filewatcher.config" />
       </Component>
-      
       <Component Id="openFLE_FWConsole">
         <File Id="openFLE_FWConsole.exe" Name="$(var.XDAFileWatcherConsole.TargetFileName)" Source="$(var.XDAFileWatcherConsole.TargetPath)" />
       </Component>
@@ -46,19 +46,21 @@
         <File Id="openFLE_FWConsole.exe.config" Name="XDAFileWatcherConsole.exe.config" Source="$(var.XDAFileWatcherConsole.TargetDir)\XDAFileWatcherConsole.exe.config" />
       </Component>
 
+      <!-- GSF Dependencies -->
       <Component Id="GSF.Communication">
-        <File Id="GSF.Communication.dll" Name="GSF.Communication.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.Communication.dll" />
+        <File Id="GSF.Communication.dll" Name="GSF.Communication.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Communication.dll" />
       </Component>
       <Component Id="GSF.Core">
-        <File Id="GSF.Core.dll" Name="GSF.Core.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.Core.dll" />
+        <File Id="GSF.Core.dll" Name="GSF.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Core.dll" />
       </Component>
       <Component Id="GSF.Security">
-        <File Id="GSF.Security.dll" Name="GSF.Security.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.Security.dll" />
+        <File Id="GSF.Security.dll" Name="GSF.Security.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Security.dll" />
       </Component>
       <Component Id="GSF.ServiceProcess">
-        <File Id="GSF.ServiceProcess.dll" Name="GSF.ServiceProcess.dll" Source="$(var.XDAFileWatcher.TargetDir)\GSF.ServiceProcess.dll" />
+        <File Id="GSF.ServiceProcess.dll" Name="GSF.ServiceProcess.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.ServiceProcess.dll" />
       </Component>
       
+      <!-- NLog Dependencies -->
       <Component Id="NLog">
         <File Id="NLog.dll" Name="NLog.dll" Source="$(var.XDAFileWatcher.TargetDir)\NLog.dll" />
       </Component>
@@ -69,6 +71,7 @@
         <File Id="NLog.config" Name="NLog.config" Source="$(var.XDAFileWatcher.TargetDir)\NLog.config" />
       </Component>
 
+      <!-- Config Crypter -->
       <Component Id="ConfigCrypter">
         <File Id="ConfigCrypter.exe" Name="ConfigCrypter.exe" Source="$(var.ProjectDir)\ConfigCrypter.exe" />
       </Component>
