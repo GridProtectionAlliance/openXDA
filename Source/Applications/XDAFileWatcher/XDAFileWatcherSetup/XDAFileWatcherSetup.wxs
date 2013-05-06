@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="XDAFileWatcher" Language="1033" Version="!(bind.FileVersion.openFLE_FW.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="abcfa666-fdfe-404c-a483-ef58298f9092">
+	<Product Id="{30E86358-36F2-480B-B483-A5BA2C8C9945}" Name="XDAFileWatcher" Language="1033" Version="!(bind.FileVersion.XDAFileWatcher.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="abcfa666-fdfe-404c-a483-ef58298f9092">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -28,22 +28,22 @@
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <!-- Applications -->
-      <Component Id="openFLE_FW">
-        <File Id="openFLE_FW.exe" Name="$(var.XDAFileWatcher.TargetFileName)" Source="$(var.XDAFileWatcher.TargetPath)" />
-        <ServiceInstall Id="openFLE_FWService" Name="XDAFileWatcher" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
-        <ServiceControl Id="openFLE_FWServiceControl" Name="XDAFileWatcher" Start="install" Stop="both" Remove="uninstall" />
+      <Component Id="XDAFileWatcher">
+        <File Id="XDAFileWatcher.exe" Name="$(var.XDAFileWatcher.TargetFileName)" Source="$(var.XDAFileWatcher.TargetPath)" />
+        <ServiceInstall Id="XDAFileWatcherService" Name="XDAFileWatcher" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
+        <ServiceControl Id="XDAFileWatcherServiceControl" Name="XDAFileWatcher" Start="install" Stop="both" Remove="uninstall" />
       </Component>
-      <Component Id="openFLE_FWConfig">
-        <File Id="openFLE_FW.exe.config" Name="XDAFileWatcher.exe.config" Source="$(var.XDAFileWatcher.TargetDir)\XDAFileWatcher.exe.config" />
+      <Component Id="XDAFileWatcherConfig">
+        <File Id="XDAFileWatcher.exe.config" Name="XDAFileWatcher.exe.config" Source="$(var.XDAFileWatcher.TargetDir)\XDAFileWatcher.exe.config" />
       </Component>
       <Component Id="FilewatcherConfig">
         <File Id="Filewatcher.config" Name="Filewatcher.config" Source="$(var.XDAFileWatcher.TargetDir)\Filewatcher.config" />
       </Component>
-      <Component Id="openFLE_FWConsole">
-        <File Id="openFLE_FWConsole.exe" Name="$(var.XDAFileWatcherConsole.TargetFileName)" Source="$(var.XDAFileWatcherConsole.TargetPath)" />
+      <Component Id="XDAFileWatcherConsole">
+        <File Id="XDAFileWatcherConsole.exe" Name="$(var.XDAFileWatcherConsole.TargetFileName)" Source="$(var.XDAFileWatcherConsole.TargetPath)" />
       </Component>
-      <Component Id="openFLE_FWConsoleConfig">
-        <File Id="openFLE_FWConsole.exe.config" Name="XDAFileWatcherConsole.exe.config" Source="$(var.XDAFileWatcherConsole.TargetDir)\XDAFileWatcherConsole.exe.config" />
+      <Component Id="XDAFileWatcherConsoleConfig">
+        <File Id="XDAFileWatcherConsole.exe.config" Name="XDAFileWatcherConsole.exe.config" Source="$(var.XDAFileWatcherConsole.TargetDir)\XDAFileWatcherConsole.exe.config" />
       </Component>
 
       <!-- GSF Dependencies -->
