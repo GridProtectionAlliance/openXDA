@@ -657,15 +657,18 @@ namespace XDAFileWatcher
         {
             string filename = FilePath.GetFileName(filespec);
             string[] patterns;
+            string regex;
 
             if (string.IsNullOrEmpty(filename))
                 return false;
 
             patterns = f.FileFilter.Split(_separators);
 
-            foreach (string s in patterns)
+            foreach (string pattern in patterns)
             {
-                if (Regex.IsMatch(filename, s.Trim(), RegexOptions.IgnoreCase))
+                regex = Regex.Escape(pattern.Trim()).Replace("\\*", ".*").Replace("\\?", ".");
+
+                if (Regex.IsMatch(filename, regex, RegexOptions.IgnoreCase))
                     return true;
             }
 
@@ -1123,7 +1126,7 @@ namespace XDAFileWatcher
                                         else
                                             watchFolder.FullPathToWatch = Path.Combine(RootPathToWatch, folderToProcess).EnsureEnd("\\");
 
-                                        if (Path.GetInvalidPathChars().Any(c => watchFolder.FullPathToWatch.Contains(c)))
+                                        if (!Path.GetInvalidPathChars().Any(c => watchFolder.FullPathToWatch.Contains(c)))
                                         {
                                             if (!Directory.Exists(watchFolder.FullPathToWatch))
                                             {
@@ -1309,7 +1312,7 @@ namespace XDAFileWatcher
                 else
                 {
                     // Can't let element form improper filename
-                    element = element.RemoveInvalidFileNameCharacters();
+                    element = element.RemoveCharacters(c => Path.GetInvalidPathChars().Contains(c));
                 }
 
                 if (element.Length > 0)

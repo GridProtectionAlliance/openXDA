@@ -34,7 +34,7 @@
         <ServiceControl Id="XDAFileWatcherServiceControl" Name="XDAFileWatcher" Start="install" Stop="both" Remove="uninstall" />
       </Component>
       <Component Id="XDAFileWatcherConfig">
-        <File Id="XDAFileWatcher.exe.config" Name="XDAFileWatcher.exe.config" Source="$(var.XDAFileWatcher.TargetDir)\XDAFileWatcher.exe.config" />
+        <File Id="XDAFileWatcher.exe.config" Name="$(var.XDAFileWatcher.TargetFileName).config" Source="$(var.XDAFileWatcher.TargetPath).config" />
       </Component>
       <Component Id="FilewatcherConfig">
         <File Id="Filewatcher.config" Name="Filewatcher.config" Source="$(var.XDAFileWatcher.TargetDir)\Filewatcher.config" />
@@ -43,7 +43,7 @@
         <File Id="XDAFileWatcherConsole.exe" Name="$(var.XDAFileWatcherConsole.TargetFileName)" Source="$(var.XDAFileWatcherConsole.TargetPath)" />
       </Component>
       <Component Id="XDAFileWatcherConsoleConfig">
-        <File Id="XDAFileWatcherConsole.exe.config" Name="XDAFileWatcherConsole.exe.config" Source="$(var.XDAFileWatcherConsole.TargetDir)\XDAFileWatcherConsole.exe.config" />
+        <File Id="XDAFileWatcherConsole.exe.config" Name="$(var.XDAFileWatcherConsole.TargetFileName).config" Source="$(var.XDAFileWatcherConsole.TargetPath).config" />
       </Component>
 
       <!-- GSF Dependencies -->
