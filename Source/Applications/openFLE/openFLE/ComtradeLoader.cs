@@ -207,9 +207,9 @@ namespace openFLE
                 {
                     if (schema.AnalogChannels[valueIndex].Index == channelIndex)
                     {
-                        units = schema.AnalogChannels[valueIndex].Units;
+                        units = schema.AnalogChannels[valueIndex].Units.ToUpper();
 
-                        if (units.Contains("kA") || units.Contains("kV"))
+                        if (units.Contains("KA") || units.Contains("KV"))
                             multiplier *= 1000;
 
                         yield return new Tuple<int, int>(multiplier, valueIndex);
