@@ -184,7 +184,7 @@ namespace FaultAlgorithms
         {
             const string Header = "Time,AN V,BN V,CN V,AB V,BC V,CA V,AN I,BN I,CN I";
 
-            using (FileStream fileStream = File.OpenWrite(fileName))
+            using (FileStream fileStream = File.Create(fileName))
             {
                 using (TextWriter fileWriter = new StreamWriter(fileStream))
                 {

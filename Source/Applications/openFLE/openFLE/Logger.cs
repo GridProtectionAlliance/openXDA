@@ -80,7 +80,7 @@ namespace openFLE
 
         private Logger(string logFile)
         {
-            m_fileWriter = new StreamWriter(File.OpenWrite(logFile));
+            m_fileWriter = new StreamWriter(File.Create(logFile));
         }
 
         public void WriteLine(string line)
