@@ -895,7 +895,7 @@ namespace openFLE
 
         private static int GetSampleRate(long[] times)
         {
-            int[] knownSampleRates = { 96, 128, 256 };
+            int[] knownSampleRates = { 96, 100, 128, 256 };
 
             long startTime;
             long cycleTime;

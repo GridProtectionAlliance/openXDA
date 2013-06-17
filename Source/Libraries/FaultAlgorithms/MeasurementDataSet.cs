@@ -80,7 +80,7 @@ namespace FaultAlgorithms
 
         // Constants
 
-        private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
 
         // Fields
 
