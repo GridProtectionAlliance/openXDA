@@ -76,6 +76,7 @@ namespace XDAFileWatcher
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ForceEvent", "Forces an event to be processed by the file watcher", ForceEventRequestHandler));
 
             m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
+            m_serviceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
             m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
             m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
             m_serviceMonitors.Initialize();
@@ -218,6 +219,11 @@ namespace XDAFileWatcher
         }
 
         #region [ Service Monitor Handlers ]
+
+        private void ServiceMonitors_AdapterCreated(object sender, EventArgs<IServiceMonitor> e)
+        {
+            e.Argument.PersistSettings = true;
+        }
 
         private void ServiceMonitors_AdapterLoaded(object sender, EventArgs<IServiceMonitor> e)
         {
