@@ -69,8 +69,11 @@
 using System;
 using System.ComponentModel;
 using System.ServiceProcess;
+using System.Text;
 using GSF;
+using GSF.Adapters;
 using GSF.ServiceProcess;
+using XDAServiceMonitor;
 
 namespace openFLE
 {
@@ -79,6 +82,7 @@ namespace openFLE
         #region [ Members ]
 
         // Fields
+        private AdapterLoader<IServiceMonitor> m_serviceMonitors;
         private FaultLocationEngine m_faultLocationEngine;
 
         #endregion
@@ -108,25 +112,141 @@ namespace openFLE
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
+            // Set up heartbeat and client request handlers
+            m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadDeviceDefs", "Reloads the device definitions file", ReloadDeviceDefsRequestHandler));
 
+            // Set up adapter loader to load service monitors
+            m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
+            m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
+            m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
+            m_serviceMonitors.Initialize();
+
+            // Set up fault location engine
             m_faultLocationEngine = new FaultLocationEngine();
-            m_faultLocationEngine.StatusMessage += (o, args) => m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, args.Argument);
-            m_faultLocationEngine.ProcessException += (o, args) => m_serviceHelper.UpdateStatusAppendLine(UpdateType.Alarm, args.Argument.Message);
+            m_faultLocationEngine.StatusMessage += FaultLocationEngine_StatusMessage;
+            m_faultLocationEngine.ProcessException += FaultLocationEngine_ProcessException;
             m_faultLocationEngine.Start();
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
         {
+            // Dispose of adapter loader for service monitors
+            m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
+            m_serviceMonitors.AdapterUnloaded -= ServiceMonitors_AdapterUnloaded;
+            m_serviceMonitors.Dispose();
+
+            // Dispose of fault location engine
+            m_faultLocationEngine.StatusMessage -= FaultLocationEngine_StatusMessage;
+            m_faultLocationEngine.ProcessException -= FaultLocationEngine_ProcessException;
             m_faultLocationEngine.Stop();
             m_faultLocationEngine.Dispose();
         }
 
-        private void ReloadDeviceDefsRequestHandler(ClientRequestInfo clientRequestInfo)
+        private void ServiceHeartbeatHandler(string s, object[] args)
         {
-            m_faultLocationEngine.ReloadDeviceDefinitionsFile();
-            SendResponse(clientRequestInfo, true);
+            // Go through all service monitors to notify of the heartbeat
+            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            {
+                try
+                {
+                    // If the service monitor is enabled, notify it of the heartbeat
+                    if (serviceMonitor.Enabled)
+                        serviceMonitor.HandleServiceHeartbeat();
+                }
+                catch (Exception ex)
+                {
+                    // Handle each service monitor's exceptions individually
+                    HandleException(ex);
+                }
+            }
         }
+
+        // Reload the device definitions file on request
+        private void ReloadDeviceDefsRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Reloads the device definitions file.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ReloadDeviceDefs [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                m_faultLocationEngine.ReloadDeviceDefinitionsFile();
+                SendResponse(requestInfo, true);
+            }
+        }
+
+        // Send the error to the service helper, error logger, and each service monitor
+        private void HandleException(Exception ex)
+        {
+            string newLines = string.Format("{0}{0}", Environment.NewLine);
+
+            m_serviceHelper.ErrorLogger.Log(ex);
+            m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex.Message + newLines);
+
+            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            {
+                try
+                {
+                    if (serviceMonitor.Enabled)
+                        serviceMonitor.HandleServiceErrorMessage(ex.Message);
+                }
+                catch (Exception ex2)
+                {
+                    // Exceptions encountered while handling exceptions can be tricky,
+                    // so we just log them rather than risk a recursive loop
+                    m_serviceHelper.ErrorLogger.Log(ex2);
+                    m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex2.Message + newLines);
+                }
+            }
+        }
+
+        #region [ Service Monitor Handlers ]
+
+        // Display a message when service monitors are loaded
+        private void ServiceMonitors_AdapterLoaded(object sender, EventArgs<IServiceMonitor> e)
+        {
+            m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been loaded", e.Argument.GetType().Name);
+        }
+
+        // Display a message when service monitors are unloaded
+        private void ServiceMonitors_AdapterUnloaded(object sender, EventArgs<IServiceMonitor> e)
+        {
+            m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been unloaded", e.Argument.GetType().Name);
+        }
+
+        #endregion
+
+        #region [ Fault Location Engine Handlers ]
+
+        // Sends status messages to the service helper
+        private void FaultLocationEngine_StatusMessage(object sender, EventArgs<string> e)
+        {
+            m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, e.Argument);
+        }
+
+        // Handles exceptions encountered while performing fault location analysis
+        private void FaultLocationEngine_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            HandleException(e.Argument);
+        }
+
+        #endregion
 
         #region [ Broadcast Message Handling ]
 
@@ -138,18 +258,6 @@ namespace openFLE
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success)
         {
             SendResponseWithAttachment(requestInfo, success, null, null);
-        }
-
-        /// <summary>
-        /// Sends an actionable response to client with a formatted message.
-        /// </summary>
-        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        /// <param name="success">Flag that determines if this response to client request was a success.</param>
-        /// <param name="status">Formatted status message to send with response.</param>
-        /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args)
-        {
-            SendResponseWithAttachment(requestInfo, success, null, status, args);
         }
 
         /// <summary>
@@ -187,8 +295,8 @@ namespace openFLE
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
+                string message = string.Format("Failed to send client response due to an exception: {0}", ex.Message);
+                HandleException(new InvalidOperationException(message, ex));
             }
         }
 
@@ -206,46 +314,8 @@ namespace openFLE
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
-            }
-        }
-
-        /// <summary>
-        /// Displays a broadcast message to all subscribed clients.
-        /// </summary>
-        /// <param name="status">Status message to send to all clients.</param>
-        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type)
-        {
-            try
-            {
-                status = status.Replace("{", "{{").Replace("}", "}}");
-                m_serviceHelper.UpdateStatus(type, string.Format("{0}\r\n\r\n", status));
-            }
-            catch (Exception ex)
-            {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
-            }
-        }
-
-        /// <summary>
-        /// Displays a broadcast message to all subscribed clients.
-        /// </summary>
-        /// <param name="status">Formatted status message to send to all clients.</param>
-        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args)
-        {
-            try
-            {
-                DisplayStatusMessage(string.Format(status, args), type);
-            }
-            catch (Exception ex)
-            {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+                string message = string.Format("Failed to update client status \"{0}\" due to an exception: {1}", status.ToNonNullString(), ex.Message);
+                HandleException(new InvalidOperationException(message, ex));
             }
         }
 

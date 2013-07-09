@@ -146,6 +146,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Libraries\XDAServiceMonitor\XDAServiceMonitor.csproj">
+      <Project>{81D533ED-3E17-461D-A45C-CD19DFBD6640}</Project>
+      <Name>XDAServiceMonitor</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

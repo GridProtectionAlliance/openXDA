@@ -76,7 +76,7 @@ namespace XDAFileWatcher
 
             public override void Write(char value)
             {
-                const string errorPrefix = "ERROR: ";
+                const string ErrorPrefix = "ERROR: ";
                 string message;
 
                 m_message.Append(value);
@@ -84,8 +84,8 @@ namespace XDAFileWatcher
 
                 if (message.EndsWith(Environment.NewLine))
                 {
-                    if (message.StartsWith(errorPrefix))
-                        m_host.BroadcastError(message.Substring(errorPrefix.Length));
+                    if (message.StartsWith(ErrorPrefix))
+                        m_host.BroadcastError(message.Substring(ErrorPrefix.Length));
                     else
                         m_host.BroadcastMessage(message);
 

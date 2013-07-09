@@ -85,7 +85,7 @@ namespace openFLE
 
         public void WriteLine(string line)
         {
-            m_fileWriter.WriteLine(string.Format("[{0}] {1} - {2}", m_recordCount, DateTime.Now.ToString(DateTimeFormat), line));
+            m_fileWriter.WriteLine("[{0}] {1} - {2}", m_recordCount, DateTime.Now.ToString(DateTimeFormat), line);
             m_recordCount++;
         }
 

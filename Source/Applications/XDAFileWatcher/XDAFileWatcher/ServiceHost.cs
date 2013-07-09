@@ -28,8 +28,10 @@ using System.ServiceProcess;
 using System.Text;
 using System.Windows.Forms;
 using GSF;
+using GSF.Adapters;
 using GSF.IO;
 using GSF.ServiceProcess;
+using XDAServiceMonitor;
 
 namespace XDAFileWatcher
 {
@@ -39,6 +41,7 @@ namespace XDAFileWatcher
 
         // Fields
         private string m_configFile;
+        private AdapterLoader<IServiceMonitor> m_serviceMonitors;
         private XDAFileWatcher m_fileWatcher;
 
         #endregion
@@ -52,6 +55,7 @@ namespace XDAFileWatcher
 
             // Register event handlers.
             m_serviceHelper.ServiceStarted += ServiceHelper_ServiceStarted;
+            m_serviceHelper.ServiceStopping += ServiceHelper_ServiceStopping;
         }
 
         public ServiceHost(IContainer container)
@@ -67,13 +71,26 @@ namespace XDAFileWatcher
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
+            m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadConfig", "Reloads configuration from configuration file", ReloadConfigRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ForceEvent", "Forces an event to be processed by the file watcher", ForceEventRequestHandler));
+
+            m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
+            m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
+            m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
+            m_serviceMonitors.Initialize();
 
             m_configFile = Path.Combine(Application.StartupPath, "Filewatcher.config");
             m_fileWatcher = new XDAFileWatcher();
             m_fileWatcher.ReadConfigFile(m_configFile);
             m_fileWatcher.StartWatching();
+        }
+
+        private void ServiceHelper_ServiceStopping(object sender, EventArgs eventArgs)
+        {
+            m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
+            m_serviceMonitors.AdapterUnloaded -= ServiceMonitors_AdapterUnloaded;
+            m_serviceMonitors.Dispose();
         }
 
         private void ForceEventRequestHandler(ClientRequestInfo requestInfo)
@@ -135,11 +152,84 @@ namespace XDAFileWatcher
             }
         }
 
-        private void ReloadConfigRequestHandler(ClientRequestInfo clientRequestInfo)
+        private void ReloadConfigRequestHandler(ClientRequestInfo requestInfo)
         {
-            m_fileWatcher.ReadConfigFile(m_configFile);
-            SendResponse(clientRequestInfo, true);
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Reloads the Filewatcher.config configuration file.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ReloadConfig [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                m_fileWatcher.ReadConfigFile(m_configFile);
+                SendResponse(requestInfo, true);
+            }
         }
+
+        private void ServiceHeartbeatHandler(string s, object[] args)
+        {
+            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            {
+                try
+                {
+                    if (serviceMonitor.Enabled)
+                        serviceMonitor.HandleServiceHeartbeat();
+                }
+                catch (Exception ex)
+                {
+                    HandleException(ex);
+                }
+            }
+        }
+
+        private void HandleException(Exception ex)
+        {
+            string newLines = string.Format("{0}{0}", Environment.NewLine);
+
+            m_serviceHelper.ErrorLogger.Log(ex);
+            m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex.Message + newLines);
+
+            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            {
+                try
+                {
+                    serviceMonitor.HandleServiceErrorMessage(ex.Message);
+                }
+                catch (Exception ex2)
+                {
+                    m_serviceHelper.ErrorLogger.Log(ex2);
+                    m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex2.Message + newLines);
+                }
+            }
+        }
+
+        #region [ Service Monitor Handlers ]
+
+        private void ServiceMonitors_AdapterLoaded(object sender, EventArgs<IServiceMonitor> e)
+        {
+            m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been loaded", e.Argument.GetType().Name);
+        }
+
+        private void ServiceMonitors_AdapterUnloaded(object sender, EventArgs<IServiceMonitor> e)
+        {
+            m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been unloaded", e.Argument.GetType().Name);
+        }
+
+        #endregion
 
         #region [ Broadcast Message Handling ]
 
@@ -159,6 +249,20 @@ namespace XDAFileWatcher
         public void BroadcastError(string errorMessage)
         {
             m_serviceHelper.UpdateStatus(UpdateType.Alarm, "{0}{1}", errorMessage, Environment.NewLine);
+
+            foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+            {
+                try
+                {
+                    if (serviceMonitor.Enabled)
+                        serviceMonitor.HandleServiceErrorMessage(errorMessage);
+                }
+                catch (Exception ex)
+                {
+                    m_serviceHelper.ErrorLogger.Log(ex);
+                    m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex.Message + string.Format("{0}{0}", Environment.NewLine));
+                }
+            }
         }
 
         /// <summary>
@@ -218,8 +322,8 @@ namespace XDAFileWatcher
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
+                string message = string.Format("Failed to send client response due to an exception: {0}", ex.Message);
+                HandleException(new InvalidOperationException(message, ex));
             }
         }
 
@@ -237,46 +341,8 @@ namespace XDAFileWatcher
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
-            }
-        }
-
-        /// <summary>
-        /// Displays a broadcast message to all subscribed clients.
-        /// </summary>
-        /// <param name="status">Status message to send to all clients.</param>
-        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type)
-        {
-            try
-            {
-                status = status.Replace("{", "{{").Replace("}", "}}");
-                m_serviceHelper.UpdateStatus(type, string.Format("{0}\r\n\r\n", status));
-            }
-            catch (Exception ex)
-            {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
-            }
-        }
-
-        /// <summary>
-        /// Displays a broadcast message to all subscribed clients.
-        /// </summary>
-        /// <param name="status">Formatted status message to send to all clients.</param>
-        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args)
-        {
-            try
-            {
-                DisplayStatusMessage(string.Format(status, args), type);
-            }
-            catch (Exception ex)
-            {
-                m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+                string message = string.Format("Failed to update client status \"{0}\" due to an exception: {1}", status.ToNonNullString(), ex.Message);
+                HandleException(new InvalidOperationException(message, ex));
             }
         }
 

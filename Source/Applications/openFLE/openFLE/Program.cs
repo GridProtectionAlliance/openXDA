@@ -73,7 +73,7 @@
 #if RunAsApp
     using System.Windows.Forms;
 #else
-using System.ServiceProcess;
+    using System.ServiceProcess;
 #endif
 
 namespace openFLE
@@ -92,12 +92,7 @@ namespace openFLE
             Application.Run(new DebugHost());
 #else
             // Run as Windows Service.
-            ServiceBase[] ServicesToRun;
-            ServicesToRun = new ServiceBase[] 
-            { 
-                new ServiceHost() 
-            };
-            ServiceBase.Run(ServicesToRun);
+            ServiceBase.Run(new ServiceHost());
 #endif
         }
     }
