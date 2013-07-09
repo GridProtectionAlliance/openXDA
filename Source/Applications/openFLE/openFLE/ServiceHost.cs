@@ -118,6 +118,7 @@ namespace openFLE
 
             // Set up adapter loader to load service monitors
             m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
+            m_serviceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
             m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
             m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
             m_serviceMonitors.Initialize();
@@ -217,6 +218,12 @@ namespace openFLE
         }
 
         #region [ Service Monitor Handlers ]
+
+        // Ensure that service monitors save their settings to the configuration file
+        private void ServiceMonitors_AdapterCreated(object sender, EventArgs<IServiceMonitor> e)
+        {
+            e.Argument.PersistSettings = true;
+        }
 
         // Display a message when service monitors are loaded
         private void ServiceMonitors_AdapterLoaded(object sender, EventArgs<IServiceMonitor> e)
