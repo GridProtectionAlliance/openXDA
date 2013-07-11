@@ -74,6 +74,9 @@
       <Component Id="FaultAlgorithms">
         <File Id="FaultAlgorithms.dll" Name="$(var.FaultAlgorithms.TargetFileName)" Source="$(var.FaultAlgorithms.TargetPath)" />
       </Component>
+      <Component Id="XDAServiceMonitor">
+        <File Id="XDAServiceMonitor.dll" Name="$(var.XDAServiceMonitor.TargetFileName)" Source="$(var.XDAServiceMonitor.TargetPath)" />
+      </Component>
       
       <!-- DotNetZip Dependencies -->
       <Component Id="Ionic.Zlib">
