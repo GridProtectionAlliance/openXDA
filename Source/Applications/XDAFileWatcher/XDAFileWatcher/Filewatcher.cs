@@ -1466,13 +1466,17 @@ namespace XDAFileWatcher
         {
             try
             {
-                FilePath.ConnectToNetworkShare(share.Name, share.Username, share.Password, share.Domain);
-                Log.Instance.Debug("Successfully connected to file share " + share.Name.QuoteWrap() + ".");
+                if (!Directory.Exists(share.Name))
+                {
+                    FilePath.ConnectToNetworkShare(share.Name, share.Username, share.Password, share.Domain);
+                    Log.Instance.Debug("Successfully connected to file share " + share.Name.QuoteWrap() + ".");
+                }
+
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                Log.Instance.Error("Error connecting to file share " + share.Name.QuoteWrap() + ".");
+                Log.Instance.Error("Error connecting to file share " + share.Name.QuoteWrap() + ":" + ex.Message);
                 return false;
             }
         }
