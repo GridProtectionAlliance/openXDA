@@ -27,12 +27,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Timers;
 using GSF;
 using System.Xml;
 using System.Threading;
 using System.Reflection;
 using GSF.IO;
 using GSF.Security.Cryptography;
+using Timer = System.Timers.Timer;
 
 namespace XDAFileWatcher
 {
@@ -170,11 +172,13 @@ namespace XDAFileWatcher
         }
     }
 
-    public class XDAFileWatcher
+    public class XDAFileWatcher : IDisposable
     {
-        private FileSystemWatcher _watcher;
-        private volatile List<WatchFolder> _watchFolders;
+        private Timer m_watcherMonitor;
+        private FileSystemWatcher m_fileSystemWatcher;
+        private volatile List<WatchFolder> m_watchFolders;
         //private DestinationFilePattern[] _outputDestinationFileElements;
+        private bool m_disposed;
 
         public bool OutputFilePatternIsSet
         {
@@ -183,7 +187,13 @@ namespace XDAFileWatcher
         }
 
         //Note if set externally, this is reset by the config file
-        public List<FileShare> FileShares
+        public ISet<FileShare> FileShares
+        {
+            get;
+            set;
+        }
+
+        public ISet<FileShare> UnauthenticatedFileShares
         {
             get;
             set;
@@ -195,28 +205,46 @@ namespace XDAFileWatcher
             set;
         }
 
+        private FileSystemWatcher FileSystemWatcher
+        {
+            get
+            {
+                return m_fileSystemWatcher;
+            }
+            set
+            {
+                using (FileSystemWatcher fileSystemWatcher = m_fileSystemWatcher)
+                {
+                    m_fileSystemWatcher = value;
+                }
+            }
+        }
+
         private char[] _separators = { ',', ';' };
 
         public XDAFileWatcher()
         {
-            _watcher = new FileSystemWatcher();
-            _watchFolders = new List<WatchFolder>();
-            //_outputDestinationFileElements = new DestinationFilePattern[1];  moved to WatchFolder class
+            m_watcherMonitor = new Timer(1000);
+            m_watcherMonitor.AutoReset = false;
+            m_watcherMonitor.Elapsed += WatcherMonitorElapsed;
+
+            m_watchFolders = new List<WatchFolder>();
+
             OutputFilePatternIsSet = false;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="XDAFileWatcher"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
         ~XDAFileWatcher()
         {
-            Log.Instance.Info("***** FileWatcher Terminated *****");
-            Log.FlushLog();
+            Dispose(false);
         }
 
         public void StartWatching()
         {
-            new Thread(CreateNewWatcher).Start();
-
+            new Thread(CreateAndValidateNewWatcher).Start();
             Log.Instance.Info("StartWatching: EventType Tread Started for root folder = " + RootPathToWatch.QuoteWrap());
-
         }
 
         /// <summary>
@@ -259,7 +287,7 @@ namespace XDAFileWatcher
                 }
             }
 
-            _watchFolders = watchFolders;
+            m_watchFolders = watchFolders;
         }
 
         /// <summary>
@@ -294,49 +322,58 @@ namespace XDAFileWatcher
 
         #region [ Private Processing Methods ]
 
+        private void CreateAndValidateNewWatcher()
+        {
+            if (!Path.GetInvalidPathChars().Any(c => RootPathToWatch.Contains(c)) && Directory.Exists(RootPathToWatch))
+                CreateNewWatcher();
+            else
+                Log.Instance.Error("CreateNewWatcher: CANNOT START FILEWATCHER.  Root path to watch does not exist or is invalid.");
+
+            // Start the timer to monitor the file system watcher
+            m_watcherMonitor.Start();
+        }
+
         /// <summary>
         /// 
         /// </summary>
         private void CreateNewWatcher()
         {
-            var primaryWatcher = new FileSystemWatcher();
-
-            if (Path.GetInvalidPathChars().Any(c => RootPathToWatch.Contains(c)) || !Directory.Exists(RootPathToWatch))
-            {
-                Log.Instance.Error("CreateNewWatcher: CANNOT START FILEWATCHER.  Root path to watch does not exist or is invalid.");
-                return;
-            }
-
-            primaryWatcher.Path = RootPathToWatch;
-            primaryWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastAccess | NotifyFilters.LastWrite |
-                                          NotifyFilters.DirectoryName;
-
-            //watch all files in the path 
-            primaryWatcher.Filter = "*.*";
-
-            //watch sub dir as default
-            primaryWatcher.IncludeSubdirectories = true;
-
-            primaryWatcher.Created += new FileSystemEventHandler(OnCreated);
-            Log.Instance.Debug("CreateNewWatcher: EventType CREATE Handler Loaded");
-
-            primaryWatcher.Deleted += new FileSystemEventHandler(OnDeleted);
-            Log.Instance.Debug("CreateNewWatcher: EventType DELETE Handler Loaded");
-
-            primaryWatcher.Renamed += new RenamedEventHandler(OnRenamed);
-            Log.Instance.Debug("CreateNewWatcher: EventType RENAME Handler Loaded");
+            FileSystemWatcher fileSystemWatcher = null;
 
             try
             {
-                primaryWatcher.EnableRaisingEvents = true;
+                fileSystemWatcher = new FileSystemWatcher();
+
+                fileSystemWatcher.Path = RootPathToWatch;
+                fileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastAccess | NotifyFilters.LastWrite |
+                    NotifyFilters.DirectoryName;
+
+                //watch all files in the path 
+                fileSystemWatcher.Filter = "*.*";
+
+                //watch sub dir as default
+                fileSystemWatcher.IncludeSubdirectories = true;
+
+                fileSystemWatcher.Created += OnCreated;
+                Log.Instance.Debug("CreateNewWatcher: EventType CREATE Handler Loaded");
+
+                fileSystemWatcher.Deleted += OnDeleted;
+                Log.Instance.Debug("CreateNewWatcher: EventType DELETE Handler Loaded");
+
+                fileSystemWatcher.Renamed += OnRenamed;
+                Log.Instance.Debug("CreateNewWatcher: EventType RENAME Handler Loaded");
+
+                fileSystemWatcher.EnableRaisingEvents = true;
                 Log.Instance.Info("CreateNewWatcher: FileWatcher Serivce Successfully Started  *********  WAITING for FILE CHANGES ******** ");
 
+                FileSystemWatcher = fileSystemWatcher;
             }
             catch (Exception ex)
             {
                 Log.Instance.ErrorException("CreateNewWatcher: CANNOT START FILEWATCHER.", ex);
-                //MessageBox.Show("FileWather Service Could Not be Started. " + ex.Message, "FileWatcher", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
+                if ((object)fileSystemWatcher != null)
+                    fileSystemWatcher.Dispose();
             }
         }
 
@@ -361,6 +398,47 @@ namespace XDAFileWatcher
             ProcessEvent(e.FullPath, FileEventType.Renamed);
         }
 
+        private void WatcherMonitorElapsed(object sender, ElapsedEventArgs e)
+        {
+            // First, check for error conditions that would
+            // require recreating the file system watcher
+            try
+            {
+                if ((object)m_fileSystemWatcher != null)
+                {
+                    if (!Directory.Exists(RootPathToWatch))
+                    {
+                        Log.Instance.Error("No longer able to find root path. Attempting to reenable the file system watcher...");
+                        FileSystemWatcher = null;
+                    }
+                    else if (!m_fileSystemWatcher.EnableRaisingEvents)
+                    {
+                        Log.Instance.Error("The file system watcher has stopped unexpectedly. Attempting to reenable the file system watcher...");
+                        FileSystemWatcher = null;
+                    }
+                }
+            }
+            catch
+            {
+                Log.Instance.Error("A strange and unexpected error has occurred while monitoring the file the system watcher. Attempting to reenable the file system watcher -- just in case...");
+                FileSystemWatcher = null;
+            }
+
+            // Attempt to reconnect to file shares that we have yet to authenticate to
+            foreach (FileShare share in FileShares.Where(s => (object)s.Password != null))
+            {
+                if (TryConnectToFileShare(share))
+                    share.Password = null;
+            }
+
+            // If the file system watcher is null, attempt to recreate it
+            if ((object)m_fileSystemWatcher == null)
+                CreateNewWatcher();
+
+            if ((object)m_watcherMonitor != null)
+                m_watcherMonitor.Start();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -375,7 +453,7 @@ namespace XDAFileWatcher
                 return;
 
             processStartTime = DateTime.UtcNow;
-            watchFolders = _watchFolders;
+            watchFolders = m_watchFolders;
 
             // Full Path may or may not be a folder of interst to watch. (Need to loop through all -- folder may appear more than once)
             foreach (WatchFolder f in watchFolders)
@@ -774,7 +852,8 @@ namespace XDAFileWatcher
                 XmlNodeList rootParms = configXml.SelectNodes("EDAfilewatcher");
                 WatchFolder watchFolder;
 
-                FileShares = new List<FileShare>();
+                FileShares = new HashSet<FileShare>();
+                UnauthenticatedFileShares = new HashSet<FileShare>();
 
                 if (rootParms == null)
                 {
@@ -831,17 +910,10 @@ namespace XDAFileWatcher
                             }
                         }
 
-                        try
-                        {
-                            FilePath.ConnectToNetworkShare(share.Name, share.Username, share.Password, share.Domain);
-                            share.Password = string.Empty;
-                            FileShares.Add(share);
-                            Log.Instance.Debug("ExtractParms:  Successfully connected to file share " + share.Name.QuoteWrap() + ".");
-                        }
-                        catch
-                        {
-                            Log.Instance.Error("ExtractParms:  Error connecting to file share " + share.Name.QuoteWrap() + ".");
-                        }
+                        if (TryConnectToFileShare(share))
+                            share.Password = null;
+
+                        FileShares.Add(share);
                     }
 
                     foreach (XmlNode childNode in xmlNode)
@@ -862,7 +934,7 @@ namespace XDAFileWatcher
                                         if (Path.GetInvalidPathChars().Any(c => RootPathToWatch.Contains(c)))
                                             Log.Instance.Error("ExtractParms:  Root watch folder " + RootPathToWatch.QuoteWrap() + " is not a valid folder name.  Many errors to follow.");
                                         else
-                                            Log.Instance.Error("ExtractParms:  Root watch folder " + RootPathToWatch.QuoteWrap() + " does not exist or is not accessable.  Many errors to follow.");
+                                            Log.Instance.Error("ExtractParms:  Root watch folder " + RootPathToWatch.QuoteWrap() + " does not exist or is not accessable.");
                                     }
                                 }
                                 else
@@ -1112,7 +1184,7 @@ namespace XDAFileWatcher
                                             }
                                         }
 
-                                        watchFolder.WatchFolderAction.Enabled = true;
+                                        watchFolder.WatchFolderAction.Enabled = actionParm.InnerText.ParseBoolean();
                                         watchFolder.WatchSubfolders = subfolders;
                                         watchFolder.ProduceResultsFile = createFwrXml;
 
@@ -1126,25 +1198,12 @@ namespace XDAFileWatcher
                                         else
                                             watchFolder.FullPathToWatch = Path.Combine(RootPathToWatch, folderToProcess).EnsureEnd("\\");
 
-                                        if (!Path.GetInvalidPathChars().Any(c => watchFolder.FullPathToWatch.Contains(c)))
-                                        {
-                                            if (!Directory.Exists(watchFolder.FullPathToWatch))
-                                            {
-                                                watchFolder.WatchFolderAction.Enabled = false;
-                                                Log.Instance.Warn("ExtractParms: Folder specified to watch " +
-                                                                  watchFolder.FullPathToWatch.QuoteWrap() + " does not exist.  Folder action skipped.");
-                                            }
-                                        }
-                                        else
+                                        if (Path.GetInvalidPathChars().Any(c => watchFolder.FullPathToWatch.Contains(c)))
                                         {
                                             watchFolder.WatchFolderAction.Enabled = false;
                                             Log.Instance.Warn("ExtractParms: Folder specified to watch " + folderToProcess.QuoteWrap() + " is not valid path name.  Folder action skipped.");
                                         }
 
-
-                                        if (watchFolder.WatchFolderAction.Enabled &&
-                                            actionParm.InnerText.ParseBoolean())
-                                        {
                                             if (actionParm.Name.ToUpper().IndexOf("CREATED") > 0)
                                             {
                                                 watchFolder.WatchFolderAction.EventType =
@@ -1166,14 +1225,7 @@ namespace XDAFileWatcher
                                                     FileEventType.Renamed;
                                             }
 
-                                        }
-                                        else
-                                        {
-                                            watchFolder.WatchFolderAction.Enabled = false;
-                                        }
-
-                                        if (watchFolder.WatchFolderAction.Enabled &&
-                                            actionParm.Attributes != null && actionParm.Attributes.Count >= 1)
+                                        if (actionParm.Attributes != null && actionParm.Attributes.Count >= 1)
                                         {
                                             foreach (XmlAttribute attrib in actionParm.Attributes)
                                                 switch (attrib.Name.ToUpper())
@@ -1181,15 +1233,13 @@ namespace XDAFileWatcher
                                                     case "ACTION":
                                                         if (attrib.Value.ToUpper().IndexOf("NOTIFY") > -1)
                                                             watchFolder.WatchFolderAction.Action = FileAction.Notify;
-
                                                         else if (attrib.Value.ToUpper().IndexOf("MOVE") > -1)
                                                             watchFolder.WatchFolderAction.Action = FileAction.Move;
-
                                                         else if (attrib.Value.ToUpper().IndexOf("COPY") > -1)
                                                             watchFolder.WatchFolderAction.Action = FileAction.Copy;
-
                                                         else
                                                             watchFolder.WatchFolderAction.Enabled = false;
+
                                                         break;
 
                                                     case "DESTINATTION":
@@ -1410,6 +1460,65 @@ namespace XDAFileWatcher
                 }
             }
             return pattern;
+        }
+
+        private bool TryConnectToFileShare(FileShare share)
+        {
+            try
+            {
+                FilePath.ConnectToNetworkShare(share.Name, share.Username, share.Password, share.Domain);
+                Log.Instance.Debug("Successfully connected to file share " + share.Name.QuoteWrap() + ".");
+                return true;
+            }
+            catch
+            {
+                Log.Instance.Error("Error connecting to file share " + share.Name.QuoteWrap() + ".");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="XDAFileWatcher"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="XDAFileWatcher"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    Log.Instance.Info("***** FileWatcher Terminated *****");
+                    Log.FlushLog();
+
+                    if (disposing)
+                    {
+                        if ((object)m_watcherMonitor != null)
+                        {
+                            m_watcherMonitor.Dispose();
+                            m_watcherMonitor = null;
+                        }
+
+                        if ((object)m_fileSystemWatcher != null)
+                        {
+                            m_fileSystemWatcher.Dispose();
+                            m_fileSystemWatcher = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
 
