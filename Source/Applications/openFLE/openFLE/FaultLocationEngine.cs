@@ -345,7 +345,7 @@ namespace openFLE
                 if ((object)devices == null)
                 {
                     devices = CreateDevices(m_deviceDefinitionsFile);
-                    m_faultResultsWriter.WriteConfiguration(devices);
+                    TryWriteConfiguration(m_faultResultsWriter, devices);
                     m_devices = devices;
                 }
 
@@ -353,6 +353,9 @@ namespace openFLE
                 disturbanceRecorder = GetDevice(devices, rootFileName);
                 disturbanceFiles = CreateDisturbanceFiles(rootFileName);
                 lineDataSets = new Collection<Tuple<Line, FaultLocationDataSet>>();
+
+                if ((object)disturbanceRecorder == null)
+                    throw new InvalidOperationException(string.Format("No device record found for \"{0}\" in configuration.", fileName));
 
                 foreach (Line line in disturbanceRecorder.Lines)
                 {
@@ -396,18 +399,26 @@ namespace openFLE
                     }
                 }
 
-                // Write results to the output source
-                if (lineDataSets.Count > 0)
+                try
                 {
-                    timeProcessed = DateTime.UtcNow;
-
-                    foreach (DisturbanceFile disturbanceFile in disturbanceFiles)
+                    // Write results to the output source
+                    if (lineDataSets.Count > 0)
                     {
-                        disturbanceFile.FLETimeStarted = timeStarted;
-                        disturbanceFile.FLETimeProcessed = timeProcessed;
-                    }
+                        timeProcessed = DateTime.UtcNow;
 
-                    m_faultResultsWriter.WriteResults(disturbanceRecorder, disturbanceFiles, lineDataSets);
+                        foreach (DisturbanceFile disturbanceFile in disturbanceFiles)
+                        {
+                            disturbanceFile.FLETimeStarted = timeStarted;
+                            disturbanceFile.FLETimeProcessed = timeProcessed;
+                        }
+
+                        m_faultResultsWriter.WriteResults(disturbanceRecorder, disturbanceFiles, lineDataSets);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = string.Format("Unable to write results for file \"{0}\" due to exception: {1}", fileName, ex.Message);
+                    OnProcessException(new InvalidOperationException(errorMessage, ex));
                 }
             }
             catch (Exception ex)
@@ -761,6 +772,23 @@ namespace openFLE
             };
 
             return faultDataSet;
+        }
+
+        private void TryWriteConfiguration(IFaultResultsWriter faultResultsWriter, ICollection<Device> configuration)
+        {
+            const string ErrorFormat = "Unable to write configuration to the fault results writer due to exception: {0}";
+
+            try
+            {
+                if ((object)faultResultsWriter == null)
+                    throw new InvalidOperationException("Fault results writer does not exist.");
+
+                faultResultsWriter.WriteConfiguration(configuration);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format(ErrorFormat, ex.Message), ex));
+            }
         }
 
         // Attempts to execute fault trigger algorithm and processes errors if they occur.
