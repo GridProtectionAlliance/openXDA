@@ -62,9 +62,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAServiceMonitor", "Librar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServerTedWriter", "Libraries\SqlServerTedWriter\SqlServerTedWriter.csproj", "{05636D10-CC92-43B1-AF3D-E66CCECFB3CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugServiceMonitor", "Libraries\DebugServiceMonitor\DebugServiceMonitor.csproj", "{953A5C0E-31C5-4C36-93E6-A0F2750F199C}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 11
+		SccNumberOfProjects = 12
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -108,6 +110,10 @@ Global
 		SccProjectTopLevelParentUniqueName10 = openXDA.sln
 		SccProjectName10 = Libraries/SqlServerTedWriter
 		SccLocalPath10 = Libraries\\SqlServerTedWriter
+		SccProjectUniqueName11 = Libraries\\DebugServiceMonitor\\DebugServiceMonitor.csproj
+		SccProjectTopLevelParentUniqueName11 = openXDA.sln
+		SccProjectName11 = Libraries/DebugServiceMonitor
+		SccLocalPath11 = Libraries\\DebugServiceMonitor
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -192,6 +198,14 @@ Global
 		{05636D10-CC92-43B1-AF3D-E66CCECFB3CC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{05636D10-CC92-43B1-AF3D-E66CCECFB3CC}.Release|x86.ActiveCfg = Release|Any CPU
 		{05636D10-CC92-43B1-AF3D-E66CCECFB3CC}.Release|x86.Build.0 = Release|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Debug|x86.Build.0 = Debug|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Release|x86.ActiveCfg = Release|Any CPU
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -205,6 +219,7 @@ Global
 		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{81D533ED-3E17-461D-A45C-CD19DFBD6640} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{05636D10-CC92-43B1-AF3D-E66CCECFB3CC} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{953A5C0E-31C5-4C36-93E6-A0F2750F199C} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3} = {BC5C2A22-31D3-4887-B798-262244564883}
 		{33FAD525-AAE2-4E26-A790-ECC18697CE45} = {BC5C2A22-31D3-4887-B798-262244564883}
 		{8F3E211B-B0C7-49CB-9683-E488E4E6702F} = {BC5C2A22-31D3-4887-B798-262244564883}

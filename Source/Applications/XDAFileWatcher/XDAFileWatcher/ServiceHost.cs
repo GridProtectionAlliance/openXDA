@@ -24,11 +24,13 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Windows.Forms;
 using GSF;
 using GSF.Adapters;
+using GSF.Console;
 using GSF.IO;
 using GSF.ServiceProcess;
 using XDAServiceMonitor;
@@ -74,6 +76,7 @@ namespace XDAFileWatcher
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadConfig", "Reloads configuration from configuration file", ReloadConfigRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ForceEvent", "Forces an event to be processed by the file watcher", ForceEventRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
 
             m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
             m_serviceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
@@ -92,6 +95,34 @@ namespace XDAFileWatcher
             m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
             m_serviceMonitors.AdapterUnloaded -= ServiceMonitors_AdapterUnloaded;
             m_serviceMonitors.Dispose();
+        }
+
+        private void ReloadConfigRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Reloads the Filewatcher.config configuration file.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ReloadConfig [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                m_fileWatcher.ReadConfigFile(m_configFile);
+                SendResponse(requestInfo, true);
+            }
         }
 
         private void ForceEventRequestHandler(ClientRequestInfo requestInfo)
@@ -153,18 +184,21 @@ namespace XDAFileWatcher
             }
         }
 
-        private void ReloadConfigRequestHandler(ClientRequestInfo requestInfo)
+        // Send a message to the service monitors on request
+        private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)
         {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            Arguments arguments = requestInfo.Request.Arguments;
+
+            if (arguments.ContainsHelpRequest)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
-                helpMessage.Append("Reloads the Filewatcher.config configuration file.");
+                helpMessage.Append("Sends a message to all service monitors.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       ReloadConfig [Options]");
+                helpMessage.Append("       MsgServiceMonitors [Options] [Args...]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
@@ -176,7 +210,26 @@ namespace XDAFileWatcher
             }
             else
             {
-                m_fileWatcher.ReadConfigFile(m_configFile);
+                string[] args = Enumerable.Range(1, arguments.OrderedArgCount)
+                    .Select(arg => arguments[arguments.OrderedArgID + arg])
+                    .ToArray();
+
+                // Go through all service monitors and handle the message
+                foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+                {
+                    try
+                    {
+                        // If the service monitor is enabled, notify it of the message
+                        if (serviceMonitor.Enabled)
+                            serviceMonitor.HandleClientMessage(args);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle each service monitor's exceptions individually
+                        HandleException(ex);
+                    }
+                }
+
                 SendResponse(requestInfo, true);
             }
         }

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IServiceMonitor.cs - Gbtc
+//  DebugServiceMonitor.cs - Gbtc
 //
 //  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,38 +16,48 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/08/2013 - Stephen C. Wills
+//  08/01/2013 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF.Adapters;
+using System.Diagnostics;
+using XDAServiceMonitor;
 
-namespace XDAServiceMonitor
+namespace DebugServiceMonitor
 {
     /// <summary>
-    /// Interface for an adapter that monitors the health of a service.
+    /// Implementation of <see cref="IServiceMonitor"/> used for debugging purposes.
     /// </summary>
-    public interface IServiceMonitor : IAdapter
+    public class DebugServiceMonitor : ServiceMonitorBase
     {
         /// <summary>
         /// Handles notifications from the service that occur
         /// on an interval to indicate that the service is
         /// still running.
         /// </summary>
-        void HandleServiceHeartbeat();
+        public override void HandleServiceHeartbeat()
+        {
+            Debug.WriteLine("...Heartbeat...");
+        }
 
         /// <summary>
         /// Handles messages received by the service
         /// whenever the service encounters an error.
         /// </summary>
         /// <param name="message">The error message received from the service.</param>
-        void HandleServiceErrorMessage(string message);
+        public override void HandleServiceErrorMessage(string message)
+        {
+            Debug.WriteLine("ERROR: {0}", (object)message);
+        }
 
         /// <summary>
         /// Handles messages sent by a client.
         /// </summary>
         /// <param name="args">Arguments provided by the client.</param>
-        void HandleClientMessage(string[] args);
+        public override void HandleClientMessage(string[] args)
+        {
+            Debug.WriteLine("Client says, \"{0}\"", (object)string.Join(" ", args));
+        }
     }
 }

@@ -50,6 +50,14 @@ namespace XDAServiceMonitor
         }
 
         /// <summary>
+        /// Handles messages sent by a client.
+        /// </summary>
+        /// <param name="args">Arguments provided by the client.</param>
+        public virtual void HandleClientMessage(string[] args)
+        {
+        }
+
+        /// <summary>
         /// Loads saved <see cref="ServiceMonitorBase"/> settings from the config file if the <see cref="P:GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:GSF.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>

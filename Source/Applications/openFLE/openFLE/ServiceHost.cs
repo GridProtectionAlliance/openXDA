@@ -68,10 +68,12 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using GSF;
 using GSF.Adapters;
+using GSF.Console;
 using GSF.ServiceProcess;
 using XDAServiceMonitor;
 
@@ -115,6 +117,7 @@ namespace openFLE
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadDeviceDefs", "Reloads the device definitions file", ReloadDeviceDefsRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
 
             // Set up adapter loader to load service monitors
             m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
@@ -188,6 +191,56 @@ namespace openFLE
             else
             {
                 m_faultLocationEngine.ReloadDeviceDefinitionsFile();
+                SendResponse(requestInfo, true);
+            }
+        }
+
+        // Send a message to the service monitors on request
+        private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)
+        {
+            Arguments arguments = requestInfo.Request.Arguments;
+
+            if (arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Sends a message to all service monitors.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       MsgServiceMonitors [Options] [Args...]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                string[] args = Enumerable.Range(1, arguments.OrderedArgCount)
+                    .Select(arg => arguments[arguments.OrderedArgID + arg])
+                    .ToArray();
+
+                // Go through all service monitors and handle the message
+                foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
+                {
+                    try
+                    {
+                        // If the service monitor is enabled, notify it of the message
+                        if (serviceMonitor.Enabled)
+                            serviceMonitor.HandleClientMessage(args);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle each service monitor's exceptions individually
+                        HandleException(ex);
+                    }
+                }
+
                 SendResponse(requestInfo, true);
             }
         }
