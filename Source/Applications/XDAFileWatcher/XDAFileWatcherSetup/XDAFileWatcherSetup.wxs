@@ -19,9 +19,17 @@
 
 	<Fragment>
 		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFiles64Folder">
-				<Directory Id="INSTALLFOLDER" Name="XDAFileWatcher" />
-			</Directory>
+      <?if $(var.Platform) = x64 ?>
+      <Directory Id="ProgramFiles64Folder">
+        <!-- C:\Program Files\XDAFileWatcher -->
+        <Directory Id="INSTALLFOLDER" Name="XDAFileWatcher" />
+      </Directory>
+      <?else ?>
+      <Directory Id="ProgramFilesFolder">
+        <!-- C:\Program Files (x86)\XDAFileWatcher -->
+        <Directory Id="INSTALLFOLDER" Name="XDAFileWatcher" />
+      </Directory>
+      <?endif ?>
 		</Directory>
 	</Fragment>
 
