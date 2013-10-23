@@ -66,9 +66,9 @@
 //
 //*********************************************************************************************************************
 
-//#if DEBUG
-//    #define RunAsApp
-//#endif
+#if DEBUG
+    #define RunAsApp
+#endif
 
 #if RunAsApp
     using System.Windows.Forms;

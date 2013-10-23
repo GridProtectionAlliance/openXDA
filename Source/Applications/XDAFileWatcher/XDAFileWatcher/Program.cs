@@ -21,9 +21,9 @@
 //
 //******************************************************************************************************
 
-//#if !DEBUG
-#define RunAsService
-//#endif
+#if !DEBUG
+    #define RunAsService
+#endif
 
 #if RunAsService
     using System.ServiceProcess;
