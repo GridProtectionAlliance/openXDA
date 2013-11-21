@@ -115,6 +115,60 @@ namespace FaultAlgorithms
             .ToArray();
         }
 
+        /// <summary>
+        /// Novosel et al. algorithm for calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
+        /// </summary>
+        /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
+        /// <param name="parameters">Extra parameters to the algorithm.</param>
+        /// <returns>Set of distance calculations, one for each cycle of data.</returns>
+        [FaultLocationAlgorithm]
+        private static double[] NovoselEtAl(FaultLocationDataSet faultDataSet, string parameters)
+        {
+            FaultType viFaultType;
+            ComplexNumber z;
+
+            ComplexNumber[] voltages;
+            ComplexNumber[] currents;
+            ComplexNumber vPre;
+            ComplexNumber iPre;
+
+            ComplexNumber loadImpedance;
+
+            viFaultType = GetVIFaultType(faultDataSet);
+            z = GetNominalImpedance(faultDataSet);
+
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
+            vPre = voltages[0];
+            iPre = currents[0];
+
+            loadImpedance = (vPre / iPre) - z;
+
+            return voltages.Zip(currents, (v, i) =>
+            {
+                ComplexNumber sourceImpedance = (v - vPre) / (i - iPre);
+                ComplexNumber ab = (v / (z * i)) + (loadImpedance / z) + 1;
+                ComplexNumber cd = (v / (z * i)) * (1 + (loadImpedance / z));
+                ComplexNumber ef = ((i - iPre) / (z * i)) * (1 + ((loadImpedance + sourceImpedance) / z));
+
+                double a = ab.Real, b = ab.Imaginary;
+                double c = cd.Real, d = cd.Imaginary;
+                double e = ef.Real, f = ef.Imaginary;
+
+                double left = (a - ((e * b) / f));
+                double right = Math.Sqrt(left * left - 4.0D * (c - ((e * d) / f)));
+                double m1 = (left + right) / 2.0D;
+                double m2 = (left - right) / 2.0D;
+
+                if (m1 >= 0.0D && m1 <= 1.0D)
+                    return m1;
+
+                return m2;
+            })
+            .Select(m => m * faultDataSet.LineDistance)
+            .ToArray();
+        }
+
         // Gets the fault type used to determine which voltages and currents to use in fault calculations.
         // This method changes the ABC fault type to either AN, BN, or CN based on whichever phase is closest to a pure sine wave.
         private static FaultType GetVIFaultType(FaultLocationDataSet faultDataSet)
