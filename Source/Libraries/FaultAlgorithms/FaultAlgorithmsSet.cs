@@ -67,9 +67,6 @@
 //*********************************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using GSF;
 
 namespace FaultAlgorithms
 {
@@ -94,8 +91,8 @@ namespace FaultAlgorithms
     /// </summary>
     /// <param name="faultDataSet">Full collection of voltage, current, and cycle data.</param>
     /// <param name="parameters">Custom parameters for algorithm.</param>
-    /// <returns>Percentage of distance down the line where fault occured.</returns>
-    public delegate double FaultLocationAlgorithm(FaultLocationDataSet faultDataSet, string parameters);
+    /// <returns>Result of distance calculations for each cycle.</returns>
+    public delegate double[] FaultLocationAlgorithm(FaultLocationDataSet faultDataSet, string parameters);
 
     /// <summary>
     /// Attribute used to annotate fault trigger algorithms.
@@ -139,7 +136,7 @@ namespace FaultAlgorithms
         /// <summary>
         /// The fault location algorithm.
         /// </summary>
-        public FaultLocationAlgorithm FaultLocationAlgorithm;
+        public FaultLocationAlgorithm[] FaultLocationAlgorithms;
 
         /// <summary>
         /// The fault trigger parameters.
@@ -154,168 +151,6 @@ namespace FaultAlgorithms
         /// <summary>
         /// The fault location parameters.
         /// </summary>
-        public string FaultLocationParameters;
-    }
-
-    /// <summary>
-    /// Defines built-in fault detection and location algorithms
-    /// </summary>
-    public static class SimpleFaultAlgorithms
-    {
-        /// <summary>
-        /// Simple algorithm that checks for faults in a <see cref="FaultLocationDataSet"/>.
-        /// </summary>
-        /// <param name="faultDataSet">The data set to check for faults.</param>
-        /// <param name="parameters">Extra parameters to the algorithm.</param>
-        /// <returns>The type of the fault found in the fault data set.</returns>
-        [FaultTypeAlgorithm]
-        private static FaultType SimpleFaultTypeAlgorithm(FaultLocationDataSet faultDataSet, string parameters)
-        {
-            Dictionary<string, string> parameterLookup;
-            string parameterValue;
-
-            CycleData bestFaultCycle;
-            FaultType faultType;
-            double anCurrentRMS;
-            double bnCurrentRMS;
-            double cnCurrentRMS;
-            double anMultiplied;
-            double bnMultiplied;
-            double cnMultiplied;
-            double multiplier;
-
-            parameterLookup = parameters.ParseKeyValuePairs();
-            bestFaultCycle = GetBestFaultCycle(faultDataSet);
-
-            if ((object)bestFaultCycle == null)
-                throw new InvalidOperationException("No cycles found in fault data set. Cannot calculate fault type.");
-
-            if (!parameterLookup.TryGetValue("multiplier", out parameterValue) || !double.TryParse(parameterValue, out multiplier))
-                multiplier = 5.0;
-
-            anCurrentRMS = bestFaultCycle.AN.I.RMS;
-            bnCurrentRMS = bestFaultCycle.BN.I.RMS;
-            cnCurrentRMS = bestFaultCycle.CN.I.RMS;
-            anMultiplied = anCurrentRMS * multiplier;
-            bnMultiplied = bnCurrentRMS * multiplier;
-            cnMultiplied = cnCurrentRMS * multiplier;
-
-            if (anCurrentRMS >= bnMultiplied && anCurrentRMS >= cnMultiplied)
-                faultType = FaultType.AN;
-            else if (bnCurrentRMS >= anMultiplied && bnCurrentRMS >= cnMultiplied)
-                faultType = FaultType.BN;
-            else if (cnCurrentRMS >= anMultiplied && cnCurrentRMS >= bnMultiplied)
-                faultType = FaultType.CN;
-            else if (anCurrentRMS >= cnMultiplied && bnCurrentRMS >= cnMultiplied)
-                faultType = FaultType.AB;
-            else if (bnCurrentRMS >= anMultiplied && cnCurrentRMS >= anMultiplied)
-                faultType = FaultType.BC;
-            else if (anCurrentRMS >= bnMultiplied && cnCurrentRMS >= bnMultiplied)
-                faultType = FaultType.CA;
-            else
-                faultType = FaultType.ABC;
-
-            return faultType;
-        }
-
-        /// <summary>
-        /// Simple algorithm that determines the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
-        /// </summary>
-        /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
-        /// <param name="parameters">Extra parameters to the algorithm.</param>
-        /// <returns>Distance to the fault.</returns>
-        [FaultLocationAlgorithm]
-        private static double SimpleFaultLocationAlgorithm(FaultLocationDataSet faultDataSet, string parameters)
-        {
-            CycleData bestFaultCycle;
-            ComplexNumber v, i, z;
-
-            // Get the cycle with the largest sum of currents
-            bestFaultCycle = GetBestFaultCycle(faultDataSet);
-
-            if ((object)bestFaultCycle == null)
-                throw new InvalidOperationException("No cycles found in fault data set. Cannot calculate fault distance.");
-
-            switch (faultDataSet.FaultType)
-            {
-                case FaultType.AN:
-                    v = bestFaultCycle.AN.V.Complex;
-                    i = bestFaultCycle.AN.I.Complex;
-                    z = faultDataSet.Zs;
-                    break;
-
-                case FaultType.BN:
-                    v = bestFaultCycle.BN.V.Complex;
-                    i = bestFaultCycle.BN.I.Complex;
-                    z = faultDataSet.Zs;
-                    break;
-
-                case FaultType.CN:
-                    v = bestFaultCycle.CN.V.Complex;
-                    i = bestFaultCycle.CN.I.Complex;
-                    z = faultDataSet.Zs;
-                    break;
-
-                case FaultType.AB:
-                    v = bestFaultCycle.AN.V.Complex - bestFaultCycle.BN.V.Complex;
-                    i = bestFaultCycle.AN.I.Complex - bestFaultCycle.BN.I.Complex;
-                    z = faultDataSet.Z1;
-                    break;
-
-                case FaultType.BC:
-                    v = bestFaultCycle.BN.V.Complex - bestFaultCycle.CN.V.Complex;
-                    i = bestFaultCycle.BN.I.Complex - bestFaultCycle.CN.I.Complex;
-                    z = faultDataSet.Z1;
-                    break;
-
-                case FaultType.CA:
-                    v = bestFaultCycle.CN.V.Complex - bestFaultCycle.AN.V.Complex;
-                    i = bestFaultCycle.CN.I.Complex - bestFaultCycle.AN.I.Complex;
-                    z = faultDataSet.Z1;
-                    break;
-
-                case FaultType.ABC:
-                    Conductor[] conductors = { bestFaultCycle.AN, bestFaultCycle.BN, bestFaultCycle.CN };
-                    Conductor bestConductor = conductors.OrderBy(conductor => conductor.IError).First();
-
-                    v = bestConductor.V.Complex;
-                    i = bestConductor.I.Complex;
-                    z = faultDataSet.Z1;
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException("Unknown fault type: " + faultDataSet.FaultType);
-            }
-
-            // Provide additional information about how the fault was calculated
-            faultDataSet.FaultCalculationCycle = faultDataSet.Cycles
-                .Select((cycle, index) => index)
-                .Where(index => (object)faultDataSet.Cycles[index] == (object)bestFaultCycle)
-                .DefaultIfEmpty(-1)
-                .First();
-
-            // Calculate fault distance
-            return faultDataSet.LineDistance * (v.Magnitude / i.Magnitude) / z.Magnitude;
-        }
-
-        // Returns the cycle with the largest total current.
-        private static CycleData GetBestFaultCycle(FaultLocationDataSet faultDataSet)
-        {
-            CycleData bestFaultCycle = null;
-            double largestCurrent = 0.0D;
-
-            foreach (CycleData cycle in faultDataSet.Cycles)
-            {
-                double totalCurrent = cycle.AN.I.RMS + cycle.BN.I.RMS + cycle.CN.I.RMS;
-
-                if (totalCurrent > largestCurrent)
-                {
-                    bestFaultCycle = cycle;
-                    largestCurrent = totalCurrent;
-                }
-            }
-
-            return bestFaultCycle;
-        }
+        public string[] FaultLocationParameters;
     }
 }

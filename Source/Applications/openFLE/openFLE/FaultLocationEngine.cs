@@ -77,6 +77,7 @@ using System.Text;
 using System.Xml.Linq;
 using FaultAlgorithms;
 using GSF;
+using GSF.Adapters;
 using GSF.Configuration;
 using GSF.IO;
 
@@ -116,7 +117,7 @@ namespace openFLE
         private System.Timers.Timer m_fileMonitor;
 
         private volatile ICollection<Device> m_devices;
-        private IFaultResultsWriter m_faultResultsWriter;
+        private AdapterLoader<IFaultResultsWriter> m_resultsWriters;
 
         private Logger m_currentLogger;
 
@@ -163,7 +164,14 @@ namespace openFLE
             m_debugFolder = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(systemSettings["DebugFolder"].Value));
 
             // Load the fault results writer defined in systemSettings
-            LoadFaultResultsWriter(systemSettings, out m_faultResultsWriter);
+            using (AdapterLoader<IFaultResultsWriter> resultsWriters = m_resultsWriters)
+            {
+                m_resultsWriters = new AdapterLoader<IFaultResultsWriter>();
+                m_resultsWriters.AdapterCreated += (sender, args) => args.Argument.PersistSettings = true;
+                m_resultsWriters.AdapterLoaded += (sender, args) => OnStatusMessage("{0} has been loaded", args.Argument.Name);
+                m_resultsWriters.AdapterUnloaded += (sender, args) => OnStatusMessage("{0} has been unloaded", args.Argument.Name);
+                m_resultsWriters.Initialize();
+            }
 
             try
             {
@@ -212,8 +220,15 @@ namespace openFLE
             {
                 m_fileMonitor.Elapsed -= FileMonitor_Elapsed;
                 m_fileMonitor.Dispose();
+                m_fileMonitor = null;
             }
-            m_fileMonitor = null;
+
+            // Dispose of fault results writers
+            if ((object)m_resultsWriters != null)
+            {
+                m_resultsWriters.Dispose();
+                m_resultsWriters = null;
+            }
         }
 
         /// <summary>
@@ -224,44 +239,10 @@ namespace openFLE
             // Parses the device definitions file to get
             // the collection of devices defined there
             m_devices = CreateDevices(m_deviceDefinitionsFile);
-            m_faultResultsWriter.WriteConfiguration(m_devices);
-        }
 
-        private void LoadFaultResultsWriter(CategorizedSettingsElementCollection systemSettings, out IFaultResultsWriter faultResultsWriter)
-        {
-            string resultsAssemblyName = "FaultAlgorithms.dll";
-            string resultsTypeName = "FaultAlgorithms.XmlFaultResultsWriter";
-            string resultsParameters = "resultsDirectory=Results";
-
-            // TODO: Add descriptions to config file settings
-            systemSettings.Add("ResultsAssembly", resultsAssemblyName, "");
-            systemSettings.Add("ResultsType", resultsTypeName, "");
-            systemSettings.Add("ResultsParameters", resultsParameters, "");
-            resultsAssemblyName = FilePath.GetAbsolutePath(systemSettings["ResultsAssembly"].Value);
-            resultsTypeName = systemSettings["ResultsType"].Value;
-            resultsParameters = systemSettings["ResultsParameters"].Value;
-
-            faultResultsWriter = LoadType<IFaultResultsWriter>(resultsAssemblyName, resultsTypeName);
-            faultResultsWriter.Parameters = resultsParameters.ParseKeyValuePairs();
-        }
-
-        private T LoadType<T>(string assemblyName, string typeName) where T : class
-        {
-            Assembly assembly;
-            Type type;
-
-            try
-            {
-                assembly = Assembly.LoadFrom(assemblyName);
-                type = assembly.GetType(typeName);
-                return Activator.CreateInstance(type) as T;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Failed while loading {0} due to exception: {1}", typeof(T).Name, ex.Message), ex));
-            }
-
-            return null;
+            // Write configuration to each of the results writers
+            foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
+                TryWriteConfiguration(resultsWriter, m_devices);
         }
 
         private void FileMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -345,7 +326,10 @@ namespace openFLE
                 if ((object)devices == null)
                 {
                     devices = CreateDevices(m_deviceDefinitionsFile);
-                    TryWriteConfiguration(m_faultResultsWriter, devices);
+
+                    foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
+                        TryWriteConfiguration(resultsWriter, devices);
+
                     m_devices = devices;
                 }
 
@@ -381,7 +365,13 @@ namespace openFLE
                         if (ExecuteFaultTriggerAlgorithm(line.FaultAlgorithmsSet.FaultTriggerAlgorithm, faultDataSet, line.FaultAlgorithmsSet.FaultTriggerParameters))
                         {
                             faultDataSet.FaultType = ExecuteFaultTypeAlgorithm(line.FaultAlgorithmsSet.FaultTypeAlgorithm, faultDataSet, line.FaultAlgorithmsSet.FaultTypeParameters);
-                            faultDataSet.FaultDistance = ExecuteFaultLocationAlgorithm(line.FaultAlgorithmsSet.FaultLocationAlgorithm, faultDataSet, line.FaultAlgorithmsSet.FaultLocationParameters);
+                            faultDataSet.FaultDistances = line.FaultAlgorithmsSet.FaultLocationAlgorithms.ToDictionary(algorithm => algorithm.Method.Name, algorithm => ExecuteFaultLocationAlgorithm(algorithm, faultDataSet, null));
+
+                            faultDataSet.FaultDistance = faultDataSet.FaultDistances.Values
+                                .Select(distances => distances[faultDataSet.Cycles.GetLargestCurrentIndex()])
+                                .OrderBy(dist => dist).Where((dist, index) => index == faultDataSet.FaultDistances.Count / 2)
+                                .First();
+
                             OnStatusMessage("Distance to fault: {0} {1}", faultDataSet.FaultDistance, m_lengthUnits);
 
                             // Add the line-specific parameters to the faultResultsWriter
@@ -412,7 +402,8 @@ namespace openFLE
                             disturbanceFile.FLETimeProcessed = timeProcessed;
                         }
 
-                        m_faultResultsWriter.WriteResults(disturbanceRecorder, disturbanceFiles, lineDataSets);
+                        foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
+                            TryWriteResults(resultsWriter, disturbanceRecorder, disturbanceFiles, lineDataSets);
                     }
                 }
                 catch (Exception ex)
@@ -555,9 +546,9 @@ namespace openFLE
                 faultAlgorithms.FaultTypeParameters = defaultFaultAlgorithms.FaultTypeParameters;
             }
 
-            if ((object)faultAlgorithms.FaultLocationAlgorithm == null)
+            if ((object)faultAlgorithms.FaultLocationAlgorithms == null || faultAlgorithms.FaultLocationAlgorithms.Length == 0)
             {
-                faultAlgorithms.FaultLocationAlgorithm = defaultFaultAlgorithms.FaultLocationAlgorithm;
+                faultAlgorithms.FaultLocationAlgorithms = defaultFaultAlgorithms.FaultLocationAlgorithms;
                 faultAlgorithms.FaultLocationParameters = defaultFaultAlgorithms.FaultLocationParameters;
             }
 
@@ -592,7 +583,7 @@ namespace openFLE
 
             LoadFaultTriggerAlgorithm(parentElement, out faultAlgorithms.FaultTriggerAlgorithm, out faultAlgorithms.FaultTriggerParameters);
             LoadFaultTypeAlgorithm(parentElement, out faultAlgorithms.FaultTypeAlgorithm, out faultAlgorithms.FaultTypeParameters);
-            LoadFaultLocationAlgorithm(parentElement, out faultAlgorithms.FaultLocationAlgorithm, out faultAlgorithms.FaultLocationParameters);
+            LoadFaultLocationAlgorithms(parentElement, out faultAlgorithms.FaultLocationAlgorithms, out faultAlgorithms.FaultLocationParameters);
 
             return faultAlgorithms;
         }
@@ -607,9 +598,11 @@ namespace openFLE
             LoadFaultAlgorithm(parentElement, "faultType", out faultTypeAlgorithm, out parameters);
         }
 
-        private void LoadFaultLocationAlgorithm(XElement parentElement, out FaultLocationAlgorithm faultLocationAlgorithm, out string parameters)
+        private void LoadFaultLocationAlgorithms(XElement parentElement, out FaultLocationAlgorithm[] faultLocationAlgorithms, out string[] parameters)
         {
-            LoadFaultAlgorithm(parentElement, "faultLocation", out faultLocationAlgorithm, out parameters);
+            List<XElement> elements = parentElement.Elements("faultLocation").ToList();
+            faultLocationAlgorithms = elements.Select(LoadAlgorithm<FaultLocationAlgorithm>).ToArray();
+            parameters = elements.Select(LoadAlgorithmParameters).ToArray();
         }
 
         private void LoadFaultAlgorithm<T>(XElement parentElement, string elementName, out T faultAlgorithm, out string parameters) where T : class
@@ -780,10 +773,21 @@ namespace openFLE
 
             try
             {
-                if ((object)faultResultsWriter == null)
-                    throw new InvalidOperationException("Fault results writer does not exist.");
-
                 faultResultsWriter.WriteConfiguration(configuration);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format(ErrorFormat, ex.Message), ex));
+            }
+        }
+
+        private void TryWriteResults(IFaultResultsWriter faultResultsWriter, Device disturbanceRecorder, ICollection<DisturbanceFile> disturbanceFiles, ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets)
+        {
+            const string ErrorFormat = "Unable to write results to the fault results writer due to exception: {0}";
+
+            try
+            {
+                faultResultsWriter.WriteResults(disturbanceRecorder, disturbanceFiles, lineDataSets);
             }
             catch (Exception ex)
             {
@@ -820,7 +824,7 @@ namespace openFLE
         }
 
         // Attempts to execute fault location algorithm and processes errors if they occur.
-        private double ExecuteFaultLocationAlgorithm(FaultLocationAlgorithm algorithm, FaultLocationDataSet faultDataSet, string parameters)
+        private double[] ExecuteFaultLocationAlgorithm(FaultLocationAlgorithm algorithm, FaultLocationDataSet faultDataSet, string parameters)
         {
             try
             {
@@ -829,7 +833,7 @@ namespace openFLE
             catch (Exception ex)
             {
                 OnProcessException(new Exception(string.Format("Error executing fault location algorithm: {0}", ex.Message), ex));
-                return -1.0D;
+                return null;
             }
         }
 

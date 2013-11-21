@@ -135,7 +135,7 @@ namespace FaultAlgorithms
                 if (k < voltageDataSet.AN.Times.Length)
                     frequency = 1.0D / Ticks.ToSeconds(voltageDataSet.AN.Times[k] - time[0]);
 
-                m_cycles.Add(new CycleData(frequency, i, time, vAN, iAN, vBN, iBN, vCN, iCN));
+                m_cycles.Add(new CycleData(frequency, time, vAN, iAN, vBN, iBN, vCN, iCN));
             }
         }
 
@@ -178,6 +178,32 @@ namespace FaultAlgorithms
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Returns the index of the cycle with the largest total current.
+        /// </summary>
+        /// <returns>The index of the cycle with the largest total current.</returns>
+        public int GetLargestCurrentIndex()
+        {
+            int index = 0;
+            int bestFaultIndex = -1;
+            double largestCurrent = 0.0D;
+
+            foreach (CycleData cycle in m_cycles)
+            {
+                double totalCurrent = cycle.AN.I.RMS + cycle.BN.I.RMS + cycle.CN.I.RMS;
+
+                if (totalCurrent > largestCurrent)
+                {
+                    bestFaultIndex = index;
+                    largestCurrent = totalCurrent;
+                }
+
+                index++;
+            }
+
+            return bestFaultIndex;
+        }
 
         /// <summary>
         /// Returns an enumerator that iterates through the collection of cycles.

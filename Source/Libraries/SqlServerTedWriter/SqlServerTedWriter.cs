@@ -23,59 +23,31 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using FaultAlgorithms;
 using GSF;
+using GSF.Configuration;
 
 namespace SqlServerTedWriter
 {
     /// <summary>
     /// Writes the results of fault analysis to SQL Server Transient Event Database.
     /// </summary>
-    public class SqlServerTedWriter : IFaultResultsWriter
+    public class SqlServerTedWriter : FaultResultsWriterBase
     {
-        #region [ Members ]
-
-        // Fields
-        private Dictionary<string, string> m_parameters;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Parameters used to configure the results writer.
-        /// </summary>
-        public Dictionary<string, string> Parameters
-        {
-            get
-            {
-                return m_parameters;
-            }
-            set
-            {
-                m_parameters = value;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
+        private string m_connectionString;
 
         /// <summary>
         /// Writes configuration information to the output source.
         /// </summary>
         /// <param name="deviceConfigurations">Configuration information to be written to the output source.</param>
-        public void WriteConfiguration(ICollection<Device> deviceConfigurations)
+        public override void WriteConfiguration(ICollection<Device> deviceConfigurations)
         {
-            string connectionString;
             int deviceID;
 
-            if (!m_parameters.TryGetValue("connectionString", out connectionString))
-                connectionString = m_parameters.JoinKeyValuePairs();
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(m_connectionString))
             using (SqlCommand command = connection.CreateCommand())
             {
                 connection.Open();
@@ -96,16 +68,12 @@ namespace SqlServerTedWriter
         /// <param name="disturbanceRecorder">The device that collected the disturbance data.</param>
         /// <param name="disturbanceFiles">Information about the data files collected during the disturbance.</param>
         /// <param name="lineDataSets">The data sets used for analysis to determine fault location.</param>
-        public void WriteResults(Device disturbanceRecorder, ICollection<DisturbanceFile> disturbanceFiles, ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets)
+        public override void WriteResults(Device disturbanceRecorder, ICollection<DisturbanceFile> disturbanceFiles, ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets)
         {
-            string connectionString;
             int deviceID;
             int fileGroupID;
 
-            if (!m_parameters.TryGetValue("connectionString", out connectionString))
-                connectionString = m_parameters.JoinKeyValuePairs();
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(m_connectionString))
             using (SqlCommand command = connection.CreateCommand())
             {
                 connection.Open();
@@ -303,72 +271,35 @@ namespace SqlServerTedWriter
         private void InsertFaultData(Line line, FaultLocationDataSet faultDataSet, SqlCommand command, int fileGroupID)
         {
             int lineID;
+            int lineDisturbanceID;
 
-            long[] times;
-            int firstFaultCycleIndex;
-            CycleData firstFaultCycle;
-            DateTime firstFaultCycleTime = DateTime.MinValue;
+            int largestCurrentIndex;
+            double faultDistance;
 
-            CycleData faultCalculationCycle;
-            double iaFault = -1.0D;
-            double ibFault = -1.0D;
-            double icFault = -1.0D;
-            double vaFault = -1.0D;
-            double vbFault = -1.0D;
-            double vcFault = -1.0D;
+            // Get largest current index and median fault distance for that cycle
+            largestCurrentIndex = faultDataSet.Cycles.GetLargestCurrentIndex();
 
-            // Get the timestamp of the first fault cycle
-            times = faultDataSet.Voltages.AN.Times;
+            faultDistance = faultDataSet.FaultDistances.Values
+                .Select(distances => distances[largestCurrentIndex])
+                .OrderBy(distance => distance)
+                .ToArray()[faultDataSet.FaultDistances.Count / 2];
 
-            if (faultDataSet.FaultedCycles.Count > 0)
-            {
-                firstFaultCycleIndex = faultDataSet.FaultedCycles.First();
-
-                if (firstFaultCycleIndex >= 0 && firstFaultCycleIndex < faultDataSet.Cycles.Count)
-                {
-                    firstFaultCycle = faultDataSet.Cycles[firstFaultCycleIndex];
-                    firstFaultCycleTime = new DateTime(times[firstFaultCycle.StartIndex]);
-                }
-            }
-
-            // Get voltage and current values during the fault
-            if (faultDataSet.FaultCalculationCycle >= 0 && faultDataSet.FaultCalculationCycle < faultDataSet.Cycles.Count)
-            {
-                faultCalculationCycle = faultDataSet.Cycles[faultDataSet.FaultCalculationCycle];
-                iaFault = faultCalculationCycle.AN.I.RMS;
-                ibFault = faultCalculationCycle.BN.I.RMS;
-                icFault = faultCalculationCycle.CN.I.RMS;
-                vaFault = faultCalculationCycle.AN.V.RMS;
-                vbFault = faultCalculationCycle.BN.V.RMS;
-                vcFault = faultCalculationCycle.CN.V.RMS;
-            }
-
+            // Get ID of the line associated with this fault data
             command.CommandText = "SELECT ID FROM Line WHERE FLEID = @fleID";
             command.Parameters.AddWithValue("@fleID", line.ID);
             lineID = Convert.ToInt32(command.ExecuteScalar());
             command.Parameters.Clear();
 
-            command.CommandText = "INSERT INTO LineDisturbance (LineID, FileGroupID, FaultType, FaultDistance, CyclesOfData, " +
-                                  "FaultCycles, FaultCalculationCycle, FirstFaultCycleTime, IAFault, IBFault, ICFault, VAFault, " +
-                                  "VBFault, VCFault, IAMax, IBMax, ICMax, VAMin, VBMin, VCMin) VALUES (@lineID, @fileGroupID, " +
-                                  "@faultType, @faultDistance, @cyclesOfData, @faultCycles, @faultCalculationCycle, " +
-                                  "@firstFaultCycleTime, @iaFault, @ibFault, @icFault, @vaFault, @vbFault, @vcFault, @iaMax, " +
-                                  "@ibMax, @icMax, @vaMin, @vbMin, @vcMin)";
+            // Insert a disturbance record for this line
+            command.CommandText = "INSERT INTO LineDisturbance (LineID, FileGroupID, FaultType, LargestCurrentIndex, " +
+                                  "FaultDistance, IAMax, IBMax, ICMax, VAMin, VBMin, VCMin) VALUES (@lineID, @fileGroupID, " +
+                                  "@faultType, @largestCurrentIndex, @faultDistance, @iaMax, @ibMax, @icMax, @vaMin, @vbMin, @vcMin)";
 
             command.Parameters.AddWithValue("@lineID", lineID);
             command.Parameters.AddWithValue("@fileGroupID", fileGroupID);
             command.Parameters.AddWithValue("@faultType", faultDataSet.FaultType.ToString());
-            command.Parameters.AddWithValue("@faultDistance", faultDataSet.FaultDistance);
-            command.Parameters.AddWithValue("@cyclesOfData", faultDataSet.Cycles.Count);
-            command.Parameters.AddWithValue("@faultCycles", faultDataSet.FaultCycleCount);
-            command.Parameters.AddWithValue("@faultCalculationCycle", faultDataSet.FaultCalculationCycle);
-            command.Parameters.AddWithValue("@firstFaultCycleTime", firstFaultCycleTime);
-            command.Parameters.AddWithValue("@iaFault", iaFault);
-            command.Parameters.AddWithValue("@ibFault", ibFault);
-            command.Parameters.AddWithValue("@icFault", icFault);
-            command.Parameters.AddWithValue("@vaFault", vaFault);
-            command.Parameters.AddWithValue("@vbFault", vbFault);
-            command.Parameters.AddWithValue("@vcFault", vcFault);
+            command.Parameters.AddWithValue("@largestCurrentIndex", largestCurrentIndex);
+            command.Parameters.AddWithValue("@faultDistance", faultDistance);
             command.Parameters.AddWithValue("@iaMax", faultDataSet.Cycles.Max(cycle => cycle.AN.I.RMS));
             command.Parameters.AddWithValue("@ibMax", faultDataSet.Cycles.Max(cycle => cycle.BN.I.RMS));
             command.Parameters.AddWithValue("@icMax", faultDataSet.Cycles.Max(cycle => cycle.CN.I.RMS));
@@ -377,8 +308,153 @@ namespace SqlServerTedWriter
             command.Parameters.AddWithValue("@vcMin", faultDataSet.Cycles.Min(cycle => cycle.CN.V.RMS));
             command.ExecuteNonQuery();
             command.Parameters.Clear();
+
+            // Get the ID of the disturbance record
+            command.CommandText = "SELECT @@IDENTITY";
+            lineDisturbanceID = Convert.ToInt32(command.ExecuteScalar());
+
+            // Insert data for each cycle into the database
+            for (int i = 0; i < faultDataSet.Cycles.Count; i++)
+                InsertCycleData(faultDataSet, command, lineDisturbanceID, i);
         }
 
-        #endregion
+        private void InsertCycleData(FaultLocationDataSet faultDataSet, SqlCommand command, int lineDisturbanceID, int cycleIndex)
+        {
+            int cycleID;
+            CycleData cycle;
+            ComplexNumber[] sequenceVoltages;
+            ComplexNumber[] sequenceCurrents;
+
+            // Get the cycle data and sequence
+            // components from the fault data set
+            cycle = faultDataSet.Cycles[cycleIndex];
+            sequenceVoltages = CycleData.CalculateSequenceComponents(cycle.AN.V, cycle.BN.V, cycle.CN.V);
+            sequenceCurrents = CycleData.CalculateSequenceComponents(cycle.AN.I, cycle.BN.I, cycle.CN.I);
+
+            // Insert the cycle data into the database
+            command.CommandText = "INSERT INTO Cycle (LineDisturbanceID, TimeStart, CycleIndex," +
+                                  "ANVoltagePeak, ANVoltageRMS, ANVoltagePhase, ANCurrentPeak, ANCurrentRMS, ANCurrentPhase, " +
+                                  "BNVoltagePeak, BNVoltageRMS, BNVoltagePhase, BNCurrentPeak, BNCurrentRMS, BNCurrentPhase, " +
+                                  "CNVoltagePeak, CNVoltageRMS, CNVoltagePhase, CNCurrentPeak, CNCurrentRMS, CNCurrentPhase, " +
+                                  "PositiveVoltageMagnitude, PositiveVoltageAngle, PositiveCurrentMagnitude, PositiveCurrentAngle, " +
+                                  "NegativeVoltageMagnitude, NegativeVoltageAngle, NegativeCurrentMagnitude, NegativeCurrentAngle, " +
+                                  "ZeroVoltageMagnitude, ZeroVoltageAngle, ZeroCurrentMagnitude, ZeroCurrentAngle) " +
+                                  "VALUES (@lineDisturbanceID, @timeStart, @cycleIndex, " +
+                                  "@anVoltagePeak, @anVoltageRMS, @anVoltagePhase, @anCurrentPeak, @anCurrentRMS, @anCurrentPhase, " +
+                                  "@bnVoltagePeak, @bnVoltageRMS, @bnVoltagePhase, @bnCurrentPeak, @bnCurrentRMS, @bnCurrentPhase, " +
+                                  "@cnVoltagePeak, @cnVoltageRMS, @cnVoltagePhase, @cnCurrentPeak, @cnCurrentRMS, @cnCurrentPhase, " +
+                                  "@positiveVoltageMagnitude, @positiveVoltageAngle, @positiveCurrentMagnitude, @positiveCurrentAngle, " +
+                                  "@negativeVoltageMagnitude, @negativeVoltageAngle, @negativeCurrentMagnitude, @negativeCurrentAngle, " +
+                                  "@zeroVoltageMagnitude, @zeroVoltageAngle, @zeroCurrentMagnitude, @zeroCurrentAngle)";
+
+            command.Parameters.AddWithValue("@lineDisturbanceID", lineDisturbanceID);
+            command.Parameters.AddWithValue("@timeStart", cycle.StartTime);
+            command.Parameters.AddWithValue("@cycleIndex", cycleIndex);
+            command.Parameters.AddWithValue("@anVoltagePeak", cycle.AN.V.Peak);
+            command.Parameters.AddWithValue("@anVoltageRMS", cycle.AN.V.RMS);
+            command.Parameters.AddWithValue("@anVoltagePhase", cycle.AN.V.Phase.ToDegrees());
+            command.Parameters.AddWithValue("@anCurrentPeak", cycle.AN.I.Peak);
+            command.Parameters.AddWithValue("@anCurrentRMS", cycle.AN.I.RMS);
+            command.Parameters.AddWithValue("@anCurrentPhase", cycle.AN.I.Phase.ToDegrees());
+            command.Parameters.AddWithValue("@bnVoltagePeak", cycle.BN.V.Peak);
+            command.Parameters.AddWithValue("@bnVoltageRMS", cycle.BN.V.RMS);
+            command.Parameters.AddWithValue("@bnVoltagePhase", cycle.BN.V.Phase.ToDegrees());
+            command.Parameters.AddWithValue("@bnCurrentPeak", cycle.BN.I.Peak);
+            command.Parameters.AddWithValue("@bnCurrentRMS", cycle.BN.I.RMS);
+            command.Parameters.AddWithValue("@bnCurrentPhase", cycle.BN.I.Phase.ToDegrees());
+            command.Parameters.AddWithValue("@cnVoltagePeak", cycle.CN.V.Peak);
+            command.Parameters.AddWithValue("@cnVoltageRMS", cycle.CN.V.RMS);
+            command.Parameters.AddWithValue("@cnVoltagePhase", cycle.CN.V.Phase.ToDegrees());
+            command.Parameters.AddWithValue("@cnCurrentPeak", cycle.CN.I.Peak);
+            command.Parameters.AddWithValue("@cnCurrentRMS", cycle.CN.I.RMS);
+            command.Parameters.AddWithValue("@cnCurrentPhase", cycle.CN.I.Phase.ToDegrees());
+            command.Parameters.AddWithValue("@positiveVoltageMagnitude", sequenceVoltages[0].Magnitude);
+            command.Parameters.AddWithValue("@positiveVoltageAngle", sequenceVoltages[0].Angle.ToDegrees());
+            command.Parameters.AddWithValue("@negativeVoltageMagnitude", sequenceVoltages[1].Magnitude);
+            command.Parameters.AddWithValue("@negativeVoltageAngle", sequenceVoltages[1].Angle.ToDegrees());
+            command.Parameters.AddWithValue("@zeroVoltageMagnitude", sequenceVoltages[2].Magnitude);
+            command.Parameters.AddWithValue("@zeroVoltageAngle", sequenceVoltages[2].Angle.ToDegrees());
+            command.Parameters.AddWithValue("@positiveCurrentMagnitude", sequenceCurrents[0].Magnitude);
+            command.Parameters.AddWithValue("@positiveCurrentAngle", sequenceCurrents[0].Angle.ToDegrees());
+            command.Parameters.AddWithValue("@negativeCurrentMagnitude", sequenceCurrents[1].Magnitude);
+            command.Parameters.AddWithValue("@negativeCurrentAngle", sequenceCurrents[1].Angle.ToDegrees());
+            command.Parameters.AddWithValue("@zeroCurrentMagnitude", sequenceCurrents[2].Magnitude);
+            command.Parameters.AddWithValue("@zeroCurrentAngle", sequenceCurrents[2].Angle.ToDegrees());
+
+            command.ExecuteNonQuery();
+            command.Parameters.Clear();
+
+            // Get the ID of the cycle data that was entered
+            command.CommandText = "SELECT @@IDENTITY";
+            cycleID = Convert.ToInt32(command.ExecuteScalar());
+
+            // Insert fault distances calculated for this cycle
+            InsertFaultDistances(faultDataSet, command, cycleIndex, cycleID);
+        }
+
+        private void InsertFaultDistances(FaultLocationDataSet faultDataSet, SqlCommand command, int cycleIndex, int cycleID)
+        {
+            IDbDataParameter algorithmParameter = command.CreateParameter();
+            IDbDataParameter distanceParameter = command.CreateParameter();
+            double distance;
+
+            command.CommandText = "INSERT INTO FaultDistance (CycleID, Algorithm, Distance) VALUES (@cycleID, @algorithm, @distance)";
+            command.Parameters.AddWithValue("@cycleID", cycleID);
+            command.Parameters.Add(algorithmParameter);
+            command.Parameters.Add(distanceParameter);
+
+            algorithmParameter.ParameterName = "@algorithm";
+            distanceParameter.ParameterName = "@distance";
+
+            foreach (KeyValuePair<string, double[]> faultDistances in faultDataSet.FaultDistances)
+            {
+                distance = faultDistances.Value[cycleIndex];
+
+                if (!double.IsNaN(distance))
+                {
+                    algorithmParameter.Value = faultDistances.Key;
+                    distanceParameter.Value = distance;
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            command.Parameters.Clear();
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="FaultResultsWriterBase"/> settings from the config file if the <see cref="P:GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:GSF.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("ConnectionString", @"Data Source=localhost\SQLEXPRESS; Initial Catalog=openFLE; Integrated Security=SSPI", "Connection parameters required to connect to the SQL Server database.");
+                m_connectionString = settings["ConnectionString"].Value;
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="FaultResultsWriterBase"/> settings to the config file if the <see cref="P:GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:GSF.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["ConnectionString", true].Update(m_connectionString);
+                config.Save();
+            }
+        }
     }
 }

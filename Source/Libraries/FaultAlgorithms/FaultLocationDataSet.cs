@@ -139,6 +139,7 @@ namespace FaultAlgorithms
         private int m_faultCalculationCycle;
         private double m_lineDistance;
         private double m_faultDistance;
+        private Dictionary<string, double[]> m_faultDistances;
 
         private Dictionary<string, object> m_values;
 
@@ -364,6 +365,22 @@ namespace FaultAlgorithms
             set
             {
                 m_lineDistance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the collection of fault distances,
+        /// one distance per fault location algorithm.
+        /// </summary>
+        public Dictionary<string, double[]> FaultDistances
+        {
+            get
+            {
+                return m_faultDistances;
+            }
+            set
+            {
+                m_faultDistances = value;
             }
         }
 

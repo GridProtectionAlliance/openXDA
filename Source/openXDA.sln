@@ -64,6 +64,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServerTedWriter", "Libra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugServiceMonitor", "Libraries\DebugServiceMonitor\DebugServiceMonitor.csproj", "{953A5C0E-31C5-4C36-93E6-A0F2750F199C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C3DF-4D8B-B3EF-7819B44BCE09}"
+	ProjectSection(SolutionItems) = preProject
+		Data\XDATransientEventDatabase.sql = Data\XDATransientEventDatabase.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 12

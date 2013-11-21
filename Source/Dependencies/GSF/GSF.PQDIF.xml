@@ -327,7 +327,7 @@
         </member>
         <member name="F:GSF.PQDIF.Logical.ChannelDefinition.SeriesDefinitionsTag">
             <summary>
-            Tag that identifies the series defintions collection.
+            Tag that identifies the series definitions collection.
             </summary>
         </member>
         <member name="F:GSF.PQDIF.Logical.ChannelDefinition.OneSeriesDefinitionTag">
@@ -426,7 +426,7 @@
         </member>
         <member name="P:GSF.PQDIF.Logical.ChannelInstance.Definition">
             <summary>
-            Gets the channel defintion which defines the channel instance.
+            Gets the channel definition which defines the channel instance.
             </summary>
         </member>
         <member name="P:GSF.PQDIF.Logical.ChannelInstance.TriggerModuleName">
@@ -1122,7 +1122,7 @@
         </member>
         <member name="T:GSF.PQDIF.Physical.CompressionAlgorithm">
             <summary>
-            Enuemration which defines the algorithms used to compress PQDIF files.
+            Enumeration which defines the algorithms used to compress PQDIF files.
             </summary>
         </member>
         <member name="F:GSF.PQDIF.Physical.CompressionAlgorithm.None">

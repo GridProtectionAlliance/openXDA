@@ -71,7 +71,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Comtrade;
+using GSF.COMTRADE;
 using FaultAlgorithms;
 using GSF.IO;
 

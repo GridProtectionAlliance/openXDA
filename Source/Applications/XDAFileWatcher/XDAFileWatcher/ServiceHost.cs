@@ -261,7 +261,8 @@ namespace XDAFileWatcher
             {
                 try
                 {
-                    serviceMonitor.HandleServiceErrorMessage(ex.Message);
+                    if (serviceMonitor.Enabled)
+                        serviceMonitor.HandleServiceErrorMessage(ex.Message);
                 }
                 catch (Exception ex2)
                 {

@@ -9,6 +9,36 @@
             Marks a parameter as being a connection string parameter used to configure an <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/>.
             </summary>
         </member>
+        <member name="T:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute">
+            <summary>
+            Marks a parameter or class as having a custom configuration editor page used to configure that parameter or class.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute"/> class.
+            </summary>
+            <param name="assemblyName">The name of the assembly in which the editor type resides.</param>
+            <param name="typeName">The full name of the type of the editor.</param>
+            <param name="connectionString">The connection string for the custom configuration screen.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute"/> class.
+            </summary>
+            <param name="editorType">The type of the editor.</param>
+            <param name="connectionString">The connection string for the custom configuration screen.</param>
+        </member>
+        <member name="P:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute.EditorType">
+            <summary>
+            Gets the type of the UI editor used to configure the custom adapter.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Adapters.CustomConfigurationEditorAttribute.ConnectionString">
+            <summary>
+            Gets the connection string used to configure the editor.
+            </summary>
+        </member>
         <member name="T:GSF.TimeSeries.Adapters.IaonSession">
             <summary>
             Represents a new Input, Action, Output interface session.
@@ -45,11 +75,6 @@
             Initialize and start adapters.
             </summary>
             <param name="autoStart">Sets flag that determines if adapters should be automatically started.</param>
-        </member>
-        <member name="M:GSF.TimeSeries.Adapters.IaonSession.DetermineTemporalSupport">
-            <summary>
-            Determines which adapters in the <see cref="T:GSF.TimeSeries.Adapters.IaonSession"/> support temporal processing.
-            </summary>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.IaonSession.TemporalProcessingSupportExists(System.String)">
             <summary>
@@ -109,6 +134,12 @@
             </summary>
             <param name="sender">Object source raising the event.</param>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.IaonSession.OnConfigurationChanged(System.Object)">
+            <summary>
+            Raises <see cref="E:GSF.TimeSeries.Adapters.IaonSession.ConfigurationChanged"/> event.
+            </summary>
+            <param name="sender">Object source raising the event.</param>
+        </member>
         <member name="M:GSF.TimeSeries.Adapters.IaonSession.OnUnpublishedSamples(System.Object,System.Int32)">
             <summary>
             Raises the <see cref="E:GSF.TimeSeries.Adapters.IaonSession.UnpublishedSamples"/> event.
@@ -164,6 +195,13 @@
             <param name="sender">Sending object.</param>
             <param name="e">Event arguments, if any.</param>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.IaonSession.ConfigurationChangedHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for adapter notifications about configuration changes.
+            </summary>
+            <param name="sender">Sending object.</param>
+            <param name="e">Event arguments, if any.</param>
+        </member>
         <member name="M:GSF.TimeSeries.Adapters.IaonSession.UnpublishedSamplesHandler(System.Object,GSF.EventArgs{System.Int32})">
             <summary>
             Event handler for monitoring unpublished samples.
@@ -173,6 +211,16 @@
             <remarks>
             Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
             This method is typically called once every five seconds.
+            </remarks>
+        </member>
+        <member name="M:GSF.TimeSeries.Adapters.IaonSession.RequestTemporalSupportHandler(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for requesting temporal support.
+            </summary>
+            <param name="sender">Event source reference to adapter collection, typically an action adapter collection, that is requesting temporal support.</param>
+            <param name="e">Event arguments are not used.</param>
+            <remarks>
+            Action adapter collections use this handler to make sure temporal support is initialized before setting up temporal sessions.
             </remarks>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.IaonSession.UnprocessedMeasurementsHandler(System.Object,GSF.EventArgs{System.Int32})">
@@ -232,6 +280,11 @@
         <member name="E:GSF.TimeSeries.Adapters.IaonSession.OutputMeasurementsUpdated">
             <summary>
             Event is raised when <see cref="P:GSF.TimeSeries.Adapters.IAdapter.OutputMeasurements"/> are updated.
+            </summary>
+        </member>
+        <member name="E:GSF.TimeSeries.Adapters.IaonSession.ConfigurationChanged">
+            <summary>
+            Event is raised when adapter is aware of a configuration change.
             </summary>
         </member>
         <member name="E:GSF.TimeSeries.Adapters.IaonSession.UnpublishedSamples">
@@ -389,6 +442,22 @@
             Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
             </remarks>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.RoutingTables.OnStatusMessage(System.String)">
+            <summary>
+            Raises the <see cref="E:GSF.TimeSeries.Adapters.RoutingTables.StatusMessage"/> event.
+            </summary>
+            <param name="status">New status message.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Adapters.RoutingTables.OnStatusMessage(System.String,System.Object[])">
+            <summary>
+            Raises the <see cref="E:GSF.TimeSeries.Adapters.RoutingTables.StatusMessage"/> event with a formatted status message.
+            </summary>
+            <param name="formattedStatus">Formatted status message.</param>
+            <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+            <remarks>
+            This overload combines string.Format and SendStatusMessage for convenience.
+            </remarks>
+        </member>
         <member name="M:GSF.TimeSeries.Adapters.RoutingTables.OnProcessException(System.Exception)">
             <summary>
             Raises <see cref="E:GSF.TimeSeries.Adapters.RoutingTables.ProcessException"/> event.
@@ -423,6 +492,14 @@
             </summary>
             <param name="sender">The source of the event.</param>
             <param name="args">The measurement that was updated.</param>
+        </member>
+        <member name="E:GSF.TimeSeries.Adapters.RoutingTables.StatusMessage">
+            <summary>
+            Provides status messages to consumer.
+            </summary>
+            <remarks>
+            <see cref="F:GSF.EventArgs`1.Argument"/> is new status message.
+            </remarks>
         </member>
         <member name="E:GSF.TimeSeries.Adapters.RoutingTables.ProcessException">
             <summary>
@@ -671,6 +748,12 @@
             Gets or sets the state of the alarm (raised or cleared).
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Alarm.TimeRaised">
+            <summary>
+            Gets or sets the timestamp of the most recent
+            measurement that caused the alarm to be raised.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Alarm.Cause">
             <summary>
             Gets or sets the most recent measurement
@@ -679,28 +762,28 @@
         </member>
         <member name="T:GSF.TimeSeries.DownsamplingMethod">
             <summary>
-            Downsampling method enumeration.
+            Down-sampling method enumeration.
             </summary>
         </member>
         <member name="F:GSF.TimeSeries.DownsamplingMethod.LastReceived">
             <summary>
-            Downsamples to the last measurement received.
+            Down-samples to the last measurement received.
             </summary>
             <remarks>
-            Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
+            Use this option if no down-sampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
             </remarks>
         </member>
         <member name="F:GSF.TimeSeries.DownsamplingMethod.Closest">
             <summary>
-            Downsamples to the measurement closest to frame time.
+            Down-samples to the measurement closest to frame time.
             </summary>
             <remarks>
-            This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
+            This is the typical operation used when performing simple down-sampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
             </remarks>
         </member>
         <member name="F:GSF.TimeSeries.DownsamplingMethod.Filtered">
             <summary>
-            Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
+            Down-samples by applying a user-defined value filter over all received measurements to anti-alias the results.
             </summary>
             <remarks>
             This option will produce the best result but has a processing penalty.
@@ -708,7 +791,7 @@
         </member>
         <member name="F:GSF.TimeSeries.DownsamplingMethod.BestQuality">
             <summary>
-            Downsamples to the measurement that has the best quality closest to frame time.
+            Down-samples to the measurement that has the best quality closest to frame time.
             </summary>
             <remarks>
             This option chooses the measurement closest to the frame time with the best quality.
@@ -940,7 +1023,7 @@
         </member>
         <member name="P:GSF.TimeSeries.ConcentratorBase.LagTime">
             <summary>
-            Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -956,7 +1039,7 @@
         </member>
         <member name="P:GSF.TimeSeries.ConcentratorBase.LeadTime">
             <summary>
-            Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -1018,7 +1101,7 @@
             processing interval since it is used to define the intervals in one second that will become the time sorting
             destination "buckets" used by the concentrator irrespective of the data rate of the incoming data. As an example,
             if the frames per second of the concentrator is set to 30 and the source data rate is 60fps, then data will be
-            downsampled to 30 frames of sorted incoming data but the assigned processing interval will be used to publish the
+            down-sampled to 30 frames of sorted incoming data but the assigned processing interval will be used to publish the
             frames at the specified rate.
             </para>
             <para>
@@ -1116,7 +1199,7 @@
             Gets or sets the <see cref="T:GSF.TimeSeries.DownsamplingMethod"/> to be used by the concentrator.
             </summary>
             <remarks>
-            The downsampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
+            The down-sampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.ConcentratorBase.TicksPerFrame">
@@ -1309,7 +1392,7 @@
         </member>
         <member name="P:GSF.TimeSeries.ConcentratorBase.DownsampledMeasurements">
             <summary>
-            Gets the total number of downsampled measurements processed by the concentrator.
+            Gets the total number of down-sampled measurements processed by the concentrator.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.ConcentratorBase.MissedSortsByTimeout">
@@ -1445,7 +1528,7 @@
             Gets or sets total number of measurements that have been sorted into this <see cref="T:GSF.TimeSeries.IFrame"/>.
             </summary>
             <remarks>
-            If this property has not been assigned a value, implementors should return measurement count.
+            If this property has not been assigned a value, implementers should return measurement count.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.IFrame.Timestamp">
@@ -1461,7 +1544,7 @@
             Gets or sets exact timestamp, in ticks, of when this <see cref="T:GSF.TimeSeries.IMeasurement"/> was received (i.e., created).
             </summary>
             <remarks>
-            <para>Implementors should set this timestamp to be the ticks of <see cref="P:GSF.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>Implementers should set this timestamp to be the ticks of <see cref="P:System.DateTime.UtcNow"/> of when this class was created.</para>
             <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
@@ -1470,17 +1553,17 @@
             Gets or sets exact timestamp, in ticks, of when this <see cref="T:GSF.TimeSeries.IMeasurement"/> was published (post-processing).
             </summary>
             <remarks>
-            <para>Implementors should update all associated <see cref="P:GSF.TimeSeries.IMeasurement.PublishedTimestamp"/> values when setting this property.</para>
+            <para>Implementers should update all associated <see cref="P:GSF.TimeSeries.IMeasurement.PublishedTimestamp"/> values when setting this property.</para>
             <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.IFrame.LastSortedMeasurement">
             <summary>
-            Gets ot sets reference to last <see cref="T:GSF.TimeSeries.IMeasurement"/> that was sorted into this <see cref="T:GSF.TimeSeries.IFrame"/>.
+            Gets or sets reference to last <see cref="T:GSF.TimeSeries.IMeasurement"/> that was sorted into this <see cref="T:GSF.TimeSeries.IFrame"/>.
             </summary>
             <remarks>
             <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="T:GSF.TimeSeries.IFrame"/>.</para>
-            <para>Implementors need only track the value.</para>
+            <para>Implementers need only track the value.</para>
             </remarks>
         </member>
         <member name="M:GSF.TimeSeries.Frame.#ctor(GSF.Ticks,System.Int32)">
@@ -1629,7 +1712,7 @@
             Gets or sets exact timestamp, in ticks, of when this <see cref="T:GSF.TimeSeries.Frame"/> was received (i.e., created).
             </summary>
             <remarks>
-            <para>In the default implementation, this timestamp will simply be the ticks of <see cref="P:GSF.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>In the default implementation, this timestamp will simply be the ticks of <see cref="P:System.DateTime.UtcNow"/> of when this class was created.</para>
             <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
@@ -1944,7 +2027,7 @@
             Get the hash code for the <see cref="P:GSF.TimeSeries.ITimeSeriesValue.ID"/>.
             </summary>
             <returns>Hash code for the <see cref="P:GSF.TimeSeries.ITimeSeriesValue.ID"/>.</returns>
-            <remarks>Implementors should always return the hash code based on <see cref="P:GSF.TimeSeries.ITimeSeriesValue.ID"/> of measurement.</remarks>
+            <remarks>Implementers should always return the hash code based on <see cref="P:GSF.TimeSeries.ITimeSeriesValue.ID"/> of measurement.</remarks>
         </member>
         <member name="P:GSF.TimeSeries.ITimeSeriesValue.ID">
             <summary>
@@ -2018,7 +2101,7 @@
             Gets or sets exact timestamp, in ticks, of when this <see cref="T:GSF.TimeSeries.IMeasurement"/> was received (i.e., created).
             </summary>
             <remarks>
-            <para>Implementers should set this timestamp to be the ticks of <see cref="P:GSF.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>Implementers should set this timestamp to be the ticks of <see cref="P:System.DateTime.UtcNow"/> of when this class was created.</para>
             <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
@@ -2032,7 +2115,7 @@
         </member>
         <member name="P:GSF.TimeSeries.IMeasurement.MeasurementValueFilter">
             <summary>
-            Gets or sets function used to apply a downsampling filter over a sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values.
+            Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values.
             </summary>
         </member>
         <member name="T:GSF.TimeSeries.IMeasurementExtensions">
@@ -2215,7 +2298,7 @@
         </member>
         <member name="P:GSF.TimeSeries.ImmediateMeasurements.LagTime">
             <summary>
-            Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -2225,7 +2308,7 @@
         </member>
         <member name="P:GSF.TimeSeries.ImmediateMeasurements.LeadTime">
             <summary>
-            Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -2464,7 +2547,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Measurement.Multiplier">
             <summary>
-            Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.
+            Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Measurement.Timestamp">
@@ -2480,7 +2563,7 @@
             Gets or sets exact timestamp, in ticks, of when this <see cref="T:GSF.TimeSeries.Measurement"/> was received (i.e., created).
             </summary>
             <remarks>
-            <para>In the default implementation, this timestamp will simply be the ticks of <see cref="P:GSF.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>In the default implementation, this timestamp will simply be the ticks of <see cref="P:System.DateTime.UtcNow"/> of when this class was created.</para>
             <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
@@ -2494,7 +2577,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Measurement.MeasurementValueFilter">
             <summary>
-            Gets or sets function used to apply a downsampling filter over a sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values.
+            Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values.
             </summary>
         </member>
         <member name="T:GSF.TimeSeries.MeasurementKey">
@@ -2731,7 +2814,7 @@
         </member>
         <member name="T:GSF.TimeSeries.Adapters.IActionAdapter">
             <summary>
-            Represents thet abstract interface for any action adapter.
+            Represents the abstract interface for any action adapter.
             </summary>
         </member>
         <member name="T:GSF.TimeSeries.Adapters.IAdapter">
@@ -2756,23 +2839,6 @@
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current adapter status.</returns>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.IAdapter.AssignParentCollection(GSF.TimeSeries.Adapters.IAdapterCollection)">
-            <summary>
-            Assigns the reference to the parent <see cref="T:GSF.TimeSeries.Adapters.IAdapterCollection"/> that will contain this <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/>.
-            </summary>
-            <param name="parent">Parent adapter collection.</param>
-        </member>
-        <member name="M:GSF.TimeSeries.Adapters.IAdapter.WaitForInitialize(System.Int32)">
-            <summary>
-            Blocks the current thread until the adapter is <see cref="P:GSF.TimeSeries.Adapters.IAdapter.Initialized"/>.
-            </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-            <remarks>
-            Implementors should create a wait handle (e.g., the <see cref="T:System.Threading.ManualResetEvent"/>) so that consumers
-            can call this method and wait for the adapter intialization to complete before using the adapter.
-            </remarks>
-        </member>
         <member name="M:GSF.TimeSeries.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)">
             <summary>
             Defines a temporal processing constraint for the adapter.
@@ -2782,9 +2848,9 @@
             <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
             <remarks>
             <para>
-            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
             adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
             for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
             return the adapter to standard / real-time operation.
             </para>
@@ -2866,6 +2932,11 @@
             Event is raised when <see cref="P:GSF.TimeSeries.Adapters.IAdapter.OutputMeasurements"/> are updated.
             </summary>
         </member>
+        <member name="E:GSF.TimeSeries.Adapters.IAdapter.ConfigurationChanged">
+            <summary>
+            Event is raised when adapter is aware of a configuration change.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Adapters.IAdapter.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/>.
@@ -2879,11 +2950,6 @@
         <member name="P:GSF.TimeSeries.Adapters.IAdapter.Settings">
             <summary>
             Gets settings <see cref="T:System.Collections.Generic.Dictionary`2"/> parsed when <see cref="P:GSF.TimeSeries.Adapters.IAdapter.ConnectionString"/> was assigned.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.Adapters.IAdapter.Parent">
-            <summary>
-            Gets a read-only reference to the collection that contains this <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/>.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IAdapter.Name">
@@ -2901,7 +2967,7 @@
             Gets or sets flag indicating if the adapter has been initialized successfully.
             </summary>
             <remarks>
-            Implementors only need to track this value.
+            Implementers only need to track this value.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IAdapter.InitializationTimeout">
@@ -2909,7 +2975,7 @@
             Gets or sets maximum time system will wait during <see cref="M:GSF.TimeSeries.Adapters.IAdapter.Start"/> for initialization.
             </summary>
             <remarks>
-            Implementors should use value <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
+            Implementers should use value <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IAdapter.DependencyTimeout">
@@ -2950,7 +3016,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IAdapter.StartTimeConstraint">
             <summary>
-            Gets the start time temporal procesing constraint defined by call to <see cref="M:GSF.TimeSeries.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            Gets the start time temporal processing constraint defined by call to <see cref="M:GSF.TimeSeries.Adapters.IAdapter.SetTemporalConstraint(System.String,System.String,System.String)"/>.
             </summary>
             <remarks>
             This value will be <see cref="F:System.DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
@@ -2972,7 +3038,7 @@
             </summary>
             <remarks>
             With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
             interval while a value of 0 means to process data as fast as possible.
             </remarks>
         </member>
@@ -3032,7 +3098,7 @@
             </summary>
             <remarks>
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
-            Set to <c>null</c> apply no filter.
+            Set to <c>null</c> to apply no filter.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IActionAdapter.OutputSourceIDs">
@@ -3041,7 +3107,7 @@
             </summary>
             <remarks>
             This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
-            Set to <c>null</c> apply no filter.
+            Set to <c>null</c> to apply no filter.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IActionAdapter.RequestedInputMeasurementKeys">
@@ -3085,12 +3151,6 @@
             Examines the concentrator frame queue state of the <see cref="T:GSF.TimeSeries.Adapters.ActionAdapterBase"/>.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.AssignParentCollection(GSF.TimeSeries.Adapters.IAdapterCollection)">
-            <summary>
-            Assigns the reference to the parent <see cref="T:GSF.TimeSeries.Adapters.IAdapterCollection"/> that will contain this <see cref="T:GSF.TimeSeries.Adapters.ActionAdapterBase"/>.
-            </summary>
-            <param name="parent">Parent adapter collection.</param>
-        </member>
         <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.ResetStatistics">
             <summary>
             Resets the statistics of the <see cref="T:GSF.TimeSeries.Adapters.ActionAdapterBase"/>.
@@ -3098,7 +3158,7 @@
         </member>
         <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.SetInitializedState(System.Boolean)">
             <summary>
-            Manually sets the intialized state of the <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.
+            Manually sets the initialized state of the <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.
             </summary>
             <param name="initialized">Desired initialized state.</param>
         </member>
@@ -3134,13 +3194,6 @@
             <param name="item">Primary key of measurement to find.</param>
             <returns>true if specified measurement key is defined in <see cref="P:GSF.TimeSeries.Adapters.ActionAdapterBase.InputMeasurementKeys"/>.</returns>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.WaitForInitialize(System.Int32)">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:GSF.TimeSeries.Adapters.ActionAdapterBase.Initialized"/>.
-            </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        </member>
         <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)">
             <summary>
             Defines a temporal processing constraint for the adapter.
@@ -3150,9 +3203,9 @@
             <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
             <remarks>
             <para>
-            This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+            This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
             adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-            should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+            should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
             for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
             return the adapter to standard / real-time operation.
             </para>
@@ -3246,7 +3299,7 @@
             <param name="formattedStatus">Formatted status message.</param>
             <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
             <remarks>
-            This overload combines string.Format and SendStatusMessage for convienence.
+            This overload combines string.Format and SendStatusMessage for convenience.
             </remarks>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.OnInputMeasurementKeysUpdated">
@@ -3257,6 +3310,11 @@
         <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.OnOutputMeasurementsUpdated">
             <summary>
             Raises <see cref="E:GSF.TimeSeries.Adapters.ActionAdapterBase.OutputMeasurementsUpdated"/> event.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Adapters.ActionAdapterBase.OnConfigurationChanged">
+            <summary>
+            Raises <see cref="E:GSF.TimeSeries.Adapters.ActionAdapterBase.ConfigurationChanged"/> event.
             </summary>
         </member>
         <member name="E:GSF.TimeSeries.Adapters.ActionAdapterBase.Notify">
@@ -3283,6 +3341,11 @@
         <member name="E:GSF.TimeSeries.Adapters.ActionAdapterBase.OutputMeasurementsUpdated">
             <summary>
             Event is raised when <see cref="P:GSF.TimeSeries.Adapters.ActionAdapterBase.OutputMeasurements"/> are updated.
+            </summary>
+        </member>
+        <member name="E:GSF.TimeSeries.Adapters.ActionAdapterBase.ConfigurationChanged">
+            <summary>
+            Event is raised when adapter is aware of a configuration change.
             </summary>
         </member>
         <member name="E:GSF.TimeSeries.Adapters.ActionAdapterBase.NewMeasurements">
@@ -3346,7 +3409,7 @@
                 <item>
                     <term>Multiplier</term>
                     <term>FLOAT</term>
-                    <description>Multipler to apply to value, if any (default to 1.0).</description>
+                    <description>Multiplier to apply to value, if any (default to 1.0).</description>
                 </item>
             </list>
             </para>
@@ -3354,11 +3417,6 @@
             Note that framesPerSecond, lagTime and leadTime are required parameters, all other parameters are optional.
             </para>
             </remarks>
-        </member>
-        <member name="P:GSF.TimeSeries.Adapters.ActionAdapterBase.Parent">
-            <summary>
-            Gets a read-only reference to the collection that contains this <see cref="T:GSF.TimeSeries.Adapters.ActionAdapterBase"/>.
-            </summary>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.ActionAdapterBase.DataSource">
             <summary>
@@ -3430,7 +3488,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.ActionAdapterBase.LagTime">
             <summary>
-            Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -3441,7 +3499,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.ActionAdapterBase.LeadTime">
             <summary>
-            Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -3498,7 +3556,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.ActionAdapterBase.StartTimeConstraint">
             <summary>
-            Gets the start time temporal procesing constraint defined by call to <see cref="M:GSF.TimeSeries.Adapters.ActionAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)"/>.
+            Gets the start time temporal processing constraint defined by call to <see cref="M:GSF.TimeSeries.Adapters.ActionAdapterBase.SetTemporalConstraint(System.String,System.String,System.String)"/>.
             </summary>
             <remarks>
             This value will be <see cref="F:System.DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
@@ -3614,7 +3672,6 @@
             <summary>
             Constructs a new instance of the <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>.
             </summary>
-            <param name="waitHandles">Wait handle dictionary.</param>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.Finalize">
             <summary>
@@ -3704,12 +3761,6 @@
             Stops each <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/> implementation in this <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.AssignParentCollection(GSF.TimeSeries.Adapters.IAdapterCollection)">
-            <summary>
-            Assigns the reference to the parent <see cref="T:GSF.TimeSeries.Adapters.IAdapterCollection"/> that will contain this <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>, if any.
-            </summary>
-            <param name="parent">Parent adapter collection.</param>
-        </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.ResetStatistics">
             <summary>
             Resets the statistics of this collection.
@@ -3721,13 +3772,6 @@
             </summary>
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.</returns>
-        </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.WaitForInitialize(System.Int32)">
-            <summary>
-            This method does not wait for <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>.
-            </summary>
-            <param name="timeout">This parameter is ignored.</param>
-            <returns><c>true</c> for <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>.</returns>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.SetTemporalConstraint(System.String,System.String,System.String)">
             <summary>
@@ -3824,6 +3868,11 @@
             Raises <see cref="E:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.OutputMeasurementsUpdated"/> event.
             </summary>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.OnConfigurationChanged">
+            <summary>
+            Raises <see cref="E:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.ConfigurationChanged"/> event.
+            </summary>
+        </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.ClearItems">
             <summary>
             Removes all elements from the <see cref="T:System.Collections.ObjectModel.Collection`1"/>.
@@ -3901,6 +3950,11 @@
             Event is raised when <see cref="P:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.OutputMeasurements"/> are updated.
             </summary>
         </member>
+        <member name="E:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.ConfigurationChanged">
+            <summary>
+            Event is raised when adapter is aware of a configuration change.
+            </summary>
+        </member>
         <member name="E:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.Disposed">
             <summary>
             Event is raised when this <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/> is disposed or an <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/> in the collection is disposed.
@@ -3924,11 +3978,6 @@
         <member name="P:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.ConnectionString">
             <summary>
             Gets or sets key/value pair connection information specific to this <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.Parent">
-            <summary>
-            Gets a read-only reference to the collection that contains this <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>, if any.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.AdapterCollectionBase`1.DataSource">
@@ -4122,6 +4171,11 @@
             </summary>
             <param name="measurements">Enumeration of <see cref="T:GSF.TimeSeries.IMeasurement"/> values being discarded.</param>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.ActionAdapterCollection.OnRequestTemporalSupport">
+            <summary>
+            Raises <see cref="E:GSF.TimeSeries.Adapters.ActionAdapterCollection.RequestTemporalSupport"/> event.
+            </summary>
+        </member>
         <member name="M:GSF.TimeSeries.Adapters.ActionAdapterCollection.InitializeItem(GSF.TimeSeries.Adapters.IActionAdapter)">
             <summary>
             Wires events and initializes new <see cref="T:GSF.TimeSeries.Adapters.IActionAdapter"/> implementation.
@@ -4157,6 +4211,11 @@
             <remarks>
             <see cref="F:GSF.EventArgs`1.Argument"/> is the enumeration of <see cref="T:GSF.TimeSeries.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
+        </member>
+        <member name="E:GSF.TimeSeries.Adapters.ActionAdapterCollection.RequestTemporalSupport">
+            <summary>
+            Event is raised when temporal support is requested.
+            </summary>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.ActionAdapterCollection.RespectInputDemands">
             <summary>
@@ -4229,12 +4288,6 @@
             Stops the <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.
             </summary>		
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.AssignParentCollection(GSF.TimeSeries.Adapters.IAdapterCollection)">
-            <summary>
-            Assigns the reference to the parent <see cref="T:GSF.TimeSeries.Adapters.IAdapterCollection"/> that will contain this <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.
-            </summary>
-            <param name="parent">Parent adapter collection.</param>
-        </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterBase.SetInitializedState(System.Boolean)">
             <summary>
             Manually sets the initialized state of the <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.
@@ -4254,13 +4307,6 @@
             </summary>
             <param name="item">Primary key of measurement to find.</param>
             <returns>true if specified measurement key is defined in <see cref="P:GSF.TimeSeries.Adapters.AdapterBase.InputMeasurementKeys"/>.</returns>
-        </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.WaitForInitialize(System.Int32)">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:GSF.TimeSeries.Adapters.AdapterBase.Initialized"/>.
-            </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterBase.SetTemporalConstraint(System.String,System.String,System.String)">
             <summary>
@@ -4363,11 +4409,30 @@
             Raises <see cref="E:GSF.TimeSeries.Adapters.AdapterBase.OutputMeasurementsUpdated"/> event.
             </summary>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.OnConfigurationChanged">
+            <summary>
+            Raises <see cref="E:GSF.TimeSeries.Adapters.AdapterBase.ConfigurationChanged"/> event.
+            </summary>
+        </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterBase.IncrementProcessedMeasurements(System.Int64)">
             <summary>
             Safely increments the total processed measurements.
             </summary>
             <param name="totalAdded"></param>
+        </member>
+        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseFilterExpression(System.String,System.String@,System.String@,System.String@,System.Int32@)">
+            <summary>
+            Parses a standard FILTER styles expression into its constituent parts.
+            </summary>
+            <param name="filterExpression">Filter expression to parse.</param>
+            <param name="tableName">Name of table in filter expression.</param>
+            <param name="whereExpression">Where expression in filter expression.</param>
+            <param name="sortField">Sort field, if any, in filter expression.</param>
+            <param name="takeCount">Total row restriction, if any, in filter expression.</param>
+            <returns><c>true</c> if filter expression was successfully parsed; otherwise <c>false</c>.</returns>
+            <remarks>
+            This method can be safely called from multiple threads.
+            </remarks>
         </member>
         <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseTimeTag(System.String)">
             <summary>
@@ -4438,32 +4503,47 @@
             Any existing output measurements will be distinctly merged with those associated with specified source ID's.
             </remarks>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String,System.String)">
+        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.Boolean,System.String,System.String)">
             <summary>
             Parses input measurement keys from connection string setting.
             </summary>
             <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to define input measurement keys.</param>
+            <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining input measurement keys (see remarks about security).</param>
             <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
             <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected input measurement keys.</returns>
+            <remarks>
+            Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
+            injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
+            </remarks>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseOutputMeasurementKeys(System.Data.DataSet,System.String,System.String)">
+        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseOutputMeasurementKeys(System.Data.DataSet,System.Boolean,System.String,System.String)">
             <summary>
             Parses output measurement keys from connection string setting.
             </summary>
             <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to define output measurements.</param>
+            <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining output measurement keys (see remarks about security).</param>
             <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
             <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected output measurements.</returns>
+            <remarks>
+            Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
+            injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
+            </remarks>
         </member>
-        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String,System.String)">
+        <member name="M:GSF.TimeSeries.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.Boolean,System.String,System.String)">
             <summary>
             Parses output measurements from connection string setting.
             </summary>
             <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to define output measurements.</param>
+            <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining output measurements (see remarks about security).</param>
             <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
             <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
             <returns>User selected output measurements.</returns>
+            <remarks>
+            Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
+            injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
+            </remarks>
         </member>
         <member name="E:GSF.TimeSeries.Adapters.AdapterBase.Notify">
             <summary>
@@ -4499,14 +4579,15 @@
             Event is raised when <see cref="P:GSF.TimeSeries.Adapters.AdapterBase.OutputMeasurements"/> are updated.
             </summary>
         </member>
+        <member name="E:GSF.TimeSeries.Adapters.AdapterBase.ConfigurationChanged">
+            <summary>
+            Event is raised when adapter is aware of a configuration change.
+            </summary>
+        </member>
         <member name="E:GSF.TimeSeries.Adapters.AdapterBase.Disposed">
             <summary>
             Event is raised when <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/> is disposed.
             </summary>
-            <remarks>
-            If an adapter references another adapter by enumerating the <see cref="P:GSF.TimeSeries.Adapters.AdapterBase.Parent"/> collection, this
-            event should be monitored to release the reference.
-            </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.AdapterBase.Name">
             <summary>
@@ -4575,11 +4656,6 @@
             </list>
             </para>
             </remarks>
-        </member>
-        <member name="P:GSF.TimeSeries.Adapters.AdapterBase.Parent">
-            <summary>
-            Gets a read-only reference to the collection that contains this <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/>.
-            </summary>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.AdapterBase.DataSource">
             <summary>
@@ -4737,9 +4813,21 @@
             </summary>
             <param name="description">Assigns the description for this adapter command.</param>
         </member>
+        <member name="M:GSF.TimeSeries.Adapters.AdapterCommandAttribute.#ctor(System.String,System.String[])">
+            <summary>
+            Creates a new <see cref="T:GSF.TimeSeries.Adapters.AdapterCommandAttribute"/> with the specified <paramref name="description"/> value.
+            </summary>
+            <param name="description">Assigns the description for this adapter command.</param>
+            <param name="allowedRoles">Assigns the roles which are allowed to invoke this adapter command.</param>
+        </member>
         <member name="P:GSF.TimeSeries.Adapters.AdapterCommandAttribute.Description">
             <summary>
             Gets the description of this adapter command.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Adapters.AdapterCommandAttribute.AllowedRoles">
+            <summary>
+            Gets the roles which are allowed to invoke this adapter command.
             </summary>
         </member>
         <member name="T:GSF.TimeSeries.Adapters.AllAdaptersCollection">
@@ -4805,7 +4893,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.AllAdaptersCollection.AutoInitialize">
             <summary>
-            Gets flag that detemines if <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/> implementations are automatically initialized
+            Gets flag that determines if <see cref="T:GSF.TimeSeries.Adapters.IAdapter"/> implementations are automatically initialized
             when they are added to the collection.
             </summary>
             <remarks>
@@ -4966,7 +5054,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.FacileActionAdapterBase.LagTime">
             <summary>
-            Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -4977,7 +5065,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Adapters.FacileActionAdapterBase.LeadTime">
             <summary>
-            Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+            Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
             </summary>
             <remarks>
             <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -4991,7 +5079,7 @@
             Gets or sets flag to start tracking the absolute latest received measurement values.
             </summary>
             <remarks>
-            Lastest received measurement value will be available via the <see cref="P:GSF.TimeSeries.Adapters.FacileActionAdapterBase.LatestMeasurements"/> property.
+            Latest received measurement value will be available via the <see cref="P:GSF.TimeSeries.Adapters.FacileActionAdapterBase.LatestMeasurements"/> property.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.FacileActionAdapterBase.LatestMeasurements">
@@ -5080,7 +5168,7 @@
             </summary>
             <remarks>
             This event is expected to only be raised when an input adapter has been designed to process
-            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            a finite amount of data, e.g., reading a historical range of data during temporal processing.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.IInputAdapter.OutputSourceIDs">
@@ -5189,7 +5277,7 @@
             </summary>
             <remarks>
             This event is expected to only be raised when an input adapter has been designed to process
-            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            a finite amount of data, e.g., reading a historical range of data during temporal processing.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Adapters.InputAdapterBase.OutputSourceIDs">
@@ -5230,6 +5318,14 @@
             </summary>
             <remarks>
             Derived classes should extend status with implementation specific information.
+            </remarks>
+        </member>
+        <member name="P:GSF.TimeSeries.Adapters.InputAdapterBase.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/> expects, if any.
+            </summary>
+            <remarks>
+            Redefined to hide attributes defined in the base class.
             </remarks>
         </member>
         <member name="T:GSF.TimeSeries.Adapters.InputAdapterCollection">
@@ -5279,7 +5375,7 @@
             </summary>
             <remarks>
             This event is expected to only be raised when an input adapter has been designed to process
-            a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+            a finite amount of data, e.g., reading a historical range of data during temporal processing.
             </remarks>
         </member>
         <member name="T:GSF.TimeSeries.Adapters.IOutputAdapter">
@@ -5486,8 +5582,8 @@
             <remarks>
             <para>
             It is possible for items to be added to the queue while the flush is executing. The flush will continue to
-            process items as quickly as possible until the queue is empty. Unless the user stops queueing items to be
-            processed, the flush call may never return (not a happy situtation on shutdown).
+            process items as quickly as possible until the queue is empty. Unless the user stops queuing items to be
+            processed, the flush call may never return (not a happy situation on shutdown).
             </para>
             <para>
             The <see cref="T:GSF.TimeSeries.Adapters.OutputAdapterBase"/> does not clear queue prior to destruction. If the user fails to call
@@ -5500,12 +5596,6 @@
             Raises the <see cref="E:GSF.TimeSeries.Adapters.OutputAdapterBase.UnprocessedMeasurements"/> event.
             </summary>
             <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        </member>
-        <member name="M:GSF.TimeSeries.Adapters.OutputAdapterBase.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:GSF.TimeSeries.Adapters.AdapterBase.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
         </member>
         <member name="E:GSF.TimeSeries.Adapters.OutputAdapterBase.UnprocessedMeasurements">
             <summary>
@@ -5589,7 +5679,7 @@
             </summary>
             <remarks>
             With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-            basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+            basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
             interval while a value of 0 means to process data as fast as possible.
             </remarks>
         </member>
@@ -5615,6 +5705,14 @@
             <summary>
             Returns the detailed status of the data input source.  Derived classes should extend status with implementation specific information.
             </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Adapters.OutputAdapterBase.OutputMeasurements">
+            <summary>
+            Gets or sets output measurements that the <see cref="T:GSF.TimeSeries.Adapters.AdapterBase"/> will produce, if any.
+            </summary>
+            <remarks>
+            Redefined to hide attributes defined in the base class.
+            </remarks>
         </member>
         <member name="T:GSF.TimeSeries.Adapters.OutputAdapterCollection">
             <summary>
@@ -5745,11 +5843,11 @@
         </member>
         <member name="M:GSF.TimeSeries.PrecisionInputTimer.Detach(GSF.TimeSeries.PrecisionInputTimer@)">
             <summary>
-            Detatch from the <see cref="T:GSF.TimeSeries.PrecisionInputTimer"/>.
+            Detach from the <see cref="T:GSF.TimeSeries.PrecisionInputTimer"/>.
             </summary>
             <param name="timer">Timer instance to detach from.</param>
             <remarks>
-            Timer reference will be set to <c>null</c> after detatch.
+            Timer reference will be set to <c>null</c> after detach.
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.PrecisionInputTimer.FramesPerSecond">
@@ -6229,6 +6327,11 @@
             Gets time of last cipher key update.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.ClientConnection.ValidIPAddresses">
+            <summary>
+            Gets or sets the list of valid IP addresses that this client can connect from.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.ClientConnection.IPAddress">
             <summary>
             Gets the IP address of the remote client connection.
@@ -6345,6 +6448,8 @@
             Received device list should be defined as children of the "parent" server device connection similar to the way
             PMUs are defined as children of a parent PDC device connection.
             Devices and measurements contain unique Guids that should be used to key metadata updates in local repository.
+            Optional string based message can follow command that should represent client requested meta-data filtering
+            expressions, e.g.: "FILTER MeasurementDetail WHERE SignalType &lt;&gt; 'STAT'"
             </remarks>
         </member>
         <member name="F:GSF.TimeSeries.Transport.ServerCommand.Subscribe">
@@ -6493,6 +6598,15 @@
             Unsolicited response provides a notification message to the client.
             </remarks>
         </member>
+        <member name="F:GSF.TimeSeries.Transport.ServerResponse.ConfigurationChanged">
+            <summary>
+            Configuration changed response.
+            </summary>
+            <remarks>
+            Unsolicited response provides a notification that the publisher's source configuration has changed and that
+            client may want to request a meta-data refresh.
+            </remarks>
+        </member>
         <member name="F:GSF.TimeSeries.Transport.ServerResponse.NoOP">
             <summary>
             No operation keep-alive ping.
@@ -6559,7 +6673,10 @@
             Operational modes that affect how <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/> and <see cref="T:GSF.TimeSeries.Transport.DataSubscriber"/> communicate.
             </summary>
             <remarks>
-            Operational modes only apply to fundamental protocol control.
+            Operational modes are sent from a subscriber to a publisher to request operational behaviors for the
+            connection, as a result the operation modes must be sent before any other command. The publisher may
+            silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
+            apply to fundamental protocol control.
             </remarks>
         </member>
         <member name="F:GSF.TimeSeries.Transport.OperationalModes.VersionMask">
@@ -6575,8 +6692,8 @@
             Mask to get mode of compression.
             </summary>
             <remarks>
-            Compression mode is currently not supported.
-            These bits are simply reserved for different compression modes.
+            GZip compression is only mode currently supported. Remaining bits are
+            reserved for future compression modes.
             </remarks>
         </member>
         <member name="F:GSF.TimeSeries.Transport.OperationalModes.EncodingMask">
@@ -6584,8 +6701,8 @@
             Mask to get character encoding used when exchanging messages between publisher and subscriber.
             </summary>
             <remarks>
-            00 = UTF-16 little endian<br/>
-            01 = UTF-16 big endian<br/>
+            00 = UTF-16, little endian<br/>
+            01 = UTF-16, big endian<br/>
             10 = UTF-8<br/>
             11 = ANSI
             </remarks>
@@ -6595,7 +6712,25 @@
             Determines type of serialization to use when exchanging signal index cache and metadata.
             </summary>
             <remarks>
-            Bit set = common serialization format, bit clear = .NET serialization format
+            Bit set = common serialization format, bit clear = .NET serialization format. The .NET
+            serialization format is only for backwards compatibility with older GEP implementations
+            and considered obsolete, it may be removed from future builds.
+            </remarks>
+        </member>
+        <member name="F:GSF.TimeSeries.Transport.OperationalModes.ReceiveExternalMetadata">
+            <summary>
+            Determines whether external measurements are exchanged during metadata synchronization.
+            </summary>
+            <remarks>
+            Bit set = external measurements are exchanged, bit clear = no external measurements are exchanged
+            </remarks>
+        </member>
+        <member name="F:GSF.TimeSeries.Transport.OperationalModes.ReceiveInternalMetadata">
+            <summary>
+            Determines whether internal measurements are exchanged during metadata synchronization.
+            </summary>
+            <remarks>
+            Bit set = internal measurements are exchanged, bit clear = no internal measurements are exchanged
             </remarks>
         </member>
         <member name="F:GSF.TimeSeries.Transport.OperationalModes.CompressPayloadData">
@@ -6639,12 +6774,12 @@
         </member>
         <member name="F:GSF.TimeSeries.Transport.OperationalEncoding.Unicode">
             <summary>
-            UTF-16 little endian
+            UTF-16, little endian
             </summary>
         </member>
         <member name="F:GSF.TimeSeries.Transport.OperationalEncoding.BigEndianUnicode">
             <summary>
-            UTF-16 bit endian
+            UTF-16, big endian
             </summary>
         </member>
         <member name="F:GSF.TimeSeries.Transport.OperationalEncoding.UTF8">
@@ -6712,6 +6847,11 @@
             Default value for <see cref="P:GSF.TimeSeries.Transport.DataPublisher.AllowSynchronizedSubscription"/>.
             </summary>
         </member>
+        <member name="F:GSF.TimeSeries.Transport.DataPublisher.DefaultAllowMetadataRefresh">
+            <summary>
+            Default value for <see cref="P:GSF.TimeSeries.Transport.DataPublisher.AllowMetadataRefresh"/>.
+            </summary>
+        </member>
         <member name="F:GSF.TimeSeries.Transport.DataPublisher.DefaultUseBaseTimeOffsets">
             <summary>
             Default value for <see cref="P:GSF.TimeSeries.Transport.DataPublisher.UseBaseTimeOffsets"/>.
@@ -6777,13 +6917,6 @@
             Terminate <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/> and stop listening for client connections.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.Transport.DataPublisher.WaitForInitialize(System.Int32)">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:GSF.TimeSeries.Transport.DataPublisher.Initialized"/>.
-            </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        </member>
         <member name="M:GSF.TimeSeries.Transport.DataPublisher.GetShortStatus(System.Int32)">
             <summary>
             Gets a short one-line status of this <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/>.
@@ -6807,6 +6940,20 @@
             Gets subscriber information for specified client connection.
             </summary>
             <param name="clientIndex">Enumerated index for client connection.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataPublisher.GetLocalCertificate">
+            <summary>
+            Gets the local certificate currently in use by the data publisher.
+            </summary>
+            <returns>The local certificate file read directly from the certificate file as an array of bytes.</returns>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataPublisher.ImportCertificate(System.String,System.Byte[])">
+            <summary>
+            Imports a certificate to the trusted certificates path.
+            </summary>
+            <param name="fileName">The file name to give to the certificate when imported.</param>
+            <param name="certificateData">The data to be written to the certificate file.</param>
+            <returns>The local path on the server where the file was written.</returns>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataPublisher.GetSubscriberStatus(System.Guid)">
             <summary>
@@ -6923,6 +7070,17 @@
             <param name="data">Data to return to client; null if none.</param>
             <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         </member>
+        <member name="M:GSF.TimeSeries.Transport.DataPublisher.SendClientResponse(GSF.IO.BlockAllocatedMemoryStream,System.Guid,GSF.TimeSeries.Transport.ServerResponse,GSF.TimeSeries.Transport.ServerCommand,System.Byte[])">
+            <summary>
+            Sends response back to specified client with attached data using specified working buffer.
+            </summary>
+            <param name="workingBuffer">Working buffer to use to assemble response, or <c>null</c> to have one created for you.</param>
+            <param name="clientID">ID of client to send response.</param>
+            <param name="response">Server response.</param>
+            <param name="command">In response to command.</param>
+            <param name="data">Data to return to client; null if none.</param>
+            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
         <member name="M:GSF.TimeSeries.Transport.DataPublisher.UpdateLatencyStatistics(System.Collections.Generic.IEnumerable{System.Int64})">
             <summary>
             Updates latency statistics based on the collection of latencies passed into the method.
@@ -7000,6 +7158,11 @@
             Gets or sets flag that indicates if this publisher will allow synchronized subscriptions when requested by subscribers.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataPublisher.AllowMetadataRefresh">
+            <summary>
+            Gets or sets flag that indicates if this publisher will allow synchronized subscriptions when requested by subscribers.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataPublisher.UseBaseTimeOffsets">
             <summary>
             Gets or sets flag that determines whether to use base time offsets to decrease the size of compact measurements.
@@ -7025,6 +7188,12 @@
             <summary>
             Gets or sets the maximum time the system will wait on inter-adapter
             dependencies before publishing queued measurements to an adapter.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataPublisher.CacheMeasurementKeys">
+            <summary>
+            Gets or sets the set of measurements which are cached by the data
+            publisher to be published to subscribers immediately upon subscription.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataPublisher.DataSource">
@@ -7054,6 +7223,12 @@
             Gets or sets semi-colon separated list of SQL select statements used to create data for meta-data exchange.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataPublisher.AutoInitialize">
+            <summary>
+            Gets flag that determines if <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/> subscriptions
+            are automatically initialized when they are added to the collection.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataPublisher.ClientConnections">
             <summary>
             Gets dictionary of connected clients.
@@ -7062,11 +7237,6 @@
         <member name="P:GSF.TimeSeries.Transport.DataPublisher.CommandChannel">
             <summary>
             Gets or sets reference to <see cref="T:GSF.Communication.TcpServer"/> command channel, attaching and/or detaching to events as needed.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.Transport.DataPublisher.Initialized">
-            <summary>
-            Gets or sets flag indicating if the adapter has been initialized successfully.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataPublisher.IsConnected">
@@ -7127,6 +7297,16 @@
         <member name="F:GSF.TimeSeries.Transport.DataSubscriber.DefaultOperationalModes">
             <summary>
             Defines default value for <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.OperationalModes"/>.
+            </summary>
+        </member>
+        <member name="F:GSF.TimeSeries.Transport.DataSubscriber.DefaultMetadataSynchronizationTimeout">
+            <summary>
+            Defines the default value for the <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.MetadataSynchronizationTimeout"/> property.
+            </summary>
+        </member>
+        <member name="F:GSF.TimeSeries.Transport.DataSubscriber.DefaultUseTransactionForMetadata">
+            <summary>
+            Defines the default value for the <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.UseTransactionForMetadata"/> property.
             </summary>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.#ctor">
@@ -7405,22 +7585,39 @@
             Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.RefreshMetadata">
-            <summary>
-            Initiate a metadata refresh.
-            </summary>
-        </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.ResetLifetimeCounters">
             <summary>
             Resets the counters for the lifetime statistics without interrupting the adapter's operations.
             </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.RefreshMetadata">
+            <summary>
+            Initiate a meta-data refresh.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.SynchronizeMetadata(System.Data.DataSet)">
+            <summary>
+            Spawn meta-data synchronization.
+            </summary>
+            <param name="metadata"><see cref="T:System.Data.DataSet"/> to use for synchronization.</param>
+            <remarks>
+            This method makes sure only one meta-data synchronization happens at a time.
+            </remarks>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.SendServerCommand(GSF.TimeSeries.Transport.ServerCommand,System.String)">
+            <summary>
+            Sends a server command to the publisher connection with associated <paramref name="message"/> data.
+            </summary>
+            <param name="commandCode"><see cref="T:GSF.TimeSeries.Transport.ServerCommand"/> to send.</param>
+            <param name="message">String based command data to send to server.</param>
+            <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.SendServerCommand(GSF.TimeSeries.Transport.ServerCommand,System.Byte[])">
             <summary>
             Sends a server command to the publisher connection.
             </summary>
             <param name="commandCode"><see cref="T:GSF.TimeSeries.Transport.ServerCommand"/> to send.</param>
-            <param name="data">Command data to send.</param>
+            <param name="data">Optional command data to send.</param>
             <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.AttemptConnection">
@@ -7451,11 +7648,13 @@
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.SynchronizeMetadata(System.Object)">
             <summary>
-            Handles auto-connection metadata synchronization to local system. 
+            Handles meta-data synchronization to local system.
             </summary>
-            <param name="state"><see cref="T:System.Data.DataSet"/> metadata collection passed into state parameter.</param>
+            <param name="state"><see cref="T:System.Data.DataSet"/> meta-data collection passed into state parameter.</param>
             <remarks>
-            This function is normally called from thread pool since synchronization can take some time.
+            This function should only be initiated from call to <see cref="M:GSF.TimeSeries.Transport.DataSubscriber.SynchronizeMetadata(System.Data.DataSet)"/> to make
+            sure only one meta-data synchronization happens at once. Users can override this method to customize
+            process of meta-data synchronization.
             </remarks>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.OnConnectionEstablished">
@@ -7472,6 +7671,13 @@
             <summary>
             Raises the <see cref="E:GSF.TimeSeries.Transport.DataSubscriber.ConnectionAuthenticated"/> event.
             </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.OnReceivedServerResponse(GSF.TimeSeries.Transport.ServerResponse,GSF.TimeSeries.Transport.ServerCommand)">
+            <summary>
+            Raises the <see cref="E:GSF.TimeSeries.Transport.DataSubscriber.ReceivedServerResponse"/> event.
+            </summary>
+            <param name="responseCode">Response received from the server.</param>
+            <param name="commandCode">Command that the server responded to.</param>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.OnMetaDataReceived(System.Data.DataSet)">
             <summary>
@@ -7491,6 +7697,17 @@
             </summary>
             <param name="source">Type name of adapter that sent the processing completed notification.</param>
         </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.OnNotificationReceived(System.String)">
+            <summary>
+            Raises the <see cref="E:GSF.TimeSeries.Transport.DataSubscriber.NotificationReceived"/> event.
+            </summary>
+            <param name="message">Message for the notification.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.OnServerConfigurationChanged">
+            <summary>
+            Raises the <see cref="E:GSF.TimeSeries.Transport.DataSubscriber.ServerConfigurationChanged"/> event.
+            </summary>
+        </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.DisposeLocalConcentrator">
             <summary>
             Disposes of any previously defined local concentrator.
@@ -7509,6 +7726,11 @@
         <member name="E:GSF.TimeSeries.Transport.DataSubscriber.ConnectionAuthenticated">
             <summary>
             Occurs when client connection to the data publication server has successfully authenticated.
+            </summary>
+        </member>
+        <member name="E:GSF.TimeSeries.Transport.DataSubscriber.ReceivedServerResponse">
+            <summary>
+            Occurs when client receives response from the server.
             </summary>
         </member>
         <member name="E:GSF.TimeSeries.Transport.DataSubscriber.MetaDataReceived">
@@ -7535,6 +7757,12 @@
             Occurs when a notification has been received from the <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/>.
             </summary>
         </member>
+        <member name="E:GSF.TimeSeries.Transport.DataSubscriber.ServerConfigurationChanged">
+            <summary>
+            Occurs when the server has sent a notification that its configuration has changed, this
+            can allow subscriber to request updated meta-data if desired.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.SecurityMode">
             <summary>
             Gets or sets the security mode used for communications over the command channel.
@@ -7549,6 +7777,26 @@
             <summary>
             Gets or sets flag that determines if <see cref="T:GSF.TimeSeries.Transport.DataSubscriber"/> should attempt to auto-connection to <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/> using defined connection settings.
             </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.AutoSynchronizeMetadata">
+            <summary>
+            Gets or sets flag that determines if <see cref="T:GSF.TimeSeries.Transport.DataSubscriber"/> should
+            automatically request meta-data synchronization and synchronize publisher
+            meta-data with its own database configuration.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.MetadataFilters">
+            <summary>
+            Gets or sets requested meta-data filter expressions to be applied by <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/> before meta-data is sent.
+            </summary>
+            <remarks>
+            Multiple meta-data filters, such filters for different data tables, should be separated by a semicolon. Specifying fields in the filter
+            expression that do not exist in the data publisher's current meta-data set could cause filter expressions to not be applied and possibly
+            result in no meta-data being received for the specified data table.
+            </remarks>
+            <example>
+            FILTER MeasurementDetail WHERE SignalType &lt;&gt; 'STAT'; FILTER PhasorDetail WHERE Phase = '+'
+            </example>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.UseMillisecondResolution">
             <summary>
@@ -7576,9 +7824,49 @@
             which the subscriber and publisher communicate.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.CompressMetadata">
+            <summary>
+            Gets or sets the operational mode flag to compress meta-data.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.CompressSignalIndexCache">
+            <summary>
+            Gets or sets the operational mode flag to compress the signal index cache.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.CompressPayload">
+            <summary>
+            Gets or sets the operational mode flag to compress data payloads.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.ReceiveInternalMetadata">
+            <summary>
+            Gets or sets the operational mode flag to receive internal meta-data.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.ReceiveExternalMetadata">
+            <summary>
+            Gets or sets the operational mode flag to receive external meta-data.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.UseCommonSerializationFormat">
+            <summary>
+            Gets or sets the operational mode flag to use the common serialization format.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.OperationalEncoding">
             <summary>
             Gets or sets the <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.OperationalEncoding"/> used by the subscriber and publisher.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.GatewayCompressionMode">
+            <summary>
+            Gets or sets the <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.GatewayCompressionMode"/> used by the subscriber and publisher.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.Version">
+            <summary>
+            Gets the version number of the protocol in use by this subscriber.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.SupportsTemporalProcessing">
@@ -7600,6 +7888,16 @@
             basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
             interval while a value of 0 means to process data as fast as possible.
             </remarks>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.MetadataSynchronizationTimeout">
+            <summary>
+            Gets or sets the timeout used when executing database queries during meta-data synchronization.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.UseTransactionForMetadata">
+            <summary>
+            Gets or sets flag that determines if meta-data synchronization should be performed within a transaction.
+            </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.Status">
             <summary>
@@ -7798,7 +8096,7 @@
               Tag        TagLen  <br/>
               Value         8    <br/>
               Adder         8    <br/>
-            Multipler       8    <br/>
+            Multiplier      8    <br/>
               Ticks         8    <br/>
               Flags         4    <br/>
             </para>
@@ -7886,7 +8184,7 @@
         </member>
         <member name="F:GSF.TimeSeries.ConfigurationType.WebService">
             <summary>
-            Configuration source is a webservice.
+            Configuration source is a web-service.
             </summary>
         </member>
         <member name="F:GSF.TimeSeries.ConfigurationType.BinaryFile">
@@ -7905,7 +8203,7 @@
             </summary>
             <param name="connection">Connection to database.</param>
             <param name="adapterType">Adapter type for database connection.</param>
-            <param name="nodeIDQueryString">Formatted node ID guid query string.</param>
+            <param name="nodeIDQueryString">Formatted node ID Guid query string.</param>
             <param name="arguments">Optional data operation arguments.</param>
             <param name="statusMessage">Reference to host status message function.</param>
             <param name="processException">Reference to host process exception function.</param>
@@ -7983,6 +8281,16 @@
             <param name="e">Event arguments containing the exception to report.</param>
             <remarks>
             The time-series framework <see cref="T:GSF.TimeSeries.Adapters.IaonSession"/> uses this event to report exceptions.
+            </remarks>
+        </member>
+        <member name="M:GSF.TimeSeries.ServiceHostBase.m_iaonSession_ConfigurationChanged(System.Object,System.EventArgs)">
+            <summary>
+            Event handler for processing notifications from adapters that configuration has changed.
+            </summary>
+            <param name="sender">Event source of the notification.</param>
+            <param name="e">Event arguments, if any.</param>
+            <remarks>
+            The time-series framework <see cref="T:GSF.TimeSeries.Adapters.IaonSession"/> uses this event to report configuration changes.
             </remarks>
         </member>
         <member name="M:GSF.TimeSeries.ServiceHostBase.LogExceptionHandler(System.Object,GSF.EventArgs{System.Exception})">
@@ -8070,6 +8378,12 @@
             Performs initialization or reinitialization of specified adapter or collection.
             </summary>
             <param name="requestInfo"><see cref="T:GSF.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.ServiceHostBase.LogEventRequestHandler(GSF.ServiceProcess.ClientRequestInfo)">
+            <summary>
+            Sends remote entry for logging.
+            </summary>
+            <param name="requestInfo"></param>
         </member>
         <member name="M:GSF.TimeSeries.ServiceHostBase.TemporalSupportRequestHandler(GSF.ServiceProcess.ClientRequestInfo)">
             <summary>
@@ -8287,7 +8601,7 @@
             <para>Note that returned value will be offset by adder and multiplier.</para>
             </remarks>
             <param name="timestamp">Timestamp used to constrain <see cref="T:GSF.TimeSeries.TemporalMeasurement"/> (typically set to real-time, i.e. "now").</param>
-            <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder).</returns>
+            <returns>Value offset by adder and multiplier (i.e., Value * Multiplier + Adder).</returns>
         </member>
         <member name="M:GSF.TimeSeries.TemporalMeasurement.GetValue(GSF.Ticks)">
             <summary>Gets numeric value of this <see cref="T:GSF.TimeSeries.TemporalMeasurement"/>, constrained within specified ticks.</summary>
@@ -8307,7 +8621,7 @@
             <returns><c>true</c> if value was updated; otherwise <c>false</c>.</returns>
         </member>
         <member name="P:GSF.TimeSeries.TemporalMeasurement.LagTime">
-            <summary>Allowed past time deviation tolerance in seconds (can be subsecond).</summary>
+            <summary>Allowed past time deviation tolerance in seconds (can be sub-second).</summary>
             <remarks>
             <para>This value defines the time sensitivity to past measurement timestamps.</para>
             <para>Defined the number of seconds allowed before assuming a measurement timestamp is too old.</para>
@@ -8315,7 +8629,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
         </member>
         <member name="P:GSF.TimeSeries.TemporalMeasurement.LeadTime">
-            <summary>Allowed future time deviation tolerance in seconds (can be subsecond).</summary>
+            <summary>Allowed future time deviation tolerance in seconds (can be sub-second).</summary>
             <remarks>
             <para>This value defines the time sensitivity to future measurement timestamps.</para>
             <para>Defined the number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
@@ -8324,7 +8638,7 @@
         </member>
         <member name="T:GSF.TimeSeries.TrackingFrame">
             <summary>
-            <see cref="T:GSF.TimeSeries.IFrame"/> container used to track <see cref="T:GSF.TimeSeries.IMeasurement"/> values for downsampling.
+            <see cref="T:GSF.TimeSeries.IFrame"/> container used to track <see cref="T:GSF.TimeSeries.IMeasurement"/> values for down-sampling.
             </summary>
         </member>
         <member name="M:GSF.TimeSeries.TrackingFrame.#ctor(GSF.TimeSeries.IFrame,GSF.TimeSeries.DownsamplingMethod)">
@@ -8336,7 +8650,7 @@
         </member>
         <member name="M:GSF.TimeSeries.TrackingFrame.DeriveMeasurementValue(GSF.TimeSeries.IMeasurement)">
             <summary>
-            Derives measurement value, downsampling if needed.
+            Derives measurement value, down-sampling if needed.
             </summary>
             <param name="measurement">New <see cref="T:GSF.TimeSeries.IMeasurement"/> value.</param>
             <returns>New derived <see cref="T:GSF.TimeSeries.IMeasurement"/> value, or null if value should not be assigned to <see cref="T:GSF.TimeSeries.IFrame"/>.</returns>
@@ -8353,7 +8667,7 @@
         </member>
         <member name="P:GSF.TimeSeries.TrackingFrame.DownsampledMeasurements">
             <summary>
-            Total number of measurements downsampled by <see cref="T:GSF.TimeSeries.TrackingFrame"/>.
+            Total number of measurements down-sampled by <see cref="T:GSF.TimeSeries.TrackingFrame"/>.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.TrackingFrame.Lock">
@@ -8544,7 +8858,7 @@
             Defines extension functions related to <see cref="T:GSF.TimeSeries.Transport.CompactMeasurement"/>.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.Transport.CompactMeasurementExtensions.CompressPayload(System.Collections.Generic.IEnumerable{GSF.TimeSeries.Transport.CompactMeasurement},System.IO.MemoryStream,System.Byte,System.Boolean,GSF.TimeSeries.Transport.DataPacketFlags@)">
+        <member name="M:GSF.TimeSeries.Transport.CompactMeasurementExtensions.CompressPayload(System.Collections.Generic.IEnumerable{GSF.TimeSeries.Transport.CompactMeasurement},GSF.IO.BlockAllocatedMemoryStream,System.Byte,System.Boolean,GSF.TimeSeries.Transport.DataPacketFlags@)">
             <summary>
             Attempts to compress payload of <see cref="T:GSF.TimeSeries.Transport.CompactMeasurement"/> values onto the <paramref name="destination"/> stream.
             </summary>
@@ -8822,13 +9136,13 @@
         <member name="P:GSF.TimeSeries.Transport.SubscriptionInfo.LagTime">
             <summary>
             Gets or sets the allowed past time deviation
-            tolerance in seconds (can be subsecond).
+            tolerance in seconds (can be sub-second).
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.SubscriptionInfo.LeadTime">
             <summary>
             Gets or sets the allowed future time deviation
-            tolerance, in seconds (can be subsecond).
+            tolerance, in seconds (can be sub-second).
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.SubscriptionInfo.UseLocalClockAsRealTime">
@@ -8855,7 +9169,7 @@
             </summary>
             <remarks>
             <para>
-            When the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StartTime"/> or <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            When the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StartTime"/> or <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
             specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StartTime"/>
             and <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
             </para>
@@ -8903,7 +9217,7 @@
             </summary>
             <remarks>
             <para>
-            When the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StartTime"/> or <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+            When the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StartTime"/> or <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
             specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StartTime"/>
             and <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.StopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
             </para>
@@ -8946,7 +9260,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Transport.SubscriptionInfo.ConstraintParameters">
             <summary>
-            Gets or sets the aditional constraint parameters
+            Gets or sets the additional constraint parameters
             supplied to temporal adapters in a temporal session.
             </summary>
         </member>
@@ -8959,7 +9273,7 @@
             </summary>
             <remarks>
             With the exception of the values of -1 and 0, the <see cref="P:GSF.TimeSeries.Transport.SubscriptionInfo.ProcessingInterval"/> value specifies the desired historical playback data
-            processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+            processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
             to use the default processing interval while setting the value to 0 means to process data as fast as possible.
             </remarks>
         </member>
@@ -8995,7 +9309,7 @@
         </member>
         <member name="P:GSF.TimeSeries.Transport.SynchronizedSubscriptionInfo.DownsamplingMethod">
             <summary>
-            Gets or sets the downsampling method used when the frame rate of
+            Gets or sets the down-sampling method used when the frame rate of
             the subscription is lower than the frame rate of the measurement's
             source.
             </summary>

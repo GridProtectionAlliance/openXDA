@@ -23,24 +23,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
+using GSF.Adapters;
 
 namespace FaultAlgorithms
 {
     /// <summary>
     /// Interface for writing the results of the fault analysis to an output source.
     /// </summary>
-    public interface IFaultResultsWriter
+    public interface IFaultResultsWriter : IAdapter
     {
-        /// <summary>
-        /// Parameters used to configure the results writer.
-        /// </summary>
-        Dictionary<string, string> Parameters
-        {
-            get;
-            set;
-        }
-
         /// <summary>
         /// Writes configuration information to the output source.
         /// </summary>

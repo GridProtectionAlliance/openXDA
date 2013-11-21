@@ -44,6 +44,7 @@
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -67,8 +68,11 @@
     <Compile Include="Device.cs" />
     <Compile Include="DisturbanceFile.cs" />
     <Compile Include="FaultAlgorithmsSet.cs" />
+    <Compile Include="FaultLocationAlgorithms.cs" />
     <Compile Include="FaultLocationDataSet.cs" />
+    <Compile Include="FaultResultsWriterBase.cs" />
     <Compile Include="FaultTriggerAlgorithms.cs" />
+    <Compile Include="FaultTypeAlgorithms.cs" />
     <Compile Include="IFaultResultsWriter.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="MeasurementData.cs" />

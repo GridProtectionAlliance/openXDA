@@ -97,11 +97,11 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Comtrade">
-      <HintPath>..\..\..\Dependencies\GSF\Comtrade.dll</HintPath>
-    </Reference>
     <Reference Include="GSF.Communication">
       <HintPath>..\..\..\Dependencies\GSF\GSF.Communication.dll</HintPath>
+    </Reference>
+    <Reference Include="GSF.COMTRADE">
+      <HintPath>..\..\..\Dependencies\GSF\GSF.COMTRADE.dll</HintPath>
     </Reference>
     <Reference Include="GSF.Core">
       <HintPath>..\..\..\Dependencies\GSF\GSF.Core.dll</HintPath>

@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:fle="clr-namespace:openFLEManager"
-        Title="openFLE Manager" Height="650" Width="600"
+        Title="openFLE Manager" Height="500" Width="600"
         Loaded="MainWindow_Loaded" Unloaded="MainWindow_Unloaded">
     
     <Window.Background>
@@ -95,34 +95,6 @@
                             <ComboBoxItem Content="Miles" />
                             <ComboBoxItem Content="Kilometers" />
                         </ComboBox>
-                    </Grid>
-                </GroupBox>
-
-                <GroupBox Grid.Row="2" Margin="0,10" Padding="5" Header="Results writer">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Label Grid.Row="0" Grid.Column="0" Content="Results assembly" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ResultsAssembly}" Background="GhostWhite" />
-
-                        <Label Grid.Row="1" Grid.Column="0" Content="Results type" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ResultsType}" Background="GhostWhite" />
-
-                        <Label Grid.Row="2" Grid.Column="0" Content="Results parameters" />
-                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ResultsParameters}" Background="GhostWhite" />
-
-                        <Label Grid.Row="3" Grid.Column="0" Content="Results writers:" />
-                        <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ResultsWriterNames}" SelectedIndex="{Binding Mode=TwoWay, Path=SelectedResultsWriter}" />
                     </Grid>
                 </GroupBox>
 

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using GSF.Configuration;
 using GSF.IO;
 
 namespace FaultAlgorithms
@@ -33,44 +34,9 @@ namespace FaultAlgorithms
     /// <summary>
     /// Writes the results of fault analysis to an XML file.
     /// </summary>
-    public class XmlFaultResultsWriter : IFaultResultsWriter
+    public class XmlFaultResultsWriter : FaultResultsWriterBase
     {
-        #region [ Members ]
-
-        // Fields
-        private Dictionary<string, string> m_parameters;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Parameters used to configure the results writer.
-        /// </summary>
-        public Dictionary<string, string> Parameters
-        {
-            get
-            {
-                return m_parameters;
-            }
-            set
-            {
-                m_parameters = value;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Writes configuration information to the output source.
-        /// </summary>
-        /// <param name="deviceConfigurations">Configuration information to be written to the output source.</param>
-        public void WriteConfiguration(ICollection<Device> deviceConfigurations)
-        {
-            // Configuration information does not get written to XML results file
-        }
+        private string m_resultsDirectory;
 
         /// <summary>
         /// Writes the results to the output source.
@@ -78,16 +44,15 @@ namespace FaultAlgorithms
         /// <param name="disturbanceRecorder">The device that collected the disturbance data.</param>
         /// <param name="disturbanceFiles">Information about the data files collected during the disturbance.</param>
         /// <param name="lineDataSets">The data sets used for analysis to determine fault location.</param>
-        public void WriteResults(Device disturbanceRecorder, ICollection<DisturbanceFile> disturbanceFiles, ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets)
+        public override void WriteResults(Device disturbanceRecorder, ICollection<DisturbanceFile> disturbanceFiles, ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets)
         {
-            const string dateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+            const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
 
             XElement sourceFiles;
 
             Line lineDefinition;
             FaultLocationDataSet faultDataSet;
 
-            long[] times;
             int firstFaultCycleIndex;
             CycleData firstFaultCycle;
             DateTime firstFaultCycleTime;
@@ -103,7 +68,6 @@ namespace FaultAlgorithms
 
             XDocument resultsDocument;
             XElement results;
-            string resultsDirectory;
             string resultsFileName;
             string resultsFilePath;
 
@@ -129,10 +93,9 @@ namespace FaultAlgorithms
                 faultDataSet = lineDataSet.Item2;
 
                 // Get the timestamp of the first fault cycle
-                times = faultDataSet.Voltages.AN.Times;
                 firstFaultCycleIndex = faultDataSet.FaultedCycles.First();
                 firstFaultCycle = faultDataSet.Cycles[firstFaultCycleIndex];
-                firstFaultCycleTime = new DateTime(times[firstFaultCycle.StartIndex]);
+                firstFaultCycleTime = firstFaultCycle.StartTime;
 
                 // Get the fault calculation cycle
                 faultCalculationIndex = faultDataSet.FaultCalculationCycle;
@@ -171,7 +134,7 @@ namespace FaultAlgorithms
                         new XElement("cyclesOfData", faultDataSet.Cycles.Count),
                         new XElement("faultCycles", faultDataSet.FaultCycleCount),
                         new XElement("faultCalculationCycle", faultDataSet.FaultCalculationCycle),
-                        new XElement("firstFaultCycleTime", firstFaultCycleTime.ToString(dateTimeFormat)),
+                        new XElement("firstFaultCycleTime", firstFaultCycleTime.ToString(DateTimeFormat)),
                         new XElement("iaFault", iaFault),
                         new XElement("ibFault", ibFault),
                         new XElement("icFault", icFault),
@@ -193,28 +156,50 @@ namespace FaultAlgorithms
                     new XElement("openFLE", results)
                 );
 
-            // Get the directory name to place the results file in
-            if (!m_parameters.TryGetValue("resultsDirectory", out resultsDirectory))
-                resultsDirectory = "Results";
-
-            resultsDirectory = FilePath.GetAbsolutePath(resultsDirectory);
-
-            if (!Directory.Exists(resultsDirectory))
-                Directory.CreateDirectory(resultsDirectory);
+            if (!Directory.Exists(m_resultsDirectory))
+                Directory.CreateDirectory(m_resultsDirectory);
 
             // Create file path based on drop file name and avoid file name collisions
             resultsFileName = string.Format("{0}.xml", FilePath.GetFileNameWithoutExtension(disturbanceFiles.First().DestinationPath));
-            resultsFilePath = Path.Combine(resultsDirectory, resultsFileName);
-
-            for (int i = 2; File.Exists(resultsFilePath); i++)
-            {
-                resultsFileName = string.Format("{0}({1:D2}).xml", FilePath.GetFileNameWithoutExtension(disturbanceFiles.First().DestinationPath), i);
-                resultsFilePath = Path.Combine(FilePath.GetAbsolutePath(resultsDirectory), resultsFileName);
-            }
+            resultsFilePath = FilePath.GetUniqueFilePathWithBinarySearch(Path.Combine(m_resultsDirectory, resultsFileName));
 
             resultsDocument.Save(resultsFilePath);
         }
 
-        #endregion
+        /// <summary>
+        /// Loads saved <see cref="FaultResultsWriterBase"/> settings from the config file if the <see cref="P:GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:GSF.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("ResultsDirectory", "Results", "The directory to which XML fault results will be written.");
+                m_resultsDirectory = settings["ResultsDirectory"].Value;
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="FaultResultsWriterBase"/> settings to the config file if the <see cref="P:GSF.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:GSF.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["ResultsDirectory", true].Update(m_resultsDirectory);
+                config.Save();
+            }
+        }
     }
 }

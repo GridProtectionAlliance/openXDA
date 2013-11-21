@@ -108,14 +108,9 @@ namespace FaultAlgorithms
         public Conductor CN;
 
         /// <summary>
-        /// The index from the original <see cref="MeasurementDataSet"/> of the start of this cycle.
+        /// Timestamp of the start of the cycle.
         /// </summary>
-        public int StartIndex;
-
-        /// <summary>
-        /// The index from the original <see cref="MeasurementDataSet"/> of the end of this cycle.
-        /// </summary>
-        public int StopIndex;
+        public DateTime StartTime;
 
         #endregion
 
@@ -142,14 +137,12 @@ namespace FaultAlgorithms
         /// <param name="iBN">The current values for the B-to-neutral conductor.</param>
         /// <param name="vCN">The voltage values for the C-to-neutral conductor.</param>
         /// <param name="iCN">The current values for the C-to-neutral conductor.</param>
-        public CycleData(double frequency, int startIndex, long[] time, double[] vAN, double[] iAN, double[] vBN, double[] iBN, double[] vCN, double[] iCN)
+        public CycleData(double frequency, long[] time, double[] vAN, double[] iAN, double[] vBN, double[] iBN, double[] vCN, double[] iCN)
         {
             AN = new Conductor(frequency, time, vAN, iAN);
             BN = new Conductor(frequency, time, vBN, iBN);
             CN = new Conductor(frequency, time, vCN, iCN);
-
-            StartIndex = startIndex;
-            StopIndex = startIndex + time.Length - 1;
+            StartTime = new DateTime(time[0]);
         }
 
         #endregion
