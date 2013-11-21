@@ -24,6 +24,7 @@
 using System;
 using System.Linq;
 using GSF;
+using GSF.Units;
 
 namespace FaultAlgorithms
 {
@@ -110,6 +111,49 @@ namespace FaultAlgorithms
             {
                 ComplexNumber iSupConjugate = (i - iPre).Conjugate;
                 return (v * iSupConjugate).Imaginary / (z * i * iSupConjugate).Imaginary;
+            })
+            .Select(m => m * faultDataSet.LineDistance)
+            .ToArray();
+        }
+
+        /// <summary>
+        /// Takagi algorithm, substituting zero sequence current for superposition current, for
+        /// calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
+        /// </summary>
+        /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
+        /// <param name="parameters">Extra parameters to the algorithm.</param>
+        /// <returns>Set of distance calculations, one for each cycle of data.</returns>
+        [FaultLocationAlgorithm]
+        private static double[] ModifiedTakagi(FaultLocationDataSet faultDataSet, string parameters)
+        {
+            FaultType viFaultType;
+            ComplexNumber z;
+
+            ComplexNumber[] voltages;
+            ComplexNumber[] currents;
+            ComplexNumber[] zeros;
+
+            viFaultType = GetVIFaultType(faultDataSet);
+            z = GetNominalImpedance(faultDataSet);
+
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
+            zeros = faultDataSet.Cycles.Select(cycle => 3 * CycleData.CalculateSequenceComponents(cycle.AN.I, cycle.BN.I, cycle.CN.I)[0]).ToArray();
+
+            return voltages.Zip(currents, (v, i) => new
+            {
+                V = v,
+                I = i
+            })
+            .Zip(zeros, (vi, zero) =>
+            {
+                ComplexNumber v = vi.V;
+                ComplexNumber i = vi.I;
+                Angle t = (i / zero).Angle;
+
+                ComplexNumber ejt = new ComplexNumber(t, 1.0D);
+
+                return (v * zero.Conjugate * ejt).Imaginary / (z * i * zero.Conjugate * ejt).Imaginary;
             })
             .Select(m => m * faultDataSet.LineDistance)
             .ToArray();
