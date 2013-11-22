@@ -35,10 +35,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotNetZip", "DotNetZip", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GSF", "GSF", "{F5BD3958-FFBE-415F-BC25-25C30DD7C26F}"
 	ProjectSection(SolutionItems) = preProject
-		Dependencies\GSF\Comtrade.dll = Dependencies\GSF\Comtrade.dll
-		Dependencies\GSF\COMTRADE.XML = Dependencies\GSF\COMTRADE.XML
 		Dependencies\GSF\GSF.Communication.dll = Dependencies\GSF\GSF.Communication.dll
 		Dependencies\GSF\GSF.Communication.xml = Dependencies\GSF\GSF.Communication.xml
+		Dependencies\GSF\GSF.COMTRADE.dll = Dependencies\GSF\GSF.COMTRADE.dll
+		Dependencies\GSF\GSF.COMTRADE.xml = Dependencies\GSF\GSF.COMTRADE.xml
 		Dependencies\GSF\GSF.Core.dll = Dependencies\GSF\GSF.Core.dll
 		Dependencies\GSF\GSF.Core.xml = Dependencies\GSF\GSF.Core.xml
 		Dependencies\GSF\GSF.PhasorProtocols.dll = Dependencies\GSF\GSF.PhasorProtocols.dll

@@ -307,6 +307,9 @@ namespace openFLE
             ICollection<DisturbanceFile> disturbanceFiles;
             ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets;
 
+            List<double> largestCurrentDistances;
+            List<double> boundedDistances;
+
             timeStarted = DateTime.UtcNow;
             m_currentLogger = null;
             rootFileName = null;
@@ -367,10 +370,22 @@ namespace openFLE
                             faultDataSet.FaultType = ExecuteFaultTypeAlgorithm(line.FaultAlgorithmsSet.FaultTypeAlgorithm, faultDataSet, line.FaultAlgorithmsSet.FaultTypeParameters);
                             faultDataSet.FaultDistances = line.FaultAlgorithmsSet.FaultLocationAlgorithms.ToDictionary(algorithm => algorithm.Method.Name, algorithm => ExecuteFaultLocationAlgorithm(algorithm, faultDataSet, null));
 
-                            faultDataSet.FaultDistance = faultDataSet.FaultDistances.Values
+                            // Get the set of distance calculations for the cycle with the largest current
+                            largestCurrentDistances = faultDataSet.FaultDistances.Values
                                 .Select(distances => distances[faultDataSet.Cycles.GetLargestCurrentIndex()])
-                                .OrderBy(dist => dist).Where((dist, index) => index == faultDataSet.FaultDistances.Count / 2)
-                                .First();
+                                .OrderBy(dist => dist)
+                                .ToList();
+
+                            // Filter the set down to the distance values that are reasonable
+                            boundedDistances = largestCurrentDistances
+                                .Where(dist => dist >= 0.0D && dist <= faultDataSet.LineDistance)
+                                .ToList();
+
+                            // Get the representative fault distance as the median of the bounded distances,
+                            // falling back on the median of the unbounded distances if there are no bounded ones
+                            faultDataSet.FaultDistance = (boundedDistances.Count > 0)
+                                ? boundedDistances[boundedDistances.Count / 2]
+                                : largestCurrentDistances[largestCurrentDistances.Count / 2];
 
                             OnStatusMessage("Distance to fault: {0} {1}", faultDataSet.FaultDistance, m_lengthUnits);
 
