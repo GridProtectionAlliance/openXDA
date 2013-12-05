@@ -77,6 +77,9 @@
       <Component Id="XDAServiceMonitor">
         <File Id="XDAServiceMonitor.dll" Name="$(var.XDAServiceMonitor.TargetFileName)" Source="$(var.XDAServiceMonitor.TargetPath)" />
       </Component>
+      <Component Id="SqlServerTedWriter">
+        <File Id="SqlServerTedWriter.dll" Name="$(var.SqlServerTedWriter.TargetFileName)" Source="$(var.SqlServerTedWriter.TargetPath)" />
+      </Component>
       
       <!-- DotNetZip Dependencies -->
       <Component Id="Ionic.Zlib">
@@ -107,6 +110,11 @@
       </Component>
       <Component Id="GSF.TimeSeries">
         <File Id="GSF.TimeSeries.dll" Name="GSF.TimeSeries.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.TimeSeries.dll" />
+      </Component>
+      
+      <!-- Additional Files -->
+      <Component Id="XDATransientEventDatabase">
+        <File Id="XDATransientEventDatabase.sql" Name="XDATransientEventDatabase.sql" Source="$(var.SolutionDir)\Data\XDATransientEventDatabase.sql" />
       </Component>
       
       <!-- Cleanup -->

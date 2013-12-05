@@ -45,6 +45,14 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\SqlServerTedWriter\SqlServerTedWriter.csproj">
+      <Name>SqlServerTedWriter</Name>
+      <Project>{05636d10-cc92-43b1-af3d-e66ccecfb3cc}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\XDAServiceMonitor\XDAServiceMonitor.csproj">
       <Name>XDAServiceMonitor</Name>
       <Project>{81d533ed-3e17-461d-a45c-cd19dfbd6640}</Project>
