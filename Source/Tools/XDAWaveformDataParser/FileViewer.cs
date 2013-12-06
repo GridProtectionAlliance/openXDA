@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using GSF;
 using GSF.COMTRADE;
 using GSF.IO;
 using GSF.PQDIF.Logical;
@@ -377,7 +378,8 @@ namespace XDAWaveformDataParser
                 // TimeValues must be calculated by adding values to start time
                 parsedChannel.TimeValues = timeSeries.OriginalValues
                     .Select(Convert.ToDouble)
-                    .Select(TimeSpan.FromSeconds)
+                    .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
+                    .Select(TimeSpan.FromTicks)
                     .Select(timeSpan => channel.ObservationRecord.StartTime + timeSpan)
                     .ToList();
 
@@ -457,11 +459,11 @@ namespace XDAWaveformDataParser
             string csvFilePath = FilePath.GetUniqueFilePathWithBinarySearch(Path.Combine(location, csvFileName));
 
             // Generate CSV header by joining channel names
-            string header = "Time," + string.Join(",", channels.Select(channel => channel.Name));
+            string header = "Time,Ticks," + string.Join(",", channels.Select(channel => channel.Name));
 
             // It is assumed that all time series in the channels are the same, and that all y-value collections are the same size.
             // Generate CSV data by aligning timestamps and data by index, formatting each time value and joining the corresponding data values together.
-            IEnumerable<string> lines = timeValues.Select((time, index) => time.ToString("yyyy-MM-dd HH:mm:ss.ffffff") + "," + string.Join(",", channels.Select(channel => Convert.ToDouble(channel.YValues[index]))));
+            IEnumerable<string> lines = timeValues.Select((time, index) => time.ToString("yyyy-MM-dd HH:mm:ss.ffffff") + "," + time.Ticks + "," + string.Join(",", channels.Select(channel => Convert.ToDouble(channel.YValues[index]))));
 
             // Open the file and write in each line
             using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(csvFilePath)))

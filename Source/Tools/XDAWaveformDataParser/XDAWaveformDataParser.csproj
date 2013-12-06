@@ -76,6 +76,9 @@
     <Reference Include="GSF.SELEventParser">
       <HintPath>..\..\Dependencies\GSF\GSF.SELEventParser.dll</HintPath>
     </Reference>
+    <Reference Include="Ionic.Zlib">
+      <HintPath>..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms.DataVisualization" />
