@@ -83,9 +83,14 @@ namespace FaultAlgorithms
         public long[] Times;
 
         /// <summary>
-        /// Array of magnitude values.
+        /// Array of measured values.
         /// </summary>
-        public double[] Values;
+        public double[] Measurements;
+
+        /// <summary>
+        /// The number of measured samples per cycle of data.
+        /// </summary>
+        public int SampleRate;
 
         #endregion
     }

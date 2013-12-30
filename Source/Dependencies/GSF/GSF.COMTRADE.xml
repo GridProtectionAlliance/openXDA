@@ -467,7 +467,7 @@
             COMTRADE data and config file writer.
             </summary>
         </member>
-        <member name="M:GSF.COMTRADE.Writer.CreateSchema(System.Collections.Generic.IEnumerable{GSF.COMTRADE.ChannelMetadata},System.String,System.String,GSF.Ticks,System.Int32,System.Boolean,System.Double,System.Double,GSF.PhasorProtocols.LineFrequency,System.Boolean)">
+        <member name="M:GSF.COMTRADE.Writer.CreateSchema(System.Collections.Generic.IEnumerable{GSF.COMTRADE.ChannelMetadata},System.String,System.String,GSF.Ticks,System.Int32,System.Boolean,System.Double,System.Double,System.Double,System.Boolean)">
             <summary>
             Creates a new COMTRADE configuration <see cref="T:GSF.COMTRADE.Schema"/>.
             </summary>

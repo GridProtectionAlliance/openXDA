@@ -66,11 +66,6 @@
 //
 //*********************************************************************************************************************
 
-using System;
-using System.Linq;
-using GSF;
-using GSF.NumericalAnalysis;
-
 namespace FaultAlgorithms
 {
     /// <summary>
@@ -80,9 +75,6 @@ namespace FaultAlgorithms
     public class Conductor
     {
         #region [ Members ]
-
-        // Constants
-        private const double PiOverTwo = Math.PI / 2.0D;
 
         // Fields
 
@@ -95,16 +87,6 @@ namespace FaultAlgorithms
         /// One cycle of current data.
         /// </summary>
         public Cycle I;
-
-        /// <summary>
-        /// The error in voltage between the sine fit and the given data values.
-        /// </summary>
-        public double VError;
-
-        /// <summary>
-        /// The error in current between the sine fit and the given data values.
-        /// </summary>
-        public double IError;
 
         #endregion
 
@@ -122,45 +104,17 @@ namespace FaultAlgorithms
         /// <summary>
         /// Creates a new instance of the <see cref="Conductor"/> class.
         /// </summary>
+        /// <param name="cycleIndex">The index of the cycle to be calculated.</param>
+        /// <param name="sampleRateDivisor">The value to divide from the sample rate to determine the starting location of the cycle.</param>
         /// <param name="frequency">The frequency of the sine wave during this cycle.</param>
-        /// <param name="timeData">The timestamps of the data points in the given data.</param>
-        /// <param name="voltData">The voltage data points.</param>
+        /// <param name="voltageData">The voltage data points.</param>
         /// <param name="currentData">The current data points.</param>
-        public Conductor(double frequency, long[] timeData, double[] voltData, double[] currentData)
+        public Conductor(int cycleIndex, int sampleRateDivisor, double frequency, MeasurementData voltageData, MeasurementData currentData)
         {
-            long timeStart = timeData[0];
-            double[] timeInSeconds = timeData.Select(ti => Ticks.ToSeconds(ti - timeStart)).ToArray();
-            SineWave vFit = WaveFit.SineFit(voltData, timeInSeconds, frequency);
-            SineWave iFit = WaveFit.SineFit(currentData, timeInSeconds, frequency);
-
-            V = new Cycle()
-            {
-                RMS = Math.Sqrt(voltData.Select(vi => vi * vi).Average()),
-                Phase = vFit.Phase - PiOverTwo,
-                Peak = vFit.Amplitude,
-                Frequency = frequency
-            };
-
-            I = new Cycle()
-            {
-                RMS = Math.Sqrt(currentData.Select(ci => ci * ci).Average()),
-                Phase = iFit.Phase - PiOverTwo,
-                Peak = iFit.Amplitude,
-                Frequency = frequency
-            };
-
-            for (int i = 0; i < timeInSeconds.Length; i++)
-            {
-                double time = timeInSeconds[i];
-                double voltage = voltData[i];
-                double current = currentData[i];
-
-                double vEst = vFit.CalculateY(time);
-                double iEst = iFit.CalculateY(time);
-
-                VError += Math.Abs(voltage - vEst);
-                IError += Math.Abs(current - iEst);
-            }
+            int vStart = cycleIndex * (voltageData.SampleRate / sampleRateDivisor);
+            int iStart = cycleIndex * (currentData.SampleRate / sampleRateDivisor);
+            V = new Cycle(vStart, frequency, voltageData);
+            I = new Cycle(iStart, frequency, currentData);
         }
 
         #endregion

@@ -130,6 +130,7 @@ namespace FaultAlgorithms
         private MeasurementDataSet m_currents;
         private CycleDataSet m_cycles;
 
+        private double m_frequency;
         private ComplexNumber m_positiveImpedance;
         private ComplexNumber m_zeroImpedance;
 
@@ -150,14 +151,12 @@ namespace FaultAlgorithms
         /// <summary>
         /// Creates a new instance of the <see cref="FaultLocationDataSet"/> class.
         /// </summary>
-        /// <param name="voltages">The set of voltages in the data set.</param>
-        /// <param name="currents">The set of currents in the data set.</param>
-        /// <param name="cycles">The set of cycles in the data set.</param>
-        public FaultLocationDataSet(MeasurementDataSet voltages, MeasurementDataSet currents, CycleDataSet cycles)
+        public FaultLocationDataSet()
         {
-            m_voltages = voltages;
-            m_currents = currents;
-            m_cycles = cycles;
+            m_voltages = new MeasurementDataSet();
+            m_currents = new MeasurementDataSet();
+            m_cycles = new CycleDataSet();
+            m_frequency = 60.0D;
 
             m_values = new Dictionary<string, object>();
         }
@@ -196,6 +195,21 @@ namespace FaultAlgorithms
             get
             {
                 return m_cycles;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the frequency of the measured system, in Hz.
+        /// </summary>
+        public double Frequency
+        {
+            get
+            {
+                return m_frequency;
+            }
+            set
+            {
+                m_frequency = value;
             }
         }
 
@@ -415,6 +429,30 @@ namespace FaultAlgorithms
             {
                 m_values[name] = value;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Uses system frequency to calculate the sample rate for each set of
+        /// <see cref="MeasurementData"/> in the voltage and current data sets.
+        /// </summary>
+        public void CalculateSampleRates()
+        {
+            Voltages.CalculateSampleRates(m_frequency);
+            Currents.CalculateSampleRates(m_frequency);
+        }
+
+        /// <summary>
+        /// Sets the sample rate of the voltage and current data sets.
+        /// </summary>
+        /// <param name="sampleRate"></param>
+        public void SetSampleRates(int sampleRate)
+        {
+            Voltages.SetSampleRate(sampleRate);
+            Currents.SetSampleRate(sampleRate);
         }
 
         #endregion

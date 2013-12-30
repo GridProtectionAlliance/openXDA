@@ -129,20 +129,21 @@ namespace FaultAlgorithms
         /// <summary>
         /// Creates a new instance of the <see cref="CycleData"/> class.
         /// </summary>
-        /// <param name="frequency">The frequency of the sine wave during this cycle.</param>
-        /// <param name="time">The time values over the full cycle.</param>
-        /// <param name="vAN">The voltage values for the A-to-neutral conductor.</param>
-        /// <param name="iAN">The current values for the A-to-neutral conductor.</param>
-        /// <param name="vBN">The voltage values for the B-to-neutral conductor.</param>
-        /// <param name="iBN">The current values for the B-to-neutral conductor.</param>
-        /// <param name="vCN">The voltage values for the C-to-neutral conductor.</param>
-        /// <param name="iCN">The current values for the C-to-neutral conductor.</param>
-        public CycleData(double frequency, long[] time, double[] vAN, double[] iAN, double[] vBN, double[] iBN, double[] vCN, double[] iCN)
+        /// <param name="cycleIndex">The index of the cycle being created.</param>
+        /// <param name="sampleRateDivisor">The value to divide from the sample rate to determine the index of the sample at the start of the cycle.</param>
+        /// <param name="frequency">The frequency of the measured system, in Hz.</param>
+        /// <param name="voltageDataSet">The data set containing voltage measurements.</param>
+        /// <param name="currentDataSet">The data set containing current measurements.</param>
+        public CycleData(int cycleIndex, int sampleRateDivisor, double frequency, MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet)
         {
-            AN = new Conductor(frequency, time, vAN, iAN);
-            BN = new Conductor(frequency, time, vBN, iBN);
-            CN = new Conductor(frequency, time, vCN, iCN);
-            StartTime = new DateTime(time[0]);
+            int sampleIndex;
+
+            AN = new Conductor(cycleIndex, sampleRateDivisor, frequency, voltageDataSet.AN, currentDataSet.AN);
+            BN = new Conductor(cycleIndex, sampleRateDivisor, frequency, voltageDataSet.BN, currentDataSet.BN);
+            CN = new Conductor(cycleIndex, sampleRateDivisor, frequency, voltageDataSet.CN, currentDataSet.CN);
+
+            sampleIndex = cycleIndex * (voltageDataSet.AN.SampleRate / sampleRateDivisor);
+            StartTime = new DateTime(voltageDataSet.AN.Times[sampleIndex]);
         }
 
         #endregion

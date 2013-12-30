@@ -68,6 +68,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using GSF;
 
 namespace FaultAlgorithms
 {
@@ -118,6 +120,30 @@ namespace FaultAlgorithms
         #region [ Methods ]
 
         /// <summary>
+        /// Uses system frequency to calculate the sample rate for each set
+        /// of <see cref="MeasurementData"/> in this measurement data set.
+        /// </summary>
+        /// <param name="frequency">The frequency of the measured system, in Hz.</param>
+        public void CalculateSampleRates(double frequency)
+        {
+            CalculateSampleRate(frequency, AN);
+            CalculateSampleRate(frequency, BN);
+            CalculateSampleRate(frequency, CN);
+        }
+
+        /// <summary>
+        /// Explicitly sets the sample rate for each set of
+        /// <see cref="MeasurementData"/> in this measurement data set.
+        /// </summary>
+        /// <param name="sampleRate">The sample rate.</param>
+        public void SetSampleRate(int sampleRate)
+        {
+            AN.SampleRate = sampleRate;
+            BN.SampleRate = sampleRate;
+            CN.SampleRate = sampleRate;
+        }
+
+        /// <summary>
         /// Writes all measurement data to a CSV file. 
         /// </summary>
         /// <param name="fileName">Export file name.</param>
@@ -137,9 +163,9 @@ namespace FaultAlgorithms
                     {
                         string time = new DateTime(AN.Times[i]).ToString(DateTimeFormat);
 
-                        double an = AN.Values[i];
-                        double bn = BN.Values[i];
-                        double cn = CN.Values[i];
+                        double an = AN.Measurements[i];
+                        double bn = BN.Measurements[i];
+                        double cn = CN.Measurements[i];
 
                         fileWriter.Write("{0},{1},{2},{3},", time, an, bn, cn);
                         fileWriter.WriteLine("{0},{1},{2}", an - bn, bn - cn, cn - an);
@@ -164,14 +190,36 @@ namespace FaultAlgorithms
                     {
                         string time = new DateTime(AN.Times[i]).ToString(DateTimeFormat);
 
-                        double an = AN.Values[i];
-                        double bn = BN.Values[i];
-                        double cn = CN.Values[i];
+                        double an = AN.Measurements[i];
+                        double bn = BN.Measurements[i];
+                        double cn = CN.Measurements[i];
 
                         fileWriter.WriteLine("{0},{1},{2},{3}", time, an, bn, cn);
                     }
                 }
             }
+        }
+
+        private void CalculateSampleRate(double frequency, MeasurementData measurementData)
+        {
+            long[] times;
+            long startTicks;
+            long endTicks;
+            double cycles;
+
+            // Get the collection of measurement timestamps
+            times = measurementData.Times;
+
+            // Determine the start and end time of the data set
+            startTicks = times[0];
+            endTicks = times[times.Length - 1];
+
+            // Determine the number of cycles in the file,
+            // based on the system frequency
+            cycles = frequency * Ticks.ToSeconds(endTicks - startTicks);
+
+            // Calculate the number of samples per cycle
+            measurementData.SampleRate = (int)Math.Round(times.Length / cycles);
         }
 
         #endregion
@@ -196,13 +244,13 @@ namespace FaultAlgorithms
                     {
                         string time = new DateTime(voltageData.AN.Times[i]).ToString(DateTimeFormat);
 
-                        double vAN = voltageData.AN.Values[i];
-                        double vBN = voltageData.BN.Values[i];
-                        double vCN = voltageData.CN.Values[i];
+                        double vAN = voltageData.AN.Measurements[i];
+                        double vBN = voltageData.BN.Measurements[i];
+                        double vCN = voltageData.CN.Measurements[i];
 
-                        double iAN = currentData.AN.Values[i];
-                        double iBN = currentData.BN.Values[i];
-                        double iCN = currentData.CN.Values[i];
+                        double iAN = currentData.AN.Measurements[i];
+                        double iBN = currentData.BN.Measurements[i];
+                        double iCN = currentData.CN.Measurements[i];
 
                         fileWriter.Write("{0},{1},{2},{3},", time, vAN, vBN, vCN);
                         fileWriter.Write("{0},{1},{2},", vAN - vBN, vBN - vCN, vCN - vAN);

@@ -66,7 +66,10 @@
 //
 //*********************************************************************************************************************
 
+using System;
+using System.Linq;
 using GSF;
+using GSF.NumericalAnalysis;
 using GSF.Units;
 
 namespace FaultAlgorithms
@@ -77,6 +80,9 @@ namespace FaultAlgorithms
     public class Cycle
     {
         #region [ Members ]
+
+        // Constants
+        private const double PiOverTwo = Math.PI / 2.0D;
 
         // Fields
 
@@ -95,12 +101,73 @@ namespace FaultAlgorithms
         /// </summary>
         public double Peak;
 
+        /// <summary>
+        /// The error between the sine fit and the given data values.
+        /// </summary>
+        public double Error;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Cycle"/> class.
+        /// </summary>
+        public Cycle()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="Cycle"/> class.
+        /// </summary>
+        /// <param name="startSample">The index of the start of the cycle.</param>
+        /// <param name="frequency">The frequency of the measured system, in Hz.</param>
+        /// <param name="waveFormData">The time-domain data to be used to calculate frequency-domain values.</param>
+        public Cycle(int startSample, double frequency, MeasurementData waveFormData)
+        {
+            long timeStart;
+            double[] timeInSeconds;
+            double[] measurements;
+            SineWave sineFit;
+
+            if (startSample < 0)
+                throw new ArgumentOutOfRangeException("startSample");
+
+            if (startSample + waveFormData.SampleRate > waveFormData.Times.Length)
+                throw new ArgumentOutOfRangeException("startSample");
+
+            if (startSample + waveFormData.SampleRate > waveFormData.Measurements.Length)
+                throw new ArgumentOutOfRangeException("startSample");
+
+            timeStart = waveFormData.Times[startSample];
+            timeInSeconds = new double[waveFormData.SampleRate];
+            measurements = new double[waveFormData.SampleRate];
+
+            for (int i = 0; i < waveFormData.SampleRate; i++)
+            {
+                timeInSeconds[i] = Ticks.ToSeconds(waveFormData.Times[i + startSample] - timeStart);
+                measurements[i] = waveFormData.Measurements[i + startSample];
+            }
+
+            sineFit = WaveFit.SineFit(measurements, timeInSeconds, frequency);
+
+            RMS = Math.Sqrt(measurements.Select(vi => vi * vi).Average());
+            Phase = sineFit.Phase - PiOverTwo;
+            Peak = sineFit.Amplitude;
+            Frequency = frequency;
+
+            Error = timeInSeconds
+                .Select(time => sineFit.CalculateY(time))
+                .Zip(measurements, (calc, measurement) => Math.Abs(calc - measurement))
+                .Sum();
+        }
+
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Root-mean-square of the <see cref="MeasurementData.Values"/> in the cycle.
+        /// Root-mean-square of the <see cref="MeasurementData.Measurements"/> in the cycle.
         /// </summary>
         public double RMS
         {

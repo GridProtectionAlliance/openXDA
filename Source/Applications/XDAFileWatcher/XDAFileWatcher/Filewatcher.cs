@@ -476,7 +476,7 @@ namespace XDAFileWatcher
                         destinationFileName = string.Concat(destinationFileName, FilePath.GetExtension(sourceFullPath));
 
                         // Determine destination foldername
-                        string destinationFolderName = BuildDestinationName(sourceFullPath, f.WatchFolderAction.OutputFolderPattern, true);
+                        string destinationFolderName = FilePath.GetAbsolutePath(BuildDestinationName(sourceFullPath, f.WatchFolderAction.OutputFolderPattern, true));
 
                         // Determine destination sourceFullPath
                         string destinationPathName = FilePath.GetUniqueFilePath(Path.Combine(destinationFolderName, destinationFileName));
@@ -923,7 +923,7 @@ namespace XDAFileWatcher
                             case "SOURCEROOTPATH":
                                 if (!string.IsNullOrEmpty(childNode.InnerText))
                                 {
-                                    RootPathToWatch = childNode.InnerText.EnsureEnd("\\");
+                                    RootPathToWatch = FilePath.GetAbsolutePath(childNode.InnerText.EnsureEnd("\\"));
 
                                     if (Directory.Exists(RootPathToWatch))
                                     {

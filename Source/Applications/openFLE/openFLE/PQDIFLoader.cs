@@ -71,23 +71,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FaultAlgorithms;
-using GSF.PQDIF.Logical;
 using GSF;
+using GSF.PQDIF.Logical;
 
 namespace openFLE
 {
     /// <summary>
     /// Defines functions needed to load PQDIF data sets for openFLE.
     /// </summary>
-    static class PQDIFLoader
+    internal static class PQDIFLoader
     {
         /// <summary>
         /// Populate known voltage and current data from PQDIF file.
         /// </summary>
+        /// <param name="faultDataSet">Fault data set to be populated.</param>
         /// <param name="settings">Source parameters.</param>
-        /// <param name="voltageDataSet">Voltage data set to populate.</param>
-        /// <param name="currentDataSet">Current data set to populate.</param>
-        public static void PopulateDataSets(Dictionary<string, string> settings, MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet)
+        public static void PopulateDataSet(FaultLocationDataSet faultDataSet, Dictionary<string, string> settings)
         {
             string fileName;
 
@@ -107,9 +106,7 @@ namespace openFLE
                 logicalParser.Open();
 
                 while (logicalParser.HasNextObservationRecord())
-                {
                     observationRecords.Add(logicalParser.NextObservationRecord());
-                }
             }
 
             // Get the first observation record that contains six wave forms.
@@ -127,9 +124,12 @@ namespace openFLE
                 cnChannels = waveForms.Where(channel => channel.Definition.Phase == Phase.CN).ToArray();
 
                 // Attempt to fill in fault data for each of the three phase types
-                FillFaultData(voltageDataSet.AN, currentDataSet.AN, anChannels);
-                FillFaultData(voltageDataSet.BN, currentDataSet.BN, bnChannels);
-                FillFaultData(voltageDataSet.CN, currentDataSet.CN, cnChannels);
+                FillFaultData(faultDataSet.Voltages.AN, faultDataSet.Currents.AN, anChannels);
+                FillFaultData(faultDataSet.Voltages.BN, faultDataSet.Currents.BN, bnChannels);
+                FillFaultData(faultDataSet.Voltages.CN, faultDataSet.Currents.CN, cnChannels);
+
+                // Set the frequency in the data set to the nominal frequency of the system
+                faultDataSet.Frequency = faultObservation.Settings.NominalFrequency;
             }
         }
 
@@ -160,8 +160,8 @@ namespace openFLE
                 // Fill in fault data for each of the three series obtained above
                 voltageData.Times = ToTicks(voltageTimeSeries);
                 currentData.Times = ToTicks(currentTimeSeries);
-                voltageData.Values = voltageDataSeries.OriginalValues.Select(Convert.ToDouble).ToArray();
-                currentData.Values = currentDataSeries.OriginalValues.Select(Convert.ToDouble).ToArray();
+                voltageData.Measurements = voltageDataSeries.OriginalValues.Select(Convert.ToDouble).ToArray();
+                currentData.Measurements = currentDataSeries.OriginalValues.Select(Convert.ToDouble).ToArray();
             }
         }
 

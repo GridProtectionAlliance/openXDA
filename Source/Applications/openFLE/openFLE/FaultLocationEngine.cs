@@ -242,7 +242,10 @@ namespace openFLE
 
             // Write configuration to each of the results writers
             foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
-                TryWriteConfiguration(resultsWriter, m_devices);
+            {
+                if (resultsWriter.Enabled)
+                    TryWriteConfiguration(resultsWriter, m_devices);
+            }
         }
 
         private void FileMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -331,7 +334,10 @@ namespace openFLE
                     devices = CreateDevices(m_deviceDefinitionsFile);
 
                     foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
-                        TryWriteConfiguration(resultsWriter, devices);
+                    {
+                        if (resultsWriter.Enabled)
+                            TryWriteConfiguration(resultsWriter, devices);
+                    }
 
                     m_devices = devices;
                 }
@@ -418,7 +424,10 @@ namespace openFLE
                         }
 
                         foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
-                            TryWriteResults(resultsWriter, disturbanceRecorder, disturbanceFiles, lineDataSets);
+                        {
+                            if (resultsWriter.Enabled)
+                                TryWriteResults(resultsWriter, disturbanceRecorder, disturbanceFiles, lineDataSets);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -742,11 +751,12 @@ namespace openFLE
         {
             string extension = FilePath.GetExtension(fileName).ToLowerInvariant().Trim();
 
-            // Load the fault data set based on provided parameters
-            MeasurementDataSet voltageMeasurementDataSet = new MeasurementDataSet();
-            MeasurementDataSet currentMeasurementDataSet = new MeasurementDataSet();
-            CycleDataSet cycleDataSet;
-            FaultLocationDataSet faultDataSet;
+            FaultLocationDataSet faultDataSet = new FaultLocationDataSet()
+            {
+                PositiveImpedance = new ComplexNumber(line.R1, line.X1),
+                ZeroImpedance = new ComplexNumber(line.R0, line.X0),
+                LineDistance = line.Length
+            };
 
             StringBuilder parameters = new StringBuilder();
 
@@ -769,15 +779,7 @@ namespace openFLE
             }
 
             // Load data sets based on specified parameters
-            LoadDataSets(voltageMeasurementDataSet, currentMeasurementDataSet, parameters.ToString(), line);
-            cycleDataSet = new CycleDataSet(voltageMeasurementDataSet, currentMeasurementDataSet, GetSampleRate(voltageMeasurementDataSet.AN.Times));
-
-            faultDataSet = new FaultLocationDataSet(voltageMeasurementDataSet, currentMeasurementDataSet, cycleDataSet)
-            {
-                PositiveImpedance = new ComplexNumber(line.R1, line.X1),
-                ZeroImpedance = new ComplexNumber(line.R0, line.X0),
-                LineDistance = line.Length
-            };
+            LoadDataSets(faultDataSet, parameters.ToString(), line);
 
             return faultDataSet;
         }
@@ -912,7 +914,7 @@ namespace openFLE
         // Static Methods
 
         // Load voltage and current data set based on connection string parameters
-        private static void LoadDataSets(MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet, string parameters, Line line)
+        private static void LoadDataSets(FaultLocationDataSet faultDataSet, string parameters, Line line)
         {
             if (string.IsNullOrEmpty(parameters))
                 throw new ArgumentNullException("parameters");
@@ -926,41 +928,59 @@ namespace openFLE
             switch (dataSourceType.ToLowerInvariant().Trim())
             {
                 case "pqdif":
-                    PQDIFLoader.PopulateDataSets(settings, voltageDataSet, currentDataSet);
+                    PQDIFLoader.PopulateDataSet(faultDataSet, settings);
                     break;
                 case "comtrade":
-                    ComtradeLoader.PopulateDataSets(settings, voltageDataSet, currentDataSet, line);
+                    COMTRADELoader.PopulateDataSet(faultDataSet, settings, line);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("parameters", string.Format("Cannot parse \"{0}\" data source type - format is undefined.", dataSourceType));
             }
 
-            // TODO: Determine if this is a valid assumption
-            if ((object)voltageDataSet.AN.Values == null || voltageDataSet.AN.Values.Length == 0 || (object)voltageDataSet.BN.Values == null || voltageDataSet.BN.Values.Length == 0 || (object)voltageDataSet.CN.Values == null || voltageDataSet.CN.Values.Length == 0)
-                throw new InvalidOperationException("Cannot calculate fault location without line-to-neutral values.");
+            if ((object)faultDataSet.Voltages.AN.Measurements == null || faultDataSet.Voltages.AN.Measurements.Length == 0)
+                throw new InvalidOperationException("Missing AN voltage. Cannot calculate fault location without line-to-neutral voltages.");
+
+            if ((object)faultDataSet.Voltages.BN.Measurements == null || faultDataSet.Voltages.BN.Measurements.Length == 0)
+                throw new InvalidOperationException("Missing BN voltage. Cannot calculate fault location without line-to-neutral voltages.");
+
+            if ((object)faultDataSet.Voltages.CN.Measurements == null || faultDataSet.Voltages.CN.Measurements.Length == 0)
+                throw new InvalidOperationException("Missing CN voltage. Cannot calculate fault location without line-to-neutral voltages.");
+
+            if ((object)faultDataSet.Currents.AN.Measurements == null || faultDataSet.Currents.AN.Measurements.Length == 0)
+                throw new InvalidOperationException("Missing AN current. Cannot calculate fault location without line-to-neutral currents.");
+
+            if ((object)faultDataSet.Currents.BN.Measurements == null || faultDataSet.Currents.BN.Measurements.Length == 0)
+                throw new InvalidOperationException("Missing BN current. Cannot calculate fault location without line-to-neutral currents.");
+
+            if ((object)faultDataSet.Currents.CN.Measurements == null || faultDataSet.Currents.CN.Measurements.Length == 0)
+                throw new InvalidOperationException("Missing CN current. Cannot calculate fault location without line-to-neutral currents.");
+
+            ValidateSampleRates(faultDataSet.Frequency, faultDataSet.Voltages);
+            ValidateSampleRates(faultDataSet.Frequency, faultDataSet.Currents);
+
+            faultDataSet.Cycles.Populate(faultDataSet.Frequency, faultDataSet.Voltages, faultDataSet.Currents);
         }
 
-        private static int GetSampleRate(long[] times)
+        private static void ValidateSampleRates(double frequency, MeasurementDataSet measurementDataSet)
         {
-            int[] knownSampleRates = { 96, 100, 128, 256 };
+            int[] sampleRates = new int[] { measurementDataSet.AN.SampleRate, measurementDataSet.BN.SampleRate, measurementDataSet.CN.SampleRate };
+            int[] distinctSampleRates;
 
-            long startTime;
-            long cycleTime;
-            int samples;
-            int min;
+            if (sampleRates.Any(rate => rate == 0))
+            {
+                distinctSampleRates = sampleRates.Where(rate => rate != 0).Distinct().ToArray();
 
-            // If there are no times in the array, default to 128
-            if ((object)times == null || times.Length <= 0)
-                return 128;
-
-            // Assume 60 Hz and get a full cycle
-            startTime = times[0];
-            cycleTime = Ticks.PerSecond / 60L;
-            samples = times.TakeWhile(time => time - startTime < cycleTime).Count();
-
-            // Return the known sample rate closest to the 60 Hz sample rate
-            min = knownSampleRates.Min(sampleRate => Math.Abs(sampleRate - samples));
-            return knownSampleRates.Single(sampleRate => Math.Abs(sampleRate - samples) == min);
+                if (distinctSampleRates.Length != 1)
+                {
+                    measurementDataSet.CalculateSampleRates(frequency);
+                }
+                else
+                {
+                    measurementDataSet.AN.SampleRate = distinctSampleRates[0];
+                    measurementDataSet.BN.SampleRate = distinctSampleRates[0];
+                    measurementDataSet.CN.SampleRate = distinctSampleRates[0];
+                }
+            }
         }
 
         #endregion

@@ -71,8 +71,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using GSF.COMTRADE;
 using FaultAlgorithms;
+using GSF.COMTRADE;
 using GSF.IO;
 
 namespace openFLE
@@ -80,16 +80,15 @@ namespace openFLE
     /// <summary>
     /// Defines functions needed to load COMTRADE data sets for openFLE.
     /// </summary>
-    internal static class ComtradeLoader
+    internal static class COMTRADELoader
     {
         /// <summary>
         /// Populate known voltage and current data from PQDIF file.
         /// </summary>
+        /// <param name="faultDataSet">Fault data set to be populated.</param>
         /// <param name="settings">Source parameters.</param>
-        /// <param name="voltageDataSet">Voltage data set to populate.</param>
-        /// <param name="currentDataSet">Current data set to populate.</param>
         /// <param name="line">Associated XML event file definition.</param>
-        public static void PopulateDataSets(Dictionary<string, string> settings, MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet, Line line)
+        public static void PopulateDataSet(FaultLocationDataSet faultDataSet, Dictionary<string, string> settings, Line line)
         {
             string fileName;
 
@@ -132,6 +131,8 @@ namespace openFLE
             List<double> ibValues = new List<double>();
             List<double> icValues = new List<double>();
 
+            SampleRate sampleRate;
+
             ValidateIndexes("VA", vaIndexes);
             ValidateIndexes("VB", vbIndexes);
             ValidateIndexes("VC", vcIndexes);
@@ -150,6 +151,12 @@ namespace openFLE
                 // Open COMTRADE data files
                 parser.OpenFiles();
 
+                faultDataSet.Frequency = schema.NominalFrequency;
+                sampleRate = schema.SampleRates.First();
+
+                if (sampleRate.Rate != 0)
+                    faultDataSet.SetSampleRates((int)(sampleRate.Rate / faultDataSet.Frequency));
+
                 // Read all COMTRADE records
                 while (parser.ReadNext())
                 {
@@ -164,21 +171,20 @@ namespace openFLE
             }
 
             // Populate voltage data set
-            voltageDataSet.AN.Times = times.ToArray();
-            voltageDataSet.AN.Values = vaValues.ToArray();
-            voltageDataSet.BN.Times = times.ToArray();
-            voltageDataSet.BN.Values = vbValues.ToArray();
-            voltageDataSet.CN.Times = times.ToArray();
-            voltageDataSet.CN.Values = vcValues.ToArray();
+            faultDataSet.Voltages.AN.Times = times.ToArray();
+            faultDataSet.Voltages.AN.Measurements = vaValues.ToArray();
+            faultDataSet.Voltages.BN.Times = times.ToArray();
+            faultDataSet.Voltages.BN.Measurements = vbValues.ToArray();
+            faultDataSet.Voltages.CN.Times = times.ToArray();
+            faultDataSet.Voltages.CN.Measurements = vcValues.ToArray();
 
             // Populate current data set
-            currentDataSet.AN.Times = times.ToArray();
-            currentDataSet.AN.Values = iaValues.ToArray();
-            currentDataSet.BN.Times = times.ToArray();
-            currentDataSet.BN.Values = ibValues.ToArray();
-            currentDataSet.CN.Times = times.ToArray();
-            currentDataSet.CN.Values = icValues.ToArray();
-
+            faultDataSet.Currents.AN.Times = times.ToArray();
+            faultDataSet.Currents.AN.Measurements = iaValues.ToArray();
+            faultDataSet.Currents.BN.Times = times.ToArray();
+            faultDataSet.Currents.BN.Measurements = ibValues.ToArray();
+            faultDataSet.Currents.CN.Times = times.ToArray();
+            faultDataSet.Currents.CN.Measurements = icValues.ToArray();
         }
 
         // Gets the actual analog value indexes based on the schema based channel indexes

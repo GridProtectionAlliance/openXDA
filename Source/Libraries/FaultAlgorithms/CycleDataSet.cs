@@ -69,7 +69,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using GSF;
+using GSF.NumericalAnalysis;
 
 namespace FaultAlgorithms
 {
@@ -98,45 +100,12 @@ namespace FaultAlgorithms
         /// <summary>
         /// Creates a new instance of the <see cref="CycleDataSet"/> class.
         /// </summary>
+        /// <param name="frequency">The frequency of the measured system, in Hz.</param>
         /// <param name="voltageDataSet">The data set containing voltage data points.</param>
         /// <param name="currentDataSet">The data set containing current data points.</param>
-        /// <param name="samplesPerCycle">The number of samples per cycle.</param>
-        public CycleDataSet(MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet, int samplesPerCycle)
+        public CycleDataSet(double frequency, MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet)
         {
-            int totalSamples = voltageDataSet.AN.Times.Length;
-
-            long[] time = new long[samplesPerCycle];
-            double[] vAN = new double[samplesPerCycle];
-            double[] iAN = new double[samplesPerCycle];
-            double[] vBN = new double[samplesPerCycle];
-            double[] iBN = new double[samplesPerCycle];
-            double[] vCN = new double[samplesPerCycle];
-            double[] iCN = new double[samplesPerCycle];
-
-            double frequency = 60.0D;
-
-            m_cycles = new List<CycleData>(totalSamples - samplesPerCycle + 1);
-
-            for (int i = 0; i < m_cycles.Capacity; i++)
-            {
-                int j, k;
-
-                for (j = 0, k = i; j < samplesPerCycle; j++, k++)
-                {
-                    time[j] = voltageDataSet.AN.Times[k];
-                    vAN[j] = voltageDataSet.AN.Values[k];
-                    iAN[j] = currentDataSet.AN.Values[k];
-                    vBN[j] = voltageDataSet.BN.Values[k];
-                    iBN[j] = currentDataSet.BN.Values[k];
-                    vCN[j] = voltageDataSet.CN.Values[k];
-                    iCN[j] = currentDataSet.CN.Values[k];
-                }
-
-                if (k < voltageDataSet.AN.Times.Length)
-                    frequency = 1.0D / Ticks.ToSeconds(voltageDataSet.AN.Times[k] - time[0]);
-
-                m_cycles.Add(new CycleData(frequency, time, vAN, iAN, vBN, iBN, vCN, iCN));
-            }
+            Populate(frequency, voltageDataSet, currentDataSet);
         }
 
         #endregion
@@ -178,6 +147,37 @@ namespace FaultAlgorithms
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Populates the cycle data set by calculating cycle
+        /// data based on the given measurement data sets.
+        /// </summary>
+        /// <param name="frequency">The frequency of the measured system, in Hz.</param>
+        /// <param name="voltageDataSet">Data set containing voltage waveform measurements.</param>
+        /// <param name="currentDataSet">Data set containing current waveform measurements.</param>
+        public void Populate(double frequency, MeasurementDataSet voltageDataSet, MeasurementDataSet currentDataSet)
+        {
+            List<MeasurementData> measurementDataList;
+            int sampleRateDivisor;
+            int numberOfCycles;
+
+            measurementDataList = new List<MeasurementData>()
+            {
+                voltageDataSet.AN, voltageDataSet.BN, voltageDataSet.CN,
+                currentDataSet.AN, currentDataSet.BN, currentDataSet.CN
+            };
+
+            sampleRateDivisor = measurementDataList
+                .Select(measurementData => measurementData.SampleRate)
+                .GreatestCommonDenominator();
+
+            numberOfCycles = measurementDataList
+                .Select(measurementData => (measurementData.Measurements.Length - measurementData.SampleRate + 1) / (measurementData.SampleRate / sampleRateDivisor))
+                .Min();
+
+            for (int i = 0; i < numberOfCycles; i++)
+                m_cycles.Add(new CycleData(i, sampleRateDivisor, frequency, voltageDataSet, currentDataSet));
+        }
 
         /// <summary>
         /// Returns the index of the cycle with the largest total current.
