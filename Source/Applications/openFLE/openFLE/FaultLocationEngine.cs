@@ -961,6 +961,12 @@ namespace openFLE
             faultDataSet.Cycles.Populate(faultDataSet.Frequency, faultDataSet.Voltages, faultDataSet.Currents);
         }
 
+        // Some rough calculations have shown that sample rate calculation is extremely accurate,
+        // so long as the frequency of the system is close to the frequency passed into this method
+        // (within a few hundreths of a Hz). However, in the interest of correctness, this method
+        // attempts to use the sample rate provided by the data loader--if one has been provided--
+        // rather than blindly using the calculated sample rate. Given the accuracy of the
+        // calculation, this may not be necessary.
         private static void ValidateSampleRates(double frequency, MeasurementDataSet measurementDataSet)
         {
             int[] sampleRates = new int[] { measurementDataSet.AN.SampleRate, measurementDataSet.BN.SampleRate, measurementDataSet.CN.SampleRate };
