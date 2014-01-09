@@ -224,9 +224,9 @@ namespace FaultAlgorithms
 
             if (faultDataSet.FaultType == FaultType.ABC)
             {
-                anError = faultDataSet.Cycles.Sum(cycle => cycle.AN.IError);
-                bnError = faultDataSet.Cycles.Sum(cycle => cycle.BN.IError);
-                cnError = faultDataSet.Cycles.Sum(cycle => cycle.CN.IError);
+                anError = faultDataSet.Cycles.Sum(cycle => cycle.AN.I.Error);
+                bnError = faultDataSet.Cycles.Sum(cycle => cycle.BN.I.Error);
+                cnError = faultDataSet.Cycles.Sum(cycle => cycle.CN.I.Error);
                 minError = Math.Min(Math.Min(anError, bnError), cnError);
 
                 if (anError == minError)
