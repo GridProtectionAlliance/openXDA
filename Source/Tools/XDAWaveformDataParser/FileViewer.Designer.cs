@@ -115,7 +115,7 @@
             this.Controls.Add(this.SELEVEButton);
             this.Controls.Add(this.DataChart);
             this.Name = "FileViewer";
-            this.Text = "openDDT";
+            this.Text = "XDA Waveform Data Parser";
             this.Resize += new System.EventHandler(this.Form_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.DataChart)).EndInit();
             this.ResumeLayout(false);

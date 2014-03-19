@@ -14,6 +14,13 @@
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
 //  License for the specific language governing permissions and limitations.
 //
+//  --------------------------------------------------------------------------------------------------- 
+//  Portions of this work are derived from "openFLE" which is an Electric Power Research Institute, Inc.
+//  (EPRI) copyrighted open source software product released under the BSD license.  openFLE carries
+//  the following copyright notice: Version 1.0 - Copyright 2012 ELECTRIC POWER RESEARCH INSTITUTE, INC.
+//  All rights reserved.
+//  ---------------------------------------------------------------------------------------------------
+//
 //  Code Modification History:
 //  -------------------------------------------------------------------------------------------------------------------
 //  03/08/2013 - Stephen C. Wills

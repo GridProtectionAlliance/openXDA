@@ -14,6 +14,24 @@
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
 //  License for the specific language governing permissions and limitations.
 //
+//  --------------------------------------------------------------------------------------------------- 
+//  Portions of this work are derived from "openFLE" which is an Electric Power Research Institute, Inc.
+//  (EPRI) copyrighted open source software product released under the BSD license.  openFLE carries
+//  the following copyright notice: Version 1.0 - Copyright 2012 ELECTRIC POWER RESEARCH INSTITUTE, INC.
+//  All rights reserved.
+//  ---------------------------------------------------------------------------------------------------
+//
+//  The algorithms and methods in this class come from the following sources, among others:
+//
+//  1. IEEE-C37.114 (2005), IEEE Guide for Determining Fault Location on AC Transmission and Distribution
+//         Lines
+//  2. EPRI Product Report 1024381 (2013), Distribution Fault Location Support Tools, Algorithms and
+//         Implementation Approaches
+//  3. Novosel D., Hart DG, Saha MM et al. (1994) Optimal fault location for transmission systems. 
+//         ABB Rev(8) 20-27.
+//  4. Takagi T, Yamakosi Y, Yamura M et al. (1981) Development of a new type fault locating using the
+//        one-terminal voltage and current data.  IEEE Transactions on PAS, 101(8):2892-2898
+//
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
 //  11/12/2013 - Stephen C. Wills
