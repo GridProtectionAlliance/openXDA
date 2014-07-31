@@ -499,11 +499,11 @@ namespace XDAFileWatcher
                                     if (!Directory.Exists(destinationFolderName))
                                         Directory.CreateDirectory(destinationFolderName);
 
-                                    FilePath.WaitForReadLock(sourceFullPath);
+                                    FilePath.WaitForReadLockExclusive(sourceFullPath);
                                     File.Copy(sourceFullPath, destinationPathName, true);
 
                                     TimeSpan duration = processStartTime.Subtract(DateTime.UtcNow).Negate();
-                                    Log.Instance.Info("ProcessEvent: File COPY successsful to " + destinationPathName.QuoteWrap() + " Duration = " + duration.ToFormattedString());
+                                    Log.Instance.Info("ProcessEvent: File COPY successsful to " + destinationPathName.QuoteWrap() + " Duration = " + duration.ToElapsedTimeString());
 
                                     if (f.ProduceResultsFile)
                                     {
@@ -527,11 +527,11 @@ namespace XDAFileWatcher
                                     if (!Directory.Exists(destinationFolderName))
                                         Directory.CreateDirectory(destinationFolderName);
 
-                                    FilePath.WaitForReadLock(sourceFullPath);
+                                    FilePath.WaitForReadLockExclusive(sourceFullPath);
                                     File.Move(sourceFullPath, destinationPathName);
 
                                     TimeSpan duration = processStartTime.Subtract(DateTime.UtcNow).Negate();
-                                    Log.Instance.Info("ProcessEvent: File MOVE successsful to " + destinationPathName.QuoteWrap() + " Duration = " + duration.ToFormattedString());
+                                    Log.Instance.Info("ProcessEvent: File MOVE successsful to " + destinationPathName.QuoteWrap() + " Duration = " + duration.ToElapsedTimeString());
 
                                     if (f.ProduceResultsFile)
                                     {

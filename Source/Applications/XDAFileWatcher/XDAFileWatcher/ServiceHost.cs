@@ -33,7 +33,6 @@ using GSF.Adapters;
 using GSF.Console;
 using GSF.IO;
 using GSF.ServiceProcess;
-using XDAServiceMonitor;
 
 namespace XDAFileWatcher
 {
@@ -262,7 +261,7 @@ namespace XDAFileWatcher
                 try
                 {
                     if (serviceMonitor.Enabled)
-                        serviceMonitor.HandleServiceErrorMessage(ex.Message);
+                        serviceMonitor.HandleServiceError(ex);
                 }
                 catch (Exception ex2)
                 {
@@ -315,7 +314,7 @@ namespace XDAFileWatcher
                 try
                 {
                     if (serviceMonitor.Enabled)
-                        serviceMonitor.HandleServiceErrorMessage(errorMessage);
+                        serviceMonitor.HandleServiceError(new Exception(errorMessage));
                 }
                 catch (Exception ex)
                 {

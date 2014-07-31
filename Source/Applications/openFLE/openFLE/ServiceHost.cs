@@ -72,10 +72,8 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using GSF;
-using GSF.Adapters;
 using GSF.Console;
 using GSF.ServiceProcess;
-using XDAServiceMonitor;
 
 namespace openFLE
 {
@@ -84,7 +82,7 @@ namespace openFLE
         #region [ Members ]
 
         // Fields
-        private AdapterLoader<IServiceMonitor> m_serviceMonitors;
+        private ServiceMonitors m_serviceMonitors;
         private FaultLocationEngine m_faultLocationEngine;
 
         #endregion
@@ -92,7 +90,6 @@ namespace openFLE
         #region [ Constructors ]
 
         public ServiceHost()
-            : base()
         {
             InitializeComponent();
 
@@ -120,7 +117,7 @@ namespace openFLE
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
 
             // Set up adapter loader to load service monitors
-            m_serviceMonitors = new AdapterLoader<IServiceMonitor>();
+            m_serviceMonitors = new ServiceMonitors();
             m_serviceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
             m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
             m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
@@ -258,7 +255,7 @@ namespace openFLE
                 try
                 {
                     if (serviceMonitor.Enabled)
-                        serviceMonitor.HandleServiceErrorMessage(ex.Message);
+                        serviceMonitor.HandleServiceError(ex);
                 }
                 catch (Exception ex2)
                 {

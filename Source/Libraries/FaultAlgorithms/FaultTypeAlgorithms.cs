@@ -55,10 +55,14 @@ namespace FaultAlgorithms
             double anCurrentRMS;
             double bnCurrentRMS;
             double cnCurrentRMS;
-            double anMultiplied;
-            double bnMultiplied;
-            double cnMultiplied;
-            double multiplier;
+
+            double tolerance;
+            double largestCurrentRMS;
+            double faultCurrentRMS;
+
+            bool anFault;
+            bool bnFault;
+            bool cnFault;
 
             parameterLookup = parameters.ParseKeyValuePairs();
             largestCurrentIndex = faultDataSet.Cycles.GetLargestCurrentIndex();
@@ -67,30 +71,34 @@ namespace FaultAlgorithms
             if ((object)largestCurrentCycle == null)
                 throw new InvalidOperationException("No cycles found in fault data set. Cannot calculate fault type.");
 
-            if (!parameterLookup.TryGetValue("multiplier", out parameterValue) || !double.TryParse(parameterValue, out multiplier))
-                multiplier = 5.0;
+            if (!parameterLookup.TryGetValue("tolerance", out parameterValue) || !double.TryParse(parameterValue, out tolerance))
+                tolerance = 10.0D;
 
             anCurrentRMS = largestCurrentCycle.AN.I.RMS;
             bnCurrentRMS = largestCurrentCycle.BN.I.RMS;
             cnCurrentRMS = largestCurrentCycle.CN.I.RMS;
-            anMultiplied = anCurrentRMS * multiplier;
-            bnMultiplied = bnCurrentRMS * multiplier;
-            cnMultiplied = cnCurrentRMS * multiplier;
 
-            if (anCurrentRMS >= bnMultiplied && anCurrentRMS >= cnMultiplied)
-                faultType = FaultType.AN;
-            else if (bnCurrentRMS >= anMultiplied && bnCurrentRMS >= cnMultiplied)
-                faultType = FaultType.BN;
-            else if (cnCurrentRMS >= anMultiplied && cnCurrentRMS >= bnMultiplied)
-                faultType = FaultType.CN;
-            else if (anCurrentRMS >= cnMultiplied && bnCurrentRMS >= cnMultiplied)
-                faultType = FaultType.AB;
-            else if (bnCurrentRMS >= anMultiplied && cnCurrentRMS >= anMultiplied)
-                faultType = FaultType.BC;
-            else if (anCurrentRMS >= bnMultiplied && cnCurrentRMS >= bnMultiplied)
-                faultType = FaultType.CA;
-            else
+            largestCurrentRMS = Math.Max(Math.Max(anCurrentRMS, bnCurrentRMS), cnCurrentRMS);
+            faultCurrentRMS = largestCurrentRMS * tolerance * 0.01D;
+
+            anFault = (anCurrentRMS >= faultCurrentRMS);
+            bnFault = (bnCurrentRMS >= faultCurrentRMS);
+            cnFault = (cnCurrentRMS >= faultCurrentRMS);
+
+            if (anFault && bnFault && cnFault)
                 faultType = FaultType.ABC;
+            else if (anFault && bnFault)
+                faultType = FaultType.AB;
+            else if (bnFault && cnFault)
+                faultType = FaultType.BC;
+            else if (cnFault && anFault)
+                faultType = FaultType.CA;
+            else if (anFault)
+                faultType = FaultType.AN;
+            else if (bnFault)
+                faultType = FaultType.BN;
+            else
+                faultType = FaultType.CN;
 
             return faultType;
         }

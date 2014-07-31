@@ -21,8 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Diagnostics;
-using XDAServiceMonitor;
+using GSF.ServiceProcess;
 
 namespace DebugServiceMonitor
 {
@@ -45,10 +46,10 @@ namespace DebugServiceMonitor
         /// Handles messages received by the service
         /// whenever the service encounters an error.
         /// </summary>
-        /// <param name="message">The error message received from the service.</param>
-        public override void HandleServiceErrorMessage(string message)
+        /// <param name="ex">The error received from the service.</param>
+        public override void HandleServiceError(Exception ex)
         {
-            Debug.WriteLine("ERROR: {0}", (object)message);
+            Debug.WriteLine("ERROR: {0}", (object)ex.Message);
         }
 
         /// <summary>

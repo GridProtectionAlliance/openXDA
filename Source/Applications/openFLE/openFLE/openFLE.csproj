@@ -194,10 +194,6 @@
       <Project>{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}</Project>
       <Name>FaultAlgorithms</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\XDAServiceMonitor\XDAServiceMonitor.csproj">
-      <Project>{81D533ED-3E17-461D-A45C-CD19DFBD6640}</Project>
-      <Name>XDAServiceMonitor</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
