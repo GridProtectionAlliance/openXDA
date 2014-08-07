@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FaultAlgorithms;
 using GSF;
 using GSF.COMTRADE;
@@ -83,7 +84,14 @@ namespace FaultData.DataWriters
             DataGroup faultLocationData = GetFaultLocationData(meter, faultCurveTable);
             Schema schema = BuildSchema(meter, waveFormData, waveFormSeriesList, faultCurveTable, originalFilePath);
 
-            using (FileStream fileStream = File.OpenWrite(filePath))
+            string absoluteFilePath = FilePath.GetAbsolutePath(filePath);
+            string directory = FilePath.GetDirectoryName(absoluteFilePath);
+            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
+            string schemaFilePath = Path.Combine(directory, rootFileName + ".cfg");
+
+            File.WriteAllText(schemaFilePath, schema.FileImage, Encoding.ASCII);
+
+            using (FileStream fileStream = File.OpenWrite(absoluteFilePath))
             {
                 FaultType faultType;
                 FaultSegment currentSegment = null;
@@ -96,8 +104,21 @@ namespace FaultData.DataWriters
 
                     if ((object)currentSegment == null || i > currentSegment.EndSample)
                     {
-                        currentSegment = segments[nextSegmentIndex++];
-                        faultType = GetFaultType(currentSegment.SegmentType);
+                        if (nextSegmentIndex < segments.Count)
+                        {
+                            currentSegment = segments[nextSegmentIndex++];
+                            faultType = GetFaultType(currentSegment.SegmentType);
+                        }
+                        else
+                        {
+                            currentSegment = new FaultSegment()
+                            {
+                                StartSample = i,
+                                EndSample = waveFormData.Samples - 1
+                            };
+
+                            faultType = FaultType.None;
+                        }
 
                         digitals = new bool[]
                         {
@@ -157,9 +178,11 @@ namespace FaultData.DataWriters
             int sampleCount;
             double samplingRate;
 
-            if (File.Exists(originalFilePath))
+            string absoluteOriginalFilePath = FilePath.GetAbsolutePath(originalFilePath);
+
+            if (File.Exists(absoluteOriginalFilePath))
             {
-                originalDirectory = FilePath.GetDirectoryName(originalFilePath);
+                originalDirectory = FilePath.GetDirectoryName(absoluteOriginalFilePath);
                 originalRootFileName = FilePath.GetFileNameWithoutExtension(originalFilePath);
                 originalSchemaFilePath = Path.Combine(originalDirectory, originalRootFileName + ".cfg");
                 originalSchema = new Schema(originalSchemaFilePath);
@@ -219,6 +242,9 @@ namespace FaultData.DataWriters
                     schemaChannel.PrimaryRatio = originalSchemaChannel.PrimaryRatio;
                     schemaChannel.SecondaryRatio = originalSchemaChannel.SecondaryRatio;
                     schemaChannel.ScalingIdentifier = originalSchemaChannel.ScalingIdentifier;
+
+                    if (schemaChannel.Units.ToUpper().Contains("KA") || schemaChannel.Units.ToUpper().Contains("KV"))
+                        waveFormSeriesList[i] = waveFormSeriesList[i].Multiply(0.001);
                 }
             }
 
@@ -288,7 +314,7 @@ namespace FaultData.DataWriters
             int index;
 
             return ((object)originalSchema != null && int.TryParse(series.SeriesInfo.SourceIndexes, out index))
-                ? originalSchema.AnalogChannels[index].ChannelName
+                ? originalSchema.AnalogChannels[Math.Abs(index) - 1].Name
                 : series.SeriesInfo.Channel.Name;
         }
 
@@ -297,7 +323,7 @@ namespace FaultData.DataWriters
             int index;
 
             return ((object)originalSchema != null && int.TryParse(series.SeriesInfo.SourceIndexes, out index))
-                ? originalSchema.AnalogChannels[index]
+                ? originalSchema.AnalogChannels[Math.Abs(index) - 1]
                 : null;
         }
 
