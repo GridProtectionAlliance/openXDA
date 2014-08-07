@@ -40,7 +40,7 @@ namespace DeviceDefinitionsMigrator
                 Console.WriteLine("    DeviceDefinitionsMigrator <ConnectionString> <FilePath>");
                 Console.WriteLine();
                 Console.WriteLine("Example:");
-                Console.WriteLine("    DeviceDefinitionsMigrator \"Data Source=localhost; Initial Catalog=XDA; Integrated Security=SSPI\" \"C:\\Program Files\\openFLE\\DeviceDefinitions.xml\"");
+                Console.WriteLine("    DeviceDefinitionsMigrator \"Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI\" \"C:\\Program Files\\openFLE\\DeviceDefinitions.xml\"");
 
                 Environment.Exit(0);
             }
