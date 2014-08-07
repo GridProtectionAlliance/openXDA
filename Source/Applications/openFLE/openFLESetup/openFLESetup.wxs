@@ -74,9 +74,6 @@
       <Component Id="FaultAlgorithms">
         <File Id="FaultAlgorithms.dll" Name="$(var.FaultAlgorithms.TargetFileName)" Source="$(var.FaultAlgorithms.TargetPath)" />
       </Component>
-      <Component Id="XDAServiceMonitor">
-        <File Id="XDAServiceMonitor.dll" Name="$(var.XDAServiceMonitor.TargetFileName)" Source="$(var.XDAServiceMonitor.TargetPath)" />
-      </Component>
       <Component Id="SqlServerTedWriter">
         <File Id="SqlServerTedWriter.dll" Name="$(var.SqlServerTedWriter.TargetFileName)" Source="$(var.SqlServerTedWriter.TargetPath)" />
       </Component>

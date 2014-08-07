@@ -126,7 +126,7 @@ namespace FaultAlgorithms
             }
             set
             {
-                while(i <= m_cycles.Count)
+                while(i >= m_cycles.Count)
                     m_cycles.Add(null);
 
                 m_cycles[i] = value;

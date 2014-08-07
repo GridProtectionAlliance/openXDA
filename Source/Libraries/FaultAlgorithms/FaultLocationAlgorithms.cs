@@ -201,14 +201,18 @@ namespace FaultAlgorithms
 
             voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
             currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
-            vPre = voltages[0];
-            iPre = currents[0];
+            vPre = GetFaultVoltage(faultDataSet.PrefaultCycle, viFaultType);
+            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, viFaultType);
 
             loadImpedance = (vPre / iPre) - z;
 
             return voltages.Zip(currents, (v, i) =>
             {
-                ComplexNumber sourceImpedance = (v - vPre) / (i - iPre);
+                ComplexNumber sourceImpedance = faultDataSet.ZSrc;
+
+                if (double.IsNaN(sourceImpedance.Real) || double.IsNaN(sourceImpedance.Imaginary))
+                    sourceImpedance = (v - vPre) / (i - iPre);
+
                 ComplexNumber ab = (v / (z * i)) + (loadImpedance / z) + 1;
                 ComplexNumber cd = (v / (z * i)) * (1 + (loadImpedance / z));
                 ComplexNumber ef = ((i - iPre) / (z * i)) * (1 + ((loadImpedance + sourceImpedance) / z));

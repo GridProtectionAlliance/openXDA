@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="MeterDB" Class="FaultLocationInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=SWILLS-PC\SQLEXPRESS;Initial Catalog=MeterDB;Integrated Security=True" SettingsObjectName="MeterDataEngine.Properties.Settings" SettingsPropertyName="MeterDBConnectionString" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.SegmentType" Member="SegmentTypes">
+    <Type Name="SegmentType">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="Description" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Association Name="SegmentType_FaultSegment" Member="FaultSegments" ThisKey="ID" OtherKey="SegmentTypeID" Type="FaultSegment" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultSegment" Member="FaultSegments">
+    <Type Name="FaultSegment">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="EventID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SegmentTypeID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="StartTime" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
+      <Column Name="EndTime" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
+      <Column Name="StartSample" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="EndSample" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="SegmentType_FaultSegment" Member="SegmentType" ThisKey="SegmentTypeID" OtherKey="ID" Type="SegmentType" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultLocationAlgorithm" Member="FaultLocationAlgorithms">
+    <Type Name="FaultLocationAlgorithm">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="LineID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="AssemblyName" Type="System.String" DbType="VarChar(1024) NOT NULL" CanBeNull="false" />
+      <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="MethodName" Type="System.String" DbType="VarChar(80) NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Impedance" Member="Impedances">
+    <Type Name="Impedance">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="LineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="R0" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="X0" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="R1" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="X1" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="RSrc" Type="System.Double" DbType="Float" CanBeNull="true" />
+      <Column Name="XSrc" Type="System.Double" DbType="Float" CanBeNull="true" />
+    </Type>
+  </Table>
+</Database>

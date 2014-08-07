@@ -53,11 +53,6 @@
       <Component Id="XDAFileWatcherConsoleConfig">
         <File Id="XDAFileWatcherConsole.exe.config" Name="$(var.XDAFileWatcherConsole.TargetFileName).config" Source="$(var.XDAFileWatcherConsole.TargetPath).config" />
       </Component>
-      
-      <!-- Libraries -->
-      <Component Id="XDAServiceMonitor">
-        <File Id="XDAServiceMonitor.dll" Name="$(var.XDAServiceMonitor.TargetFileName)" Source="$(var.XDAServiceMonitor.TargetPath)" />
-      </Component>
 
       <!-- GSF Dependencies -->
       <Component Id="GSF.Communication">

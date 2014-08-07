@@ -129,10 +129,12 @@ namespace FaultAlgorithms
         private MeasurementDataSet m_voltages;
         private MeasurementDataSet m_currents;
         private CycleDataSet m_cycles;
+        private CycleData m_prefaultCycle;
 
         private double m_frequency;
         private ComplexNumber m_positiveImpedance;
         private ComplexNumber m_zeroImpedance;
+        private ComplexNumber m_sourceImpedance;
 
         private double m_ratedCurrent;
         private FaultType m_faultType;
@@ -199,6 +201,21 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
+        /// Gets or sets the cycle of prefault data to be used in fault location calculations.
+        /// </summary>
+        public CycleData PrefaultCycle
+        {
+            get
+            {
+                return m_prefaultCycle;
+            }
+            set
+            {
+                m_prefaultCycle = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the frequency of the measured system, in Hz.
         /// </summary>
         public double Frequency
@@ -255,6 +272,21 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
+        /// Gets or sets the impedance of the voltage source.
+        /// </summary>
+        public ComplexNumber SourceImpedance
+        {
+            get
+            {
+                return m_sourceImpedance;
+            }
+            set
+            {
+                m_sourceImpedance = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the positive sequence impedance.
         /// </summary>
         public ComplexNumber Z1
@@ -292,6 +324,21 @@ namespace FaultAlgorithms
             get
             {
                 return LoopImpedance;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the impedance of the voltage source.
+        /// </summary>
+        public ComplexNumber ZSrc
+        {
+            get
+            {
+                return m_sourceImpedance;
+            }
+            set
+            {
+                m_sourceImpedance = value;
             }
         }
 

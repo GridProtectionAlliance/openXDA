@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11.75, 8.5" name="FileInfo">
+  <DataContextMoniker Name="/FileInfoDataContext" />
+  <nestedChildShapes>
+    <classShape Id="ab2137ba-d42f-42d7-80da-851ff56bf246" absoluteBounds="9.5, 2.75, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/FileInfoDataContext/DataFile" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d1bb4e08-dc0a-4117-ae5a-93c88b8e1767" absoluteBounds="9.515, 3.21, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="aa728f18-079c-484f-8cf5-26ae597c3515" absoluteBounds="6.75, 2.875, 2, 1.9631982421875">
+      <DataClassMoniker Name="/FileInfoDataContext/FileGroup" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d8d7f89d-90f5-4049-9277-1bd431a96556" absoluteBounds="6.765, 3.335, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <associationConnector edgePoints="[(8.75 : 3.85659912109375); (9.5 : 3.85659912109375)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/FileInfoDataContext/FileGroup/FileGroup_DataFile" />
+      <nodes>
+        <classShapeMoniker Id="aa728f18-079c-484f-8cf5-26ae597c3515" />
+        <classShapeMoniker Id="ab2137ba-d42f-42d7-80da-851ff56bf246" />
+      </nodes>
+    </associationConnector>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>
