@@ -34,10 +34,29 @@ namespace DeviceDefinitionsMigrator
     {
         static void Main(string[] args)
         {
-            string connectionString = args[0];
-            string deviceDefinitionsFile = args[1];
+            if (args.Length != 2)
+            {
+                Console.WriteLine("Usage:");
+                Console.WriteLine("    DeviceDefinitionsMigrator <ConnectionString> <FilePath>");
+                Console.WriteLine();
+                Console.WriteLine("Example:");
+                Console.WriteLine("    DeviceDefinitionsMigrator \"Data Source=localhost; Initial Catalog=XDA; Integrated Security=SSPI\" \"C:\\Program Files\\openFLE\\DeviceDefinitions.xml\"");
 
-            Migrate(connectionString, deviceDefinitionsFile);
+                Environment.Exit(0);
+            }
+
+            try
+            {
+                string connectionString = args[0];
+                string deviceDefinitionsFile = args[1];
+
+                Migrate(connectionString, deviceDefinitionsFile);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("--- ERROR ---");
+                Console.Error.WriteLine(ex.Message);
+            }
         }
 
         private static void Migrate(string connectionString, string deviceDefinitionsFile)

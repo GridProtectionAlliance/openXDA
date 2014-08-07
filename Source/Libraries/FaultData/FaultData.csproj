@@ -118,6 +118,7 @@
     <Compile Include="DataReaders\IDataReader.cs" />
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
+    <Compile Include="DataWriters\CSVWriter.cs" />
     <Compile Include="MeterDataProcessor.cs" />
     <Compile Include="MeterDataSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
