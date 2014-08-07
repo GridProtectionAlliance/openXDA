@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using FaultAlgorithms;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
@@ -85,11 +84,6 @@ namespace FaultData.DataWriters
 
             using (StreamWriter fileStream = new StreamWriter(File.OpenWrite(absoluteFilePath)))
             {
-                FaultType faultType;
-                FaultSegment currentSegment = null;
-                int nextSegmentIndex = 0;
-                bool[] digitals = null;
-
                 string originalDirectory;
                 string originalRootFileName;
                 string originalSchemaFilePath;
@@ -119,60 +113,13 @@ namespace FaultData.DataWriters
                 {
                     DateTime time = waveFormSeriesList[0].DataPoints[i].Time;
 
-                    if ((object)currentSegment == null || i > currentSegment.EndSample)
-                    {
-                        if (nextSegmentIndex < segments.Count)
-                        {
-                            currentSegment = segments[nextSegmentIndex++];
-                            faultType = GetFaultType(currentSegment.SegmentType);
-                        }
-                        else
-                        {
-                            currentSegment = new FaultSegment()
-                            {
-                                StartSample = i,
-                                EndSample = waveFormData.Samples - 1
-                            };
-
-                            faultType = FaultType.None;
-                        }
-
-                        digitals = new bool[]
-                        {
-                            faultType != FaultType.None,
-                            faultType == FaultType.AN,
-                            faultType == FaultType.BN,
-                            faultType == FaultType.CN,
-                            faultType == FaultType.AB,
-                            faultType == FaultType.BC,
-                            faultType == FaultType.CA,
-                            faultType == FaultType.ABC
-                        };
-                    }
-
                     double[] values = waveFormSeriesList
                         .Select(series => series.DataPoints[i].Value)
                         .Concat(faultLocationData.DataSeries.Select(series => series.DataPoints.Count > i ? series.DataPoints[i].Value : 0.0D))
-                        .Concat(digitals.Select(Convert.ToDouble))
                         .ToArray();
 
                     fileStream.WriteLine(values.Aggregate(time.ToString("yyyy-MM-dd HH:mm:ss.ffffff"), (s, d) => s + "," + d));
                 }
-            }
-        }
-
-        private static FaultType GetFaultType(SegmentType segmentType)
-        {
-            switch (segmentType.Name)
-            {
-                case "AN Fault": return FaultType.AN;
-                case "BN Fault": return FaultType.BN;
-                case "CN Fault": return FaultType.CN;
-                case "AB Fault": return FaultType.AB;
-                case "BC Fault": return FaultType.BC;
-                case "CA Fault": return FaultType.CA;
-                case "3-Phase Fault": return FaultType.ABC;
-                default: return FaultType.None;
             }
         }
 
