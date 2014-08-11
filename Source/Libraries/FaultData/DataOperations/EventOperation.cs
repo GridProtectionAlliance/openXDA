@@ -46,7 +46,6 @@ namespace FaultData.DataOperations
         public EventOperation(string connectionString)
         {
             m_connectionString = connectionString;
-            m_eventTypeLookup = new Dictionary<DataClassification, int>();
         }
 
         #endregion
@@ -62,10 +61,13 @@ namespace FaultData.DataOperations
 
         private void LoadEventTypes(List<DataGroup> dataGroups)
         {
-            DataClassification eventClassification = default(DataClassification);
             MeterData.EventTypeDataTable eventTypeTable = new MeterData.EventTypeDataTable();
+            List<string> eventTypeNames;
 
-            List<string> eventTypeNames = dataGroups
+            if ((object)m_eventTypeLookup == null)
+                m_eventTypeLookup = GetEventTypeLookup();
+
+            eventTypeNames = dataGroups
                 .Select(dataGroup => dataGroup.Classification)
                 .Distinct()
                 .Where(classification => classification != DataClassification.Trend)
@@ -81,22 +83,15 @@ namespace FaultData.DataOperations
 
                 using (SqlConnection connection = new SqlConnection(m_connectionString))
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(connection))
-                using (EventTypeTableAdapter eventTypeAdapter = new EventTypeTableAdapter())
                 {
                     connection.Open();
                     bulkCopy.BulkCopyTimeout = 0;
 
                     bulkCopy.DestinationTableName = eventTypeTable.TableName;
                     bulkCopy.WriteToServer(eventTypeTable);
-
-                    eventTypeAdapter.Connection = connection;
-                    eventTypeAdapter.Fill(eventTypeTable);
-
-                    m_eventTypeLookup = eventTypeTable
-                        .Where(row => Enum.TryParse(row.Name, out eventClassification))
-                        .Select(row => Tuple.Create(eventClassification, row.ID))
-                        .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
                 }
+
+                m_eventTypeLookup = GetEventTypeLookup();
             }
         }
 
@@ -136,6 +131,23 @@ namespace FaultData.DataOperations
                 bulkCopy.BulkCopyTimeout = 0;
                 bulkCopy.DestinationTableName = eventTable.TableName;
                 bulkCopy.WriteToServer(eventTable);
+            }
+        }
+
+        private Dictionary<DataClassification, int> GetEventTypeLookup()
+        {
+            MeterData.EventTypeDataTable eventTypeTable = new MeterData.EventTypeDataTable();
+            DataClassification eventClassification = default(DataClassification);
+
+            using (EventTypeTableAdapter eventTypeAdapter = new EventTypeTableAdapter())
+            {
+                eventTypeAdapter.Connection.ConnectionString = m_connectionString;
+                eventTypeAdapter.Fill(eventTypeTable);
+
+                return eventTypeTable
+                    .Where(row => Enum.TryParse(row.Name, out eventClassification))
+                    .Select(row => Tuple.Create(eventClassification, row.ID))
+                    .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
             }
         }
 
