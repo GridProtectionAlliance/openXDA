@@ -54,6 +54,7 @@ namespace FaultData.DataAnalysis
             // Fields
             private List<DataSeries> m_dataSeries;
             private double m_prefaultMultiplier;
+            private double m_ratedCurrentMultiplier;
 
             private Dictionary<string, DataSeries> m_channelLookup;
             private Dictionary<string, DataSeries> m_rmsLookup;
@@ -63,10 +64,11 @@ namespace FaultData.DataAnalysis
 
             #region [ Constructors ]
 
-            public EventClassificationHelper(List<DataSeries> dataSeries, double prefaultMultiplier)
+            public EventClassificationHelper(List<DataSeries> dataSeries, double prefaultMultiplier, double ratedCurrentMultiplier)
             {
                 m_dataSeries = dataSeries;
                 m_prefaultMultiplier = prefaultMultiplier;
+                m_ratedCurrentMultiplier = ratedCurrentMultiplier;
             }
 
             #endregion
@@ -78,6 +80,14 @@ namespace FaultData.DataAnalysis
                 get
                 {
                     return m_prefaultMultiplier;
+                }
+            }
+
+            public double RatedCurrentMultiplier
+            {
+                get
+                {
+                    return m_ratedCurrentMultiplier;
                 }
             }
 
@@ -337,19 +347,20 @@ namespace FaultData.DataAnalysis
         /// <returns>The classification of the data group determined by the data in the group.</returns>
         public DataClassification Classify()
         {
-            return Classify(1.5D);
+            return Classify(4.0D, 1.5D);
         }
 
         /// <summary>
         /// Classifies the data group and returns the classification.
         /// </summary>
         /// <param name="prefaultMultiplier">The factor by which the RMS current needs to increase in order to classify the event as a fault.</param>
+        /// <param name="ratedCurrentMultiplier">The factor by which the rated current is multiplied to determine how large the current needs to be to be considered a fault.</param>
         /// <returns>The classification of the data group determined by the data in the group.</returns>
-        public DataClassification Classify(double prefaultMultiplier)
+        public DataClassification Classify(double prefaultMultiplier, double ratedCurrentMultiplier)
         {
             EventClassificationHelper eventClassificationHelper;
 
-            eventClassificationHelper = new EventClassificationHelper(m_dataSeries, prefaultMultiplier);
+            eventClassificationHelper = new EventClassificationHelper(m_dataSeries, prefaultMultiplier, ratedCurrentMultiplier);
 
             if (IsTrend())
             {
@@ -409,12 +420,24 @@ namespace FaultData.DataAnalysis
                 "Current CN"
             };
 
-            DataSeries sum = currents.Select(eventClassificationHelper.GetRMS)
-                .Aggregate((series1, series2) => series1.Add(series2));
+            double ratedCurrent = 0.0D;
+            double prefaultMultiplied;
+            double ratedCurrentMultiplied;
 
-            double prefaultMultiplied = sum.DataPoints[0].Value * eventClassificationHelper.PrefaultMultiplier;
+            if ((object)m_line != null)
+                ratedCurrent = m_line.ThermalRating;
 
-            return sum.DataPoints.Any(dataPoint => dataPoint.Value >= prefaultMultiplied);
+            ratedCurrentMultiplied = ratedCurrent * eventClassificationHelper.RatedCurrentMultiplier;
+
+            foreach (DataSeries rmsSeries in currents.Select(eventClassificationHelper.GetRMS))
+            {
+                prefaultMultiplied = rmsSeries.DataPoints[0].Value * eventClassificationHelper.PrefaultMultiplier;
+
+                if (rmsSeries.DataPoints.Any(dataPoint => dataPoint.Value >= prefaultMultiplied && dataPoint.Value >= ratedCurrentMultiplied))
+                    return true;
+            }
+
+            return false;
         }
 
         private bool IsInterruption(EventClassificationHelper eventClassificationHelper)

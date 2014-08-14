@@ -184,6 +184,27 @@ namespace FaultData.DataAnalysis
 
         #region [ Methods ]
 
+        public DataSeries ToSubSeries(int startIndex, int endIndex)
+        {
+            DataSeries subSeries = new DataSeries();
+            int count;
+
+            if (startIndex < 0)
+                startIndex = 0;
+
+            if (endIndex >= m_dataPoints.Count)
+                endIndex = m_dataPoints.Count - 1;
+
+            count = endIndex - startIndex + 1;
+
+            if (count > 0)
+                subSeries.DataPoints = m_dataPoints.Skip(startIndex).Take(count).ToList();
+            else
+                subSeries.DataPoints = new List<DataPoint>();
+
+            return subSeries;
+        }
+
         public DataSeries ToRMS(int samplesPerCycle)
         {
             DataSeries rms = new DataSeries();

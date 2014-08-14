@@ -54,6 +54,19 @@ namespace FaultData.DataOperations
             public CycleDataGroup IA = new CycleDataGroup();
             public CycleDataGroup IB = new CycleDataGroup();
             public CycleDataGroup IC = new CycleDataGroup();
+
+            public void PushDataTo(Segment subSegment)
+            {
+                int startIndex = subSegment.StartSample;
+                int endIndex = subSegment.EndSample;
+
+                subSegment.VA = VA.ToSubGroup(startIndex, endIndex);
+                subSegment.VB = VB.ToSubGroup(startIndex, endIndex);
+                subSegment.VC = VC.ToSubGroup(startIndex, endIndex);
+                subSegment.IA = IA.ToSubGroup(startIndex, endIndex);
+                subSegment.IB = IB.ToSubGroup(startIndex, endIndex);
+                subSegment.IC = IC.ToSubGroup(startIndex, endIndex);
+            }
         }
 
         private class CycleDataGroup
@@ -62,6 +75,18 @@ namespace FaultData.DataOperations
             public DataSeries PeakSeries = new DataSeries();
             public DataSeries PhaseSeries = new DataSeries();
             public DataSeries ErrorSeries = new DataSeries();
+
+            public CycleDataGroup ToSubGroup(int startIndex, int endIndex)
+            {
+                CycleDataGroup subGroup = new CycleDataGroup();
+
+                subGroup.RMSSeries = RMSSeries.ToSubSeries(startIndex, endIndex);
+                subGroup.PeakSeries = PeakSeries.ToSubSeries(startIndex, endIndex);
+                subGroup.PhaseSeries = PhaseSeries.ToSubSeries(startIndex, endIndex);
+                subGroup.ErrorSeries = ErrorSeries.ToSubSeries(startIndex, endIndex);
+
+                return subGroup;
+            }
         }
 
         // Constants
@@ -108,9 +133,9 @@ namespace FaultData.DataOperations
             FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(m_connectionString);
 
             Dictionary<string, DataSeries> seriesLookup;
-            Dictionary<string, DataSeries> rmsLookup;
             List<FaultType> faultTypes;
             List<Segment> segments;
+            Segment fullSegment;
 
             int eventID;
             bool prefault;
@@ -118,6 +143,15 @@ namespace FaultData.DataOperations
             FaultLocationDataSet faultLocationDataSet;
 
             FaultLocationData.FaultCurveDataTable faultCurveTable = new FaultLocationData.FaultCurveDataTable();
+
+            SourceImpedance zLocal;
+            ComplexNumber zSrc;
+
+            zLocal = faultLocationInfo.SourceImpedances.FirstOrDefault(impedance => impedance.MeterLocationID == meterDataSet.Meter.MeterLocationID);
+
+            zSrc = ((object)zLocal != null)
+                ? new ComplexNumber(zLocal.RSrc, zLocal.XSrc)
+                : default(ComplexNumber);
 
             foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
             {
@@ -131,8 +165,8 @@ namespace FaultData.DataOperations
                     continue;
 
                 seriesLookup = GetSeriesLookup(faultGroup);
-                rmsLookup = seriesLookup.ToDictionary(kvp => kvp.Key, kvp => GetRMS(kvp.Value));
-                faultTypes = GetFaultTypes(rmsLookup);
+                fullSegment = GetFullSegment(faultGroup, seriesLookup);
+                faultTypes = GetFaultTypes(fullSegment);
                 segments = GetSegments(faultTypes);
 
                 prefault = true;
@@ -141,6 +175,8 @@ namespace FaultData.DataOperations
                 {
                     if (segment.FaultType != FaultType.None)
                         prefault = false;
+
+                    fullSegment.PushDataTo(segment);
 
                     faultSegment = new FaultSegment();
                     faultSegment.EventID = eventID;
@@ -151,31 +187,41 @@ namespace FaultData.DataOperations
                     faultSegment.EndSample = segment.EndSample;
 
                     faultLocationInfo.FaultSegments.InsertOnSubmit(faultSegment);
-
-                    if (segment.FaultType != FaultType.None)
-                        FillCycleDataGroups(seriesLookup, rmsLookup, segment);
                 }
 
                 // FAULT LOCATION
                 ComplexNumber z0;
                 ComplexNumber z1;
-                ComplexNumber? zSrc;
+                ComplexNumber zRem;
                 CycleData prefaultCycle;
 
                 DataSeries faultDistanceSeries;
-                Impedance zRow;
+                LineImpedance zLine;
 
-                zRow = faultLocationInfo.Impedances.FirstOrDefault(impedance => impedance.LineID == faultGroup.Line.ID);
+                int lineID = faultGroup.Line.ID;
 
-                if ((object)zRow != null)
+                zLine = faultLocationInfo.LineImpedances.FirstOrDefault(impedance => impedance.LineID == lineID);
+                
+                List<int> meterLocationIDs = faultGroup.Line.MeterLocations
+                    .Select(location => location.ID)
+                    .Where(id => id != meterDataSet.Meter.MeterLocationID)
+                    .ToList();
+
+                List<SourceImpedance> remoteImpedances = faultLocationInfo.SourceImpedances
+                    .Where(impedance => impedance.LineID == lineID)
+                    .Where(impedance => meterLocationIDs.Contains(impedance.MeterLocationID))
+                    .ToList();
+
+                if (remoteImpedances.Count == 1)
+                    zRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
+                else
+                    zRem = default(ComplexNumber);
+
+                if ((object)zLine != null)
                 {
                     prefaultCycle = null;
-                    z0 = new ComplexNumber(zRow.R0, zRow.X0);
-                    z1 = new ComplexNumber(zRow.R1, zRow.X1);
-
-                    zSrc = ((object)zRow.RSrc != null && (object)zRow.XSrc != null)
-                        ? new ComplexNumber(zRow.RSrc.Value, zRow.XSrc.Value)
-                        : (ComplexNumber?)null;
+                    z0 = new ComplexNumber(zLine.R0, zLine.X0);
+                    z1 = new ComplexNumber(zLine.R1, zLine.X1);
 
                     foreach (FaultLocationAlgorithm faultLocationAlgorithm in GetFaultLocationAlgorithms(faultLocationInfo, faultGroup.Line))
                     {
@@ -188,16 +234,7 @@ namespace FaultData.DataOperations
                             double[] faultDistances;
 
                             if ((object)prefaultCycle == null && segment.FaultType == FaultType.None)
-                            {
-                                Segment firstCycleSegment = new Segment()
-                                {
-                                    StartSample = 0,
-                                    EndSample = 0
-                                };
-
-                                FillCycleDataGroups(seriesLookup, rmsLookup, firstCycleSegment);
-                                prefaultCycle = FirstCycle(firstCycleSegment);
-                            }
+                                prefaultCycle = FirstCycle(segment);
 
                             if (segment.FaultType != FaultType.None)
                             {
@@ -206,7 +243,8 @@ namespace FaultData.DataOperations
                                 faultLocationDataSet.PrefaultCycle = prefaultCycle;
                                 faultLocationDataSet.Z0 = z0;
                                 faultLocationDataSet.Z1 = z1;
-                                faultLocationDataSet.ZSrc = zSrc.GetValueOrDefault();
+                                faultLocationDataSet.ZSrc = zSrc;
+                                faultLocationDataSet.ZRem = zRem;
 
                                 if (TryExecute(faultLocationAlgorithm, faultLocationDataSet, out faultDistances))
                                 {
@@ -218,7 +256,7 @@ namespace FaultData.DataOperations
 
                             if ((object)faultDataPoints == null)
                             {
-                                faultDataPoints = rmsLookup["VA"].DataPoints
+                                faultDataPoints = fullSegment.VA.RMSSeries.DataPoints
                                     .Skip(segment.StartSample)
                                     .Take(segment.EndSample - segment.StartSample + 1)
                                     .Select(point => new DataPoint() { Time = point.Time, Value = 0.0D })
@@ -247,6 +285,20 @@ namespace FaultData.DataOperations
             }
         }
 
+        private Segment GetFullSegment(DataGroup faultGroup, Dictionary<string, DataSeries> seriesLookup)
+        {
+            Segment fullSegment = new Segment();
+            double samplesPerSecond = faultGroup.Samples / (faultGroup.EndTime - faultGroup.StartTime).TotalSeconds;
+            int samplesPerCycle = (int)Math.Round(samplesPerSecond / Frequency);
+
+            fullSegment.FaultType = FaultType.None;
+            fullSegment.StartSample = 0;
+            fullSegment.EndSample = faultGroup.Samples - samplesPerCycle - 1;
+            FillCycleDataGroups(seriesLookup, fullSegment);
+
+            return fullSegment;
+        }
+
         private Dictionary<string, DataSeries> GetSeriesLookup(DataGroup faultGroup)
         {
             string[] measurementTypes = { "Voltage", "Current" };
@@ -271,21 +323,23 @@ namespace FaultData.DataOperations
                 .ToDictionary(typeSelector);
         }
 
-        private void FillCycleDataGroups(Dictionary<string, DataSeries> seriesLookup, Dictionary<string, DataSeries> rmsLookup, Segment segment)
+        private void FillCycleDataGroups(Dictionary<string, DataSeries> seriesLookup, Segment segment)
         {
-            FillCycleDataGroup(seriesLookup["VA"], rmsLookup["VA"], segment, segment.VA);
-            FillCycleDataGroup(seriesLookup["VB"], rmsLookup["VB"], segment, segment.VB);
-            FillCycleDataGroup(seriesLookup["VC"], rmsLookup["VC"], segment, segment.VC);
-            FillCycleDataGroup(seriesLookup["IA"], rmsLookup["IA"], segment, segment.IA);
-            FillCycleDataGroup(seriesLookup["IB"], rmsLookup["IB"], segment, segment.IB);
-            FillCycleDataGroup(seriesLookup["IC"], rmsLookup["IC"], segment, segment.IC);
+            FillCycleDataGroup(seriesLookup["VA"], segment, segment.VA);
+            FillCycleDataGroup(seriesLookup["VB"], segment, segment.VB);
+            FillCycleDataGroup(seriesLookup["VC"], segment, segment.VC);
+            FillCycleDataGroup(seriesLookup["IA"], segment, segment.IA);
+            FillCycleDataGroup(seriesLookup["IB"], segment, segment.IB);
+            FillCycleDataGroup(seriesLookup["IC"], segment, segment.IC);
         }
 
-        private void FillCycleDataGroup(DataSeries waveForm, DataSeries rmsSeries, Segment segment, CycleDataGroup cycleDataGroup)
+        private void FillCycleDataGroup(DataSeries waveForm, Segment segment, CycleDataGroup cycleDataGroup)
         {
             int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
             double[] yValues = new double[samplesPerCycle];
             double[] tValues = new double[samplesPerCycle];
+
+            DataSeries rmsSeries = waveForm.ToRMS(samplesPerCycle);
 
             cycleDataGroup.RMSSeries.DataPoints = new List<DataPoint>();
             cycleDataGroup.PhaseSeries.DataPoints = new List<DataPoint>();
@@ -330,16 +384,11 @@ namespace FaultData.DataOperations
             }
         }
 
-        private DataSeries GetRMS(DataSeries series)
+        private List<FaultType> GetFaultTypes(Segment fullSegment)
         {
-            return series.ToRMS((int)Math.Round(series.SampleRate / Frequency));
-        }
-
-        private List<FaultType> GetFaultTypes(Dictionary<string, DataSeries> rmsLookup)
-        {
-            DataSeries ia = rmsLookup["IA"];
-            DataSeries ib = rmsLookup["IB"];
-            DataSeries ic = rmsLookup["IC"];
+            DataSeries ia = fullSegment.IA.RMSSeries;
+            DataSeries ib = fullSegment.IB.RMSSeries;
+            DataSeries ic = fullSegment.IC.RMSSeries;
 
             return GetFaultTypes(ia, ib, ic);
         }

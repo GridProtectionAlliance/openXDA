@@ -39,16 +39,13 @@ namespace FaultData.Database
     partial void InsertFaultLocationAlgorithm(FaultLocationAlgorithm instance);
     partial void UpdateFaultLocationAlgorithm(FaultLocationAlgorithm instance);
     partial void DeleteFaultLocationAlgorithm(FaultLocationAlgorithm instance);
-    partial void InsertImpedance(Impedance instance);
-    partial void UpdateImpedance(Impedance instance);
-    partial void DeleteImpedance(Impedance instance);
+    partial void InsertLineImpedance(LineImpedance instance);
+    partial void UpdateLineImpedance(LineImpedance instance);
+    partial void DeleteLineImpedance(LineImpedance instance);
+    partial void InsertSourceImpedance(SourceImpedance instance);
+    partial void UpdateSourceImpedance(SourceImpedance instance);
+    partial void DeleteSourceImpedance(SourceImpedance instance);
     #endregion
-		
-		public FaultLocationInfoDataContext() : 
-				base(global::FaultData.Properties.Settings.Default.MeterDBConnectionString, mappingSource)
-		{
-			OnCreated();
-		}
 		
 		public FaultLocationInfoDataContext(string connection) : 
 				base(connection, mappingSource)
@@ -98,11 +95,19 @@ namespace FaultData.Database
 			}
 		}
 		
-		public System.Data.Linq.Table<Impedance> Impedances
+		public System.Data.Linq.Table<LineImpedance> LineImpedances
 		{
 			get
 			{
-				return this.GetTable<Impedance>();
+				return this.GetTable<LineImpedance>();
+			}
+		}
+		
+		public System.Data.Linq.Table<SourceImpedance> SourceImpedances
+		{
+			get
+			{
+				return this.GetTable<SourceImpedance>();
 			}
 		}
 	}
@@ -650,8 +655,8 @@ namespace FaultData.Database
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.Impedance")]
-	public partial class Impedance : INotifyPropertyChanging, INotifyPropertyChanged
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.LineImpedance")]
+	public partial class LineImpedance : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
@@ -667,10 +672,6 @@ namespace FaultData.Database
 		private double _R1;
 		
 		private double _X1;
-		
-		private System.Nullable<double> _RSrc;
-		
-		private System.Nullable<double> _XSrc;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -688,13 +689,9 @@ namespace FaultData.Database
     partial void OnR1Changed();
     partial void OnX1Changing(double value);
     partial void OnX1Changed();
-    partial void OnRSrcChanging(System.Nullable<double> value);
-    partial void OnRSrcChanged();
-    partial void OnXSrcChanging(System.Nullable<double> value);
-    partial void OnXSrcChanged();
     #endregion
 		
-		public Impedance()
+		public LineImpedance()
 		{
 			OnCreated();
 		}
@@ -819,8 +816,126 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_RSrc", DbType="Float")]
-		public System.Nullable<double> RSrc
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.SourceImpedance")]
+	public partial class SourceImpedance : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _LineID;
+		
+		private int _MeterLocationID;
+		
+		private double _RSrc;
+		
+		private double _XSrc;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnLineIDChanging(int value);
+    partial void OnLineIDChanged();
+    partial void OnMeterLocationIDChanging(int value);
+    partial void OnMeterLocationIDChanged();
+    partial void OnRSrcChanging(double value);
+    partial void OnRSrcChanged();
+    partial void OnXSrcChanging(double value);
+    partial void OnXSrcChanged();
+    #endregion
+		
+		public SourceImpedance()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int NOT NULL")]
+		public int LineID
+		{
+			get
+			{
+				return this._LineID;
+			}
+			set
+			{
+				if ((this._LineID != value))
+				{
+					this.OnLineIDChanging(value);
+					this.SendPropertyChanging();
+					this._LineID = value;
+					this.SendPropertyChanged("LineID");
+					this.OnLineIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterLocationID", DbType="Int NOT NULL")]
+		public int MeterLocationID
+		{
+			get
+			{
+				return this._MeterLocationID;
+			}
+			set
+			{
+				if ((this._MeterLocationID != value))
+				{
+					this.OnMeterLocationIDChanging(value);
+					this.SendPropertyChanging();
+					this._MeterLocationID = value;
+					this.SendPropertyChanged("MeterLocationID");
+					this.OnMeterLocationIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_RSrc", DbType="Float NOT NULL")]
+		public double RSrc
 		{
 			get
 			{
@@ -839,8 +954,8 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_XSrc", DbType="Float")]
-		public System.Nullable<double> XSrc
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_XSrc", DbType="Float NOT NULL")]
+		public double XSrc
 		{
 			get
 			{

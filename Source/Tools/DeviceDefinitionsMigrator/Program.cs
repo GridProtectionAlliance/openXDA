@@ -67,7 +67,7 @@ namespace DeviceDefinitionsMigrator
 
             List<Tuple<XElement, Line>> lineMappings = new List<Tuple<XElement, Line>>();
             FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(connectionString);
-            Impedance impedance;
+            LineImpedance impedance;
 
             FaultLocationAlgorithm algorithm;
 
@@ -151,13 +151,13 @@ namespace DeviceDefinitionsMigrator
                     XElement lineElement = mapping.Item1;
                     XElement impedanceElement = lineElement.Element("impedances") ?? new XElement("impedances");
 
-                    impedance = new Impedance();
+                    impedance = new LineImpedance();
                     impedance.LineID = mapping.Item2.ID;
                     impedance.R0 = Convert.ToDouble((string)impedanceElement.Element("R0"));
                     impedance.X0 = Convert.ToDouble((string)impedanceElement.Element("X0"));
                     impedance.R1 = Convert.ToDouble((string)impedanceElement.Element("R1"));
                     impedance.X1 = Convert.ToDouble((string)impedanceElement.Element("X1"));
-                    faultLocationInfo.Impedances.InsertOnSubmit(impedance);
+                    faultLocationInfo.LineImpedances.InsertOnSubmit(impedance);
 
                     foreach (XElement faultLocationElement in lineElement.Elements("faultLocation"))
                     {

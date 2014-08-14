@@ -223,16 +223,24 @@ GO
 -- Fault Location --
 -- -------------- --
 
-CREATE TABLE Impedance
+CREATE TABLE SourceImpedance
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    LineID INT NOT NULL REFERENCES Line(ID),
+    MeterLocationID INT NOT NULL REFERENCES MeterLocation(ID),
+    RSrc FLOAT NOT NULL,
+    XSrc FLOAT NOT NULL
+)
+GO
+
+CREATE TABLE LineImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     LineID INT NOT NULL REFERENCES Line(ID),
     R0 FLOAT NOT NULL,
     X0 FLOAT NOT NULL,
     R1 FLOAT NOT NULL,
-    X1 FLOAT NOT NULL,
-    RSrc FLOAT NULL,
-    XSrc FLOAT NULL
+    X1 FLOAT NOT NULL
 )
 GO
 

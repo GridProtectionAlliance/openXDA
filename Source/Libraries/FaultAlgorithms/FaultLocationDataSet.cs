@@ -134,7 +134,8 @@ namespace FaultAlgorithms
         private double m_frequency;
         private ComplexNumber m_positiveImpedance;
         private ComplexNumber m_zeroImpedance;
-        private ComplexNumber m_sourceImpedance;
+        private ComplexNumber m_localSourceImpedance;
+        private ComplexNumber m_remoteSourceImpedance;
 
         private double m_ratedCurrent;
         private FaultType m_faultType;
@@ -272,17 +273,32 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
-        /// Gets or sets the impedance of the voltage source.
+        /// Gets or sets the impedance of the local voltage source.
         /// </summary>
-        public ComplexNumber SourceImpedance
+        public ComplexNumber LocalSourceImpedance
         {
             get
             {
-                return m_sourceImpedance;
+                return m_localSourceImpedance;
             }
             set
             {
-                m_sourceImpedance = value;
+                m_localSourceImpedance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the impedance of the remote voltage source.
+        /// </summary>
+        public ComplexNumber RemoteSourceImpedance
+        {
+            get
+            {
+                return m_remoteSourceImpedance;
+            }
+            set
+            {
+                m_remoteSourceImpedance = value;
             }
         }
 
@@ -328,17 +344,32 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
-        /// Gets or sets the impedance of the voltage source.
+        /// Gets or sets the impedance of the local voltage source.
         /// </summary>
         public ComplexNumber ZSrc
         {
             get
             {
-                return m_sourceImpedance;
+                return m_localSourceImpedance;
             }
             set
             {
-                m_sourceImpedance = value;
+                m_localSourceImpedance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the impedance of the remote voltage source.
+        /// </summary>
+        public ComplexNumber ZRem
+        {
+            get
+            {
+                return m_remoteSourceImpedance;
+            }
+            set
+            {
+                m_remoteSourceImpedance = value;
             }
         }
 
