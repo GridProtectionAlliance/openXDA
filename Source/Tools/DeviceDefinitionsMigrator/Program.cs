@@ -303,6 +303,10 @@ namespace DeviceDefinitionsMigrator
             XElement deviceAttributes;
             XElement impedancesElement;
 
+            List<Tuple<Line, LineImpedance>> lineImpedances = new List<Tuple<Line, LineImpedance>>();
+            List<Tuple<MeterLocationLine, SourceImpedance>> sourceImpedances = new List<Tuple<MeterLocationLine, SourceImpedance>>();
+            List<Tuple<Series, OutputChannel>> outputChannels = new List<Tuple<Series, OutputChannel>>();
+
             ProgressTracker progressTracker = new ProgressTracker(deviceElements.Count);
 
             using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(connectionString))
@@ -320,6 +324,8 @@ namespace DeviceDefinitionsMigrator
                 foreach (XElement analyticsElement in document.Elements().Elements("analytics"))
                     LoadFaultLocationAlgorithms(analyticsElement, faultLocationInfo);
 
+                faultLocationInfo.SubmitChanges();
+
                 progressTracker.EndPendingMessage();
 
                 // Load updates to device configuration into the database
@@ -327,6 +333,10 @@ namespace DeviceDefinitionsMigrator
 
                 foreach (XElement deviceElement in deviceElements)
                 {
+                    lineImpedances.Clear();
+                    sourceImpedances.Clear();
+                    outputChannels.Clear();
+
                     // Get the element representing a device's attributes
                     deviceAttributes = deviceElement.Element("attributes") ?? new XElement("attributes");
 
@@ -371,15 +381,15 @@ namespace DeviceDefinitionsMigrator
                             remoteLink = null;
                         }
 
+                        // Get a lookup table for the channels monitoring this line
                         channelLookup = lookupTables.GetChannelLookup(meter, line);
-
                         outputChannelIndex = 0;
 
-                        // Load updates to channel configuration into the database
                         foreach (XElement channelElement in lineElement.Elements("channels").Elements())
                         {
                             channelKey = channelElement.Name.LocalName;
 
+                            // Attempt to find an existing channel corresponding to this element
                             if (channelLookup.TryGetValue(channelKey, out tuple))
                             {
                                 series = tuple.Item1;
@@ -391,13 +401,18 @@ namespace DeviceDefinitionsMigrator
                                 channel = new Channel();
                                 series = new Series();
                                 outputChannel = new OutputChannel();
+
+                                channelLookup.Add(channelKey, Tuple.Create(series, outputChannel));
                             }
 
+                            // Load updates to channel configuration into the database
                             LoadChannelAttributes(meter, line, remoteMeterLocation, channel, channelKey, lookupTables);
                             LoadSeriesAttributes(channel, series, channelElement, lookupTables);
 
                             outputChannel.ChannelKey = channelKey;
                             outputChannel.LoadOrder = outputChannelIndex;
+                            outputChannels.Add(Tuple.Create(series, outputChannel));
+
                             outputChannelIndex++;
                         }
 
@@ -406,16 +421,19 @@ namespace DeviceDefinitionsMigrator
                         // Attempt to find existing impedance configuration for the line and update with configuration changes
                         lineImpedance = lookupTables.LineImpedanceLookup.GetOrAdd(line, ln => new LineImpedance());
                         LoadLineImpedanceAttributes(lineImpedance, impedancesElement);
+                        lineImpedances.Add(Tuple.Create(line, lineImpedance));
 
                         // Attempt to find existing impedance configuration for the meter's location and update with configuration changes
                         localSourceImpedance = lookupTables.SourceImpedanceLookup.GetOrAdd(localLink, location => new SourceImpedance());
                         LoadLocalSourceImpedanceAttributes(localSourceImpedance, impedancesElement);
+                        sourceImpedances.Add(Tuple.Create(localLink, localSourceImpedance));
 
                         if ((object)remoteLink != null)
                         {
                             // Attempt to find existing impedance configuration for the remote location and update with configuration changes
                             remoteSourceImpedance = lookupTables.SourceImpedanceLookup.GetOrAdd(remoteLink, location => new SourceImpedance());
                             LoadRemoteSourceImpedanceAttributes(remoteSourceImpedance, impedancesElement);
+                            sourceImpedances.Add(Tuple.Create(remoteLink, remoteSourceImpedance));
                         }
                     }
 
@@ -425,10 +443,10 @@ namespace DeviceDefinitionsMigrator
                     meterInfo.SubmitChanges();
 
                     // Load updates to line impedance configuration into the database
-                    foreach (KeyValuePair<Line, LineImpedance> mapping in lookupTables.LineImpedanceLookup)
+                    foreach (Tuple<Line, LineImpedance> mapping in lineImpedances)
                     {
-                        line = mapping.Key;
-                        lineImpedance = mapping.Value;
+                        line = mapping.Item1;
+                        lineImpedance = mapping.Item2;
                         lineImpedance.LineID = line.ID;
 
                         if (lineImpedance.ID == 0)
@@ -436,14 +454,25 @@ namespace DeviceDefinitionsMigrator
                     }
 
                     // Load updates to source impedance configuration into the database
-                    foreach (KeyValuePair<MeterLocationLine, SourceImpedance> mapping in lookupTables.SourceImpedanceLookup)
+                    foreach (Tuple<MeterLocationLine, SourceImpedance> mapping in sourceImpedances)
                     {
-                        localLink = mapping.Key;
-                        localSourceImpedance = mapping.Value;
+                        localLink = mapping.Item1;
+                        localSourceImpedance = mapping.Item2;
                         localSourceImpedance.MeterLocationLineID = localLink.ID;
 
                         if (localSourceImpedance.ID == 0 && (localSourceImpedance.RSrc != 0.0D || localSourceImpedance.XSrc != 0.0D))
                             faultLocationInfo.SourceImpedances.InsertOnSubmit(localSourceImpedance);
+                    }
+
+                    // Load updates to source impedance configuration into the database
+                    foreach (Tuple<Series, OutputChannel> mapping in outputChannels)
+                    {
+                        series = mapping.Item1;
+                        outputChannel = mapping.Item2;
+                        outputChannel.SeriesID = series.ID;
+
+                        if (outputChannel.ID == 0)
+                            faultLocationInfo.OutputChannels.InsertOnSubmit(outputChannel);
                     }
 
                     faultLocationInfo.SubmitChanges();
@@ -454,25 +483,6 @@ namespace DeviceDefinitionsMigrator
                     progressTracker.MakeProgress();
                 }
             }
-        }
-
-        private static MeterLocationLine Link(MeterLocation meterLocation, Line line, Dictionary<Tuple<string, string>, MeterLocationLine> meterLocationLineLookup)
-        {
-            Tuple<string, string> key = Tuple.Create(meterLocation.AssetKey, line.AssetKey);
-            MeterLocationLine meterLocationLine;
-
-            if (!meterLocationLineLookup.TryGetValue(key, out meterLocationLine))
-            {
-                meterLocationLine = new MeterLocationLine()
-                {
-                    MeterLocation = meterLocation,
-                    Line = line
-                };
-
-                meterLocationLineLookup.Add(key, meterLocationLine);
-            }
-
-            return meterLocationLine;
         }
 
         private static void LoadFaultLocationAlgorithms(XElement analyticsElement, FaultLocationInfoDataContext faultLocationInfo)
@@ -491,13 +501,6 @@ namespace DeviceDefinitionsMigrator
                 .Where(algorithm1 => !newFaultLocationAlgorithms.Any(algorithm2 => IsMatch(algorithm1, algorithm2))));
         }
 
-        private static bool IsMatch(FaultLocationAlgorithm algorithm1, FaultLocationAlgorithm algorithm2)
-        {
-            return algorithm1.AssemblyName == algorithm2.AssemblyName
-                && algorithm1.TypeName == algorithm2.TypeName
-                && algorithm1.MethodName == algorithm2.MethodName;
-        }
-
         private static FaultLocationAlgorithm ToFaultLocationAlgorithm(XElement faultLocationElement)
         {
             string assemblyName = (string)faultLocationElement.Attribute("assembly");
@@ -513,6 +516,13 @@ namespace DeviceDefinitionsMigrator
                 TypeName = typeName,
                 MethodName = methodName
             };
+        }
+
+        private static bool IsMatch(FaultLocationAlgorithm algorithm1, FaultLocationAlgorithm algorithm2)
+        {
+            return algorithm1.AssemblyName == algorithm2.AssemblyName
+                && algorithm1.TypeName == algorithm2.TypeName
+                && algorithm1.MethodName == algorithm2.MethodName;
         }
 
         private static void LoadMeterAttributes(Meter meter, XElement deviceAttributes)
@@ -564,6 +574,25 @@ namespace DeviceDefinitionsMigrator
             line.VoltageKV = Convert.ToDouble((string)lineElement.Element("voltage"));
             line.ThermalRating = Convert.ToDouble((string)lineElement.Element("rating50F"));
             line.Length = Convert.ToDouble((string)lineElement.Element("length"));
+        }
+
+        private static MeterLocationLine Link(MeterLocation meterLocation, Line line, Dictionary<Tuple<string, string>, MeterLocationLine> meterLocationLineLookup)
+        {
+            Tuple<string, string> key = Tuple.Create(meterLocation.AssetKey, line.AssetKey);
+            MeterLocationLine meterLocationLine;
+
+            if (!meterLocationLineLookup.TryGetValue(key, out meterLocationLine))
+            {
+                meterLocationLine = new MeterLocationLine()
+                {
+                    MeterLocation = meterLocation,
+                    Line = line
+                };
+
+                meterLocationLineLookup.Add(key, meterLocationLine);
+            }
+
+            return meterLocationLine;
         }
 
         private static void LoadChannelAttributes(Meter meter, Line line, MeterLocation remoteMeterLocation, Channel channel, string channelKey, LookupTables lookupTables)
@@ -652,7 +681,8 @@ namespace DeviceDefinitionsMigrator
             { "IB", "Current" },
             { "IC", "Current" },
             { "IR", "Current" },
-            { "IN", "Current" }
+            { "IN", "Current" },
+            { "IG", "Current" }
         };
 
         private static readonly Dictionary<string, string> PhaseNameLookup = new Dictionary<string, string>()
@@ -664,7 +694,8 @@ namespace DeviceDefinitionsMigrator
             { "IB", "BN" },
             { "IC", "CN" },
             { "IR", "RES" },
-            { "IN", "NG" }
+            { "IN", "NG" },
+            { "IG", "NG" }
         };
     }
 }
