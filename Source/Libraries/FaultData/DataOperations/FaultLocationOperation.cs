@@ -144,15 +144,6 @@ namespace FaultData.DataOperations
 
             FaultLocationData.FaultCurveDataTable faultCurveTable = new FaultLocationData.FaultCurveDataTable();
 
-            SourceImpedance zLocal;
-            ComplexNumber zSrc;
-
-            zLocal = faultLocationInfo.SourceImpedances.FirstOrDefault(impedance => impedance.MeterLocationID == meterDataSet.Meter.MeterLocationID);
-
-            zSrc = ((object)zLocal != null)
-                ? new ComplexNumber(zLocal.RSrc, zLocal.XSrc)
-                : default(ComplexNumber);
-
             foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
             {
                 using (EventTableAdapter adapter = new EventTableAdapter())
@@ -192,6 +183,7 @@ namespace FaultData.DataOperations
                 // FAULT LOCATION
                 ComplexNumber z0;
                 ComplexNumber z1;
+                ComplexNumber zSrc;
                 ComplexNumber zRem;
                 CycleData prefaultCycle;
 
@@ -201,16 +193,20 @@ namespace FaultData.DataOperations
                 int lineID = faultGroup.Line.ID;
 
                 zLine = faultLocationInfo.LineImpedances.FirstOrDefault(impedance => impedance.LineID == lineID);
-                
-                List<int> meterLocationIDs = faultGroup.Line.MeterLocations
-                    .Select(location => location.ID)
-                    .Where(id => id != meterDataSet.Meter.MeterLocationID)
+
+                SourceImpedance zLocal = faultGroup.Line.MeterLocationLines
+                    .Where(link => link.MeterLocationID == meterDataSet.Meter.MeterLocationID)
+                    .SelectMany(link => faultLocationInfo.SourceImpedances.Where(sourceImpedance => sourceImpedance.MeterLocationLineID == link.ID))
+                    .FirstOrDefault();
+
+                List<SourceImpedance> remoteImpedances = faultGroup.Line.MeterLocationLines
+                    .Where(link => link.MeterLocationID != meterDataSet.Meter.MeterLocationID)
+                    .SelectMany(link => faultLocationInfo.SourceImpedances.Where(sourceImpedance => sourceImpedance.MeterLocationLineID == link.ID))
                     .ToList();
 
-                List<SourceImpedance> remoteImpedances = faultLocationInfo.SourceImpedances
-                    .Where(impedance => impedance.LineID == lineID)
-                    .Where(impedance => meterLocationIDs.Contains(impedance.MeterLocationID))
-                    .ToList();
+                zSrc = ((object)zLocal != null)
+                    ? new ComplexNumber(zLocal.RSrc, zLocal.XSrc)
+                    : default(ComplexNumber);
 
                 if (remoteImpedances.Count == 1)
                     zRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
@@ -628,7 +624,6 @@ namespace FaultData.DataOperations
         private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo, Line line)
         {
             return faultLocationInfo.FaultLocationAlgorithms
-                .Where(dbAlgorithm => dbAlgorithm.LineID == null || dbAlgorithm.LineID == line.ID)
                 .Select(dbAlgorithm => LoadAlgorithm<FaultLocationAlgorithm>(dbAlgorithm.AssemblyName, dbAlgorithm.TypeName, dbAlgorithm.MethodName))
                 .ToList();
         }

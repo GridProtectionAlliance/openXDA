@@ -22,7 +22,6 @@
   <Table Name="dbo.FaultLocationAlgorithm" Member="FaultLocationAlgorithms">
     <Type Name="FaultLocationAlgorithm">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="LineID" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="AssemblyName" Type="System.String" DbType="VarChar(1024) NOT NULL" CanBeNull="false" />
       <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="MethodName" Type="System.String" DbType="VarChar(80) NOT NULL" CanBeNull="false" />
@@ -41,10 +40,17 @@
   <Table Name="dbo.SourceImpedance" Member="SourceImpedances">
     <Type Name="SourceImpedance">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="LineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="MeterLocationID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="MeterLocationLineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="RSrc" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Column Name="XSrc" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.OutputChannel" Member="OutputChannels">
+    <Type Name="OutputChannel">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="SeriesID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="ChannelKey" Type="System.String" DbType="VarChar(20) NOT NULL" CanBeNull="false" />
+      <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
 </Database>

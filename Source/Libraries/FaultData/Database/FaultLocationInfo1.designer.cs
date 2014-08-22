@@ -45,6 +45,9 @@ namespace FaultData.Database
     partial void InsertSourceImpedance(SourceImpedance instance);
     partial void UpdateSourceImpedance(SourceImpedance instance);
     partial void DeleteSourceImpedance(SourceImpedance instance);
+    partial void InsertOutputChannel(OutputChannel instance);
+    partial void UpdateOutputChannel(OutputChannel instance);
+    partial void DeleteOutputChannel(OutputChannel instance);
     #endregion
 		
 		public FaultLocationInfoDataContext(string connection) : 
@@ -108,6 +111,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<SourceImpedance>();
+			}
+		}
+		
+		public System.Data.Linq.Table<OutputChannel> OutputChannels
+		{
+			get
+			{
+				return this.GetTable<OutputChannel>();
 			}
 		}
 	}
@@ -505,8 +516,6 @@ namespace FaultData.Database
 		
 		private int _ID;
 		
-		private System.Nullable<int> _LineID;
-		
 		private string _AssemblyName;
 		
 		private string _TypeName;
@@ -519,8 +528,6 @@ namespace FaultData.Database
     partial void OnCreated();
     partial void OnIDChanging(int value);
     partial void OnIDChanged();
-    partial void OnLineIDChanging(System.Nullable<int> value);
-    partial void OnLineIDChanged();
     partial void OnAssemblyNameChanging(string value);
     partial void OnAssemblyNameChanged();
     partial void OnTypeNameChanging(string value);
@@ -550,26 +557,6 @@ namespace FaultData.Database
 					this._ID = value;
 					this.SendPropertyChanged("ID");
 					this.OnIDChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int")]
-		public System.Nullable<int> LineID
-		{
-			get
-			{
-				return this._LineID;
-			}
-			set
-			{
-				if ((this._LineID != value))
-				{
-					this.OnLineIDChanging(value);
-					this.SendPropertyChanging();
-					this._LineID = value;
-					this.SendPropertyChanged("LineID");
-					this.OnLineIDChanged();
 				}
 			}
 		}
@@ -845,9 +832,7 @@ namespace FaultData.Database
 		
 		private int _ID;
 		
-		private int _LineID;
-		
-		private int _MeterLocationID;
+		private int _MeterLocationLineID;
 		
 		private double _RSrc;
 		
@@ -859,10 +844,8 @@ namespace FaultData.Database
     partial void OnCreated();
     partial void OnIDChanging(int value);
     partial void OnIDChanged();
-    partial void OnLineIDChanging(int value);
-    partial void OnLineIDChanged();
-    partial void OnMeterLocationIDChanging(int value);
-    partial void OnMeterLocationIDChanged();
+    partial void OnMeterLocationLineIDChanging(int value);
+    partial void OnMeterLocationLineIDChanged();
     partial void OnRSrcChanging(double value);
     partial void OnRSrcChanged();
     partial void OnXSrcChanging(double value);
@@ -894,42 +877,22 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int NOT NULL")]
-		public int LineID
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterLocationLineID", DbType="Int NOT NULL")]
+		public int MeterLocationLineID
 		{
 			get
 			{
-				return this._LineID;
+				return this._MeterLocationLineID;
 			}
 			set
 			{
-				if ((this._LineID != value))
+				if ((this._MeterLocationLineID != value))
 				{
-					this.OnLineIDChanging(value);
+					this.OnMeterLocationLineIDChanging(value);
 					this.SendPropertyChanging();
-					this._LineID = value;
-					this.SendPropertyChanged("LineID");
-					this.OnLineIDChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterLocationID", DbType="Int NOT NULL")]
-		public int MeterLocationID
-		{
-			get
-			{
-				return this._MeterLocationID;
-			}
-			set
-			{
-				if ((this._MeterLocationID != value))
-				{
-					this.OnMeterLocationIDChanging(value);
-					this.SendPropertyChanging();
-					this._MeterLocationID = value;
-					this.SendPropertyChanged("MeterLocationID");
-					this.OnMeterLocationIDChanged();
+					this._MeterLocationLineID = value;
+					this.SendPropertyChanged("MeterLocationLineID");
+					this.OnMeterLocationLineIDChanged();
 				}
 			}
 		}
@@ -970,6 +933,140 @@ namespace FaultData.Database
 					this._XSrc = value;
 					this.SendPropertyChanged("XSrc");
 					this.OnXSrcChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.OutputChannel")]
+	public partial class OutputChannel : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _SeriesID;
+		
+		private string _ChannelKey;
+		
+		private int _LoadOrder;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnSeriesIDChanging(int value);
+    partial void OnSeriesIDChanged();
+    partial void OnChannelKeyChanging(string value);
+    partial void OnChannelKeyChanged();
+    partial void OnLoadOrderChanging(int value);
+    partial void OnLoadOrderChanged();
+    #endregion
+		
+		public OutputChannel()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_SeriesID", DbType="Int NOT NULL")]
+		public int SeriesID
+		{
+			get
+			{
+				return this._SeriesID;
+			}
+			set
+			{
+				if ((this._SeriesID != value))
+				{
+					this.OnSeriesIDChanging(value);
+					this.SendPropertyChanging();
+					this._SeriesID = value;
+					this.SendPropertyChanged("SeriesID");
+					this.OnSeriesIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ChannelKey", DbType="VarChar(20) NOT NULL", CanBeNull=false)]
+		public string ChannelKey
+		{
+			get
+			{
+				return this._ChannelKey;
+			}
+			set
+			{
+				if ((this._ChannelKey != value))
+				{
+					this.OnChannelKeyChanging(value);
+					this.SendPropertyChanging();
+					this._ChannelKey = value;
+					this.SendPropertyChanged("ChannelKey");
+					this.OnChannelKeyChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LoadOrder", DbType="Int NOT NULL")]
+		public int LoadOrder
+		{
+			get
+			{
+				return this._LoadOrder;
+			}
+			set
+			{
+				if ((this._LoadOrder != value))
+				{
+					this.OnLoadOrderChanging(value);
+					this.SendPropertyChanging();
+					this._LoadOrder = value;
+					this.SendPropertyChanged("LoadOrder");
+					this.OnLoadOrderChanged();
 				}
 			}
 		}

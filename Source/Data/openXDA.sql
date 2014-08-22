@@ -223,11 +223,19 @@ GO
 -- Fault Location --
 -- -------------- --
 
+CREATE TABLE OutputChannel
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    SeriesID INT NOT NULL REFERENCES Series(ID),
+    ChannelKey VARCHAR(20) NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
 CREATE TABLE SourceImpedance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    LineID INT NOT NULL REFERENCES Line(ID),
-    MeterLocationID INT NOT NULL REFERENCES MeterLocation(ID),
+    MeterLocationLineID INT NOT NULL REFERENCES MeterLocationLine(ID),
     RSrc FLOAT NOT NULL,
     XSrc FLOAT NOT NULL
 )
@@ -267,7 +275,6 @@ GO
 CREATE TABLE FaultLocationAlgorithm
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    LineID INT NULL REFERENCES Line(ID),
     AssemblyName VARCHAR(1024) NOT NULL,
     TypeName VARCHAR(200) NOT NULL,
     MethodName VARCHAR(80) NOT NULL
