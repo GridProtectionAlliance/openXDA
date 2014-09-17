@@ -145,7 +145,7 @@ namespace FaultData.DataAnalysis
                 if ((object)dataSeries == null)
                     return null;
 
-                return dataSeries.ToRMS((int)Math.Round(dataSeries.SampleRate / 60.0D)); // TODO: Nominal frequency is hardcoded
+                return Transform.ToRMS(dataSeries, 60.0D); // TODO: Nominal frequency is hardcoded
             }
 
             private bool IsInstantaneous(DataSeries dataSeries)
@@ -153,7 +153,7 @@ namespace FaultData.DataAnalysis
                 string characteristicName = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
                 string seriesTypeName = dataSeries.SeriesInfo.SeriesType.Name;
 
-                return (characteristicName == "None" || characteristicName == "Instantaneous") &&
+                return (characteristicName == "Instantaneous") &&
                        (seriesTypeName == "Values" || seriesTypeName == "Instantaneous");
             }
 
@@ -267,6 +267,14 @@ namespace FaultData.DataAnalysis
             get
             {
                 return m_classification;
+            }
+        }
+
+        public DataSeries this[int index]
+        {
+            get
+            {
+                return m_dataSeries[index];
             }
         }
 
@@ -515,6 +523,16 @@ namespace FaultData.DataAnalysis
                 .Any(rms => rms.DataPoints.Any(dataPoint => dataPoint.Value > voltageThreshold));
         }
 
+        public DataGroup ToSubGroup(int startIndex, int endIndex)
+        {
+            DataGroup subGroup = new DataGroup();
+
+            foreach (DataSeries dataSeries in m_dataSeries)
+                subGroup.Add(dataSeries.ToSubSeries(startIndex, endIndex));
+
+            return subGroup;
+        }
+
         public byte[] ToData()
         {
             int timeSeriesByteLength;
@@ -556,6 +574,11 @@ namespace FaultData.DataAnalysis
             return GZipStream.CompressBuffer(data);
         }
 
+        public void FromData(byte[] data)
+        {
+            FromData(null, data);
+        }
+
         public void FromData(Meter meter, byte[] data)
         {
             byte[] uncompressedData;
@@ -582,7 +605,6 @@ namespace FaultData.DataAnalysis
             while (offset < uncompressedData.Length)
             {
                 series = new DataSeries();
-                series.DataPoints = new List<DataPoint>();
                 seriesID = LittleEndian.ToInt32(uncompressedData, offset);
                 offset += sizeof(int);
 

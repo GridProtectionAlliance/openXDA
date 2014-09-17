@@ -100,19 +100,23 @@ namespace FaultData.DataReaders
 
                     series = new DataSeries();
                     series.SeriesInfo = channel.Series[0];
-                    series.DataPoints = new List<DataPoint>();
 
                     meterDataSet.Meter.Channels.Add(channel);
-                    meterDataSet.DataSeries.Add(series);
+
+                    while (meterDataSet.DataSeries.Count <= analogChannel.Index)
+                        meterDataSet.DataSeries.Add(new DataSeries());
+
+                    meterDataSet.DataSeries[analogChannel.Index] = series;
                 }
 
                 while (parser.ReadNext())
                 {
-                    for (int i = 0; i < meterDataSet.DataSeries.Count; i++)
+                    for (int i = 0; i < schema.AnalogChannels.Length; i++)
                     {
+                        int seriesIndex = schema.AnalogChannels[i].Index;
                         string units = schema.AnalogChannels[i].Units.ToUpper();
                         double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
-                        meterDataSet.DataSeries[i].DataPoints.Add(new DataPoint() { Time = parser.Timestamp, Value = multiplier * parser.Values[i] });
+                        meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = parser.Timestamp, Value = multiplier * parser.Values[i] });
                     }
                 }
             }

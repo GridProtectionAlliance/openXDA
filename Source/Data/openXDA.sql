@@ -145,7 +145,8 @@ CREATE TABLE MeasurementCharacteristic
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
-    Description VARCHAR(MAX) NULL
+    Description VARCHAR(MAX) NULL,
+    Display BIT NOT NULL DEFAULT 0
 )
 GO
 
@@ -166,9 +167,31 @@ CREATE TABLE Channel
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
     Name VARCHAR(200) NOT NULL,
+    SamplesPerHour INT NOT NULL,
+    PerUnitValue FLOAT NULL,
     HarmonicGroup INT NOT NULL,
     Description VARCHAR(MAX) NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_MeterID
+ON Channel(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_LineID
+ON Channel(LineID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_MeasurementTypeID
+ON Channel(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_MeasurementCharacteristicID
+ON Channel(MeasurementCharacteristicID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Channel_PhaseID
+ON Channel(PhaseID ASC)
 GO
 
 CREATE TABLE SeriesType
@@ -222,6 +245,14 @@ GO
 -- -------------- --
 -- Fault Location --
 -- -------------- --
+
+CREATE TABLE CycleData
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    Data VARBINARY(MAX) NOT NULL
+)
+GO
 
 CREATE TABLE OutputChannel
 (
@@ -277,7 +308,8 @@ CREATE TABLE FaultLocationAlgorithm
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssemblyName VARCHAR(1024) NOT NULL,
     TypeName VARCHAR(200) NOT NULL,
-    MethodName VARCHAR(80) NOT NULL
+    MethodName VARCHAR(80) NOT NULL,
+    ExecutionOrder INT NOT NULL
 )
 GO
 
@@ -288,31 +320,4 @@ CREATE TABLE FaultCurve
     Algorithm VARCHAR(80) NOT NULL,
     Data VARBINARY(MAX) NOT NULL
 )
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('Prefault', 'Before fault inception')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('AN Fault', 'Line A to neutral fault')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('BN Fault', 'Line B to neutral fault')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('CN Fault', 'Line C to neutral fault')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('AB Fault', 'Line A to line B fault')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('BC Fault', 'Line B to line C fault')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('CA Fault', 'Line C to line A fault')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('3-Phase Fault', 'Fault on all three lines')
-GO
-
-INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO

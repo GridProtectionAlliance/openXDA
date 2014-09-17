@@ -22,18 +22,17 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using FaultAlgorithms;
 using GSF;
-using GSF.NumericalAnalysis;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
-using Line = FaultData.Database.Line;
 
 namespace FaultData.DataOperations
 {
@@ -47,46 +46,6 @@ namespace FaultData.DataOperations
             public FaultType FaultType;
             public int StartSample;
             public int EndSample;
-
-            public CycleDataGroup VA = new CycleDataGroup();
-            public CycleDataGroup VB = new CycleDataGroup();
-            public CycleDataGroup VC = new CycleDataGroup();
-            public CycleDataGroup IA = new CycleDataGroup();
-            public CycleDataGroup IB = new CycleDataGroup();
-            public CycleDataGroup IC = new CycleDataGroup();
-
-            public void PushDataTo(Segment subSegment)
-            {
-                int startIndex = subSegment.StartSample;
-                int endIndex = subSegment.EndSample;
-
-                subSegment.VA = VA.ToSubGroup(startIndex, endIndex);
-                subSegment.VB = VB.ToSubGroup(startIndex, endIndex);
-                subSegment.VC = VC.ToSubGroup(startIndex, endIndex);
-                subSegment.IA = IA.ToSubGroup(startIndex, endIndex);
-                subSegment.IB = IB.ToSubGroup(startIndex, endIndex);
-                subSegment.IC = IC.ToSubGroup(startIndex, endIndex);
-            }
-        }
-
-        private class CycleDataGroup
-        {
-            public DataSeries RMSSeries = new DataSeries();
-            public DataSeries PeakSeries = new DataSeries();
-            public DataSeries PhaseSeries = new DataSeries();
-            public DataSeries ErrorSeries = new DataSeries();
-
-            public CycleDataGroup ToSubGroup(int startIndex, int endIndex)
-            {
-                CycleDataGroup subGroup = new CycleDataGroup();
-
-                subGroup.RMSSeries = RMSSeries.ToSubSeries(startIndex, endIndex);
-                subGroup.PeakSeries = PeakSeries.ToSubSeries(startIndex, endIndex);
-                subGroup.PhaseSeries = PhaseSeries.ToSubSeries(startIndex, endIndex);
-                subGroup.ErrorSeries = ErrorSeries.ToSubSeries(startIndex, endIndex);
-
-                return subGroup;
-            }
         }
 
         // Constants
@@ -96,6 +55,7 @@ namespace FaultData.DataOperations
         // Fields
         private string m_connectionString;
         private double m_prefaultMultiplier;
+        private double m_ratedCurrentMultiplier;
 
         #endregion
 
@@ -104,7 +64,8 @@ namespace FaultData.DataOperations
         public FaultLocationOperation(string connectionString)
         {
             m_connectionString = connectionString;
-            m_prefaultMultiplier = 1.5D;
+            m_prefaultMultiplier = 4.0D;
+            m_ratedCurrentMultiplier = 1.5D;
         }
 
         #endregion
@@ -123,6 +84,18 @@ namespace FaultData.DataOperations
             }
         }
 
+        public double RatedCurrentMultiplier
+        {
+            get
+            {
+                return m_ratedCurrentMultiplier;
+            }
+            set
+            {
+                m_ratedCurrentMultiplier = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -132,16 +105,18 @@ namespace FaultData.DataOperations
             List<DataGroup> dataGroups = meterDataSet.GetResource<DataGroupsResource>().DataGroups;
             FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(m_connectionString);
 
-            Dictionary<string, DataSeries> seriesLookup;
-            List<FaultType> faultTypes;
-            List<Segment> segments;
-            Segment fullSegment;
+            VIDataGroup viDataGroup;
+            DataSeries irDataSeries;
+            VICycleDataSet viCycleDataSet;
+            List<Segment> faultDetectedSegments;
+            List<Segment> faultTypeSegments;
 
             int eventID;
             bool prefault;
             FaultSegment faultSegment;
             FaultLocationDataSet faultLocationDataSet;
 
+            FaultLocationData.CycleDataDataTable cycleDataTable = new FaultLocationData.CycleDataDataTable();
             FaultLocationData.FaultCurveDataTable faultCurveTable = new FaultLocationData.FaultCurveDataTable();
 
             foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
@@ -155,19 +130,18 @@ namespace FaultData.DataOperations
                 if (eventID == 0)
                     continue;
 
-                seriesLookup = GetSeriesLookup(faultGroup);
-                fullSegment = GetFullSegment(faultGroup, seriesLookup);
-                faultTypes = GetFaultTypes(fullSegment);
-                segments = GetSegments(faultTypes);
+                viDataGroup = GetVIDataGroup(faultGroup);
+                irDataSeries = viDataGroup.IA.Add(viDataGroup.IB).Add(viDataGroup.IC);
+                viCycleDataSet = Transform.ToVICycleDataSet(viDataGroup, Frequency);
+                faultDetectedSegments = DetectFaults(viDataGroup, viCycleDataSet);
+                faultTypeSegments = ClassifyFaults(faultDetectedSegments, viCycleDataSet, Transform.ToCycleDataGroup(irDataSeries, Frequency));
 
                 prefault = true;
 
-                foreach (Segment segment in segments)
+                foreach (Segment segment in faultTypeSegments)
                 {
                     if (segment.FaultType != FaultType.None)
                         prefault = false;
-
-                    fullSegment.PushDataTo(segment);
 
                     faultSegment = new FaultSegment();
                     faultSegment.EventID = eventID;
@@ -219,22 +193,23 @@ namespace FaultData.DataOperations
                     z0 = new ComplexNumber(zLine.R0, zLine.X0);
                     z1 = new ComplexNumber(zLine.R1, zLine.X1);
 
-                    foreach (FaultLocationAlgorithm faultLocationAlgorithm in GetFaultLocationAlgorithms(faultLocationInfo, faultGroup.Line))
+                    foreach (FaultLocationAlgorithm faultLocationAlgorithm in GetFaultLocationAlgorithms(faultLocationInfo))
                     {
                         faultDistanceSeries = new DataSeries();
-                        faultDistanceSeries.DataPoints = new List<DataPoint>();
 
-                        foreach (Segment segment in segments)
+                        foreach (Segment segment in faultTypeSegments)
                         {
+                            VICycleDataSet subSet;
                             List<DataPoint> faultDataPoints = null;
                             double[] faultDistances;
 
                             if ((object)prefaultCycle == null && segment.FaultType == FaultType.None)
-                                prefaultCycle = FirstCycle(segment);
+                                prefaultCycle = FirstCycle(viCycleDataSet);
 
                             if (segment.FaultType != FaultType.None)
                             {
-                                faultLocationDataSet = GetFaultLocationDataSet(segment);
+                                faultLocationDataSet = new FaultLocationDataSet();
+                                faultLocationDataSet.FaultType = segment.FaultType;
                                 faultLocationDataSet.LineDistance = faultGroup.Line.Length;
                                 faultLocationDataSet.PrefaultCycle = prefaultCycle;
                                 faultLocationDataSet.Z0 = z0;
@@ -242,9 +217,12 @@ namespace FaultData.DataOperations
                                 faultLocationDataSet.ZSrc = zSrc;
                                 faultLocationDataSet.ZRem = zRem;
 
+                                subSet = viCycleDataSet.ToSubSet(segment.StartSample, segment.EndSample);
+                                subSet.PushDataTo(faultLocationDataSet.Cycles);
+
                                 if (TryExecute(faultLocationAlgorithm, faultLocationDataSet, out faultDistances))
                                 {
-                                    faultDataPoints = segment.VA.RMSSeries.DataPoints
+                                    faultDataPoints = subSet.VA.RMS.DataPoints
                                         .Zip(faultDistances, (point, distance) => new DataPoint() { Time = point.Time, Value = distance })
                                         .ToList();
                                 }
@@ -252,7 +230,7 @@ namespace FaultData.DataOperations
 
                             if ((object)faultDataPoints == null)
                             {
-                                faultDataPoints = fullSegment.VA.RMSSeries.DataPoints
+                                faultDataPoints = viCycleDataSet.VA.RMS.DataPoints
                                     .Skip(segment.StartSample)
                                     .Take(segment.EndSample - segment.StartSample + 1)
                                     .Select(point => new DataPoint() { Time = point.Time, Value = 0.0D })
@@ -265,6 +243,8 @@ namespace FaultData.DataOperations
 
                         faultCurveTable.AddFaultCurveRow(eventID, faultLocationAlgorithm.Method.Name, Serialize(faultDistanceSeries));
                     }
+
+                    cycleDataTable.AddCycleDataRow(eventID, viCycleDataSet.ToDataGroup().ToData());
                 }
             }
 
@@ -275,24 +255,30 @@ namespace FaultData.DataOperations
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connectionString))
                 {
                     bulkCopy.BulkCopyTimeout = 0;
+
+                    bulkCopy.DestinationTableName = cycleDataTable.TableName;
+                    bulkCopy.WriteToServer(cycleDataTable);
+
                     bulkCopy.DestinationTableName = faultCurveTable.TableName;
                     bulkCopy.WriteToServer(faultCurveTable);
                 }
             }
         }
 
-        private Segment GetFullSegment(DataGroup faultGroup, Dictionary<string, DataSeries> seriesLookup)
+        private VIDataGroup GetVIDataGroup(DataGroup faultGroup)
         {
-            Segment fullSegment = new Segment();
-            double samplesPerSecond = faultGroup.Samples / (faultGroup.EndTime - faultGroup.StartTime).TotalSeconds;
-            int samplesPerCycle = (int)Math.Round(samplesPerSecond / Frequency);
+            Dictionary<string, DataSeries> seriesLookup = GetSeriesLookup(faultGroup);
 
-            fullSegment.FaultType = FaultType.None;
-            fullSegment.StartSample = 0;
-            fullSegment.EndSample = faultGroup.Samples - samplesPerCycle - 1;
-            FillCycleDataGroups(seriesLookup, fullSegment);
+            DataGroup dataGroup = new DataGroup();
 
-            return fullSegment;
+            dataGroup.Add(seriesLookup["VA"]);
+            dataGroup.Add(seriesLookup["VB"]);
+            dataGroup.Add(seriesLookup["VC"]);
+            dataGroup.Add(seriesLookup["IA"]);
+            dataGroup.Add(seriesLookup["IB"]);
+            dataGroup.Add(seriesLookup["IC"]);
+
+            return new VIDataGroup(dataGroup);
         }
 
         private Dictionary<string, DataSeries> GetSeriesLookup(DataGroup faultGroup)
@@ -319,120 +305,246 @@ namespace FaultData.DataOperations
                 .ToDictionary(typeSelector);
         }
 
-        private void FillCycleDataGroups(Dictionary<string, DataSeries> seriesLookup, Segment segment)
+        private List<Segment> DetectFaults(VIDataGroup viDataGroup, VICycleDataSet viCycleDataSet)
         {
-            FillCycleDataGroup(seriesLookup["VA"], segment, segment.VA);
-            FillCycleDataGroup(seriesLookup["VB"], segment, segment.VB);
-            FillCycleDataGroup(seriesLookup["VC"], segment, segment.VC);
-            FillCycleDataGroup(seriesLookup["IA"], segment, segment.IA);
-            FillCycleDataGroup(seriesLookup["IB"], segment, segment.IB);
-            FillCycleDataGroup(seriesLookup["IC"], segment, segment.IC);
-        }
+            List<Segment> segments = new List<Segment>();
+            Segment currentSegment = null;
 
-        private void FillCycleDataGroup(DataSeries waveForm, Segment segment, CycleDataGroup cycleDataGroup)
-        {
-            int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
-            double[] yValues = new double[samplesPerCycle];
-            double[] tValues = new double[samplesPerCycle];
+            DataSeries iaRMS = viCycleDataSet.IA.RMS;
+            DataSeries ibRMS = viCycleDataSet.IB.RMS;
+            DataSeries icRMS = viCycleDataSet.IC.RMS;
 
-            DataSeries rmsSeries = waveForm.ToRMS(samplesPerCycle);
+            double ratedCurrentMultiplied = viDataGroup.ToDataGroup().Line.ThermalRating * m_ratedCurrentMultiplier;
+            double iaFault = Math.Max(iaRMS.DataPoints[0].Value * m_prefaultMultiplier, ratedCurrentMultiplied);
+            double ibFault = Math.Max(ibRMS.DataPoints[0].Value * m_prefaultMultiplier, ratedCurrentMultiplied);
+            double icFault = Math.Max(icRMS.DataPoints[0].Value * m_prefaultMultiplier, ratedCurrentMultiplied);
 
-            cycleDataGroup.RMSSeries.DataPoints = new List<DataPoint>();
-            cycleDataGroup.PhaseSeries.DataPoints = new List<DataPoint>();
-            cycleDataGroup.PeakSeries.DataPoints = new List<DataPoint>();
-            cycleDataGroup.ErrorSeries.DataPoints = new List<DataPoint>();
+            double ia;
+            double ib;
+            double ic;
 
-            for (int i = segment.StartSample; i <= segment.EndSample; i++)
-            {
-                DateTime cycleTime = waveForm.DataPoints[i].Time;
-
-                for (int j = 0; j < samplesPerCycle; j++)
-                {
-                    yValues[j] = waveForm.DataPoints[i + j].Value;
-                    tValues[j] = (waveForm.DataPoints[i + j].Time - cycleTime).TotalSeconds;
-                }
-
-                SineWave sineFit = WaveFit.SineFit(yValues, tValues, Frequency);
-
-                cycleDataGroup.RMSSeries.DataPoints.Add(rmsSeries.DataPoints[i]);
-
-                cycleDataGroup.PhaseSeries.DataPoints.Add(new DataPoint()
-                {
-                    Time = cycleTime,
-                    Value = sineFit.Phase
-                });
-
-                cycleDataGroup.PeakSeries.DataPoints.Add(new DataPoint()
-                {
-                    Time = cycleTime,
-                    Value = sineFit.Amplitude
-                });
-
-                cycleDataGroup.ErrorSeries.DataPoints.Add(new DataPoint()
-                {
-                    Time = cycleTime,
-
-                    Value = tValues
-                        .Select(sineFit.CalculateY)
-                        .Zip(yValues, (estimate, value) => Math.Abs(estimate - value))
-                        .Sum()
-                });
-            }
-        }
-
-        private List<FaultType> GetFaultTypes(Segment fullSegment)
-        {
-            DataSeries ia = fullSegment.IA.RMSSeries;
-            DataSeries ib = fullSegment.IB.RMSSeries;
-            DataSeries ic = fullSegment.IC.RMSSeries;
-
-            return GetFaultTypes(ia, ib, ic);
-        }
-
-        private List<FaultType> GetFaultTypes(DataSeries iaRMS, DataSeries ibRMS, DataSeries icRMS)
-        {
-            List<FaultType> faultTypes = new List<FaultType>();
-
-            double anPrefault = iaRMS.DataPoints[0].Value;
-            double bnPrefault = ibRMS.DataPoints[0].Value;
-            double cnPrefault = icRMS.DataPoints[0].Value;
-
-            double prefaultSum = anPrefault + bnPrefault + cnPrefault;
-            double prefaultMultiplied = prefaultSum * PrefaultMultiplier;
-
-            int numPhases;
+            int iaIndex;
+            int ibIndex;
+            int icIndex;
 
             for (int i = 0; i < iaRMS.DataPoints.Count; i++)
             {
-                double an = iaRMS.DataPoints[i].Value;
-                double bn = ibRMS.DataPoints[i].Value;
-                double cn = icRMS.DataPoints[i].Value;
-                double sum = an + bn + cn;
-                bool isFault = sum > prefaultMultiplied;
+                ia = iaRMS.DataPoints[i].Value;
+                ib = ibRMS.DataPoints[i].Value;
+                ic = icRMS.DataPoints[i].Value;
 
-                if (isFault)
+                if ((object)currentSegment == null)
                 {
-                    numPhases = GetNumPhases(4.0D, an, bn, cn);
+                    currentSegment = new Segment();
+                    currentSegment.FaultType = FaultType.None;
+                    currentSegment.StartSample = 0;
+                    segments.Add(currentSegment);
+                }
 
-                    if (numPhases == 3)
-                        numPhases = GetNumPhases(1.5D, an - anPrefault, bn - bnPrefault, cn - cnPrefault);
+                if (currentSegment.FaultType == FaultType.None)
+                {
+                    // Search start of fault
+                    if (ia >= iaFault || ib >= ibFault || ic >= icFault)
+                    {
+                        iaIndex = FindFaultInception(viDataGroup.IA, i);
+                        ibIndex = FindFaultInception(viDataGroup.IB, i);
+                        icIndex = FindFaultInception(viDataGroup.IC, i);
 
-                    faultTypes.Add(GetFaultType(numPhases, an, bn, cn));
+                        i = Math.Min(Math.Min(iaIndex, ibIndex), icIndex);
+                        currentSegment.EndSample = i - 1;
+
+                        currentSegment = new Segment();
+                        currentSegment.FaultType = FaultType.ABC;
+                        currentSegment.StartSample = i;
+                        segments.Add(currentSegment);
+                    }
                 }
                 else
                 {
-                    faultTypes.Add(FaultType.None);
+                    // Search for end of fault
+                    if (ia < iaFault && ib < ibFault && ic < icFault)
+                    {
+                        iaIndex = FindFaultClearing(viDataGroup.IA, i);
+                        ibIndex = FindFaultClearing(viDataGroup.IB, i);
+                        icIndex = FindFaultClearing(viDataGroup.IC, i);
+
+                        i = Math.Max(Math.Max(iaIndex, ibIndex), icIndex);
+                        currentSegment.EndSample = i - 1;
+                        
+                        currentSegment = new Segment();
+                        currentSegment.FaultType = FaultType.None;
+                        currentSegment.StartSample = i;
+                        segments.Add(currentSegment);
+                    }
                 }
             }
 
-            return faultTypes;
+            if ((object)currentSegment != null)
+                currentSegment.EndSample = iaRMS.DataPoints.Count - 1;
+
+            return segments;
         }
 
-        private int GetNumPhases(double factor, double an, double bn, double cn)
+        private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
-            double max = Math.Max(Math.Max(an, bn), cn);
-            double min = Math.Min(Math.Min(an, bn), cn);
-            double mid = (an + bn + cn) - max - min;
+            int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
+            int endIndex = cycleIndex + samplesPerCycle - 1;
+
+            double previousValue;
+            double value;
+            double nextValue;
+
+            for (int i = endIndex; i >= cycleIndex; i--)
+            {
+                if (i - 1 < 0)
+                    continue;
+
+                if (i + 1 >= waveForm.DataPoints.Count)
+                    continue;
+
+                previousValue = waveForm.DataPoints[i - 1].Value;
+                value = waveForm.DataPoints[i].Value;
+                nextValue = waveForm.DataPoints[i + 1].Value;
+
+                if (value * nextValue < 0.0D)
+                    return i + 1;
+
+                if (5.0D * Math.Abs(value - previousValue) < Math.Abs(nextValue - value))
+                    return i;
+            }
+
+            return endIndex;
+        }
+
+        private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
+        {
+            int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
+
+            double previousValue;
+            double value;
+            double nextValue;
+
+            for (int i = cycleIndex; i < cycleIndex + samplesPerCycle; i++)
+            {
+                if (i - 1 < 0)
+                    continue;
+
+                if (i + 1 >= waveForm.DataPoints.Count)
+                    continue;
+
+                previousValue = waveForm.DataPoints[i - 1].Value;
+                value = waveForm.DataPoints[i].Value;
+                nextValue = waveForm.DataPoints[i + 1].Value;
+
+                if (value * nextValue < 0.0D)
+                    return i;
+
+                if (Math.Abs(value - previousValue) > 5.0D * Math.Abs(nextValue - value))
+                    return i;
+            }
+
+            return cycleIndex;
+        }
+
+        private List<Segment> ClassifyFaults(List<Segment> faultDetectedSegments, VICycleDataSet viCycleDataSet, CycleDataGroup irCycleDataGroup)
+        {
+            List<Segment> faultTypeSegments = new List<Segment>();
+            Segment currentSegment = null;
+
+            DataSeries iaRMS = viCycleDataSet.IA.RMS;
+            DataSeries ibRMS = viCycleDataSet.IB.RMS;
+            DataSeries icRMS = viCycleDataSet.IC.RMS;
+            DataSeries irRMS = irCycleDataGroup.RMS;
+
+            double iaPre = iaRMS.DataPoints[0].Value;
+            double ibPre = ibRMS.DataPoints[0].Value;
+            double icPre = icRMS.DataPoints[0].Value;
+            double irPre = irRMS.DataPoints[0].Value;
+
+            double ia;
+            double ib;
+            double ic;
+            double ir;
+
+            int numPhases;
+            FaultType faultType;
+
+            foreach (Segment segment in faultDetectedSegments)
+            {
+                if (segment.FaultType == FaultType.None)
+                {
+                    faultTypeSegments.Add(segment);
+                }
+                else
+                {
+                    for (int i = segment.StartSample; i <= segment.EndSample; i++)
+                    {
+                        ia = iaRMS.DataPoints[i].Value;
+                        ib = ibRMS.DataPoints[i].Value;
+                        ic = icRMS.DataPoints[i].Value;
+                        ir = irRMS.DataPoints[i].Value;
+
+                        numPhases = GetNumPhases(4.0D, ia, ib, ic);
+
+                        if (numPhases == 3)
+                            numPhases = GetNumPhases(1.5, ia - iaPre, ib - ibPre, ic - icPre);
+
+                        faultType = GetFaultType(numPhases, ia, ib, ic);
+
+                        // If two phases are involved in this fault,
+                        // determine if ground is also involved
+                        if (numPhases == 2 && ir > 5.0D * irPre)
+                        {
+                            switch (faultType)
+                            {
+                                case FaultType.AB:
+                                    faultType = FaultType.ABG;
+                                    break;
+
+                                case FaultType.BC:
+                                    faultType = FaultType.BCG;
+                                    break;
+
+                                case FaultType.CA:
+                                    faultType = FaultType.CAG;
+                                    break;
+                            }
+                        }
+
+                        if ((object)currentSegment == null)
+                        {
+                            currentSegment = new Segment();
+                            currentSegment.FaultType = faultType;
+                            currentSegment.StartSample = i;
+                            faultTypeSegments.Add(currentSegment);
+                        }
+                        else if (currentSegment.FaultType != faultType)
+                        {
+                            currentSegment.EndSample = i - 1;
+
+                            currentSegment = new Segment();
+                            currentSegment.FaultType = faultType;
+                            currentSegment.StartSample = i;
+                            faultTypeSegments.Add(currentSegment);
+                        }
+                    }
+
+                    if ((object)currentSegment != null)
+                    {
+                        currentSegment.EndSample = segment.EndSample;
+                        currentSegment = null;
+                    }
+                }
+            }
+
+            return faultTypeSegments;
+        }
+
+        private int GetNumPhases(double factor, double ia, double ib, double ic)
+        {
+            double max = Math.Max(Math.Max(ia, ib), ic);
+            double min = Math.Min(Math.Min(ia, ib), ic);
+            double mid = (ia + ib + ic) - max - min;
 
             if (max > factor * mid)
                 return 1;
@@ -443,64 +555,36 @@ namespace FaultData.DataOperations
             return 3;
         }
 
-        private FaultType GetFaultType(int numPhases, double an, double bn, double cn)
+        private FaultType GetFaultType(int numPhases, double ia, double ib, double ic)
         {
             if (numPhases == 3)
                 return FaultType.ABC;
 
             if (numPhases == 2)
             {
-                if (cn < an && cn < bn)
+                if (ic < ia && ic < ib)
                     return FaultType.AB;
 
-                if (an < bn && an < cn)
+                if (ia < ib && ia < ic)
                     return FaultType.BC;
 
-                if (bn < an && bn < cn)
+                if (ib < ia && ib < ic)
                     return FaultType.CA;
             }
 
             if (numPhases == 1)
             {
-                if (an > bn && an > cn)
+                if (ia > ib && ia > ic)
                     return FaultType.AN;
 
-                if (bn > an && bn > cn)
+                if (ib > ia && ib > ic)
                     return FaultType.BN;
 
-                if (cn > an && cn > bn)
+                if (ic > ia && ic > ib)
                     return FaultType.CN;
             }
 
             return FaultType.None;
-        }
-
-        private List<Segment> GetSegments(List<FaultType> faultTypes)
-        {
-            List<Segment> segments = new List<Segment>();
-            Segment currentSegment = null;
-
-            for (int i = 0; i < faultTypes.Count; i++)
-            {
-                if ((object)currentSegment == null || currentSegment.FaultType != faultTypes[i])
-                {
-                    if ((object)currentSegment != null)
-                        currentSegment.EndSample = i - 1;
-
-                    currentSegment = new Segment()
-                    {
-                        FaultType = faultTypes[i],
-                        StartSample = i
-                    };
-
-                    segments.Add(currentSegment);
-                }
-            }
-
-            if ((object)currentSegment != null)
-                currentSegment.EndSample = faultTypes.Count - 1;
-
-            return segments;
         }
 
         private SegmentType GetSegmentType(bool prefault, FaultLocationInfoDataContext faultLocationInfo, FaultType faultType)
@@ -525,6 +609,15 @@ namespace FaultData.DataOperations
                 case FaultType.CA:
                     return faultLocationInfo.SegmentTypes.First(type => type.Name == "CA Fault");
 
+                case FaultType.ABG:
+                    return faultLocationInfo.SegmentTypes.First(type => type.Name == "ABG Fault");
+
+                case FaultType.BCG:
+                    return faultLocationInfo.SegmentTypes.First(type => type.Name == "BCG Fault");
+
+                case FaultType.CAG:
+                    return faultLocationInfo.SegmentTypes.First(type => type.Name == "CAG Fault");
+
                 case FaultType.ABC:
                     return faultLocationInfo.SegmentTypes.First(type => type.Name == "3-Phase Fault");
 
@@ -535,95 +628,48 @@ namespace FaultData.DataOperations
             }
         }
 
-        private FaultLocationDataSet GetFaultLocationDataSet(Segment segment)
-        {
-            FaultLocationDataSet faultLocationDataSet;
-            CycleDataSet cycleDataSet;
-
-            faultLocationDataSet = new FaultLocationDataSet();
-            faultLocationDataSet.FaultType = segment.FaultType;
-            cycleDataSet = faultLocationDataSet.Cycles;
-
-            for (int i = 0; i <= segment.EndSample - segment.StartSample; i++)
-            {
-                CycleData cycle = new CycleData();
-
-                cycle.AN.V.RMS = segment.VA.RMSSeries.DataPoints[i].Value;
-                cycle.AN.V.Phase = segment.VA.PhaseSeries.DataPoints[i].Value;
-                cycle.AN.V.Peak = segment.VA.PeakSeries.DataPoints[i].Value;
-                cycle.AN.V.Error = segment.VA.ErrorSeries.DataPoints[i].Value;
-
-                cycle.BN.V.RMS = segment.VB.RMSSeries.DataPoints[i].Value;
-                cycle.BN.V.Phase = segment.VB.PhaseSeries.DataPoints[i].Value;
-                cycle.BN.V.Peak = segment.VB.PeakSeries.DataPoints[i].Value;
-                cycle.BN.V.Error = segment.VB.ErrorSeries.DataPoints[i].Value;
-
-                cycle.CN.V.RMS = segment.VC.RMSSeries.DataPoints[i].Value;
-                cycle.CN.V.Phase = segment.VC.PhaseSeries.DataPoints[i].Value;
-                cycle.CN.V.Peak = segment.VC.PeakSeries.DataPoints[i].Value;
-                cycle.CN.V.Error = segment.VC.ErrorSeries.DataPoints[i].Value;
-
-                cycle.AN.I.RMS = segment.IA.RMSSeries.DataPoints[i].Value;
-                cycle.AN.I.Phase = segment.IA.PhaseSeries.DataPoints[i].Value;
-                cycle.AN.I.Peak = segment.IA.PeakSeries.DataPoints[i].Value;
-                cycle.AN.I.Error = segment.IA.ErrorSeries.DataPoints[i].Value;
-
-                cycle.BN.I.RMS = segment.IB.RMSSeries.DataPoints[i].Value;
-                cycle.BN.I.Phase = segment.IB.PhaseSeries.DataPoints[i].Value;
-                cycle.BN.I.Peak = segment.IB.PeakSeries.DataPoints[i].Value;
-                cycle.BN.I.Error = segment.IB.ErrorSeries.DataPoints[i].Value;
-
-                cycle.CN.I.RMS = segment.IC.RMSSeries.DataPoints[i].Value;
-                cycle.CN.I.Phase = segment.IC.PhaseSeries.DataPoints[i].Value;
-                cycle.CN.I.Peak = segment.IC.PeakSeries.DataPoints[i].Value;
-                cycle.CN.I.Error = segment.IC.ErrorSeries.DataPoints[i].Value;
-
-                cycleDataSet[i] = cycle;
-            }
-
-            return faultLocationDataSet;
-        }
-
-        private CycleData FirstCycle(Segment segment)
+        private CycleData FirstCycle(VICycleDataSet viCycleDataSet)
         {
             CycleData cycle = new CycleData();
 
-            cycle.AN.V.RMS = segment.VA.RMSSeries.DataPoints[0].Value;
-            cycle.AN.V.Phase = segment.VA.PhaseSeries.DataPoints[0].Value;
-            cycle.AN.V.Peak = segment.VA.PeakSeries.DataPoints[0].Value;
-            cycle.AN.V.Error = segment.VA.ErrorSeries.DataPoints[0].Value;
+            cycle.AN.V.RMS = viCycleDataSet.VA.RMS.DataPoints[0].Value;
+            cycle.AN.V.Phase = viCycleDataSet.VA.Phase.DataPoints[0].Value;
+            cycle.AN.V.Peak = viCycleDataSet.VA.Peak.DataPoints[0].Value;
+            cycle.AN.V.Error = viCycleDataSet.VA.Error.DataPoints[0].Value;
 
-            cycle.BN.V.RMS = segment.VB.RMSSeries.DataPoints[0].Value;
-            cycle.BN.V.Phase = segment.VB.PhaseSeries.DataPoints[0].Value;
-            cycle.BN.V.Peak = segment.VB.PeakSeries.DataPoints[0].Value;
-            cycle.BN.V.Error = segment.VB.ErrorSeries.DataPoints[0].Value;
+            cycle.BN.V.RMS = viCycleDataSet.VB.RMS.DataPoints[0].Value;
+            cycle.BN.V.Phase = viCycleDataSet.VB.Phase.DataPoints[0].Value;
+            cycle.BN.V.Peak = viCycleDataSet.VB.Peak.DataPoints[0].Value;
+            cycle.BN.V.Error = viCycleDataSet.VB.Error.DataPoints[0].Value;
 
-            cycle.CN.V.RMS = segment.VC.RMSSeries.DataPoints[0].Value;
-            cycle.CN.V.Phase = segment.VC.PhaseSeries.DataPoints[0].Value;
-            cycle.CN.V.Peak = segment.VC.PeakSeries.DataPoints[0].Value;
-            cycle.CN.V.Error = segment.VC.ErrorSeries.DataPoints[0].Value;
+            cycle.CN.V.RMS = viCycleDataSet.VC.RMS.DataPoints[0].Value;
+            cycle.CN.V.Phase = viCycleDataSet.VC.Phase.DataPoints[0].Value;
+            cycle.CN.V.Peak = viCycleDataSet.VC.Peak.DataPoints[0].Value;
+            cycle.CN.V.Error = viCycleDataSet.VC.Error.DataPoints[0].Value;
 
-            cycle.AN.I.RMS = segment.IA.RMSSeries.DataPoints[0].Value;
-            cycle.AN.I.Phase = segment.IA.PhaseSeries.DataPoints[0].Value;
-            cycle.AN.I.Peak = segment.IA.PeakSeries.DataPoints[0].Value;
-            cycle.AN.I.Error = segment.IA.ErrorSeries.DataPoints[0].Value;
+            cycle.AN.I.RMS = viCycleDataSet.IA.RMS.DataPoints[0].Value;
+            cycle.AN.I.Phase = viCycleDataSet.IA.Phase.DataPoints[0].Value;
+            cycle.AN.I.Peak = viCycleDataSet.IA.Peak.DataPoints[0].Value;
+            cycle.AN.I.Error = viCycleDataSet.IA.Error.DataPoints[0].Value;
 
-            cycle.BN.I.RMS = segment.IB.RMSSeries.DataPoints[0].Value;
-            cycle.BN.I.Phase = segment.IB.PhaseSeries.DataPoints[0].Value;
-            cycle.BN.I.Peak = segment.IB.PeakSeries.DataPoints[0].Value;
-            cycle.BN.I.Error = segment.IB.ErrorSeries.DataPoints[0].Value;
+            cycle.BN.I.RMS = viCycleDataSet.IB.RMS.DataPoints[0].Value;
+            cycle.BN.I.Phase = viCycleDataSet.IB.Phase.DataPoints[0].Value;
+            cycle.BN.I.Peak = viCycleDataSet.IB.Peak.DataPoints[0].Value;
+            cycle.BN.I.Error = viCycleDataSet.IB.Error.DataPoints[0].Value;
 
-            cycle.CN.I.RMS = segment.IC.RMSSeries.DataPoints[0].Value;
-            cycle.CN.I.Phase = segment.IC.PhaseSeries.DataPoints[0].Value;
-            cycle.CN.I.Peak = segment.IC.PeakSeries.DataPoints[0].Value;
-            cycle.CN.I.Error = segment.IC.ErrorSeries.DataPoints[0].Value;
+            cycle.CN.I.RMS = viCycleDataSet.IC.RMS.DataPoints[0].Value;
+            cycle.CN.I.Phase = viCycleDataSet.IC.Phase.DataPoints[0].Value;
+            cycle.CN.I.Peak = viCycleDataSet.IC.Peak.DataPoints[0].Value;
+            cycle.CN.I.Error = viCycleDataSet.IC.Error.DataPoints[0].Value;
 
             return cycle;
         }
 
-        private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo, Line line)
+        private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo)
         {
             return faultLocationInfo.FaultLocationAlgorithms
+                .OrderBy(dbAlgorithm => dbAlgorithm.ExecutionOrder)
+                .ThenBy(dbAlgorithm => dbAlgorithm.ID)
                 .Select(dbAlgorithm => LoadAlgorithm<FaultLocationAlgorithm>(dbAlgorithm.AssemblyName, dbAlgorithm.TypeName, dbAlgorithm.MethodName))
                 .ToList();
         }

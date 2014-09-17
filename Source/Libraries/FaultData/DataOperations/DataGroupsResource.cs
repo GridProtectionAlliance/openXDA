@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FaultAlgorithms;
 using FaultData.DataAnalysis;
 using Line = FaultData.Database.Line;
 

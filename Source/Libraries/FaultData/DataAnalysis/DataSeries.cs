@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Series.cs - Gbtc
+//  DataSeries.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -47,6 +47,15 @@ namespace FaultData.DataAnalysis
 
         #endregion
 
+        #region [ Constructors ]
+
+        public DataSeries()
+        {
+            m_dataPoints = new List<DataPoint>();
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -76,7 +85,7 @@ namespace FaultData.DataAnalysis
             }
             set
             {
-                m_dataPoints = value;
+                m_dataPoints = value ?? new List<DataPoint>();
                 m_duration = null;
                 m_sampleRate = null;
                 m_minimum = null;
@@ -95,7 +104,7 @@ namespace FaultData.DataAnalysis
                 if (m_duration.HasValue)
                     return m_duration.Value;
 
-                if ((object)m_dataPoints == null || !m_dataPoints.Any())
+                if (!m_dataPoints.Any())
                     return double.NaN;
 
                 m_duration = m_dataPoints.Last().Time.Subtract(m_dataPoints.First().Time).TotalSeconds;
@@ -114,31 +123,12 @@ namespace FaultData.DataAnalysis
                 if (m_sampleRate.HasValue)
                     return m_sampleRate.Value;
 
-                if ((object)m_dataPoints == null)
+                if (!m_dataPoints.Any())
                     return double.NaN;
 
                 m_sampleRate = (Duration != 0.0D) ? m_dataPoints.Count / Duration : double.NaN;
 
                 return m_sampleRate.Value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the minimum value in the series.
-        /// </summary>
-        public double Minimum
-        {
-            get
-            {
-                if (m_minimum.HasValue)
-                    return m_minimum.Value;
-
-                if ((object)m_dataPoints == null || !m_dataPoints.Any())
-                    return double.NaN;
-
-                m_minimum = m_dataPoints.Min(point => point.Value);
-
-                return m_minimum.Value;
             }
         }
 
@@ -152,12 +142,31 @@ namespace FaultData.DataAnalysis
                 if (m_maximum.HasValue)
                     return m_maximum.Value;
 
-                if ((object)m_dataPoints == null || !m_dataPoints.Any())
+                if (!m_dataPoints.Any())
                     return double.NaN;
 
                 m_maximum = m_dataPoints.Max(point => point.Value);
 
                 return m_maximum.Value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the minimum value in the series.
+        /// </summary>
+        public double Minimum
+        {
+            get
+            {
+                if (m_minimum.HasValue)
+                    return m_minimum.Value;
+
+                if (!m_dataPoints.Any())
+                    return double.NaN;
+
+                m_minimum = m_dataPoints.Min(point => point.Value);
+
+                return m_minimum.Value;
             }
         }
 
@@ -171,12 +180,20 @@ namespace FaultData.DataAnalysis
                 if (m_average.HasValue)
                     return m_average.Value;
 
-                if ((object)m_dataPoints == null || !m_dataPoints.Any())
+                if (!m_dataPoints.Any())
                     return double.NaN;
 
                 m_average = m_dataPoints.Average(point => point.Value);
 
                 return m_average.Value;
+            }
+        }
+
+        public DataPoint this[int index]
+        {
+            get
+            {
+                return m_dataPoints[index];
             }
         }
 
@@ -189,6 +206,8 @@ namespace FaultData.DataAnalysis
             DataSeries subSeries = new DataSeries();
             int count;
 
+            subSeries.SeriesInfo = m_seriesInfo;
+
             if (startIndex < 0)
                 startIndex = 0;
 
@@ -199,74 +218,13 @@ namespace FaultData.DataAnalysis
 
             if (count > 0)
                 subSeries.DataPoints = m_dataPoints.Skip(startIndex).Take(count).ToList();
-            else
-                subSeries.DataPoints = new List<DataPoint>();
 
             return subSeries;
-        }
-
-        public DataSeries ToRMS(int samplesPerCycle)
-        {
-            DataSeries rms = new DataSeries();
-            double sum;
-
-            rms.DataPoints = new List<DataPoint>();
-
-            if ((object)m_dataPoints != null)
-            {
-                for (int i = 0; i < m_dataPoints.Count - samplesPerCycle; i++)
-                {
-                    sum = 0.0D;
-
-                    for (int j = i; j < i + samplesPerCycle; j++)
-                        sum += m_dataPoints[j].Value * m_dataPoints[j].Value;
-
-                    rms.DataPoints.Add(new DataPoint()
-                    {
-                        Time = m_dataPoints[i].Time,
-                        Value = Math.Sqrt(sum / samplesPerCycle)
-                    });
-                }
-            }
-
-            return rms;
-        }
-
-        public DataSeries ToSparseRMS(int samplesPerCycle)
-        {
-            DataSeries rms = new DataSeries();
-
-            rms.DataPoints = new List<DataPoint>();
-
-            if ((object)m_dataPoints != null)
-            {
-                for (int i = 0; i < m_dataPoints.Count - samplesPerCycle; i += samplesPerCycle)
-                    rms.DataPoints.Add(GetRMS(i, samplesPerCycle));
-            }
-
-            return rms;
-        }
-
-        public DataPoint GetRMS(int index, int samplesPerCycle)
-        {
-            double sum = 0.0D;
-
-            for (int i = index; i < index + samplesPerCycle; i++)
-                sum += m_dataPoints[i].Value * m_dataPoints[i].Value;
-
-            return new DataPoint()
-            {
-                Time = m_dataPoints[index].Time,
-                Value = Math.Sqrt(sum / samplesPerCycle)
-            };
         }
 
         public DataSeries Negate()
         {
             DataSeries negatedDataSeries = new DataSeries();
-
-            if ((object)m_dataPoints == null)
-                throw new InvalidOperationException("Cannot negate a series with null list of data points");
 
             negatedDataSeries.DataPoints = m_dataPoints
                 .Select(point => point.Negate())
@@ -278,9 +236,6 @@ namespace FaultData.DataAnalysis
         public DataSeries Add(DataSeries operand)
         {
             DataSeries sum = new DataSeries();
-
-            if ((object)m_dataPoints == null || (object)operand.DataPoints == null)
-                throw new InvalidOperationException("Cannot take the sum of series with null list of data points");
 
             if (m_dataPoints.Count != operand.DataPoints.Count)
                 throw new InvalidOperationException("Cannot take the sum of series with mismatched time values");
@@ -300,9 +255,6 @@ namespace FaultData.DataAnalysis
         public DataSeries Multiply(double value)
         {
             DataSeries result = new DataSeries();
-
-            if ((object)m_dataPoints == null)
-                throw new InvalidOperationException("Cannot multiply a value into a series with null list of data points");
 
             result.DataPoints = m_dataPoints
                 .Select(point => point.Multiply(value))

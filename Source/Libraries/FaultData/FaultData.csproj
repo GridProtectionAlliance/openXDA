@@ -57,9 +57,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAnalysis\CycleDataGroup.cs" />
     <Compile Include="DataAnalysis\DataGroup.cs" />
     <Compile Include="DataAnalysis\DataPoint.cs" />
     <Compile Include="DataAnalysis\DataSeries.cs" />
+    <Compile Include="DataAnalysis\Transform.cs" />
+    <Compile Include="DataAnalysis\VICycleDataSet.cs" />
+    <Compile Include="DataAnalysis\VIDataGroup.cs" />
     <Compile Include="Database\AlarmData1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -119,6 +123,7 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\CSVWriter.cs" />
+    <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="MeterDataProcessor.cs" />
     <Compile Include="MeterDataSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -129,6 +134,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Database\AlarmData.xsc">
       <DependentUpon>AlarmData.xsd</DependentUpon>
     </None>

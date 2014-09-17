@@ -123,7 +123,7 @@ namespace FaultAlgorithms
 
             voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
             currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
-            iPre = currents[0];
+            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, viFaultType);
 
             return voltages.Zip(currents, (v, i) =>
             {
@@ -278,12 +278,15 @@ namespace FaultAlgorithms
                     return cycle.CN.V.Complex;
 
                 case FaultType.AB:
+                case FaultType.ABG:
                     return cycle.AN.V.Complex - cycle.BN.V.Complex;
 
                 case FaultType.BC:
+                case FaultType.BCG:
                     return cycle.BN.V.Complex - cycle.CN.V.Complex;
 
                 case FaultType.CA:
+                case FaultType.CAG:
                     return cycle.CN.V.Complex - cycle.AN.V.Complex;
 
                 default:
@@ -306,12 +309,15 @@ namespace FaultAlgorithms
                     return cycle.CN.I.Complex;
 
                 case FaultType.AB:
+                case FaultType.ABG:
                     return cycle.AN.I.Complex - cycle.BN.I.Complex;
 
                 case FaultType.BC:
+                case FaultType.BCG:
                     return cycle.BN.I.Complex - cycle.CN.I.Complex;
 
                 case FaultType.CA:
+                case FaultType.CAG:
                     return cycle.CN.I.Complex - cycle.AN.I.Complex;
 
                 default:
@@ -332,6 +338,9 @@ namespace FaultAlgorithms
                 case FaultType.AB:
                 case FaultType.BC:
                 case FaultType.CA:
+                case FaultType.ABG:
+                case FaultType.BCG:
+                case FaultType.CAG:
                 case FaultType.ABC:
                     return faultDataSet.Z1;
 

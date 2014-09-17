@@ -606,7 +606,7 @@ namespace DeviceDefinitionsMigrator
 
             channel.HarmonicGroup = 0;
             channel.MeasurementType = lookupTables.MeasurementTypeLookup.GetOrAdd(GetMeasurementTypeName(channelName), name => new MeasurementType() { Name = name, Description = name });
-            channel.MeasurementCharacteristic = lookupTables.MeasurementCharacteristicLookup.GetOrAdd("Unknown", name => new MeasurementCharacteristic() { Name = name, Description = name });
+            channel.MeasurementCharacteristic = lookupTables.MeasurementCharacteristicLookup.GetOrAdd("Instantaneous", name => new MeasurementCharacteristic() { Name = name, Description = name });
             channel.Phase = lookupTables.PhaseLookup.GetOrAdd(GetPhaseName(channelName), name => new Phase() { Name = name, Description = name });
 
             channel.Meter = meter;

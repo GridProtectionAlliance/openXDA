@@ -36,9 +36,6 @@ namespace FaultData.Database
     partial void InsertFaultSegment(FaultSegment instance);
     partial void UpdateFaultSegment(FaultSegment instance);
     partial void DeleteFaultSegment(FaultSegment instance);
-    partial void InsertFaultLocationAlgorithm(FaultLocationAlgorithm instance);
-    partial void UpdateFaultLocationAlgorithm(FaultLocationAlgorithm instance);
-    partial void DeleteFaultLocationAlgorithm(FaultLocationAlgorithm instance);
     partial void InsertLineImpedance(LineImpedance instance);
     partial void UpdateLineImpedance(LineImpedance instance);
     partial void DeleteLineImpedance(LineImpedance instance);
@@ -48,7 +45,16 @@ namespace FaultData.Database
     partial void InsertOutputChannel(OutputChannel instance);
     partial void UpdateOutputChannel(OutputChannel instance);
     partial void DeleteOutputChannel(OutputChannel instance);
+    partial void InsertFaultLocationAlgorithm(FaultLocationAlgorithm instance);
+    partial void UpdateFaultLocationAlgorithm(FaultLocationAlgorithm instance);
+    partial void DeleteFaultLocationAlgorithm(FaultLocationAlgorithm instance);
     #endregion
+		
+		public FaultLocationInfoDataContext() : 
+				base(global::FaultData.Properties.Settings.Default.MeterDBConnectionString1, mappingSource)
+		{
+			OnCreated();
+		}
 		
 		public FaultLocationInfoDataContext(string connection) : 
 				base(connection, mappingSource)
@@ -90,14 +96,6 @@ namespace FaultData.Database
 			}
 		}
 		
-		public System.Data.Linq.Table<FaultLocationAlgorithm> FaultLocationAlgorithms
-		{
-			get
-			{
-				return this.GetTable<FaultLocationAlgorithm>();
-			}
-		}
-		
 		public System.Data.Linq.Table<LineImpedance> LineImpedances
 		{
 			get
@@ -119,6 +117,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<OutputChannel>();
+			}
+		}
+		
+		public System.Data.Linq.Table<FaultLocationAlgorithm> FaultLocationAlgorithms
+		{
+			get
+			{
+				return this.GetTable<FaultLocationAlgorithm>();
 			}
 		}
 	}
@@ -483,140 +489,6 @@ namespace FaultData.Database
 						this._SegmentTypeID = default(int);
 					}
 					this.SendPropertyChanged("SegmentType");
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.FaultLocationAlgorithm")]
-	public partial class FaultLocationAlgorithm : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _ID;
-		
-		private string _AssemblyName;
-		
-		private string _TypeName;
-		
-		private string _MethodName;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnIDChanging(int value);
-    partial void OnIDChanged();
-    partial void OnAssemblyNameChanging(string value);
-    partial void OnAssemblyNameChanged();
-    partial void OnTypeNameChanging(string value);
-    partial void OnTypeNameChanged();
-    partial void OnMethodNameChanging(string value);
-    partial void OnMethodNameChanged();
-    #endregion
-		
-		public FaultLocationAlgorithm()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int ID
-		{
-			get
-			{
-				return this._ID;
-			}
-			set
-			{
-				if ((this._ID != value))
-				{
-					this.OnIDChanging(value);
-					this.SendPropertyChanging();
-					this._ID = value;
-					this.SendPropertyChanged("ID");
-					this.OnIDChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_AssemblyName", DbType="VarChar(1024) NOT NULL", CanBeNull=false)]
-		public string AssemblyName
-		{
-			get
-			{
-				return this._AssemblyName;
-			}
-			set
-			{
-				if ((this._AssemblyName != value))
-				{
-					this.OnAssemblyNameChanging(value);
-					this.SendPropertyChanging();
-					this._AssemblyName = value;
-					this.SendPropertyChanged("AssemblyName");
-					this.OnAssemblyNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TypeName", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
-		public string TypeName
-		{
-			get
-			{
-				return this._TypeName;
-			}
-			set
-			{
-				if ((this._TypeName != value))
-				{
-					this.OnTypeNameChanging(value);
-					this.SendPropertyChanging();
-					this._TypeName = value;
-					this.SendPropertyChanged("TypeName");
-					this.OnTypeNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MethodName", DbType="VarChar(80) NOT NULL", CanBeNull=false)]
-		public string MethodName
-		{
-			get
-			{
-				return this._MethodName;
-			}
-			set
-			{
-				if ((this._MethodName != value))
-				{
-					this.OnMethodNameChanging(value);
-					this.SendPropertyChanging();
-					this._MethodName = value;
-					this.SendPropertyChanged("MethodName");
-					this.OnMethodNameChanged();
 				}
 			}
 		}
@@ -1067,6 +939,164 @@ namespace FaultData.Database
 					this._LoadOrder = value;
 					this.SendPropertyChanged("LoadOrder");
 					this.OnLoadOrderChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.FaultLocationAlgorithm")]
+	public partial class FaultLocationAlgorithm : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private string _AssemblyName;
+		
+		private string _TypeName;
+		
+		private string _MethodName;
+		
+		private int _ExecutionOrder;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnAssemblyNameChanging(string value);
+    partial void OnAssemblyNameChanged();
+    partial void OnTypeNameChanging(string value);
+    partial void OnTypeNameChanged();
+    partial void OnMethodNameChanging(string value);
+    partial void OnMethodNameChanged();
+    partial void OnExecutionOrderChanging(int value);
+    partial void OnExecutionOrderChanged();
+    #endregion
+		
+		public FaultLocationAlgorithm()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_AssemblyName", DbType="VarChar(1024) NOT NULL", CanBeNull=false)]
+		public string AssemblyName
+		{
+			get
+			{
+				return this._AssemblyName;
+			}
+			set
+			{
+				if ((this._AssemblyName != value))
+				{
+					this.OnAssemblyNameChanging(value);
+					this.SendPropertyChanging();
+					this._AssemblyName = value;
+					this.SendPropertyChanged("AssemblyName");
+					this.OnAssemblyNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TypeName", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string TypeName
+		{
+			get
+			{
+				return this._TypeName;
+			}
+			set
+			{
+				if ((this._TypeName != value))
+				{
+					this.OnTypeNameChanging(value);
+					this.SendPropertyChanging();
+					this._TypeName = value;
+					this.SendPropertyChanged("TypeName");
+					this.OnTypeNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MethodName", DbType="VarChar(80) NOT NULL", CanBeNull=false)]
+		public string MethodName
+		{
+			get
+			{
+				return this._MethodName;
+			}
+			set
+			{
+				if ((this._MethodName != value))
+				{
+					this.OnMethodNameChanging(value);
+					this.SendPropertyChanging();
+					this._MethodName = value;
+					this.SendPropertyChanged("MethodName");
+					this.OnMethodNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ExecutionOrder", DbType="Int NOT NULL")]
+		public int ExecutionOrder
+		{
+			get
+			{
+				return this._ExecutionOrder;
+			}
+			set
+			{
+				if ((this._ExecutionOrder != value))
+				{
+					this.OnExecutionOrderChanging(value);
+					this.SendPropertyChanging();
+					this._ExecutionOrder = value;
+					this.SendPropertyChanged("ExecutionOrder");
+					this.OnExecutionOrderChanged();
 				}
 			}
 		}

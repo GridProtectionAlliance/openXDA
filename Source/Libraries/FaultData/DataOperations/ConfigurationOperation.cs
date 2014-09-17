@@ -130,6 +130,9 @@ namespace FaultData.DataOperations
 
                 foreach (DataSeries dataSeries in meterDataSet.DataSeries)
                 {
+                    if ((object)dataSeries.SeriesInfo == null)
+                        continue;
+
                     if (seriesLookup.TryGetValue(GetKey(dataSeries.SeriesInfo), out seriesInfo))
                         dataSeries.SeriesInfo = seriesInfo;
                 }
@@ -140,6 +143,15 @@ namespace FaultData.DataOperations
                 {
                     if (!string.IsNullOrEmpty(series.SourceIndexes))
                         AddCalculatedDataSeries(meterDataSet, series);
+                }
+
+                // There may be some placeholder DataSeries objects with no data so that indexes
+                // would be correct for calculating data series--now that we are finished
+                // calculating data series, these need to be removed
+                for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
+                {
+                    if ((object)meterDataSet.DataSeries[i].SeriesInfo == null)
+                        meterDataSet.DataSeries.RemoveAt(i);
                 }
 
                 // Replace the parsed meter with
@@ -206,13 +218,13 @@ namespace FaultData.DataOperations
         {
             int sourceIndex = 0;
 
-            int[] sourceIndexes = series.SourceIndexes.Split(',')
+            List<Tuple<char, int>> sourceIndexes = series.SourceIndexes.Split(',')
                 .Where(str => int.TryParse(str, out sourceIndex))
-                .Select(str => sourceIndex)
-                .ToArray();
+                .Select(str => Tuple.Create(str[0], sourceIndex))
+                .ToList();
 
             DataSeries dataSeries = sourceIndexes
-                .Select(index => (index > 0) ? meterDataSet.DataSeries[index - 1].Copy() : meterDataSet.DataSeries[Math.Abs(index) - 1].Negate())
+                .Select(tuple => (tuple.Item1 != '-') ? meterDataSet.DataSeries[tuple.Item2].Copy() : meterDataSet.DataSeries[Math.Abs(tuple.Item2)].Negate())
                 .Aggregate((series1, series2) => series1.Add(series2));
 
             dataSeries.SeriesInfo = series;

@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="MeterDB" Class="MeterInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=SWILLS-PC\SQLEXPRESS;Initial Catalog=MeterDB;Integrated Security=True" SettingsObjectName="MeterDataEngine.Properties.Settings" SettingsPropertyName="MeterDBConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.MeterLocation" Member="MeterLocations">
     <Type Name="MeterLocation">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -45,14 +44,6 @@
       <Association Name="Line_Channel" Member="Channels" ThisKey="ID" OtherKey="LineID" Type="Channel" />
     </Type>
   </Table>
-  <Table Name="dbo.MeasurementCharacteristic" Member="MeasurementCharacteristics">
-    <Type Name="MeasurementCharacteristic">
-      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
-      <Column Name="Description" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
-      <Association Name="MeasurementCharacteristic_Channel" Member="Channels" ThisKey="ID" OtherKey="MeasurementCharacteristicID" Type="Channel" />
-    </Type>
-  </Table>
   <Table Name="dbo.MeasurementType" Member="MeasurementTypes">
     <Type Name="MeasurementType">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -94,6 +85,16 @@
       <Association Name="Meter_MeterFileGroup" Member="Meter" ThisKey="MeterID" OtherKey="ID" Type="Meter" IsForeignKey="true" />
     </Type>
   </Table>
+  <Table Name="dbo.Series" Member="Series">
+    <Type Name="Series">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ChannelID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SeriesTypeID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SourceIndexes" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Association Name="SeriesType_Series" Member="SeriesType" ThisKey="SeriesTypeID" OtherKey="ID" Type="SeriesType" IsForeignKey="true" />
+      <Association Name="Channel_Series" Member="Channel" ThisKey="ChannelID" OtherKey="ID" Type="Channel" IsForeignKey="true" />
+    </Type>
+  </Table>
   <Table Name="dbo.Channel" Member="Channels">
     <Type Name="Channel">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -103,24 +104,25 @@
       <Column Name="MeasurementCharacteristicID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="PhaseID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="SamplesPerHour" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="PerUnitValue" Type="System.Double" DbType="Float" CanBeNull="true" />
       <Column Name="HarmonicGroup" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Description" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
       <Association Name="Channel_Series" Member="Series" ThisKey="ID" OtherKey="ChannelID" Type="Series" />
       <Association Name="Line_Channel" Member="Line" ThisKey="LineID" OtherKey="ID" Type="Line" IsForeignKey="true" />
       <Association Name="MeasurementType_Channel" Member="MeasurementType" ThisKey="MeasurementTypeID" OtherKey="ID" Type="MeasurementType" IsForeignKey="true" />
-      <Association Name="MeasurementCharacteristic_Channel" Member="MeasurementCharacteristic" ThisKey="MeasurementCharacteristicID" OtherKey="ID" Type="MeasurementCharacteristic" IsForeignKey="true" />
       <Association Name="Meter_Channel" Member="Meter" ThisKey="MeterID" OtherKey="ID" Type="Meter" IsForeignKey="true" />
       <Association Name="Phase_Channel" Member="Phase" ThisKey="PhaseID" OtherKey="ID" Type="Phase" IsForeignKey="true" />
+      <Association Name="MeasurementCharacteristic_Channel" Member="MeasurementCharacteristic" ThisKey="MeasurementCharacteristicID" OtherKey="ID" Type="MeasurementCharacteristic" IsForeignKey="true" />
     </Type>
   </Table>
-  <Table Name="dbo.Series" Member="Series">
-    <Type Name="Series">
+  <Table Name="dbo.MeasurementCharacteristic" Member="MeasurementCharacteristics">
+    <Type Name="MeasurementCharacteristic">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="ChannelID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="SeriesTypeID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="SourceIndexes" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
-      <Association Name="Channel_Series" Member="Channel" ThisKey="ChannelID" OtherKey="ID" Type="Channel" IsForeignKey="true" />
-      <Association Name="SeriesType_Series" Member="SeriesType" ThisKey="SeriesTypeID" OtherKey="ID" Type="SeriesType" IsForeignKey="true" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="Description" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Column Name="Display" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Association Name="MeasurementCharacteristic_Channel" Member="Channels" ThisKey="ID" OtherKey="MeasurementCharacteristicID" Type="Channel" />
     </Type>
   </Table>
 </Database>

@@ -21,12 +21,6 @@
         <classShapeMoniker Id="40a84a10-461d-47a6-bde7-1946a13af3b5" />
       </nodes>
     </associationConnector>
-    <classShape Id="ca0fc2b5-6aa2-413d-b1a9-694ef2ce0c2b" absoluteBounds="3.875, 1.125, 2, 1.5785953776041666">
-      <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultLocationAlgorithm" />
-      <nestedChildShapes>
-        <elementListCompartment Id="ddf97a9b-3657-4e12-abea-09307d88ae06" absoluteBounds="3.8899999999999997, 1.585, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
-      </nestedChildShapes>
-    </classShape>
     <classShape Id="0cb8b407-667e-44b9-90e7-c5007a8534d8" absoluteBounds="1.375, 1, 2, 1.9631982421875">
       <DataClassMoniker Name="/FaultLocationInfoDataContext/LineImpedance" />
       <nestedChildShapes>
@@ -43,6 +37,12 @@
       <DataClassMoniker Name="/FaultLocationInfoDataContext/OutputChannel" />
       <nestedChildShapes>
         <elementListCompartment Id="456c742f-20e0-4df5-9d78-988e8359dd85" absoluteBounds="1.3899999999999997, 6.21, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="aa641fde-2aea-4bfb-8243-c91e0626ff97" absoluteBounds="3.875, 1.125, 2, 1.7708968098958331">
+      <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultLocationAlgorithm" />
+      <nestedChildShapes>
+        <elementListCompartment Id="0a933891-ff92-41e7-92ae-9708ec2efed3" absoluteBounds="3.8899999999999997, 1.585, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
   </nestedChildShapes>

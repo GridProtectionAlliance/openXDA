@@ -105,11 +105,26 @@ namespace FaultAlgorithms
         /// C-phase to A-phase fault type.
         /// </summary>
         CA = 6,
+
+        /// <summary>
+        /// A-phase to B-phase to ground fault type.
+        /// </summary>
+        ABG = 7,
+        
+        /// <summary>
+        /// B-phase to C-phase to ground fault type.
+        /// </summary>
+        BCG = 8,
+
+        /// <summary>
+        /// C-phase to A-phase to ground fault type.
+        /// </summary>
+        CAG = 9,
         
         /// <summary>
         /// Three-phase fault type.
         /// </summary>
-        ABC = 7,
+        ABC = 10,
 
         /// <summary>
         /// No fault.

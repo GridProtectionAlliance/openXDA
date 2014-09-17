@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="MeterDB" Class="FaultLocationInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=SWILLS-PC\SQLEXPRESS;Initial Catalog=MeterDB;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="MeterDBConnectionString1" Provider="System.Data.SqlClient" />
   <Table Name="dbo.SegmentType" Member="SegmentTypes">
     <Type Name="SegmentType">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -17,14 +18,6 @@
       <Column Name="StartSample" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="EndSample" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Association Name="SegmentType_FaultSegment" Member="SegmentType" ThisKey="SegmentTypeID" OtherKey="ID" Type="SegmentType" IsForeignKey="true" />
-    </Type>
-  </Table>
-  <Table Name="dbo.FaultLocationAlgorithm" Member="FaultLocationAlgorithms">
-    <Type Name="FaultLocationAlgorithm">
-      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="AssemblyName" Type="System.String" DbType="VarChar(1024) NOT NULL" CanBeNull="false" />
-      <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
-      <Column Name="MethodName" Type="System.String" DbType="VarChar(80) NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
   <Table Name="dbo.LineImpedance" Member="LineImpedances">
@@ -51,6 +44,15 @@
       <Column Name="SeriesID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="ChannelKey" Type="System.String" DbType="VarChar(20) NOT NULL" CanBeNull="false" />
       <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultLocationAlgorithm" Member="FaultLocationAlgorithms">
+    <Type Name="FaultLocationAlgorithm">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="AssemblyName" Type="System.String" DbType="VarChar(1024) NOT NULL" CanBeNull="false" />
+      <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="MethodName" Type="System.String" DbType="VarChar(80) NOT NULL" CanBeNull="false" />
+      <Column Name="ExecutionOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
 </Database>
