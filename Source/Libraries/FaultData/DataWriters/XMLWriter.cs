@@ -36,6 +36,7 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
+using GSF.Units;
 using Line = FaultData.Database.Line;
 
 namespace FaultData.DataWriters
@@ -63,6 +64,9 @@ namespace FaultData.DataWriters
         // Constants
         // TODO: Hardcoded frequency
         private const double Frequency = 60.0D;
+
+        const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
+        const string DoubleFormat = "0.####";
 
         // Fields
         private string m_connectionString;
@@ -111,8 +115,6 @@ namespace FaultData.DataWriters
 
         private void WriteResults(FaultRecordInfo faultRecordInfo, string resultsFilePath)
         {
-            const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
-
             XDocument resultsDocument;
             XElement results;
 
@@ -124,13 +126,13 @@ namespace FaultData.DataWriters
                     new XElement("disturbanceFiles", GetPathElements(faultRecordInfo)),
                     new XElement("line",
                         new XElement("name", faultRecordInfo.Line.Name),
-                        new XElement("length", faultRecordInfo.Line.Length)
+                        new XElement("length", faultRecordInfo.Line.Length.ToString(DoubleFormat))
                     ),
                     new XElement("prefault",
                         new XElement("time", viCycleDataSet.VA.RMS[0].Time.ToString(DateTimeFormat)),
                         GetCycleElements(viCycleDataSet, 0)
                     ),
-                    GetFaultElements(faultRecordInfo, viCycleDataSet, DateTimeFormat)
+                    GetFaultElements(faultRecordInfo, viCycleDataSet)
                 );
 
             // Create the XML document
@@ -142,7 +144,7 @@ namespace FaultData.DataWriters
             resultsDocument.Save(resultsFilePath);
         }
 
-        private List<XElement> GetFaultElements(FaultRecordInfo faultRecordInfo, VICycleDataSet viCycleDataSet, string dateTimeFormat)
+        private List<XElement> GetFaultElements(FaultRecordInfo faultRecordInfo, VICycleDataSet viCycleDataSet)
         {
             List<List<FaultSegment>> faults = faultRecordInfo.FaultSegments
                 .Aggregate(new List<List<FaultSegment>>(), (list, segment) =>
@@ -168,12 +170,12 @@ namespace FaultData.DataWriters
 
             return faults
                 .Where(fault => fault.Count > 0)
-                .Select(fault => GetFaultElement(faultRecordInfo.Line, viCycleDataSet, faultCurves, fault, dateTimeFormat))
+                .Select(fault => GetFaultElement(faultRecordInfo.Line, viCycleDataSet, faultCurves, fault))
                 .Where(element => (object)element != null)
                 .ToList();
         }
 
-        private XElement GetFaultElement(Line line, VICycleDataSet viCycleDataSet, List<DataSeries> faultCurves, List<FaultSegment> fault, string dateTimeFormat)
+        private XElement GetFaultElement(Line line, VICycleDataSet viCycleDataSet, List<DataSeries> faultCurves, List<FaultSegment> fault)
         {
             DateTime startTime = fault.First().StartTime;
             DateTime endTime = fault.Last().EndTime;
@@ -195,47 +197,47 @@ namespace FaultData.DataWriters
                 return null;
 
             return new XElement("fault",
-                new XElement("distance", validDistances[validDistances.Count / 2]),
+                new XElement("distance", validDistances[validDistances.Count / 2].ToString(DoubleFormat)),
                 new XElement("inception",
-                    new XElement("time", startTime.ToString(dateTimeFormat)),
+                    new XElement("time", startTime.ToString(DateTimeFormat)),
                     new XElement("sample", startSample)
                 ),
                 new XElement("clearing",
-                    new XElement("time", endTime.ToString(dateTimeFormat)),
+                    new XElement("time", endTime.ToString(DateTimeFormat)),
                     new XElement("sample", endSample)
                 ),
                 new XElement("duration",
-                    new XElement("seconds", duration),
-                    new XElement("cycles", duration * Frequency)
+                    new XElement("seconds", duration.ToString(DoubleFormat)),
+                    new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))
                 ),
-                GetSegmentElements(fault, dateTimeFormat),
+                GetSegmentElements(fault),
                 new XElement("largestCurrent", GetCycleElements(subSet, GetLargestCurrentCycleIndex(subSet))),
                 new XElement("smallestVoltage", GetCycleElements(subSet, GetSmallestVoltageCycleIndex(subSet)))
             );
         }
 
-        private List<XElement> GetSegmentElements(List<FaultSegment> segments, string dateTimeFormat)
+        private List<XElement> GetSegmentElements(List<FaultSegment> segments)
         {
             return segments
-                .Select(segment => GetSegmentElement(segment, dateTimeFormat))
+                .Select(GetSegmentElement)
                 .ToList();
         }
 
-        private XElement GetSegmentElement(FaultSegment segment, string dateTimeFormat)
+        private XElement GetSegmentElement(FaultSegment segment)
         {
             double duration = (segment.EndTime - segment.StartTime).TotalSeconds;
 
             return new XElement("segment",
                 new XElement("type", segment.SegmentType.Name),
                 new XElement("start",
-                    new XElement("time", segment.StartTime.ToString(dateTimeFormat)),
+                    new XElement("time", segment.StartTime.ToString(DateTimeFormat)),
                     new XElement("index", segment.StartSample)),
                 new XElement("end",
-                    new XElement("time", segment.EndTime.ToString(dateTimeFormat)),
+                    new XElement("time", segment.EndTime.ToString(DateTimeFormat)),
                     new XElement("index", segment.EndSample)),
                 new XElement("duration",
-                    new XElement("seconds", duration),
-                    new XElement("cycles", duration * Frequency)));
+                    new XElement("seconds", duration.ToString(DoubleFormat)),
+                    new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))));
         }
 
         private static List<XElement> GetPathElements(FaultRecordInfo faultRecordInfo)
@@ -263,9 +265,8 @@ namespace FaultData.DataWriters
         private XElement GetCycleElement(string name, CycleDataGroup cycleDataGroup, int cycleIndex)
         {
             return new XElement(name,
-                new XElement("RMS", cycleDataGroup.RMS[cycleIndex].Value),
-                new XElement("Phase", cycleDataGroup.Phase[cycleIndex].Value),
-                new XElement("Peak", cycleDataGroup.Peak[cycleIndex].Value));
+                new XElement("RMS Magnitude", cycleDataGroup.RMS[cycleIndex].Value.ToString(DoubleFormat)),
+                new XElement("Phase Angle", new Angle(cycleDataGroup.Phase[cycleIndex].Value).ToDegrees().ToString(DoubleFormat)));
         }
 
         private int GetLargestCurrentCycleIndex(VICycleDataSet viCycleDataSet)

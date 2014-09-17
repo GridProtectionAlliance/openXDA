@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -106,7 +105,6 @@ namespace FaultData.DataOperations
             FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(m_connectionString);
 
             VIDataGroup viDataGroup;
-            DataSeries irDataSeries;
             VICycleDataSet viCycleDataSet;
             List<Segment> faultDetectedSegments;
             List<Segment> faultTypeSegments;
@@ -131,10 +129,9 @@ namespace FaultData.DataOperations
                     continue;
 
                 viDataGroup = GetVIDataGroup(faultGroup);
-                irDataSeries = viDataGroup.IA.Add(viDataGroup.IB).Add(viDataGroup.IC);
                 viCycleDataSet = Transform.ToVICycleDataSet(viDataGroup, Frequency);
                 faultDetectedSegments = DetectFaults(viDataGroup, viCycleDataSet);
-                faultTypeSegments = ClassifyFaults(faultDetectedSegments, viCycleDataSet, Transform.ToCycleDataGroup(irDataSeries, Frequency));
+                faultTypeSegments = ClassifyFaults(faultDetectedSegments, viCycleDataSet);
 
                 prefault = true;
 
@@ -446,7 +443,7 @@ namespace FaultData.DataOperations
             return cycleIndex;
         }
 
-        private List<Segment> ClassifyFaults(List<Segment> faultDetectedSegments, VICycleDataSet viCycleDataSet, CycleDataGroup irCycleDataGroup)
+        private List<Segment> ClassifyFaults(List<Segment> faultDetectedSegments, VICycleDataSet viCycleDataSet)
         {
             List<Segment> faultTypeSegments = new List<Segment>();
             Segment currentSegment = null;
@@ -454,17 +451,14 @@ namespace FaultData.DataOperations
             DataSeries iaRMS = viCycleDataSet.IA.RMS;
             DataSeries ibRMS = viCycleDataSet.IB.RMS;
             DataSeries icRMS = viCycleDataSet.IC.RMS;
-            DataSeries irRMS = irCycleDataGroup.RMS;
 
             double iaPre = iaRMS.DataPoints[0].Value;
             double ibPre = ibRMS.DataPoints[0].Value;
             double icPre = icRMS.DataPoints[0].Value;
-            double irPre = irRMS.DataPoints[0].Value;
 
             double ia;
             double ib;
             double ic;
-            double ir;
 
             int numPhases;
             FaultType faultType;
@@ -482,7 +476,6 @@ namespace FaultData.DataOperations
                         ia = iaRMS.DataPoints[i].Value;
                         ib = ibRMS.DataPoints[i].Value;
                         ic = icRMS.DataPoints[i].Value;
-                        ir = irRMS.DataPoints[i].Value;
 
                         numPhases = GetNumPhases(4.0D, ia, ib, ic);
 
@@ -490,26 +483,6 @@ namespace FaultData.DataOperations
                             numPhases = GetNumPhases(1.5, ia - iaPre, ib - ibPre, ic - icPre);
 
                         faultType = GetFaultType(numPhases, ia, ib, ic);
-
-                        // If two phases are involved in this fault,
-                        // determine if ground is also involved
-                        if (numPhases == 2 && ir > 5.0D * irPre)
-                        {
-                            switch (faultType)
-                            {
-                                case FaultType.AB:
-                                    faultType = FaultType.ABG;
-                                    break;
-
-                                case FaultType.BC:
-                                    faultType = FaultType.BCG;
-                                    break;
-
-                                case FaultType.CA:
-                                    faultType = FaultType.CAG;
-                                    break;
-                            }
-                        }
 
                         if ((object)currentSegment == null)
                         {
