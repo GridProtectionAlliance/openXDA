@@ -161,7 +161,7 @@
         </member>
         <member name="M:GSF.ServiceProcess.ClientHelper.TryParseActionableResponse(GSF.ServiceProcess.ServiceResponse,System.String@,System.Boolean@)">
             <summary>
-            Attempts to parse an actionable reponse sent from the service.
+            Attempts to parse an actionable response sent from the service.
             </summary>
             <param name="serviceResponse"><see cref="T:GSF.ServiceProcess.ServiceResponse"/> to test for actionable response.</param>
             <param name="sourceCommand">Command that invoked <paramref name="serviceResponse"/>.</param>
@@ -228,6 +228,11 @@
             Gets or sets the password of the <see cref="T:GSF.ServiceProcess.ClientHelper"/>'s user to be used for authenticating with the <see cref="T:GSF.ServiceProcess.ServiceHelper"/>.
             </summary>
             <exception cref="T:System.ArgumentNullException">The value being specified is a null string.</exception>
+        </member>
+        <member name="P:GSF.ServiceProcess.ClientHelper.SerializationFormat">
+            <summary>
+            Gets or sets a value that indicates the desired message <see cref="T:GSF.SerializationFormat"/> for interaction with <see cref="T:GSF.ServiceProcess.ServiceHelper"/>.
+            </summary>
         </member>
         <member name="P:GSF.ServiceProcess.ClientHelper.PersistSettings">
             <summary>
@@ -553,6 +558,11 @@
             Specifies the default value for the <see cref="P:GSF.ServiceProcess.ServiceHelper.SecureRemoteInteractions"/> property.
             </summary>
         </member>
+        <member name="F:GSF.ServiceProcess.ServiceHelper.DefaultSerializationFormat">
+            <summary>
+            Specifies the default value for the <see cref="P:GSF.ServiceProcess.ServiceHelper.SerializationFormat"/> property.
+            </summary>
+        </member>
         <member name="F:GSF.ServiceProcess.ServiceHelper.DefaultPersistSettings">
             <summary>
             Specifies the default value for the <see cref="P:GSF.ServiceProcess.ServiceHelper.PersistSettings"/> property.
@@ -815,6 +825,12 @@
             <param name="handlerCommand">Request type whose <see cref="T:GSF.ServiceProcess.ClientRequestHandler"/> object is to be retrieved.</param>
             <returns><see cref="T:GSF.ServiceProcess.ClientRequestHandler"/> object if found; otherwise null.</returns>
         </member>
+        <member name="M:GSF.ServiceProcess.ServiceHelper.LogException(System.Exception)">
+            <summary>
+            Log exception to <see cref="P:GSF.ServiceProcess.ServiceHelper.ErrorLogger"/>.
+            </summary>
+            <param name="ex">Exception to log.</param>
+        </member>
         <member name="M:GSF.ServiceProcess.ServiceHelper.OnServiceStarting(System.String[])">
             <summary>
             Raises the <see cref="E:GSF.ServiceProcess.ServiceHelper.ServiceStarting"/> event.
@@ -874,6 +890,22 @@
             </summary>
             <param name="processName">Name of the <see cref="T:GSF.ServiceProcess.ServiceProcess"/> whose state changed.</param>
             <param name="processState">New <see cref="T:GSF.ServiceProcess.ServiceProcessState"/> of the <see cref="T:GSF.ServiceProcess.ServiceProcess"/>.</param>
+        </member>
+        <member name="M:GSF.ServiceProcess.ServiceHelper.OnUpdatedStatus(System.String,GSF.UpdateType)">
+            <summary>
+            Raises the <see cref="E:GSF.ServiceProcess.ServiceHelper.UpdatedStatus"/> event with the updated status message.
+            </summary>
+            <param name="status">Updated status message.</param>
+            <param name="type"><see cref="T:GSF.UpdateType"/> of status message.</param>
+            <remarks>
+            This overload combines string.Format and SendStatusMessage for convenience.
+            </remarks>
+        </member>
+        <member name="M:GSF.ServiceProcess.ServiceHelper.OnLoggedException(System.Exception)">
+            <summary>
+            Raises <see cref="E:GSF.ServiceProcess.ServiceHelper.LoggedException"/> event with logged exception.
+            </summary>
+            <param name="ex">Logged <see cref="T:System.Exception"/>.</param>
         </member>
         <member name="M:GSF.ServiceProcess.ServiceHelper.Dispose(System.Boolean)">
             <summary>
@@ -944,6 +976,23 @@
             <see cref="F:GSF.EventArgs`2.Argument2"/> is the <see cref="P:GSF.ServiceProcess.ServiceProcess.CurrentState"/>
             </remarks>
         </member>
+        <member name="E:GSF.ServiceProcess.ServiceHelper.UpdatedStatus">
+            <summary>
+            Provides notification of when status messages were sent to consumer(s).
+            </summary>
+            <remarks>
+            <see cref="F:GSF.EventArgs`2.Argument1"/> is the status message sent to consumer(s).<br/>
+            <see cref="F:GSF.EventArgs`2.Argument2"/> is the message <see cref="T:GSF.UpdateType"/>.
+            </remarks>
+        </member>
+        <member name="E:GSF.ServiceProcess.ServiceHelper.LoggedException">
+            <summary>
+            Provides notification of when there is an exception logged.
+            </summary>
+            <remarks>
+            <see cref="F:GSF.EventArgs`1.Argument"/> is the exception that was logged.
+            </remarks>
+        </member>
         <member name="P:GSF.ServiceProcess.ServiceHelper.LogStatusUpdates">
             <summary>
             Gets or sets a boolean value that indicates whether messages sent using <see cref="M:GSF.ServiceProcess.ServiceHelper.UpdateStatus(GSF.UpdateType,System.String,System.Object[])"/> 
@@ -991,6 +1040,11 @@
         <member name="P:GSF.ServiceProcess.ServiceHelper.SecureRemoteInteractions">
             <summary>
             Gets or sets a boolean value that indicates whether <see cref="T:GSF.ServiceProcess.ServiceHelper"/> will secure remote interactions from <see cref="T:GSF.ServiceProcess.ClientHelper"/>.
+            </summary>
+        </member>
+        <member name="P:GSF.ServiceProcess.ServiceHelper.SerializationFormat">
+            <summary>
+            Gets or sets a value that indicates the desired message <see cref="T:GSF.SerializationFormat"/> for interaction with <see cref="T:GSF.ServiceProcess.ClientHelper"/>.
             </summary>
         </member>
         <member name="P:GSF.ServiceProcess.ServiceHelper.PersistSettings">
