@@ -78,9 +78,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultData", "Libraries\Faul
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceDefinitionsMigrator", "Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj", "{94E98B70-2F52-45A2-A805-3D6B62547149}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openXDA", "openXDA", "{DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA", "Applications\openXDA\openXDA\openXDA.csproj", "{0C461E89-2430-4E47-B5C4-97FCA86E0E21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDAConsole", "Applications\openXDA\openXDAConsole\openXDAConsole.csproj", "{72F417E9-F592-4417-B87C-B681AE707294}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDAManager", "Applications\openXDA\openXDAManager\openXDAManager.csproj", "{51358DA9-39B6-4176-BB24-E6735E977604}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "openXDASetup", "Applications\openXDA\openXDASetup\openXDASetup.wixproj", "{36380070-81B6-4D71-A80A-C5AE76B0E357}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 14
+		SccNumberOfProjects = 18
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -136,6 +146,22 @@ Global
 		SccProjectTopLevelParentUniqueName13 = openXDA.sln
 		SccProjectName13 = Tools/DeviceDefinitionsMigrator
 		SccLocalPath13 = Tools\\DeviceDefinitionsMigrator
+		SccProjectUniqueName14 = Applications\\openXDA\\openXDA\\openXDA.csproj
+		SccProjectTopLevelParentUniqueName14 = openXDA.sln
+		SccProjectName14 = Applications/openXDA/openXDA
+		SccLocalPath14 = Applications\\openXDA\\openXDA
+		SccProjectUniqueName15 = Applications\\openXDA\\openXDAConsole\\openXDAConsole.csproj
+		SccProjectTopLevelParentUniqueName15 = openXDA.sln
+		SccProjectName15 = Applications/openXDA/openXDAConsole
+		SccLocalPath15 = Applications\\openXDA\\openXDAConsole
+		SccProjectUniqueName16 = Applications\\openXDA\\openXDAManager\\openXDAManager.csproj
+		SccProjectTopLevelParentUniqueName16 = openXDA.sln
+		SccProjectName16 = Applications/openXDA/openXDAManager
+		SccLocalPath16 = Applications\\openXDA\\openXDAManager
+		SccProjectUniqueName17 = Applications\\openXDA\\openXDASetup\\openXDASetup.wixproj
+		SccProjectTopLevelParentUniqueName17 = openXDA.sln
+		SccProjectName17 = Applications/openXDA/openXDASetup
+		SccLocalPath17 = Applications\\openXDA\\openXDASetup
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -184,8 +210,8 @@ Global
 		{ECD65C8C-9905-4259-85BE-8E62DA5C7C62}.Release|x86.Build.0 = Release|x86
 		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|x86.Build.0 = Debug|Any CPU
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|x86.ActiveCfg = Debug|x86
+		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Debug|x86.Build.0 = Debug|x86
 		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{28B2088F-7128-42A0-A752-335D4E4EF98E}.Release|x86.ActiveCfg = Release|Any CPU
@@ -223,9 +249,11 @@ Global
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Debug|x86.ActiveCfg = Debug|x86
+		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Debug|x86.Build.0 = Debug|x86
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Release|x86.ActiveCfg = Release|x86
+		{79FBD416-8CFF-425E-A010-15E61B9D3BD7}.Release|x86.Build.0 = Release|x86
 		{11AE594D-2B2B-473C-8550-6BF62914C3E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{11AE594D-2B2B-473C-8550-6BF62914C3E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11AE594D-2B2B-473C-8550-6BF62914C3E2}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -242,6 +270,36 @@ Global
 		{94E98B70-2F52-45A2-A805-3D6B62547149}.Release|Any CPU.Build.0 = Release|Any CPU
 		{94E98B70-2F52-45A2-A805-3D6B62547149}.Release|x86.ActiveCfg = Release|x86
 		{94E98B70-2F52-45A2-A805-3D6B62547149}.Release|x86.Build.0 = Release|x86
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Debug|x86.ActiveCfg = Debug|x86
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Debug|x86.Build.0 = Debug|x86
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Release|x86.ActiveCfg = Release|x86
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21}.Release|x86.Build.0 = Release|x86
+		{72F417E9-F592-4417-B87C-B681AE707294}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F417E9-F592-4417-B87C-B681AE707294}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F417E9-F592-4417-B87C-B681AE707294}.Debug|x86.ActiveCfg = Debug|x86
+		{72F417E9-F592-4417-B87C-B681AE707294}.Debug|x86.Build.0 = Debug|x86
+		{72F417E9-F592-4417-B87C-B681AE707294}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F417E9-F592-4417-B87C-B681AE707294}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72F417E9-F592-4417-B87C-B681AE707294}.Release|x86.ActiveCfg = Release|x86
+		{72F417E9-F592-4417-B87C-B681AE707294}.Release|x86.Build.0 = Release|x86
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Debug|x86.ActiveCfg = Debug|x86
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Debug|x86.Build.0 = Debug|x86
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Release|x86.ActiveCfg = Release|x86
+		{51358DA9-39B6-4176-BB24-E6735E977604}.Release|x86.Build.0 = Release|x86
+		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Debug|x86.ActiveCfg = Debug|x86
+		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|Any CPU.ActiveCfg = Release|x64
+		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|Any CPU.Build.0 = Release|x64
+		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|x86.ActiveCfg = Release|x86
+		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -249,6 +307,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BC5C2A22-31D3-4887-B798-262244564883} = {B3493118-9437-497D-A716-24232CE0D4F2}
 		{E0A728AA-FC3E-4184-AA89-B421C3EBFD62} = {B3493118-9437-497D-A716-24232CE0D4F2}
+		{DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A} = {B3493118-9437-497D-A716-24232CE0D4F2}
 		{847B0BE1-54CD-4A68-B0DB-6EA2CD8F672F} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{F5BD3958-FFBE-415F-BC25-25C30DD7C26F} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{598B0FE9-B4EA-4797-982D-BF243F3C5BEC} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
@@ -265,5 +324,9 @@ Global
 		{F04EDA71-4C20-4AE4-B348-E53C3F376621} = {E0A728AA-FC3E-4184-AA89-B421C3EBFD62}
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
 		{94E98B70-2F52-45A2-A805-3D6B62547149} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
+		{72F417E9-F592-4417-B87C-B681AE707294} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
+		{51358DA9-39B6-4176-BB24-E6735E977604} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
+		{36380070-81B6-4D71-A80A-C5AE76B0E357} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
 	EndGlobalSection
 EndGlobal
