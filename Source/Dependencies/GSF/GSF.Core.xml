@@ -19970,6 +19970,12 @@
             Gets the flag that indicates whether this file has been processed before.
             </summary>
         </member>
+        <member name="P:GSF.IO.FileProcessorEventArgs.Requeue">
+            <summary>
+            Gets or sets a flag that indicates whether the
+            file should be requeued by the file processor.
+            </summary>
+        </member>
         <member name="T:GSF.IO.FileProcessor">
             <summary>
             Tracks files processed in a list of directories, and
