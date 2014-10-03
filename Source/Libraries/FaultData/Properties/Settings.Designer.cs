@@ -23,26 +23,12 @@ namespace FaultData.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string MeterDBConnectionString {
-            get {
-                return ((string)(this["MeterDBConnectionString"]));
-            }
-            set {
-                this["MeterDBConnectionString"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=SWILLS-PC\\SQLEXPRESS;Initial Catalog=MeterDB;Integrated Security=True" +
-            "")]
-        public string MeterDBConnectionString1 {
+        public string MeterDBConnectionString {
             get {
-                return ((string)(this["MeterDBConnectionString1"]));
+                return ((string)(this["MeterDBConnectionString"]));
             }
         }
     }

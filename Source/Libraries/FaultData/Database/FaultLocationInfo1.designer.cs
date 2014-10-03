@@ -51,7 +51,7 @@ namespace FaultData.Database
     #endregion
 		
 		public FaultLocationInfoDataContext() : 
-				base(global::FaultData.Properties.Settings.Default.MeterDBConnectionString1, mappingSource)
+				base(global::FaultData.Properties.Settings.Default.MeterDBConnectionString, mappingSource)
 		{
 			OnCreated();
 		}

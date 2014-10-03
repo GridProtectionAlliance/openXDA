@@ -87,22 +87,81 @@ namespace FaultData.DataWriters
         // TODO: Hardcoded frequency
         private const double Frequency = 60.0D;
 
-        // TODO: Hardcoded maximum fault distance multiplier
-        private const double MaxFaultDistanceMultiplier = 1.25D;
-
-        // TODO: Hardcoded minimum fault distance multiplier
-        private const double MinFaultDistanceMultiplier = -0.1D;
+        private const double DefaultMaxFaultDistanceMultiplier = 1.25D;
+        private const double DefaultMinFaultDistanceMultiplier = -0.1D;
+        private const string DefaultLengthUnits = "miles";
 
         // Fields
         private string m_connectionString;
+        private double m_maxFaultDistanceMultiplier;
+        private double m_minFaultDistanceMultiplier;
+        private string m_lengthUnits;
 
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="COMTRADEWriter"/> class.
+        /// </summary>
+        /// <param name="connectionString">The connection string used to connect to the database that contains the fault location data.</param>
         public COMTRADEWriter(string connectionString)
         {
             m_connectionString = connectionString;
+            m_maxFaultDistanceMultiplier = DefaultMaxFaultDistanceMultiplier;
+            m_minFaultDistanceMultiplier = DefaultMinFaultDistanceMultiplier;
+            m_lengthUnits = DefaultLengthUnits;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the multiplier used to determine the
+        /// maximum valid fault distance based on the line length.
+        /// </summary>
+        public double MaxFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_maxFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_maxFaultDistanceMultiplier = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the multiplier used to determine the
+        /// minimum valid fault distance based on the line length.
+        /// </summary>
+        public double MinFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_minFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_minFaultDistanceMultiplier = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the unit of measure for length used by the fault location system.
+        /// </summary>
+        public string LengthUnits
+        {
+            get
+            {
+                return m_lengthUnits;
+            }
+            set
+            {
+                m_lengthUnits = value;
+            }
         }
 
         #endregion
@@ -129,7 +188,7 @@ namespace FaultData.DataWriters
                 faultCurveAdapter.Connection.ConnectionString = m_connectionString;
 
                 // Get the event for the given event ID
-                faultRecordInfo.Event = eventAdapter.GetDataBy(eventID).Single();
+                faultRecordInfo.Event = eventAdapter.GetDataByID(eventID).Single();
 
                 // Get the group of files that contained the event data as well as the
                 // meter that monitored the event and the line on which the event occurred

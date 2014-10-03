@@ -50,7 +50,7 @@ namespace FaultData.DataWriters
             using (EventTableAdapter eventAdapter = new EventTableAdapter())
             {
                 eventAdapter.Connection.ConnectionString = connectionString;
-                eventRow = eventAdapter.GetDataBy(eventID).FirstOrDefault();
+                eventRow = eventAdapter.GetDataByID(eventID).FirstOrDefault();
             }
 
             if ((object)eventRow == null)

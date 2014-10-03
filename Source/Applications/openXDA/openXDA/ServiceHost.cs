@@ -68,11 +68,13 @@
 
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using GSF;
 using GSF.Console;
+using GSF.IO;
 using GSF.ServiceProcess;
 
 namespace openXDA
@@ -111,9 +113,11 @@ namespace openXDA
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
+            // Set current working directory to fix relative paths
+            Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
+
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadDeviceDefs", "Reloads the device definitions file", ReloadDeviceDefsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
 
             // Set up adapter loader to load service monitors
@@ -160,35 +164,6 @@ namespace openXDA
                     // Handle each service monitor's exceptions individually
                     HandleException(ex);
                 }
-            }
-        }
-
-        // Reload the device definitions file on request
-        private void ReloadDeviceDefsRequestHandler(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                StringBuilder helpMessage = new StringBuilder();
-
-                helpMessage.Append("Reloads the device definitions file.");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Usage:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       ReloadDeviceDefs [Options]");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Options:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -?".PadRight(20));
-                helpMessage.Append("Displays this help message");
-
-                DisplayResponseMessage(requestInfo, helpMessage.ToString());
-            }
-            else
-            {
-                m_faultLocationEngine.ReloadDeviceDefinitionsFile();
-                SendResponse(requestInfo, true);
             }
         }
 

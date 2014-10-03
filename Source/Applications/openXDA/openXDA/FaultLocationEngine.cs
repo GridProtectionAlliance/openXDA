@@ -63,23 +63,32 @@
 //  -------------------------------------------------------------------------------------------------------------------
 //  05/16/2012 - J. Ritchie Carroll, Grid Protection Alliance
 //       Generated original version of source code.
+//  10/02/2014 - Stephen C. Wills, Grid Protection Alliance
+//       Adapted from the openFLE project to use the new fault location logic.
 //
 //*********************************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
-using FaultAlgorithms;
+using System.Threading;
+using System.Transactions;
+using FaultData;
+using FaultData.Database;
+using FaultData.Database.FaultLocationDataTableAdapters;
+using FaultData.Database.MeterDataTableAdapters;
+using FaultData.DataOperations;
+using FaultData.DataReaders;
+using FaultData.DataWriters;
 using GSF;
-using GSF.Adapters;
+using GSF.Annotations;
 using GSF.Configuration;
 using GSF.IO;
+using openXDA.Configuration;
+using FileShare = openXDA.Configuration.FileShare;
 
 namespace openXDA
 {
@@ -90,6 +99,13 @@ namespace openXDA
     public class FaultLocationEngine : IDisposable
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// Globally unique identifier required by the file processor to identify its cached list of processed files.
+        /// </summary>
+        private static readonly Guid FileProcessorID = new Guid("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D");
 
         // Events
 
@@ -105,33 +121,10 @@ namespace openXDA
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        private string m_deviceDefinitionsFile;
-        private double m_processDelay;
-        private string m_dropFolder;
-        private string m_lengthUnits;
-        private int m_debugLevel;
-        private string m_debugFolder;
-
-        private string[] m_fileExtensionFilter = { "*.pqd", "*.d00", "*.dat" };
+        private SystemSettings m_systemSettings;
         private Dictionary<string, DateTime> m_fileCreationTimes = new Dictionary<string, DateTime>();
-        private System.Timers.Timer m_fileMonitor;
-
-        private volatile ICollection<Device> m_devices;
-        private AdapterLoader<IFaultResultsWriter> m_resultsWriters;
-
+        private FileProcessor m_fileProcessor;
         private Logger m_currentLogger;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Finalizer for <see cref="FaultLocationEngine"/> class.
-        /// </summary>
-        ~FaultLocationEngine()
-        {
-            Dispose();
-        }
 
         #endregion
 
@@ -142,62 +135,77 @@ namespace openXDA
         /// </summary>
         public void Start()
         {
-            // Make sure default service settings exist
             ConfigurationFile configFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection category = configFile.Settings["systemSettings"];
+            string connectionString;
 
-            // System settings
-            // TODO: Add description to system settings
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-            systemSettings.Add("DeviceDefinitionsFile", "DeviceDefinitions.xml", "");
-            systemSettings.Add("ProcessDelay", "15", "");
-            systemSettings.Add("DropFolder", "Drop", "");
-            systemSettings.Add("LengthUnits", "Miles", "");
-            systemSettings.Add("DebugLevel", "1", "");
-            systemSettings.Add("DebugFolder", "Debug", "");
+            Dictionary<string, string> settingsDictionary;
+            string fileShares;
 
-            // Retrieve file paths as defined in the config file
-            m_deviceDefinitionsFile = FilePath.GetAbsolutePath(systemSettings["DeviceDefinitionsFile"].Value);
-            m_processDelay = systemSettings["ProcessDelay"].ValueAs(m_processDelay);
-            m_dropFolder = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(systemSettings["DropFolder"].Value));
-            m_lengthUnits = systemSettings["LengthUnits"].Value;
-            m_debugLevel = systemSettings["DebugLevel"].ValueAs(m_debugLevel);
-            m_debugFolder = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(systemSettings["DebugFolder"].Value));
+            // Retrieve the connection string from the config file
+            category.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
+            connectionString = category["ConnectionString"].Value;
 
-            // Load the fault results writer defined in systemSettings
-            using (AdapterLoader<IFaultResultsWriter> resultsWriters = m_resultsWriters)
+            // Get system settings from the database
+            using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(connectionString))
             {
-                m_resultsWriters = new AdapterLoader<IFaultResultsWriter>();
-                m_resultsWriters.AdapterCreated += (sender, args) => args.Argument.PersistSettings = true;
-                m_resultsWriters.AdapterLoaded += (sender, args) => OnStatusMessage("{0} has been loaded", args.Argument.Name);
-                m_resultsWriters.AdapterUnloaded += (sender, args) => OnStatusMessage("{0} has been unloaded", args.Argument.Name);
-                m_resultsWriters.Initialize();
+                settingsDictionary = systemInfo.Settings
+                    .Where(setting => setting.Name.IndexOf('.') < 0)
+                    .ToDictionary(setting => setting.Name, setting => setting.Value);
+
+                if (!settingsDictionary.ContainsKey("dbConnectionString"))
+                    settingsDictionary["dbConnectionString"] = connectionString;
+
+                if (!settingsDictionary.ContainsKey("fileShares"))
+                {
+                    fileShares = systemInfo.Settings.ToList()
+                        .Where(setting => setting.Name.StartsWith("FileShare.", StringComparison.OrdinalIgnoreCase))
+                        .Select(setting => Tuple.Create(setting.Name.Split('.'), setting.Value))
+                        .Where(tuple => tuple.Item1.Length == 3)
+                        .GroupBy(tuple => tuple.Item1[1])
+                        .Select(grouping => grouping.ToDictionary(tuple => tuple.Item1[2], tuple => tuple.Item2))
+                        .Select(dict => dict.JoinKeyValuePairs().Trim(' ', ';'))
+                        .Select((shareSettings, index) => Tuple.Create(index, shareSettings))
+                        .ToDictionary(tuple => tuple.Item1.ToString(), tuple => tuple.Item2)
+                        .JoinKeyValuePairs();
+
+                    if (!string.IsNullOrEmpty(fileShares))
+                        settingsDictionary["fileShares"] = fileShares;
+                }
             }
 
-            try
-            {
-                // Make sure file path directories exist
-                if (!Directory.Exists(m_dropFolder))
-                    Directory.CreateDirectory(m_dropFolder);
+            m_systemSettings = new SystemSettings(settingsDictionary.JoinKeyValuePairs());
 
-                if (m_debugLevel > 0 && !Directory.Exists(m_debugFolder))
-                    Directory.CreateDirectory(m_debugFolder);
-            }
-            catch (Exception ex)
+            DataGroupsResource.PrefaultMultiplier = m_systemSettings.PrefaultMultiplier;
+            DataGroupsResource.RatedCurrentMultiplier = m_systemSettings.RatedCurrentMultiplier;
+
+            // Attempt to authenticate to configured file shares
+            foreach (FileShare fileShare in m_systemSettings.FileShareList)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to create directory due to exception: {0}", ex.Message), ex));
+                if (!fileShare.TryAuthenticate())
+                    OnProcessException(fileShare.AuthenticationException);
             }
 
-            // Setup new simple file monitor - we do this since the .NET 4.0 FileWatcher has a bad memory leak :-(
-            if ((object)m_fileMonitor == null)
-            {
-                m_fileMonitor = new System.Timers.Timer();
-                m_fileMonitor.Interval = 1000;
-                m_fileMonitor.AutoReset = false;
-                m_fileMonitor.Elapsed += FileMonitor_Elapsed;
-            }
+            // Make sure watch directories exist
+            foreach (string path in m_systemSettings.WatchDirectoryList)
+                TryCreateDirectory(path);
 
-            // Start watching for files
-            m_fileMonitor.Start();
+            // Make sure results directory exists
+            TryCreateDirectory(m_systemSettings.ResultsPath);
+
+            // Make sure debug directory exists
+            TryCreateDirectory(m_systemSettings.DebugPath);
+
+            // Setup new file processor to monitor the watch directories
+            if ((object)m_fileProcessor == null)
+            {
+                m_fileProcessor = new FileProcessor(FileProcessorID);
+                m_fileProcessor.Processing += FileProcessor_Processing;
+                m_fileProcessor.Error += FileProcessor_Error;
+
+                foreach (string path in m_systemSettings.WatchDirectoryList)
+                    m_fileProcessor.AddTrackedDirectory(path);
+            }
         }
 
         /// <summary>
@@ -205,8 +213,7 @@ namespace openXDA
         /// </summary>
         public void Stop()
         {
-            if ((object)m_fileMonitor != null)
-                m_fileMonitor.Stop();
+            m_fileProcessor.ClearTrackedDirectories();
         }
 
         /// <summary>
@@ -216,645 +223,302 @@ namespace openXDA
         public void Dispose()
         {
             // Stop file monitor timer
-            if ((object)m_fileMonitor != null)
+            if ((object)m_fileProcessor != null)
             {
-                m_fileMonitor.Elapsed -= FileMonitor_Elapsed;
-                m_fileMonitor.Dispose();
-                m_fileMonitor = null;
-            }
-
-            // Dispose of fault results writers
-            if ((object)m_resultsWriters != null)
-            {
-                m_resultsWriters.Dispose();
-                m_resultsWriters = null;
+                m_fileProcessor.Processing -= FileProcessor_Processing;
+                m_fileProcessor.Error -= FileProcessor_Error;
+                m_fileProcessor.Dispose();
+                m_fileProcessor = null;
             }
         }
 
-        /// <summary>
-        /// Updates the device definitions by reloading the device definitions file.
-        /// </summary>
-        public void ReloadDeviceDefinitionsFile()
+        // Attempts to create the directory at the given path.
+        private void TryCreateDirectory(string path)
         {
-            // Parses the device definitions file to get
-            // the collection of devices defined there
-            m_devices = CreateDevices(m_deviceDefinitionsFile);
-
-            // Write configuration to each of the results writers
-            foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
+            try
             {
-                if (resultsWriter.Enabled)
-                    TryWriteConfiguration(resultsWriter, m_devices);
+                // Make sure results directory exists
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
             }
         }
 
-        private void FileMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        // Determines whether the file on the given file path
+        // can be processed at the time this method is called.
+        private bool CanProcessFile(string filePath)
         {
-            // Queue files from the unprocessed file directory that match the desired file patterns
-            foreach (string fileName in FilePath.GetFileList(m_dropFolder))
-            {
-                if (FilePath.IsFilePatternMatch(m_fileExtensionFilter, FilePath.GetFileName(fileName), true))
-                {
-                    if (CanProcessFile(fileName))
-                    {
-                        ProcessFile(fileName);
-                        m_fileCreationTimes.Remove(fileName);
-                    }
-                }
-            }
-
-            if ((object)m_fileMonitor != null)
-                m_fileMonitor.Start();
-        }
-
-        private bool CanProcessFile(string fileName)
-        {
+            string directory;
             string rootFileName;
             string extension;
 
             string cfgFileName;
             TimeSpan timeSinceCreation;
 
-            if ((object)fileName == null || !File.Exists(fileName))
+            if ((object)filePath == null || !File.Exists(filePath))
                 return false;
 
-            rootFileName = FilePath.GetFileNameWithoutExtension(fileName);
-            extension = FilePath.GetExtension(fileName).ToLowerInvariant().Trim();
-
-            cfgFileName = Path.Combine(m_dropFolder, rootFileName + ".cfg");
-            timeSinceCreation = DateTime.Now - GetFileCreationTime(fileName);
+            extension = FilePath.GetExtension(filePath).ToLowerInvariant().Trim();
 
             // If the data file is COMTRADE and the schema file does not exist, the file cannot be processed
-            if (string.Compare(extension, ".pqd", true) != 0 && !File.Exists(cfgFileName))
-                return false;
+            if (!extension.Equals(".pqd", StringComparison.OrdinalIgnoreCase))
+            {
+                directory = FilePath.GetDirectoryName(filePath);
+                rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
+                cfgFileName = Path.Combine(directory, rootFileName + ".cfg");
+
+                if (!File.Exists(cfgFileName))
+                    return false;
+            }
 
             // If the extension for the data file is .d00, inject a delay before allowing the file to be processed
-            if (string.Compare(extension, ".d00", true) == 0 && timeSinceCreation.TotalSeconds < m_processDelay)
-                return false;
+            if (extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
+            {
+                timeSinceCreation = DateTime.Now - GetFileCreationTime(filePath);
 
-            return FilePath.GetFileList(Path.Combine(m_dropFolder, rootFileName + ".*"))
-                .Where(file => !file.EndsWith(".fwr", true, CultureInfo.CurrentCulture))
-                .All(file => File.Exists(file + ".fwr"));
+                if (timeSinceCreation.TotalSeconds < m_systemSettings.COMTRADEMinWaitTime)
+                    return false;
+            }
+
+            return true;
         }
 
-        private void ProcessFile(string fileName)
+        // Processes the file on the given file path.
+        private void ProcessFile(string filePath)
         {
-            DateTime timeStarted;
-            DateTime timeProcessed;
+            ConfigurationOperation configurationOperation = new ConfigurationOperation(m_systemSettings.DbConnectionString);
+            EventOperation eventOperation = new EventOperation(m_systemSettings.DbConnectionString);
+            FaultLocationOperation faultLocationOperation = new FaultLocationOperation(m_systemSettings.DbConnectionString);
 
-            string rootFileName;
-            ICollection<Device> devices;
-            FaultLocationDataSet faultDataSet;
+            FaultValidator validator = new FaultValidator(m_systemSettings.DbConnectionString);
+            COMTRADEWriter comtradeWriter = new COMTRADEWriter(m_systemSettings.DbConnectionString);
+            XMLWriter xmlWriter = new XMLWriter(m_systemSettings.DbConnectionString);
 
-            Device disturbanceRecorder;
-            ICollection<DisturbanceFile> disturbanceFiles;
-            ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets;
+            IDataReader reader;
+            List<MeterDataSet> meterDataSets;
+            string extension;
 
-            List<double> largestCurrentDistances;
-            List<double> boundedDistances;
-
-            timeStarted = DateTime.UtcNow;
-            m_currentLogger = null;
-            rootFileName = null;
+            int fileGroupID;
+            MeterData.EventDataTable events;
+            FileGroup fileGroup;
 
             try
             {
-                rootFileName = FilePath.GetFileNameWithoutExtension(fileName);
+                // Open a temp file to write log entries
+                string logFilePath = Path.GetTempFileName();
 
-                if (m_debugLevel >= 1)
-                    m_currentLogger = Logger.Open(string.Format("{0}{1}.log", m_debugFolder, rootFileName));
+                if (m_systemSettings.DebugLevel > 0)
+                    m_currentLogger = Logger.Open(logFilePath);
 
-                OnStatusMessage(string.Format("Processing {0}...", fileName));
+                OnStatusMessage("Found fault record \"{0}\".", filePath);
 
-                // Make sure device definitions exist, and attempt to load them if they don't
-                devices = m_devices;
+                // Determine whether the file is PQDIF or COMTRADE
+                extension = FilePath.GetExtension(filePath);
 
-                if ((object)devices == null)
+                if (extension == ".pqd")
+                    reader = new PQDIFReader();
+                else
+                    reader = new COMTRADEReader();
+
+                // Parse the file into a meter data set
+                meterDataSets = reader.Parse(filePath);
+
+                // Run fault location algorithms to determine fault distance
+                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
                 {
-                    devices = CreateDevices(m_deviceDefinitionsFile);
+                    fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
 
-                    foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
+                    configurationOperation.ModifyConfiguration = false;
+                    configurationOperation.FilePathPattern = m_systemSettings.FilePattern;
+
+                    faultLocationOperation.PrefaultMultiplier = m_systemSettings.PrefaultMultiplier;
+                    faultLocationOperation.RatedCurrentMultiplier = m_systemSettings.RatedCurrentMultiplier;
+
+                    foreach (MeterDataSet meterDataSet in meterDataSets)
                     {
-                        if (resultsWriter.Enabled)
-                            TryWriteConfiguration(resultsWriter, devices);
+                        meterDataSet.FilePath = filePath;
+                        meterDataSet.FileGroup = fileGroup;
+                        configurationOperation.Execute(meterDataSet);
+                        eventOperation.Execute(meterDataSet);
+                        faultLocationOperation.Execute(meterDataSet);
                     }
 
-                    m_devices = devices;
+                    fileGroupID = fileGroup.ID;
+
+                    transactionScope.Complete();
                 }
 
-                // Get the definition for the device that captured this event
-                disturbanceRecorder = GetDevice(devices, rootFileName);
-                disturbanceFiles = CreateDisturbanceFiles(rootFileName);
-                lineDataSets = new Collection<Tuple<Line, FaultLocationDataSet>>();
-
-                if ((object)disturbanceRecorder == null)
-                    throw new InvalidOperationException(string.Format("No device record found for \"{0}\" in configuration.", fileName));
-
-                foreach (Line line in disturbanceRecorder.Lines)
+                // Export fault results to results files
+                using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_systemSettings.DbConnectionString))
+                using (EventTableAdapter eventAdapter = new EventTableAdapter())
+                using (FaultCurveTableAdapter faultAdapter = new FaultCurveTableAdapter())
                 {
-                    try
+                    eventAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
+                    faultAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
+
+                    validator.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+                    validator.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+
+                    comtradeWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+                    comtradeWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+                    comtradeWriter.LengthUnits = m_systemSettings.LengthUnits;
+
+                    events = eventAdapter.GetDataByFileGroup(fileGroupID);
+
+                    foreach (MeterData.EventRow evt in events)
                     {
-                        // Provide status information about which line is being processed
-                        OnStatusMessage("Detecting faults on line {0}...", line.Name);
+                        Meter meter = meterInfo.Meters.Single(m => m.ID == evt.MeterID);
+                        Line line = meterInfo.Lines.Single(l => l.ID == evt.LineID);
 
-                        // Get the fault data set for this line
-                        faultDataSet = GetFaultDataSet(fileName, line);
+                        validator.Validate(evt.ID);
 
-                        // Get the maximum rated current from the line definition
-                        faultDataSet.RatedCurrent = line.Rating50F;
-
-                        // Export data to CSV for validation
-                        if (m_debugLevel >= 1)
+                        if (validator.IsFaultDistanceValid)
                         {
-                            MeasurementDataSet.ExportToCSV(FilePath.GetAbsolutePath(string.Format("{0}{1}.{2}_measurementData.csv", m_debugFolder, rootFileName, line.ID)), faultDataSet.Voltages, faultDataSet.Currents);
-                            CycleDataSet.ExportToCSV(FilePath.GetAbsolutePath(string.Format("{0}{1}.{2}_cycleData.csv", m_debugFolder, rootFileName, line.ID)), faultDataSet.Cycles);
-                        }
+                            string resultsDir;
+                            string comtradeFilePath;
+                            string xmlFilePath;
 
-                        // Run fault trigger, type, and location algorithms
-                        if (ExecuteFaultTriggerAlgorithm(line.FaultAlgorithmsSet.FaultTriggerAlgorithm, faultDataSet, line.FaultAlgorithmsSet.FaultTriggerParameters))
-                        {
-                            faultDataSet.FaultType = ExecuteFaultTypeAlgorithm(line.FaultAlgorithmsSet.FaultTypeAlgorithm, faultDataSet, line.FaultAlgorithmsSet.FaultTypeParameters);
-                            faultDataSet.FaultDistances = line.FaultAlgorithmsSet.FaultLocationAlgorithms.ToDictionary(algorithm => algorithm.Method.Name, algorithm => ExecuteFaultLocationAlgorithm(algorithm, faultDataSet, null));
+                            OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, validator.FaultDistance, m_systemSettings.LengthUnits);
 
-                            // Get the set of distance calculations for the cycle with the largest current
-                            largestCurrentDistances = faultDataSet.FaultDistances.Values
-                                .Select(distances => distances[faultDataSet.Cycles.GetLargestCurrentIndex()])
-                                .OrderBy(dist => dist)
-                                .ToList();
+                            resultsDir = Path.Combine(m_systemSettings.ResultsPath, meter.AssetKey);
+                            TryCreateDirectory(resultsDir);
 
-                            // Filter the set down to the distance values that are reasonable
-                            boundedDistances = largestCurrentDistances
-                                .Where(dist => dist >= 0.0D && dist <= faultDataSet.LineDistance)
-                                .ToList();
+                            comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(filePath) + ".dat");
+                            comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
+                            OnStatusMessage("Results written to {0}", comtradeFilePath);
 
-                            // Get the representative fault distance as the median of the bounded distances,
-                            // falling back on the median of the unbounded distances if there are no bounded ones
-                            faultDataSet.FaultDistance = (boundedDistances.Count > 0)
-                                ? boundedDistances[boundedDistances.Count / 2]
-                                : largestCurrentDistances[largestCurrentDistances.Count / 2];
-
-                            OnStatusMessage("Distance to fault: {0} {1}", faultDataSet.FaultDistance, m_lengthUnits);
-
-                            // Add the line-specific parameters to the faultResultsWriter
-                            lineDataSets.Add(Tuple.Create(line, faultDataSet));
+                            xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(filePath) + ".xml");
+                            xmlWriter.WriteResults(evt.ID, xmlFilePath);
+                            OnStatusMessage("Summary of results written to {0}", xmlFilePath);
                         }
                         else
                         {
-                            OnStatusMessage("No fault detected.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        string message = string.Format("Error detecting faults on line {0}: {1}", line.Name, ex.Message);
-                        OnProcessException(new Exception(message, ex));
-                    }
-                }
-
-                try
-                {
-                    // Write results to the output source
-                    if (lineDataSets.Count > 0)
-                    {
-                        timeProcessed = DateTime.UtcNow;
-
-                        foreach (DisturbanceFile disturbanceFile in disturbanceFiles)
-                        {
-                            disturbanceFile.FLETimeStarted = timeStarted;
-                            disturbanceFile.FLETimeProcessed = timeProcessed;
-                        }
-
-                        foreach (IFaultResultsWriter resultsWriter in m_resultsWriters.Adapters)
-                        {
-                            if (resultsWriter.Enabled)
-                                TryWriteResults(resultsWriter, disturbanceRecorder, disturbanceFiles, lineDataSets);
+                            OnStatusMessage("Fault found on line {0}, but fault data is suspect.", line.Name);
+                            OnStatusMessage("Fault distance: {0} {1}", validator.FaultDistance, m_systemSettings.LengthUnits);
+                            OnStatusMessage("   Line length: {0} {1}", line.Length, m_systemSettings.LengthUnits);
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    string errorMessage = string.Format("Unable to write results for file \"{0}\" due to exception: {1}", fileName, ex.Message);
-                    OnProcessException(new InvalidOperationException(errorMessage, ex));
-                }
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = string.Format("Unable to process file \"{0}\" due to exception: {1}", fileName, ex.Message);
-                OnProcessException(new InvalidOperationException(errorMessage, ex));
-            }
 
-            try
-            {
                 if ((object)m_currentLogger != null)
                 {
+                    // Close the log file so we can
+                    // move it to the debug directory
                     m_currentLogger.Close();
+
+                    // Move the file to the debug directory
+                    string debugDir = Path.Combine(m_systemSettings.DebugPath, meterDataSets.First().Meter.AssetKey);
+                    string debugPath = Path.Combine(debugDir, FilePath.GetFileNameWithoutExtension(filePath) + ".log");
+                    TryCreateDirectory(debugDir);
+                    File.Copy(logFilePath, FilePath.GetUniqueFilePathWithBinarySearch(debugPath), true);
+                    File.Delete(logFilePath);
+                }
+            }
+            finally
+            {
+                // Clean up the current log file
+                if ((object)m_currentLogger != null)
+                {
+                    m_currentLogger.Dispose();
                     m_currentLogger = null;
                 }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
-
-            try
-            {
-                if ((object)rootFileName != null)
-                {
-                    // Get a list of processed files based on file prefix
-                    List<string> processedFiles = FilePath.GetFileList(string.Format("{0}{1}.*", m_dropFolder, rootFileName))
-                        .Concat(FilePath.GetFileList(string.Format("{0}{1}_*", m_dropFolder, rootFileName)))
-                        .ToList();
-
-                    // Delete processed files from the drop folder
-                    foreach (string file in processedFiles)
-                        File.Delete(file);
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
             }
 
             OnStatusMessage("");
         }
 
-        private ICollection<Device> CreateDevices(string deviceDefinitionsFile)
+        // Loads a file group containing information about the file on the given
+        // file path, as well as the files related to it, into the database.
+        private FileGroup LoadFileGroup(FileInfoDataContext dataContext, string filePath)
         {
-            XDocument deviceDefinitionsDocument;
-            XElement root;
+            string directory = FilePath.GetDirectoryName(filePath);
+            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
 
-            FaultAlgorithmsSet defaultFaultAlgorithms;
-            ICollection<Device> devices;
+            FileInfo fileInfo;
+            FileGroup fileGroup;
+            DataFile dataFile;
 
-            if (!File.Exists(deviceDefinitionsFile))
-                throw new FileNotFoundException(string.Format("Device definitions file \"{0}\" not found.", deviceDefinitionsFile));
+            fileGroup = new FileGroup();
+            fileGroup.ProcessingStartTime = DateTime.UtcNow;
 
-            deviceDefinitionsDocument = XDocument.Load(deviceDefinitionsFile);
-            root = deviceDefinitionsDocument.Root ?? new XElement("openXDA");
-            defaultFaultAlgorithms = GetFaultAlgorithms(root.Element("analytics") ?? new XElement("analytics"));
-            devices = new Collection<Device>();
-
-            foreach (XElement deviceDefinition in root.Elements("device"))
-                devices.Add(CreateDevice(deviceDefinition, defaultFaultAlgorithms));
-
-            return devices;
-        }
-
-        private Device CreateDevice(XElement deviceDefinition, FaultAlgorithmsSet defaultFaultAlgorithms)
-        {
-            XElement deviceAttributes;
-            XElement deviceLines;
-            Device device;
-
-            // Get the attributes and lines XML elements
-            deviceAttributes = deviceDefinition.Element("attributes") ?? new XElement("attributes");
-            deviceLines = deviceDefinition.Element("lines") ?? new XElement("lines");
-
-            // Create new device and set the attributes
-            device = new Device()
+            foreach (string file in FilePath.GetFileList(Path.Combine(directory, rootFileName + ".*")))
             {
-                ID = (string)deviceDefinition.Attribute("id"),
-                Make = (string)deviceAttributes.Element("make"),
-                Model = (string)deviceAttributes.Element("model"),
-                StationID = (string)deviceAttributes.Element("stationID"),
-                StationName = (string)deviceAttributes.Element("stationName")
-            };
+                fileInfo = new FileInfo(file);
 
-            // Add lines based on the line definitions
-            foreach (XElement lineDefinition in deviceLines.Elements("line"))
-                device.Lines.Add(CreateLine(lineDefinition, defaultFaultAlgorithms));
-
-            // Return the device
-            return device;
-        }
-
-        private Line CreateLine(XElement lineDefinition, FaultAlgorithmsSet defaultFaultAlgorithms)
-        {
-            Line line;
-            XElement impedancesElement;
-            FaultAlgorithmsSet faultAlgorithms;
-
-            double rating50F;
-            double length;
-
-            double r1;
-            double x1;
-            double r0;
-            double x0;
-
-            // Create new line
-            line = new Line()
-            {
-                ID = (string)lineDefinition.Attribute("id"),
-                Name = (string)lineDefinition.Element("name"),
-                Voltage = (string)lineDefinition.Element("voltage"),
-                EndStationID = (string)lineDefinition.Element("endStationID"),
-                EndStationName = (string)lineDefinition.Element("endStationName"),
-                ChannelsElement = lineDefinition.Element("channels") ?? new XElement("channels")
-            };
-
-            // Get the XML element that contains impedances
-            impedancesElement = lineDefinition.Element("impedances") ?? new XElement("impedances");
-
-            // Get fault algorithms for this line
-            faultAlgorithms = GetFaultAlgorithms(lineDefinition);
-
-            if ((object)faultAlgorithms.FaultTriggerAlgorithm == null)
-            {
-                faultAlgorithms.FaultTriggerAlgorithm = defaultFaultAlgorithms.FaultTriggerAlgorithm;
-                faultAlgorithms.FaultTriggerParameters = defaultFaultAlgorithms.FaultTriggerParameters;
+                dataFile = new DataFile();
+                dataFile.FilePath = file;
+                dataFile.FileSize = fileInfo.Length;
+                dataFile.CreationTime = fileInfo.CreationTimeUtc;
+                dataFile.LastWriteTime = fileInfo.LastWriteTimeUtc;
+                dataFile.LastAccessTime = fileInfo.LastAccessTimeUtc;
+                dataFile.FileGroup = fileGroup;
             }
 
-            if ((object)faultAlgorithms.FaultTypeAlgorithm == null)
-            {
-                faultAlgorithms.FaultTypeAlgorithm = defaultFaultAlgorithms.FaultTypeAlgorithm;
-                faultAlgorithms.FaultTypeParameters = defaultFaultAlgorithms.FaultTypeParameters;
-            }
+            dataContext.FileGroups.InsertOnSubmit(fileGroup);
+            dataContext.SubmitChanges();
 
-            if ((object)faultAlgorithms.FaultLocationAlgorithms == null || faultAlgorithms.FaultLocationAlgorithms.Length == 0)
-            {
-                faultAlgorithms.FaultLocationAlgorithms = defaultFaultAlgorithms.FaultLocationAlgorithms;
-                faultAlgorithms.FaultLocationParameters = defaultFaultAlgorithms.FaultLocationParameters;
-            }
-
-            line.FaultAlgorithmsSet = faultAlgorithms;
-
-            // Set parameters that require parsing
-            if (double.TryParse((string)lineDefinition.Element("rating50F"), out rating50F))
-                line.Rating50F = rating50F;
-
-            if (double.TryParse((string)lineDefinition.Element("length"), out length))
-                line.Length = length;
-
-            if (double.TryParse((string)impedancesElement.Element("R1"), out r1))
-                line.R1 = r1;
-
-            if (double.TryParse((string)impedancesElement.Element("X1"), out x1))
-                line.X1 = x1;
-
-            if (double.TryParse((string)impedancesElement.Element("R0"), out r0))
-                line.R0 = r0;
-
-            if (double.TryParse((string)impedancesElement.Element("X0"), out x0))
-                line.X0 = x0;
-
-            // Return the line
-            return line;
+            return fileGroup;
         }
 
-        private FaultAlgorithmsSet GetFaultAlgorithms(XElement parentElement)
+        // Called when the file processor has picked up a file in one of the watch
+        // directories. This handler validates the file and processes it if able.
+        private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
-            FaultAlgorithmsSet faultAlgorithms = new FaultAlgorithmsSet();
-
-            LoadFaultTriggerAlgorithm(parentElement, out faultAlgorithms.FaultTriggerAlgorithm, out faultAlgorithms.FaultTriggerParameters);
-            LoadFaultTypeAlgorithm(parentElement, out faultAlgorithms.FaultTypeAlgorithm, out faultAlgorithms.FaultTypeParameters);
-            LoadFaultLocationAlgorithms(parentElement, out faultAlgorithms.FaultLocationAlgorithms, out faultAlgorithms.FaultLocationParameters);
-
-            return faultAlgorithms;
-        }
-
-        private void LoadFaultTriggerAlgorithm(XElement parentElement, out FaultTriggerAlgorithm faultTriggerAlgorithm, out string parameters)
-        {
-            LoadFaultAlgorithm(parentElement, "faultTrigger", out faultTriggerAlgorithm, out parameters);
-        }
-
-        private void LoadFaultTypeAlgorithm(XElement parentElement, out FaultTypeAlgorithm faultTypeAlgorithm, out string parameters)
-        {
-            LoadFaultAlgorithm(parentElement, "faultType", out faultTypeAlgorithm, out parameters);
-        }
-
-        private void LoadFaultLocationAlgorithms(XElement parentElement, out FaultLocationAlgorithm[] faultLocationAlgorithms, out string[] parameters)
-        {
-            List<XElement> elements = parentElement.Elements("faultLocation").ToList();
-            faultLocationAlgorithms = elements.Select(LoadAlgorithm<FaultLocationAlgorithm>).ToArray();
-            parameters = elements.Select(LoadAlgorithmParameters).ToArray();
-        }
-
-        private void LoadFaultAlgorithm<T>(XElement parentElement, string elementName, out T faultAlgorithm, out string parameters) where T : class
-        {
-            XElement faultElement = parentElement.Element(elementName) ?? new XElement(elementName);
-
-            faultAlgorithm = LoadAlgorithm<T>(faultElement);
-            parameters = LoadAlgorithmParameters(faultElement);
-        }
-
-        private T LoadAlgorithm<T>(XElement algorithmElement) where T : class
-        {
-            XAttribute assemblyName = algorithmElement.Attribute("assembly");
-            XAttribute algorithmName = algorithmElement.Attribute("method");
-
-            if ((object)assemblyName != null && (object)algorithmName != null)
-                return LoadAlgorithm<T>(FilePath.GetAbsolutePath(assemblyName.Value), algorithmName.Value);
-
-            return null;
-        }
-
-        private string LoadAlgorithmParameters(XElement algorithmElement)
-        {
-            return algorithmElement.Elements()
-                .ToDictionary(element => element.Name.LocalName, element => element.Value)
-                .JoinKeyValuePairs();
-        }
-
-        private T LoadAlgorithm<T>(string assemblyName, string algorithmName) where T : class
-        {
-            int index;
-            string typeName;
-            string methodName;
-
-            Assembly assembly;
-            Type type;
-            MethodInfo method;
+            string[] validExtensions = { ".pqd", ".dat", ".d00" };
+            string filePath = fileProcessorEventArgs.FullPath;
+            string extension;
 
             try
             {
-                index = algorithmName.LastIndexOf('.');
-                typeName = algorithmName.Substring(0, index);
-                methodName = algorithmName.Substring(index + 1);
+                extension = FilePath.GetExtension(filePath);
 
-                assembly = Assembly.LoadFrom(assemblyName);
-                type = assembly.GetType(typeName);
-                method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
+                if (!validExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+                    return;
 
-                return Delegate.CreateDelegate(typeof(T), method) as T;
+                if (!fileProcessorEventArgs.AlreadyProcessed)
+                {
+                    if (CanProcessFile(filePath))
+                    {
+                        ProcessFile(filePath);
+                        m_fileCreationTimes.Remove(filePath);
+                    }
+                    else
+                    {
+                        fileProcessorEventArgs.Requeue = true;
+                    }
+                }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed while loading {0} due to exception: {1}", typeof(T).Name, ex.Message), ex));
-            }
+                FileGroup fileGroup;
+                string message;
 
-            return null;
-        }
+                message = string.Format("Unable to process file \"{0}\" due to exception: {1}", filePath, ex.Message);
+                OnProcessException(new InvalidOperationException(message, ex));
 
-        private ICollection<DisturbanceFile> CreateDisturbanceFiles(string rootFileName)
-        {
-            ICollection<DisturbanceFile> disturbanceFiles = new Collection<DisturbanceFile>();
-            string fwrPattern = Path.Combine(m_dropFolder, string.Format("{0}*.fwr", rootFileName));
-            string[] fwrList = FilePath.GetFileList(fwrPattern);
-
-            foreach (string fwrPath in fwrList)
-                disturbanceFiles.Add(CreateDisturbanceFile(fwrPath));
-
-            return disturbanceFiles;
-        }
-
-        private DisturbanceFile CreateDisturbanceFile(string filePath)
-        {
-            XDocument fwrDocument = XDocument.Load(filePath);
-            XElement root = fwrDocument.Root ?? new XElement("fileWatcherResults");
-            XElement sourceFullPath = root.Element("sourceFullPath") ?? new XElement("sourceFullPath");
-            XElement stats = root.Element("Stats") ?? new XElement("Stats");
-
-            int fileSize;
-            DateTime creationTime;
-            DateTime lastWriteTime;
-            DateTime lastAccessTime;
-            DateTime startTime;
-            TimeSpan processingTime;
-
-            DisturbanceFile disturbanceFile;
-
-            disturbanceFile = new DisturbanceFile()
-            {
-                SourcePath = (string)sourceFullPath,
-                DestinationPath = (string)root.Element("DestinationFullPath")
-            };
-
-            if (int.TryParse((string)sourceFullPath.Attribute("Size"), out fileSize))
-                disturbanceFile.FileSize = fileSize;
-
-            if (DateTime.TryParse((string)sourceFullPath.Attribute("CreationTime"), out creationTime))
-                disturbanceFile.CreationTime = creationTime;
-
-            if (DateTime.TryParse((string)sourceFullPath.Attribute("LastWriteTime"), out lastWriteTime))
-                disturbanceFile.LastWriteTime = lastWriteTime;
-
-            if (DateTime.TryParse((string)sourceFullPath.Attribute("LastAccessTime"), out lastAccessTime))
-                disturbanceFile.LastAccessTime = lastAccessTime;
-
-            if (DateTime.TryParse((string)stats.Attribute("StartTime"), out startTime))
-            {
-                disturbanceFile.FileWatcherTimeStarted = startTime;
-
-                if (TimeSpan.TryParse((string)stats.Attribute("ProcessingTime"), out processingTime))
-                    disturbanceFile.FileWatcherTimeProcessed = startTime + processingTime;
-            }
-
-            return disturbanceFile;
-        }
-
-        private Device GetDevice(ICollection<Device> devices, string rootFileName)
-        {
-            return devices.FirstOrDefault(device => (object)device.ID != null && rootFileName.StartsWith(device.ID, StringComparison.CurrentCultureIgnoreCase));
-        }
-
-        private FaultLocationDataSet GetFaultDataSet(string fileName, Line line)
-        {
-            string extension = FilePath.GetExtension(fileName).ToLowerInvariant().Trim();
-
-            FaultLocationDataSet faultDataSet = new FaultLocationDataSet()
-            {
-                PositiveImpedance = new ComplexNumber(line.R1, line.X1),
-                ZeroImpedance = new ComplexNumber(line.R0, line.X0),
-                LineDistance = line.Length
-            };
-
-            StringBuilder parameters = new StringBuilder();
-
-            // TODO: Load other needed specific associated parameters based on file / line information once all meta-data is known and defined
-            parameters.AppendFormat("fileName={0}; ", fileName);
-            parameters.Append("dataSourceType=");
-
-            // Process files based on file extension
-            switch (extension)
-            {
-                case ".pqd":
-                    parameters.Append("PQDIF");
-                    break;
-                case ".d00":
-                case ".dat":
-                    parameters.Append("Comtrade");
-                    break;
-                default:
-                    throw new InvalidOperationException(string.Format("Unknown file extension encountered: \"{0}\" - cannot parse file.", extension));
-            }
-
-            // Load data sets based on specified parameters
-            LoadDataSets(faultDataSet, parameters.ToString(), line);
-
-            return faultDataSet;
-        }
-
-        private void TryWriteConfiguration(IFaultResultsWriter faultResultsWriter, ICollection<Device> configuration)
-        {
-            const string ErrorFormat = "Unable to write configuration to the fault results writer due to exception: {0}";
-
-            try
-            {
-                faultResultsWriter.WriteConfiguration(configuration);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format(ErrorFormat, ex.Message), ex));
+                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
+                {
+                    fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
+                    fileGroup.Error = 1;
+                    fileInfoDataContext.SubmitChanges();
+                    transactionScope.Complete();
+                }
             }
         }
 
-        private void TryWriteResults(IFaultResultsWriter faultResultsWriter, Device disturbanceRecorder, ICollection<DisturbanceFile> disturbanceFiles, ICollection<Tuple<Line, FaultLocationDataSet>> lineDataSets)
+        // Called when the file processor encounters an unexpected error.
+        private void FileProcessor_Error(object sender, ErrorEventArgs args)
         {
-            const string ErrorFormat = "Unable to write results to the fault results writer due to exception: {0}";
-
-            try
-            {
-                faultResultsWriter.WriteResults(disturbanceRecorder, disturbanceFiles, lineDataSets);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format(ErrorFormat, ex.Message), ex));
-            }
-        }
-
-        // Attempts to execute fault trigger algorithm and processes errors if they occur.
-        private bool ExecuteFaultTriggerAlgorithm(FaultTriggerAlgorithm algorithm, FaultLocationDataSet faultDataSet, string parameters)
-        {
-            try
-            {
-                return algorithm(faultDataSet, parameters);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new Exception(string.Format("Error executing fault trigger algorithm: {0}", ex.Message), ex));
-                return false;
-            }
-        }
-
-        // Attempts to execute fault type algorithm and processes errors if they occur.
-        private FaultType ExecuteFaultTypeAlgorithm(FaultTypeAlgorithm algorithm, FaultLocationDataSet faultDataSet, string parameters)
-        {
-            try
-            {
-                return algorithm(faultDataSet, parameters);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new Exception(string.Format("Error executing fault type algorithm: {0}", ex.Message), ex));
-                return FaultType.None;
-            }
-        }
-
-        // Attempts to execute fault location algorithm and processes errors if they occur.
-        private double[] ExecuteFaultLocationAlgorithm(FaultLocationAlgorithm algorithm, FaultLocationDataSet faultDataSet, string parameters)
-        {
-            try
-            {
-                return algorithm(faultDataSet, parameters);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new Exception(string.Format("Error executing fault location algorithm: {0}", ex.Message), ex));
-                return null;
-            }
+            OnProcessException(args.GetException());
         }
 
         // Displays status message to the console - proxy method for service implementation
+        [StringFormatMethod("format")]
         private void OnStatusMessage(string format, params object[] args)
         {
             string message = string.Format(format, args);
@@ -907,86 +571,13 @@ namespace openXDA
             return creationTime;
         }
 
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-
-        // Load voltage and current data set based on connection string parameters
-        private static void LoadDataSets(FaultLocationDataSet faultDataSet, string parameters, Line line)
+        private TransactionOptions GetTransactionOptions()
         {
-            if (string.IsNullOrEmpty(parameters))
-                throw new ArgumentNullException("parameters");
-
-            Dictionary<string, string> settings = parameters.ParseKeyValuePairs();
-            string dataSourceType;
-
-            if (!settings.TryGetValue("dataSourceType", out dataSourceType) || string.IsNullOrWhiteSpace(dataSourceType))
-                throw new ArgumentException("Parameters must define a \"dataSourceType\" setting.");
-
-            switch (dataSourceType.ToLowerInvariant().Trim())
+            return new TransactionOptions()
             {
-                case "pqdif":
-                    PQDIFLoader.PopulateDataSet(faultDataSet, settings);
-                    break;
-                case "comtrade":
-                    COMTRADELoader.PopulateDataSet(faultDataSet, settings, line);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("parameters", string.Format("Cannot parse \"{0}\" data source type - format is undefined.", dataSourceType));
-            }
-
-            if ((object)faultDataSet.Voltages.AN.Measurements == null || faultDataSet.Voltages.AN.Measurements.Length == 0)
-                throw new InvalidOperationException("Missing AN voltage. Cannot calculate fault location without line-to-neutral voltages.");
-
-            if ((object)faultDataSet.Voltages.BN.Measurements == null || faultDataSet.Voltages.BN.Measurements.Length == 0)
-                throw new InvalidOperationException("Missing BN voltage. Cannot calculate fault location without line-to-neutral voltages.");
-
-            if ((object)faultDataSet.Voltages.CN.Measurements == null || faultDataSet.Voltages.CN.Measurements.Length == 0)
-                throw new InvalidOperationException("Missing CN voltage. Cannot calculate fault location without line-to-neutral voltages.");
-
-            if ((object)faultDataSet.Currents.AN.Measurements == null || faultDataSet.Currents.AN.Measurements.Length == 0)
-                throw new InvalidOperationException("Missing AN current. Cannot calculate fault location without line-to-neutral currents.");
-
-            if ((object)faultDataSet.Currents.BN.Measurements == null || faultDataSet.Currents.BN.Measurements.Length == 0)
-                throw new InvalidOperationException("Missing BN current. Cannot calculate fault location without line-to-neutral currents.");
-
-            if ((object)faultDataSet.Currents.CN.Measurements == null || faultDataSet.Currents.CN.Measurements.Length == 0)
-                throw new InvalidOperationException("Missing CN current. Cannot calculate fault location without line-to-neutral currents.");
-
-            ValidateSampleRates(faultDataSet.Frequency, faultDataSet.Voltages);
-            ValidateSampleRates(faultDataSet.Frequency, faultDataSet.Currents);
-
-            faultDataSet.Cycles.Populate(faultDataSet.Frequency, faultDataSet.Voltages, faultDataSet.Currents);
-        }
-
-        // Some rough calculations have shown that sample rate calculation is extremely accurate,
-        // so long as the frequency of the system is close to the frequency passed into this method
-        // (within a few hundreths of a Hz). However, in the interest of correctness, this method
-        // attempts to use the sample rate provided by the data loader--if one has been provided--
-        // rather than blindly using the calculated sample rate. Given the accuracy of the
-        // calculation, this may not be necessary.
-        private static void ValidateSampleRates(double frequency, MeasurementDataSet measurementDataSet)
-        {
-            int[] sampleRates = new int[] { measurementDataSet.AN.SampleRate, measurementDataSet.BN.SampleRate, measurementDataSet.CN.SampleRate };
-            int[] distinctSampleRates;
-
-            if (sampleRates.Any(rate => rate == 0))
-            {
-                distinctSampleRates = sampleRates.Where(rate => rate != 0).Distinct().ToArray();
-
-                if (distinctSampleRates.Length != 1)
-                {
-                    measurementDataSet.CalculateSampleRates(frequency);
-                }
-                else
-                {
-                    measurementDataSet.AN.SampleRate = distinctSampleRates[0];
-                    measurementDataSet.BN.SampleRate = distinctSampleRates[0];
-                    measurementDataSet.CN.SampleRate = distinctSampleRates[0];
-                }
-            }
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
         }
 
         #endregion

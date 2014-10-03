@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using FaultAlgorithms;
@@ -117,19 +118,24 @@ namespace FaultData.DataOperations
             FaultLocationData.CycleDataDataTable cycleDataTable = new FaultLocationData.CycleDataDataTable();
             FaultLocationData.FaultCurveDataTable faultCurveTable = new FaultLocationData.FaultCurveDataTable();
 
+            Stopwatch stopwatch = new Stopwatch();
+
             foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
             {
                 using (EventTableAdapter adapter = new EventTableAdapter())
                 {
                     adapter.Connection.ConnectionString = m_connectionString;
-                    eventID = adapter.GetEventIDBy(meterDataSet.Meter.ID, faultGroup.Line.ID, faultGroup.StartTime, faultGroup.EndTime) ?? 0;
+                    eventID = adapter.GetEventIDBy(meterDataSet.Meter.ID, faultGroup.Line.ID, meterDataSet.FileGroup.ID, faultGroup.StartTime, faultGroup.EndTime) ?? 0;
                 }
 
                 if (eventID == 0)
                     continue;
 
                 viDataGroup = GetVIDataGroup(faultGroup);
+                stopwatch.Restart();
                 viCycleDataSet = Transform.ToVICycleDataSet(viDataGroup, Frequency);
+                stopwatch.Stop();
+                Debug.WriteLine("VICycleDataSet in {0}", stopwatch.Elapsed);
                 faultDetectedSegments = DetectFaults(viDataGroup, viCycleDataSet);
                 faultTypeSegments = ClassifyFaults(faultDetectedSegments, viCycleDataSet);
 
@@ -238,10 +244,16 @@ namespace FaultData.DataOperations
                                 faultDistanceSeries.DataPoints.Add(faultDataPoint);
                         }
 
+                        stopwatch.Restart();
                         faultCurveTable.AddFaultCurveRow(eventID, faultLocationAlgorithm.Method.Name, Serialize(faultDistanceSeries));
+                        stopwatch.Stop();
+                        Debug.WriteLine("Serialize in {0}", stopwatch.Elapsed);
                     }
 
+                    stopwatch.Restart();
                     cycleDataTable.AddCycleDataRow(eventID, viCycleDataSet.ToDataGroup().ToData());
+                    stopwatch.Stop();
+                    Debug.WriteLine("ToData in {0}", stopwatch.Elapsed);
                 }
             }
 
@@ -347,7 +359,7 @@ namespace FaultData.DataOperations
                         ibIndex = FindFaultInception(viDataGroup.IB, i);
                         icIndex = FindFaultInception(viDataGroup.IC, i);
 
-                        i = Math.Min(Math.Min(iaIndex, ibIndex), icIndex);
+                        i = Common.Min(iaIndex, ibIndex, icIndex);
                         currentSegment.EndSample = i - 1;
 
                         currentSegment = new Segment();
@@ -365,7 +377,7 @@ namespace FaultData.DataOperations
                         ibIndex = FindFaultClearing(viDataGroup.IB, i);
                         icIndex = FindFaultClearing(viDataGroup.IC, i);
 
-                        i = Math.Max(Math.Max(iaIndex, ibIndex), icIndex);
+                        i = Common.Max(iaIndex, ibIndex, icIndex);
                         currentSegment.EndSample = i - 1;
                         
                         currentSegment = new Segment();
@@ -515,8 +527,8 @@ namespace FaultData.DataOperations
 
         private int GetNumPhases(double factor, double ia, double ib, double ic)
         {
-            double max = Math.Max(Math.Max(ia, ib), ic);
-            double min = Math.Min(Math.Min(ia, ib), ic);
+            double max = Common.Max(ia, ib, ic);
+            double min = Common.Min(ia, ib, ic);
             double mid = (ia + ib + ic) - max - min;
 
             if (max > factor * mid)

@@ -2,9 +2,10 @@
 <xs:schema id="MeterData" targetNamespace="http://tempuri.org/MeterData.xsd" xmlns:mstns="http://tempuri.org/MeterData.xsd" xmlns="http://tempuri.org/MeterData.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
   <xs:annotation>
     <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
-      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="1" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
         <Connections>
-          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="MeterDBConnectionString" IsAppSettingsProperty="true" Modifier="Public" Name="MeterDBConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.MeterDBConnectionString" Provider="System.Data.SqlClient" />
+          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="MeterDBConnectionString" ConnectionStringObject="" IsAppSettingsProperty="true" Modifier="Public" Name="MeterDBConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.MeterDBConnectionString" Provider="System.Data.SqlClient" />
+          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="MeterDBConnectionString1" IsAppSettingsProperty="true" Modifier="Assembly" Name="MeterDBConnectionString1 (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.MeterDBConnectionString1" Provider="System.Data.SqlClient" />
         </Connections>
         <Tables>
           <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="HourlyTrendingSummaryTableAdapter" GeneratorDataComponentClassName="HourlyTrendingSummaryTableAdapter" Name="HourlyTrendingSummary" UserDataComponentName="HourlyTrendingSummaryTableAdapter">
@@ -333,7 +334,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
               <Mapping SourceColumn="Data" DataSetColumn="Data" />
             </Mappings>
             <Sources>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.Event" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
+              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.Event" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillByID" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataByID" GeneratorSourceName="FillByID" GetMethodModifier="Public" GetMethodName="GetDataByID" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataByID" UserSourceName="FillByID">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
                     <CommandText>SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, Magnitude, Duration, Description, Data FROM dbo.Event WHERE ID = @id</CommandText>
@@ -343,13 +344,26 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
                   </DbCommand>
                 </SelectCommand>
               </DbSource>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.Event" DbObjectType="Table" GenerateShortCommands="true" GeneratorSourceName="GetEventIDBy" Modifier="Public" Name="GetEventIDBy" QueryType="Scalar" ScalarCallRetval="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy1" UserSourceName="GetEventIDBy">
+              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.Event" DbObjectType="Table" GenerateMethods="Get" GenerateShortCommands="true" GeneratorGetMethodName="GetDataByFileGroup" GetMethodModifier="Public" GetMethodName="GetDataByFileGroup" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataByFileGroup" UserSourceName="GetDataByFileGroup">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
-                    <CommandText>SELECT ID FROM Event WHERE MeterID = @meterID AND LineID = @lineID AND StartTime = @startTime AND EndTime = @endTime</CommandText>
+                    <CommandText>SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, Magnitude, Duration, Description, Data FROM dbo.Event WHERE FileGroupID = @fileGroupID</CommandText>
+                    <Parameters>
+                      <Parameter AllowDbNull="false" AutogeneratedName="fileGroupID" ColumnName="FileGroupID" DataSourceName="MeterDB.dbo.Event" DataTypeServer="int" DbType="Int32" Direction="Input" ParameterName="@fileGroupID" Precision="0" ProviderType="Int" Scale="0" Size="4" SourceColumn="FileGroupID" SourceColumnNullMapping="false" SourceVersion="Current" />
+                    </Parameters>
+                  </DbCommand>
+                </SelectCommand>
+              </DbSource>
+              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.Event" DbObjectType="Table" GenerateShortCommands="true" GeneratorSourceName="GetEventIDBy" Modifier="Public" Name="GetEventIDBy" QueryType="Scalar" ScalarCallRetval="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="GetEventIDBy">
+                <SelectCommand>
+                  <DbCommand CommandType="Text" ModifiedByUser="true">
+                    <CommandText>SELECT ID
+FROM Event
+WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND StartTime = @startTime AND EndTime = @endTime</CommandText>
                     <Parameters>
                       <Parameter AllowDbNull="false" AutogeneratedName="meterID" ColumnName="MeterID" DataSourceName="MeterDB.dbo.Event" DataTypeServer="int" DbType="Int32" Direction="Input" ParameterName="@meterID" Precision="0" ProviderType="Int" Scale="0" Size="4" SourceColumn="MeterID" SourceColumnNullMapping="false" SourceVersion="Current" />
                       <Parameter AllowDbNull="false" AutogeneratedName="lineID" ColumnName="LineID" DataSourceName="MeterDB.dbo.Event" DataTypeServer="int" DbType="Int32" Direction="Input" ParameterName="@lineID" Precision="0" ProviderType="Int" Scale="0" Size="4" SourceColumn="LineID" SourceColumnNullMapping="false" SourceVersion="Current" />
+                      <Parameter AllowDbNull="false" AutogeneratedName="fileGroupID" ColumnName="FileGroupID" DataSourceName="MeterDB.dbo.Event" DataTypeServer="int" DbType="Int32" Direction="Input" ParameterName="@fileGroupID" Precision="0" ProviderType="Int" Scale="0" Size="4" SourceColumn="FileGroupID" SourceColumnNullMapping="false" SourceVersion="Current" />
                       <Parameter AllowDbNull="false" AutogeneratedName="startTime" ColumnName="StartTime" DataSourceName="MeterDB.dbo.Event" DataTypeServer="datetime2" DbType="DateTime2" Direction="Input" ParameterName="@startTime" Precision="0" ProviderType="DateTime2" Scale="0" Size="8" SourceColumn="StartTime" SourceColumnNullMapping="false" SourceVersion="Current" />
                       <Parameter AllowDbNull="false" AutogeneratedName="endTime" ColumnName="EndTime" DataSourceName="MeterDB.dbo.Event" DataTypeServer="datetime2" DbType="DateTime2" Direction="Input" ParameterName="@endTime" Precision="0" ProviderType="DateTime2" Scale="0" Size="8" SourceColumn="EndTime" SourceColumnNullMapping="false" SourceVersion="Current" />
                     </Parameters>

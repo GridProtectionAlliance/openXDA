@@ -75,6 +75,10 @@ namespace FaultData.DataWriters
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="XMLWriter"/> class.
+        /// </summary>
+        /// <param name="connectionString">The connection string used to connect to the database containing fault location data.</param>
         public XMLWriter(string connectionString)
         {
             m_connectionString = connectionString;
@@ -99,7 +103,7 @@ namespace FaultData.DataWriters
                 cycleDataAdapter.Connection.ConnectionString = m_connectionString;
                 faultCurveAdapter.Connection.ConnectionString = m_connectionString;
 
-                faultRecordInfo.Event = eventAdapter.GetDataBy(eventID).First();
+                faultRecordInfo.Event = eventAdapter.GetDataByID(eventID).First();
 
                 faultRecordInfo.FileGroup = fileInfo.FileGroups.Single(fg => faultRecordInfo.Event.FileGroupID == fg.ID);
                 faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
@@ -265,8 +269,8 @@ namespace FaultData.DataWriters
         private XElement GetCycleElement(string name, CycleDataGroup cycleDataGroup, int cycleIndex)
         {
             return new XElement(name,
-                new XElement("RMS Magnitude", cycleDataGroup.RMS[cycleIndex].Value.ToString(DoubleFormat)),
-                new XElement("Phase Angle", new Angle(cycleDataGroup.Phase[cycleIndex].Value).ToDegrees().ToString(DoubleFormat)));
+                new XElement("RMSMagnitude", cycleDataGroup.RMS[cycleIndex].Value.ToString(DoubleFormat)),
+                new XElement("PhaseAngle", new Angle(cycleDataGroup.Phase[cycleIndex].Value).ToDegrees().ToString(DoubleFormat)));
         }
 
         private int GetLargestCurrentCycleIndex(VICycleDataSet viCycleDataSet)

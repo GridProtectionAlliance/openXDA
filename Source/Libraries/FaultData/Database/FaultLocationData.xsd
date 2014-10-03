@@ -5,7 +5,6 @@
       <DataSource DefaultConnectionIndex="1" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
         <Connections>
           <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="MeterDBConnectionString" IsAppSettingsProperty="true" Modifier="Public" Name="MeterDBConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.MeterDBConnectionString" Provider="System.Data.SqlClient" />
-          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="MeterDBConnectionString1" ConnectionStringObject="" IsAppSettingsProperty="true" Modifier="Assembly" Name="MeterDBConnectionString1 (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.MeterDBConnectionString1" Provider="System.Data.SqlClient" />
         </Connections>
         <Tables>
           <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="FaultCurveTableAdapter" GeneratorDataComponentClassName="FaultCurveTableAdapter" Name="FaultCurve" UserDataComponentName="FaultCurveTableAdapter">
@@ -76,7 +75,7 @@ SELECT ID, EventID, Algorithm, Data FROM FaultCurve WHERE (ID = @ID)</CommandTex
           </TableAdapter>
           <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="CycleDataTableAdapter" GeneratorDataComponentClassName="CycleDataTableAdapter" Name="CycleData" UserDataComponentName="CycleDataTableAdapter">
             <MainSource>
-              <DbSource ConnectionRef="MeterDBConnectionString1 (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
+              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
                 <DeleteCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="false">
                     <CommandText>DELETE FROM [dbo].[CycleData] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID))</CommandText>
@@ -123,7 +122,7 @@ SELECT ID, EventID, Data FROM CycleData WHERE (ID = @ID)</CommandText>
               <Mapping SourceColumn="Data" DataSetColumn="Data" />
             </Mappings>
             <Sources>
-              <DbSource ConnectionRef="MeterDBConnectionString1 (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
+              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
                     <CommandText>SELECT ID, EventID, Data FROM dbo.CycleData WHERE EventID = @eventID</CommandText>
@@ -143,7 +142,7 @@ SELECT ID, EventID, Data FROM CycleData WHERE (ID = @ID)</CommandText>
   <xs:element name="FaultLocationData" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="FaultLocationData" msprop:Generator_UserDSName="FaultLocationData">
     <xs:complexType>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="FaultCurve" msprop:Generator_TableClassName="FaultCurveDataTable" msprop:Generator_TableVarName="tableFaultCurve" msprop:Generator_RowChangedName="FaultCurveRowChanged" msprop:Generator_TablePropName="FaultCurve" msprop:Generator_RowDeletingName="FaultCurveRowDeleting" msprop:Generator_RowChangingName="FaultCurveRowChanging" msprop:Generator_RowEvHandlerName="FaultCurveRowChangeEventHandler" msprop:Generator_RowDeletedName="FaultCurveRowDeleted" msprop:Generator_RowClassName="FaultCurveRow" msprop:Generator_UserTableName="FaultCurve" msprop:Generator_RowEvArgName="FaultCurveRowChangeEvent">
+        <xs:element name="FaultCurve" msprop:Generator_TableClassName="FaultCurveDataTable" msprop:Generator_TableVarName="tableFaultCurve" msprop:Generator_TablePropName="FaultCurve" msprop:Generator_RowDeletingName="FaultCurveRowDeleting" msprop:Generator_RowChangingName="FaultCurveRowChanging" msprop:Generator_RowEvHandlerName="FaultCurveRowChangeEventHandler" msprop:Generator_RowDeletedName="FaultCurveRowDeleted" msprop:Generator_UserTableName="FaultCurve" msprop:Generator_RowChangedName="FaultCurveRowChanged" msprop:Generator_RowEvArgName="FaultCurveRowChangeEvent" msprop:Generator_RowClassName="FaultCurveRow">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -159,7 +158,7 @@ SELECT ID, EventID, Data FROM CycleData WHERE (ID = @ID)</CommandText>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="CycleData" msprop:Generator_TableClassName="CycleDataDataTable" msprop:Generator_TableVarName="tableCycleData" msprop:Generator_TablePropName="CycleData" msprop:Generator_RowDeletingName="CycleDataRowDeleting" msprop:Generator_RowChangingName="CycleDataRowChanging" msprop:Generator_RowEvHandlerName="CycleDataRowChangeEventHandler" msprop:Generator_RowDeletedName="CycleDataRowDeleted" msprop:Generator_UserTableName="CycleData" msprop:Generator_RowChangedName="CycleDataRowChanged" msprop:Generator_RowEvArgName="CycleDataRowChangeEvent" msprop:Generator_RowClassName="CycleDataRow">
+        <xs:element name="CycleData" msprop:Generator_TableClassName="CycleDataDataTable" msprop:Generator_TableVarName="tableCycleData" msprop:Generator_RowChangedName="CycleDataRowChanged" msprop:Generator_TablePropName="CycleData" msprop:Generator_RowDeletingName="CycleDataRowDeleting" msprop:Generator_RowChangingName="CycleDataRowChanging" msprop:Generator_RowEvHandlerName="CycleDataRowChangeEventHandler" msprop:Generator_RowDeletedName="CycleDataRowDeleted" msprop:Generator_RowClassName="CycleDataRow" msprop:Generator_UserTableName="CycleData" msprop:Generator_RowEvArgName="CycleDataRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />

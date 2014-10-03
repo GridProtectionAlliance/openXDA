@@ -107,18 +107,18 @@ namespace FaultData.DataOperations
 
             Meter meter;
             MeterFileGroup meterFileGroup;
-            string meterName;
+            string meterKey;
 
             Dictionary<SeriesKey, Series> seriesLookup;
             Series seriesInfo;
 
             // Try to parse the name of the meter from the file path
-            if (!string.IsNullOrEmpty(FilePathPattern) && TryParseFilePath(meterDataSet.FilePath, out meterName))
-                meterDataSet.Meter.Name = meterName;
+            if (!string.IsNullOrEmpty(FilePathPattern) && TryParseFilePath(meterDataSet.FilePath, out meterKey))
+                meterDataSet.Meter.AssetKey = meterKey;
 
             // Search the database for a meter definition that matches the parsed meter
             configurationHelper = new ConfigurationHelper(m_connectionString);
-            meter = configurationHelper.MeterInfo.Meters.SingleOrDefault(m => m.Name == meterDataSet.Meter.Name);
+            meter = configurationHelper.MeterInfo.Meters.SingleOrDefault(m => m.AssetKey == meterDataSet.Meter.AssetKey);
 
             if ((object)meter != null)
             {
@@ -194,23 +194,23 @@ namespace FaultData.DataOperations
             configurationHelper.MeterInfo.SubmitChanges();
         }
 
-        private bool TryParseFilePath(string fileName, out string meterName)
+        private bool TryParseFilePath(string fileName, out string meterKey)
         {
             Match match = Regex.Match(fileName, FilePathPattern);
-            Group meterNameGroup;
+            Group meterKeyGroup;
 
             if (match.Success)
             {
-                meterNameGroup = match.Groups["MeterName"];
+                meterKeyGroup = match.Groups["AssetKey"];
 
-                if ((object)meterNameGroup != null)
+                if ((object)meterKeyGroup != null)
                 {
-                    meterName = meterNameGroup.Value;
+                    meterKey = meterKeyGroup.Value;
                     return true;
                 }
             }
 
-            meterName = null;
+            meterKey = null;
             return false;
         }
 

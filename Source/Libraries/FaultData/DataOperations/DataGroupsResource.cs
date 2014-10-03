@@ -72,7 +72,7 @@ namespace FaultData.DataOperations
                             foreach (DataSeries dataSeries in sampleCountGroup)
                                 dataGroup.Add(dataSeries);
 
-                            dataGroup.Classify();
+                            dataGroup.Classify(s_prefaultMultiplier, s_ratedCurrentMultiplier);
                             dataGroups.Add(dataGroup);
                         }
                     }
@@ -88,6 +88,53 @@ namespace FaultData.DataOperations
                 return dataSeries.SeriesInfo.Channel.Line;
 
             return null;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static double s_prefaultMultiplier;
+        private static double s_ratedCurrentMultiplier;
+
+        // Static Constructor
+        static DataGroupsResource()
+        {
+            s_prefaultMultiplier = 4.0D;
+            s_ratedCurrentMultiplier = 1.5D;
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets or sets the prefault multiplier used to classify data groups.
+        /// </summary>
+        public static double PrefaultMultiplier
+        {
+            get
+            {
+                return s_prefaultMultiplier;
+            }
+            set
+            {
+                s_prefaultMultiplier = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the rated current multiplier used to classify data groups.
+        /// </summary>
+        public static double RatedCurrentMultiplier
+        {
+            get
+            {
+                return s_ratedCurrentMultiplier;
+            }
+            set
+            {
+                s_ratedCurrentMultiplier = value;
+            }
         }
 
         #endregion
