@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="{A568D847-5068-4EFD-A4A2-62202834DA52}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="c3e729b7-9d8d-418f-ae83-a2ebcfbc03c4">
+	<Product Id="{F305D8A2-34EC-447C-A007-F0C526FB5137}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -14,6 +14,8 @@
     <UIRef Id="WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\INSTALL_LICENSE.rtf" />
 	</Product>
 
@@ -51,13 +53,13 @@
 			<Component Id="openXDA">
         <File Id="openXDA.exe" Name="$(var.openXDA.TargetFileName)" Source="$(var.openXDA.TargetPath)" />
         <ServiceInstall Id="openXDAService" Name="openXDA" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
-        <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" />
+        <ServiceControl Id="openXDAServiceControl" Name="openXDA" Stop="both" Remove="uninstall" />
 			</Component>
       <Component Id="openXDAConsole">
         <File Id="openXDAConsole.exe" Name="$(var.openXDAConsole.TargetFileName)" Source="$(var.openXDAConsole.TargetPath)" />
       </Component>
-      <Component Id="openXDAManager">
-        <File Id="openXDAManager.exe" Name="$(var.openXDAManager.TargetFileName)" Source="$(var.openXDAManager.TargetPath)" />
+      <Component Id="DeviceDefinitionsMigrator">
+        <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
       </Component>
       <Component Id="openXDAConfig">
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
@@ -65,17 +67,13 @@
       <Component Id="openXDAConsoleConfig">
         <File Id="openXDAConsole.exe.config" Name="$(var.openXDAConsole.TargetFileName).config" Source="$(var.openXDAConsole.TargetPath).config" />
       </Component>
-      <Component Id="openXDAManagerShortcut">
-        <Shortcut Id="openXDAManagerStartMenuShortcut" Name="openXDA Manager" Description="Manager application for the openXDA service." Target="[INSTALLFOLDER]openXDAManager.exe" WorkingDirectory="INSTALLFOLDER" Directory="ApplicationProgramsFolder" />
-        <RegistryValue Root="HKCU" Key="Software\Grid Protection Alliance\openXDA" Name="installed" Type="integer" Value="1" KeyPath="yes" />
-      </Component>
 
       <!-- Libraries -->
       <Component Id="FaultAlgorithms">
         <File Id="FaultAlgorithms.dll" Name="$(var.FaultAlgorithms.TargetFileName)" Source="$(var.FaultAlgorithms.TargetPath)" />
       </Component>
-      <Component Id="SqlServerTedWriter">
-        <File Id="SqlServerTedWriter.dll" Name="$(var.SqlServerTedWriter.TargetFileName)" Source="$(var.SqlServerTedWriter.TargetPath)" />
+      <Component Id="FaultData">
+        <File Id="FaultData.dll" Name="$(var.FaultData.TargetFileName)" Source="$(var.FaultData.TargetPath)" />
       </Component>
       
       <!-- DotNetZip Dependencies -->
@@ -110,8 +108,8 @@
       </Component>
       
       <!-- Additional Files -->
-      <Component Id="XDATransientEventDatabase">
-        <File Id="XDATransientEventDatabase.sql" Name="XDATransientEventDatabase.sql" Source="$(var.SolutionDir)\Data\XDATransientEventDatabase.sql" />
+      <Component Id="DBScript">
+        <File Id="openXDA.sql" Name="openXDA.sql" Source="$(var.SolutionDir)\Data\openXDA.sql" />
       </Component>
       
       <!-- Cleanup -->

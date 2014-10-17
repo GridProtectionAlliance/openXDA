@@ -70,11 +70,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Transactions;
 using FaultData;
 using FaultData.Database;
@@ -261,16 +259,19 @@ namespace openXDA
             if ((object)filePath == null || !File.Exists(filePath))
                 return false;
 
+            rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
             extension = FilePath.GetExtension(filePath).ToLowerInvariant().Trim();
 
             // If the data file is COMTRADE and the schema file does not exist, the file cannot be processed
             if (!extension.Equals(".pqd", StringComparison.OrdinalIgnoreCase))
             {
                 directory = FilePath.GetDirectoryName(filePath);
-                rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
                 cfgFileName = Path.Combine(directory, rootFileName + ".cfg");
 
                 if (!File.Exists(cfgFileName))
+                    return false;
+
+                if (!FilePath.TryGetReadLockExclusive(cfgFileName))
                     return false;
             }
 
@@ -281,6 +282,12 @@ namespace openXDA
 
                 if (timeSinceCreation.TotalSeconds < m_systemSettings.COMTRADEMinWaitTime)
                     return false;
+
+                foreach (string file in FilePath.GetFileList(rootFileName + ".d*"))
+                {
+                    if (!FilePath.TryGetReadLockExclusive(file))
+                        return false;
+                }
             }
 
             return true;
@@ -303,7 +310,7 @@ namespace openXDA
 
             int fileGroupID;
             MeterData.EventDataTable events;
-            FileGroup fileGroup;
+            FileGroup fileGroup = null;
 
             try
             {
@@ -418,6 +425,30 @@ namespace openXDA
                     File.Delete(logFilePath);
                 }
             }
+            catch
+            {
+                try
+                {
+                    using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                    using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
+                    {
+                        if ((object)fileGroup == null)
+                            fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
+
+                        fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                        fileGroup.Error = 1;
+                        fileInfoDataContext.SubmitChanges();
+                        transactionScope.Complete();
+                    }
+                }
+                catch
+                {
+                    // Ignore errors here as they are most likely
+                    // related to the error we originally caught
+                }
+
+                throw;
+            }
             finally
             {
                 // Clean up the current log file
@@ -494,20 +525,8 @@ namespace openXDA
             }
             catch (Exception ex)
             {
-                FileGroup fileGroup;
-                string message;
-
-                message = string.Format("Unable to process file \"{0}\" due to exception: {1}", filePath, ex.Message);
+                string message = string.Format("Unable to process file \"{0}\" due to exception: {1}", filePath, ex.Message);
                 OnProcessException(new InvalidOperationException(message, ex));
-
-                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
-                {
-                    fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
-                    fileGroup.Error = 1;
-                    fileInfoDataContext.SubmitChanges();
-                    transactionScope.Complete();
-                }
             }
         }
 

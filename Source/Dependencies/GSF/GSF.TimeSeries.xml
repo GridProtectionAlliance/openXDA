@@ -634,6 +634,24 @@
             <param name="measurement">The measurement whose value is to be tested.</param>
             <returns>true if the alarm's state changed; false otherwise</returns>
         </member>
+        <member name="M:GSF.TimeSeries.Alarm.Clone">
+            <summary>
+            Creates a new alarm that is a copy of the current instance.
+            </summary>
+            <returns>
+            A new alarm that is a copy of this instance.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:GSF.TimeSeries.Alarm.System#ICloneable#Clone">
+            <summary>
+            Creates a new object that is a copy of the current instance.
+            </summary>
+            <returns>
+            A new object that is a copy of this instance.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
         <member name="P:GSF.TimeSeries.Alarm.ID">
             <summary>
             Gets or sets the identification number of the alarm.
@@ -6319,6 +6337,12 @@
             <summary>
             Initializes <see cref="T:GSF.TimeSeries.Statistics.StatisticsEngine"/>.
             </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Statistics.StatisticsEngine.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{GSF.TimeSeries.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing.
+            </summary>
+            <param name="measurements">Measurements to queue for processing.</param>
         </member>
         <member name="M:GSF.TimeSeries.Statistics.StatisticsEngine.Start">
             <summary>

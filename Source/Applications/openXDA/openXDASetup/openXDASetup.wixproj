@@ -46,9 +46,17 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\SqlServerTedWriter\SqlServerTedWriter.csproj">
-      <Name>SqlServerTedWriter</Name>
-      <Project>{05636d10-cc92-43b1-af3d-e66ccecfb3cc}</Project>
+    <ProjectReference Include="..\..\..\Libraries\FaultData\FaultData.csproj">
+      <Name>FaultData</Name>
+      <Project>{11ae594d-2b2b-473c-8550-6bf62914c3e2}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj">
+      <Name>DeviceDefinitionsMigrator</Name>
+      <Project>{94e98b70-2f52-45a2-a805-3d6b62547149}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -57,14 +65,6 @@
     <ProjectReference Include="..\openXDAConsole\openXDAConsole.csproj">
       <Name>openXDAConsole</Name>
       <Project>{72f417e9-f592-4417-b87c-b681ae707294}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\openXDAManager\openXDAManager.csproj">
-      <Name>openXDAManager</Name>
-      <Project>{51358da9-39b6-4176-bb24-e6735e977604}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -81,6 +81,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="INSTALL_LICENSE.rtf" />
+    <Content Include="openXDASetupBanner.bmp" />
+    <Content Include="openXDASetupDialog.bmp" />
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixUIExtension">
