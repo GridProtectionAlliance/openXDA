@@ -15626,7 +15626,7 @@
         </member>
         <member name="T:GSF.Identity.UserInfo">
              <summary>
-             Represents information about a domain user retrieved from Active Directory.
+             Represents information about a local user or a domain user (e.g., from Active Directory).
              </summary>
              <remarks>
              See <a href="http://msdn.microsoft.com/en-us/library/ms677980.aspx" target="_blank">http://msdn.microsoft.com/en-us/library/ms677980.aspx</a> for more information on active directory properties.
@@ -15676,9 +15676,6 @@
              </configuration>
              ]]>
              </code>
-             <para>
-             Some methods in this class may not behave as expected when running on under Mono deployments.
-             </para>
              </example>
         </member>
         <member name="F:GSF.Identity.UserInfo.DefaultPersistSettings">
@@ -20825,6 +20822,21 @@
             Thread-safety Warning: A lock must be obtained on <see cref="P:GSF.IO.IsamDataFileBase`1.FileData"/> before accessing it.
             </remarks>
         </member>
+        <member name="P:GSF.IO.IsamDataFileBase`1.FileDataLock">
+            <summary>
+            Gets the locking object for the <see cref="P:GSF.IO.IsamDataFileBase`1.FileData"/> stream.
+            </summary>
+        </member>
+        <member name="P:GSF.IO.IsamDataFileBase`1.LoadWaitHandle">
+            <summary>
+            Gets wait handle for loading data.
+            </summary>
+        </member>
+        <member name="P:GSF.IO.IsamDataFileBase`1.SaveWaitHandle">
+            <summary>
+            Gets wait handle for saving data.
+            </summary>
+        </member>
         <member name="T:GSF.IO.LogFileFullOperation">
             <summary>
             Specifies the operation to be performed on the <see cref="T:GSF.IO.LogFile"/> when it is full.
@@ -24501,7 +24513,7 @@
             Gets the reserved symbols - this includes all delimiters and expression operators.
             </summary>
             <remarks>
-            The default reserved symbol list is: &lt;, &gt;, =, !, {, }, [ and ]
+            The default reserved symbol list is: \, &lt;, &gt;, =, !, {, }, [ and ]
             </remarks>
         </member>
         <member name="P:GSF.Parsing.TemplatedExpressionParser.StartTokenDelimiter">
