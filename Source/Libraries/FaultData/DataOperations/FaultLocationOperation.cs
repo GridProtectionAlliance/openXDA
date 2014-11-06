@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using FaultAlgorithms;
@@ -32,6 +31,7 @@ using GSF;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.MeterDataTableAdapters;
+using GSF.Collections;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
 
 namespace FaultData.DataOperations
@@ -56,6 +56,8 @@ namespace FaultData.DataOperations
         private string m_connectionString;
         private double m_prefaultMultiplier;
         private double m_ratedCurrentMultiplier;
+        private double m_minFaultDistanceMultiplier;
+        private double m_maxFaultDistanceMultiplier;
 
         #endregion
 
@@ -96,6 +98,30 @@ namespace FaultData.DataOperations
             }
         }
 
+        public double MinFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_minFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_minFaultDistanceMultiplier = value;
+            }
+        }
+
+        public double MaxFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_maxFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_maxFaultDistanceMultiplier = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -118,8 +144,6 @@ namespace FaultData.DataOperations
             FaultLocationData.CycleDataDataTable cycleDataTable = new FaultLocationData.CycleDataDataTable();
             FaultLocationData.FaultCurveDataTable faultCurveTable = new FaultLocationData.FaultCurveDataTable();
 
-            Stopwatch stopwatch = new Stopwatch();
-
             foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
             {
                 using (EventTableAdapter adapter = new EventTableAdapter())
@@ -132,10 +156,7 @@ namespace FaultData.DataOperations
                     continue;
 
                 viDataGroup = GetVIDataGroup(faultGroup);
-                stopwatch.Restart();
                 viCycleDataSet = Transform.ToVICycleDataSet(viDataGroup, Frequency);
-                stopwatch.Stop();
-                Debug.WriteLine("VICycleDataSet in {0}", stopwatch.Elapsed);
                 faultDetectedSegments = DetectFaults(viDataGroup, viCycleDataSet);
                 faultTypeSegments = ClassifyFaults(faultDetectedSegments, viCycleDataSet);
 
@@ -244,16 +265,84 @@ namespace FaultData.DataOperations
                                 faultDistanceSeries.DataPoints.Add(faultDataPoint);
                         }
 
-                        stopwatch.Restart();
-                        faultCurveTable.AddFaultCurveRow(eventID, faultLocationAlgorithm.Method.Name, Serialize(faultDistanceSeries));
-                        stopwatch.Stop();
-                        Debug.WriteLine("Serialize in {0}", stopwatch.Elapsed);
+                        FaultLocationData.FaultCurveRow faultCurveRow = faultCurveTable.NewFaultCurveRow();
+                        int largestCurrentCycleIndex = GetLargestCurrentCycleIndex(viCycleDataSet);
+                        double lineLength = faultGroup.Line.Length;
+
+                        List<DataPoint> validFaultDistances = faultDistanceSeries.DataPoints
+                            .Where(dataPoint => dataPoint.Value >= MinFaultDistanceMultiplier * lineLength)
+                            .Where(dataPoint => dataPoint.Value <= MaxFaultDistanceMultiplier * lineLength)
+                            .OrderBy(dataPoint => dataPoint.Value)
+                            .ToList();
+
+                        List<Segment> segmentsOfFirstFault = faultTypeSegments
+                            .SkipWhile(segment => segment.FaultType == FaultType.None)
+                            .TakeWhile(segment => segment.FaultType != FaultType.None)
+                            .ToList();
+
+                        int startSample = segmentsOfFirstFault.First().StartSample;
+                        int endSample = segmentsOfFirstFault.Last().EndSample;
+
+                        double largestCurrentDistance;
+                        double medianDistance;
+                        double maximumDistance;
+                        double minimumDistance;
+                        double averageDistance;
+                        double distanceDeviation;
+                        int firstFaultInceptionIndex;
+                        double durationSeconds;
+                        double durationCycles;
+                        FaultType faultType;
+
+                        largestCurrentDistance = (largestCurrentCycleIndex < faultDistanceSeries.DataPoints.Count)
+                            ? faultDistanceSeries.DataPoints[largestCurrentCycleIndex].Value
+                            : double.NaN;
+
+                        if (validFaultDistances.Count > 0)
+                        {
+                            medianDistance = validFaultDistances[validFaultDistances.Count / 2].Value;
+                            maximumDistance = validFaultDistances.Last().Value;
+                            minimumDistance = validFaultDistances.First().Value;
+                            averageDistance = validFaultDistances.Average(dataPoint => dataPoint.Value);
+                            distanceDeviation = Math.Sqrt(validFaultDistances.Select(dataPoint => dataPoint.Value - averageDistance).Average(diff => diff * diff));
+                            firstFaultInceptionIndex = faultTypeSegments.First(segment => segment.FaultType != FaultType.None).StartSample;
+                            durationSeconds = (faultDistanceSeries.DataPoints[endSample].Time - faultDistanceSeries.DataPoints[startSample].Time).TotalSeconds;
+                            durationCycles = durationSeconds / Frequency;
+                            faultType = segmentsOfFirstFault.MaxBy(segment => segment.EndSample - segment.StartSample).FaultType;
+
+                            faultCurveRow.FirstInception = faultDistanceSeries.DataPoints[firstFaultInceptionIndex].Time;
+                        }
+                        else
+                        {
+                            medianDistance = double.NaN;
+                            maximumDistance = double.NaN;
+                            minimumDistance = double.NaN;
+                            averageDistance = double.NaN;
+                            distanceDeviation = double.NaN;
+                            firstFaultInceptionIndex = -1;
+                            durationSeconds = 0.0D;
+                            durationCycles = 0.0D;
+                            faultType = FaultType.None;
+                        }
+
+                        faultCurveRow.EventID = eventID;
+                        faultCurveRow.Algorithm = faultLocationAlgorithm.Method.Name;
+                        faultCurveRow.LargestCurrentDistance = largestCurrentDistance;
+                        faultCurveRow.MedianDistance = medianDistance;
+                        faultCurveRow.MaximumDistance = maximumDistance;
+                        faultCurveRow.MinimumDistance = minimumDistance;
+                        faultCurveRow.AverageDistance = averageDistance;
+                        faultCurveRow.DistanceDeviation = distanceDeviation;
+                        faultCurveRow.FirstInceptionSample = firstFaultInceptionIndex;
+                        faultCurveRow.DurationSeconds = durationSeconds;
+                        faultCurveRow.DurationCycles = durationCycles;
+                        faultCurveRow.FaultType = faultType.ToString();
+                        faultCurveRow.Data = Serialize(faultDistanceSeries);
+
+                        faultCurveTable.AddFaultCurveRow(faultCurveRow);
                     }
 
-                    stopwatch.Restart();
                     cycleDataTable.AddCycleDataRow(eventID, viCycleDataSet.ToDataGroup().ToData());
-                    stopwatch.Stop();
-                    Debug.WriteLine("ToData in {0}", stopwatch.Elapsed);
                 }
             }
 
@@ -648,6 +737,27 @@ namespace FaultData.DataOperations
             cycle.CN.I.Error = viCycleDataSet.IC.Error.DataPoints[0].Value;
 
             return cycle;
+        }
+
+        private int GetLargestCurrentCycleIndex(VICycleDataSet viCycleDataSet)
+        {
+            double largestCurrent = viCycleDataSet.IA.RMS[0].Value + viCycleDataSet.IB.RMS[0].Value + viCycleDataSet.IC.RMS[0].Value;
+            int largestCurrentIndex = 0;
+
+            double iCurrent;
+
+            for (int i = 1; i < viCycleDataSet.IA.ToDataGroup().Samples; i++)
+            {
+                iCurrent = viCycleDataSet.IA.RMS[i].Value + viCycleDataSet.IB.RMS[i].Value + viCycleDataSet.IC.RMS[i].Value;
+
+                if (iCurrent > largestCurrent)
+                {
+                    largestCurrent = iCurrent;
+                    largestCurrentIndex = i;
+                }
+            }
+
+            return largestCurrentIndex;
         }
 
         private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo)

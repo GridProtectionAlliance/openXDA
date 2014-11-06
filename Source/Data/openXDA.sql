@@ -318,6 +318,17 @@ CREATE TABLE FaultCurve
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     Algorithm VARCHAR(80) NOT NULL,
+	LargestCurrentDistance FLOAT NOT NULL,
+	MedianDistance FLOAT NOT NULL,
+	MaximumDistance FLOAT NOT NULL,
+	MinimumDistance FLOAT NOT NULL,
+	AverageDistance FLOAT NOT NULL,
+	DistanceDeviation FLOAT NOT NULL,
+	FirstInception DATETIME2 NOT NULL,
+	FirstInceptionSample INT NOT NULL,
+	DurationSeconds FLOAT NOT NULL,
+	DurationCycles FLOAT NOT NULL,
+	FaultType VARCHAR(200) NOT NULL,
     Data VARBINARY(MAX) NOT NULL
 )
 GO

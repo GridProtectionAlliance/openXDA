@@ -344,6 +344,8 @@ namespace openXDA
 
                     faultLocationOperation.PrefaultMultiplier = m_systemSettings.PrefaultMultiplier;
                     faultLocationOperation.RatedCurrentMultiplier = m_systemSettings.RatedCurrentMultiplier;
+                    faultLocationOperation.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+                    faultLocationOperation.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
 
                     foreach (MeterDataSet meterDataSet in meterDataSets)
                     {
