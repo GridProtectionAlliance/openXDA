@@ -134,7 +134,14 @@ namespace openXDA
                 line = meterInfo.Lines.Single(l => evt.LineID == l.ID);
 
                 // Get the cycle data and fault curves calculated by the fault location engine
-                cycleData = cycleDataAdapter.GetDataBy(eventID).Single();
+                cycleData = cycleDataAdapter.GetDataBy(eventID).SingleOrDefault();
+
+                if ((object)cycleData == null)
+                {
+                    m_faultDistance = double.NaN;
+                    m_isFaultDistanceValid = false;
+                    return;
+                }
 
                 faultCurves = faultCurveAdapter.GetDataBy(eventID)
                     .Where(curve => curve.EventID == eventID)

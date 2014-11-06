@@ -166,8 +166,9 @@ namespace FaultData.DataOperations
             else
             {
                 // If configuration cannot be modified and existing configuration cannot be found for this meter,
-                // throw an exception to indicate the operation could not be executed
-                throw new InvalidOperationException("Cannot process meter - configuration does not exist");
+                // set Meter to null to indicate the operation could not be executed and return
+                meterDataSet.Meter = null;
+                return;
             }
 
             if (m_modifyConfiguration)

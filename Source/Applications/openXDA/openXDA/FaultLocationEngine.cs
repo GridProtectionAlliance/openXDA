@@ -349,9 +349,16 @@ namespace openXDA
                     {
                         meterDataSet.FilePath = filePath;
                         meterDataSet.FileGroup = fileGroup;
+
                         configurationOperation.Execute(meterDataSet);
-                        eventOperation.Execute(meterDataSet);
-                        faultLocationOperation.Execute(meterDataSet);
+
+                        // Configuration operation may set meter to null if the meter
+                        // that dropped the file was not found in the database
+                        if ((object)meterDataSet.Meter != null)
+                        {
+                            eventOperation.Execute(meterDataSet);
+                            faultLocationOperation.Execute(meterDataSet);
+                        }
                     }
 
                     fileGroupID = fileGroup.ID;
