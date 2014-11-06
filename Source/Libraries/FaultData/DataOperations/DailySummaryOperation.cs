@@ -25,12 +25,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.Database;
+using GSF;
 
 namespace FaultData.DataOperations
 {
     public class DailySummaryOperation : IDataOperation
     {
         #region [ Members ]
+
+        // Events
+        public event EventHandler<EventArgs<string>> StatusMessage;
+        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private BulkLoader m_bulkLoader;
@@ -71,6 +76,8 @@ namespace FaultData.DataOperations
 
         #endregion
 
+        #region [ Methods ]
+
         public void Execute(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
@@ -104,5 +111,19 @@ namespace FaultData.DataOperations
         {
             return new DateTime(time.Year, time.Month, time.Day);
         }
+
+        private void OnStatusMessage(string message)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
+
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        #endregion
     }
 }

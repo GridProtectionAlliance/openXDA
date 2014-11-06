@@ -52,6 +52,10 @@ namespace FaultData.DataOperations
         // TODO: Hardcoded frequency
         private const double Frequency = 60.0D;
 
+        // Events
+        public event EventHandler<EventArgs<string>> StatusMessage;
+        public event EventHandler<EventArgs<Exception>> ProcessException;
+
         // Fields
         private string m_connectionString;
         private double m_prefaultMultiplier;
@@ -144,6 +148,8 @@ namespace FaultData.DataOperations
             FaultLocationData.CycleDataDataTable cycleDataTable = new FaultLocationData.CycleDataDataTable();
             FaultLocationData.FaultCurveDataTable faultCurveTable = new FaultLocationData.FaultCurveDataTable();
 
+            OnStatusMessage("Executing operation to calculate fault location data load it into the database...");
+
             foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
             {
                 using (EventTableAdapter adapter = new EventTableAdapter())
@@ -154,6 +160,8 @@ namespace FaultData.DataOperations
 
                 if (eventID == 0)
                     continue;
+
+                OnStatusMessage(string.Format("Calculating fault locations for event with ID {0}.", eventID));
 
                 viDataGroup = GetVIDataGroup(faultGroup);
                 viCycleDataSet = Transform.ToVICycleDataSet(viDataGroup, Frequency);
@@ -177,6 +185,14 @@ namespace FaultData.DataOperations
 
                     faultLocationInfo.FaultSegments.InsertOnSubmit(faultSegment);
                 }
+
+                int faultCount = faultTypeSegments
+                    .SkipWhile(segment => segment.FaultType == FaultType.None)
+                    .Reverse()
+                    .SkipWhile(segment => segment.FaultType == FaultType.None)
+                    .Count(segment => segment.FaultType == FaultType.None) + 1;
+
+                OnStatusMessage(string.Format("Found {0} fault{1} and a total of {2} segment{3}.", faultCount, (faultCount != 1) ? "s" : "", faultTypeSegments.Count, (faultTypeSegments.Count != 1) ? "s" : ""));
 
                 // FAULT LOCATION
                 ComplexNumber z0;
@@ -219,6 +235,8 @@ namespace FaultData.DataOperations
 
                     foreach (FaultLocationAlgorithm faultLocationAlgorithm in GetFaultLocationAlgorithms(faultLocationInfo))
                     {
+                        OnStatusMessage(string.Format("Executing fault location algorithm {0}.", faultLocationAlgorithm.Method.Name));
+
                         faultDistanceSeries = new DataSeries();
 
                         foreach (Segment segment in faultTypeSegments)
@@ -350,6 +368,8 @@ namespace FaultData.DataOperations
 
             if (faultCurveTable.Count > 0)
             {
+                OnStatusMessage("Loading fault location data into the database.");
+
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connectionString))
                 {
                     bulkCopy.BulkCopyTimeout = 0;
@@ -801,6 +821,18 @@ namespace FaultData.DataOperations
             DataGroup group = new DataGroup();
             group.Add(series);
             return group.ToData();
+        }
+
+        private void OnStatusMessage(string message)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
+
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

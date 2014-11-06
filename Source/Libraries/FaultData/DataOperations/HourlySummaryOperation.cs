@@ -25,12 +25,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.Database;
+using GSF;
 
 namespace FaultData.DataOperations
 {
     public class HourlySummaryOperation : IDataOperation
     {
         #region [ Members ]
+
+        // Events
+        public event EventHandler<EventArgs<string>> StatusMessage;
+        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private BulkLoader m_bulkLoader;
@@ -105,6 +110,18 @@ namespace FaultData.DataOperations
         private DateTime GetHour(DateTime time)
         {
             return new DateTime(time.Year, time.Month, time.Day, time.Hour, 0, 0);
+        }
+
+        private void OnStatusMessage(string message)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
+
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

@@ -341,11 +341,18 @@ namespace openXDA
 
                     configurationOperation.ModifyConfiguration = false;
                     configurationOperation.FilePathPattern = m_systemSettings.FilePattern;
+                    configurationOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
+                    configurationOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
+
+                    eventOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
+                    eventOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
 
                     faultLocationOperation.PrefaultMultiplier = m_systemSettings.PrefaultMultiplier;
                     faultLocationOperation.RatedCurrentMultiplier = m_systemSettings.RatedCurrentMultiplier;
                     faultLocationOperation.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
                     faultLocationOperation.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+                    faultLocationOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
+                    faultLocationOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
 
                     foreach (MeterDataSet meterDataSet in meterDataSets)
                     {

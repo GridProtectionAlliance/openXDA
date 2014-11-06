@@ -21,10 +21,15 @@
 //
 //******************************************************************************************************
 
+using System;
+using GSF;
+
 namespace FaultData.DataOperations
 {
     public interface IDataOperation
     {
+        event EventHandler<EventArgs<string>> StatusMessage;
+        event EventHandler<EventArgs<Exception>> ProcessException;
         void Execute(MeterDataSet meterDataSet);
     }
 }

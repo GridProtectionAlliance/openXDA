@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using GSF;
 using GSF.Collections;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -54,6 +55,10 @@ namespace FaultData.DataOperations
 
         // Constants
         private static readonly double Sqrt3 = Math.Sqrt(3.0D);
+
+        // Events
+        public event EventHandler<EventArgs<string>> StatusMessage;
+        public event EventHandler<EventArgs<Exception>> ProcessException;
 		
         // Fields
         private string m_connectionString;
@@ -112,6 +117,8 @@ namespace FaultData.DataOperations
             Dictionary<SeriesKey, Series> seriesLookup;
             Series seriesInfo;
 
+            OnStatusMessage("Executing operation to locate meter in database...");
+
             // Try to parse the name of the meter from the file path
             if (!string.IsNullOrEmpty(FilePathPattern) && TryParseFilePath(meterDataSet.FilePath, out meterKey))
                 meterDataSet.Meter.AssetKey = meterKey;
@@ -122,6 +129,8 @@ namespace FaultData.DataOperations
 
             if ((object)meter != null)
             {
+                OnStatusMessage(string.Format("Found meter {0} in database.", meter.Name));
+
                 // Match the parsed series with the ones associated with the meter in the database
                 seriesLookup = meter.Channels
                     .SelectMany(channel => channel.Series)
@@ -160,11 +169,15 @@ namespace FaultData.DataOperations
             }
             else if (m_modifyConfiguration)
             {
+                OnStatusMessage(string.Format("No existing meter found. Adding meter {0} to the database.", meterDataSet.Meter.Name));
+
                 // Make sure to insert the new meter's configuration when changes are submitted
                 configurationHelper.MeterInfo.Meters.InsertOnSubmit(meterDataSet.Meter);
             }
             else
             {
+                OnStatusMessage(string.Format("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name));
+
                 // If configuration cannot be modified and existing configuration cannot be found for this meter,
                 // set Meter to null to indicate the operation could not be executed and return
                 meterDataSet.Meter = null;
@@ -453,6 +466,18 @@ namespace FaultData.DataOperations
 
                 line.VoltageKV = Math.Round(averageVoltage);
             }
+        }
+
+        private void OnStatusMessage(string message)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
+
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

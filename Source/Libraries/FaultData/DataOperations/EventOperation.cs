@@ -28,12 +28,17 @@ using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.MeterDataTableAdapters;
+using GSF;
 
 namespace FaultData.DataOperations
 {
     public class EventOperation : IDataOperation
     {
         #region [ Members ]
+
+        // Events
+        public event EventHandler<EventArgs<string>> StatusMessage;
+        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private string m_connectionString;
@@ -54,7 +59,12 @@ namespace FaultData.DataOperations
 
         public void Execute(MeterDataSet meterDataSet)
         {
-            List<DataGroup> dataGroups = meterDataSet.GetResource<DataGroupsResource>().DataGroups;
+            List<DataGroup> dataGroups;
+
+            OnStatusMessage("Executing operation to load event data into the database...");
+
+            dataGroups = meterDataSet.GetResource<DataGroupsResource>().DataGroups;
+
             LoadEventTypes(dataGroups);
             LoadEvents(meterDataSet, dataGroups);
         }
@@ -110,6 +120,8 @@ namespace FaultData.DataOperations
                 if (!m_eventTypeLookup.TryGetValue(eventGroup.Classification, out eventTypeID))
                     continue;
 
+                OnStatusMessage(string.Format("Processing event with event type {0}.", eventGroup.Classification));
+
                 eventRow = eventTable.NewEventRow();
                 eventRow.FileGroupID = meterDataSet.FileGroup.ID;
                 eventRow.MeterID = meterDataSet.Meter.ID;
@@ -132,6 +144,8 @@ namespace FaultData.DataOperations
                 bulkCopy.DestinationTableName = eventTable.TableName;
                 bulkCopy.WriteToServer(eventTable);
             }
+
+            OnStatusMessage(string.Format("Finished processing {0} events.", eventTable.Count));
         }
 
         private Dictionary<DataClassification, int> GetEventTypeLookup()
@@ -149,6 +163,18 @@ namespace FaultData.DataOperations
                     .Select(row => Tuple.Create(eventClassification, row.ID))
                     .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
             }
+        }
+
+        private void OnStatusMessage(string message)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
+
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion
