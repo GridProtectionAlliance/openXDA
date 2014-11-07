@@ -322,7 +322,7 @@ namespace FaultData.DataOperations
 
                         largestCurrentDistance = (largestCurrentCycleIndex < faultDistanceSeries.DataPoints.Count)
                             ? faultDistanceSeries.DataPoints[largestCurrentCycleIndex].Value
-                            : double.NaN;
+                            : double.MinValue;
 
                         firstFaultInceptionIndex = faultTypeSegments.First(segment => segment.FaultType != FaultType.None).StartSample;
                         firstFaultInceptionTime = faultDistanceSeries.DataPoints[firstFaultInceptionIndex].Time;
@@ -340,11 +340,11 @@ namespace FaultData.DataOperations
                         }
                         else
                         {
-                            medianDistance = double.NaN;
-                            maximumDistance = double.NaN;
-                            minimumDistance = double.NaN;
-                            averageDistance = double.NaN;
-                            distanceDeviation = double.NaN;
+                            medianDistance = double.MinValue;
+                            maximumDistance = double.MinValue;
+                            minimumDistance = double.MinValue;
+                            averageDistance = double.MinValue;
+                            distanceDeviation = double.MinValue;
                         }
 
                         faultCurveRow.EventID = eventID;

@@ -73,6 +73,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Transactions;
 using FaultData;
 using FaultData.Database;
@@ -296,6 +297,8 @@ namespace openXDA
         // Processes the file on the given file path.
         private void ProcessFile(string filePath)
         {
+            string meterKey;
+
             ConfigurationOperation configurationOperation = new ConfigurationOperation(m_systemSettings.DbConnectionString);
             EventOperation eventOperation = new EventOperation(m_systemSettings.DbConnectionString);
             FaultLocationOperation faultLocationOperation = new FaultLocationOperation(m_systemSettings.DbConnectionString);
@@ -309,7 +312,9 @@ namespace openXDA
             string extension;
 
             int fileGroupID;
+            int faultEventTypeID;
             MeterData.EventDataTable events;
+            MeterData.EventTypeDataTable eventTypes;
             FileGroup fileGroup = null;
 
             try
@@ -319,6 +324,29 @@ namespace openXDA
 
                 if (m_systemSettings.DebugLevel > 0)
                     m_currentLogger = Logger.Open(logFilePath);
+
+                // Try to parse the name of the meter from the file path to determine whether this file needs to be parsed
+                if (!string.IsNullOrEmpty(m_systemSettings.FilePattern) && TryParseFilePath(filePath, out meterKey))
+                {
+                    using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_systemSettings.DbConnectionString))
+                    {
+                        if (!meterInfo.Meters.Any(m => m.AssetKey == meterKey))
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
+
+                            using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                            using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
+                            {
+                                fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
+                                fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                                fileInfoDataContext.SubmitChanges();
+                                transactionScope.Complete();
+                            }
+
+                            return;
+                        }
+                    }
+                }
 
                 OnStatusMessage("Found fault record \"{0}\".", filePath);
 
@@ -358,16 +386,9 @@ namespace openXDA
                     {
                         meterDataSet.FilePath = filePath;
                         meterDataSet.FileGroup = fileGroup;
-
                         configurationOperation.Execute(meterDataSet);
-
-                        // Configuration operation may set meter to null if the meter
-                        // that dropped the file was not found in the database
-                        if ((object)meterDataSet.Meter != null)
-                        {
-                            eventOperation.Execute(meterDataSet);
-                            faultLocationOperation.Execute(meterDataSet);
-                        }
+                        eventOperation.Execute(meterDataSet);
+                        faultLocationOperation.Execute(meterDataSet);
                     }
 
                     fileGroupID = fileGroup.ID;
@@ -378,9 +399,11 @@ namespace openXDA
                 // Export fault results to results files
                 using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_systemSettings.DbConnectionString))
                 using (EventTableAdapter eventAdapter = new EventTableAdapter())
+                using (EventTypeTableAdapter eventTypeAdapter = new EventTypeTableAdapter())
                 using (FaultCurveTableAdapter faultAdapter = new FaultCurveTableAdapter())
                 {
                     eventAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
+                    eventTypeAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
                     faultAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
 
                     validator.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
@@ -391,8 +414,15 @@ namespace openXDA
                     comtradeWriter.LengthUnits = m_systemSettings.LengthUnits;
 
                     events = eventAdapter.GetDataByFileGroup(fileGroupID);
+                    eventTypes = eventTypeAdapter.GetData();
 
-                    foreach (MeterData.EventRow evt in events)
+                    faultEventTypeID = eventTypes
+                        .Where(row => row.Name == "Fault")
+                        .Select(row => row.ID)
+                        .DefaultIfEmpty(0)
+                        .Single();
+
+                    foreach (MeterData.EventRow evt in events.Where(row => row.EventTypeID == faultEventTypeID))
                     {
                         Meter meter = meterInfo.Meters.Single(m => m.ID == evt.MeterID);
                         Line line = meterInfo.Lines.Single(l => l.ID == evt.LineID);
@@ -476,6 +506,27 @@ namespace openXDA
             }
 
             OnStatusMessage("");
+        }
+
+        // Attempts to parse the meter's asset key from the file path
+        private bool TryParseFilePath(string fileName, out string meterKey)
+        {
+            Match match = Regex.Match(fileName, m_systemSettings.FilePattern);
+            Group meterKeyGroup;
+
+            if (match.Success)
+            {
+                meterKeyGroup = match.Groups["AssetKey"];
+
+                if ((object)meterKeyGroup != null)
+                {
+                    meterKey = meterKeyGroup.Value;
+                    return true;
+                }
+            }
+
+            meterKey = null;
+            return false;
         }
 
         // Loads a file group containing information about the file on the given

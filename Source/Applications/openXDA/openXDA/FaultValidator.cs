@@ -109,6 +109,7 @@ namespace openXDA
             Line line;
             FaultLocationData.CycleDataRow cycleData;
 
+            List<FaultSegment> faultSegments;
             List<DataSeries> faultCurves;
             DataGroup cycleDataGroup;
             VICycleDataSet cycleDataSet;
@@ -118,6 +119,7 @@ namespace openXDA
             List<double> faultDistances;
 
             using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_connectionString))
+            using (FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(m_connectionString))
             using (EventTableAdapter eventAdapter = new EventTableAdapter())
             using (CycleDataTableAdapter cycleDataAdapter = new CycleDataTableAdapter())
             using (FaultCurveTableAdapter faultCurveAdapter = new FaultCurveTableAdapter())
@@ -173,9 +175,18 @@ namespace openXDA
                     return (minFaultDistance <= distance) && (distance <= maxFaultDistance);
                 };
 
+                // Get a list of faulted segments invalid data
+                // which is outside the fault can be excluded
+                faultSegments = faultLocationInfo.FaultSegments
+                    .Where(segment => segment.EventID == evt.ID)
+                    .Where(segment => segment.SegmentType.Name != "Prefault")
+                    .Where(segment => segment.SegmentType.Name != "Postfalt")
+                    .ToList();
+
                 // Get a list of the valid fault distances
                 faultDistances = faultCurves
                     .Select(faultCurve => faultCurve.DataPoints[largestCurrentIndex].Value)
+                    .Where((faultDistance, index) => faultSegments.Any(segment => segment.StartSample <= index && index <= segment.EndSample))
                     .Where(isValidFaultDistance)
                     .OrderByDescending(faultDistance => faultDistance)
                     .ToList();

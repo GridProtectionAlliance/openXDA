@@ -179,9 +179,8 @@ namespace FaultData.DataOperations
                 OnStatusMessage(string.Format("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name));
 
                 // If configuration cannot be modified and existing configuration cannot be found for this meter,
-                // set Meter to null to indicate the operation could not be executed and return
-                meterDataSet.Meter = null;
-                return;
+                // throw an exception to indicate the operation could not be executed
+                throw new InvalidOperationException("Cannot process meter - configuration does not exist");
             }
 
             if (m_modifyConfiguration)
