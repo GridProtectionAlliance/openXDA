@@ -283,24 +283,29 @@ namespace FaultData.DataOperations
                                 faultDistanceSeries.DataPoints.Add(faultDataPoint);
                         }
 
-                        FaultLocationData.FaultCurveRow faultCurveRow = faultCurveTable.NewFaultCurveRow();
                         int largestCurrentCycleIndex = GetLargestCurrentCycleIndex(viCycleDataSet);
                         double lineLength = faultGroup.Line.Length;
-
-                        List<DataPoint> validFaultDistances = faultDistanceSeries.DataPoints
-                            .Where(dataPoint => dataPoint.Value >= MinFaultDistanceMultiplier * lineLength)
-                            .Where(dataPoint => dataPoint.Value <= MaxFaultDistanceMultiplier * lineLength)
-                            .OrderBy(dataPoint => dataPoint.Value)
-                            .ToList();
 
                         List<Segment> segmentsOfFirstFault = faultTypeSegments
                             .SkipWhile(segment => segment.FaultType == FaultType.None)
                             .TakeWhile(segment => segment.FaultType != FaultType.None)
                             .ToList();
 
+                        Segment largestSegment = segmentsOfFirstFault
+                            .MaxBy(segment => segment.EndSample - segment.StartSample);
+
+                        List<DataPoint> validFaultDistances = faultDistanceSeries.DataPoints
+                            .Skip(largestSegment.StartSample)
+                            .Take(largestSegment.EndSample - largestSegment.StartSample)
+                            .Where(dataPoint => dataPoint.Value >= MinFaultDistanceMultiplier * lineLength)
+                            .Where(dataPoint => dataPoint.Value <= MaxFaultDistanceMultiplier * lineLength)
+                            .OrderBy(dataPoint => dataPoint.Value)
+                            .ToList();
+
                         int startSample = segmentsOfFirstFault.First().StartSample;
                         int endSample = segmentsOfFirstFault.Last().EndSample;
 
+                        FaultLocationData.FaultCurveRow faultCurveRow;
                         double largestCurrentDistance;
                         double medianDistance;
                         double maximumDistance;
@@ -312,9 +317,16 @@ namespace FaultData.DataOperations
                         double durationCycles;
                         FaultType faultType;
 
+                        faultCurveRow = faultCurveTable.NewFaultCurveRow();
+
                         largestCurrentDistance = (largestCurrentCycleIndex < faultDistanceSeries.DataPoints.Count)
                             ? faultDistanceSeries.DataPoints[largestCurrentCycleIndex].Value
                             : double.NaN;
+
+                        firstFaultInceptionIndex = faultTypeSegments.First(segment => segment.FaultType != FaultType.None).StartSample;
+                        durationSeconds = (faultDistanceSeries.DataPoints[endSample].Time - faultDistanceSeries.DataPoints[startSample].Time).TotalSeconds;
+                        durationCycles = durationSeconds / Frequency;
+                        faultType = largestSegment.FaultType;
 
                         if (validFaultDistances.Count > 0)
                         {
@@ -323,10 +335,6 @@ namespace FaultData.DataOperations
                             minimumDistance = validFaultDistances.First().Value;
                             averageDistance = validFaultDistances.Average(dataPoint => dataPoint.Value);
                             distanceDeviation = Math.Sqrt(validFaultDistances.Select(dataPoint => dataPoint.Value - averageDistance).Average(diff => diff * diff));
-                            firstFaultInceptionIndex = faultTypeSegments.First(segment => segment.FaultType != FaultType.None).StartSample;
-                            durationSeconds = (faultDistanceSeries.DataPoints[endSample].Time - faultDistanceSeries.DataPoints[startSample].Time).TotalSeconds;
-                            durationCycles = durationSeconds / Frequency;
-                            faultType = segmentsOfFirstFault.MaxBy(segment => segment.EndSample - segment.StartSample).FaultType;
 
                             faultCurveRow.FirstInception = faultDistanceSeries.DataPoints[firstFaultInceptionIndex].Time;
                         }
@@ -337,10 +345,6 @@ namespace FaultData.DataOperations
                             minimumDistance = double.NaN;
                             averageDistance = double.NaN;
                             distanceDeviation = double.NaN;
-                            firstFaultInceptionIndex = -1;
-                            durationSeconds = 0.0D;
-                            durationCycles = 0.0D;
-                            faultType = FaultType.None;
                         }
 
                         faultCurveRow.EventID = eventID;
