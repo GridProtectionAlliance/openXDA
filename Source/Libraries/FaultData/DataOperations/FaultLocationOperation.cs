@@ -312,6 +312,7 @@ namespace FaultData.DataOperations
                         double minimumDistance;
                         double averageDistance;
                         double distanceDeviation;
+                        DateTime firstFaultInceptionTime;
                         int firstFaultInceptionIndex;
                         double durationSeconds;
                         double durationCycles;
@@ -324,6 +325,7 @@ namespace FaultData.DataOperations
                             : double.NaN;
 
                         firstFaultInceptionIndex = faultTypeSegments.First(segment => segment.FaultType != FaultType.None).StartSample;
+                        firstFaultInceptionTime = faultDistanceSeries.DataPoints[firstFaultInceptionIndex].Time;
                         durationSeconds = (faultDistanceSeries.DataPoints[endSample].Time - faultDistanceSeries.DataPoints[startSample].Time).TotalSeconds;
                         durationCycles = durationSeconds / Frequency;
                         faultType = largestSegment.FaultType;
@@ -335,8 +337,6 @@ namespace FaultData.DataOperations
                             minimumDistance = validFaultDistances.First().Value;
                             averageDistance = validFaultDistances.Average(dataPoint => dataPoint.Value);
                             distanceDeviation = Math.Sqrt(validFaultDistances.Select(dataPoint => dataPoint.Value - averageDistance).Average(diff => diff * diff));
-
-                            faultCurveRow.FirstInception = faultDistanceSeries.DataPoints[firstFaultInceptionIndex].Time;
                         }
                         else
                         {
@@ -355,6 +355,7 @@ namespace FaultData.DataOperations
                         faultCurveRow.MinimumDistance = minimumDistance;
                         faultCurveRow.AverageDistance = averageDistance;
                         faultCurveRow.DistanceDeviation = distanceDeviation;
+                        faultCurveRow.FirstInception = firstFaultInceptionTime;
                         faultCurveRow.FirstInceptionSample = firstFaultInceptionIndex;
                         faultCurveRow.DurationSeconds = durationSeconds;
                         faultCurveRow.DurationCycles = durationCycles;
