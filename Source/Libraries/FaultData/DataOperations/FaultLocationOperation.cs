@@ -327,7 +327,7 @@ namespace FaultData.DataOperations
                         firstFaultInceptionIndex = faultTypeSegments.First(segment => segment.FaultType != FaultType.None).StartSample;
                         firstFaultInceptionTime = faultDistanceSeries.DataPoints[firstFaultInceptionIndex].Time;
                         durationSeconds = (faultDistanceSeries.DataPoints[endSample].Time - faultDistanceSeries.DataPoints[startSample].Time).TotalSeconds;
-                        durationCycles = durationSeconds / Frequency;
+                        durationCycles = durationSeconds * Frequency;
                         faultType = largestSegment.FaultType;
 
                         if (validFaultDistances.Count > 0)

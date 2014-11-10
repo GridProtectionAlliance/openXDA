@@ -616,9 +616,9 @@ namespace FaultData.Database {
             
             private global::System.Data.DataColumn columnMedianDistance;
             
-            private global::System.Data.DataColumn columnMinimumDistance;
-            
             private global::System.Data.DataColumn columnMaximumDistance;
+            
+            private global::System.Data.DataColumn columnMinimumDistance;
             
             private global::System.Data.DataColumn columnAverageDistance;
             
@@ -711,17 +711,17 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn MinimumDistanceColumn {
+            public global::System.Data.DataColumn MaximumDistanceColumn {
                 get {
-                    return this.columnMinimumDistance;
+                    return this.columnMaximumDistance;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn MaximumDistanceColumn {
+            public global::System.Data.DataColumn MinimumDistanceColumn {
                 get {
-                    return this.columnMaximumDistance;
+                    return this.columnMinimumDistance;
                 }
             }
             
@@ -826,7 +826,7 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultCurveRow AddFaultCurveRow(int EventID, string Algorithm, double LargestCurrentDistance, double MedianDistance, double MinimumDistance, double MaximumDistance, double AverageDistance, double DistanceDeviation, System.DateTime FirstInception, int FirstInceptionSample, double DurationSeconds, double DurationCycles, string FaultType, byte[] Data) {
+            public FaultCurveRow AddFaultCurveRow(int EventID, string Algorithm, double LargestCurrentDistance, double MedianDistance, double MaximumDistance, double MinimumDistance, double AverageDistance, double DistanceDeviation, System.DateTime FirstInception, int FirstInceptionSample, double DurationSeconds, double DurationCycles, string FaultType, byte[] Data) {
                 FaultCurveRow rowFaultCurveRow = ((FaultCurveRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
@@ -834,8 +834,8 @@ namespace FaultData.Database {
                         Algorithm,
                         LargestCurrentDistance,
                         MedianDistance,
-                        MinimumDistance,
                         MaximumDistance,
+                        MinimumDistance,
                         AverageDistance,
                         DistanceDeviation,
                         FirstInception,
@@ -878,8 +878,8 @@ namespace FaultData.Database {
                 this.columnAlgorithm = base.Columns["Algorithm"];
                 this.columnLargestCurrentDistance = base.Columns["LargestCurrentDistance"];
                 this.columnMedianDistance = base.Columns["MedianDistance"];
-                this.columnMinimumDistance = base.Columns["MinimumDistance"];
                 this.columnMaximumDistance = base.Columns["MaximumDistance"];
+                this.columnMinimumDistance = base.Columns["MinimumDistance"];
                 this.columnAverageDistance = base.Columns["AverageDistance"];
                 this.columnDistanceDeviation = base.Columns["DistanceDeviation"];
                 this.columnFirstInception = base.Columns["FirstInception"];
@@ -903,10 +903,10 @@ namespace FaultData.Database {
                 base.Columns.Add(this.columnLargestCurrentDistance);
                 this.columnMedianDistance = new global::System.Data.DataColumn("MedianDistance", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnMedianDistance);
-                this.columnMinimumDistance = new global::System.Data.DataColumn("MinimumDistance", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnMinimumDistance);
                 this.columnMaximumDistance = new global::System.Data.DataColumn("MaximumDistance", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnMaximumDistance);
+                this.columnMinimumDistance = new global::System.Data.DataColumn("MinimumDistance", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnMinimumDistance);
                 this.columnAverageDistance = new global::System.Data.DataColumn("AverageDistance", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnAverageDistance);
                 this.columnDistanceDeviation = new global::System.Data.DataColumn("DistanceDeviation", typeof(double), null, global::System.Data.MappingType.Element);
@@ -936,8 +936,8 @@ namespace FaultData.Database {
                 this.columnAlgorithm.MaxLength = 80;
                 this.columnLargestCurrentDistance.AllowDBNull = false;
                 this.columnMedianDistance.AllowDBNull = false;
-                this.columnMinimumDistance.AllowDBNull = false;
                 this.columnMaximumDistance.AllowDBNull = false;
+                this.columnMinimumDistance.AllowDBNull = false;
                 this.columnAverageDistance.AllowDBNull = false;
                 this.columnDistanceDeviation.AllowDBNull = false;
                 this.columnFirstInception.AllowDBNull = false;
@@ -1192,23 +1192,23 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double MinimumDistance {
-                get {
-                    return ((double)(this[this.tableFaultCurve.MinimumDistanceColumn]));
-                }
-                set {
-                    this[this.tableFaultCurve.MinimumDistanceColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public double MaximumDistance {
                 get {
                     return ((double)(this[this.tableFaultCurve.MaximumDistanceColumn]));
                 }
                 set {
                     this[this.tableFaultCurve.MaximumDistanceColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double MinimumDistance {
+                get {
+                    return ((double)(this[this.tableFaultCurve.MinimumDistanceColumn]));
+                }
+                set {
+                    this[this.tableFaultCurve.MinimumDistanceColumn] = value;
                 }
             }
             
@@ -1843,8 +1843,8 @@ namespace FaultData.Database.FaultLocationDataTableAdapters {
             tableMapping.ColumnMappings.Add("Algorithm", "Algorithm");
             tableMapping.ColumnMappings.Add("LargestCurrentDistance", "LargestCurrentDistance");
             tableMapping.ColumnMappings.Add("MedianDistance", "MedianDistance");
-            tableMapping.ColumnMappings.Add("MinimumDistance", "MinimumDistance");
-            tableMapping.ColumnMappings.Add("MaximumDistance", "MaximumDistance");
+            tableMapping.ColumnMappings.Add("MinimumDistance", "MaximumDistance");
+            tableMapping.ColumnMappings.Add("MaximumDistance", "MinimumDistance");
             tableMapping.ColumnMappings.Add("AverageDistance", "AverageDistance");
             tableMapping.ColumnMappings.Add("DistanceDeviation", "DistanceDeviation");
             tableMapping.ColumnMappings.Add("FirstInception", "FirstInception");
@@ -1856,15 +1856,15 @@ namespace FaultData.Database.FaultLocationDataTableAdapters {
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[FaultCurve] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([LargestCurrentDistance] = @Original_LargestCurrentDistance) AND ([MedianDistance] = @Original_MedianDistance) AND ([MinimumDistance] = @Original_MinimumDistance) AND ([MaximumDistance] = @Original_MaximumDistance) AND ([AverageDistance] = @Original_AverageDistance) AND ([DistanceDeviation] = @Original_DistanceDeviation) AND ([FirstInception] = @Original_FirstInception) AND ([FirstInceptionSample] = @Original_FirstInceptionSample) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[FaultCurve] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([LargestCurrentDistance] = @Original_LargestCurrentDistance) AND ([MedianDistance] = @Original_MedianDistance) AND ([MaximumDistance] = @Original_MaximumDistance) AND ([MinimumDistance] = @Original_MinimumDistance) AND ([AverageDistance] = @Original_AverageDistance) AND ([DistanceDeviation] = @Original_DistanceDeviation) AND ([FirstInception] = @Original_FirstInception) AND ([FirstInceptionSample] = @Original_FirstInceptionSample) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LargestCurrentDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LargestCurrentDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MedianDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MedianDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MaximumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MaximumDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AverageDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AverageDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DistanceDeviation", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DistanceDeviation", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FirstInception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FirstInception", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -1874,15 +1874,15 @@ namespace FaultData.Database.FaultLocationDataTableAdapters {
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[FaultCurve] ([EventID], [Algorithm], [LargestCurrentDistance], [MedianDistance], [MinimumDistance], [MaximumDistance], [AverageDistance], [DistanceDeviation], [FirstInception], [FirstInceptionSample], [DurationSeconds], [DurationCycles], [FaultType], [Data]) VALUES (@EventID, @Algorithm, @LargestCurrentDistance, @MedianDistance, @MinimumDistance, @MaximumDistance, @AverageDistance, @DistanceDeviation, @FirstInception, @FirstInceptionSample, @DurationSeconds, @DurationCycles, @FaultType, @Data);
-SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDistance, MaximumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM FaultCurve WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[FaultCurve] ([EventID], [Algorithm], [LargestCurrentDistance], [MedianDistance], [MaximumDistance], [MinimumDistance], [AverageDistance], [DistanceDeviation], [FirstInception], [FirstInceptionSample], [DurationSeconds], [DurationCycles], [FaultType], [Data]) VALUES (@EventID, @Algorithm, @LargestCurrentDistance, @MedianDistance, @MaximumDistance, @MinimumDistance, @AverageDistance, @DistanceDeviation, @FirstInception, @FirstInceptionSample, @DurationSeconds, @DurationCycles, @FaultType, @Data);
+SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MaximumDistance, MinimumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM FaultCurve WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LargestCurrentDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LargestCurrentDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MedianDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MedianDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MaximumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MaximumDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AverageDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AverageDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DistanceDeviation", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DistanceDeviation", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FirstInception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FirstInception", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -1893,15 +1893,15 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Data", global::System.Data.SqlDbType.VarBinary, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Data", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[FaultCurve] SET [EventID] = @EventID, [Algorithm] = @Algorithm, [LargestCurrentDistance] = @LargestCurrentDistance, [MedianDistance] = @MedianDistance, [MinimumDistance] = @MinimumDistance, [MaximumDistance] = @MaximumDistance, [AverageDistance] = @AverageDistance, [DistanceDeviation] = @DistanceDeviation, [FirstInception] = @FirstInception, [FirstInceptionSample] = @FirstInceptionSample, [DurationSeconds] = @DurationSeconds, [DurationCycles] = @DurationCycles, [FaultType] = @FaultType, [Data] = @Data WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([LargestCurrentDistance] = @Original_LargestCurrentDistance) AND ([MedianDistance] = @Original_MedianDistance) AND ([MinimumDistance] = @Original_MinimumDistance) AND ([MaximumDistance] = @Original_MaximumDistance) AND ([AverageDistance] = @Original_AverageDistance) AND ([DistanceDeviation] = @Original_DistanceDeviation) AND ([FirstInception] = @Original_FirstInception) AND ([FirstInceptionSample] = @Original_FirstInceptionSample) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType));
-SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDistance, MaximumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM FaultCurve WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[FaultCurve] SET [EventID] = @EventID, [Algorithm] = @Algorithm, [LargestCurrentDistance] = @LargestCurrentDistance, [MedianDistance] = @MedianDistance, [MaximumDistance] = @MaximumDistance, [MinimumDistance] = @MinimumDistance, [AverageDistance] = @AverageDistance, [DistanceDeviation] = @DistanceDeviation, [FirstInception] = @FirstInception, [FirstInceptionSample] = @FirstInceptionSample, [DurationSeconds] = @DurationSeconds, [DurationCycles] = @DurationCycles, [FaultType] = @FaultType, [Data] = @Data WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([LargestCurrentDistance] = @Original_LargestCurrentDistance) AND ([MedianDistance] = @Original_MedianDistance) AND ([MaximumDistance] = @Original_MaximumDistance) AND ([MinimumDistance] = @Original_MinimumDistance) AND ([AverageDistance] = @Original_AverageDistance) AND ([DistanceDeviation] = @Original_DistanceDeviation) AND ([FirstInception] = @Original_FirstInception) AND ([FirstInceptionSample] = @Original_FirstInceptionSample) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType));
+SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MaximumDistance, MinimumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM FaultCurve WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LargestCurrentDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LargestCurrentDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MedianDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MedianDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MaximumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MaximumDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AverageDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AverageDistance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DistanceDeviation", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DistanceDeviation", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FirstInception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FirstInception", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -1915,8 +1915,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LargestCurrentDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LargestCurrentDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MedianDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MedianDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MaximumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MaximumDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MinimumDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MinimumDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AverageDistance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AverageDistance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DistanceDeviation", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DistanceDeviation", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FirstInception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FirstInception", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -1940,14 +1940,14 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDis" +
-                "tance, MaximumDistance, AverageDistance, DistanceDeviation, FirstInception, Firs" +
+            this._commandCollection[0].CommandText = "SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MaximumDis" +
+                "tance, MinimumDistance, AverageDistance, DistanceDeviation, FirstInception, Firs" +
                 "tInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM dbo.Faul" +
                 "tCurve";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = @"SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDistance, MaximumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM dbo.FaultCurve WHERE EventID = @eventID";
+            this._commandCollection[1].CommandText = @"SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MaximumDistance, MinimumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data FROM dbo.FaultCurve WHERE EventID = @eventID";
             this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@eventID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
@@ -2035,7 +2035,7 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_EventID, string Original_Algorithm, double Original_LargestCurrentDistance, double Original_MedianDistance, double Original_MinimumDistance, double Original_MaximumDistance, double Original_AverageDistance, double Original_DistanceDeviation, System.DateTime Original_FirstInception, int Original_FirstInceptionSample, double Original_DurationSeconds, double Original_DurationCycles, string Original_FaultType) {
+        public virtual int Delete(int Original_ID, int Original_EventID, string Original_Algorithm, double Original_LargestCurrentDistance, double Original_MedianDistance, double Original_MaximumDistance, double Original_MinimumDistance, double Original_AverageDistance, double Original_DistanceDeviation, System.DateTime Original_FirstInception, int Original_FirstInceptionSample, double Original_DurationSeconds, double Original_DurationCycles, string Original_FaultType) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
             this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_EventID));
             if ((Original_Algorithm == null)) {
@@ -2046,8 +2046,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             }
             this.Adapter.DeleteCommand.Parameters[3].Value = ((double)(Original_LargestCurrentDistance));
             this.Adapter.DeleteCommand.Parameters[4].Value = ((double)(Original_MedianDistance));
-            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_MinimumDistance));
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_MaximumDistance));
+            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_MaximumDistance));
+            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_MinimumDistance));
             this.Adapter.DeleteCommand.Parameters[7].Value = ((double)(Original_AverageDistance));
             this.Adapter.DeleteCommand.Parameters[8].Value = ((double)(Original_DistanceDeviation));
             this.Adapter.DeleteCommand.Parameters[9].Value = ((System.DateTime)(Original_FirstInception));
@@ -2080,7 +2080,7 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int EventID, string Algorithm, double LargestCurrentDistance, double MedianDistance, double MinimumDistance, double MaximumDistance, double AverageDistance, double DistanceDeviation, System.DateTime FirstInception, int FirstInceptionSample, double DurationSeconds, double DurationCycles, string FaultType, byte[] Data) {
+        public virtual int Insert(int EventID, string Algorithm, double LargestCurrentDistance, double MedianDistance, double MaximumDistance, double MinimumDistance, double AverageDistance, double DistanceDeviation, System.DateTime FirstInception, int FirstInceptionSample, double DurationSeconds, double DurationCycles, string FaultType, byte[] Data) {
             this.Adapter.InsertCommand.Parameters[0].Value = ((int)(EventID));
             if ((Algorithm == null)) {
                 throw new global::System.ArgumentNullException("Algorithm");
@@ -2090,8 +2090,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             }
             this.Adapter.InsertCommand.Parameters[2].Value = ((double)(LargestCurrentDistance));
             this.Adapter.InsertCommand.Parameters[3].Value = ((double)(MedianDistance));
-            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(MinimumDistance));
-            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(MaximumDistance));
+            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(MaximumDistance));
+            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(MinimumDistance));
             this.Adapter.InsertCommand.Parameters[6].Value = ((double)(AverageDistance));
             this.Adapter.InsertCommand.Parameters[7].Value = ((double)(DistanceDeviation));
             this.Adapter.InsertCommand.Parameters[8].Value = ((System.DateTime)(FirstInception));
@@ -2135,8 +2135,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
                     string Algorithm, 
                     double LargestCurrentDistance, 
                     double MedianDistance, 
-                    double MinimumDistance, 
                     double MaximumDistance, 
+                    double MinimumDistance, 
                     double AverageDistance, 
                     double DistanceDeviation, 
                     System.DateTime FirstInception, 
@@ -2150,8 +2150,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
                     string Original_Algorithm, 
                     double Original_LargestCurrentDistance, 
                     double Original_MedianDistance, 
-                    double Original_MinimumDistance, 
                     double Original_MaximumDistance, 
+                    double Original_MinimumDistance, 
                     double Original_AverageDistance, 
                     double Original_DistanceDeviation, 
                     System.DateTime Original_FirstInception, 
@@ -2169,8 +2169,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             }
             this.Adapter.UpdateCommand.Parameters[2].Value = ((double)(LargestCurrentDistance));
             this.Adapter.UpdateCommand.Parameters[3].Value = ((double)(MedianDistance));
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(MinimumDistance));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(MaximumDistance));
+            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(MaximumDistance));
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(MinimumDistance));
             this.Adapter.UpdateCommand.Parameters[6].Value = ((double)(AverageDistance));
             this.Adapter.UpdateCommand.Parameters[7].Value = ((double)(DistanceDeviation));
             this.Adapter.UpdateCommand.Parameters[8].Value = ((System.DateTime)(FirstInception));
@@ -2199,8 +2199,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
             }
             this.Adapter.UpdateCommand.Parameters[17].Value = ((double)(Original_LargestCurrentDistance));
             this.Adapter.UpdateCommand.Parameters[18].Value = ((double)(Original_MedianDistance));
-            this.Adapter.UpdateCommand.Parameters[19].Value = ((double)(Original_MinimumDistance));
-            this.Adapter.UpdateCommand.Parameters[20].Value = ((double)(Original_MaximumDistance));
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((double)(Original_MaximumDistance));
+            this.Adapter.UpdateCommand.Parameters[20].Value = ((double)(Original_MinimumDistance));
             this.Adapter.UpdateCommand.Parameters[21].Value = ((double)(Original_AverageDistance));
             this.Adapter.UpdateCommand.Parameters[22].Value = ((double)(Original_DistanceDeviation));
             this.Adapter.UpdateCommand.Parameters[23].Value = ((System.DateTime)(Original_FirstInception));
@@ -2239,8 +2239,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
                     string Algorithm, 
                     double LargestCurrentDistance, 
                     double MedianDistance, 
-                    double MinimumDistance, 
                     double MaximumDistance, 
+                    double MinimumDistance, 
                     double AverageDistance, 
                     double DistanceDeviation, 
                     System.DateTime FirstInception, 
@@ -2254,8 +2254,8 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
                     string Original_Algorithm, 
                     double Original_LargestCurrentDistance, 
                     double Original_MedianDistance, 
-                    double Original_MinimumDistance, 
                     double Original_MaximumDistance, 
+                    double Original_MinimumDistance, 
                     double Original_AverageDistance, 
                     double Original_DistanceDeviation, 
                     System.DateTime Original_FirstInception, 
@@ -2263,7 +2263,7 @@ SELECT ID, EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDi
                     double Original_DurationSeconds, 
                     double Original_DurationCycles, 
                     string Original_FaultType) {
-            return this.Update(EventID, Algorithm, LargestCurrentDistance, MedianDistance, MinimumDistance, MaximumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data, Original_ID, Original_EventID, Original_Algorithm, Original_LargestCurrentDistance, Original_MedianDistance, Original_MinimumDistance, Original_MaximumDistance, Original_AverageDistance, Original_DistanceDeviation, Original_FirstInception, Original_FirstInceptionSample, Original_DurationSeconds, Original_DurationCycles, Original_FaultType, Original_ID);
+            return this.Update(EventID, Algorithm, LargestCurrentDistance, MedianDistance, MaximumDistance, MinimumDistance, AverageDistance, DistanceDeviation, FirstInception, FirstInceptionSample, DurationSeconds, DurationCycles, FaultType, Data, Original_ID, Original_EventID, Original_Algorithm, Original_LargestCurrentDistance, Original_MedianDistance, Original_MaximumDistance, Original_MinimumDistance, Original_AverageDistance, Original_DistanceDeviation, Original_FirstInception, Original_FirstInceptionSample, Original_DurationSeconds, Original_DurationCycles, Original_FaultType, Original_ID);
         }
     }
     
