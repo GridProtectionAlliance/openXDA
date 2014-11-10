@@ -577,17 +577,27 @@ namespace openXDA
                 if (!validExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
                     return;
 
-                if (!fileProcessorEventArgs.AlreadyProcessed)
+                if (fileProcessorEventArgs.AlreadyProcessed)
                 {
-                    if (CanProcessFile(filePath))
+                    using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
                     {
-                        ProcessFile(filePath);
-                        m_fileCreationTimes.Remove(filePath);
+                        // Check that this file has not already been processed
+                        if (fileInfoDataContext.DataFiles.Any(dataFile => dataFile.FilePath == filePath))
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
+                            return;
+                        }
                     }
-                    else
-                    {
-                        fileProcessorEventArgs.Requeue = true;
-                    }
+                }
+
+                if (CanProcessFile(filePath))
+                {
+                    ProcessFile(filePath);
+                    m_fileCreationTimes.Remove(filePath);
+                }
+                else
+                {
+                    fileProcessorEventArgs.Requeue = true;
                 }
             }
             catch (Exception ex)
