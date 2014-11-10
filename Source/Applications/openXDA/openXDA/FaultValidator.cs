@@ -162,9 +162,18 @@ namespace openXDA
                     .Add(cycleDataSet.IB.RMS)
                     .Add(cycleDataSet.IC.RMS);
 
+                // Get a list of faulted segments invalid data
+                // which is outside the fault can be excluded
+                faultSegments = faultLocationInfo.FaultSegments
+                    .Where(segment => segment.EventID == evt.ID)
+                    .Where(segment => segment.SegmentType.Name != "Prefault")
+                    .Where(segment => segment.SegmentType.Name != "Postfalt")
+                    .ToList();
+
                 // Find the index of the cycle with the largest current
                 largestCurrentIndex = iSum.DataPoints
                     .Select((dataPoint, index) => Tuple.Create(index, dataPoint.Value))
+                    .Where(tuple => faultSegments.Any(segment => segment.StartSample >= tuple.Item1 && tuple.Item1 <= segment.EndSample))
                     .MaxBy(tuple => tuple.Item2).Item1;
 
                 // Create the function that will determine whether a given fault distance is valid
@@ -175,18 +184,9 @@ namespace openXDA
                     return (minFaultDistance <= distance) && (distance <= maxFaultDistance);
                 };
 
-                // Get a list of faulted segments invalid data
-                // which is outside the fault can be excluded
-                faultSegments = faultLocationInfo.FaultSegments
-                    .Where(segment => segment.EventID == evt.ID)
-                    .Where(segment => segment.SegmentType.Name != "Prefault")
-                    .Where(segment => segment.SegmentType.Name != "Postfalt")
-                    .ToList();
-
                 // Get a list of the valid fault distances
                 faultDistances = faultCurves
                     .Select(faultCurve => faultCurve.DataPoints[largestCurrentIndex].Value)
-                    .Where((faultDistance, index) => faultSegments.Any(segment => segment.StartSample <= index && index <= segment.EndSample))
                     .Where(isValidFaultDistance)
                     .OrderByDescending(faultDistance => faultDistance)
                     .ToList();
