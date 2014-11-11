@@ -211,6 +211,23 @@ CREATE TABLE Series
 )
 GO
 
+CREATE TABLE Recipient
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	FirstName VARCHAR(50) NOT NULL,
+	LastName VARCHAR(50) NOT NULL,
+	Email VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE MeterRecipient
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	MeterID INT NOT NULL REFERENCES Meter(ID),
+	RecipientID INT NOT NULL REFERENCES Recipient(ID)
+)
+GO
+
 -- ------ --
 -- Events --
 -- ------ --
@@ -324,12 +341,25 @@ CREATE TABLE FaultCurve
 	MinimumDistance FLOAT NOT NULL,
 	AverageDistance FLOAT NOT NULL,
 	DistanceDeviation FLOAT NOT NULL,
-	FirstInception DATETIME2 NOT NULL,
-	FirstInceptionSample INT NOT NULL,
+    Data VARBINARY(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE FaultSummary
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	EventID INT NOT NULL REFERENCES Event(ID),
+	LargestCurrentDistance FLOAT NOT NULL,
+	MedianDistance FLOAT NOT NULL,
+	MaximumDistance FLOAT NOT NULL,
+	MinimumDistance FLOAT NOT NULL,
+	AverageDistance FLOAT NOT NULL,
+	DistanceDeviation FLOAT NOT NULL,
+	FaultCount INT NOT NULL,
+	Inception DATETIME2 NOT NULL,
 	DurationSeconds FLOAT NOT NULL,
 	DurationCycles FLOAT NOT NULL,
-	FaultType VARCHAR(200) NOT NULL,
-    Data VARBINARY(MAX) NOT NULL
+	FaultType VARCHAR(200) NOT NULL
 )
 GO
 

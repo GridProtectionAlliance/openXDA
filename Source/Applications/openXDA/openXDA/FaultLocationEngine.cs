@@ -413,6 +413,9 @@ namespace openXDA
                     comtradeWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
                     comtradeWriter.LengthUnits = m_systemSettings.LengthUnits;
 
+                    xmlWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+                    xmlWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+
                     events = eventAdapter.GetDataByFileGroup(fileGroupID);
                     eventTypes = eventTypeAdapter.GetData();
 

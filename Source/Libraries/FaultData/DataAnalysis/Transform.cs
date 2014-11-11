@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using FaultAlgorithms;
 using GSF.NumericalAnalysis;
@@ -155,6 +156,13 @@ namespace FaultData.DataAnalysis
             }
 
             return rms;
+        }
+
+        public static List<double> ToValues(DataSeries series)
+        {
+            return series.DataPoints
+                .Select(dataPoint => dataPoint.Value)
+                .ToList();
         }
 
         private static int CalculateSamplesPerCycle(DataSeries dataSeries, double frequency)

@@ -383,7 +383,14 @@ namespace FaultData.DataWriters
                         .ToList();
 
                     if (!validDistances.Any())
-                        continue;
+                    {
+                        validDistances = faultCurves
+                           .Select(series => series.ToSubSeries(startSample, endSample))
+                           .SelectMany(series => series.DataPoints)
+                           .Select(dataPoint => dataPoint.Value)
+                           .OrderBy(value => value)
+                           .ToList();
+                    }
 
                     writer.WriteLine("Fault {0}:", faultNumber);
                     writer.WriteLine("[{0}]       Fault distance: {1:0.00} {2}", faultNumber, validDistances[validDistances.Count / 2], LengthUnits);

@@ -70,6 +70,8 @@ namespace FaultData.DataWriters
 
         // Fields
         private string m_connectionString;
+        private double m_maxFaultDistanceMultiplier;
+        private double m_minFaultDistanceMultiplier;
 
         #endregion
 
@@ -82,6 +84,34 @@ namespace FaultData.DataWriters
         public XMLWriter(string connectionString)
         {
             m_connectionString = connectionString;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        public double MaxFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_maxFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_maxFaultDistanceMultiplier = value;
+            }
+        }
+
+        public double MinFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_minFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_minFaultDistanceMultiplier = value;
+            }
         }
 
         #endregion
@@ -111,7 +141,7 @@ namespace FaultData.DataWriters
 
                 faultRecordInfo.CycleData = cycleDataAdapter.GetDataBy(eventID).Single();
                 faultRecordInfo.FaultSegments = faultLocationInfo.FaultSegments.Where(segment => segment.EventID == eventID).ToList();
-                faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).Where(curve => curve.EventID == eventID).ToList();
+                faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
 
                 WriteResults(faultRecordInfo, resultsFilePath);
             }
@@ -192,13 +222,20 @@ namespace FaultData.DataWriters
                 .Select(series => series.ToSubSeries(startSample, endSample))
                 .SelectMany(series => series.DataPoints)
                 .Select(dataPoint => dataPoint.Value)
-                .Where(value => value >= -0.1D * line.Length)
-                .Where(value => value <= 1.25D * line.Length)
+                .Where(value => value >= MinFaultDistanceMultiplier * line.Length)
+                .Where(value => value <= MaxFaultDistanceMultiplier * line.Length)
                 .OrderBy(value => value)
                 .ToList();
 
             if (!validDistances.Any())
-                return null;
+            {
+                validDistances = faultCurves
+                    .Select(series => series.ToSubSeries(startSample, endSample))
+                    .SelectMany(series => series.DataPoints)
+                    .Select(dataPoint => dataPoint.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+            }
 
             return new XElement("fault",
                 new XElement("distance", validDistances[validDistances.Count / 2].ToString(DoubleFormat)),

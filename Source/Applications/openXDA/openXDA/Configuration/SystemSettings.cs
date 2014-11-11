@@ -51,6 +51,7 @@ namespace openXDA.Configuration
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private string m_fileShares;
+        private string m_smtpServer;
         private int m_debugLevel;
 
         private List<string> m_watchDirectoryList;
@@ -303,6 +304,24 @@ namespace openXDA.Configuration
                         .Select(fileShareString => new FileShare(fileShareString))
                         .ToList();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the hostname or IP address of the SMTP server to
+        /// use for sending automated email notifications when faults occur.
+        /// </summary>
+        [Setting]
+        [DefaultValue("")]
+        public string SMTPServer
+        {
+            get
+            {
+                return m_smtpServer;
+            }
+            set
+            {
+                m_smtpServer = value;
             }
         }
 

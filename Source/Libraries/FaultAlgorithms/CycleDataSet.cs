@@ -206,6 +206,14 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
+        /// Clears the cycle data set so that it can be repopulated.
+        /// </summary>
+        public void Clear()
+        {
+            m_cycles.Clear();
+        }
+
+        /// <summary>
         /// Returns an enumerator that iterates through the collection of cycles.
         /// </summary>
         /// <returns>An <see cref="IEnumerator{T}"/> object that can be used to iterate through the collection.</returns>
