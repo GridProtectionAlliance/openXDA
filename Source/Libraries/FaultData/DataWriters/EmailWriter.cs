@@ -297,6 +297,7 @@ namespace FaultData.DataWriters
                 {
                     series = new Series();
                     series.ChartType = SeriesChartType.FastLine;
+                    series.BorderWidth = 5;
 
                     foreach (DataPoint dataPoint in dataSeries.DataPoints)
                     {
