@@ -50,6 +50,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -123,6 +126,7 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\CSVWriter.cs" />
+    <Compile Include="DataWriters\EmailWriter.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="MeterDataProcessor.cs" />
     <Compile Include="MeterDataSet.cs" />
@@ -215,6 +219,9 @@
       <Project>{24eb0e7b-9f79-4e3a-94fb-87bd4d06a400}</Project>
       <Name>FaultAlgorithms</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DataWriters\FaultResultsTemplate.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

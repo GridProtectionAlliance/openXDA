@@ -796,7 +796,7 @@ namespace FaultData.DataWriters
             foreach (DataPoint dataPoint in series.DataPoints)
             {
                 if (double.IsNaN(dataPoint.Value))
-                    dataPoint.Value = maxFaultDistance;
+                    dataPoint.Value = 0.0D;
                 else if (dataPoint.Value > maxFaultDistance)
                     dataPoint.Value = maxFaultDistance;
                 else if (dataPoint.Value < minFaultDistance)

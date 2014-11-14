@@ -306,6 +306,7 @@ namespace openXDA
             FaultValidator validator = new FaultValidator(m_systemSettings.DbConnectionString);
             COMTRADEWriter comtradeWriter = new COMTRADEWriter(m_systemSettings.DbConnectionString);
             XMLWriter xmlWriter = new XMLWriter(m_systemSettings.DbConnectionString);
+            EmailWriter emailWriter = new EmailWriter(m_systemSettings.DbConnectionString);
 
             IDataReader reader;
             List<MeterDataSet> meterDataSets;
@@ -416,6 +417,12 @@ namespace openXDA
                     xmlWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
                     xmlWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
 
+                    emailWriter.SMTPServer = m_systemSettings.SMTPServer;
+                    emailWriter.FromAddress = m_systemSettings.FromAddress;
+                    emailWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+                    emailWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+                    emailWriter.LengthUnits = m_systemSettings.LengthUnits;
+
                     events = eventAdapter.GetDataByFileGroup(fileGroupID);
                     eventTypes = eventTypeAdapter.GetData();
 
@@ -450,6 +457,9 @@ namespace openXDA
                             xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(filePath) + ".xml");
                             xmlWriter.WriteResults(evt.ID, xmlFilePath);
                             OnStatusMessage("Summary of results written to {0}", xmlFilePath);
+
+                            emailWriter.WriteResults(evt.ID);
+                            OnStatusMessage("Summary of results sent by email");
                         }
                         else
                         {

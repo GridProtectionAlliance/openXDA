@@ -56,6 +56,7 @@ namespace openXDA.Configuration
 
         private List<string> m_watchDirectoryList;
         private List<FileShare> m_fileShareList;
+        private string m_fromAddress;
 
         #endregion
 
@@ -322,6 +323,23 @@ namespace openXDA.Configuration
             set
             {
                 m_smtpServer = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the email address used when sending automated email notifications.
+        /// </summary>
+        [Setting]
+        [DefaultValue("openXDA@gridprotectionalliance.org")]
+        public string FromAddress
+        {
+            get
+            {
+                return m_fromAddress;
+            }
+            set
+            {
+                m_fromAddress = value;
             }
         }
 
