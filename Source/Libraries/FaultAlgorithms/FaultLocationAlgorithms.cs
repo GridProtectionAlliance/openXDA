@@ -23,19 +23,26 @@
 //
 //  The algorithms and methods in this class come from the following sources, among others:
 //
-//  1. IEEE-C37.114 (2005), IEEE Guide for Determining Fault Location on AC Transmission and Distribution
-//         Lines
+//  1. IEEE-C37.114 (2005), IEEE Guide for Determining Fault Location on AC Transmission and
+//         Distribution Lines
 //  2. EPRI Product Report 1024381 (2013), Distribution Fault Location Support Tools, Algorithms and
 //         Implementation Approaches
 //  3. Novosel D., Hart DG, Saha MM et al. (1994) Optimal fault location for transmission systems. 
 //         ABB Rev(8) 20-27.
-//  4. Takagi T, Yamakosi Y, Yamura M et al. (1981) Development of a new type fault locating using the
-//        one-terminal voltage and current data.  IEEE Transactions on PAS, 101(8):2892-2898
+//  4. Takagi T, Yamakosi Y, Yamura M et al. (1981) Development of a new type fault locator using the
+//         one-terminal voltage and current data.  IEEE Transactions on PAS, 101(8):2892-2898
+//  5. Eriksson L., Saha MM, Rockefeller GD et al. (1985) An accurate fault locator with compensation
+//         for apparent reactance in the fault resistance resulting from remote-end infeed. IEEE
+//         Power Engineering Review, 5(2): 44
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
 //  11/12/2013 - Stephen C. Wills
 //       Generated original version of source code.
+//  11/21/2013 - Stephen C. Wills
+//       Added the ModifiedTakagi and NovoselEtAl fault location methods.
+//  12/11/2014 - Stephen C. Wills
+//       Added the Eriksson fault location method.
 //
 //******************************************************************************************************
 
@@ -48,6 +55,11 @@ namespace FaultAlgorithms
 {
     internal class FaultLocationAlgorithms
     {
+        #region [ Fault Location Methods ]
+        
+        // ReSharper disable UnusedMember.Local
+        // ReSharper disable UnusedParameter.Local
+
         /// <summary>
         /// Simple algorithm to calculate the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
@@ -210,7 +222,8 @@ namespace FaultAlgorithms
             {
                 ComplexNumber sourceImpedance = faultDataSet.ZSrc;
 
-                if (double.IsNaN(sourceImpedance.Real) || double.IsNaN(sourceImpedance.Imaginary))
+                // TODO: Test to determine the effect of using -(v - vPre) / (i - iPre) instead
+                if (IsNaN(sourceImpedance))
                     sourceImpedance = (v - vPre) / (i - iPre);
 
                 ComplexNumber ab = (v / (z * i)) + (loadImpedance / z) + 1;
@@ -226,7 +239,7 @@ namespace FaultAlgorithms
                 double m1 = (left + right) / 2.0D;
                 double m2 = (left - right) / 2.0D;
 
-                if (m1 >= 0.0D && m1 <= 1.0D)
+                if (MinDistance(m1, 0.0D, 1.0D) < MinDistance(m2, 0.0D, 1.0D))
                     return m1;
 
                 return m2;
@@ -234,6 +247,69 @@ namespace FaultAlgorithms
             .Select(m => m * faultDataSet.LineDistance)
             .ToArray();
         }
+
+        /// <summary>
+        /// Eriksson algorithm for calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
+        /// </summary>
+        /// <param name="faultDataSet">The data set to be used to find the distance to fault.</param>
+        /// <param name="parameters">Extra parameters to the algorithm.</param>
+        /// <returns>Set of distance calculations, one for each cycle of data.</returns>
+        [FaultLocationAlgorithm]
+        private static double[] Eriksson(FaultLocationDataSet faultDataSet, string parameters)
+        {
+            FaultType viFaultType;
+            ComplexNumber z;
+
+            ComplexNumber[] voltages;
+            ComplexNumber[] currents;
+            ComplexNumber iPre;
+
+            ComplexNumber sourceImpedance;
+            ComplexNumber remoteImpedance;
+
+            sourceImpedance = faultDataSet.ZSrc;
+            remoteImpedance = faultDataSet.ZRem;
+
+            if (IsNaN(sourceImpedance) || IsNaN(remoteImpedance))
+                return null;
+
+            viFaultType = GetVIFaultType(faultDataSet);
+            z = GetNominalImpedance(faultDataSet);
+
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
+            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, viFaultType);
+
+            return voltages.Zip(currents, (v, i) =>
+            {
+                ComplexNumber ab = (v / (i * z)) + 1 + (remoteImpedance / z);
+                ComplexNumber cd = (v / (i * z)) * ((remoteImpedance / z) + 1);
+                ComplexNumber ef = ((i - iPre) / (i * z)) * (((sourceImpedance + remoteImpedance) / z) + 1);
+
+                double a = ab.Real, b = ab.Imaginary;
+                double c = cd.Real, d = cd.Imaginary;
+                double e = ef.Real, f = ef.Imaginary;
+
+                double left = (a - ((e * b) / f));
+                double right = Math.Sqrt(left * left - 4.0D * (c - ((e * d) / f)));
+                double m1 = (left + right) / 2.0D;
+                double m2 = (left - right) / 2.0D;
+
+                if (MinDistance(m1, 0.0D, 1.0D) < MinDistance(m2, 0.0D, 1.0D))
+                    return m1;
+
+                return m2;
+            })
+            .Select(m => m * faultDataSet.LineDistance)
+            .ToArray();
+        }
+
+        // ReSharper restore UnusedParameter.Local
+        // ReSharper restore UnusedMember.Local
+
+        #endregion
+
+        #region [ Helper Methods ]
 
         // Gets the fault type used to determine which voltages and currents to use in fault calculations.
         // This method changes the ABC fault type to either AN, BN, or CN based on whichever phase is closest to a pure sine wave.
@@ -348,5 +424,20 @@ namespace FaultAlgorithms
                     throw new ArgumentOutOfRangeException("faultDataSet", string.Format("Unknown fault type: {0}", faultDataSet.FaultType));
             }
         }
+
+        // Gets the minimum distance between the value n and the set of values m.
+        private static double MinDistance(double n, params double[] m)
+        {
+            return m.Min(x => Math.Abs(n - x));
+        }
+
+        // Determines whether one of either the real or imaginary
+        // components of the given complex number is NaN.
+        private static bool IsNaN(ComplexNumber num)
+        {
+            return double.IsNaN(num.Real) || double.IsNaN(num.Imaginary);
+        }
+
+        #endregion
     }
 }
