@@ -129,6 +129,8 @@ namespace FaultData.DataOperations
             #region [ Members ]
 
             // Fields
+            public int SamplesPerCycle;
+
             public VICycleDataSet CycleDataSet;
             public List<Segment> FaultTypeSegments;
             public FaultLocationDataSet FaultLocationDataSet;
@@ -144,6 +146,7 @@ namespace FaultData.DataOperations
             public void GenerateFaultCurves()
             {
                 VICycleDataSet subSet;
+                VICycleDataSet subSet2;
                 List<DataPoint> faultDataPoints;
                 double[] faultDistances;
 
@@ -157,61 +160,104 @@ namespace FaultData.DataOperations
                     .Select(algorithm => new List<DataPoint>())
                     .ToList();
 
-                foreach (Segment segment in FaultTypeSegments)
-                {
-                    // Get a subset of the cycle data that contains only the data in the current segment
-                    subSet = CycleDataSet.ToSubSet(segment.StartSample, segment.EndSample);
-
-                    if (segment.FaultType != FaultType.None)
+                // Break the list of segments into smaller lists of segments where
+                // each consecutive group of faulted segments marks the end of a list
+                List<List<Segment>> segmentGroups = FaultTypeSegments
+                    .Aggregate(new List<List<Segment>>(), (list, segment) =>
                     {
-                        // Set the fault type of the fault location data
-                        // set to the fault type of the current segment
-                        FaultLocationDataSet.FaultType = segment.FaultType;
+                        if (segment.FaultType == FaultType.None || list.Count == 0)
+                            list.Add(new List<Segment>());
 
-                        // Push data from the cycle data set
-                        // to the fault location data set
-                        FaultLocationDataSet.Cycles.Clear();
-                        subSet.PushDataTo(FaultLocationDataSet.Cycles);
+                        list.Last().Add(segment);
 
-                        // Attempt to execute each fault location algorithm
-                        for (int i = 0; i < FaultLocationAlgorithms.Count; i++)
+                        return list;
+                    });
+
+                foreach (List<Segment> segmentGroup in segmentGroups)
+                {
+                    // Don't calculate fault distances for cycles at the end
+                    // of a fault because these cycles include non-faulted data
+                    int endSample = segmentGroup.Last().EndSample - SamplesPerCycle;
+
+                    foreach (Segment segment in segmentGroup)
+                    {
+                        if (endSample > segment.StartSample)
                         {
-                            if (TryExecute(FaultLocationAlgorithms[i], FaultLocationDataSet, out faultDistances))
-                            {
-                                // Create a data point for each of the fault distances
-                                faultDataPoints = subSet.VA.RMS.DataPoints
-                                    .Zip(faultDistances, (point, distance) => new DataPoint() { Time = point.Time, Value = distance })
-                                    .ToList();
+                            // Get a subset of the cycle data that contains only the data
+                            // in the current segment, up to and including the end sample
+                            subSet = CycleDataSet.ToSubSet(segment.StartSample, Math.Min(segment.EndSample, endSample));
 
-                                // Dump the fault distance data points into the
-                                // collection of fault data for this algorithm
-                                FaultData[i].AddRange(faultDataPoints);
+                            if (segment.FaultType != FaultType.None)
+                            {
+                                // Set the fault type of the fault location data
+                                // set to the fault type of the current segment
+                                FaultLocationDataSet.FaultType = segment.FaultType;
+
+                                // Push data from the cycle data set
+                                // to the fault location data set
+                                FaultLocationDataSet.Cycles.Clear();
+                                subSet.PushDataTo(FaultLocationDataSet.Cycles);
+
+                                // Attempt to execute each fault location algorithm
+                                for (int i = 0; i < FaultLocationAlgorithms.Count; i++)
+                                {
+                                    if (TryExecute(FaultLocationAlgorithms[i], FaultLocationDataSet, out faultDistances))
+                                    {
+                                        // Create a data point for each of the fault distances
+                                        faultDataPoints = subSet.VA.RMS.DataPoints
+                                            .Zip(faultDistances, (point, distance) => new DataPoint() { Time = point.Time, Value = distance })
+                                            .ToList();
+
+                                        // Dump the fault distance data points into the
+                                        // collection of fault data for this algorithm
+                                        FaultData[i].AddRange(faultDataPoints);
+                                    }
+                                    else
+                                    {
+                                        // Generate NaN-value data points to
+                                        // fill this segment of the fault curve
+                                        faultDataPoints = subSet.VA.RMS.DataPoints
+                                            .Select(point => new DataPoint() { Time = point.Time, Value = double.NaN })
+                                            .ToList();
+                                    }
+
+                                    // Add the data points to the current fault curve
+                                    FaultCurves[i].DataPoints.AddRange(faultDataPoints);
+                                }
                             }
                             else
                             {
-                                // Generate NaN-value data points to
-                                // fill this segment of the fault curve
-                                faultDataPoints = subSet.VA.RMS.DataPoints
+                                foreach (DataSeries faultCurve in FaultCurves)
+                                {
+                                    // Generate NaN-value data points to
+                                    // fill this segment of the fault curve
+                                    faultDataPoints = subSet.VA.RMS.DataPoints
+                                        .Select(point => new DataPoint() { Time = point.Time, Value = double.NaN })
+                                        .ToList();
+
+                                    // Add the data points to the current fault curve
+                                    faultCurve.DataPoints.AddRange(faultDataPoints);
+                                }
+                            }
+                        }
+
+                        if (endSample < segment.EndSample)
+                        {
+                            // Get a subset of the cycle data that contains only
+                            // the data in the current segment after the end sample
+                            subSet2 = CycleDataSet.ToSubSet(Math.Max(segment.StartSample, endSample + 1), segment.EndSample);
+
+                            foreach (DataSeries faultCurve in FaultCurves)
+                            {
+                                // Generate NaN-value data points to fill
+                                // the fault curve beyond the end sample
+                                faultDataPoints = subSet2.VA.RMS.DataPoints
                                     .Select(point => new DataPoint() { Time = point.Time, Value = double.NaN })
                                     .ToList();
+
+                                // Add the data points to the current fault curve
+                                faultCurve.DataPoints.AddRange(faultDataPoints);
                             }
-
-                            // Add the data points to the current fault curve
-                            FaultCurves[i].DataPoints.AddRange(faultDataPoints);
-                        }
-                    }
-                    else
-                    {
-                        foreach (DataSeries faultCurve in FaultCurves)
-                        {
-                            // Generate NaN-value data points to
-                            // fill this segment of the fault curve
-                            faultDataPoints = subSet.VA.RMS.DataPoints
-                                .Select(point => new DataPoint() { Time = point.Time, Value = double.NaN })
-                                .ToList();
-
-                            // Add the data points to the current fault curve
-                            faultCurve.DataPoints.AddRange(faultDataPoints);
                         }
                     }
                 }
@@ -596,6 +642,7 @@ namespace FaultData.DataOperations
                     // Generate fault curves for fault analysis
                     OnStatusMessage(string.Format("Event {0}: Generating fault curves.", eventID));
                     faultCurveGenerator = new FaultCurveGenerator();
+                    faultCurveGenerator.SamplesPerCycle = (int)(viDataGroup.VA.SampleRate / Frequency);
                     faultCurveGenerator.CycleDataSet = viCycleDataSet;
                     faultCurveGenerator.FaultTypeSegments = faultTypeSegments;
                     faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
@@ -1068,20 +1115,6 @@ namespace FaultData.DataOperations
             method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
 
             return Delegate.CreateDelegate(typeof(T), method) as T;
-        }
-
-        private bool TryExecute(FaultLocationAlgorithm faultLocationAlgorithm, FaultLocationDataSet faultLocationDataSet, out double[] distances)
-        {
-            try
-            {
-                distances = faultLocationAlgorithm(faultLocationDataSet, null);
-            }
-            catch
-            {
-                distances = null;
-            }
-
-            return (object)distances != null;
         }
 
         private void OnStatusMessage(string message)
