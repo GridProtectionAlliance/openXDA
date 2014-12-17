@@ -161,22 +161,25 @@ namespace FaultData.DataWriters
             using (FaultCurveTableAdapter faultCurveAdapter = new FaultCurveTableAdapter())
             using (FaultSummaryTableAdapter faultSummaryAdapter = new FaultSummaryTableAdapter())
             {
-                eventAdapter.Connection.ConnectionString = m_connectionString;
-                cycleDataAdapter.Connection.ConnectionString = m_connectionString;
-                faultCurveAdapter.Connection.ConnectionString = m_connectionString;
-                faultSummaryAdapter.Connection.ConnectionString = m_connectionString;
-
-                faultRecordInfo.Event = eventAdapter.GetDataByID(eventID).First();
-
-                faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
-                faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
-
-                faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
-                faultRecordInfo.FaultSummary = faultSummaryAdapter.GetDataBy(eventID).FirstOrDefault();
-
                 faultRecordInfo.Recipients = systemInfo.Recipients.ToList();
 
-                WriteResults(faultRecordInfo);
+                if (faultRecordInfo.Recipients.Count > 0)
+                {
+                    eventAdapter.Connection.ConnectionString = m_connectionString;
+                    cycleDataAdapter.Connection.ConnectionString = m_connectionString;
+                    faultCurveAdapter.Connection.ConnectionString = m_connectionString;
+                    faultSummaryAdapter.Connection.ConnectionString = m_connectionString;
+
+                    faultRecordInfo.Event = eventAdapter.GetDataByID(eventID).First();
+
+                    faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
+                    faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
+
+                    faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
+                    faultRecordInfo.FaultSummary = faultSummaryAdapter.GetDataBy(eventID).FirstOrDefault();
+
+                    WriteResults(faultRecordInfo);
+                }
             }
         }
 
