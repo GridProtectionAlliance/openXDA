@@ -75,6 +75,11 @@
     <Compile Include="Database\BulkLoader.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Database\DataQuality.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataQuality.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Database\FaultLocationData1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -149,6 +154,17 @@
     </None>
     <None Include="Database\AlarmData.xss">
       <DependentUpon>AlarmData.xsd</DependentUpon>
+    </None>
+    <None Include="Database\DataQuality.xsc">
+      <DependentUpon>DataQuality.xsd</DependentUpon>
+    </None>
+    <None Include="Database\DataQuality.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>DataQuality.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Database\DataQuality.xss">
+      <DependentUpon>DataQuality.xsd</DependentUpon>
     </None>
     <None Include="Database\FaultLocationData.xsc">
       <DependentUpon>FaultLocationData.xsd</DependentUpon>

@@ -41,7 +41,26 @@ namespace FaultData.DataOperations
             public double Maximum;
             public double Minimum;
             public double Average;
+
+            public bool Latched;
+            public bool NonCongruent;
+            public bool Unreasonable;
+
+            public double UnreasonableValue;
+            public double HighLimit;
+            public double LowLimit;
+
+            public bool IsValid
+            {
+                get
+                {
+                    return !(Latched || NonCongruent || Unreasonable);
+                }
+            }
         }
+
+        // Constants
+        private const int SignificantDigits = 5;
 
         // Fields
         private Dictionary<Channel, List<TrendingDataSummary>> m_trendingDataSummaries;
@@ -159,6 +178,12 @@ namespace FaultData.DataOperations
                     }
                 }
             }
+        }
+
+        // TODO: Determine if this helps or hurts
+        private double Round(double value, int significantDigits)
+        {
+            return Math.Round(value, significantDigits - ((int)Math.Log10(value) + 1));
         }
 
         #endregion

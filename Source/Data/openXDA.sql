@@ -399,3 +399,244 @@ GO
 INSERT INTO SegmentType(Name, Description) VALUES('Postfault', 'After the fault ends')
 GO
 
+-- -------- --
+-- Trending --
+-- -------- --
+
+CREATE TABLE HourlyTrendingSummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    Time DATETIME NOT NULL,
+    Minimum FLOAT NOT NULL,
+    Maximum FLOAT NOT NULL,
+    Average FLOAT NOT NULL,
+    ValidCount INT NOT NULL,
+    InvalidCount INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_HourlyTrendingSummary_ChannelID
+ON HourlyTrendingSummary(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_HourlyTrendingSummary_Time
+ON HourlyTrendingSummary(Time ASC)
+GO
+
+CREATE TABLE DailyTrendingSummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    Date Date NOT NULL,
+    Minimum FLOAT NOT NULL,
+    Maximum FLOAT NOT NULL,
+    Average FLOAT NOT NULL,
+    ValidCount INT NOT NULL,
+    InvalidCount INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DailyTrendingSummary_ChannelID
+ON DailyTrendingSummary(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DailyTrendingSummary_Date
+ON DailyTrendingSummary(Date ASC)
+GO
+
+CREATE TABLE ChannelNormal
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    Average FLOAT NOT NULL,
+    MeanSquare FLOAT NOT NULL,
+    StandardDeviation FLOAT NOT NULL,
+    Count INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelNormal_ChannelID
+ON ChannelNormal(ChannelID ASC)
+GO
+
+-- ------------ --
+-- Data Quality --
+-- ------------ --
+
+CREATE TABLE DefaultDataQualityRangeLimit
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+    High FLOAT NULL,
+    Low FLOAT NULL,
+    RangeInclusive INT NOT NULL DEFAULT 0,
+    PerUnit INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DefaultDataQualityRangeLimit_MeasurementTypeID
+ON DefaultDataQualityRangeLimit(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DefaultDataQualityRangeLimit_MeasurementCharacteristicID
+ON DefaultDataQualityRangeLimit(MeasurementCharacteristicID ASC)
+GO
+
+CREATE TABLE DataQualityRangeLimit
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    High FLOAT NULL,
+    Low FLOAT NULL,
+    RangeInclusive INT NOT NULL DEFAULT 0,
+    PerUnit INT NOT NULL DEFAULT 0,
+    Enabled INT NOT NULL DEFAULT 1
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataQualityRangeLimit_ChannelID
+ON DataQualityRangeLimit(ChannelID ASC)
+GO
+
+-- ------ --
+-- Alarms --
+-- ------ --
+
+CREATE TABLE AlarmType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE DefaultAlarmRangeLimit
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Severity INT NOT NULL DEFAULT 0,
+    High FLOAT NULL,
+    Low FLOAT NULL,
+    RangeInclusive INT NOT NULL DEFAULT 0,
+    PerUnit INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DefaultAlarmRangeLimit_MeasurementTypeID
+ON DefaultAlarmRangeLimit(MeasurementTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DefaultAlarmRangeLimit_MeasurementCharacteristicID
+ON DefaultAlarmRangeLimit(MeasurementCharacteristicID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DefaultAlarmRangeLimit_AlarmTypeID
+ON DefaultAlarmRangeLimit(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DefaultAlarmRangeLimit_Severity
+ON DefaultAlarmRangeLimit(Severity ASC)
+GO
+
+CREATE TABLE AlarmRangeLimit
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Severity INT NOT NULL DEFAULT 0,
+    High FLOAT NULL,
+    Low FLOAT NULL,
+    RangeInclusive INT NOT NULL DEFAULT 0,
+    PerUnit INT NOT NULL DEFAULT 0,
+    Enabled INT NOT NULL DEFAULT 1
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmRangeLimit_ChannelID
+ON AlarmRangeLimit(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmRangeLimit_AlarmTypeID
+ON AlarmRangeLimit(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmRangeLimit_Severity
+ON AlarmRangeLimit(Severity ASC)
+GO
+
+CREATE TABLE HourOfWeekLimit
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    HourOfWeek INT NOT NULL,
+    Severity INT NOT NULL,
+    High FLOAT NOT NULL,
+    Low FLOAT NOT NULL,
+    Enabled INT NOT NULL DEFAULT 1
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_HourOfWeekLimit_ChannelID
+ON HourOfWeekLimit(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_HourOfWeekLimit_AlarmTypeID
+ON HourOfWeekLimit(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_HourOfWeekLimit_HourOfWeek
+ON HourOfWeekLimit(HourOfWeek ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_HourOfWeekLimit_Severity
+ON HourOfWeekLimit(Severity ASC)
+GO
+
+CREATE TABLE AlarmLog
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Time DATETIME NOT NULL,
+    Severity INT NOT NULL,
+    LimitHigh FLOAT NULL,
+    LimitLow FLOAT NULL,
+    Value FLOAT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_ChannelID
+ON AlarmLog(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_AlarmTypeID
+ON AlarmLog(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_Time
+ON AlarmLog(Time ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AlarmLog_Severity
+ON AlarmLog(Severity ASC)
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Latched', 'Latched value')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Non-congruent', 'Average value outside of minimum and maximum')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Unreasonable', 'Value outside of reasonable limits')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Off-normal-168H', 'Value was outside of normal range for a given hour of the week')
+GO
+
+INSERT INTO AlarmType(Name, Description) VALUES ('Regulatory', 'Value exceeded regulatory limits')
+GO

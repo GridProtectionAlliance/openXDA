@@ -302,6 +302,9 @@ namespace openXDA
             ConfigurationOperation configurationOperation = new ConfigurationOperation(m_systemSettings.DbConnectionString);
             EventOperation eventOperation = new EventOperation(m_systemSettings.DbConnectionString);
             FaultLocationOperation faultLocationOperation = new FaultLocationOperation(m_systemSettings.DbConnectionString);
+            HourlySummaryOperation hourlySummaryOperation = new HourlySummaryOperation(m_systemSettings.DbConnectionString);
+            HourlySummaryOperation dailySummaryOperation = new HourlySummaryOperation(m_systemSettings.DbConnectionString);
+            AlarmOperation alarmOperation = new AlarmOperation(m_systemSettings.DbConnectionString);
 
             FaultValidator validator = new FaultValidator(m_systemSettings.DbConnectionString);
             COMTRADEWriter comtradeWriter = new COMTRADEWriter(m_systemSettings.DbConnectionString);
@@ -383,6 +386,15 @@ namespace openXDA
                     faultLocationOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
                     faultLocationOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
 
+                    hourlySummaryOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
+                    hourlySummaryOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
+
+                    dailySummaryOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
+                    dailySummaryOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
+
+                    alarmOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
+                    alarmOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
+
                     foreach (MeterDataSet meterDataSet in meterDataSets)
                     {
                         meterDataSet.FilePath = filePath;
@@ -390,6 +402,10 @@ namespace openXDA
                         configurationOperation.Execute(meterDataSet);
                         eventOperation.Execute(meterDataSet);
                         faultLocationOperation.Execute(meterDataSet);
+
+                        hourlySummaryOperation.Execute(meterDataSet);
+                        dailySummaryOperation.Execute(meterDataSet);
+                        alarmOperation.Execute(meterDataSet);
                     }
 
                     fileGroupID = fileGroup.ID;

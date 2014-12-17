@@ -84,19 +84,24 @@ namespace FaultData.DataOperations
             MeterData.DailyTrendingSummaryDataTable dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
             MeterData.DailyTrendingSummaryRow row;
 
+            List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries;
+
             foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
             {
-                foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> hourlySummary in channelSummaries.Value.GroupBy(summary => GetDate(summary.Time)))
+                foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> dailySummary in channelSummaries.Value.GroupBy(summary => GetDate(summary.Time)))
                 {
+                    validSummaries = dailySummary.Where(summary => summary.IsValid).ToList();
+
                     row = dailySummaryTable.NewDailyTrendingSummaryRow();
 
                     row.BeginEdit();
                     row.ChannelID = channelSummaries.Key.ID;
-                    row.Date = hourlySummary.Key;
-                    row.Minimum = hourlySummary.Min(summary => summary.Minimum);
-                    row.Maximum = hourlySummary.Max(summary => summary.Maximum);
-                    row.Average = hourlySummary.Average(summary => summary.Average);
-                    row.Count = hourlySummary.Count();
+                    row.Date = dailySummary.Key;
+                    row.Minimum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Min();
+                    row.Maximum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Max();
+                    row.Average = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Average();
+                    row.ValidCount = validSummaries.Count;
+                    row.InvalidCount = dailySummary.Count() - validSummaries.Count;
                     row.EndEdit();
 
                     dailySummaryTable.AddDailyTrendingSummaryRow(row);
