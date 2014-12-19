@@ -35,6 +35,7 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
+using GSF;
 using DataPoint = FaultData.DataAnalysis.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
@@ -55,9 +56,15 @@ namespace FaultData.DataWriters
 
             public MeterData.EventRow Event;
             public List<FaultLocationData.FaultCurveRow> FaultCurves;
-            public FaultLocationData.FaultSummaryRow FaultSummary;
+            public List<FaultLocationData.FaultSummaryRow> FaultSummaries;
 
             public List<Recipient> Recipients;
+        }
+
+        private class NamedDataSeries
+        {
+            public string Name;
+            public DataSeries Series;
         }
 
         // Fields
@@ -65,6 +72,7 @@ namespace FaultData.DataWriters
 
         private string m_smtpServer;
         private string m_fromAddress;
+        private string m_pqDashboardURL;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private string m_lengthUnits;
@@ -107,6 +115,18 @@ namespace FaultData.DataWriters
             set
             {
                 m_fromAddress = value;
+            }
+        }
+
+        public string PQDashboardURL
+        {
+            get
+            {
+                return m_pqDashboardURL;
+            }
+            set
+            {
+                m_pqDashboardURL = value;
             }
         }
 
@@ -176,7 +196,7 @@ namespace FaultData.DataWriters
                     faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
 
                     faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
-                    faultRecordInfo.FaultSummary = faultSummaryAdapter.GetDataBy(eventID).FirstOrDefault();
+                    faultRecordInfo.FaultSummaries = faultSummaryAdapter.GetDataBy(eventID).ToList();
 
                     WriteResults(faultRecordInfo);
                 }
@@ -188,9 +208,13 @@ namespace FaultData.DataWriters
             string template;
             string subject;
             string body;
-            string table;
 
-            List<DataSeries> faultCurves;
+            List<FaultLocationData.FaultSummaryRow> faultSummaries;
+            int faultCount;
+
+            Lazy<string> faultCurvesHTML;
+            List<NamedDataSeries> faultCurves;
+            Attachment faultCurveAttachment;
 
             template = null;
 
@@ -207,60 +231,121 @@ namespace FaultData.DataWriters
 
             if ((object)template != null)
             {
-                subject = string.Format("Line faults detected on {0}", faultRecordInfo.Line.Name);
-                body = template;
-                table = string.Concat(faultRecordInfo.FaultCurves.Select(ToTableRow));
+                faultSummaries = faultRecordInfo.FaultSummaries.Where(faultSummary => IsValid(faultSummary, faultRecordInfo.Line.Length)).ToList();
+                faultCount = faultSummaries.Select(faultSummary => faultSummary.FaultNumber).Distinct().Count();
 
-                table += ToTableRow(faultRecordInfo.FaultSummary);
+                if (faultCount > 0)
+                {
+                    subject = string.Format("Fault detected by openXDA  Line: {0}  Time: {1:MM/dd/yyyy HH:mm}", faultRecordInfo.Line.Name, ToDataSeries(faultRecordInfo.FaultCurves[0]).Series[0].Time);
+                    body = template;
 
-                body = body.Replace("{meter}", faultRecordInfo.Meter.Name);
-                body = body.Replace("{station}", faultRecordInfo.Meter.MeterLocation.Name);
-                body = body.Replace("{line}", faultRecordInfo.Line.Name);
-                body = body.Replace("{distance}", faultRecordInfo.FaultSummary.MedianDistance.ToString("0.##"));
-                body = body.Replace("{confidence}", faultRecordInfo.FaultSummary.DistanceDeviation.ToString("0.##"));
-                body = body.Replace("{lengthUnits}", m_lengthUnits);
-                body = body.Replace("{distanceSummaryTable}", table);
-                body = body.Replace("{faultType}", faultRecordInfo.FaultSummary.FaultType);
-                body = body.Replace("{inception}", faultRecordInfo.FaultSummary.Inception.ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
-                body = body.Replace("{durationSeconds}", faultRecordInfo.FaultSummary.DurationSeconds.ToString("0.####"));
-                body = body.Replace("{durationCycles}", faultRecordInfo.FaultSummary.DurationCycles.ToString("0.##"));
-                body = body.Replace("{faultCount}", faultRecordInfo.FaultSummary.FaultCount.ToString());
+                    faultCurvesHTML = new Lazy<string>(() => "<img src=\"cid:FaultCurves.png\" width=\"650\" height=\"340\" />");
 
-                faultCurves = faultRecordInfo.FaultCurves
-                    .Select(ToDataSeries)
-                    .ToList();
+                    body = Replace(body, "{eventID}", faultRecordInfo.Event.ID.ToString());
+                    body = Replace(body, "{meter}", faultRecordInfo.Meter.Name);
+                    body = Replace(body, "{station}", faultRecordInfo.Meter.MeterLocation.Name);
+                    body = Replace(body, "{line}", faultRecordInfo.Line.Name);
+                    body = Replace(body, "{nFaults}", string.Format("{0} fault{1}", faultCount, (faultCount > 1) ? "s" : ""));
+                    body = Replace(body, "{faultSummaries}", () => ToHTML(faultSummaries));
+                    body = Replace(body, "{distanceSummaryTable}", () => string.Format("<table>{0}{1}</table>", GetTableHeader(), GetTableRows(faultRecordInfo.FaultSummaries, faultRecordInfo.Line)));
+                    body = Replace(body, "{faultCurves}", () => faultCurvesHTML.Value);
+                    body = Replace(body, "{PQDashboardURL}", m_pqDashboardURL);
 
-                foreach (DataSeries faultCurve in faultCurves)
-                    FixFaultCurve(faultCurve, faultRecordInfo.Line);
+                    if (faultCurvesHTML.IsValueCreated)
+                    {
+                        faultCurves = GetValidFaultCurves(faultSummaries, faultRecordInfo.FaultCurves);
 
-                SendEmail(faultRecordInfo.Recipients, subject, body, ToImageStream(faultCurves));
+                        foreach (NamedDataSeries faultCurve in faultCurves)
+                            FixFaultCurve(faultCurve.Series, faultRecordInfo.Line);
+
+                        faultCurveAttachment = new Attachment(ToImageStream(faultCurves), "FaultCurves.png");
+                        faultCurveAttachment.ContentId = "FaultCurves.png";
+                        SendEmail(faultRecordInfo.Recipients, subject, body, faultCurveAttachment);
+                    }
+                    else
+                    {
+                        SendEmail(faultRecordInfo.Recipients, subject, body);
+                    }
+                }
             }
         }
 
-        private string ToTableRow(FaultLocationData.FaultCurveRow faultCurveRow)
+        private List<NamedDataSeries> GetValidFaultCurves(List<FaultLocationData.FaultSummaryRow> faultSummaries, List<FaultLocationData.FaultCurveRow> faultCurveRows)
         {
-            return string.Format("<tr><td>{0}</td><td>{1:0.####}</td><td>{2:0.####}</td><td>{3:0.####}</td><td>{4:0.####}</td><td>{5:0.####}</td><td>{6:0.####}</td></tr>",
-                faultCurveRow.Algorithm,
-                faultCurveRow.LargestCurrentDistance,
-                faultCurveRow.MedianDistance,
-                faultCurveRow.MaximumDistance,
-                faultCurveRow.MinimumDistance,
-                faultCurveRow.AverageDistance,
-                faultCurveRow.DistanceDeviation);
+            HashSet<string> validAlgorithms = new HashSet<string>(faultSummaries.Select(faultSummary => faultSummary.Algorithm));
+
+            return faultCurveRows
+                .Where(faultCurveRow => validAlgorithms.Contains(faultCurveRow.Algorithm))
+                .Select(ToDataSeries)
+                .ToList();
         }
 
-        private string ToTableRow(FaultLocationData.FaultSummaryRow faultSummaryRow)
+        private string ToHTML(List<FaultLocationData.FaultSummaryRow> faultSummaries)
         {
-            return string.Format("<tr><td>ALL</td><td>{0:0.####}</td><td>{1:0.####}</td><td>{2:0.####}</td><td>{3:0.####}</td><td>{4:0.####}</td><td>{5:0.####}</td></tr>",
+            string html = "";
+
+            IEnumerable<FaultLocationData.FaultSummaryRow> faults = faultSummaries
+                .GroupBy(faultSummary => faultSummary.FaultNumber)
+                .Select(grouping => grouping.OrderBy(faultSummary => faultSummary.LargestCurrentDistance).ToList())
+                .Select(list => list[list.Count / 2])
+                .OrderBy(faultSummary => faultSummary.FaultNumber);
+
+            foreach (FaultLocationData.FaultSummaryRow fault in faults)
+            {
+                html += string.Format("<p>" +
+                                      "<span style=\"font-size: 20px; font-weight: bold; text-decoration: underline\">Fault {0}</span><br />" +
+                                      "<span style=\"font-weight: bold\">Fault Type:</span> {1}<br />" +
+                                      "<span style=\"font-weight: bold\">Inception:</span> {2:ss.ffffff} seconds (since {2:MM/dd/yyyy HH:mm})<br />" +
+                                      "<span style=\"font-weight: bold\">Duration:</span> {3:0.000} milliseconds ({4:0.00} cycles)<br />" +
+                                      "<span style=\"font-weight: bold\">Distance:</span> {5:0.000} {6} ({7})<br />" +
+                                      "</p>", fault.FaultNumber, fault.FaultType, fault.Inception, fault.DurationSeconds * 1000,
+                                      fault.DurationCycles, fault.LargestCurrentDistance, LengthUnits, fault.Algorithm);
+            }
+
+            return html;
+        }
+
+        private string GetTableHeader()
+        {
+            string header = string.Format("<tr><th colspan=\"3\"></th><th colspan=\"5\">Fault Distances ({0})</th></tr>", LengthUnits);
+
+            header += string.Format("<tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th><th>{5}</th><th>{6}</th><th>{7}</th></tr>",
+                "Fault Number",
+                "Algorithm",
+                "Valid",
+                "At Largest Current Cycle",
+                "Maximum",
+                "Minimum",
+                "Average",
+                "Standard Deviation");
+
+            return header;
+        }
+
+        private string GetTableRows(List<FaultLocationData.FaultSummaryRow> faultSummaryRows, Line line)
+        {
+            IEnumerable<string> rows = faultSummaryRows
+                .OrderBy(faultSummaryRow => faultSummaryRow.FaultNumber)
+                .ThenBy(faultSummaryRow => faultSummaryRow.ID)
+                .Select(faultSummaryRow => ToTableRow(faultSummaryRow, line));
+
+            return string.Concat(rows);
+        }
+
+        private string ToTableRow(FaultLocationData.FaultSummaryRow faultSummaryRow, Line line)
+        {
+            return string.Format("<tr><td style=\"text-align: center\">{0}</td><td style=\"text-align: left\">{1}</td><td style=\"text-align: center\">{2}</td><td>{3:0.000}</td><td>{4:0.000}</td><td>{5:0.000}</td><td>{6:0.000}</td><td>{7:0.000}</td></tr>",
+                faultSummaryRow.FaultNumber,
+                faultSummaryRow.Algorithm,
+                IsValid(faultSummaryRow, line.Length) ? "Yes" : "No",
                 faultSummaryRow.LargestCurrentDistance,
-                faultSummaryRow.MedianDistance,
                 faultSummaryRow.MaximumDistance,
                 faultSummaryRow.MinimumDistance,
                 faultSummaryRow.AverageDistance,
                 faultSummaryRow.DistanceDeviation);
         }
 
-        private Stream ToImageStream(List<DataSeries> faultCurves)
+        private Stream ToImageStream(List<NamedDataSeries> faultCurves)
         {
             ChartArea area;
             Series series;
@@ -274,35 +359,40 @@ namespace FaultData.DataWriters
 
             using (Chart chart = new Chart())
             {
+                startTime = faultCurves[0].Series[0].Time;
+                endTime = faultCurves[0].Series.DataPoints.Last().Time;
+
+                // Align startTime with top of the minute
+                startTime = startTime.AddTicks(-(startTime.Ticks % Ticks.PerMinute));
+
                 area = new ChartArea();
-                area.AxisX.Title = "Time (seconds)";
+                area.AxisX.Title = string.Format("Seconds since {0:MM/dd/yyyy HH:mm}", startTime);
                 area.AxisX.TitleFont = new Font(area.AxisX.TitleFont.FontFamily, 35.0F);
                 area.AxisX.MajorGrid.Enabled = false;
-                area.AxisX.LabelStyle.Format = "0.####";
+                area.AxisX.LabelStyle.Format = "0.000";
                 area.AxisX.LabelAutoFitMinFontSize = 35;
                 area.AxisY.Title = string.Format("Distance ({0})", m_lengthUnits);
                 area.AxisY.TitleFont = new Font(area.AxisY.TitleFont.FontFamily, 35.0F);
                 area.AxisY.LabelAutoFitMinFontSize = 35;
-                
-                startTime = faultCurves[0][0].Time;
-                endTime = faultCurves[0].DataPoints.Last().Time;
 
-                chart.Titles.Add(string.Format("Fault Curves ({0:yyyy-MM-dd HH:mm:ss.fffffff})", startTime));
+                chart.Titles.Add("Calculated Fault Distance by Time of Calculation");
                 chart.Titles[0].Font = new Font(chart.Titles[0].Font.FontFamily, 35.0F, FontStyle.Bold);
-                chart.Width = 2200;
+                chart.Legends.Add(new Legend());
+                chart.Legends[0].Font = new Font(chart.Legends[0].Font.FontFamily, 35.0F, FontStyle.Regular);
+                chart.Width = 2600;
                 chart.Height = 1360;
                 chart.ChartAreas.Add(area);
 
                 maxSeconds = 0.0D;
                 minSeconds = (endTime - startTime).TotalSeconds;
 
-                foreach (DataSeries dataSeries in faultCurves)
+                foreach (NamedDataSeries dataSeries in faultCurves)
                 {
-                    series = new Series();
+                    series = new Series(dataSeries.Name);
                     series.ChartType = SeriesChartType.FastLine;
                     series.BorderWidth = 5;
 
-                    foreach (DataPoint dataPoint in dataSeries.DataPoints)
+                    foreach (DataPoint dataPoint in dataSeries.Series.DataPoints)
                     {
                         seconds = (dataPoint.Time - startTime).TotalSeconds;
                         series.Points.AddXY(seconds, dataPoint.Value);
@@ -362,7 +452,7 @@ namespace FaultData.DataWriters
             return jpgStream;
         }
 
-        private void SendEmail(List<Recipient> recipients, string subject, string body, Stream faultCurveStream)
+        private void SendEmail(List<Recipient> recipients, string subject, string body, params Attachment[] attachments)
         {
             const int DefaultSMTPPort = 25;
 
@@ -386,20 +476,25 @@ namespace FaultData.DataWriters
                     emailMessage.To.Add(toRecipient.Trim());
 
                 // Create the image attachment for the email message
-                Attachment data = new Attachment(faultCurveStream, "FaultCurves.png");
-                data.ContentId = "FaultCurves.png";
-                emailMessage.Attachments.Add(data);
+                foreach (Attachment attachment in attachments)
+                    emailMessage.Attachments.Add(attachment);
 
                 // Send the email
                 smtpClient.Send(emailMessage);
             }
         }
 
-        private DataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve)
+        private NamedDataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve)
         {
             DataGroup dataGroup = new DataGroup();
+
             dataGroup.FromData(faultCurve.Data);
-            return dataGroup[0];
+
+            return new NamedDataSeries()
+            {
+                Name = faultCurve.Algorithm,
+                Series = dataGroup[0]
+            };
         }
 
         private void FixFaultCurve(DataSeries faultCurve, Line line)
@@ -416,6 +511,45 @@ namespace FaultData.DataWriters
                 else if (dataPoint.Value < minFaultDistance)
                     dataPoint.Value = minFaultDistance;
             }
+        }
+
+        private string Replace(string str, string oldValue, string newValue)
+        {
+            return str.Replace(oldValue, newValue);
+        }
+
+        private string Replace(string str, string oldValue, Func<string> newValueFactory)
+        {
+            Lazy<string> newValue = new Lazy<string>(newValueFactory);
+            StringBuilder builder = new StringBuilder();
+            int offset = 0;
+            int index;
+
+            while (offset < str.Length)
+            {
+                index = str.IndexOf(oldValue, offset, StringComparison.Ordinal);
+
+                if (index >= 0)
+                {
+                    builder.Append(str.Substring(offset, index));
+                    builder.Append(newValue.Value);
+                    offset = index + oldValue.Length;
+                }
+                else
+                {
+                    builder.Append(str.Substring(offset, str.Length - offset));
+                    offset = str.Length;
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private bool IsValid(FaultLocationData.FaultSummaryRow faultSummary, double lineLength)
+        {
+            return (faultSummary.DistanceDeviation < 0.5D * lineLength)
+                && (faultSummary.LargestCurrentDistance >= MinFaultDistanceMultiplier * lineLength)
+                && (faultSummary.LargestCurrentDistance <= MaxFaultDistanceMultiplier * lineLength);
         }
 
         #endregion

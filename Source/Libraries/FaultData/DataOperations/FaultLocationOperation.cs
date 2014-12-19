@@ -137,7 +137,6 @@ namespace FaultData.DataOperations
             public List<FaultLocationAlgorithm> FaultLocationAlgorithms;
 
             public List<DataSeries> FaultCurves;
-            public List<List<DataPoint>> FaultData;
 
             #endregion
 
@@ -145,8 +144,9 @@ namespace FaultData.DataOperations
 
             public void GenerateFaultCurves()
             {
+                List<List<Segment>> segmentGroups;
+
                 VICycleDataSet subSet;
-                VICycleDataSet subSet2;
                 List<DataPoint> faultDataPoints;
                 double[] faultDistances;
 
@@ -155,14 +155,9 @@ namespace FaultData.DataOperations
                     .Select(algorithm => new DataSeries())
                     .ToList();
 
-                // Initialize a collection of fault data for each algorithm
-                FaultData = FaultLocationAlgorithms
-                    .Select(algorithm => new List<DataPoint>())
-                    .ToList();
-
                 // Break the list of segments into smaller lists of segments where
                 // each consecutive group of faulted segments marks the end of a list
-                List<List<Segment>> segmentGroups = FaultTypeSegments
+                segmentGroups = FaultTypeSegments
                     .Aggregate(new List<List<Segment>>(), (list, segment) =>
                     {
                         if (segment.FaultType == FaultType.None || list.Count == 0)
@@ -207,10 +202,6 @@ namespace FaultData.DataOperations
                                         faultDataPoints = subSet.VA.RMS.DataPoints
                                             .Zip(faultDistances, (point, distance) => new DataPoint() { Time = point.Time, Value = distance })
                                             .ToList();
-
-                                        // Dump the fault distance data points into the
-                                        // collection of fault data for this algorithm
-                                        FaultData[i].AddRange(faultDataPoints);
                                     }
                                     else
                                     {
@@ -245,13 +236,13 @@ namespace FaultData.DataOperations
                         {
                             // Get a subset of the cycle data that contains only
                             // the data in the current segment after the end sample
-                            subSet2 = CycleDataSet.ToSubSet(Math.Max(segment.StartSample, endSample + 1), segment.EndSample);
+                            subSet = CycleDataSet.ToSubSet(Math.Max(segment.StartSample, endSample + 1), segment.EndSample);
 
                             foreach (DataSeries faultCurve in FaultCurves)
                             {
                                 // Generate NaN-value data points to fill
                                 // the fault curve beyond the end sample
-                                faultDataPoints = subSet2.VA.RMS.DataPoints
+                                faultDataPoints = subSet.VA.RMS.DataPoints
                                     .Select(point => new DataPoint() { Time = point.Time, Value = double.NaN })
                                     .ToList();
 
@@ -287,7 +278,6 @@ namespace FaultData.DataOperations
             // Fields
             public List<DataPoint> DataPoints;
 
-            public double Median;
             public double Maximum;
             public double Minimum;
             public double Average;
@@ -302,7 +292,6 @@ namespace FaultData.DataOperations
                 double variance;
 
                 DataPoints.Sort((point1, point2) => point1.Value.CompareTo(point2.Value));
-                Median = DataPoints[DataPoints.Count / 2].Value;
                 Maximum = DataPoints[DataPoints.Count - 1].Value;
                 Minimum = DataPoints[0].Value;
                 Average = DataPoints.Average(dataPoint => dataPoint.Value);
@@ -329,14 +318,8 @@ namespace FaultData.DataOperations
             public VICycleDataSet CycleDataSet;
             public List<Segment> FaultTypeSegments;
 
-            public int FaultCount;
             public List<FaultLocationAlgorithm> FaultLocationAlgorithms;
             public List<DataSeries> FaultCurves;
-            public List<List<DataPoint>> FaultData;
-
-            public double MaxFaultDistanceMultiplier;
-            public double MinFaultDistanceMultiplier;
-            public double LineLength;
 
             #endregion
 
@@ -346,10 +329,10 @@ namespace FaultData.DataOperations
             {
                 StatCalculator statCalculator;
 
+                List<List<Segment>> faults;
+                List<Segment> fault;
                 int largestCurrentIndex;
-                List<double> largestCurrentDistances;
 
-                List<Segment> firstFault;
                 DateTime startTime;
                 DateTime endTime;
                 double durationSeconds;
@@ -358,97 +341,78 @@ namespace FaultData.DataOperations
                 FaultLocationData.FaultSummaryRow faultSummaryRow;
 
                 statCalculator = new StatCalculator();
-                largestCurrentIndex = GetLargestCurrentIndex(CycleDataSet, FaultTypeSegments);
+
+                // Break the list of segments into smaller lists of segments where
+                // each consecutive group of faulted segments marks the end of a list
+                faults = FaultTypeSegments
+                    .Aggregate(new List<List<Segment>>(), (list, segment) =>
+                    {
+                        if (segment.FaultType == FaultType.None || list.Count == 0)
+                            list.Add(new List<Segment>());
+
+                        if (segment.FaultType != FaultType.None)
+                            list.Last().Add(segment);
+
+                        return list;
+                    });
+
+                faults.RemoveAll(list => list.Count == 0);
 
                 for (int i = 0; i < FaultLocationAlgorithms.Count; i++)
                 {
-                    // Calculate statistics on the fault data for the current algorithm
-                    statCalculator.DataPoints = FaultData[i]
-                        .Where(dataPoint => !double.IsNaN(dataPoint.Value))
-                        .Where(dataPoint => dataPoint.Value <= MaxFaultDistanceMultiplier * LineLength)
-                        .Where(dataPoint => dataPoint.Value >= MinFaultDistanceMultiplier * LineLength)
-                        .ToList();
-
-                    if (statCalculator.DataPoints.Count == 0)
-                    {
-                        statCalculator.DataPoints = FaultData[i]
-                            .Where(dataPoint => !double.IsNaN(dataPoint.Value))
-                            .ToList();
-                    }
-
-                    statCalculator.CalculateStatistics();
-
                     // Create the fault curve record to be written to the database
                     faultCurveRow = FaultCurveTable.NewFaultCurveRow();
                     faultCurveRow.EventID = EventID;
                     faultCurveRow.Algorithm = FaultLocationAlgorithms[i].Method.Name;
-                    faultCurveRow.LargestCurrentDistance = FaultCurves[i][largestCurrentIndex].Value;
-                    faultCurveRow.MedianDistance = statCalculator.Median;
-                    faultCurveRow.MaximumDistance = statCalculator.Maximum;
-                    faultCurveRow.MinimumDistance = statCalculator.Minimum;
-                    faultCurveRow.AverageDistance = statCalculator.Average;
-                    faultCurveRow.DistanceDeviation = statCalculator.StandardDeviation;
                     faultCurveRow.Data = Serialize(FaultCurves[i]);
 
                     FaultCurveTable.AddFaultCurveRow(faultCurveRow);
+
+                    for (int faultIndex = 0; faultIndex < faults.Count; faultIndex++)
+                    {
+                        fault = faults[faultIndex];
+
+                        // Get the index of the cycle where the sum of the three phases of RMS current is largest
+                        largestCurrentIndex = GetLargestCurrentIndex(CycleDataSet, fault);
+
+                        if (!double.IsNaN(FaultCurves[i].DataPoints[largestCurrentIndex].Value))
+                        {
+                            // Determine the start time and end time of the fault
+                            startTime = CycleDataSet.VA.RMS[fault.First().StartSample].Time;
+                            endTime = CycleDataSet.VA.RMS[fault.Last().EndSample].Time;
+
+                            // Calculate the duration of the fault in seconds
+                            durationSeconds = (endTime - startTime).TotalSeconds;
+
+                            // Calculate statistics about the fault
+                            // using fault data from this fault curve
+                            statCalculator.DataPoints = FaultCurves[i].DataPoints
+                                .Skip(fault.First().StartSample)
+                                .Take(fault.Last().EndSample)
+                                .Where(dataPoint => !double.IsNaN(dataPoint.Value))
+                                .ToList();
+
+                            statCalculator.CalculateStatistics();
+
+                            // Create the fault summary record to be written to the database
+                            faultSummaryRow = FaultSummaryTable.NewFaultSummaryRow();
+                            faultSummaryRow.EventID = EventID;
+                            faultSummaryRow.Algorithm = FaultLocationAlgorithms[i].Method.Name;
+                            faultSummaryRow.FaultNumber = faultIndex + 1;
+                            faultSummaryRow.LargestCurrentDistance = FaultCurves[i].DataPoints[largestCurrentIndex].Value;
+                            faultSummaryRow.MaximumDistance = statCalculator.Maximum;
+                            faultSummaryRow.MinimumDistance = statCalculator.Minimum;
+                            faultSummaryRow.AverageDistance = statCalculator.Average;
+                            faultSummaryRow.DistanceDeviation = statCalculator.StandardDeviation;
+                            faultSummaryRow.Inception = startTime;
+                            faultSummaryRow.DurationSeconds = durationSeconds;
+                            faultSummaryRow.DurationCycles = durationSeconds * Frequency;
+                            faultSummaryRow.FaultType = fault.MaxBy(segment => segment.EndSample - segment.StartSample).FaultType.ToString();
+
+                            FaultSummaryTable.AddFaultSummaryRow(faultSummaryRow);
+                        }
+                    }
                 }
-
-                // Get a collection of the fault distance for each
-                // algorithm on the cycle with the largest current
-                largestCurrentDistances = FaultCurves
-                    .Select(curve => curve[largestCurrentIndex].Value)
-                    .OrderBy(distance => distance)
-                    .ToList();
-
-                // Get the first set of consecutive fault segments which
-                // represent the first fault that occurred in the event
-                firstFault = FaultTypeSegments
-                    .SkipWhile(segment => segment.FaultType == FaultType.None)
-                    .TakeWhile(segment => segment.FaultType != FaultType.None)
-                    .ToList();
-
-                // Determine the start time and end time of the fault
-                startTime = CycleDataSet.VA.RMS[firstFault.First().StartSample].Time;
-                endTime = CycleDataSet.VA.RMS[firstFault.Last().EndSample].Time;
-
-                // Calculate the duration of the fault in seconds
-                durationSeconds = (endTime - startTime).TotalSeconds;
-
-                // Calculate statistics about the entire fault
-                // using fault data from all the fault curves
-                statCalculator.DataPoints = FaultData
-                    .SelectMany(faultData => faultData)
-                    .Where(dataPoint => !double.IsNaN(dataPoint.Value))
-                    .Where(dataPoint => dataPoint.Value <= MaxFaultDistanceMultiplier * LineLength)
-                    .Where(dataPoint => dataPoint.Value >= MinFaultDistanceMultiplier * LineLength)
-                    .ToList();
-
-                if (statCalculator.DataPoints.Count == 0)
-                {
-                    statCalculator.DataPoints = FaultData
-                        .SelectMany(faultData => faultData)
-                        .Where(dataPoint => !double.IsNaN(dataPoint.Value))
-                        .ToList();
-                }
-
-                statCalculator.CalculateStatistics();
-
-                // Create the fault summary record to be written to the database
-                faultSummaryRow = FaultSummaryTable.NewFaultSummaryRow();
-                faultSummaryRow.EventID = EventID;
-                faultSummaryRow.LargestCurrentDistance = largestCurrentDistances[largestCurrentDistances.Count / 2];
-                faultSummaryRow.MedianDistance = statCalculator.Median;
-                faultSummaryRow.MaximumDistance = statCalculator.Maximum;
-                faultSummaryRow.MinimumDistance = statCalculator.Minimum;
-                faultSummaryRow.AverageDistance = statCalculator.Average;
-                faultSummaryRow.DistanceDeviation = statCalculator.StandardDeviation;
-                faultSummaryRow.FaultCount = FaultCount;
-                faultSummaryRow.Inception = startTime;
-                faultSummaryRow.DurationSeconds = durationSeconds;
-                faultSummaryRow.DurationCycles = durationSeconds * Frequency;
-                faultSummaryRow.FaultType = firstFault.MaxBy(segment => segment.EndSample - segment.StartSample).FaultType.ToString();
-
-                FaultSummaryTable.AddFaultSummaryRow(faultSummaryRow);
             }
 
             private int GetLargestCurrentIndex(VICycleDataSet viCycleDataSet, List<Segment> faultTypeSegments)
@@ -657,13 +621,8 @@ namespace FaultData.DataOperations
                     faultSummarizer.EventID = eventID;
                     faultSummarizer.CycleDataSet = viCycleDataSet;
                     faultSummarizer.FaultTypeSegments = faultTypeSegments;
-                    faultSummarizer.FaultCount = faultCount;
                     faultSummarizer.FaultLocationAlgorithms = faultLocationAlgorithms;
                     faultSummarizer.FaultCurves = faultCurveGenerator.FaultCurves;
-                    faultSummarizer.FaultData = faultCurveGenerator.FaultData;
-                    faultSummarizer.MaxFaultDistanceMultiplier = MaxFaultDistanceMultiplier;
-                    faultSummarizer.MinFaultDistanceMultiplier = MinFaultDistanceMultiplier;
-                    faultSummarizer.LineLength = faultGroup.Line.Length;
                     faultSummarizer.SummarizeFault();
                 }
 
@@ -675,7 +634,6 @@ namespace FaultData.DataOperations
 
             if (faultCurveTable.Count > 0)
             {
-
                 using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connectionString))
                 {
                     bulkCopy.BulkCopyTimeout = 0;

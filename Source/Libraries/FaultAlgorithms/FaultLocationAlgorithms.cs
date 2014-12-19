@@ -196,7 +196,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] NovoselEtAl(FaultLocationDataSet faultDataSet, string parameters)
+        private static double[] Novosel(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber z;

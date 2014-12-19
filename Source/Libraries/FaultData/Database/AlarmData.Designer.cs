@@ -24,13 +24,15 @@ namespace FaultData.Database {
     [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.DataSet")]
     public partial class AlarmData : global::System.Data.DataSet {
         
-        private AlarmLimitDataTable tableAlarmLimit;
-        
-        private OffNormalLimitDataTable tableOffNormalLimit;
+        private AlarmTypeDataTable tableAlarmType;
         
         private AlarmLogDataTable tableAlarmLog;
         
-        private OffNormalLogDataTable tableOffNormalLog;
+        private DefaultAlarmRangeLimitDataTable tableDefaultAlarmRangeLimit;
+        
+        private AlarmRangeLimitDataTable tableAlarmRangeLimit;
+        
+        private HourOfWeekLimitDataTable tableHourOfWeekLimit;
         
         private global::System.Data.SchemaSerializationMode _schemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
         
@@ -60,17 +62,20 @@ namespace FaultData.Database {
             if ((this.DetermineSchemaSerializationMode(info, context) == global::System.Data.SchemaSerializationMode.IncludeSchema)) {
                 global::System.Data.DataSet ds = new global::System.Data.DataSet();
                 ds.ReadXmlSchema(new global::System.Xml.XmlTextReader(new global::System.IO.StringReader(strSchema)));
-                if ((ds.Tables["AlarmLimit"] != null)) {
-                    base.Tables.Add(new AlarmLimitDataTable(ds.Tables["AlarmLimit"]));
-                }
-                if ((ds.Tables["OffNormalLimit"] != null)) {
-                    base.Tables.Add(new OffNormalLimitDataTable(ds.Tables["OffNormalLimit"]));
+                if ((ds.Tables["AlarmType"] != null)) {
+                    base.Tables.Add(new AlarmTypeDataTable(ds.Tables["AlarmType"]));
                 }
                 if ((ds.Tables["AlarmLog"] != null)) {
                     base.Tables.Add(new AlarmLogDataTable(ds.Tables["AlarmLog"]));
                 }
-                if ((ds.Tables["OffNormalLog"] != null)) {
-                    base.Tables.Add(new OffNormalLogDataTable(ds.Tables["OffNormalLog"]));
+                if ((ds.Tables["DefaultAlarmRangeLimit"] != null)) {
+                    base.Tables.Add(new DefaultAlarmRangeLimitDataTable(ds.Tables["DefaultAlarmRangeLimit"]));
+                }
+                if ((ds.Tables["AlarmRangeLimit"] != null)) {
+                    base.Tables.Add(new AlarmRangeLimitDataTable(ds.Tables["AlarmRangeLimit"]));
+                }
+                if ((ds.Tables["HourOfWeekLimit"] != null)) {
+                    base.Tables.Add(new HourOfWeekLimitDataTable(ds.Tables["HourOfWeekLimit"]));
                 }
                 this.DataSetName = ds.DataSetName;
                 this.Prefix = ds.Prefix;
@@ -94,19 +99,9 @@ namespace FaultData.Database {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Browsable(false)]
         [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
-        public AlarmLimitDataTable AlarmLimit {
+        public AlarmTypeDataTable AlarmType {
             get {
-                return this.tableAlarmLimit;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Browsable(false)]
-        [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
-        public OffNormalLimitDataTable OffNormalLimit {
-            get {
-                return this.tableOffNormalLimit;
+                return this.tableAlarmType;
             }
         }
         
@@ -124,9 +119,29 @@ namespace FaultData.Database {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Browsable(false)]
         [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
-        public OffNormalLogDataTable OffNormalLog {
+        public DefaultAlarmRangeLimitDataTable DefaultAlarmRangeLimit {
             get {
-                return this.tableOffNormalLog;
+                return this.tableDefaultAlarmRangeLimit;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Browsable(false)]
+        [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
+        public AlarmRangeLimitDataTable AlarmRangeLimit {
+            get {
+                return this.tableAlarmRangeLimit;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Browsable(false)]
+        [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
+        public HourOfWeekLimitDataTable HourOfWeekLimit {
+            get {
+                return this.tableHourOfWeekLimit;
             }
         }
         
@@ -197,17 +212,20 @@ namespace FaultData.Database {
                 this.Reset();
                 global::System.Data.DataSet ds = new global::System.Data.DataSet();
                 ds.ReadXml(reader);
-                if ((ds.Tables["AlarmLimit"] != null)) {
-                    base.Tables.Add(new AlarmLimitDataTable(ds.Tables["AlarmLimit"]));
-                }
-                if ((ds.Tables["OffNormalLimit"] != null)) {
-                    base.Tables.Add(new OffNormalLimitDataTable(ds.Tables["OffNormalLimit"]));
+                if ((ds.Tables["AlarmType"] != null)) {
+                    base.Tables.Add(new AlarmTypeDataTable(ds.Tables["AlarmType"]));
                 }
                 if ((ds.Tables["AlarmLog"] != null)) {
                     base.Tables.Add(new AlarmLogDataTable(ds.Tables["AlarmLog"]));
                 }
-                if ((ds.Tables["OffNormalLog"] != null)) {
-                    base.Tables.Add(new OffNormalLogDataTable(ds.Tables["OffNormalLog"]));
+                if ((ds.Tables["DefaultAlarmRangeLimit"] != null)) {
+                    base.Tables.Add(new DefaultAlarmRangeLimitDataTable(ds.Tables["DefaultAlarmRangeLimit"]));
+                }
+                if ((ds.Tables["AlarmRangeLimit"] != null)) {
+                    base.Tables.Add(new AlarmRangeLimitDataTable(ds.Tables["AlarmRangeLimit"]));
+                }
+                if ((ds.Tables["HourOfWeekLimit"] != null)) {
+                    base.Tables.Add(new HourOfWeekLimitDataTable(ds.Tables["HourOfWeekLimit"]));
                 }
                 this.DataSetName = ds.DataSetName;
                 this.Prefix = ds.Prefix;
@@ -242,16 +260,10 @@ namespace FaultData.Database {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         internal void InitVars(bool initTable) {
-            this.tableAlarmLimit = ((AlarmLimitDataTable)(base.Tables["AlarmLimit"]));
+            this.tableAlarmType = ((AlarmTypeDataTable)(base.Tables["AlarmType"]));
             if ((initTable == true)) {
-                if ((this.tableAlarmLimit != null)) {
-                    this.tableAlarmLimit.InitVars();
-                }
-            }
-            this.tableOffNormalLimit = ((OffNormalLimitDataTable)(base.Tables["OffNormalLimit"]));
-            if ((initTable == true)) {
-                if ((this.tableOffNormalLimit != null)) {
-                    this.tableOffNormalLimit.InitVars();
+                if ((this.tableAlarmType != null)) {
+                    this.tableAlarmType.InitVars();
                 }
             }
             this.tableAlarmLog = ((AlarmLogDataTable)(base.Tables["AlarmLog"]));
@@ -260,10 +272,22 @@ namespace FaultData.Database {
                     this.tableAlarmLog.InitVars();
                 }
             }
-            this.tableOffNormalLog = ((OffNormalLogDataTable)(base.Tables["OffNormalLog"]));
+            this.tableDefaultAlarmRangeLimit = ((DefaultAlarmRangeLimitDataTable)(base.Tables["DefaultAlarmRangeLimit"]));
             if ((initTable == true)) {
-                if ((this.tableOffNormalLog != null)) {
-                    this.tableOffNormalLog.InitVars();
+                if ((this.tableDefaultAlarmRangeLimit != null)) {
+                    this.tableDefaultAlarmRangeLimit.InitVars();
+                }
+            }
+            this.tableAlarmRangeLimit = ((AlarmRangeLimitDataTable)(base.Tables["AlarmRangeLimit"]));
+            if ((initTable == true)) {
+                if ((this.tableAlarmRangeLimit != null)) {
+                    this.tableAlarmRangeLimit.InitVars();
+                }
+            }
+            this.tableHourOfWeekLimit = ((HourOfWeekLimitDataTable)(base.Tables["HourOfWeekLimit"]));
+            if ((initTable == true)) {
+                if ((this.tableHourOfWeekLimit != null)) {
+                    this.tableHourOfWeekLimit.InitVars();
                 }
             }
         }
@@ -276,25 +300,21 @@ namespace FaultData.Database {
             this.Namespace = "http://tempuri.org/AlarmData.xsd";
             this.EnforceConstraints = true;
             this.SchemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
-            this.tableAlarmLimit = new AlarmLimitDataTable();
-            base.Tables.Add(this.tableAlarmLimit);
-            this.tableOffNormalLimit = new OffNormalLimitDataTable();
-            base.Tables.Add(this.tableOffNormalLimit);
+            this.tableAlarmType = new AlarmTypeDataTable();
+            base.Tables.Add(this.tableAlarmType);
             this.tableAlarmLog = new AlarmLogDataTable();
             base.Tables.Add(this.tableAlarmLog);
-            this.tableOffNormalLog = new OffNormalLogDataTable();
-            base.Tables.Add(this.tableOffNormalLog);
+            this.tableDefaultAlarmRangeLimit = new DefaultAlarmRangeLimitDataTable();
+            base.Tables.Add(this.tableDefaultAlarmRangeLimit);
+            this.tableAlarmRangeLimit = new AlarmRangeLimitDataTable();
+            base.Tables.Add(this.tableAlarmRangeLimit);
+            this.tableHourOfWeekLimit = new HourOfWeekLimitDataTable();
+            base.Tables.Add(this.tableHourOfWeekLimit);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private bool ShouldSerializeAlarmLimit() {
-            return false;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private bool ShouldSerializeOffNormalLimit() {
+        private bool ShouldSerializeAlarmType() {
             return false;
         }
         
@@ -306,7 +326,19 @@ namespace FaultData.Database {
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private bool ShouldSerializeOffNormalLog() {
+        private bool ShouldSerializeDefaultAlarmRangeLimit() {
+            return false;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private bool ShouldSerializeAlarmRangeLimit() {
+            return false;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private bool ShouldSerializeHourOfWeekLimit() {
             return false;
         }
         
@@ -366,40 +398,37 @@ namespace FaultData.Database {
         }
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public delegate void AlarmLimitRowChangeEventHandler(object sender, AlarmLimitRowChangeEvent e);
-        
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public delegate void OffNormalLimitRowChangeEventHandler(object sender, OffNormalLimitRowChangeEvent e);
+        public delegate void AlarmTypeRowChangeEventHandler(object sender, AlarmTypeRowChangeEvent e);
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         public delegate void AlarmLogRowChangeEventHandler(object sender, AlarmLogRowChangeEvent e);
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public delegate void OffNormalLogRowChangeEventHandler(object sender, OffNormalLogRowChangeEvent e);
+        public delegate void DefaultAlarmRangeLimitRowChangeEventHandler(object sender, DefaultAlarmRangeLimitRowChangeEvent e);
+        
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public delegate void AlarmRangeLimitRowChangeEventHandler(object sender, AlarmRangeLimitRowChangeEvent e);
+        
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public delegate void HourOfWeekLimitRowChangeEventHandler(object sender, HourOfWeekLimitRowChangeEvent e);
         
         /// <summary>
         ///Represents the strongly named DataTable class.
         ///</summary>
         [global::System.Serializable()]
         [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
-        public partial class AlarmLimitDataTable : global::System.Data.TypedTableBase<AlarmLimitRow> {
+        public partial class AlarmTypeDataTable : global::System.Data.TypedTableBase<AlarmTypeRow> {
             
             private global::System.Data.DataColumn columnID;
             
-            private global::System.Data.DataColumn columnChannelID;
+            private global::System.Data.DataColumn columnName;
             
-            private global::System.Data.DataColumn columnHigh;
-            
-            private global::System.Data.DataColumn columnLow;
-            
-            private global::System.Data.DataColumn columnRangeInclusive;
-            
-            private global::System.Data.DataColumn columnEnabled;
+            private global::System.Data.DataColumn columnDescription;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitDataTable() {
-                this.TableName = "AlarmLimit";
+            public AlarmTypeDataTable() {
+                this.TableName = "AlarmType";
                 this.BeginInit();
                 this.InitClass();
                 this.EndInit();
@@ -407,7 +436,7 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal AlarmLimitDataTable(global::System.Data.DataTable table) {
+            internal AlarmTypeDataTable(global::System.Data.DataTable table) {
                 this.TableName = table.TableName;
                 if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
                     this.CaseSensitive = table.CaseSensitive;
@@ -424,7 +453,7 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected AlarmLimitDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+            protected AlarmTypeDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
                     base(info, context) {
                 this.InitVars();
             }
@@ -439,41 +468,17 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ChannelIDColumn {
+            public global::System.Data.DataColumn NameColumn {
                 get {
-                    return this.columnChannelID;
+                    return this.columnName;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn HighColumn {
+            public global::System.Data.DataColumn DescriptionColumn {
                 get {
-                    return this.columnHigh;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn LowColumn {
-                get {
-                    return this.columnLow;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn RangeInclusiveColumn {
-                get {
-                    return this.columnRangeInclusive;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn EnabledColumn {
-                get {
-                    return this.columnEnabled;
+                    return this.columnDescription;
                 }
             }
             
@@ -488,57 +493,54 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitRow this[int index] {
+            public AlarmTypeRow this[int index] {
                 get {
-                    return ((AlarmLimitRow)(this.Rows[index]));
+                    return ((AlarmTypeRow)(this.Rows[index]));
                 }
             }
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event AlarmLimitRowChangeEventHandler AlarmLimitRowChanging;
+            public event AlarmTypeRowChangeEventHandler AlarmTypeRowChanging;
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event AlarmLimitRowChangeEventHandler AlarmLimitRowChanged;
+            public event AlarmTypeRowChangeEventHandler AlarmTypeRowChanged;
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event AlarmLimitRowChangeEventHandler AlarmLimitRowDeleting;
+            public event AlarmTypeRowChangeEventHandler AlarmTypeRowDeleting;
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event AlarmLimitRowChangeEventHandler AlarmLimitRowDeleted;
+            public event AlarmTypeRowChangeEventHandler AlarmTypeRowDeleted;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void AddAlarmLimitRow(AlarmLimitRow row) {
+            public void AddAlarmTypeRow(AlarmTypeRow row) {
                 this.Rows.Add(row);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitRow AddAlarmLimitRow(int ChannelID, double High, double Low, int RangeInclusive, int Enabled) {
-                AlarmLimitRow rowAlarmLimitRow = ((AlarmLimitRow)(this.NewRow()));
+            public AlarmTypeRow AddAlarmTypeRow(string Name, string Description) {
+                AlarmTypeRow rowAlarmTypeRow = ((AlarmTypeRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
-                        ChannelID,
-                        High,
-                        Low,
-                        RangeInclusive,
-                        Enabled};
-                rowAlarmLimitRow.ItemArray = columnValuesArray;
-                this.Rows.Add(rowAlarmLimitRow);
-                return rowAlarmLimitRow;
+                        Name,
+                        Description};
+                rowAlarmTypeRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowAlarmTypeRow);
+                return rowAlarmTypeRow;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitRow FindByID(int ID) {
-                return ((AlarmLimitRow)(this.Rows.Find(new object[] {
+            public AlarmTypeRow FindByID(int ID) {
+                return ((AlarmTypeRow)(this.Rows.Find(new object[] {
                             ID})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public override global::System.Data.DataTable Clone() {
-                AlarmLimitDataTable cln = ((AlarmLimitDataTable)(base.Clone()));
+                AlarmTypeDataTable cln = ((AlarmTypeDataTable)(base.Clone()));
                 cln.InitVars();
                 return cln;
             }
@@ -546,18 +548,15 @@ namespace FaultData.Database {
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override global::System.Data.DataTable CreateInstance() {
-                return new AlarmLimitDataTable();
+                return new AlarmTypeDataTable();
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             internal void InitVars() {
                 this.columnID = base.Columns["ID"];
-                this.columnChannelID = base.Columns["ChannelID"];
-                this.columnHigh = base.Columns["High"];
-                this.columnLow = base.Columns["Low"];
-                this.columnRangeInclusive = base.Columns["RangeInclusive"];
-                this.columnEnabled = base.Columns["Enabled"];
+                this.columnName = base.Columns["Name"];
+                this.columnDescription = base.Columns["Description"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -565,16 +564,10 @@ namespace FaultData.Database {
             private void InitClass() {
                 this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnID);
-                this.columnChannelID = new global::System.Data.DataColumn("ChannelID", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnChannelID);
-                this.columnHigh = new global::System.Data.DataColumn("High", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnHigh);
-                this.columnLow = new global::System.Data.DataColumn("Low", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnLow);
-                this.columnRangeInclusive = new global::System.Data.DataColumn("RangeInclusive", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnRangeInclusive);
-                this.columnEnabled = new global::System.Data.DataColumn("Enabled", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnEnabled);
+                this.columnName = new global::System.Data.DataColumn("Name", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnName);
+                this.columnDescription = new global::System.Data.DataColumn("Description", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnDescription);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columnID}, true));
                 this.columnID.AutoIncrement = true;
@@ -583,35 +576,35 @@ namespace FaultData.Database {
                 this.columnID.AllowDBNull = false;
                 this.columnID.ReadOnly = true;
                 this.columnID.Unique = true;
-                this.columnChannelID.AllowDBNull = false;
-                this.columnRangeInclusive.AllowDBNull = false;
-                this.columnEnabled.AllowDBNull = false;
+                this.columnName.AllowDBNull = false;
+                this.columnName.MaxLength = 50;
+                this.columnDescription.MaxLength = 2147483647;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitRow NewAlarmLimitRow() {
-                return ((AlarmLimitRow)(this.NewRow()));
+            public AlarmTypeRow NewAlarmTypeRow() {
+                return ((AlarmTypeRow)(this.NewRow()));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
-                return new AlarmLimitRow(builder);
+                return new AlarmTypeRow(builder);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override global::System.Type GetRowType() {
-                return typeof(AlarmLimitRow);
+                return typeof(AlarmTypeRow);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowChanged(e);
-                if ((this.AlarmLimitRowChanged != null)) {
-                    this.AlarmLimitRowChanged(this, new AlarmLimitRowChangeEvent(((AlarmLimitRow)(e.Row)), e.Action));
+                if ((this.AlarmTypeRowChanged != null)) {
+                    this.AlarmTypeRowChanged(this, new AlarmTypeRowChangeEvent(((AlarmTypeRow)(e.Row)), e.Action));
                 }
             }
             
@@ -619,8 +612,8 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowChanging(e);
-                if ((this.AlarmLimitRowChanging != null)) {
-                    this.AlarmLimitRowChanging(this, new AlarmLimitRowChangeEvent(((AlarmLimitRow)(e.Row)), e.Action));
+                if ((this.AlarmTypeRowChanging != null)) {
+                    this.AlarmTypeRowChanging(this, new AlarmTypeRowChangeEvent(((AlarmTypeRow)(e.Row)), e.Action));
                 }
             }
             
@@ -628,8 +621,8 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowDeleted(e);
-                if ((this.AlarmLimitRowDeleted != null)) {
-                    this.AlarmLimitRowDeleted(this, new AlarmLimitRowChangeEvent(((AlarmLimitRow)(e.Row)), e.Action));
+                if ((this.AlarmTypeRowDeleted != null)) {
+                    this.AlarmTypeRowDeleted(this, new AlarmTypeRowChangeEvent(((AlarmTypeRow)(e.Row)), e.Action));
                 }
             }
             
@@ -637,14 +630,14 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowDeleting(e);
-                if ((this.AlarmLimitRowDeleting != null)) {
-                    this.AlarmLimitRowDeleting(this, new AlarmLimitRowChangeEvent(((AlarmLimitRow)(e.Row)), e.Action));
+                if ((this.AlarmTypeRowDeleting != null)) {
+                    this.AlarmTypeRowDeleting(this, new AlarmTypeRowChangeEvent(((AlarmTypeRow)(e.Row)), e.Action));
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void RemoveAlarmLimitRow(AlarmLimitRow row) {
+            public void RemoveAlarmTypeRow(AlarmTypeRow row) {
                 this.Rows.Remove(row);
             }
             
@@ -671,359 +664,7 @@ namespace FaultData.Database {
                 type.Attributes.Add(attribute1);
                 global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
                 attribute2.Name = "tableTypeName";
-                attribute2.FixedValue = "AlarmLimitDataTable";
-                type.Attributes.Add(attribute2);
-                type.Particle = sequence;
-                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
-                if (xs.Contains(dsSchema.TargetNamespace)) {
-                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
-                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
-                    try {
-                        global::System.Xml.Schema.XmlSchema schema = null;
-                        dsSchema.Write(s1);
-                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
-                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
-                            s2.SetLength(0);
-                            schema.Write(s2);
-                            if ((s1.Length == s2.Length)) {
-                                s1.Position = 0;
-                                s2.Position = 0;
-                                for (; ((s1.Position != s1.Length) 
-                                            && (s1.ReadByte() == s2.ReadByte())); ) {
-                                    ;
-                                }
-                                if ((s1.Position == s1.Length)) {
-                                    return type;
-                                }
-                            }
-                        }
-                    }
-                    finally {
-                        if ((s1 != null)) {
-                            s1.Close();
-                        }
-                        if ((s2 != null)) {
-                            s2.Close();
-                        }
-                    }
-                }
-                xs.Add(dsSchema);
-                return type;
-            }
-        }
-        
-        /// <summary>
-        ///Represents the strongly named DataTable class.
-        ///</summary>
-        [global::System.Serializable()]
-        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
-        public partial class OffNormalLimitDataTable : global::System.Data.TypedTableBase<OffNormalLimitRow> {
-            
-            private global::System.Data.DataColumn columnID;
-            
-            private global::System.Data.DataColumn columnChannelID;
-            
-            private global::System.Data.DataColumn columnHourOfWeek;
-            
-            private global::System.Data.DataColumn columnHigh;
-            
-            private global::System.Data.DataColumn columnLow;
-            
-            private global::System.Data.DataColumn columnCount;
-            
-            private global::System.Data.DataColumn columnEnabled;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitDataTable() {
-                this.TableName = "OffNormalLimit";
-                this.BeginInit();
-                this.InitClass();
-                this.EndInit();
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal OffNormalLimitDataTable(global::System.Data.DataTable table) {
-                this.TableName = table.TableName;
-                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
-                    this.CaseSensitive = table.CaseSensitive;
-                }
-                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
-                    this.Locale = table.Locale;
-                }
-                if ((table.Namespace != table.DataSet.Namespace)) {
-                    this.Namespace = table.Namespace;
-                }
-                this.Prefix = table.Prefix;
-                this.MinimumCapacity = table.MinimumCapacity;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected OffNormalLimitDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
-                    base(info, context) {
-                this.InitVars();
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn IDColumn {
-                get {
-                    return this.columnID;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ChannelIDColumn {
-                get {
-                    return this.columnChannelID;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn HourOfWeekColumn {
-                get {
-                    return this.columnHourOfWeek;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn HighColumn {
-                get {
-                    return this.columnHigh;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn LowColumn {
-                get {
-                    return this.columnLow;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn CountColumn {
-                get {
-                    return this.columnCount;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn EnabledColumn {
-                get {
-                    return this.columnEnabled;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            [global::System.ComponentModel.Browsable(false)]
-            public int Count {
-                get {
-                    return this.Rows.Count;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitRow this[int index] {
-                get {
-                    return ((OffNormalLimitRow)(this.Rows[index]));
-                }
-            }
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLimitRowChangeEventHandler OffNormalLimitRowChanging;
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLimitRowChangeEventHandler OffNormalLimitRowChanged;
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLimitRowChangeEventHandler OffNormalLimitRowDeleting;
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLimitRowChangeEventHandler OffNormalLimitRowDeleted;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void AddOffNormalLimitRow(OffNormalLimitRow row) {
-                this.Rows.Add(row);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitRow AddOffNormalLimitRow(int ChannelID, int HourOfWeek, double High, double Low, int Count, int Enabled) {
-                OffNormalLimitRow rowOffNormalLimitRow = ((OffNormalLimitRow)(this.NewRow()));
-                object[] columnValuesArray = new object[] {
-                        null,
-                        ChannelID,
-                        HourOfWeek,
-                        High,
-                        Low,
-                        Count,
-                        Enabled};
-                rowOffNormalLimitRow.ItemArray = columnValuesArray;
-                this.Rows.Add(rowOffNormalLimitRow);
-                return rowOffNormalLimitRow;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitRow FindByID(int ID) {
-                return ((OffNormalLimitRow)(this.Rows.Find(new object[] {
-                            ID})));
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public override global::System.Data.DataTable Clone() {
-                OffNormalLimitDataTable cln = ((OffNormalLimitDataTable)(base.Clone()));
-                cln.InitVars();
-                return cln;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override global::System.Data.DataTable CreateInstance() {
-                return new OffNormalLimitDataTable();
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal void InitVars() {
-                this.columnID = base.Columns["ID"];
-                this.columnChannelID = base.Columns["ChannelID"];
-                this.columnHourOfWeek = base.Columns["HourOfWeek"];
-                this.columnHigh = base.Columns["High"];
-                this.columnLow = base.Columns["Low"];
-                this.columnCount = base.Columns["Count"];
-                this.columnEnabled = base.Columns["Enabled"];
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            private void InitClass() {
-                this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnID);
-                this.columnChannelID = new global::System.Data.DataColumn("ChannelID", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnChannelID);
-                this.columnHourOfWeek = new global::System.Data.DataColumn("HourOfWeek", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnHourOfWeek);
-                this.columnHigh = new global::System.Data.DataColumn("High", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnHigh);
-                this.columnLow = new global::System.Data.DataColumn("Low", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnLow);
-                this.columnCount = new global::System.Data.DataColumn("Count", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnCount);
-                this.columnEnabled = new global::System.Data.DataColumn("Enabled", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnEnabled);
-                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
-                                this.columnID}, true));
-                this.columnID.AutoIncrement = true;
-                this.columnID.AutoIncrementSeed = -1;
-                this.columnID.AutoIncrementStep = -1;
-                this.columnID.AllowDBNull = false;
-                this.columnID.ReadOnly = true;
-                this.columnID.Unique = true;
-                this.columnChannelID.AllowDBNull = false;
-                this.columnHourOfWeek.AllowDBNull = false;
-                this.columnHigh.AllowDBNull = false;
-                this.columnLow.AllowDBNull = false;
-                this.columnCount.AllowDBNull = false;
-                this.columnEnabled.AllowDBNull = false;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitRow NewOffNormalLimitRow() {
-                return ((OffNormalLimitRow)(this.NewRow()));
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
-                return new OffNormalLimitRow(builder);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override global::System.Type GetRowType() {
-                return typeof(OffNormalLimitRow);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowChanged(e);
-                if ((this.OffNormalLimitRowChanged != null)) {
-                    this.OffNormalLimitRowChanged(this, new OffNormalLimitRowChangeEvent(((OffNormalLimitRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowChanging(e);
-                if ((this.OffNormalLimitRowChanging != null)) {
-                    this.OffNormalLimitRowChanging(this, new OffNormalLimitRowChangeEvent(((OffNormalLimitRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowDeleted(e);
-                if ((this.OffNormalLimitRowDeleted != null)) {
-                    this.OffNormalLimitRowDeleted(this, new OffNormalLimitRowChangeEvent(((OffNormalLimitRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowDeleting(e);
-                if ((this.OffNormalLimitRowDeleting != null)) {
-                    this.OffNormalLimitRowDeleting(this, new OffNormalLimitRowChangeEvent(((OffNormalLimitRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void RemoveOffNormalLimitRow(OffNormalLimitRow row) {
-                this.Rows.Remove(row);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
-                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
-                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
-                AlarmData ds = new AlarmData();
-                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
-                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
-                any1.MinOccurs = new decimal(0);
-                any1.MaxOccurs = decimal.MaxValue;
-                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
-                sequence.Items.Add(any1);
-                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
-                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
-                any2.MinOccurs = new decimal(1);
-                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
-                sequence.Items.Add(any2);
-                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
-                attribute1.Name = "namespace";
-                attribute1.FixedValue = ds.Namespace;
-                type.Attributes.Add(attribute1);
-                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
-                attribute2.Name = "tableTypeName";
-                attribute2.FixedValue = "OffNormalLimitDataTable";
+                attribute2.FixedValue = "AlarmTypeDataTable";
                 type.Attributes.Add(attribute2);
                 type.Particle = sequence;
                 global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
@@ -1075,15 +716,17 @@ namespace FaultData.Database {
             
             private global::System.Data.DataColumn columnChannelID;
             
+            private global::System.Data.DataColumn columnAlarmTypeID;
+            
             private global::System.Data.DataColumn columnTime;
+            
+            private global::System.Data.DataColumn columnSeverity;
             
             private global::System.Data.DataColumn columnLimitHigh;
             
             private global::System.Data.DataColumn columnLimitLow;
             
-            private global::System.Data.DataColumn columnValueHigh;
-            
-            private global::System.Data.DataColumn columnValueLow;
+            private global::System.Data.DataColumn columnValue;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
@@ -1136,9 +779,25 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn AlarmTypeIDColumn {
+                get {
+                    return this.columnAlarmTypeID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public global::System.Data.DataColumn TimeColumn {
                 get {
                     return this.columnTime;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn SeverityColumn {
+                get {
+                    return this.columnSeverity;
                 }
             }
             
@@ -1160,17 +819,9 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ValueHighColumn {
+            public global::System.Data.DataColumn ValueColumn {
                 get {
-                    return this.columnValueHigh;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ValueLowColumn {
-                get {
-                    return this.columnValueLow;
+                    return this.columnValue;
                 }
             }
             
@@ -1211,16 +862,17 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLogRow AddAlarmLogRow(int ChannelID, System.DateTime Time, double LimitHigh, double LimitLow, double ValueHigh, double ValueLow) {
+            public AlarmLogRow AddAlarmLogRow(int ChannelID, int AlarmTypeID, System.DateTime Time, int Severity, double LimitHigh, double LimitLow, double Value) {
                 AlarmLogRow rowAlarmLogRow = ((AlarmLogRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
                         ChannelID,
+                        AlarmTypeID,
                         Time,
+                        Severity,
                         LimitHigh,
                         LimitLow,
-                        ValueHigh,
-                        ValueLow};
+                        Value};
                 rowAlarmLogRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowAlarmLogRow);
                 return rowAlarmLogRow;
@@ -1252,11 +904,12 @@ namespace FaultData.Database {
             internal void InitVars() {
                 this.columnID = base.Columns["ID"];
                 this.columnChannelID = base.Columns["ChannelID"];
+                this.columnAlarmTypeID = base.Columns["AlarmTypeID"];
                 this.columnTime = base.Columns["Time"];
+                this.columnSeverity = base.Columns["Severity"];
                 this.columnLimitHigh = base.Columns["LimitHigh"];
                 this.columnLimitLow = base.Columns["LimitLow"];
-                this.columnValueHigh = base.Columns["ValueHigh"];
-                this.columnValueLow = base.Columns["ValueLow"];
+                this.columnValue = base.Columns["Value"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1266,16 +919,18 @@ namespace FaultData.Database {
                 base.Columns.Add(this.columnID);
                 this.columnChannelID = new global::System.Data.DataColumn("ChannelID", typeof(int), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnChannelID);
+                this.columnAlarmTypeID = new global::System.Data.DataColumn("AlarmTypeID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnAlarmTypeID);
                 this.columnTime = new global::System.Data.DataColumn("Time", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnTime);
+                this.columnSeverity = new global::System.Data.DataColumn("Severity", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnSeverity);
                 this.columnLimitHigh = new global::System.Data.DataColumn("LimitHigh", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnLimitHigh);
                 this.columnLimitLow = new global::System.Data.DataColumn("LimitLow", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnLimitLow);
-                this.columnValueHigh = new global::System.Data.DataColumn("ValueHigh", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnValueHigh);
-                this.columnValueLow = new global::System.Data.DataColumn("ValueLow", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnValueLow);
+                this.columnValue = new global::System.Data.DataColumn("Value", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnValue);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columnID}, true));
                 this.columnID.AutoIncrement = true;
@@ -1285,9 +940,10 @@ namespace FaultData.Database {
                 this.columnID.ReadOnly = true;
                 this.columnID.Unique = true;
                 this.columnChannelID.AllowDBNull = false;
+                this.columnAlarmTypeID.AllowDBNull = false;
                 this.columnTime.AllowDBNull = false;
-                this.columnValueHigh.AllowDBNull = false;
-                this.columnValueLow.AllowDBNull = false;
+                this.columnSeverity.AllowDBNull = false;
+                this.columnValue.AllowDBNull = false;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1419,26 +1075,30 @@ namespace FaultData.Database {
         ///</summary>
         [global::System.Serializable()]
         [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
-        public partial class OffNormalLogDataTable : global::System.Data.TypedTableBase<OffNormalLogRow> {
+        public partial class DefaultAlarmRangeLimitDataTable : global::System.Data.TypedTableBase<DefaultAlarmRangeLimitRow> {
             
             private global::System.Data.DataColumn columnID;
             
-            private global::System.Data.DataColumn columnChannelID;
+            private global::System.Data.DataColumn columnMeasurementTypeID;
             
-            private global::System.Data.DataColumn columnTime;
+            private global::System.Data.DataColumn columnMeasurementCharacteristicID;
             
-            private global::System.Data.DataColumn columnLimitHigh;
+            private global::System.Data.DataColumn columnAlarmTypeID;
             
-            private global::System.Data.DataColumn columnLimitLow;
+            private global::System.Data.DataColumn columnSeverity;
             
-            private global::System.Data.DataColumn columnValueHigh;
+            private global::System.Data.DataColumn columnHigh;
             
-            private global::System.Data.DataColumn columnValueLow;
+            private global::System.Data.DataColumn columnLow;
+            
+            private global::System.Data.DataColumn columnRangeInclusive;
+            
+            private global::System.Data.DataColumn columnPerUnit;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogDataTable() {
-                this.TableName = "OffNormalLog";
+            public DefaultAlarmRangeLimitDataTable() {
+                this.TableName = "DefaultAlarmRangeLimit";
                 this.BeginInit();
                 this.InitClass();
                 this.EndInit();
@@ -1446,7 +1106,7 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal OffNormalLogDataTable(global::System.Data.DataTable table) {
+            internal DefaultAlarmRangeLimitDataTable(global::System.Data.DataTable table) {
                 this.TableName = table.TableName;
                 if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
                     this.CaseSensitive = table.CaseSensitive;
@@ -1463,7 +1123,7 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected OffNormalLogDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+            protected DefaultAlarmRangeLimitDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
                     base(info, context) {
                 this.InitVars();
             }
@@ -1478,49 +1138,65 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ChannelIDColumn {
+            public global::System.Data.DataColumn MeasurementTypeIDColumn {
                 get {
-                    return this.columnChannelID;
+                    return this.columnMeasurementTypeID;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn TimeColumn {
+            public global::System.Data.DataColumn MeasurementCharacteristicIDColumn {
                 get {
-                    return this.columnTime;
+                    return this.columnMeasurementCharacteristicID;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn LimitHighColumn {
+            public global::System.Data.DataColumn AlarmTypeIDColumn {
                 get {
-                    return this.columnLimitHigh;
+                    return this.columnAlarmTypeID;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn LimitLowColumn {
+            public global::System.Data.DataColumn SeverityColumn {
                 get {
-                    return this.columnLimitLow;
+                    return this.columnSeverity;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ValueHighColumn {
+            public global::System.Data.DataColumn HighColumn {
                 get {
-                    return this.columnValueHigh;
+                    return this.columnHigh;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn ValueLowColumn {
+            public global::System.Data.DataColumn LowColumn {
                 get {
-                    return this.columnValueLow;
+                    return this.columnLow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn RangeInclusiveColumn {
+                get {
+                    return this.columnRangeInclusive;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn PerUnitColumn {
+                get {
+                    return this.columnPerUnit;
                 }
             }
             
@@ -1535,58 +1211,60 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogRow this[int index] {
+            public DefaultAlarmRangeLimitRow this[int index] {
                 get {
-                    return ((OffNormalLogRow)(this.Rows[index]));
+                    return ((DefaultAlarmRangeLimitRow)(this.Rows[index]));
                 }
             }
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLogRowChangeEventHandler OffNormalLogRowChanging;
+            public event DefaultAlarmRangeLimitRowChangeEventHandler DefaultAlarmRangeLimitRowChanging;
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLogRowChangeEventHandler OffNormalLogRowChanged;
+            public event DefaultAlarmRangeLimitRowChangeEventHandler DefaultAlarmRangeLimitRowChanged;
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLogRowChangeEventHandler OffNormalLogRowDeleting;
+            public event DefaultAlarmRangeLimitRowChangeEventHandler DefaultAlarmRangeLimitRowDeleting;
             
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event OffNormalLogRowChangeEventHandler OffNormalLogRowDeleted;
+            public event DefaultAlarmRangeLimitRowChangeEventHandler DefaultAlarmRangeLimitRowDeleted;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void AddOffNormalLogRow(OffNormalLogRow row) {
+            public void AddDefaultAlarmRangeLimitRow(DefaultAlarmRangeLimitRow row) {
                 this.Rows.Add(row);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogRow AddOffNormalLogRow(int ChannelID, System.DateTime Time, double LimitHigh, double LimitLow, double ValueHigh, double ValueLow) {
-                OffNormalLogRow rowOffNormalLogRow = ((OffNormalLogRow)(this.NewRow()));
+            public DefaultAlarmRangeLimitRow AddDefaultAlarmRangeLimitRow(int MeasurementTypeID, int MeasurementCharacteristicID, int AlarmTypeID, int Severity, double High, double Low, int RangeInclusive, int PerUnit) {
+                DefaultAlarmRangeLimitRow rowDefaultAlarmRangeLimitRow = ((DefaultAlarmRangeLimitRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
-                        ChannelID,
-                        Time,
-                        LimitHigh,
-                        LimitLow,
-                        ValueHigh,
-                        ValueLow};
-                rowOffNormalLogRow.ItemArray = columnValuesArray;
-                this.Rows.Add(rowOffNormalLogRow);
-                return rowOffNormalLogRow;
+                        MeasurementTypeID,
+                        MeasurementCharacteristicID,
+                        AlarmTypeID,
+                        Severity,
+                        High,
+                        Low,
+                        RangeInclusive,
+                        PerUnit};
+                rowDefaultAlarmRangeLimitRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowDefaultAlarmRangeLimitRow);
+                return rowDefaultAlarmRangeLimitRow;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogRow FindByID(int ID) {
-                return ((OffNormalLogRow)(this.Rows.Find(new object[] {
+            public DefaultAlarmRangeLimitRow FindByID(int ID) {
+                return ((DefaultAlarmRangeLimitRow)(this.Rows.Find(new object[] {
                             ID})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public override global::System.Data.DataTable Clone() {
-                OffNormalLogDataTable cln = ((OffNormalLogDataTable)(base.Clone()));
+                DefaultAlarmRangeLimitDataTable cln = ((DefaultAlarmRangeLimitDataTable)(base.Clone()));
                 cln.InitVars();
                 return cln;
             }
@@ -1594,19 +1272,21 @@ namespace FaultData.Database {
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override global::System.Data.DataTable CreateInstance() {
-                return new OffNormalLogDataTable();
+                return new DefaultAlarmRangeLimitDataTable();
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             internal void InitVars() {
                 this.columnID = base.Columns["ID"];
-                this.columnChannelID = base.Columns["ChannelID"];
-                this.columnTime = base.Columns["Time"];
-                this.columnLimitHigh = base.Columns["LimitHigh"];
-                this.columnLimitLow = base.Columns["LimitLow"];
-                this.columnValueHigh = base.Columns["ValueHigh"];
-                this.columnValueLow = base.Columns["ValueLow"];
+                this.columnMeasurementTypeID = base.Columns["MeasurementTypeID"];
+                this.columnMeasurementCharacteristicID = base.Columns["MeasurementCharacteristicID"];
+                this.columnAlarmTypeID = base.Columns["AlarmTypeID"];
+                this.columnSeverity = base.Columns["Severity"];
+                this.columnHigh = base.Columns["High"];
+                this.columnLow = base.Columns["Low"];
+                this.columnRangeInclusive = base.Columns["RangeInclusive"];
+                this.columnPerUnit = base.Columns["PerUnit"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1614,18 +1294,22 @@ namespace FaultData.Database {
             private void InitClass() {
                 this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnID);
-                this.columnChannelID = new global::System.Data.DataColumn("ChannelID", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnChannelID);
-                this.columnTime = new global::System.Data.DataColumn("Time", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnTime);
-                this.columnLimitHigh = new global::System.Data.DataColumn("LimitHigh", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnLimitHigh);
-                this.columnLimitLow = new global::System.Data.DataColumn("LimitLow", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnLimitLow);
-                this.columnValueHigh = new global::System.Data.DataColumn("ValueHigh", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnValueHigh);
-                this.columnValueLow = new global::System.Data.DataColumn("ValueLow", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnValueLow);
+                this.columnMeasurementTypeID = new global::System.Data.DataColumn("MeasurementTypeID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnMeasurementTypeID);
+                this.columnMeasurementCharacteristicID = new global::System.Data.DataColumn("MeasurementCharacteristicID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnMeasurementCharacteristicID);
+                this.columnAlarmTypeID = new global::System.Data.DataColumn("AlarmTypeID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnAlarmTypeID);
+                this.columnSeverity = new global::System.Data.DataColumn("Severity", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnSeverity);
+                this.columnHigh = new global::System.Data.DataColumn("High", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnHigh);
+                this.columnLow = new global::System.Data.DataColumn("Low", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnLow);
+                this.columnRangeInclusive = new global::System.Data.DataColumn("RangeInclusive", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnRangeInclusive);
+                this.columnPerUnit = new global::System.Data.DataColumn("PerUnit", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnPerUnit);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columnID}, true));
                 this.columnID.AutoIncrement = true;
@@ -1634,38 +1318,38 @@ namespace FaultData.Database {
                 this.columnID.AllowDBNull = false;
                 this.columnID.ReadOnly = true;
                 this.columnID.Unique = true;
-                this.columnChannelID.AllowDBNull = false;
-                this.columnTime.AllowDBNull = false;
-                this.columnLimitHigh.AllowDBNull = false;
-                this.columnLimitLow.AllowDBNull = false;
-                this.columnValueHigh.AllowDBNull = false;
-                this.columnValueLow.AllowDBNull = false;
+                this.columnMeasurementTypeID.AllowDBNull = false;
+                this.columnMeasurementCharacteristicID.AllowDBNull = false;
+                this.columnAlarmTypeID.AllowDBNull = false;
+                this.columnSeverity.AllowDBNull = false;
+                this.columnRangeInclusive.AllowDBNull = false;
+                this.columnPerUnit.AllowDBNull = false;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogRow NewOffNormalLogRow() {
-                return ((OffNormalLogRow)(this.NewRow()));
+            public DefaultAlarmRangeLimitRow NewDefaultAlarmRangeLimitRow() {
+                return ((DefaultAlarmRangeLimitRow)(this.NewRow()));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
-                return new OffNormalLogRow(builder);
+                return new DefaultAlarmRangeLimitRow(builder);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override global::System.Type GetRowType() {
-                return typeof(OffNormalLogRow);
+                return typeof(DefaultAlarmRangeLimitRow);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowChanged(e);
-                if ((this.OffNormalLogRowChanged != null)) {
-                    this.OffNormalLogRowChanged(this, new OffNormalLogRowChangeEvent(((OffNormalLogRow)(e.Row)), e.Action));
+                if ((this.DefaultAlarmRangeLimitRowChanged != null)) {
+                    this.DefaultAlarmRangeLimitRowChanged(this, new DefaultAlarmRangeLimitRowChangeEvent(((DefaultAlarmRangeLimitRow)(e.Row)), e.Action));
                 }
             }
             
@@ -1673,8 +1357,8 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowChanging(e);
-                if ((this.OffNormalLogRowChanging != null)) {
-                    this.OffNormalLogRowChanging(this, new OffNormalLogRowChangeEvent(((OffNormalLogRow)(e.Row)), e.Action));
+                if ((this.DefaultAlarmRangeLimitRowChanging != null)) {
+                    this.DefaultAlarmRangeLimitRowChanging(this, new DefaultAlarmRangeLimitRowChangeEvent(((DefaultAlarmRangeLimitRow)(e.Row)), e.Action));
                 }
             }
             
@@ -1682,8 +1366,8 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowDeleted(e);
-                if ((this.OffNormalLogRowDeleted != null)) {
-                    this.OffNormalLogRowDeleted(this, new OffNormalLogRowChangeEvent(((OffNormalLogRow)(e.Row)), e.Action));
+                if ((this.DefaultAlarmRangeLimitRowDeleted != null)) {
+                    this.DefaultAlarmRangeLimitRowDeleted(this, new DefaultAlarmRangeLimitRowChangeEvent(((DefaultAlarmRangeLimitRow)(e.Row)), e.Action));
                 }
             }
             
@@ -1691,14 +1375,14 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
                 base.OnRowDeleting(e);
-                if ((this.OffNormalLogRowDeleting != null)) {
-                    this.OffNormalLogRowDeleting(this, new OffNormalLogRowChangeEvent(((OffNormalLogRow)(e.Row)), e.Action));
+                if ((this.DefaultAlarmRangeLimitRowDeleting != null)) {
+                    this.DefaultAlarmRangeLimitRowDeleting(this, new DefaultAlarmRangeLimitRowChangeEvent(((DefaultAlarmRangeLimitRow)(e.Row)), e.Action));
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void RemoveOffNormalLogRow(OffNormalLogRow row) {
+            public void RemoveDefaultAlarmRangeLimitRow(DefaultAlarmRangeLimitRow row) {
                 this.Rows.Remove(row);
             }
             
@@ -1725,7 +1409,754 @@ namespace FaultData.Database {
                 type.Attributes.Add(attribute1);
                 global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
                 attribute2.Name = "tableTypeName";
-                attribute2.FixedValue = "OffNormalLogDataTable";
+                attribute2.FixedValue = "DefaultAlarmRangeLimitDataTable";
+                type.Attributes.Add(attribute2);
+                type.Particle = sequence;
+                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
+                if (xs.Contains(dsSchema.TargetNamespace)) {
+                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
+                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
+                    try {
+                        global::System.Xml.Schema.XmlSchema schema = null;
+                        dsSchema.Write(s1);
+                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
+                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
+                            s2.SetLength(0);
+                            schema.Write(s2);
+                            if ((s1.Length == s2.Length)) {
+                                s1.Position = 0;
+                                s2.Position = 0;
+                                for (; ((s1.Position != s1.Length) 
+                                            && (s1.ReadByte() == s2.ReadByte())); ) {
+                                    ;
+                                }
+                                if ((s1.Position == s1.Length)) {
+                                    return type;
+                                }
+                            }
+                        }
+                    }
+                    finally {
+                        if ((s1 != null)) {
+                            s1.Close();
+                        }
+                        if ((s2 != null)) {
+                            s2.Close();
+                        }
+                    }
+                }
+                xs.Add(dsSchema);
+                return type;
+            }
+        }
+        
+        /// <summary>
+        ///Represents the strongly named DataTable class.
+        ///</summary>
+        [global::System.Serializable()]
+        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
+        public partial class AlarmRangeLimitDataTable : global::System.Data.TypedTableBase<AlarmRangeLimitRow> {
+            
+            private global::System.Data.DataColumn columnID;
+            
+            private global::System.Data.DataColumn columnChannelID;
+            
+            private global::System.Data.DataColumn columnAlarmTypeID;
+            
+            private global::System.Data.DataColumn columnSeverity;
+            
+            private global::System.Data.DataColumn columnHigh;
+            
+            private global::System.Data.DataColumn columnLow;
+            
+            private global::System.Data.DataColumn columnRangeInclusive;
+            
+            private global::System.Data.DataColumn columnPerUnit;
+            
+            private global::System.Data.DataColumn columnEnabled;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitDataTable() {
+                this.TableName = "AlarmRangeLimit";
+                this.BeginInit();
+                this.InitClass();
+                this.EndInit();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal AlarmRangeLimitDataTable(global::System.Data.DataTable table) {
+                this.TableName = table.TableName;
+                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
+                    this.CaseSensitive = table.CaseSensitive;
+                }
+                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
+                    this.Locale = table.Locale;
+                }
+                if ((table.Namespace != table.DataSet.Namespace)) {
+                    this.Namespace = table.Namespace;
+                }
+                this.Prefix = table.Prefix;
+                this.MinimumCapacity = table.MinimumCapacity;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected AlarmRangeLimitDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+                    base(info, context) {
+                this.InitVars();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IDColumn {
+                get {
+                    return this.columnID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn ChannelIDColumn {
+                get {
+                    return this.columnChannelID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn AlarmTypeIDColumn {
+                get {
+                    return this.columnAlarmTypeID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn SeverityColumn {
+                get {
+                    return this.columnSeverity;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn HighColumn {
+                get {
+                    return this.columnHigh;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn LowColumn {
+                get {
+                    return this.columnLow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn RangeInclusiveColumn {
+                get {
+                    return this.columnRangeInclusive;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn PerUnitColumn {
+                get {
+                    return this.columnPerUnit;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn EnabledColumn {
+                get {
+                    return this.columnEnabled;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            [global::System.ComponentModel.Browsable(false)]
+            public int Count {
+                get {
+                    return this.Rows.Count;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitRow this[int index] {
+                get {
+                    return ((AlarmRangeLimitRow)(this.Rows[index]));
+                }
+            }
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event AlarmRangeLimitRowChangeEventHandler AlarmRangeLimitRowChanging;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event AlarmRangeLimitRowChangeEventHandler AlarmRangeLimitRowChanged;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event AlarmRangeLimitRowChangeEventHandler AlarmRangeLimitRowDeleting;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event AlarmRangeLimitRowChangeEventHandler AlarmRangeLimitRowDeleted;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void AddAlarmRangeLimitRow(AlarmRangeLimitRow row) {
+                this.Rows.Add(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitRow AddAlarmRangeLimitRow(int ChannelID, int AlarmTypeID, int Severity, double High, double Low, int RangeInclusive, int PerUnit, int Enabled) {
+                AlarmRangeLimitRow rowAlarmRangeLimitRow = ((AlarmRangeLimitRow)(this.NewRow()));
+                object[] columnValuesArray = new object[] {
+                        null,
+                        ChannelID,
+                        AlarmTypeID,
+                        Severity,
+                        High,
+                        Low,
+                        RangeInclusive,
+                        PerUnit,
+                        Enabled};
+                rowAlarmRangeLimitRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowAlarmRangeLimitRow);
+                return rowAlarmRangeLimitRow;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitRow FindByID(int ID) {
+                return ((AlarmRangeLimitRow)(this.Rows.Find(new object[] {
+                            ID})));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public override global::System.Data.DataTable Clone() {
+                AlarmRangeLimitDataTable cln = ((AlarmRangeLimitDataTable)(base.Clone()));
+                cln.InitVars();
+                return cln;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Data.DataTable CreateInstance() {
+                return new AlarmRangeLimitDataTable();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal void InitVars() {
+                this.columnID = base.Columns["ID"];
+                this.columnChannelID = base.Columns["ChannelID"];
+                this.columnAlarmTypeID = base.Columns["AlarmTypeID"];
+                this.columnSeverity = base.Columns["Severity"];
+                this.columnHigh = base.Columns["High"];
+                this.columnLow = base.Columns["Low"];
+                this.columnRangeInclusive = base.Columns["RangeInclusive"];
+                this.columnPerUnit = base.Columns["PerUnit"];
+                this.columnEnabled = base.Columns["Enabled"];
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            private void InitClass() {
+                this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnID);
+                this.columnChannelID = new global::System.Data.DataColumn("ChannelID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnChannelID);
+                this.columnAlarmTypeID = new global::System.Data.DataColumn("AlarmTypeID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnAlarmTypeID);
+                this.columnSeverity = new global::System.Data.DataColumn("Severity", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnSeverity);
+                this.columnHigh = new global::System.Data.DataColumn("High", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnHigh);
+                this.columnLow = new global::System.Data.DataColumn("Low", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnLow);
+                this.columnRangeInclusive = new global::System.Data.DataColumn("RangeInclusive", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnRangeInclusive);
+                this.columnPerUnit = new global::System.Data.DataColumn("PerUnit", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnPerUnit);
+                this.columnEnabled = new global::System.Data.DataColumn("Enabled", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnEnabled);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
+                                this.columnID}, true));
+                this.columnID.AutoIncrement = true;
+                this.columnID.AutoIncrementSeed = -1;
+                this.columnID.AutoIncrementStep = -1;
+                this.columnID.AllowDBNull = false;
+                this.columnID.ReadOnly = true;
+                this.columnID.Unique = true;
+                this.columnChannelID.AllowDBNull = false;
+                this.columnAlarmTypeID.AllowDBNull = false;
+                this.columnSeverity.AllowDBNull = false;
+                this.columnRangeInclusive.AllowDBNull = false;
+                this.columnPerUnit.AllowDBNull = false;
+                this.columnEnabled.AllowDBNull = false;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitRow NewAlarmRangeLimitRow() {
+                return ((AlarmRangeLimitRow)(this.NewRow()));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
+                return new AlarmRangeLimitRow(builder);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Type GetRowType() {
+                return typeof(AlarmRangeLimitRow);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanged(e);
+                if ((this.AlarmRangeLimitRowChanged != null)) {
+                    this.AlarmRangeLimitRowChanged(this, new AlarmRangeLimitRowChangeEvent(((AlarmRangeLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanging(e);
+                if ((this.AlarmRangeLimitRowChanging != null)) {
+                    this.AlarmRangeLimitRowChanging(this, new AlarmRangeLimitRowChangeEvent(((AlarmRangeLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleted(e);
+                if ((this.AlarmRangeLimitRowDeleted != null)) {
+                    this.AlarmRangeLimitRowDeleted(this, new AlarmRangeLimitRowChangeEvent(((AlarmRangeLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleting(e);
+                if ((this.AlarmRangeLimitRowDeleting != null)) {
+                    this.AlarmRangeLimitRowDeleting(this, new AlarmRangeLimitRowChangeEvent(((AlarmRangeLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void RemoveAlarmRangeLimitRow(AlarmRangeLimitRow row) {
+                this.Rows.Remove(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
+                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
+                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
+                AlarmData ds = new AlarmData();
+                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
+                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
+                any1.MinOccurs = new decimal(0);
+                any1.MaxOccurs = decimal.MaxValue;
+                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any1);
+                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
+                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
+                any2.MinOccurs = new decimal(1);
+                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any2);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute1.Name = "namespace";
+                attribute1.FixedValue = ds.Namespace;
+                type.Attributes.Add(attribute1);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute2.Name = "tableTypeName";
+                attribute2.FixedValue = "AlarmRangeLimitDataTable";
+                type.Attributes.Add(attribute2);
+                type.Particle = sequence;
+                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
+                if (xs.Contains(dsSchema.TargetNamespace)) {
+                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
+                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
+                    try {
+                        global::System.Xml.Schema.XmlSchema schema = null;
+                        dsSchema.Write(s1);
+                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
+                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
+                            s2.SetLength(0);
+                            schema.Write(s2);
+                            if ((s1.Length == s2.Length)) {
+                                s1.Position = 0;
+                                s2.Position = 0;
+                                for (; ((s1.Position != s1.Length) 
+                                            && (s1.ReadByte() == s2.ReadByte())); ) {
+                                    ;
+                                }
+                                if ((s1.Position == s1.Length)) {
+                                    return type;
+                                }
+                            }
+                        }
+                    }
+                    finally {
+                        if ((s1 != null)) {
+                            s1.Close();
+                        }
+                        if ((s2 != null)) {
+                            s2.Close();
+                        }
+                    }
+                }
+                xs.Add(dsSchema);
+                return type;
+            }
+        }
+        
+        /// <summary>
+        ///Represents the strongly named DataTable class.
+        ///</summary>
+        [global::System.Serializable()]
+        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
+        public partial class HourOfWeekLimitDataTable : global::System.Data.TypedTableBase<HourOfWeekLimitRow> {
+            
+            private global::System.Data.DataColumn columnID;
+            
+            private global::System.Data.DataColumn columnChannelID;
+            
+            private global::System.Data.DataColumn columnAlarmTypeID;
+            
+            private global::System.Data.DataColumn columnHourOfWeek;
+            
+            private global::System.Data.DataColumn columnSeverity;
+            
+            private global::System.Data.DataColumn columnHigh;
+            
+            private global::System.Data.DataColumn columnLow;
+            
+            private global::System.Data.DataColumn columnEnabled;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitDataTable() {
+                this.TableName = "HourOfWeekLimit";
+                this.BeginInit();
+                this.InitClass();
+                this.EndInit();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal HourOfWeekLimitDataTable(global::System.Data.DataTable table) {
+                this.TableName = table.TableName;
+                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
+                    this.CaseSensitive = table.CaseSensitive;
+                }
+                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
+                    this.Locale = table.Locale;
+                }
+                if ((table.Namespace != table.DataSet.Namespace)) {
+                    this.Namespace = table.Namespace;
+                }
+                this.Prefix = table.Prefix;
+                this.MinimumCapacity = table.MinimumCapacity;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected HourOfWeekLimitDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+                    base(info, context) {
+                this.InitVars();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IDColumn {
+                get {
+                    return this.columnID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn ChannelIDColumn {
+                get {
+                    return this.columnChannelID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn AlarmTypeIDColumn {
+                get {
+                    return this.columnAlarmTypeID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn HourOfWeekColumn {
+                get {
+                    return this.columnHourOfWeek;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn SeverityColumn {
+                get {
+                    return this.columnSeverity;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn HighColumn {
+                get {
+                    return this.columnHigh;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn LowColumn {
+                get {
+                    return this.columnLow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn EnabledColumn {
+                get {
+                    return this.columnEnabled;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            [global::System.ComponentModel.Browsable(false)]
+            public int Count {
+                get {
+                    return this.Rows.Count;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitRow this[int index] {
+                get {
+                    return ((HourOfWeekLimitRow)(this.Rows[index]));
+                }
+            }
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event HourOfWeekLimitRowChangeEventHandler HourOfWeekLimitRowChanging;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event HourOfWeekLimitRowChangeEventHandler HourOfWeekLimitRowChanged;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event HourOfWeekLimitRowChangeEventHandler HourOfWeekLimitRowDeleting;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event HourOfWeekLimitRowChangeEventHandler HourOfWeekLimitRowDeleted;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void AddHourOfWeekLimitRow(HourOfWeekLimitRow row) {
+                this.Rows.Add(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitRow AddHourOfWeekLimitRow(int ChannelID, int AlarmTypeID, int HourOfWeek, int Severity, double High, double Low, int Enabled) {
+                HourOfWeekLimitRow rowHourOfWeekLimitRow = ((HourOfWeekLimitRow)(this.NewRow()));
+                object[] columnValuesArray = new object[] {
+                        null,
+                        ChannelID,
+                        AlarmTypeID,
+                        HourOfWeek,
+                        Severity,
+                        High,
+                        Low,
+                        Enabled};
+                rowHourOfWeekLimitRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowHourOfWeekLimitRow);
+                return rowHourOfWeekLimitRow;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitRow FindByID(int ID) {
+                return ((HourOfWeekLimitRow)(this.Rows.Find(new object[] {
+                            ID})));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public override global::System.Data.DataTable Clone() {
+                HourOfWeekLimitDataTable cln = ((HourOfWeekLimitDataTable)(base.Clone()));
+                cln.InitVars();
+                return cln;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Data.DataTable CreateInstance() {
+                return new HourOfWeekLimitDataTable();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal void InitVars() {
+                this.columnID = base.Columns["ID"];
+                this.columnChannelID = base.Columns["ChannelID"];
+                this.columnAlarmTypeID = base.Columns["AlarmTypeID"];
+                this.columnHourOfWeek = base.Columns["HourOfWeek"];
+                this.columnSeverity = base.Columns["Severity"];
+                this.columnHigh = base.Columns["High"];
+                this.columnLow = base.Columns["Low"];
+                this.columnEnabled = base.Columns["Enabled"];
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            private void InitClass() {
+                this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnID);
+                this.columnChannelID = new global::System.Data.DataColumn("ChannelID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnChannelID);
+                this.columnAlarmTypeID = new global::System.Data.DataColumn("AlarmTypeID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnAlarmTypeID);
+                this.columnHourOfWeek = new global::System.Data.DataColumn("HourOfWeek", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnHourOfWeek);
+                this.columnSeverity = new global::System.Data.DataColumn("Severity", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnSeverity);
+                this.columnHigh = new global::System.Data.DataColumn("High", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnHigh);
+                this.columnLow = new global::System.Data.DataColumn("Low", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnLow);
+                this.columnEnabled = new global::System.Data.DataColumn("Enabled", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnEnabled);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
+                                this.columnID}, true));
+                this.columnID.AutoIncrement = true;
+                this.columnID.AutoIncrementSeed = -1;
+                this.columnID.AutoIncrementStep = -1;
+                this.columnID.AllowDBNull = false;
+                this.columnID.ReadOnly = true;
+                this.columnID.Unique = true;
+                this.columnChannelID.AllowDBNull = false;
+                this.columnAlarmTypeID.AllowDBNull = false;
+                this.columnHourOfWeek.AllowDBNull = false;
+                this.columnSeverity.AllowDBNull = false;
+                this.columnHigh.AllowDBNull = false;
+                this.columnLow.AllowDBNull = false;
+                this.columnEnabled.AllowDBNull = false;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitRow NewHourOfWeekLimitRow() {
+                return ((HourOfWeekLimitRow)(this.NewRow()));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
+                return new HourOfWeekLimitRow(builder);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Type GetRowType() {
+                return typeof(HourOfWeekLimitRow);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanged(e);
+                if ((this.HourOfWeekLimitRowChanged != null)) {
+                    this.HourOfWeekLimitRowChanged(this, new HourOfWeekLimitRowChangeEvent(((HourOfWeekLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanging(e);
+                if ((this.HourOfWeekLimitRowChanging != null)) {
+                    this.HourOfWeekLimitRowChanging(this, new HourOfWeekLimitRowChangeEvent(((HourOfWeekLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleted(e);
+                if ((this.HourOfWeekLimitRowDeleted != null)) {
+                    this.HourOfWeekLimitRowDeleted(this, new HourOfWeekLimitRowChangeEvent(((HourOfWeekLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleting(e);
+                if ((this.HourOfWeekLimitRowDeleting != null)) {
+                    this.HourOfWeekLimitRowDeleting(this, new HourOfWeekLimitRowChangeEvent(((HourOfWeekLimitRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void RemoveHourOfWeekLimitRow(HourOfWeekLimitRow row) {
+                this.Rows.Remove(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
+                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
+                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
+                AlarmData ds = new AlarmData();
+                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
+                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
+                any1.MinOccurs = new decimal(0);
+                any1.MaxOccurs = decimal.MaxValue;
+                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any1);
+                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
+                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
+                any2.MinOccurs = new decimal(1);
+                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any2);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute1.Name = "namespace";
+                attribute1.FixedValue = ds.Namespace;
+                type.Attributes.Add(attribute1);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute2.Name = "tableTypeName";
+                attribute2.FixedValue = "HourOfWeekLimitDataTable";
                 type.Attributes.Add(attribute2);
                 type.Particle = sequence;
                 global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
@@ -1769,207 +2200,65 @@ namespace FaultData.Database {
         /// <summary>
         ///Represents strongly named DataRow class.
         ///</summary>
-        public partial class AlarmLimitRow : global::System.Data.DataRow {
+        public partial class AlarmTypeRow : global::System.Data.DataRow {
             
-            private AlarmLimitDataTable tableAlarmLimit;
+            private AlarmTypeDataTable tableAlarmType;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal AlarmLimitRow(global::System.Data.DataRowBuilder rb) : 
+            internal AlarmTypeRow(global::System.Data.DataRowBuilder rb) : 
                     base(rb) {
-                this.tableAlarmLimit = ((AlarmLimitDataTable)(this.Table));
+                this.tableAlarmType = ((AlarmTypeDataTable)(this.Table));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public int ID {
                 get {
-                    return ((int)(this[this.tableAlarmLimit.IDColumn]));
+                    return ((int)(this[this.tableAlarmType.IDColumn]));
                 }
                 set {
-                    this[this.tableAlarmLimit.IDColumn] = value;
+                    this[this.tableAlarmType.IDColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int ChannelID {
+            public string Name {
                 get {
-                    return ((int)(this[this.tableAlarmLimit.ChannelIDColumn]));
+                    return ((string)(this[this.tableAlarmType.NameColumn]));
                 }
                 set {
-                    this[this.tableAlarmLimit.ChannelIDColumn] = value;
+                    this[this.tableAlarmType.NameColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double High {
-                get {
-                    try {
-                        return ((double)(this[this.tableAlarmLimit.HighColumn]));
-                    }
-                    catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'High\' in table \'AlarmLimit\' is DBNull.", e);
-                    }
-                }
-                set {
-                    this[this.tableAlarmLimit.HighColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double Low {
+            public string Description {
                 get {
                     try {
-                        return ((double)(this[this.tableAlarmLimit.LowColumn]));
+                        return ((string)(this[this.tableAlarmType.DescriptionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'Low\' in table \'AlarmLimit\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'Description\' in table \'AlarmType\' is DBNull.", e);
                     }
                 }
                 set {
-                    this[this.tableAlarmLimit.LowColumn] = value;
+                    this[this.tableAlarmType.DescriptionColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int RangeInclusive {
-                get {
-                    return ((int)(this[this.tableAlarmLimit.RangeInclusiveColumn]));
-                }
-                set {
-                    this[this.tableAlarmLimit.RangeInclusiveColumn] = value;
-                }
+            public bool IsDescriptionNull() {
+                return this.IsNull(this.tableAlarmType.DescriptionColumn);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int Enabled {
-                get {
-                    return ((int)(this[this.tableAlarmLimit.EnabledColumn]));
-                }
-                set {
-                    this[this.tableAlarmLimit.EnabledColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public bool IsHighNull() {
-                return this.IsNull(this.tableAlarmLimit.HighColumn);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void SetHighNull() {
-                this[this.tableAlarmLimit.HighColumn] = global::System.Convert.DBNull;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public bool IsLowNull() {
-                return this.IsNull(this.tableAlarmLimit.LowColumn);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void SetLowNull() {
-                this[this.tableAlarmLimit.LowColumn] = global::System.Convert.DBNull;
-            }
-        }
-        
-        /// <summary>
-        ///Represents strongly named DataRow class.
-        ///</summary>
-        public partial class OffNormalLimitRow : global::System.Data.DataRow {
-            
-            private OffNormalLimitDataTable tableOffNormalLimit;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal OffNormalLimitRow(global::System.Data.DataRowBuilder rb) : 
-                    base(rb) {
-                this.tableOffNormalLimit = ((OffNormalLimitDataTable)(this.Table));
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int ID {
-                get {
-                    return ((int)(this[this.tableOffNormalLimit.IDColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.IDColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int ChannelID {
-                get {
-                    return ((int)(this[this.tableOffNormalLimit.ChannelIDColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.ChannelIDColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int HourOfWeek {
-                get {
-                    return ((int)(this[this.tableOffNormalLimit.HourOfWeekColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.HourOfWeekColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double High {
-                get {
-                    return ((double)(this[this.tableOffNormalLimit.HighColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.HighColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double Low {
-                get {
-                    return ((double)(this[this.tableOffNormalLimit.LowColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.LowColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int Count {
-                get {
-                    return ((int)(this[this.tableOffNormalLimit.CountColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.CountColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int Enabled {
-                get {
-                    return ((int)(this[this.tableOffNormalLimit.EnabledColumn]));
-                }
-                set {
-                    this[this.tableOffNormalLimit.EnabledColumn] = value;
-                }
+            public void SetDescriptionNull() {
+                this[this.tableAlarmType.DescriptionColumn] = global::System.Convert.DBNull;
             }
         }
         
@@ -2011,12 +2300,34 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int AlarmTypeID {
+                get {
+                    return ((int)(this[this.tableAlarmLog.AlarmTypeIDColumn]));
+                }
+                set {
+                    this[this.tableAlarmLog.AlarmTypeIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public System.DateTime Time {
                 get {
                     return ((global::System.DateTime)(this[this.tableAlarmLog.TimeColumn]));
                 }
                 set {
                     this[this.tableAlarmLog.TimeColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int Severity {
+                get {
+                    return ((int)(this[this.tableAlarmLog.SeverityColumn]));
+                }
+                set {
+                    this[this.tableAlarmLog.SeverityColumn] = value;
                 }
             }
             
@@ -2054,23 +2365,12 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double ValueHigh {
+            public double Value {
                 get {
-                    return ((double)(this[this.tableAlarmLog.ValueHighColumn]));
+                    return ((double)(this[this.tableAlarmLog.ValueColumn]));
                 }
                 set {
-                    this[this.tableAlarmLog.ValueHighColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double ValueLow {
-                get {
-                    return ((double)(this[this.tableAlarmLog.ValueLowColumn]));
-                }
-                set {
-                    this[this.tableAlarmLog.ValueLowColumn] = value;
+                    this[this.tableAlarmLog.ValueColumn] = value;
                 }
             }
             
@@ -2102,25 +2402,173 @@ namespace FaultData.Database {
         /// <summary>
         ///Represents strongly named DataRow class.
         ///</summary>
-        public partial class OffNormalLogRow : global::System.Data.DataRow {
+        public partial class DefaultAlarmRangeLimitRow : global::System.Data.DataRow {
             
-            private OffNormalLogDataTable tableOffNormalLog;
+            private DefaultAlarmRangeLimitDataTable tableDefaultAlarmRangeLimit;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal OffNormalLogRow(global::System.Data.DataRowBuilder rb) : 
+            internal DefaultAlarmRangeLimitRow(global::System.Data.DataRowBuilder rb) : 
                     base(rb) {
-                this.tableOffNormalLog = ((OffNormalLogDataTable)(this.Table));
+                this.tableDefaultAlarmRangeLimit = ((DefaultAlarmRangeLimitDataTable)(this.Table));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public int ID {
                 get {
-                    return ((int)(this[this.tableOffNormalLog.IDColumn]));
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.IDColumn]));
                 }
                 set {
-                    this[this.tableOffNormalLog.IDColumn] = value;
+                    this[this.tableDefaultAlarmRangeLimit.IDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int MeasurementTypeID {
+                get {
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.MeasurementTypeIDColumn]));
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.MeasurementTypeIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int MeasurementCharacteristicID {
+                get {
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.MeasurementCharacteristicIDColumn]));
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.MeasurementCharacteristicIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int AlarmTypeID {
+                get {
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.AlarmTypeIDColumn]));
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.AlarmTypeIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int Severity {
+                get {
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.SeverityColumn]));
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.SeverityColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double High {
+                get {
+                    try {
+                        return ((double)(this[this.tableDefaultAlarmRangeLimit.HighColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'High\' in table \'DefaultAlarmRangeLimit\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.HighColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double Low {
+                get {
+                    try {
+                        return ((double)(this[this.tableDefaultAlarmRangeLimit.LowColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'Low\' in table \'DefaultAlarmRangeLimit\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.LowColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int RangeInclusive {
+                get {
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.RangeInclusiveColumn]));
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.RangeInclusiveColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int PerUnit {
+                get {
+                    return ((int)(this[this.tableDefaultAlarmRangeLimit.PerUnitColumn]));
+                }
+                set {
+                    this[this.tableDefaultAlarmRangeLimit.PerUnitColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public bool IsHighNull() {
+                return this.IsNull(this.tableDefaultAlarmRangeLimit.HighColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void SetHighNull() {
+                this[this.tableDefaultAlarmRangeLimit.HighColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public bool IsLowNull() {
+                return this.IsNull(this.tableDefaultAlarmRangeLimit.LowColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void SetLowNull() {
+                this[this.tableDefaultAlarmRangeLimit.LowColumn] = global::System.Convert.DBNull;
+            }
+        }
+        
+        /// <summary>
+        ///Represents strongly named DataRow class.
+        ///</summary>
+        public partial class AlarmRangeLimitRow : global::System.Data.DataRow {
+            
+            private AlarmRangeLimitDataTable tableAlarmRangeLimit;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal AlarmRangeLimitRow(global::System.Data.DataRowBuilder rb) : 
+                    base(rb) {
+                this.tableAlarmRangeLimit = ((AlarmRangeLimitDataTable)(this.Table));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int ID {
+                get {
+                    return ((int)(this[this.tableAlarmRangeLimit.IDColumn]));
+                }
+                set {
+                    this[this.tableAlarmRangeLimit.IDColumn] = value;
                 }
             }
             
@@ -2128,65 +2576,224 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public int ChannelID {
                 get {
-                    return ((int)(this[this.tableOffNormalLog.ChannelIDColumn]));
+                    return ((int)(this[this.tableAlarmRangeLimit.ChannelIDColumn]));
                 }
                 set {
-                    this[this.tableOffNormalLog.ChannelIDColumn] = value;
+                    this[this.tableAlarmRangeLimit.ChannelIDColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public System.DateTime Time {
+            public int AlarmTypeID {
                 get {
-                    return ((global::System.DateTime)(this[this.tableOffNormalLog.TimeColumn]));
+                    return ((int)(this[this.tableAlarmRangeLimit.AlarmTypeIDColumn]));
                 }
                 set {
-                    this[this.tableOffNormalLog.TimeColumn] = value;
+                    this[this.tableAlarmRangeLimit.AlarmTypeIDColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double LimitHigh {
+            public int Severity {
                 get {
-                    return ((double)(this[this.tableOffNormalLog.LimitHighColumn]));
+                    return ((int)(this[this.tableAlarmRangeLimit.SeverityColumn]));
                 }
                 set {
-                    this[this.tableOffNormalLog.LimitHighColumn] = value;
+                    this[this.tableAlarmRangeLimit.SeverityColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double LimitLow {
+            public double High {
                 get {
-                    return ((double)(this[this.tableOffNormalLog.LimitLowColumn]));
+                    try {
+                        return ((double)(this[this.tableAlarmRangeLimit.HighColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'High\' in table \'AlarmRangeLimit\' is DBNull.", e);
+                    }
                 }
                 set {
-                    this[this.tableOffNormalLog.LimitLowColumn] = value;
+                    this[this.tableAlarmRangeLimit.HighColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double ValueHigh {
+            public double Low {
                 get {
-                    return ((double)(this[this.tableOffNormalLog.ValueHighColumn]));
+                    try {
+                        return ((double)(this[this.tableAlarmRangeLimit.LowColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'Low\' in table \'AlarmRangeLimit\' is DBNull.", e);
+                    }
                 }
                 set {
-                    this[this.tableOffNormalLog.ValueHighColumn] = value;
+                    this[this.tableAlarmRangeLimit.LowColumn] = value;
                 }
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double ValueLow {
+            public int RangeInclusive {
                 get {
-                    return ((double)(this[this.tableOffNormalLog.ValueLowColumn]));
+                    return ((int)(this[this.tableAlarmRangeLimit.RangeInclusiveColumn]));
                 }
                 set {
-                    this[this.tableOffNormalLog.ValueLowColumn] = value;
+                    this[this.tableAlarmRangeLimit.RangeInclusiveColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int PerUnit {
+                get {
+                    return ((int)(this[this.tableAlarmRangeLimit.PerUnitColumn]));
+                }
+                set {
+                    this[this.tableAlarmRangeLimit.PerUnitColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int Enabled {
+                get {
+                    return ((int)(this[this.tableAlarmRangeLimit.EnabledColumn]));
+                }
+                set {
+                    this[this.tableAlarmRangeLimit.EnabledColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public bool IsHighNull() {
+                return this.IsNull(this.tableAlarmRangeLimit.HighColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void SetHighNull() {
+                this[this.tableAlarmRangeLimit.HighColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public bool IsLowNull() {
+                return this.IsNull(this.tableAlarmRangeLimit.LowColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void SetLowNull() {
+                this[this.tableAlarmRangeLimit.LowColumn] = global::System.Convert.DBNull;
+            }
+        }
+        
+        /// <summary>
+        ///Represents strongly named DataRow class.
+        ///</summary>
+        public partial class HourOfWeekLimitRow : global::System.Data.DataRow {
+            
+            private HourOfWeekLimitDataTable tableHourOfWeekLimit;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal HourOfWeekLimitRow(global::System.Data.DataRowBuilder rb) : 
+                    base(rb) {
+                this.tableHourOfWeekLimit = ((HourOfWeekLimitDataTable)(this.Table));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int ID {
+                get {
+                    return ((int)(this[this.tableHourOfWeekLimit.IDColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.IDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int ChannelID {
+                get {
+                    return ((int)(this[this.tableHourOfWeekLimit.ChannelIDColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.ChannelIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int AlarmTypeID {
+                get {
+                    return ((int)(this[this.tableHourOfWeekLimit.AlarmTypeIDColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.AlarmTypeIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int HourOfWeek {
+                get {
+                    return ((int)(this[this.tableHourOfWeekLimit.HourOfWeekColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.HourOfWeekColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int Severity {
+                get {
+                    return ((int)(this[this.tableHourOfWeekLimit.SeverityColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.SeverityColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double High {
+                get {
+                    return ((double)(this[this.tableHourOfWeekLimit.HighColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.HighColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double Low {
+                get {
+                    return ((double)(this[this.tableHourOfWeekLimit.LowColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.LowColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int Enabled {
+                get {
+                    return ((int)(this[this.tableHourOfWeekLimit.EnabledColumn]));
+                }
+                set {
+                    this[this.tableHourOfWeekLimit.EnabledColumn] = value;
                 }
             }
         }
@@ -2195,56 +2802,22 @@ namespace FaultData.Database {
         ///Row event argument class
         ///</summary>
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public class AlarmLimitRowChangeEvent : global::System.EventArgs {
+        public class AlarmTypeRowChangeEvent : global::System.EventArgs {
             
-            private AlarmLimitRow eventRow;
+            private AlarmTypeRow eventRow;
             
             private global::System.Data.DataRowAction eventAction;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitRowChangeEvent(AlarmLimitRow row, global::System.Data.DataRowAction action) {
+            public AlarmTypeRowChangeEvent(AlarmTypeRow row, global::System.Data.DataRowAction action) {
                 this.eventRow = row;
                 this.eventAction = action;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public AlarmLimitRow Row {
-                get {
-                    return this.eventRow;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataRowAction Action {
-                get {
-                    return this.eventAction;
-                }
-            }
-        }
-        
-        /// <summary>
-        ///Row event argument class
-        ///</summary>
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public class OffNormalLimitRowChangeEvent : global::System.EventArgs {
-            
-            private OffNormalLimitRow eventRow;
-            
-            private global::System.Data.DataRowAction eventAction;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitRowChangeEvent(OffNormalLimitRow row, global::System.Data.DataRowAction action) {
-                this.eventRow = row;
-                this.eventAction = action;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLimitRow Row {
+            public AlarmTypeRow Row {
                 get {
                     return this.eventRow;
                 }
@@ -2297,22 +2870,90 @@ namespace FaultData.Database {
         ///Row event argument class
         ///</summary>
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public class OffNormalLogRowChangeEvent : global::System.EventArgs {
+        public class DefaultAlarmRangeLimitRowChangeEvent : global::System.EventArgs {
             
-            private OffNormalLogRow eventRow;
+            private DefaultAlarmRangeLimitRow eventRow;
             
             private global::System.Data.DataRowAction eventAction;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogRowChangeEvent(OffNormalLogRow row, global::System.Data.DataRowAction action) {
+            public DefaultAlarmRangeLimitRowChangeEvent(DefaultAlarmRangeLimitRow row, global::System.Data.DataRowAction action) {
                 this.eventRow = row;
                 this.eventAction = action;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public OffNormalLogRow Row {
+            public DefaultAlarmRangeLimitRow Row {
+                get {
+                    return this.eventRow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataRowAction Action {
+                get {
+                    return this.eventAction;
+                }
+            }
+        }
+        
+        /// <summary>
+        ///Row event argument class
+        ///</summary>
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public class AlarmRangeLimitRowChangeEvent : global::System.EventArgs {
+            
+            private AlarmRangeLimitRow eventRow;
+            
+            private global::System.Data.DataRowAction eventAction;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitRowChangeEvent(AlarmRangeLimitRow row, global::System.Data.DataRowAction action) {
+                this.eventRow = row;
+                this.eventAction = action;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public AlarmRangeLimitRow Row {
+                get {
+                    return this.eventRow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataRowAction Action {
+                get {
+                    return this.eventAction;
+                }
+            }
+        }
+        
+        /// <summary>
+        ///Row event argument class
+        ///</summary>
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public class HourOfWeekLimitRowChangeEvent : global::System.EventArgs {
+            
+            private HourOfWeekLimitRow eventRow;
+            
+            private global::System.Data.DataRowAction eventAction;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitRowChangeEvent(HourOfWeekLimitRow row, global::System.Data.DataRowAction action) {
+                this.eventRow = row;
+                this.eventAction = action;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public HourOfWeekLimitRow Row {
                 get {
                     return this.eventRow;
                 }
@@ -2340,7 +2981,7 @@ namespace FaultData.Database.AlarmDataTableAdapters {
     [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
         ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
     [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-    public partial class AlarmLimitTableAdapter : global::System.ComponentModel.Component {
+    public partial class AlarmTypeTableAdapter : global::System.ComponentModel.Component {
         
         private global::System.Data.SqlClient.SqlDataAdapter _adapter;
         
@@ -2354,7 +2995,7 @@ namespace FaultData.Database.AlarmDataTableAdapters {
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public AlarmLimitTableAdapter() {
+        public AlarmTypeTableAdapter() {
             this.ClearBeforeFill = true;
         }
         
@@ -2451,56 +3092,35 @@ namespace FaultData.Database.AlarmDataTableAdapters {
             this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
             global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
             tableMapping.SourceTable = "Table";
-            tableMapping.DataSetTable = "AlarmLimit";
+            tableMapping.DataSetTable = "AlarmType";
             tableMapping.ColumnMappings.Add("ID", "ID");
-            tableMapping.ColumnMappings.Add("ChannelID", "ChannelID");
-            tableMapping.ColumnMappings.Add("High", "High");
-            tableMapping.ColumnMappings.Add("Low", "Low");
-            tableMapping.ColumnMappings.Add("RangeInclusive", "RangeInclusive");
-            tableMapping.ColumnMappings.Add("Enabled", "Enabled");
+            tableMapping.ColumnMappings.Add("Name", "Name");
+            tableMapping.ColumnMappings.Add("Description", "Description");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [AlarmLimit] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ((@IsNull_High = 1 AND [High] IS NULL) OR ([High] = @Original_High)) AND ((@IsNull_Low = 1 AND [Low] IS NULL) OR ([Low] = @Original_Low)) AND ([RangeInclusive] = @Original_RangeInclusive) AND ([Enabled] = @Original_Enabled))";
+            this._adapter.DeleteCommand.CommandText = "DELETE FROM [dbo].[AlarmType] WHERE (([ID] = @Original_ID) AND ([Name] = @Origina" +
+                "l_Name))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_High", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_Low", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = "INSERT INTO [AlarmLimit] ([ChannelID], [High], [Low], [RangeInclusive], [Enabled]" +
-                ") VALUES (@ChannelID, @High, @Low, @RangeInclusive, @Enabled);\r\nSELECT ID, Chann" +
-                "elID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (ID = SCOPE_IDENT" +
-                "ITY())";
+            this._adapter.InsertCommand.CommandText = "INSERT INTO [dbo].[AlarmType] ([Name], [Description]) VALUES (@Name, @Description" +
+                ");\r\nSELECT ID, Name, Description FROM AlarmType WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [AlarmLimit] SET [ChannelID] = @ChannelID, [High] = @High, [Low] = @Low, [RangeInclusive] = @RangeInclusive, [Enabled] = @Enabled WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ((@IsNull_High = 1 AND [High] IS NULL) OR ([High] = @Original_High)) AND ((@IsNull_Low = 1 AND [Low] IS NULL) OR ([Low] = @Original_Low)) AND ([RangeInclusive] = @Original_RangeInclusive) AND ([Enabled] = @Original_Enabled));
-SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandText = "UPDATE [dbo].[AlarmType] SET [Name] = @Name, [Description] = @Description WHERE (" +
+                "([ID] = @Original_ID) AND ([Name] = @Original_Name));\r\nSELECT ID, Name, Descript" +
+                "ion FROM AlarmType WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_High", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_Low", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
@@ -2514,25 +3134,18 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitCommandCollection() {
-            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
+            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        ID, ChannelID, High, Low, RangeInclusive, Enabled\r\nFROM            " +
-                "AlarmLimit";
+            this._commandCollection[0].CommandText = "SELECT ID, Name, Description FROM dbo.AlarmType";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
-            this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = "SELECT ChannelID, Enabled, High, ID, Low, RangeInclusive FROM AlarmLimit WHERE (C" +
-                "hannelID = @channelID)";
-            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@channelID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(AlarmData.AlarmLimitDataTable dataTable) {
+        public virtual int Fill(AlarmData.AlarmTypeDataTable dataTable) {
             this.Adapter.SelectCommand = this.CommandCollection[0];
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -2545,9 +3158,9 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual AlarmData.AlarmLimitDataTable GetData() {
+        public virtual AlarmData.AlarmTypeDataTable GetData() {
             this.Adapter.SelectCommand = this.CommandCollection[0];
-            AlarmData.AlarmLimitDataTable dataTable = new AlarmData.AlarmLimitDataTable();
+            AlarmData.AlarmTypeDataTable dataTable = new AlarmData.AlarmTypeDataTable();
             this.Adapter.Fill(dataTable);
             return dataTable;
         }
@@ -2555,33 +3168,7 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
-        public virtual int FillBy(AlarmData.AlarmLimitDataTable dataTable, int channelID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
-            if ((this.ClearBeforeFill == true)) {
-                dataTable.Clear();
-            }
-            int returnValue = this.Adapter.Fill(dataTable);
-            return returnValue;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
-        public virtual AlarmData.AlarmLimitDataTable GetDataBy(int channelID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
-            AlarmData.AlarmLimitDataTable dataTable = new AlarmData.AlarmLimitDataTable();
-            this.Adapter.Fill(dataTable);
-            return dataTable;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(AlarmData.AlarmLimitDataTable dataTable) {
+        public virtual int Update(AlarmData.AlarmTypeDataTable dataTable) {
             return this.Adapter.Update(dataTable);
         }
         
@@ -2589,7 +3176,7 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         public virtual int Update(AlarmData dataSet) {
-            return this.Adapter.Update(dataSet, "AlarmLimit");
+            return this.Adapter.Update(dataSet, "AlarmType");
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -2611,27 +3198,14 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_ChannelID, global::System.Nullable<double> Original_High, global::System.Nullable<double> Original_Low, int Original_RangeInclusive, int Original_Enabled) {
+        public virtual int Delete(int Original_ID, string Original_Name) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
-            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_ChannelID));
-            if ((Original_High.HasValue == true)) {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((double)(Original_High.Value));
+            if ((Original_Name == null)) {
+                throw new global::System.ArgumentNullException("Original_Name");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[3].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[1].Value = ((string)(Original_Name));
             }
-            if ((Original_Low.HasValue == true)) {
-                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_Low.Value));
-            }
-            else {
-                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[5].Value = global::System.DBNull.Value;
-            }
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((int)(Original_RangeInclusive));
-            this.Adapter.DeleteCommand.Parameters[7].Value = ((int)(Original_Enabled));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -2652,22 +3226,19 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int ChannelID, global::System.Nullable<double> High, global::System.Nullable<double> Low, int RangeInclusive, int Enabled) {
-            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(ChannelID));
-            if ((High.HasValue == true)) {
-                this.Adapter.InsertCommand.Parameters[1].Value = ((double)(High.Value));
+        public virtual int Insert(string Name, string Description) {
+            if ((Name == null)) {
+                throw new global::System.ArgumentNullException("Name");
             }
             else {
+                this.Adapter.InsertCommand.Parameters[0].Value = ((string)(Name));
+            }
+            if ((Description == null)) {
                 this.Adapter.InsertCommand.Parameters[1].Value = global::System.DBNull.Value;
             }
-            if ((Low.HasValue == true)) {
-                this.Adapter.InsertCommand.Parameters[2].Value = ((double)(Low.Value));
-            }
             else {
-                this.Adapter.InsertCommand.Parameters[2].Value = global::System.DBNull.Value;
+                this.Adapter.InsertCommand.Parameters[1].Value = ((string)(Description));
             }
-            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(RangeInclusive));
-            this.Adapter.InsertCommand.Parameters[4].Value = ((int)(Enabled));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -2688,43 +3259,27 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, global::System.Nullable<double> High, global::System.Nullable<double> Low, int RangeInclusive, int Enabled, int Original_ID, int Original_ChannelID, global::System.Nullable<double> Original_High, global::System.Nullable<double> Original_Low, int Original_RangeInclusive, int Original_Enabled, int ID) {
-            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(ChannelID));
-            if ((High.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[1].Value = ((double)(High.Value));
+        public virtual int Update(string Name, string Description, int Original_ID, string Original_Name, int ID) {
+            if ((Name == null)) {
+                throw new global::System.ArgumentNullException("Name");
             }
             else {
+                this.Adapter.UpdateCommand.Parameters[0].Value = ((string)(Name));
+            }
+            if ((Description == null)) {
                 this.Adapter.UpdateCommand.Parameters[1].Value = global::System.DBNull.Value;
             }
-            if ((Low.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[2].Value = ((double)(Low.Value));
+            else {
+                this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(Description));
+            }
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(Original_ID));
+            if ((Original_Name == null)) {
+                throw new global::System.ArgumentNullException("Original_Name");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[2].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(Original_Name));
             }
-            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(RangeInclusive));
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((int)(Enabled));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(Original_ChannelID));
-            if ((Original_High.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[8].Value = ((double)(Original_High.Value));
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[8].Value = global::System.DBNull.Value;
-            }
-            if ((Original_Low.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[9].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[10].Value = ((double)(Original_Low.Value));
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[9].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[10].Value = global::System.DBNull.Value;
-            }
-            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_RangeInclusive));
-            this.Adapter.UpdateCommand.Parameters[12].Value = ((int)(Original_Enabled));
-            this.Adapter.UpdateCommand.Parameters[13].Value = ((int)(ID));
+            this.Adapter.UpdateCommand.Parameters[4].Value = ((int)(ID));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -2745,382 +3300,8 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, Enabled FROM AlarmLimit WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, global::System.Nullable<double> High, global::System.Nullable<double> Low, int RangeInclusive, int Enabled, int Original_ID, int Original_ChannelID, global::System.Nullable<double> Original_High, global::System.Nullable<double> Original_Low, int Original_RangeInclusive, int Original_Enabled) {
-            return this.Update(ChannelID, High, Low, RangeInclusive, Enabled, Original_ID, Original_ChannelID, Original_High, Original_Low, Original_RangeInclusive, Original_Enabled, Original_ID);
-        }
-    }
-    
-    /// <summary>
-    ///Represents the connection and commands used to retrieve and save data.
-    ///</summary>
-    [global::System.ComponentModel.DesignerCategoryAttribute("code")]
-    [global::System.ComponentModel.ToolboxItem(true)]
-    [global::System.ComponentModel.DataObjectAttribute(true)]
-    [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
-        ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
-    [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-    public partial class OffNormalLimitTableAdapter : global::System.ComponentModel.Component {
-        
-        private global::System.Data.SqlClient.SqlDataAdapter _adapter;
-        
-        private global::System.Data.SqlClient.SqlConnection _connection;
-        
-        private global::System.Data.SqlClient.SqlTransaction _transaction;
-        
-        private global::System.Data.SqlClient.SqlCommand[] _commandCollection;
-        
-        private bool _clearBeforeFill;
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public OffNormalLimitTableAdapter() {
-            this.ClearBeforeFill = true;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        protected internal global::System.Data.SqlClient.SqlDataAdapter Adapter {
-            get {
-                if ((this._adapter == null)) {
-                    this.InitAdapter();
-                }
-                return this._adapter;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public global::System.Data.SqlClient.SqlConnection Connection {
-            get {
-                if ((this._connection == null)) {
-                    this.InitConnection();
-                }
-                return this._connection;
-            }
-            set {
-                this._connection = value;
-                if ((this.Adapter.InsertCommand != null)) {
-                    this.Adapter.InsertCommand.Connection = value;
-                }
-                if ((this.Adapter.DeleteCommand != null)) {
-                    this.Adapter.DeleteCommand.Connection = value;
-                }
-                if ((this.Adapter.UpdateCommand != null)) {
-                    this.Adapter.UpdateCommand.Connection = value;
-                }
-                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
-                    if ((this.CommandCollection[i] != null)) {
-                        ((global::System.Data.SqlClient.SqlCommand)(this.CommandCollection[i])).Connection = value;
-                    }
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        internal global::System.Data.SqlClient.SqlTransaction Transaction {
-            get {
-                return this._transaction;
-            }
-            set {
-                this._transaction = value;
-                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
-                    this.CommandCollection[i].Transaction = this._transaction;
-                }
-                if (((this.Adapter != null) 
-                            && (this.Adapter.DeleteCommand != null))) {
-                    this.Adapter.DeleteCommand.Transaction = this._transaction;
-                }
-                if (((this.Adapter != null) 
-                            && (this.Adapter.InsertCommand != null))) {
-                    this.Adapter.InsertCommand.Transaction = this._transaction;
-                }
-                if (((this.Adapter != null) 
-                            && (this.Adapter.UpdateCommand != null))) {
-                    this.Adapter.UpdateCommand.Transaction = this._transaction;
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        protected global::System.Data.SqlClient.SqlCommand[] CommandCollection {
-            get {
-                if ((this._commandCollection == null)) {
-                    this.InitCommandCollection();
-                }
-                return this._commandCollection;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public bool ClearBeforeFill {
-            get {
-                return this._clearBeforeFill;
-            }
-            set {
-                this._clearBeforeFill = value;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private void InitAdapter() {
-            this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
-            global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
-            tableMapping.SourceTable = "Table";
-            tableMapping.DataSetTable = "OffNormalLimit";
-            tableMapping.ColumnMappings.Add("ID", "ID");
-            tableMapping.ColumnMappings.Add("ChannelID", "ChannelID");
-            tableMapping.ColumnMappings.Add("HourOfWeek", "HourOfWeek");
-            tableMapping.ColumnMappings.Add("High", "High");
-            tableMapping.ColumnMappings.Add("Low", "Low");
-            tableMapping.ColumnMappings.Add("Count", "Count");
-            tableMapping.ColumnMappings.Add("Enabled", "Enabled");
-            this._adapter.TableMappings.Add(tableMapping);
-            this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
-            this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [OffNormalLimit] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([HourOfWeek] = @Original_HourOfWeek) AND ([High] = @Original_High) AND ([Low] = @Original_Low) AND ([Count] = @Original_Count) AND ([Enabled] = @Original_Enabled))";
-            this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Count", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Count", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
-            this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [OffNormalLimit] ([ChannelID], [HourOfWeek], [High], [Low], [Count], [Enabled]) VALUES (@ChannelID, @HourOfWeek, @High, @Low, @Count, @Enabled);
-SELECT ID, ChannelID, HourOfWeek, High, Low, Count, Enabled FROM OffNormalLimit WHERE (ID = SCOPE_IDENTITY())";
-            this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Count", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Count", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
-            this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [OffNormalLimit] SET [ChannelID] = @ChannelID, [HourOfWeek] = @HourOfWeek, [High] = @High, [Low] = @Low, [Count] = @Count, [Enabled] = @Enabled WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([HourOfWeek] = @Original_HourOfWeek) AND ([High] = @Original_High) AND ([Low] = @Original_Low) AND ([Count] = @Original_Count) AND ([Enabled] = @Original_Enabled));
-SELECT ID, ChannelID, HourOfWeek, High, Low, Count, Enabled FROM OffNormalLimit WHERE (ID = @ID)";
-            this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Count", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Count", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Count", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Count", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private void InitConnection() {
-            this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private void InitCommandCollection() {
-            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
-            this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
-            this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        ID, ChannelID, HourOfWeek, High, Low, Count, Enabled\r\nFROM         " +
-                "   OffNormalLimit";
-            this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
-            this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = "SELECT ChannelID, Count, Enabled, High, HourOfWeek, ID, Low FROM OffNormalLimit W" +
-                "HERE (ChannelID = @channelID)";
-            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@channelID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(AlarmData.OffNormalLimitDataTable dataTable) {
-            this.Adapter.SelectCommand = this.CommandCollection[0];
-            if ((this.ClearBeforeFill == true)) {
-                dataTable.Clear();
-            }
-            int returnValue = this.Adapter.Fill(dataTable);
-            return returnValue;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual AlarmData.OffNormalLimitDataTable GetData() {
-            this.Adapter.SelectCommand = this.CommandCollection[0];
-            AlarmData.OffNormalLimitDataTable dataTable = new AlarmData.OffNormalLimitDataTable();
-            this.Adapter.Fill(dataTable);
-            return dataTable;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
-        public virtual int FillBy(AlarmData.OffNormalLimitDataTable dataTable, int channelID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
-            if ((this.ClearBeforeFill == true)) {
-                dataTable.Clear();
-            }
-            int returnValue = this.Adapter.Fill(dataTable);
-            return returnValue;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
-        public virtual AlarmData.OffNormalLimitDataTable GetDataBy(int channelID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
-            AlarmData.OffNormalLimitDataTable dataTable = new AlarmData.OffNormalLimitDataTable();
-            this.Adapter.Fill(dataTable);
-            return dataTable;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(AlarmData.OffNormalLimitDataTable dataTable) {
-            return this.Adapter.Update(dataTable);
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(AlarmData dataSet) {
-            return this.Adapter.Update(dataSet, "OffNormalLimit");
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(global::System.Data.DataRow dataRow) {
-            return this.Adapter.Update(new global::System.Data.DataRow[] {
-                        dataRow});
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(global::System.Data.DataRow[] dataRows) {
-            return this.Adapter.Update(dataRows);
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_ChannelID, int Original_HourOfWeek, double Original_High, double Original_Low, int Original_Count, int Original_Enabled) {
-            this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
-            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_ChannelID));
-            this.Adapter.DeleteCommand.Parameters[2].Value = ((int)(Original_HourOfWeek));
-            this.Adapter.DeleteCommand.Parameters[3].Value = ((double)(Original_High));
-            this.Adapter.DeleteCommand.Parameters[4].Value = ((double)(Original_Low));
-            this.Adapter.DeleteCommand.Parameters[5].Value = ((int)(Original_Count));
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((int)(Original_Enabled));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
-            if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.DeleteCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.DeleteCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.DeleteCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int ChannelID, int HourOfWeek, double High, double Low, int Count, int Enabled) {
-            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(ChannelID));
-            this.Adapter.InsertCommand.Parameters[1].Value = ((int)(HourOfWeek));
-            this.Adapter.InsertCommand.Parameters[2].Value = ((double)(High));
-            this.Adapter.InsertCommand.Parameters[3].Value = ((double)(Low));
-            this.Adapter.InsertCommand.Parameters[4].Value = ((int)(Count));
-            this.Adapter.InsertCommand.Parameters[5].Value = ((int)(Enabled));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
-            if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.InsertCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.InsertCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, int HourOfWeek, double High, double Low, int Count, int Enabled, int Original_ID, int Original_ChannelID, int Original_HourOfWeek, double Original_High, double Original_Low, int Original_Count, int Original_Enabled, int ID) {
-            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(ChannelID));
-            this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(HourOfWeek));
-            this.Adapter.UpdateCommand.Parameters[2].Value = ((double)(High));
-            this.Adapter.UpdateCommand.Parameters[3].Value = ((double)(Low));
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((int)(Count));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((int)(Enabled));
-            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_ChannelID));
-            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(Original_HourOfWeek));
-            this.Adapter.UpdateCommand.Parameters[9].Value = ((double)(Original_High));
-            this.Adapter.UpdateCommand.Parameters[10].Value = ((double)(Original_Low));
-            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_Count));
-            this.Adapter.UpdateCommand.Parameters[12].Value = ((int)(Original_Enabled));
-            this.Adapter.UpdateCommand.Parameters[13].Value = ((int)(ID));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
-            if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.UpdateCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.UpdateCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, int HourOfWeek, double High, double Low, int Count, int Enabled, int Original_ID, int Original_ChannelID, int Original_HourOfWeek, double Original_High, double Original_Low, int Original_Count, int Original_Enabled) {
-            return this.Update(ChannelID, HourOfWeek, High, Low, Count, Enabled, Original_ID, Original_ChannelID, Original_HourOfWeek, Original_High, Original_Low, Original_Count, Original_Enabled, Original_ID);
+        public virtual int Update(string Name, string Description, int Original_ID, string Original_Name) {
+            return this.Update(Name, Description, Original_ID, Original_Name, Original_ID);
         }
     }
     
@@ -3247,52 +3428,61 @@ SELECT ID, ChannelID, HourOfWeek, High, Low, Count, Enabled FROM OffNormalLimit 
             tableMapping.DataSetTable = "AlarmLog";
             tableMapping.ColumnMappings.Add("ID", "ID");
             tableMapping.ColumnMappings.Add("ChannelID", "ChannelID");
+            tableMapping.ColumnMappings.Add("AlarmTypeID", "AlarmTypeID");
             tableMapping.ColumnMappings.Add("Time", "Time");
+            tableMapping.ColumnMappings.Add("Severity", "Severity");
             tableMapping.ColumnMappings.Add("LimitHigh", "LimitHigh");
             tableMapping.ColumnMappings.Add("LimitLow", "LimitLow");
-            tableMapping.ColumnMappings.Add("ValueHigh", "ValueHigh");
-            tableMapping.ColumnMappings.Add("ValueLow", "ValueLow");
+            tableMapping.ColumnMappings.Add("Value", "Value");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [AlarmLog] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([Time] = @Original_Time) AND ([LimitHigh] = @Original_LimitHigh) AND ([LimitLow] = @Original_LimitLow) AND ([ValueHigh] = @Original_ValueHigh) AND ([ValueLow] = @Original_ValueLow))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[AlarmLog] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([Time] = @Original_Time) AND ([Severity] = @Original_Severity) AND ((@IsNull_LimitHigh = 1 AND [LimitHigh] IS NULL) OR ([LimitHigh] = @Original_LimitHigh)) AND ((@IsNull_LimitLow = 1 AND [LimitLow] IS NULL) OR ([LimitLow] = @Original_LimitLow)) AND ([Value] = @Original_Value))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_LimitHigh", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_LimitLow", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Value", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Value", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [AlarmLog] ([ChannelID], [Time], [LimitHigh], [LimitLow], [ValueHigh], [ValueLow]) VALUES (@ChannelID, @Time, @LimitHigh, @LimitLow, @ValueHigh, @ValueLow);
-SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmLog WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[AlarmLog] ([ChannelID], [AlarmTypeID], [Time], [Severity], [LimitHigh], [LimitLow], [Value]) VALUES (@ChannelID, @AlarmTypeID, @Time, @Severity, @LimitHigh, @LimitLow, @Value);
+SELECT ID, ChannelID, AlarmTypeID, Time, Severity, LimitHigh, LimitLow, Value FROM AlarmLog WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Value", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Value", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [AlarmLog] SET [ChannelID] = @ChannelID, [Time] = @Time, [LimitHigh] = @LimitHigh, [LimitLow] = @LimitLow, [ValueHigh] = @ValueHigh, [ValueLow] = @ValueLow WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([Time] = @Original_Time) AND ([LimitHigh] = @Original_LimitHigh) AND ([LimitLow] = @Original_LimitLow) AND ([ValueHigh] = @Original_ValueHigh) AND ([ValueLow] = @Original_ValueLow));
-SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmLog WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[AlarmLog] SET [ChannelID] = @ChannelID, [AlarmTypeID] = @AlarmTypeID, [Time] = @Time, [Severity] = @Severity, [LimitHigh] = @LimitHigh, [LimitLow] = @LimitLow, [Value] = @Value WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([Time] = @Original_Time) AND ([Severity] = @Original_Severity) AND ((@IsNull_LimitHigh = 1 AND [LimitHigh] IS NULL) OR ([LimitHigh] = @Original_LimitHigh)) AND ((@IsNull_LimitLow = 1 AND [LimitLow] IS NULL) OR ([LimitLow] = @Original_LimitLow)) AND ([Value] = @Original_Value));
+SELECT ID, ChannelID, AlarmTypeID, Time, Severity, LimitHigh, LimitLow, Value FROM AlarmLog WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Value", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Value", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_LimitHigh", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_LimitLow", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Value", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Value", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
@@ -3309,8 +3499,8 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
             this._commandCollection = new global::System.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow\r\nFROM" +
-                "            AlarmLog";
+            this._commandCollection[0].CommandText = "SELECT ID, ChannelID, AlarmTypeID, Time, Severity, LimitHigh, LimitLow, Value FRO" +
+                "M dbo.AlarmLog";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         
@@ -3371,24 +3561,29 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_ChannelID, System.DateTime Original_Time, global::System.Nullable<double> Original_LimitHigh, global::System.Nullable<double> Original_LimitLow, double Original_ValueHigh, double Original_ValueLow) {
+        public virtual int Delete(int Original_ID, int Original_ChannelID, int Original_AlarmTypeID, System.DateTime Original_Time, int Original_Severity, global::System.Nullable<double> Original_LimitHigh, global::System.Nullable<double> Original_LimitLow, double Original_Value) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
             this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_ChannelID));
-            this.Adapter.DeleteCommand.Parameters[2].Value = ((System.DateTime)(Original_Time));
+            this.Adapter.DeleteCommand.Parameters[2].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.DeleteCommand.Parameters[3].Value = ((System.DateTime)(Original_Time));
+            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_Severity));
             if ((Original_LimitHigh.HasValue == true)) {
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((double)(Original_LimitHigh.Value));
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_LimitHigh.Value));
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[3].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[6].Value = global::System.DBNull.Value;
             }
             if ((Original_LimitLow.HasValue == true)) {
-                this.Adapter.DeleteCommand.Parameters[4].Value = ((double)(Original_LimitLow.Value));
+                this.Adapter.DeleteCommand.Parameters[7].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[8].Value = ((double)(Original_LimitLow.Value));
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[4].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[7].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[8].Value = global::System.DBNull.Value;
             }
-            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_ValueHigh));
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_ValueLow));
+            this.Adapter.DeleteCommand.Parameters[9].Value = ((double)(Original_Value));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -3409,23 +3604,24 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int ChannelID, System.DateTime Time, global::System.Nullable<double> LimitHigh, global::System.Nullable<double> LimitLow, double ValueHigh, double ValueLow) {
+        public virtual int Insert(int ChannelID, int AlarmTypeID, System.DateTime Time, int Severity, global::System.Nullable<double> LimitHigh, global::System.Nullable<double> LimitLow, double Value) {
             this.Adapter.InsertCommand.Parameters[0].Value = ((int)(ChannelID));
-            this.Adapter.InsertCommand.Parameters[1].Value = ((System.DateTime)(Time));
+            this.Adapter.InsertCommand.Parameters[1].Value = ((int)(AlarmTypeID));
+            this.Adapter.InsertCommand.Parameters[2].Value = ((System.DateTime)(Time));
+            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(Severity));
             if ((LimitHigh.HasValue == true)) {
-                this.Adapter.InsertCommand.Parameters[2].Value = ((double)(LimitHigh.Value));
+                this.Adapter.InsertCommand.Parameters[4].Value = ((double)(LimitHigh.Value));
             }
             else {
-                this.Adapter.InsertCommand.Parameters[2].Value = global::System.DBNull.Value;
+                this.Adapter.InsertCommand.Parameters[4].Value = global::System.DBNull.Value;
             }
             if ((LimitLow.HasValue == true)) {
-                this.Adapter.InsertCommand.Parameters[3].Value = ((double)(LimitLow.Value));
+                this.Adapter.InsertCommand.Parameters[5].Value = ((double)(LimitLow.Value));
             }
             else {
-                this.Adapter.InsertCommand.Parameters[3].Value = global::System.DBNull.Value;
+                this.Adapter.InsertCommand.Parameters[5].Value = global::System.DBNull.Value;
             }
-            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(ValueHigh));
-            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(ValueLow));
+            this.Adapter.InsertCommand.Parameters[6].Value = ((double)(Value));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -3446,41 +3642,63 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, System.DateTime Time, global::System.Nullable<double> LimitHigh, global::System.Nullable<double> LimitLow, double ValueHigh, double ValueLow, int Original_ID, int Original_ChannelID, System.DateTime Original_Time, global::System.Nullable<double> Original_LimitHigh, global::System.Nullable<double> Original_LimitLow, double Original_ValueHigh, double Original_ValueLow, int ID) {
+        public virtual int Update(
+                    int ChannelID, 
+                    int AlarmTypeID, 
+                    System.DateTime Time, 
+                    int Severity, 
+                    global::System.Nullable<double> LimitHigh, 
+                    global::System.Nullable<double> LimitLow, 
+                    double Value, 
+                    int Original_ID, 
+                    int Original_ChannelID, 
+                    int Original_AlarmTypeID, 
+                    System.DateTime Original_Time, 
+                    int Original_Severity, 
+                    global::System.Nullable<double> Original_LimitHigh, 
+                    global::System.Nullable<double> Original_LimitLow, 
+                    double Original_Value, 
+                    int ID) {
             this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(ChannelID));
-            this.Adapter.UpdateCommand.Parameters[1].Value = ((System.DateTime)(Time));
+            this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((System.DateTime)(Time));
+            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(Severity));
             if ((LimitHigh.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[2].Value = ((double)(LimitHigh.Value));
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(LimitHigh.Value));
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[2].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
             }
             if ((LimitLow.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[3].Value = ((double)(LimitLow.Value));
+                this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(LimitLow.Value));
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[3].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[5].Value = global::System.DBNull.Value;
             }
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(ValueHigh));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(ValueLow));
-            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_ChannelID));
-            this.Adapter.UpdateCommand.Parameters[8].Value = ((System.DateTime)(Original_Time));
+            this.Adapter.UpdateCommand.Parameters[6].Value = ((double)(Value));
+            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(Original_ChannelID));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((System.DateTime)(Original_Time));
+            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_Severity));
             if ((Original_LimitHigh.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[9].Value = ((double)(Original_LimitHigh.Value));
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((double)(Original_LimitHigh.Value));
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[9].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[13].Value = global::System.DBNull.Value;
             }
             if ((Original_LimitLow.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[10].Value = ((double)(Original_LimitLow.Value));
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[15].Value = ((double)(Original_LimitLow.Value));
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[10].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[15].Value = global::System.DBNull.Value;
             }
-            this.Adapter.UpdateCommand.Parameters[11].Value = ((double)(Original_ValueHigh));
-            this.Adapter.UpdateCommand.Parameters[12].Value = ((double)(Original_ValueLow));
-            this.Adapter.UpdateCommand.Parameters[13].Value = ((int)(ID));
+            this.Adapter.UpdateCommand.Parameters[16].Value = ((double)(Original_Value));
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(ID));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -3501,8 +3719,8 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, System.DateTime Time, global::System.Nullable<double> LimitHigh, global::System.Nullable<double> LimitLow, double ValueHigh, double ValueLow, int Original_ID, int Original_ChannelID, System.DateTime Original_Time, global::System.Nullable<double> Original_LimitHigh, global::System.Nullable<double> Original_LimitLow, double Original_ValueHigh, double Original_ValueLow) {
-            return this.Update(ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow, Original_ID, Original_ChannelID, Original_Time, Original_LimitHigh, Original_LimitLow, Original_ValueHigh, Original_ValueLow, Original_ID);
+        public virtual int Update(int ChannelID, int AlarmTypeID, System.DateTime Time, int Severity, global::System.Nullable<double> LimitHigh, global::System.Nullable<double> LimitLow, double Value, int Original_ID, int Original_ChannelID, int Original_AlarmTypeID, System.DateTime Original_Time, int Original_Severity, global::System.Nullable<double> Original_LimitHigh, global::System.Nullable<double> Original_LimitLow, double Original_Value) {
+            return this.Update(ChannelID, AlarmTypeID, Time, Severity, LimitHigh, LimitLow, Value, Original_ID, Original_ChannelID, Original_AlarmTypeID, Original_Time, Original_Severity, Original_LimitHigh, Original_LimitLow, Original_Value, Original_ID);
         }
     }
     
@@ -3515,7 +3733,7 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
     [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
         ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
     [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-    public partial class OffNormalLogTableAdapter : global::System.ComponentModel.Component {
+    public partial class DefaultAlarmRangeLimitTableAdapter : global::System.ComponentModel.Component {
         
         private global::System.Data.SqlClient.SqlDataAdapter _adapter;
         
@@ -3529,7 +3747,7 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public OffNormalLogTableAdapter() {
+        public DefaultAlarmRangeLimitTableAdapter() {
             this.ClearBeforeFill = true;
         }
         
@@ -3626,55 +3844,69 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM AlarmL
             this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
             global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
             tableMapping.SourceTable = "Table";
-            tableMapping.DataSetTable = "OffNormalLog";
+            tableMapping.DataSetTable = "DefaultAlarmRangeLimit";
             tableMapping.ColumnMappings.Add("ID", "ID");
-            tableMapping.ColumnMappings.Add("ChannelID", "ChannelID");
-            tableMapping.ColumnMappings.Add("Time", "Time");
-            tableMapping.ColumnMappings.Add("LimitHigh", "LimitHigh");
-            tableMapping.ColumnMappings.Add("LimitLow", "LimitLow");
-            tableMapping.ColumnMappings.Add("ValueHigh", "ValueHigh");
-            tableMapping.ColumnMappings.Add("ValueLow", "ValueLow");
+            tableMapping.ColumnMappings.Add("MeasurementTypeID", "MeasurementTypeID");
+            tableMapping.ColumnMappings.Add("MeasurementCharacteristicID", "MeasurementCharacteristicID");
+            tableMapping.ColumnMappings.Add("AlarmTypeID", "AlarmTypeID");
+            tableMapping.ColumnMappings.Add("Severity", "Severity");
+            tableMapping.ColumnMappings.Add("High", "High");
+            tableMapping.ColumnMappings.Add("Low", "Low");
+            tableMapping.ColumnMappings.Add("RangeInclusive", "RangeInclusive");
+            tableMapping.ColumnMappings.Add("PerUnit", "PerUnit");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [OffNormalLog] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([Time] = @Original_Time) AND ([LimitHigh] = @Original_LimitHigh) AND ([LimitLow] = @Original_LimitLow) AND ([ValueHigh] = @Original_ValueHigh) AND ([ValueLow] = @Original_ValueLow))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[DefaultAlarmRangeLimit] WHERE (([ID] = @Original_ID) AND ([MeasurementTypeID] = @Original_MeasurementTypeID) AND ([MeasurementCharacteristicID] = @Original_MeasurementCharacteristicID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([Severity] = @Original_Severity) AND ((@IsNull_High = 1 AND [High] IS NULL) OR ([High] = @Original_High)) AND ((@IsNull_Low = 1 AND [Low] IS NULL) OR ([Low] = @Original_Low)) AND ([RangeInclusive] = @Original_RangeInclusive) AND ([PerUnit] = @Original_PerUnit))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MeasurementTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MeasurementCharacteristicID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementCharacteristicID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_High", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_Low", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [OffNormalLog] ([ChannelID], [Time], [LimitHigh], [LimitLow], [ValueHigh], [ValueLow]) VALUES (@ChannelID, @Time, @LimitHigh, @LimitLow, @ValueHigh, @ValueLow);
-SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNormalLog WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[DefaultAlarmRangeLimit] ([MeasurementTypeID], [MeasurementCharacteristicID], [AlarmTypeID], [Severity], [High], [Low], [RangeInclusive], [PerUnit]) VALUES (@MeasurementTypeID, @MeasurementCharacteristicID, @AlarmTypeID, @Severity, @High, @Low, @RangeInclusive, @PerUnit);
+SELECT ID, MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit FROM DefaultAlarmRangeLimit WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MeasurementTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MeasurementCharacteristicID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementCharacteristicID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [OffNormalLog] SET [ChannelID] = @ChannelID, [Time] = @Time, [LimitHigh] = @LimitHigh, [LimitLow] = @LimitLow, [ValueHigh] = @ValueHigh, [ValueLow] = @ValueLow WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([Time] = @Original_Time) AND ([LimitHigh] = @Original_LimitHigh) AND ([LimitLow] = @Original_LimitLow) AND ([ValueHigh] = @Original_ValueHigh) AND ([ValueLow] = @Original_ValueLow));
-SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNormalLog WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[DefaultAlarmRangeLimit] SET [MeasurementTypeID] = @MeasurementTypeID, [MeasurementCharacteristicID] = @MeasurementCharacteristicID, [AlarmTypeID] = @AlarmTypeID, [Severity] = @Severity, [High] = @High, [Low] = @Low, [RangeInclusive] = @RangeInclusive, [PerUnit] = @PerUnit WHERE (([ID] = @Original_ID) AND ([MeasurementTypeID] = @Original_MeasurementTypeID) AND ([MeasurementCharacteristicID] = @Original_MeasurementCharacteristicID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([Severity] = @Original_Severity) AND ((@IsNull_High = 1 AND [High] IS NULL) OR ([High] = @Original_High)) AND ((@IsNull_Low = 1 AND [Low] IS NULL) OR ([Low] = @Original_Low)) AND ([RangeInclusive] = @Original_RangeInclusive) AND ([PerUnit] = @Original_PerUnit));
+SELECT ID, MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit FROM DefaultAlarmRangeLimit WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MeasurementTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MeasurementCharacteristicID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementCharacteristicID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Time", global::System.Data.SqlDbType.DateTime, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_LimitLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "LimitLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueHigh", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueHigh", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ValueLow", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ValueLow", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MeasurementTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_MeasurementCharacteristicID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementCharacteristicID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_High", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_Low", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
@@ -3688,19 +3920,25 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitCommandCollection() {
-            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[1];
+            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow\r\nFROM" +
-                "            OffNormalLog";
+            this._commandCollection[0].CommandText = "SELECT ID, MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity," +
+                " High, Low, RangeInclusive, PerUnit FROM dbo.DefaultAlarmRangeLimit";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[1].Connection = this.Connection;
+            this._commandCollection[1].CommandText = @"SELECT ID, MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit FROM dbo.DefaultAlarmRangeLimit WHERE MeasurementTypeID = @measurementTypeID AND MeasurementCharacteristicID = @measurementCharacteristicID";
+            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@measurementTypeID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@measurementCharacteristicID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "MeasurementCharacteristicID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(AlarmData.OffNormalLogDataTable dataTable) {
+        public virtual int Fill(AlarmData.DefaultAlarmRangeLimitDataTable dataTable) {
             this.Adapter.SelectCommand = this.CommandCollection[0];
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -3713,9 +3951,9 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual AlarmData.OffNormalLogDataTable GetData() {
+        public virtual AlarmData.DefaultAlarmRangeLimitDataTable GetData() {
             this.Adapter.SelectCommand = this.CommandCollection[0];
-            AlarmData.OffNormalLogDataTable dataTable = new AlarmData.OffNormalLogDataTable();
+            AlarmData.DefaultAlarmRangeLimitDataTable dataTable = new AlarmData.DefaultAlarmRangeLimitDataTable();
             this.Adapter.Fill(dataTable);
             return dataTable;
         }
@@ -3723,7 +3961,35 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(AlarmData.OffNormalLogDataTable dataTable) {
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
+        public virtual int FillBy(AlarmData.DefaultAlarmRangeLimitDataTable dataTable, int measurementTypeID, int measurementCharacteristicID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(measurementTypeID));
+            this.Adapter.SelectCommand.Parameters[1].Value = ((int)(measurementCharacteristicID));
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
+        public virtual AlarmData.DefaultAlarmRangeLimitDataTable GetDataBy(int measurementTypeID, int measurementCharacteristicID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(measurementTypeID));
+            this.Adapter.SelectCommand.Parameters[1].Value = ((int)(measurementCharacteristicID));
+            AlarmData.DefaultAlarmRangeLimitDataTable dataTable = new AlarmData.DefaultAlarmRangeLimitDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(AlarmData.DefaultAlarmRangeLimitDataTable dataTable) {
             return this.Adapter.Update(dataTable);
         }
         
@@ -3731,7 +3997,7 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         public virtual int Update(AlarmData dataSet) {
-            return this.Adapter.Update(dataSet, "OffNormalLog");
+            return this.Adapter.Update(dataSet, "DefaultAlarmRangeLimit");
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -3753,14 +4019,30 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_ChannelID, System.DateTime Original_Time, double Original_LimitHigh, double Original_LimitLow, double Original_ValueHigh, double Original_ValueLow) {
+        public virtual int Delete(int Original_ID, int Original_MeasurementTypeID, int Original_MeasurementCharacteristicID, int Original_AlarmTypeID, int Original_Severity, global::System.Nullable<double> Original_High, global::System.Nullable<double> Original_Low, int Original_RangeInclusive, int Original_PerUnit) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
-            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_ChannelID));
-            this.Adapter.DeleteCommand.Parameters[2].Value = ((System.DateTime)(Original_Time));
-            this.Adapter.DeleteCommand.Parameters[3].Value = ((double)(Original_LimitHigh));
-            this.Adapter.DeleteCommand.Parameters[4].Value = ((double)(Original_LimitLow));
-            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_ValueHigh));
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_ValueLow));
+            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_MeasurementTypeID));
+            this.Adapter.DeleteCommand.Parameters[2].Value = ((int)(Original_MeasurementCharacteristicID));
+            this.Adapter.DeleteCommand.Parameters[3].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_Severity));
+            if ((Original_High.HasValue == true)) {
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_High.Value));
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[6].Value = global::System.DBNull.Value;
+            }
+            if ((Original_Low.HasValue == true)) {
+                this.Adapter.DeleteCommand.Parameters[7].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[8].Value = ((double)(Original_Low.Value));
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[7].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[8].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.DeleteCommand.Parameters[9].Value = ((int)(Original_RangeInclusive));
+            this.Adapter.DeleteCommand.Parameters[10].Value = ((int)(Original_PerUnit));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -3781,13 +4063,25 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int ChannelID, System.DateTime Time, double LimitHigh, double LimitLow, double ValueHigh, double ValueLow) {
-            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(ChannelID));
-            this.Adapter.InsertCommand.Parameters[1].Value = ((System.DateTime)(Time));
-            this.Adapter.InsertCommand.Parameters[2].Value = ((double)(LimitHigh));
-            this.Adapter.InsertCommand.Parameters[3].Value = ((double)(LimitLow));
-            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(ValueHigh));
-            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(ValueLow));
+        public virtual int Insert(int MeasurementTypeID, int MeasurementCharacteristicID, int AlarmTypeID, int Severity, global::System.Nullable<double> High, global::System.Nullable<double> Low, int RangeInclusive, int PerUnit) {
+            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(MeasurementTypeID));
+            this.Adapter.InsertCommand.Parameters[1].Value = ((int)(MeasurementCharacteristicID));
+            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(AlarmTypeID));
+            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(Severity));
+            if ((High.HasValue == true)) {
+                this.Adapter.InsertCommand.Parameters[4].Value = ((double)(High.Value));
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[4].Value = global::System.DBNull.Value;
+            }
+            if ((Low.HasValue == true)) {
+                this.Adapter.InsertCommand.Parameters[5].Value = ((double)(Low.Value));
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[5].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.InsertCommand.Parameters[6].Value = ((int)(RangeInclusive));
+            this.Adapter.InsertCommand.Parameters[7].Value = ((int)(PerUnit));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -3808,21 +4102,67 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, System.DateTime Time, double LimitHigh, double LimitLow, double ValueHigh, double ValueLow, int Original_ID, int Original_ChannelID, System.DateTime Original_Time, double Original_LimitHigh, double Original_LimitLow, double Original_ValueHigh, double Original_ValueLow, int ID) {
-            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(ChannelID));
-            this.Adapter.UpdateCommand.Parameters[1].Value = ((System.DateTime)(Time));
-            this.Adapter.UpdateCommand.Parameters[2].Value = ((double)(LimitHigh));
-            this.Adapter.UpdateCommand.Parameters[3].Value = ((double)(LimitLow));
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(ValueHigh));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(ValueLow));
-            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_ChannelID));
-            this.Adapter.UpdateCommand.Parameters[8].Value = ((System.DateTime)(Original_Time));
-            this.Adapter.UpdateCommand.Parameters[9].Value = ((double)(Original_LimitHigh));
-            this.Adapter.UpdateCommand.Parameters[10].Value = ((double)(Original_LimitLow));
-            this.Adapter.UpdateCommand.Parameters[11].Value = ((double)(Original_ValueHigh));
-            this.Adapter.UpdateCommand.Parameters[12].Value = ((double)(Original_ValueLow));
-            this.Adapter.UpdateCommand.Parameters[13].Value = ((int)(ID));
+        public virtual int Update(
+                    int MeasurementTypeID, 
+                    int MeasurementCharacteristicID, 
+                    int AlarmTypeID, 
+                    int Severity, 
+                    global::System.Nullable<double> High, 
+                    global::System.Nullable<double> Low, 
+                    int RangeInclusive, 
+                    int PerUnit, 
+                    int Original_ID, 
+                    int Original_MeasurementTypeID, 
+                    int Original_MeasurementCharacteristicID, 
+                    int Original_AlarmTypeID, 
+                    int Original_Severity, 
+                    global::System.Nullable<double> Original_High, 
+                    global::System.Nullable<double> Original_Low, 
+                    int Original_RangeInclusive, 
+                    int Original_PerUnit, 
+                    int ID) {
+            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(MeasurementTypeID));
+            this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(MeasurementCharacteristicID));
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(Severity));
+            if ((High.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(High.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
+            }
+            if ((Low.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(Low.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[5].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(RangeInclusive));
+            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(PerUnit));
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(Original_MeasurementTypeID));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((int)(Original_MeasurementCharacteristicID));
+            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[12].Value = ((int)(Original_Severity));
+            if ((Original_High.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((double)(Original_High.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[14].Value = global::System.DBNull.Value;
+            }
+            if ((Original_Low.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[15].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[16].Value = ((double)(Original_Low.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[15].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[16].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_RangeInclusive));
+            this.Adapter.UpdateCommand.Parameters[18].Value = ((int)(Original_PerUnit));
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((int)(ID));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -3843,8 +4183,903 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int ChannelID, System.DateTime Time, double LimitHigh, double LimitLow, double ValueHigh, double ValueLow, int Original_ID, int Original_ChannelID, System.DateTime Original_Time, double Original_LimitHigh, double Original_LimitLow, double Original_ValueHigh, double Original_ValueLow) {
-            return this.Update(ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow, Original_ID, Original_ChannelID, Original_Time, Original_LimitHigh, Original_LimitLow, Original_ValueHigh, Original_ValueLow, Original_ID);
+        public virtual int Update(
+                    int MeasurementTypeID, 
+                    int MeasurementCharacteristicID, 
+                    int AlarmTypeID, 
+                    int Severity, 
+                    global::System.Nullable<double> High, 
+                    global::System.Nullable<double> Low, 
+                    int RangeInclusive, 
+                    int PerUnit, 
+                    int Original_ID, 
+                    int Original_MeasurementTypeID, 
+                    int Original_MeasurementCharacteristicID, 
+                    int Original_AlarmTypeID, 
+                    int Original_Severity, 
+                    global::System.Nullable<double> Original_High, 
+                    global::System.Nullable<double> Original_Low, 
+                    int Original_RangeInclusive, 
+                    int Original_PerUnit) {
+            return this.Update(MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit, Original_ID, Original_MeasurementTypeID, Original_MeasurementCharacteristicID, Original_AlarmTypeID, Original_Severity, Original_High, Original_Low, Original_RangeInclusive, Original_PerUnit, Original_ID);
+        }
+    }
+    
+    /// <summary>
+    ///Represents the connection and commands used to retrieve and save data.
+    ///</summary>
+    [global::System.ComponentModel.DesignerCategoryAttribute("code")]
+    [global::System.ComponentModel.ToolboxItem(true)]
+    [global::System.ComponentModel.DataObjectAttribute(true)]
+    [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
+        ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+    [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+    public partial class AlarmRangeLimitTableAdapter : global::System.ComponentModel.Component {
+        
+        private global::System.Data.SqlClient.SqlDataAdapter _adapter;
+        
+        private global::System.Data.SqlClient.SqlConnection _connection;
+        
+        private global::System.Data.SqlClient.SqlTransaction _transaction;
+        
+        private global::System.Data.SqlClient.SqlCommand[] _commandCollection;
+        
+        private bool _clearBeforeFill;
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public AlarmRangeLimitTableAdapter() {
+            this.ClearBeforeFill = true;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        protected internal global::System.Data.SqlClient.SqlDataAdapter Adapter {
+            get {
+                if ((this._adapter == null)) {
+                    this.InitAdapter();
+                }
+                return this._adapter;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public global::System.Data.SqlClient.SqlConnection Connection {
+            get {
+                if ((this._connection == null)) {
+                    this.InitConnection();
+                }
+                return this._connection;
+            }
+            set {
+                this._connection = value;
+                if ((this.Adapter.InsertCommand != null)) {
+                    this.Adapter.InsertCommand.Connection = value;
+                }
+                if ((this.Adapter.DeleteCommand != null)) {
+                    this.Adapter.DeleteCommand.Connection = value;
+                }
+                if ((this.Adapter.UpdateCommand != null)) {
+                    this.Adapter.UpdateCommand.Connection = value;
+                }
+                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
+                    if ((this.CommandCollection[i] != null)) {
+                        ((global::System.Data.SqlClient.SqlCommand)(this.CommandCollection[i])).Connection = value;
+                    }
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        internal global::System.Data.SqlClient.SqlTransaction Transaction {
+            get {
+                return this._transaction;
+            }
+            set {
+                this._transaction = value;
+                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
+                    this.CommandCollection[i].Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.DeleteCommand != null))) {
+                    this.Adapter.DeleteCommand.Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.InsertCommand != null))) {
+                    this.Adapter.InsertCommand.Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.UpdateCommand != null))) {
+                    this.Adapter.UpdateCommand.Transaction = this._transaction;
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        protected global::System.Data.SqlClient.SqlCommand[] CommandCollection {
+            get {
+                if ((this._commandCollection == null)) {
+                    this.InitCommandCollection();
+                }
+                return this._commandCollection;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public bool ClearBeforeFill {
+            get {
+                return this._clearBeforeFill;
+            }
+            set {
+                this._clearBeforeFill = value;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitAdapter() {
+            this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
+            global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
+            tableMapping.SourceTable = "Table";
+            tableMapping.DataSetTable = "AlarmRangeLimit";
+            tableMapping.ColumnMappings.Add("ID", "ID");
+            tableMapping.ColumnMappings.Add("ChannelID", "ChannelID");
+            tableMapping.ColumnMappings.Add("AlarmTypeID", "AlarmTypeID");
+            tableMapping.ColumnMappings.Add("Severity", "Severity");
+            tableMapping.ColumnMappings.Add("High", "High");
+            tableMapping.ColumnMappings.Add("Low", "Low");
+            tableMapping.ColumnMappings.Add("RangeInclusive", "RangeInclusive");
+            tableMapping.ColumnMappings.Add("PerUnit", "PerUnit");
+            tableMapping.ColumnMappings.Add("Enabled", "Enabled");
+            this._adapter.TableMappings.Add(tableMapping);
+            this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.DeleteCommand.Connection = this.Connection;
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[AlarmRangeLimit] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([Severity] = @Original_Severity) AND ((@IsNull_High = 1 AND [High] IS NULL) OR ([High] = @Original_High)) AND ((@IsNull_Low = 1 AND [Low] IS NULL) OR ([Low] = @Original_Low)) AND ([RangeInclusive] = @Original_RangeInclusive) AND ([PerUnit] = @Original_PerUnit) AND ([Enabled] = @Original_Enabled))";
+            this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_High", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_Low", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.InsertCommand.Connection = this.Connection;
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[AlarmRangeLimit] ([ChannelID], [AlarmTypeID], [Severity], [High], [Low], [RangeInclusive], [PerUnit], [Enabled]) VALUES (@ChannelID, @AlarmTypeID, @Severity, @High, @Low, @RangeInclusive, @PerUnit, @Enabled);
+SELECT ID, ChannelID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit, Enabled FROM AlarmRangeLimit WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.UpdateCommand.Connection = this.Connection;
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[AlarmRangeLimit] SET [ChannelID] = @ChannelID, [AlarmTypeID] = @AlarmTypeID, [Severity] = @Severity, [High] = @High, [Low] = @Low, [RangeInclusive] = @RangeInclusive, [PerUnit] = @PerUnit, [Enabled] = @Enabled WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([Severity] = @Original_Severity) AND ((@IsNull_High = 1 AND [High] IS NULL) OR ([High] = @Original_High)) AND ((@IsNull_Low = 1 AND [Low] IS NULL) OR ([Low] = @Original_Low)) AND ([RangeInclusive] = @Original_RangeInclusive) AND ([PerUnit] = @Original_PerUnit) AND ([Enabled] = @Original_Enabled));
+SELECT ID, ChannelID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit, Enabled FROM AlarmRangeLimit WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_High", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_Low", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_RangeInclusive", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "RangeInclusive", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PerUnit", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PerUnit", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitConnection() {
+            this._connection = new global::System.Data.SqlClient.SqlConnection();
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitCommandCollection() {
+            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
+            this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[0].Connection = this.Connection;
+            this._commandCollection[0].CommandText = "SELECT ID, ChannelID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit, " +
+                "Enabled FROM dbo.AlarmRangeLimit";
+            this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[1].Connection = this.Connection;
+            this._commandCollection[1].CommandText = "SELECT ID, ChannelID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit, " +
+                "Enabled FROM dbo.AlarmRangeLimit WHERE ChannelID = @channelID";
+            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@channelID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
+        public virtual int Fill(AlarmData.AlarmRangeLimitDataTable dataTable) {
+            this.Adapter.SelectCommand = this.CommandCollection[0];
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
+        public virtual AlarmData.AlarmRangeLimitDataTable GetData() {
+            this.Adapter.SelectCommand = this.CommandCollection[0];
+            AlarmData.AlarmRangeLimitDataTable dataTable = new AlarmData.AlarmRangeLimitDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
+        public virtual int FillBy(AlarmData.AlarmRangeLimitDataTable dataTable, int channelID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
+        public virtual AlarmData.AlarmRangeLimitDataTable GetDataBy(int channelID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
+            AlarmData.AlarmRangeLimitDataTable dataTable = new AlarmData.AlarmRangeLimitDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(AlarmData.AlarmRangeLimitDataTable dataTable) {
+            return this.Adapter.Update(dataTable);
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(AlarmData dataSet) {
+            return this.Adapter.Update(dataSet, "AlarmRangeLimit");
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(global::System.Data.DataRow dataRow) {
+            return this.Adapter.Update(new global::System.Data.DataRow[] {
+                        dataRow});
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(global::System.Data.DataRow[] dataRows) {
+            return this.Adapter.Update(dataRows);
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
+        public virtual int Delete(int Original_ID, int Original_ChannelID, int Original_AlarmTypeID, int Original_Severity, global::System.Nullable<double> Original_High, global::System.Nullable<double> Original_Low, int Original_RangeInclusive, int Original_PerUnit, int Original_Enabled) {
+            this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
+            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_ChannelID));
+            this.Adapter.DeleteCommand.Parameters[2].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.DeleteCommand.Parameters[3].Value = ((int)(Original_Severity));
+            if ((Original_High.HasValue == true)) {
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_High.Value));
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[5].Value = global::System.DBNull.Value;
+            }
+            if ((Original_Low.HasValue == true)) {
+                this.Adapter.DeleteCommand.Parameters[6].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[7].Value = ((double)(Original_Low.Value));
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[6].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[7].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.DeleteCommand.Parameters[8].Value = ((int)(Original_RangeInclusive));
+            this.Adapter.DeleteCommand.Parameters[9].Value = ((int)(Original_PerUnit));
+            this.Adapter.DeleteCommand.Parameters[10].Value = ((int)(Original_Enabled));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
+            if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.DeleteCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.DeleteCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.DeleteCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
+        public virtual int Insert(int ChannelID, int AlarmTypeID, int Severity, global::System.Nullable<double> High, global::System.Nullable<double> Low, int RangeInclusive, int PerUnit, int Enabled) {
+            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(ChannelID));
+            this.Adapter.InsertCommand.Parameters[1].Value = ((int)(AlarmTypeID));
+            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(Severity));
+            if ((High.HasValue == true)) {
+                this.Adapter.InsertCommand.Parameters[3].Value = ((double)(High.Value));
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[3].Value = global::System.DBNull.Value;
+            }
+            if ((Low.HasValue == true)) {
+                this.Adapter.InsertCommand.Parameters[4].Value = ((double)(Low.Value));
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[4].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.InsertCommand.Parameters[5].Value = ((int)(RangeInclusive));
+            this.Adapter.InsertCommand.Parameters[6].Value = ((int)(PerUnit));
+            this.Adapter.InsertCommand.Parameters[7].Value = ((int)(Enabled));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
+            if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.InsertCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.InsertCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
+        public virtual int Update(
+                    int ChannelID, 
+                    int AlarmTypeID, 
+                    int Severity, 
+                    global::System.Nullable<double> High, 
+                    global::System.Nullable<double> Low, 
+                    int RangeInclusive, 
+                    int PerUnit, 
+                    int Enabled, 
+                    int Original_ID, 
+                    int Original_ChannelID, 
+                    int Original_AlarmTypeID, 
+                    int Original_Severity, 
+                    global::System.Nullable<double> Original_High, 
+                    global::System.Nullable<double> Original_Low, 
+                    int Original_RangeInclusive, 
+                    int Original_PerUnit, 
+                    int Original_Enabled, 
+                    int ID) {
+            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(ChannelID));
+            this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(Severity));
+            if ((High.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((double)(High.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[3].Value = global::System.DBNull.Value;
+            }
+            if ((Low.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(Low.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((int)(RangeInclusive));
+            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(PerUnit));
+            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Enabled));
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(Original_ChannelID));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_Severity));
+            if ((Original_High.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((double)(Original_High.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[13].Value = global::System.DBNull.Value;
+            }
+            if ((Original_Low.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[15].Value = ((double)(Original_Low.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[15].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.UpdateCommand.Parameters[16].Value = ((int)(Original_RangeInclusive));
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_PerUnit));
+            this.Adapter.UpdateCommand.Parameters[18].Value = ((int)(Original_Enabled));
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((int)(ID));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
+            if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.UpdateCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.UpdateCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
+        public virtual int Update(
+                    int ChannelID, 
+                    int AlarmTypeID, 
+                    int Severity, 
+                    global::System.Nullable<double> High, 
+                    global::System.Nullable<double> Low, 
+                    int RangeInclusive, 
+                    int PerUnit, 
+                    int Enabled, 
+                    int Original_ID, 
+                    int Original_ChannelID, 
+                    int Original_AlarmTypeID, 
+                    int Original_Severity, 
+                    global::System.Nullable<double> Original_High, 
+                    global::System.Nullable<double> Original_Low, 
+                    int Original_RangeInclusive, 
+                    int Original_PerUnit, 
+                    int Original_Enabled) {
+            return this.Update(ChannelID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit, Enabled, Original_ID, Original_ChannelID, Original_AlarmTypeID, Original_Severity, Original_High, Original_Low, Original_RangeInclusive, Original_PerUnit, Original_Enabled, Original_ID);
+        }
+    }
+    
+    /// <summary>
+    ///Represents the connection and commands used to retrieve and save data.
+    ///</summary>
+    [global::System.ComponentModel.DesignerCategoryAttribute("code")]
+    [global::System.ComponentModel.ToolboxItem(true)]
+    [global::System.ComponentModel.DataObjectAttribute(true)]
+    [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
+        ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+    [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+    public partial class HourOfWeekLimitTableAdapter : global::System.ComponentModel.Component {
+        
+        private global::System.Data.SqlClient.SqlDataAdapter _adapter;
+        
+        private global::System.Data.SqlClient.SqlConnection _connection;
+        
+        private global::System.Data.SqlClient.SqlTransaction _transaction;
+        
+        private global::System.Data.SqlClient.SqlCommand[] _commandCollection;
+        
+        private bool _clearBeforeFill;
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public HourOfWeekLimitTableAdapter() {
+            this.ClearBeforeFill = true;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        protected internal global::System.Data.SqlClient.SqlDataAdapter Adapter {
+            get {
+                if ((this._adapter == null)) {
+                    this.InitAdapter();
+                }
+                return this._adapter;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public global::System.Data.SqlClient.SqlConnection Connection {
+            get {
+                if ((this._connection == null)) {
+                    this.InitConnection();
+                }
+                return this._connection;
+            }
+            set {
+                this._connection = value;
+                if ((this.Adapter.InsertCommand != null)) {
+                    this.Adapter.InsertCommand.Connection = value;
+                }
+                if ((this.Adapter.DeleteCommand != null)) {
+                    this.Adapter.DeleteCommand.Connection = value;
+                }
+                if ((this.Adapter.UpdateCommand != null)) {
+                    this.Adapter.UpdateCommand.Connection = value;
+                }
+                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
+                    if ((this.CommandCollection[i] != null)) {
+                        ((global::System.Data.SqlClient.SqlCommand)(this.CommandCollection[i])).Connection = value;
+                    }
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        internal global::System.Data.SqlClient.SqlTransaction Transaction {
+            get {
+                return this._transaction;
+            }
+            set {
+                this._transaction = value;
+                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
+                    this.CommandCollection[i].Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.DeleteCommand != null))) {
+                    this.Adapter.DeleteCommand.Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.InsertCommand != null))) {
+                    this.Adapter.InsertCommand.Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.UpdateCommand != null))) {
+                    this.Adapter.UpdateCommand.Transaction = this._transaction;
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        protected global::System.Data.SqlClient.SqlCommand[] CommandCollection {
+            get {
+                if ((this._commandCollection == null)) {
+                    this.InitCommandCollection();
+                }
+                return this._commandCollection;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public bool ClearBeforeFill {
+            get {
+                return this._clearBeforeFill;
+            }
+            set {
+                this._clearBeforeFill = value;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitAdapter() {
+            this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
+            global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
+            tableMapping.SourceTable = "Table";
+            tableMapping.DataSetTable = "HourOfWeekLimit";
+            tableMapping.ColumnMappings.Add("ID", "ID");
+            tableMapping.ColumnMappings.Add("ChannelID", "ChannelID");
+            tableMapping.ColumnMappings.Add("AlarmTypeID", "AlarmTypeID");
+            tableMapping.ColumnMappings.Add("HourOfWeek", "HourOfWeek");
+            tableMapping.ColumnMappings.Add("Severity", "Severity");
+            tableMapping.ColumnMappings.Add("High", "High");
+            tableMapping.ColumnMappings.Add("Low", "Low");
+            tableMapping.ColumnMappings.Add("Enabled", "Enabled");
+            this._adapter.TableMappings.Add(tableMapping);
+            this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.DeleteCommand.Connection = this.Connection;
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[HourOfWeekLimit] WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([HourOfWeek] = @Original_HourOfWeek) AND ([Severity] = @Original_Severity) AND ([High] = @Original_High) AND ([Low] = @Original_Low) AND ([Enabled] = @Original_Enabled))";
+            this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.InsertCommand.Connection = this.Connection;
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[HourOfWeekLimit] ([ChannelID], [AlarmTypeID], [HourOfWeek], [Severity], [High], [Low], [Enabled]) VALUES (@ChannelID, @AlarmTypeID, @HourOfWeek, @Severity, @High, @Low, @Enabled);
+SELECT ID, ChannelID, AlarmTypeID, HourOfWeek, Severity, High, Low, Enabled FROM HourOfWeekLimit WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.UpdateCommand.Connection = this.Connection;
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[HourOfWeekLimit] SET [ChannelID] = @ChannelID, [AlarmTypeID] = @AlarmTypeID, [HourOfWeek] = @HourOfWeek, [Severity] = @Severity, [High] = @High, [Low] = @Low, [Enabled] = @Enabled WHERE (([ID] = @Original_ID) AND ([ChannelID] = @Original_ChannelID) AND ([AlarmTypeID] = @Original_AlarmTypeID) AND ([HourOfWeek] = @Original_HourOfWeek) AND ([Severity] = @Original_Severity) AND ([High] = @Original_High) AND ([Low] = @Original_Low) AND ([Enabled] = @Original_Enabled));
+SELECT ID, ChannelID, AlarmTypeID, HourOfWeek, Severity, High, Low, Enabled FROM HourOfWeekLimit WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ChannelID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_AlarmTypeID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "AlarmTypeID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_HourOfWeek", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HourOfWeek", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Severity", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Severity", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_High", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "High", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Low", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Low", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Enabled", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Enabled", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitConnection() {
+            this._connection = new global::System.Data.SqlClient.SqlConnection();
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitCommandCollection() {
+            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
+            this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[0].Connection = this.Connection;
+            this._commandCollection[0].CommandText = "SELECT ID, ChannelID, AlarmTypeID, HourOfWeek, Severity, High, Low, Enabled FROM " +
+                "dbo.HourOfWeekLimit";
+            this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[1].Connection = this.Connection;
+            this._commandCollection[1].CommandText = "SELECT ID, ChannelID, AlarmTypeID, HourOfWeek, Severity, High, Low, Enabled FROM " +
+                "dbo.HourOfWeekLimit WHERE ChannelID = @channelID";
+            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@channelID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
+        public virtual int Fill(AlarmData.HourOfWeekLimitDataTable dataTable) {
+            this.Adapter.SelectCommand = this.CommandCollection[0];
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
+        public virtual AlarmData.HourOfWeekLimitDataTable GetData() {
+            this.Adapter.SelectCommand = this.CommandCollection[0];
+            AlarmData.HourOfWeekLimitDataTable dataTable = new AlarmData.HourOfWeekLimitDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
+        public virtual int FillBy(AlarmData.HourOfWeekLimitDataTable dataTable, int channelID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
+        public virtual AlarmData.HourOfWeekLimitDataTable GetDataBy(int channelID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(channelID));
+            AlarmData.HourOfWeekLimitDataTable dataTable = new AlarmData.HourOfWeekLimitDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(AlarmData.HourOfWeekLimitDataTable dataTable) {
+            return this.Adapter.Update(dataTable);
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(AlarmData dataSet) {
+            return this.Adapter.Update(dataSet, "HourOfWeekLimit");
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(global::System.Data.DataRow dataRow) {
+            return this.Adapter.Update(new global::System.Data.DataRow[] {
+                        dataRow});
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(global::System.Data.DataRow[] dataRows) {
+            return this.Adapter.Update(dataRows);
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
+        public virtual int Delete(int Original_ID, int Original_ChannelID, int Original_AlarmTypeID, int Original_HourOfWeek, int Original_Severity, double Original_High, double Original_Low, int Original_Enabled) {
+            this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
+            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_ChannelID));
+            this.Adapter.DeleteCommand.Parameters[2].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.DeleteCommand.Parameters[3].Value = ((int)(Original_HourOfWeek));
+            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_Severity));
+            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_High));
+            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_Low));
+            this.Adapter.DeleteCommand.Parameters[7].Value = ((int)(Original_Enabled));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
+            if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.DeleteCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.DeleteCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.DeleteCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
+        public virtual int Insert(int ChannelID, int AlarmTypeID, int HourOfWeek, int Severity, double High, double Low, int Enabled) {
+            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(ChannelID));
+            this.Adapter.InsertCommand.Parameters[1].Value = ((int)(AlarmTypeID));
+            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(HourOfWeek));
+            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(Severity));
+            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(High));
+            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(Low));
+            this.Adapter.InsertCommand.Parameters[6].Value = ((int)(Enabled));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
+            if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.InsertCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.InsertCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
+        public virtual int Update(
+                    int ChannelID, 
+                    int AlarmTypeID, 
+                    int HourOfWeek, 
+                    int Severity, 
+                    double High, 
+                    double Low, 
+                    int Enabled, 
+                    int Original_ID, 
+                    int Original_ChannelID, 
+                    int Original_AlarmTypeID, 
+                    int Original_HourOfWeek, 
+                    int Original_Severity, 
+                    double Original_High, 
+                    double Original_Low, 
+                    int Original_Enabled, 
+                    int ID) {
+            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(ChannelID));
+            this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(HourOfWeek));
+            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(Severity));
+            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(High));
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(Low));
+            this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(Enabled));
+            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(Original_ChannelID));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(Original_AlarmTypeID));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((int)(Original_HourOfWeek));
+            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_Severity));
+            this.Adapter.UpdateCommand.Parameters[12].Value = ((double)(Original_High));
+            this.Adapter.UpdateCommand.Parameters[13].Value = ((double)(Original_Low));
+            this.Adapter.UpdateCommand.Parameters[14].Value = ((int)(Original_Enabled));
+            this.Adapter.UpdateCommand.Parameters[15].Value = ((int)(ID));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
+            if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.UpdateCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.UpdateCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
+        public virtual int Update(int ChannelID, int AlarmTypeID, int HourOfWeek, int Severity, double High, double Low, int Enabled, int Original_ID, int Original_ChannelID, int Original_AlarmTypeID, int Original_HourOfWeek, int Original_Severity, double Original_High, double Original_Low, int Original_Enabled) {
+            return this.Update(ChannelID, AlarmTypeID, HourOfWeek, Severity, High, Low, Enabled, Original_ID, Original_ChannelID, Original_AlarmTypeID, Original_HourOfWeek, Original_Severity, Original_High, Original_Low, Original_Enabled, Original_ID);
         }
     }
     
@@ -3860,13 +5095,15 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         
         private UpdateOrderOption _updateOrder;
         
-        private AlarmLimitTableAdapter _alarmLimitTableAdapter;
-        
-        private OffNormalLimitTableAdapter _offNormalLimitTableAdapter;
+        private AlarmTypeTableAdapter _alarmTypeTableAdapter;
         
         private AlarmLogTableAdapter _alarmLogTableAdapter;
         
-        private OffNormalLogTableAdapter _offNormalLogTableAdapter;
+        private DefaultAlarmRangeLimitTableAdapter _defaultAlarmRangeLimitTableAdapter;
+        
+        private AlarmRangeLimitTableAdapter _alarmRangeLimitTableAdapter;
+        
+        private HourOfWeekLimitTableAdapter _hourOfWeekLimitTableAdapter;
         
         private bool _backupDataSetBeforeUpdate;
         
@@ -3888,26 +5125,12 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
             "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
             "a", "System.Drawing.Design.UITypeEditor")]
-        public AlarmLimitTableAdapter AlarmLimitTableAdapter {
+        public AlarmTypeTableAdapter AlarmTypeTableAdapter {
             get {
-                return this._alarmLimitTableAdapter;
+                return this._alarmTypeTableAdapter;
             }
             set {
-                this._alarmLimitTableAdapter = value;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
-            "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
-            "a", "System.Drawing.Design.UITypeEditor")]
-        public OffNormalLimitTableAdapter OffNormalLimitTableAdapter {
-            get {
-                return this._offNormalLimitTableAdapter;
-            }
-            set {
-                this._offNormalLimitTableAdapter = value;
+                this._alarmTypeTableAdapter = value;
             }
         }
         
@@ -3930,12 +5153,40 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
             "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
             "a", "System.Drawing.Design.UITypeEditor")]
-        public OffNormalLogTableAdapter OffNormalLogTableAdapter {
+        public DefaultAlarmRangeLimitTableAdapter DefaultAlarmRangeLimitTableAdapter {
             get {
-                return this._offNormalLogTableAdapter;
+                return this._defaultAlarmRangeLimitTableAdapter;
             }
             set {
-                this._offNormalLogTableAdapter = value;
+                this._defaultAlarmRangeLimitTableAdapter = value;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
+            "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
+            "a", "System.Drawing.Design.UITypeEditor")]
+        public AlarmRangeLimitTableAdapter AlarmRangeLimitTableAdapter {
+            get {
+                return this._alarmRangeLimitTableAdapter;
+            }
+            set {
+                this._alarmRangeLimitTableAdapter = value;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
+            "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
+            "a", "System.Drawing.Design.UITypeEditor")]
+        public HourOfWeekLimitTableAdapter HourOfWeekLimitTableAdapter {
+            get {
+                return this._hourOfWeekLimitTableAdapter;
+            }
+            set {
+                this._hourOfWeekLimitTableAdapter = value;
             }
         }
         
@@ -3958,21 +5209,25 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                 if ((this._connection != null)) {
                     return this._connection;
                 }
-                if (((this._alarmLimitTableAdapter != null) 
-                            && (this._alarmLimitTableAdapter.Connection != null))) {
-                    return this._alarmLimitTableAdapter.Connection;
-                }
-                if (((this._offNormalLimitTableAdapter != null) 
-                            && (this._offNormalLimitTableAdapter.Connection != null))) {
-                    return this._offNormalLimitTableAdapter.Connection;
+                if (((this._alarmTypeTableAdapter != null) 
+                            && (this._alarmTypeTableAdapter.Connection != null))) {
+                    return this._alarmTypeTableAdapter.Connection;
                 }
                 if (((this._alarmLogTableAdapter != null) 
                             && (this._alarmLogTableAdapter.Connection != null))) {
                     return this._alarmLogTableAdapter.Connection;
                 }
-                if (((this._offNormalLogTableAdapter != null) 
-                            && (this._offNormalLogTableAdapter.Connection != null))) {
-                    return this._offNormalLogTableAdapter.Connection;
+                if (((this._defaultAlarmRangeLimitTableAdapter != null) 
+                            && (this._defaultAlarmRangeLimitTableAdapter.Connection != null))) {
+                    return this._defaultAlarmRangeLimitTableAdapter.Connection;
+                }
+                if (((this._alarmRangeLimitTableAdapter != null) 
+                            && (this._alarmRangeLimitTableAdapter.Connection != null))) {
+                    return this._alarmRangeLimitTableAdapter.Connection;
+                }
+                if (((this._hourOfWeekLimitTableAdapter != null) 
+                            && (this._hourOfWeekLimitTableAdapter.Connection != null))) {
+                    return this._hourOfWeekLimitTableAdapter.Connection;
                 }
                 return null;
             }
@@ -3987,16 +5242,19 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         public int TableAdapterInstanceCount {
             get {
                 int count = 0;
-                if ((this._alarmLimitTableAdapter != null)) {
-                    count = (count + 1);
-                }
-                if ((this._offNormalLimitTableAdapter != null)) {
+                if ((this._alarmTypeTableAdapter != null)) {
                     count = (count + 1);
                 }
                 if ((this._alarmLogTableAdapter != null)) {
                     count = (count + 1);
                 }
-                if ((this._offNormalLogTableAdapter != null)) {
+                if ((this._defaultAlarmRangeLimitTableAdapter != null)) {
+                    count = (count + 1);
+                }
+                if ((this._alarmRangeLimitTableAdapter != null)) {
+                    count = (count + 1);
+                }
+                if ((this._hourOfWeekLimitTableAdapter != null)) {
                     count = (count + 1);
                 }
                 return count;
@@ -4010,21 +5268,12 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private int UpdateUpdatedRows(AlarmData dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows, global::System.Collections.Generic.List<global::System.Data.DataRow> allAddedRows) {
             int result = 0;
-            if ((this._alarmLimitTableAdapter != null)) {
-                global::System.Data.DataRow[] updatedRows = dataSet.AlarmLimit.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
+            if ((this._alarmTypeTableAdapter != null)) {
+                global::System.Data.DataRow[] updatedRows = dataSet.AlarmType.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
                 updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
                 if (((updatedRows != null) 
                             && (0 < updatedRows.Length))) {
-                    result = (result + this._alarmLimitTableAdapter.Update(updatedRows));
-                    allChangedRows.AddRange(updatedRows);
-                }
-            }
-            if ((this._offNormalLimitTableAdapter != null)) {
-                global::System.Data.DataRow[] updatedRows = dataSet.OffNormalLimit.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
-                updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
-                if (((updatedRows != null) 
-                            && (0 < updatedRows.Length))) {
-                    result = (result + this._offNormalLimitTableAdapter.Update(updatedRows));
+                    result = (result + this._alarmTypeTableAdapter.Update(updatedRows));
                     allChangedRows.AddRange(updatedRows);
                 }
             }
@@ -4037,12 +5286,30 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                     allChangedRows.AddRange(updatedRows);
                 }
             }
-            if ((this._offNormalLogTableAdapter != null)) {
-                global::System.Data.DataRow[] updatedRows = dataSet.OffNormalLog.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
+            if ((this._defaultAlarmRangeLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] updatedRows = dataSet.DefaultAlarmRangeLimit.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
                 updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
                 if (((updatedRows != null) 
                             && (0 < updatedRows.Length))) {
-                    result = (result + this._offNormalLogTableAdapter.Update(updatedRows));
+                    result = (result + this._defaultAlarmRangeLimitTableAdapter.Update(updatedRows));
+                    allChangedRows.AddRange(updatedRows);
+                }
+            }
+            if ((this._alarmRangeLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] updatedRows = dataSet.AlarmRangeLimit.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
+                updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
+                if (((updatedRows != null) 
+                            && (0 < updatedRows.Length))) {
+                    result = (result + this._alarmRangeLimitTableAdapter.Update(updatedRows));
+                    allChangedRows.AddRange(updatedRows);
+                }
+            }
+            if ((this._hourOfWeekLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] updatedRows = dataSet.HourOfWeekLimit.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
+                updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
+                if (((updatedRows != null) 
+                            && (0 < updatedRows.Length))) {
+                    result = (result + this._hourOfWeekLimitTableAdapter.Update(updatedRows));
                     allChangedRows.AddRange(updatedRows);
                 }
             }
@@ -4056,19 +5323,11 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private int UpdateInsertedRows(AlarmData dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allAddedRows) {
             int result = 0;
-            if ((this._alarmLimitTableAdapter != null)) {
-                global::System.Data.DataRow[] addedRows = dataSet.AlarmLimit.Select(null, null, global::System.Data.DataViewRowState.Added);
+            if ((this._alarmTypeTableAdapter != null)) {
+                global::System.Data.DataRow[] addedRows = dataSet.AlarmType.Select(null, null, global::System.Data.DataViewRowState.Added);
                 if (((addedRows != null) 
                             && (0 < addedRows.Length))) {
-                    result = (result + this._alarmLimitTableAdapter.Update(addedRows));
-                    allAddedRows.AddRange(addedRows);
-                }
-            }
-            if ((this._offNormalLimitTableAdapter != null)) {
-                global::System.Data.DataRow[] addedRows = dataSet.OffNormalLimit.Select(null, null, global::System.Data.DataViewRowState.Added);
-                if (((addedRows != null) 
-                            && (0 < addedRows.Length))) {
-                    result = (result + this._offNormalLimitTableAdapter.Update(addedRows));
+                    result = (result + this._alarmTypeTableAdapter.Update(addedRows));
                     allAddedRows.AddRange(addedRows);
                 }
             }
@@ -4080,11 +5339,27 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                     allAddedRows.AddRange(addedRows);
                 }
             }
-            if ((this._offNormalLogTableAdapter != null)) {
-                global::System.Data.DataRow[] addedRows = dataSet.OffNormalLog.Select(null, null, global::System.Data.DataViewRowState.Added);
+            if ((this._defaultAlarmRangeLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] addedRows = dataSet.DefaultAlarmRangeLimit.Select(null, null, global::System.Data.DataViewRowState.Added);
                 if (((addedRows != null) 
                             && (0 < addedRows.Length))) {
-                    result = (result + this._offNormalLogTableAdapter.Update(addedRows));
+                    result = (result + this._defaultAlarmRangeLimitTableAdapter.Update(addedRows));
+                    allAddedRows.AddRange(addedRows);
+                }
+            }
+            if ((this._alarmRangeLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] addedRows = dataSet.AlarmRangeLimit.Select(null, null, global::System.Data.DataViewRowState.Added);
+                if (((addedRows != null) 
+                            && (0 < addedRows.Length))) {
+                    result = (result + this._alarmRangeLimitTableAdapter.Update(addedRows));
+                    allAddedRows.AddRange(addedRows);
+                }
+            }
+            if ((this._hourOfWeekLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] addedRows = dataSet.HourOfWeekLimit.Select(null, null, global::System.Data.DataViewRowState.Added);
+                if (((addedRows != null) 
+                            && (0 < addedRows.Length))) {
+                    result = (result + this._hourOfWeekLimitTableAdapter.Update(addedRows));
                     allAddedRows.AddRange(addedRows);
                 }
             }
@@ -4098,11 +5373,27 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private int UpdateDeletedRows(AlarmData dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows) {
             int result = 0;
-            if ((this._offNormalLogTableAdapter != null)) {
-                global::System.Data.DataRow[] deletedRows = dataSet.OffNormalLog.Select(null, null, global::System.Data.DataViewRowState.Deleted);
+            if ((this._hourOfWeekLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] deletedRows = dataSet.HourOfWeekLimit.Select(null, null, global::System.Data.DataViewRowState.Deleted);
                 if (((deletedRows != null) 
                             && (0 < deletedRows.Length))) {
-                    result = (result + this._offNormalLogTableAdapter.Update(deletedRows));
+                    result = (result + this._hourOfWeekLimitTableAdapter.Update(deletedRows));
+                    allChangedRows.AddRange(deletedRows);
+                }
+            }
+            if ((this._alarmRangeLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] deletedRows = dataSet.AlarmRangeLimit.Select(null, null, global::System.Data.DataViewRowState.Deleted);
+                if (((deletedRows != null) 
+                            && (0 < deletedRows.Length))) {
+                    result = (result + this._alarmRangeLimitTableAdapter.Update(deletedRows));
+                    allChangedRows.AddRange(deletedRows);
+                }
+            }
+            if ((this._defaultAlarmRangeLimitTableAdapter != null)) {
+                global::System.Data.DataRow[] deletedRows = dataSet.DefaultAlarmRangeLimit.Select(null, null, global::System.Data.DataViewRowState.Deleted);
+                if (((deletedRows != null) 
+                            && (0 < deletedRows.Length))) {
+                    result = (result + this._defaultAlarmRangeLimitTableAdapter.Update(deletedRows));
                     allChangedRows.AddRange(deletedRows);
                 }
             }
@@ -4114,19 +5405,11 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                     allChangedRows.AddRange(deletedRows);
                 }
             }
-            if ((this._offNormalLimitTableAdapter != null)) {
-                global::System.Data.DataRow[] deletedRows = dataSet.OffNormalLimit.Select(null, null, global::System.Data.DataViewRowState.Deleted);
+            if ((this._alarmTypeTableAdapter != null)) {
+                global::System.Data.DataRow[] deletedRows = dataSet.AlarmType.Select(null, null, global::System.Data.DataViewRowState.Deleted);
                 if (((deletedRows != null) 
                             && (0 < deletedRows.Length))) {
-                    result = (result + this._offNormalLimitTableAdapter.Update(deletedRows));
-                    allChangedRows.AddRange(deletedRows);
-                }
-            }
-            if ((this._alarmLimitTableAdapter != null)) {
-                global::System.Data.DataRow[] deletedRows = dataSet.AlarmLimit.Select(null, null, global::System.Data.DataViewRowState.Deleted);
-                if (((deletedRows != null) 
-                            && (0 < deletedRows.Length))) {
-                    result = (result + this._alarmLimitTableAdapter.Update(deletedRows));
+                    result = (result + this._alarmTypeTableAdapter.Update(deletedRows));
                     allChangedRows.AddRange(deletedRows);
                 }
             }
@@ -4169,13 +5452,8 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
             if ((dataSet.HasChanges() == false)) {
                 return 0;
             }
-            if (((this._alarmLimitTableAdapter != null) 
-                        && (this.MatchTableAdapterConnection(this._alarmLimitTableAdapter.Connection) == false))) {
-                throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
-                        "tring.");
-            }
-            if (((this._offNormalLimitTableAdapter != null) 
-                        && (this.MatchTableAdapterConnection(this._offNormalLimitTableAdapter.Connection) == false))) {
+            if (((this._alarmTypeTableAdapter != null) 
+                        && (this.MatchTableAdapterConnection(this._alarmTypeTableAdapter.Connection) == false))) {
                 throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
                         "tring.");
             }
@@ -4184,8 +5462,18 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                 throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
                         "tring.");
             }
-            if (((this._offNormalLogTableAdapter != null) 
-                        && (this.MatchTableAdapterConnection(this._offNormalLogTableAdapter.Connection) == false))) {
+            if (((this._defaultAlarmRangeLimitTableAdapter != null) 
+                        && (this.MatchTableAdapterConnection(this._defaultAlarmRangeLimitTableAdapter.Connection) == false))) {
+                throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
+                        "tring.");
+            }
+            if (((this._alarmRangeLimitTableAdapter != null) 
+                        && (this.MatchTableAdapterConnection(this._alarmRangeLimitTableAdapter.Connection) == false))) {
+                throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
+                        "tring.");
+            }
+            if (((this._hourOfWeekLimitTableAdapter != null) 
+                        && (this.MatchTableAdapterConnection(this._hourOfWeekLimitTableAdapter.Connection) == false))) {
                 throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
                         "tring.");
             }
@@ -4221,22 +5509,13 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
             try {
                 // ---- Prepare for update -----------
                 //
-                if ((this._alarmLimitTableAdapter != null)) {
-                    revertConnections.Add(this._alarmLimitTableAdapter, this._alarmLimitTableAdapter.Connection);
-                    this._alarmLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
-                    this._alarmLimitTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
-                    if (this._alarmLimitTableAdapter.Adapter.AcceptChangesDuringUpdate) {
-                        this._alarmLimitTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
-                        adaptersWithAcceptChangesDuringUpdate.Add(this._alarmLimitTableAdapter.Adapter);
-                    }
-                }
-                if ((this._offNormalLimitTableAdapter != null)) {
-                    revertConnections.Add(this._offNormalLimitTableAdapter, this._offNormalLimitTableAdapter.Connection);
-                    this._offNormalLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
-                    this._offNormalLimitTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
-                    if (this._offNormalLimitTableAdapter.Adapter.AcceptChangesDuringUpdate) {
-                        this._offNormalLimitTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
-                        adaptersWithAcceptChangesDuringUpdate.Add(this._offNormalLimitTableAdapter.Adapter);
+                if ((this._alarmTypeTableAdapter != null)) {
+                    revertConnections.Add(this._alarmTypeTableAdapter, this._alarmTypeTableAdapter.Connection);
+                    this._alarmTypeTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
+                    this._alarmTypeTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
+                    if (this._alarmTypeTableAdapter.Adapter.AcceptChangesDuringUpdate) {
+                        this._alarmTypeTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
+                        adaptersWithAcceptChangesDuringUpdate.Add(this._alarmTypeTableAdapter.Adapter);
                     }
                 }
                 if ((this._alarmLogTableAdapter != null)) {
@@ -4248,13 +5527,31 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                         adaptersWithAcceptChangesDuringUpdate.Add(this._alarmLogTableAdapter.Adapter);
                     }
                 }
-                if ((this._offNormalLogTableAdapter != null)) {
-                    revertConnections.Add(this._offNormalLogTableAdapter, this._offNormalLogTableAdapter.Connection);
-                    this._offNormalLogTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
-                    this._offNormalLogTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
-                    if (this._offNormalLogTableAdapter.Adapter.AcceptChangesDuringUpdate) {
-                        this._offNormalLogTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
-                        adaptersWithAcceptChangesDuringUpdate.Add(this._offNormalLogTableAdapter.Adapter);
+                if ((this._defaultAlarmRangeLimitTableAdapter != null)) {
+                    revertConnections.Add(this._defaultAlarmRangeLimitTableAdapter, this._defaultAlarmRangeLimitTableAdapter.Connection);
+                    this._defaultAlarmRangeLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
+                    this._defaultAlarmRangeLimitTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
+                    if (this._defaultAlarmRangeLimitTableAdapter.Adapter.AcceptChangesDuringUpdate) {
+                        this._defaultAlarmRangeLimitTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
+                        adaptersWithAcceptChangesDuringUpdate.Add(this._defaultAlarmRangeLimitTableAdapter.Adapter);
+                    }
+                }
+                if ((this._alarmRangeLimitTableAdapter != null)) {
+                    revertConnections.Add(this._alarmRangeLimitTableAdapter, this._alarmRangeLimitTableAdapter.Connection);
+                    this._alarmRangeLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
+                    this._alarmRangeLimitTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
+                    if (this._alarmRangeLimitTableAdapter.Adapter.AcceptChangesDuringUpdate) {
+                        this._alarmRangeLimitTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
+                        adaptersWithAcceptChangesDuringUpdate.Add(this._alarmRangeLimitTableAdapter.Adapter);
+                    }
+                }
+                if ((this._hourOfWeekLimitTableAdapter != null)) {
+                    revertConnections.Add(this._hourOfWeekLimitTableAdapter, this._hourOfWeekLimitTableAdapter.Connection);
+                    this._hourOfWeekLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
+                    this._hourOfWeekLimitTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
+                    if (this._hourOfWeekLimitTableAdapter.Adapter.AcceptChangesDuringUpdate) {
+                        this._hourOfWeekLimitTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
+                        adaptersWithAcceptChangesDuringUpdate.Add(this._hourOfWeekLimitTableAdapter.Adapter);
                     }
                 }
                 // 
@@ -4315,21 +5612,25 @@ SELECT ID, ChannelID, Time, LimitHigh, LimitLow, ValueHigh, ValueLow FROM OffNor
                 if (workConnOpened) {
                     workConnection.Close();
                 }
-                if ((this._alarmLimitTableAdapter != null)) {
-                    this._alarmLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._alarmLimitTableAdapter]));
-                    this._alarmLimitTableAdapter.Transaction = null;
-                }
-                if ((this._offNormalLimitTableAdapter != null)) {
-                    this._offNormalLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._offNormalLimitTableAdapter]));
-                    this._offNormalLimitTableAdapter.Transaction = null;
+                if ((this._alarmTypeTableAdapter != null)) {
+                    this._alarmTypeTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._alarmTypeTableAdapter]));
+                    this._alarmTypeTableAdapter.Transaction = null;
                 }
                 if ((this._alarmLogTableAdapter != null)) {
                     this._alarmLogTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._alarmLogTableAdapter]));
                     this._alarmLogTableAdapter.Transaction = null;
                 }
-                if ((this._offNormalLogTableAdapter != null)) {
-                    this._offNormalLogTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._offNormalLogTableAdapter]));
-                    this._offNormalLogTableAdapter.Transaction = null;
+                if ((this._defaultAlarmRangeLimitTableAdapter != null)) {
+                    this._defaultAlarmRangeLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._defaultAlarmRangeLimitTableAdapter]));
+                    this._defaultAlarmRangeLimitTableAdapter.Transaction = null;
+                }
+                if ((this._alarmRangeLimitTableAdapter != null)) {
+                    this._alarmRangeLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._alarmRangeLimitTableAdapter]));
+                    this._alarmRangeLimitTableAdapter.Transaction = null;
+                }
+                if ((this._hourOfWeekLimitTableAdapter != null)) {
+                    this._hourOfWeekLimitTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._hourOfWeekLimitTableAdapter]));
+                    this._hourOfWeekLimitTableAdapter.Transaction = null;
                 }
                 if ((0 < adaptersWithAcceptChangesDuringUpdate.Count)) {
                     global::System.Data.Common.DataAdapter[] adapters = new System.Data.Common.DataAdapter[adaptersWithAcceptChangesDuringUpdate.Count];

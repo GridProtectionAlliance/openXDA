@@ -335,12 +335,6 @@ CREATE TABLE FaultCurve
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     Algorithm VARCHAR(80) NOT NULL,
-	LargestCurrentDistance FLOAT NOT NULL,
-	MedianDistance FLOAT NOT NULL,
-	MaximumDistance FLOAT NOT NULL,
-	MinimumDistance FLOAT NOT NULL,
-	AverageDistance FLOAT NOT NULL,
-	DistanceDeviation FLOAT NOT NULL,
     Data VARBINARY(MAX) NOT NULL
 )
 GO
@@ -348,14 +342,14 @@ GO
 CREATE TABLE FaultSummary
 (
 	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	EventID INT NOT NULL REFERENCES Event(ID),
+    EventID INT NOT NULL REFERENCES Event(ID),
+    Algorithm VARCHAR(80) NOT NULL,
+    FaultNumber INT NOT NULL,
 	LargestCurrentDistance FLOAT NOT NULL,
-	MedianDistance FLOAT NOT NULL,
 	MaximumDistance FLOAT NOT NULL,
 	MinimumDistance FLOAT NOT NULL,
 	AverageDistance FLOAT NOT NULL,
 	DistanceDeviation FLOAT NOT NULL,
-	FaultCount INT NOT NULL,
 	Inception DATETIME2 NOT NULL,
 	DurationSeconds FLOAT NOT NULL,
 	DurationCycles FLOAT NOT NULL,

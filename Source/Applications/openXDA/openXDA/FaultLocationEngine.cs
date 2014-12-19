@@ -456,6 +456,7 @@ namespace openXDA
 
                     emailWriter.SMTPServer = m_systemSettings.SMTPServer;
                     emailWriter.FromAddress = m_systemSettings.FromAddress;
+                    emailWriter.PQDashboardURL = m_systemSettings.PQDashboardURL;
                     emailWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
                     emailWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
                     emailWriter.LengthUnits = m_systemSettings.LengthUnits;

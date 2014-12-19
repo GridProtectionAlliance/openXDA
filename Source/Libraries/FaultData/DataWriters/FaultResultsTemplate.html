@@ -11,39 +11,37 @@
                 border: 1px solid black;
                 padding: 2px 10px;
             }
+
+            td {
+                text-align: right
+            }
         </style>
     </head>
 
     <body>
         <p>
-            Fault detected by meter <span style="font-weight: bold">{meter}</span>
+            Meter <span style="font-weight: bold">{meter}</span>
             at station <span style="font-weight: bold">{station}</span>
-            on line <span style="font-weight: bold">{line}</span>
-            at <span style="font-weight: bold">{distance} &plusmn; {confidence} {lengthUnits}</span>.
+            detected {nFaults}
+            on line <span style="font-weight: bold">{line}</span>.
         </p>
-    
-        <p>Summary of fault distance curves:</p>
-    
-        <table>
-            <tr>
-                <th>Algorithm</th>
-                <th>Largest Current</th>
-                <th>Median</th>
-                <th>Max</th>
-                <th>Min</th>
-                <th>Average</th>
-                <th>Standard Deviation</th>
-            </tr>
-            {distanceSummaryTable}
-        </table>
-    
+
+        {faultSummaries}
+
+        <br/><br/>
+
+        <span style="text-decoration: underline">Data for all faults this file</span><br/>
+        {distanceSummaryTable}
+
+        <br/><br/>
+
+        {faultCurves}
+
+        <br/><br/>
+
         <p>
-            <span style="font-weight: bold">Fault Type</span>: {faultType}<br />
-            <span style="font-weight: bold">Inception</span>: {inception}<br />
-            <span style="font-weight: bold">Duration</span>: {durationSeconds} seconds ({durationCycles} cycles)<br />
-            <span style="font-weight: bold">Number of faults</span>: {faultCount}
+            View this event in openSEE:<br/>
+            {PQDashboardURL}/OpenSEE.aspx?eventid={eventID}
         </p>
-    
-        <img src="cid:Faultcurves.png" width="550" height="340" />
     </body>
 </html>

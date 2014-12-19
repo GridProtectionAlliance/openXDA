@@ -70,7 +70,7 @@
     <Compile Include="DataAnalysis\Transform.cs" />
     <Compile Include="DataAnalysis\VICycleDataSet.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
-    <Compile Include="Database\AlarmData1.Designer.cs">
+    <Compile Include="Database\AlarmData.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>AlarmData.xsd</DependentUpon>
@@ -83,17 +83,17 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DataQuality.xsd</DependentUpon>
     </Compile>
-    <Compile Include="Database\FaultLocationData1.Designer.cs">
+    <Compile Include="Database\FaultLocationData.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FaultLocationData.xsd</DependentUpon>
     </Compile>
-    <Compile Include="Database\FaultLocationInfo1.designer.cs">
+    <Compile Include="Database\FaultLocationInfo.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FaultLocationInfo.dbml</DependentUpon>
     </Compile>
-    <Compile Include="Database\FileInfo1.designer.cs">
+    <Compile Include="Database\FileInfo.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FileInfo.dbml</DependentUpon>
@@ -111,7 +111,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Database\SystemInfo1.designer.cs">
+    <Compile Include="Database\SystemInfo.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>SystemInfo.dbml</DependentUpon>
@@ -153,7 +153,7 @@
     </None>
     <None Include="Database\AlarmData.xsd">
       <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>AlarmData1.Designer.cs</LastGenOutput>
+      <LastGenOutput>AlarmData.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
     <None Include="Database\AlarmData.xss">
@@ -175,7 +175,7 @@
     </None>
     <None Include="Database\FaultLocationData.xsd">
       <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>FaultLocationData1.Designer.cs</LastGenOutput>
+      <LastGenOutput>FaultLocationData.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
     <None Include="Database\FaultLocationData.xss">
@@ -183,12 +183,12 @@
     </None>
     <None Include="Database\FaultLocationInfo.dbml">
       <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>FaultLocationInfo1.designer.cs</LastGenOutput>
+      <LastGenOutput>FaultLocationInfo.designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
     <None Include="Database\FileInfo.dbml">
       <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>FileInfo1.designer.cs</LastGenOutput>
+      <LastGenOutput>FileInfo.designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
     <None Include="Database\MeterData.xsc">
@@ -209,7 +209,7 @@
     </None>
     <None Include="Database\SystemInfo.dbml">
       <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>SystemInfo1.designer.cs</LastGenOutput>
+      <LastGenOutput>SystemInfo.designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
     <None Include="Properties\Settings.settings">

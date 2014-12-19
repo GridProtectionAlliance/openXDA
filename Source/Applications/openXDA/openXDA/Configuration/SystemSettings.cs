@@ -52,11 +52,12 @@ namespace openXDA.Configuration
         private double m_comtradeMinWaitTime;
         private string m_fileShares;
         private string m_smtpServer;
+        private string m_fromAddress;
+        private string m_pqDashboardUrl;
         private int m_debugLevel;
 
         private List<string> m_watchDirectoryList;
         private List<FileShare> m_fileShareList;
-        private string m_fromAddress;
 
         #endregion
 
@@ -215,7 +216,7 @@ namespace openXDA.Configuration
         /// the maximum value allowed for fault distance in the COMTRADE export.
         /// </summary>
         [Setting]
-        [DefaultValue(1.25D)]
+        [DefaultValue(1.05D)]
         public double MaxFaultDistanceMultiplier
         {
             get
@@ -233,7 +234,7 @@ namespace openXDA.Configuration
         /// the minimum value allowed for fault distance in the COMTRADE export.
         /// </summary>
         [Setting]
-        [DefaultValue(-0.1D)]
+        [DefaultValue(-0.05D)]
         public double MinFaultDistanceMultiplier
         {
             get
@@ -340,6 +341,23 @@ namespace openXDA.Configuration
             set
             {
                 m_fromAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the URL of the PQ Dashboard.
+        /// </summary>
+        [Setting]
+        [DefaultValue("http://pqdashboard/")]
+        public string PQDashboardURL
+        {
+            get
+            {
+                return m_pqDashboardUrl;
+            }
+            set
+            {
+                m_pqDashboardUrl = value;
             }
         }
 
