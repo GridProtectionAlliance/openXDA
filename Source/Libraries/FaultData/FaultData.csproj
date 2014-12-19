@@ -41,6 +41,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.EMAX">
+      <HintPath>..\..\Dependencies\GSF\GSF.EMAX.dll</HintPath>
+    </Reference>
     <Reference Include="GSF.PQDIF">
       <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
     </Reference>
@@ -127,6 +130,7 @@
     <Compile Include="DataOperations\TrendingDataSummaryResource.cs" />
     <Compile Include="DataOperations\TrendingGroupsResource.cs" />
     <Compile Include="DataReaders\COMTRADEReader.cs" />
+    <Compile Include="DataReaders\EMAXReader.cs" />
     <Compile Include="DataReaders\IDataReader.cs" />
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />

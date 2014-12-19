@@ -70,6 +70,9 @@
     <Reference Include="GSF.Core">
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.EMAX">
+      <HintPath>..\..\Dependencies\GSF\GSF.EMAX.dll</HintPath>
+    </Reference>
     <Reference Include="GSF.PQDIF">
       <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
     </Reference>

@@ -264,7 +264,7 @@ namespace openXDA
             extension = FilePath.GetExtension(filePath).ToLowerInvariant().Trim();
 
             // If the data file is COMTRADE and the schema file does not exist, the file cannot be processed
-            if (!extension.Equals(".pqd", StringComparison.OrdinalIgnoreCase))
+            if (extension.Equals(".dat", StringComparison.OrdinalIgnoreCase) || extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
             {
                 directory = FilePath.GetDirectoryName(filePath);
                 cfgFileName = Path.Combine(directory, rootFileName + ".cfg");
@@ -274,21 +274,34 @@ namespace openXDA
 
                 if (!FilePath.TryGetReadLockExclusive(cfgFileName))
                     return false;
+
+                // If the extension for the data file is .d00, inject a delay before allowing the file to be processed
+                if (extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
+                {
+                    timeSinceCreation = DateTime.Now - GetFileCreationTime(filePath);
+
+                    if (timeSinceCreation.TotalSeconds < m_systemSettings.COMTRADEMinWaitTime)
+                        return false;
+
+                    foreach (string file in FilePath.GetFileList(rootFileName + ".d*"))
+                    {
+                        if (!FilePath.TryGetReadLockExclusive(file))
+                            return false;
+                    }
+                }
             }
 
-            // If the extension for the data file is .d00, inject a delay before allowing the file to be processed
-            if (extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
+            // if the data file is EMAX and the control file does not exist, the file cannot be processed
+            if (extension.Equals(".rcd", StringComparison.OrdinalIgnoreCase) || extension.Equals(".rcl", StringComparison.OrdinalIgnoreCase))
             {
-                timeSinceCreation = DateTime.Now - GetFileCreationTime(filePath);
+                directory = FilePath.GetDirectoryName(filePath);
+                cfgFileName = Path.Combine(directory, rootFileName + ".ctl");
 
-                if (timeSinceCreation.TotalSeconds < m_systemSettings.COMTRADEMinWaitTime)
+                if (!File.Exists(cfgFileName))
                     return false;
 
-                foreach (string file in FilePath.GetFileList(rootFileName + ".d*"))
-                {
-                    if (!FilePath.TryGetReadLockExclusive(file))
-                        return false;
-                }
+                if (!FilePath.TryGetReadLockExclusive(cfgFileName))
+                    return false;
             }
 
             return true;
@@ -354,13 +367,21 @@ namespace openXDA
 
                 OnStatusMessage("Found fault record \"{0}\".", filePath);
 
-                // Determine whether the file is PQDIF or COMTRADE
+                // Determine whether the file is PQDIF, COMTRADE, or EMAX
                 extension = FilePath.GetExtension(filePath);
 
-                if (extension == ".pqd")
+                if (extension.Equals(".pqd", StringComparison.OrdinalIgnoreCase))
                     reader = new PQDIFReader();
-                else
+                else if (extension.Equals(".dat", StringComparison.OrdinalIgnoreCase))
                     reader = new COMTRADEReader();
+                else if (extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
+                    reader = new COMTRADEReader();
+                else if (extension.Equals(".rcd", StringComparison.OrdinalIgnoreCase))
+                    reader = new EMAXReader();
+                else if (extension.Equals(".rcl", StringComparison.OrdinalIgnoreCase))
+                    reader = new EMAXReader();
+                else
+                    throw new InvalidOperationException(string.Format("Unable to parse file with unrecognized file extension '{0}'", extension));
 
                 // Parse the file into a meter data set
                 meterDataSets = reader.Parse(filePath);
@@ -595,7 +616,7 @@ namespace openXDA
         // directories. This handler validates the file and processes it if able.
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
-            string[] validExtensions = { ".pqd", ".dat", ".d00" };
+            string[] validExtensions = { ".pqd", ".dat", ".d00", ".rcd", ".rcl" };
             string filePath = fileProcessorEventArgs.FullPath;
             string extension;
 

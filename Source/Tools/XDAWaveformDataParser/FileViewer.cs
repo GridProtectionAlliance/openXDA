@@ -23,15 +23,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using GSF;
 using GSF.COMTRADE;
+using GSF.EMAX;
 using GSF.IO;
 using GSF.PQDIF.Logical;
 using GSF.SELEventParser;
+using Parser = GSF.COMTRADE.Parser;
 
 namespace XDAWaveformDataParser
 {
@@ -249,6 +252,93 @@ namespace XDAWaveformDataParser
             }
         }
 
+        private void EMAXButton_Click(object sender, EventArgs e)
+        {
+            string directory;
+            string rootFileName;
+            string controlFileName;
+
+            DateTime? startTime = null;
+            DateTime timestamp;
+
+            using (OpenFileDialog dialog = new OpenFileDialog())
+            {
+                dialog.Filter = "EMAX Files|*.rcd;*.rcl|All Files|*.*";
+                dialog.Title = "Browse EMAX Files";
+
+                if (dialog.ShowDialog() == DialogResult.Cancel)
+                    return;
+
+                if (!File.Exists(dialog.FileName))
+                    return;
+
+                // EMAX parsing will require a CTL file, make sure this exists...
+                directory = Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+                rootFileName = FilePath.GetFileNameWithoutExtension(dialog.FileName);
+                controlFileName = Path.Combine(directory, rootFileName + ".ctl");
+
+                if (!File.Exists(controlFileName))
+                    return;
+
+                using (CorrectiveParser parser = new CorrectiveParser())
+                {
+                    parser.ControlFile = new ControlFile(controlFileName);
+                    parser.FileName = dialog.FileName;
+
+                    // Open EMAX data file
+                    parser.OpenFiles();
+
+                    // Parse EMAX control file into channels
+                    m_channels = parser.ControlFile.AnalogChannelSettings.Values
+                        .OrderBy(channel => channel.ChannelNumber)
+                        .Select(channel => new ParsedChannel()
+                        {
+                            Name = channel.title,
+                            TimeValues = new List<DateTime>(),
+                            XValues = new List<object>(),
+                            YValues = new List<object>()
+                        }).ToList();
+
+                    // Read values from EMAX data file
+                    while (parser.ReadNext())
+                    {
+                        timestamp = parser.CalculatedTimestamp;
+
+                        // If this is the first frame, store this frame's
+                        // timestamp as the start time of the file
+                        if ((object)startTime == null)
+                            startTime = timestamp;
+
+                        // Read the values from this frame into
+                        // x- and y-value collections for each channel
+                        for (int i = 0; i < m_channels.Count; i++)
+                        {
+                            m_channels[i].TimeValues.Add(timestamp);
+                            m_channels[i].XValues.Add(timestamp.Subtract(startTime.Value).TotalSeconds);
+                            m_channels[i].YValues.Add(parser.CorrectedValues[i]);
+                        }
+                    }
+                }
+
+                // Clear the list box and data chart
+                ChannelListBox.Items.Clear();
+                DataChart.Series.Clear();
+
+                // Populate the list box with channel names
+                ChannelListBox.Items.AddRange(m_channels
+                    .Select((channel, index) => string.Format("[{0}] {1}", index, channel.Name))
+                    .Cast<object>()
+                    .ToArray());
+
+                // Select the first channel in the list
+                ChannelListBox.SelectedIndex = 0;
+
+                // Change the title text of the window to show what file the user has open
+                m_fileName = dialog.SafeFileName;
+                Text = string.Format("EMAX - [{0}]", dialog.SafeFileName);
+            }
+        }
+
         private void CSVExportButton_Click(object sender, EventArgs e)
         {
             if ((object)m_channels != null)
@@ -463,7 +553,7 @@ namespace XDAWaveformDataParser
 
             // It is assumed that all time series in the channels are the same, and that all y-value collections are the same size.
             // Generate CSV data by aligning timestamps and data by index, formatting each time value and joining the corresponding data values together.
-            IEnumerable<string> lines = timeValues.Select((time, index) => time.ToString("yyyy-MM-dd HH:mm:ss.ffffff") + "," + time.Ticks + "," + string.Join(",", channels.Select(channel => Convert.ToDouble(channel.YValues[index]))));
+            IEnumerable<string> lines = timeValues.Select((time, index) => time.ToString("yyyy-MM-dd HH:mm:ss.ffffff") + "," + (time.Ticks % Ticks.PerSecond) + "," + string.Join(",", channels.Select(channel => Convert.ToDouble(channel.YValues[index]))));
 
             // Open the file and write in each line
             using (StreamWriter fileWriter = new StreamWriter(File.OpenWrite(csvFilePath)))

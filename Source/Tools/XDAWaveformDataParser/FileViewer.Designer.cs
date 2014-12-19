@@ -28,29 +28,30 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.DataChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.SELEVEButton = new System.Windows.Forms.Button();
             this.ChannelListBox = new System.Windows.Forms.ListBox();
             this.PQDIFButton = new System.Windows.Forms.Button();
             this.COMTRADEButton = new System.Windows.Forms.Button();
             this.CSVExportButton = new System.Windows.Forms.Button();
+            this.EMAXButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.DataChart)).BeginInit();
             this.SuspendLayout();
             // 
             // DataChart
             // 
-            chartArea1.AxisX.MajorGrid.Enabled = false;
-            chartArea1.AxisY.MajorGrid.Enabled = false;
-            chartArea1.Name = "ChartArea1";
-            this.DataChart.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.DataChart.Legends.Add(legend1);
+            chartArea2.AxisX.MajorGrid.Enabled = false;
+            chartArea2.AxisY.MajorGrid.Enabled = false;
+            chartArea2.Name = "ChartArea1";
+            this.DataChart.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.DataChart.Legends.Add(legend2);
             this.DataChart.Location = new System.Drawing.Point(328, 12);
             this.DataChart.Name = "DataChart";
             this.DataChart.Size = new System.Drawing.Size(544, 537);
-            this.DataChart.TabIndex = 4;
+            this.DataChart.TabIndex = 6;
             this.DataChart.Text = "DataChart";
             // 
             // SELEVEButton
@@ -70,7 +71,7 @@
             this.ChannelListBox.Name = "ChannelListBox";
             this.ChannelListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.ChannelListBox.Size = new System.Drawing.Size(157, 537);
-            this.ChannelListBox.TabIndex = 3;
+            this.ChannelListBox.TabIndex = 5;
             this.ChannelListBox.SelectedIndexChanged += new System.EventHandler(this.ChannelListBox_SelectedIndexChanged);
             // 
             // PQDIFButton
@@ -95,19 +96,30 @@
             // 
             // CSVExportButton
             // 
-            this.CSVExportButton.Location = new System.Drawing.Point(20, 120);
+            this.CSVExportButton.Location = new System.Drawing.Point(20, 151);
             this.CSVExportButton.Name = "CSVExportButton";
             this.CSVExportButton.Size = new System.Drawing.Size(120, 22);
-            this.CSVExportButton.TabIndex = 5;
+            this.CSVExportButton.TabIndex = 4;
             this.CSVExportButton.Text = "Export to CSV...";
             this.CSVExportButton.UseVisualStyleBackColor = true;
             this.CSVExportButton.Click += new System.EventHandler(this.CSVExportButton_Click);
+            // 
+            // EMAXButton
+            // 
+            this.EMAXButton.Location = new System.Drawing.Point(20, 96);
+            this.EMAXButton.Name = "EMAXButton";
+            this.EMAXButton.Size = new System.Drawing.Size(120, 22);
+            this.EMAXButton.TabIndex = 3;
+            this.EMAXButton.Text = "Open EMAX...";
+            this.EMAXButton.UseVisualStyleBackColor = true;
+            this.EMAXButton.Click += new System.EventHandler(this.EMAXButton_Click);
             // 
             // FileViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 562);
+            this.Controls.Add(this.EMAXButton);
             this.Controls.Add(this.CSVExportButton);
             this.Controls.Add(this.COMTRADEButton);
             this.Controls.Add(this.PQDIFButton);
@@ -130,6 +142,7 @@
         private System.Windows.Forms.Button PQDIFButton;
         private System.Windows.Forms.Button COMTRADEButton;
         private System.Windows.Forms.Button CSVExportButton;
+        private System.Windows.Forms.Button EMAXButton;
     }
 }
 
