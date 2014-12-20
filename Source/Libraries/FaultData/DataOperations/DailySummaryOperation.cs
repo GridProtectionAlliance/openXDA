@@ -65,8 +65,8 @@ namespace FaultData.DataOperations
                                             "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
                                             "WHEN MATCHED THEN " +
                                             "    UPDATE SET " +
-                                            "        Maximum = IIF(Source.Maximum > Target.Maximum, Source.Maximum, Target.Maximum), " +
-                                            "        Minimum = IIF(Source.Minimum < Target.Minimum, Source.Minimum, Target.Minimum), " +
+                                            "        Maximum = CASE WHEN Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
+                                            "        Minimum = CASE WHEN Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
                                             "        Average = Target.Average + (Source.Count * (Source.Average - Target.Average) / (Source.Count + Target.Count)), " +
                                             "        Count = Source.Count + Target.Count " +
                                             "WHEN NOT MATCHED THEN " +

@@ -76,9 +76,9 @@ namespace FaultData.DataOperations
                                                      "ON Source.ChannelID = Target.ChannelID AND Source.Time = Target.Time " +
                                                      "WHEN MATCHED THEN " +
                                                      "    UPDATE SET " +
-                                                     "        Maximum = IIF(Target.ValidCount = 0 OR Source.Maximum > Target.Maximum, Source.Maximum, Target.Maximum), " +
-                                                     "        Minimum = IIF(Target.ValidCount = 0 OR Source.Minimum < Target.Minimum, Source.Minimum, Target.Minimum), " +
-                                                     "        Average = IIF(Target.ValidCount = 0, Source.Average, Target.Average * (CAST(Target.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) + Source.Average * (CAST(Source.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount))), " +
+                                                     "        Maximum = CASE WHEN Target.ValidCount = 0 OR Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
+                                                     "        Minimum = CASE WHEN Target.ValidCount = 0 OR Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
+                                                     "        Average = CASE WHEN Target.ValidCount = 0 THEN Source.Average ELSE Target.Average * (CAST(Target.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) + Source.Average * (CAST(Source.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) END, " +
                                                      "        ValidCount = Source.ValidCount + Target.ValidCount, " +
                                                      "        InvalidCount = Source.InvalidCount + Target.InvalidCount " +
                                                      "WHEN NOT MATCHED THEN " +
