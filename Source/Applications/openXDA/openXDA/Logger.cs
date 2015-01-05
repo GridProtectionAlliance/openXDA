@@ -75,11 +75,13 @@ namespace openXDA
     {
         private const string DateTimeFormat = "HH:mm:ss";
 
+        private string m_logFile;
         private TextWriter m_fileWriter;
         private int m_recordCount;
 
         private Logger(string logFile)
         {
+            m_logFile = logFile;
             m_fileWriter = new StreamWriter(File.Create(logFile));
         }
 
@@ -102,6 +104,14 @@ namespace openXDA
         public static Logger Open(string logFile)
         {
             return new Logger(logFile);
+        }
+
+        public string LogFile
+        {
+            get
+            {
+                return m_logFile;
+            }
         }
     }
 }

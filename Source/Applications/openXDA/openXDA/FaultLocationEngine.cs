@@ -551,8 +551,22 @@ namespace openXDA
                 // Clean up the current log file
                 if ((object)m_currentLogger != null)
                 {
+                    string logFile = m_currentLogger.LogFile;
+
                     m_currentLogger.Dispose();
                     m_currentLogger = null;
+
+                    try
+                    {
+                        if (File.Exists(logFile))
+                            File.Delete(logFile);
+                    }
+                    catch (Exception ex)
+                    {
+                        // The logger has already been disposed so this
+                        // error will go only to the status log and console
+                        OnProcessException(ex);
+                    }
                 }
             }
 
