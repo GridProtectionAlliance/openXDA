@@ -550,13 +550,13 @@ namespace FaultData.DataOperations
             {
                 faultLocationAlgorithms = GetFaultLocationAlgorithms(faultLocationInfo);
 
-                foreach (DataGroup faultGroup in dataGroups.Where(dataGroup => dataGroup.Classification == DataClassification.Fault))
+                foreach (DataGroup dataGroup in dataGroups)
                 {
                     // Get the ID of the event record for this fault
                     using (EventTableAdapter adapter = new EventTableAdapter())
                     {
                         adapter.Connection.ConnectionString = m_connectionString;
-                        eventID = adapter.GetEventIDBy(meterDataSet.Meter.ID, faultGroup.Line.ID, meterDataSet.FileGroup.ID, faultGroup.StartTime, faultGroup.EndTime) ?? 0;
+                        eventID = adapter.GetEventIDBy(meterDataSet.Meter.ID, dataGroup.Line.ID, meterDataSet.FileGroup.ID, dataGroup.StartTime, dataGroup.EndTime) ?? 0;
                     }
 
                     if (eventID == 0)
@@ -564,15 +564,19 @@ namespace FaultData.DataOperations
 
                     // Calculate cycle data
                     OnStatusMessage(string.Format("Event {0}: Transforming data to frequency domain.", eventID));
-                    viDataGroup = GetVIDataGroup(faultGroup);
+                    viDataGroup = GetVIDataGroup(dataGroup);
                     viCycleDataSet = Transform.ToVICycleDataSet(viDataGroup, Frequency);
                     cycleDataTable.AddCycleDataRow(eventID, viCycleDataSet.ToDataGroup().ToData());
+
+                    // If the data isn't faulted, skip the fault analysis
+                    if (dataGroup.Classification != DataClassification.Fault)
+                        continue;
 
                     // Break fault into segments
                     OnStatusMessage(string.Format("Event {0}: Detecting and classifying fault segments.", eventID));
                     faultDetectedSegments = DetectFaults(viDataGroup, viCycleDataSet);
                     faultTypeSegments = ClassifyFaults(faultDetectedSegments, viCycleDataSet);
-                    WriteSegmentsToDatabase(faultTypeSegments, eventID, faultLocationInfo, faultGroup);
+                    WriteSegmentsToDatabase(faultTypeSegments, eventID, faultLocationInfo, dataGroup);
 
                     // Determine the number of faults in this data group for logging
                     int faultCount = faultTypeSegments
@@ -586,7 +590,7 @@ namespace FaultData.DataOperations
                     // Create the fault location data set and begin populating
                     // the properties necessary for calculating fault location
                     faultLocationDataSet = new FaultLocationDataSet();
-                    faultLocationDataSet.LineDistance = faultGroup.Line.Length;
+                    faultLocationDataSet.LineDistance = dataGroup.Line.Length;
                     faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataSet);
 
                     // Extract impedances from the database
@@ -595,11 +599,11 @@ namespace FaultData.DataOperations
                     impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
                     impedanceExtractor.FaultLocationInfo = faultLocationInfo;
                     impedanceExtractor.Meter = meterDataSet.Meter;
-                    impedanceExtractor.Line = faultGroup.Line;
+                    impedanceExtractor.Line = dataGroup.Line;
 
                     if (!impedanceExtractor.TryExtractImpedances())
                     {
-                        OnStatusMessage(string.Format("Event {0}: No line impedance found for line {1}.", eventID, faultGroup.Line.Name));
+                        OnStatusMessage(string.Format("Event {0}: No line impedance found for line {1}.", eventID, dataGroup.Line.Name));
                         continue;
                     }
 
