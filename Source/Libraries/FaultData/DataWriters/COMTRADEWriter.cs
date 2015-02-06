@@ -310,9 +310,6 @@ namespace FaultData.DataWriters
             // Date-time format used in the header file
             const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
 
-            // TODO: Hardcoded units
-            const string LengthUnits = "miles";
-
             // Get the list of faults, which are the defined as a list of consecutive segments
             // where a fault was detected (an evolving fault is a fault with multiple segments)
             List<List<FaultSegment>> faults = faultRecordInfo.FaultSegments
