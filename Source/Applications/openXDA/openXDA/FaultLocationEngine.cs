@@ -106,6 +106,11 @@ namespace openXDA
         /// </summary>
         private static readonly Guid FileProcessorID = new Guid("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D");
 
+        /// <summary>
+        /// List of file extensions that can trigger file processing events.
+        /// </summary>
+        private static readonly string[] ValidExtensions = { ".pqd", ".dat", ".d00", ".rcd", ".rcl" };
+
         // Events
 
         /// <summary>
@@ -199,6 +204,7 @@ namespace openXDA
             if ((object)m_fileProcessor == null)
             {
                 m_fileProcessor = new FileProcessor(FileProcessorID);
+                m_fileProcessor.Filter = string.Join(Path.PathSeparator.ToString(), ValidExtensions.Select(ext => "*" + ext));
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
 
@@ -631,17 +637,10 @@ namespace openXDA
         // directories. This handler validates the file and processes it if able.
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
-            string[] validExtensions = { ".pqd", ".dat", ".d00", ".rcd", ".rcl" };
             string filePath = fileProcessorEventArgs.FullPath;
-            string extension;
 
             try
             {
-                extension = FilePath.GetExtension(filePath);
-
-                if (!validExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
-                    return;
-
                 if (fileProcessorEventArgs.AlreadyProcessed)
                 {
                     using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
