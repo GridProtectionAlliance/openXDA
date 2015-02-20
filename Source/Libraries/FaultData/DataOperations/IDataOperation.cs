@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using FaultData.DataSets;
 using GSF;
 
 namespace FaultData.DataOperations

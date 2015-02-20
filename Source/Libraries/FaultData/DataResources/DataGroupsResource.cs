@@ -25,9 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.DataSets;
 using Line = FaultData.Database.Line;
 
-namespace FaultData.DataOperations
+namespace FaultData.DataResources
 {
     public class DataGroupsResource : DataResourceBase<MeterDataSet>
     {

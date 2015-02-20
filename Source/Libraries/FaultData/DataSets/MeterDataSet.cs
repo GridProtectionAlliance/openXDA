@@ -25,9 +25,9 @@ using System;
 using System.Collections.Generic;
 using FaultData.DataAnalysis;
 using FaultData.Database;
-using FaultData.DataOperations;
+using FaultData.DataResources;
 
-namespace FaultData
+namespace FaultData.DataSets
 {
     public class MeterDataSet : IDataSet
     {
@@ -109,6 +109,11 @@ namespace FaultData
 
         public T GetResource<T>() where T : class, IDataResource, new()
         {
+            return GetResource(() => new T());
+        }
+
+        public T GetResource<T>(Func<T> resourceFactory) where T : class, IDataResource
+        {
             Type type = typeof(T);
             object obj;
             T resource;
@@ -119,7 +124,7 @@ namespace FaultData
             }
             else
             {
-                resource = new T();
+                resource = resourceFactory();
                 resource.Initialize(this);
                 m_resources.Add(type, resource);
             }

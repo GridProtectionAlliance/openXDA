@@ -21,10 +21,14 @@
 //
 //******************************************************************************************************
 
-namespace FaultData.DataOperations
+using System;
+using FaultData.DataResources;
+
+namespace FaultData.DataSets
 {
     public interface IDataSet
     {
         T GetResource<T>() where T : class, IDataResource, new();
+        T GetResource<T>(Func<T> resourceFactory) where T : class, IDataResource;
     }
 }

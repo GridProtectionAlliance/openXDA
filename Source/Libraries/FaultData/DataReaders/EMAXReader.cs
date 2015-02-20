@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.DataSets;
 using GSF.EMAX;
 using GSF.IO;
 

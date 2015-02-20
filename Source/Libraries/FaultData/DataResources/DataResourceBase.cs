@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IDataOperationResource.cs - Gbtc
+//  DataResourceBase.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,15 +16,25 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/21/2014 - Stephen C. Wills
+//  07/22/2014 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace FaultData.DataOperations
+using FaultData.DataSets;
+
+namespace FaultData.DataResources
 {
-    public interface IDataResource
+    public abstract class DataResourceBase<T> : IDataResource where T : class, IDataSet
     {
-        void Initialize(IDataSet dataSet);
+        public abstract void Initialize(T dataSet);
+
+        public void Initialize(IDataSet dataSet)
+        {
+            T dataSetAsT = dataSet as T;
+
+            if ((object)dataSetAsT != null)
+                Initialize(dataSetAsT);
+        }
     }
 }

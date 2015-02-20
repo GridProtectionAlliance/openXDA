@@ -1,7 +1,7 @@
 USE [master]
 GO
 
-CREATE DATABASE [openXDA];
+CREATE DATABASE [openXDA]
 GO
 
 -- The following commented statements are used to create a user with access to openXDA.

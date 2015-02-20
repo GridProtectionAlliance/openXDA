@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.Database;
+using FaultData.DataResources;
+using FaultData.DataSets;
 using GSF;
 
 namespace FaultData.DataOperations

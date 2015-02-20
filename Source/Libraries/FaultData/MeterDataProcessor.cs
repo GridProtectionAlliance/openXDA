@@ -27,6 +27,7 @@ using System.IO;
 using GSF;
 using GSF.IO;
 using FaultData.DataReaders;
+using FaultData.DataSets;
 
 namespace FaultData
 {

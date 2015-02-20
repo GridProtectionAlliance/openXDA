@@ -29,6 +29,7 @@ using GSF;
 using GSF.Collections;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.DataSets;
 using ChannelKey = System.Tuple<int, string, string, string, string>;
 using SeriesKey = System.Tuple<int, string, string, string, string, string>;
 

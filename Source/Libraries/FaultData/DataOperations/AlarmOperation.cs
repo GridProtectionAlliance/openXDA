@@ -30,6 +30,8 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.AlarmDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
+using FaultData.DataResources;
+using FaultData.DataSets;
 using GSF;
 
 namespace FaultData.DataOperations

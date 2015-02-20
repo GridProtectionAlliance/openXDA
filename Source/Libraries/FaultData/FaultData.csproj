@@ -119,16 +119,16 @@
     <Compile Include="DataOperations\AlarmOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
-    <Compile Include="DataOperations\DataGroupsResource.cs" />
-    <Compile Include="DataOperations\DataResourceBase.cs" />
+    <Compile Include="DataResources\DataGroupsResource.cs" />
+    <Compile Include="DataResources\DataResourceBase.cs" />
     <Compile Include="DataOperations\EventOperation.cs" />
     <Compile Include="DataOperations\FaultLocationOperation.cs" />
     <Compile Include="DataOperations\HourlySummaryOperation.cs" />
     <Compile Include="DataOperations\IDataOperation.cs" />
-    <Compile Include="DataOperations\IDataResource.cs" />
-    <Compile Include="DataOperations\IDataSet.cs" />
-    <Compile Include="DataOperations\TrendingDataSummaryResource.cs" />
-    <Compile Include="DataOperations\TrendingGroupsResource.cs" />
+    <Compile Include="DataResources\IDataResource.cs" />
+    <Compile Include="DataSets\IDataSet.cs" />
+    <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
+    <Compile Include="DataResources\TrendingGroupsResource.cs" />
     <Compile Include="DataReaders\COMTRADEReader.cs" />
     <Compile Include="DataReaders\EMAXReader.cs" />
     <Compile Include="DataReaders\IDataReader.cs" />
@@ -138,7 +138,7 @@
     <Compile Include="DataWriters\EmailWriter.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="MeterDataProcessor.cs" />
-    <Compile Include="MeterDataSet.cs" />
+    <Compile Include="DataSets\MeterDataSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

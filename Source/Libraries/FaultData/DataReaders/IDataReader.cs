@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using FaultData.DataSets;
 
 namespace FaultData.DataReaders
 {

@@ -29,6 +29,7 @@ using GSF.COMTRADE;
 using GSF.IO;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.DataSets;
 
 namespace FaultData.DataReaders
 {

@@ -24,11 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GSF.Collections;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.DataSets;
+using GSF.Collections;
 
-namespace FaultData.DataOperations
+namespace FaultData.DataResources
 {
     public class TrendingDataSummaryResource : DataResourceBase<MeterDataSet>
     {

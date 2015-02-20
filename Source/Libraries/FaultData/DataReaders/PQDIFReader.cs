@@ -28,6 +28,7 @@ using GSF.IO;
 using GSF.PQDIF.Logical;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.DataSets;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders

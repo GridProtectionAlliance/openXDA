@@ -31,6 +31,8 @@ using GSF;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.MeterDataTableAdapters;
+using FaultData.DataResources;
+using FaultData.DataSets;
 using GSF.Collections;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
 using Line = FaultData.Database.Line;
