@@ -68,7 +68,7 @@
     <Compile Include="DataAnalysis\DataPoint.cs" />
     <Compile Include="DataAnalysis\DataSeries.cs" />
     <Compile Include="DataAnalysis\Transform.cs" />
-    <Compile Include="DataAnalysis\VICycleDataSet.cs" />
+    <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
     <Compile Include="Database\AlarmData.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -119,6 +119,7 @@
     <Compile Include="DataOperations\AlarmOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
+    <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\DataGroupsResource.cs" />
     <Compile Include="DataResources\DataResourceBase.cs" />
     <Compile Include="DataOperations\EventOperation.cs" />

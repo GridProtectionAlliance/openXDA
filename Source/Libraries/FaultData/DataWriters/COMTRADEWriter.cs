@@ -80,7 +80,7 @@ namespace FaultData.DataWriters
             public List<FaultLocationData.FaultCurveRow> FaultCurves;
 
             public List<Tuple<OutputChannel, DataSeries>> WaveformChannels;
-            public VICycleDataSet CycleDataSet;
+            public VICycleDataGroup CycleDataGroup;
         }
 
         // Constants
@@ -213,7 +213,7 @@ namespace FaultData.DataWriters
                     .ToList();
 
                 // Create a cycle data set to identify what each series is in the cycleDataGroup
-                faultRecordInfo.CycleDataSet = new VICycleDataSet(cycleDataGroup);
+                faultRecordInfo.CycleDataGroup = new VICycleDataGroup(cycleDataGroup);
 
                 // Use the fault record info to write the results to the COMTRADE files
                 WriteResults(faultRecordInfo, resultsFilePath);
@@ -548,7 +548,7 @@ namespace FaultData.DataWriters
                 });
 
             // Get COMTRADE channel information for each cycle data series to be output to the file
-            IEnumerable<COMTRADEChannelData> cycleChannelData = GetCycleChannelData(faultRecordInfo.CycleDataSet, faultRecordInfo.WaveformChannels.Select(tuple => tuple.Item1));
+            IEnumerable<COMTRADEChannelData> cycleChannelData = GetCycleChannelData(faultRecordInfo.CycleDataGroup, faultRecordInfo.WaveformChannels.Select(tuple => tuple.Item1));
 
             // Return all the analog channel data in one list
             return waveformChannelData
@@ -668,7 +668,7 @@ namespace FaultData.DataWriters
             comtradeData.DigitalChannelData.AddRange(originalDigitalChannelData);
         }
 
-        private IEnumerable<COMTRADEChannelData> GetCycleChannelData(VICycleDataSet cycleDataSet, IEnumerable<OutputChannel> outputChannels)
+        private IEnumerable<COMTRADEChannelData> GetCycleChannelData(VICycleDataGroup cycleDataGroup, IEnumerable<OutputChannel> outputChannels)
         {
             // Create a function to get the load order of a collection of
             // channels where collections should have no more than 1 channel
@@ -680,12 +680,12 @@ namespace FaultData.DataWriters
             // Convert the cycle data set to a collection of cycle data groups
             List<Tuple<string, CycleDataGroup>> cycleDataGroups = new List<Tuple<string, CycleDataGroup>>
             {
-                Tuple.Create("VA", cycleDataSet.VA),
-                Tuple.Create("VB", cycleDataSet.VB),
-                Tuple.Create("VC", cycleDataSet.VC),
-                Tuple.Create("IA", cycleDataSet.IA),
-                Tuple.Create("IB", cycleDataSet.IB),
-                Tuple.Create("IC", cycleDataSet.IC)
+                Tuple.Create("VA", cycleDataGroup.VA),
+                Tuple.Create("VB", cycleDataGroup.VB),
+                Tuple.Create("VC", cycleDataGroup.VC),
+                Tuple.Create("IA", cycleDataGroup.IA),
+                Tuple.Create("IB", cycleDataGroup.IB),
+                Tuple.Create("IC", cycleDataGroup.IC)
             };
 
             // Join the output channels to the cycle data groups, order them by LoadOrder, and then

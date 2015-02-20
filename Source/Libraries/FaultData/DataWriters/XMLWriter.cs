@@ -152,7 +152,7 @@ namespace FaultData.DataWriters
             XDocument resultsDocument;
             XElement results;
 
-            VICycleDataSet viCycleDataSet = ToCycleDataSet(faultRecordInfo.CycleData);
+            VICycleDataGroup viCycleDataGroup = ToCycleDataSet(faultRecordInfo.CycleData);
 
             results =
                 new XElement("results",
@@ -163,10 +163,10 @@ namespace FaultData.DataWriters
                         new XElement("length", faultRecordInfo.Line.Length.ToString(DoubleFormat))
                     ),
                     new XElement("prefault",
-                        new XElement("time", viCycleDataSet.VA.RMS[0].Time.ToString(DateTimeFormat)),
-                        GetCycleElements(viCycleDataSet, 0)
+                        new XElement("time", viCycleDataGroup.VA.RMS[0].Time.ToString(DateTimeFormat)),
+                        GetCycleElements(viCycleDataGroup, 0)
                     ),
-                    GetFaultElements(faultRecordInfo, viCycleDataSet)
+                    GetFaultElements(faultRecordInfo, viCycleDataGroup)
                 );
 
             // Create the XML document
@@ -178,7 +178,7 @@ namespace FaultData.DataWriters
             resultsDocument.Save(resultsFilePath);
         }
 
-        private List<XElement> GetFaultElements(FaultRecordInfo faultRecordInfo, VICycleDataSet viCycleDataSet)
+        private List<XElement> GetFaultElements(FaultRecordInfo faultRecordInfo, VICycleDataGroup viCycleDataGroup)
         {
             List<List<FaultSegment>> faults = faultRecordInfo.FaultSegments
                 .Aggregate(new List<List<FaultSegment>>(), (list, segment) =>
@@ -204,19 +204,19 @@ namespace FaultData.DataWriters
 
             return faults
                 .Where(fault => fault.Count > 0)
-                .Select(fault => GetFaultElement(faultRecordInfo.Line, viCycleDataSet, faultCurves, fault))
+                .Select(fault => GetFaultElement(faultRecordInfo.Line, viCycleDataGroup, faultCurves, fault))
                 .Where(element => (object)element != null)
                 .ToList();
         }
 
-        private XElement GetFaultElement(Line line, VICycleDataSet viCycleDataSet, List<DataSeries> faultCurves, List<FaultSegment> fault)
+        private XElement GetFaultElement(Line line, VICycleDataGroup viCycleDataGroup, List<DataSeries> faultCurves, List<FaultSegment> fault)
         {
             DateTime startTime = fault.First().StartTime;
             DateTime endTime = fault.Last().EndTime;
             int startSample = fault.First().StartSample;
             int endSample = fault.Last().EndSample;
             double duration = (endTime - startTime).TotalSeconds;
-            VICycleDataSet subSet = viCycleDataSet.ToSubSet(startSample, endSample);
+            VICycleDataGroup subGroup = viCycleDataGroup.ToSubSet(startSample, endSample);
 
             List<double> validDistances = faultCurves
                 .Select(series => series.ToSubSeries(startSample, endSample))
@@ -252,8 +252,8 @@ namespace FaultData.DataWriters
                     new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))
                 ),
                 GetSegmentElements(fault),
-                new XElement("largestCurrent", GetCycleElements(subSet, GetLargestCurrentCycleIndex(subSet))),
-                new XElement("smallestVoltage", GetCycleElements(subSet, GetSmallestVoltageCycleIndex(subSet)))
+                new XElement("largestCurrent", GetCycleElements(subGroup, GetLargestCurrentCycleIndex(subGroup))),
+                new XElement("smallestVoltage", GetCycleElements(subGroup, GetSmallestVoltageCycleIndex(subGroup)))
             );
         }
 
@@ -290,16 +290,16 @@ namespace FaultData.DataWriters
             return pathElements;
         }
 
-        private List<XElement> GetCycleElements(VICycleDataSet viCycleDataSet, int cycleIndex)
+        private List<XElement> GetCycleElements(VICycleDataGroup viCycleDataGroup, int cycleIndex)
         {
             return new List<XElement>()
             {
-                GetCycleElement("VA", viCycleDataSet.VA, cycleIndex),
-                GetCycleElement("VB", viCycleDataSet.VB, cycleIndex),
-                GetCycleElement("VC", viCycleDataSet.VC, cycleIndex),
-                GetCycleElement("IA", viCycleDataSet.IA, cycleIndex),
-                GetCycleElement("IB", viCycleDataSet.IB, cycleIndex),
-                GetCycleElement("IC", viCycleDataSet.IC, cycleIndex)
+                GetCycleElement("VA", viCycleDataGroup.VA, cycleIndex),
+                GetCycleElement("VB", viCycleDataGroup.VB, cycleIndex),
+                GetCycleElement("VC", viCycleDataGroup.VC, cycleIndex),
+                GetCycleElement("IA", viCycleDataGroup.IA, cycleIndex),
+                GetCycleElement("IB", viCycleDataGroup.IB, cycleIndex),
+                GetCycleElement("IC", viCycleDataGroup.IC, cycleIndex)
             };
         }
 
@@ -310,16 +310,16 @@ namespace FaultData.DataWriters
                 new XElement("PhaseAngle", new Angle(cycleDataGroup.Phase[cycleIndex].Value).ToDegrees().ToString(DoubleFormat)));
         }
 
-        private int GetLargestCurrentCycleIndex(VICycleDataSet viCycleDataSet)
+        private int GetLargestCurrentCycleIndex(VICycleDataGroup viCycleDataGroup)
         {
-            double largestCurrent = viCycleDataSet.IA.RMS[0].Value + viCycleDataSet.IB.RMS[0].Value + viCycleDataSet.IC.RMS[0].Value;
+            double largestCurrent = viCycleDataGroup.IA.RMS[0].Value + viCycleDataGroup.IB.RMS[0].Value + viCycleDataGroup.IC.RMS[0].Value;
             int largestCurrentIndex = 0;
 
             double iCurrent;
 
-            for (int i = 1; i < viCycleDataSet.IA.ToDataGroup().Samples; i++)
+            for (int i = 1; i < viCycleDataGroup.IA.ToDataGroup().Samples; i++)
             {
-                iCurrent = viCycleDataSet.IA.RMS[i].Value + viCycleDataSet.IB.RMS[i].Value + viCycleDataSet.IC.RMS[i].Value;
+                iCurrent = viCycleDataGroup.IA.RMS[i].Value + viCycleDataGroup.IB.RMS[i].Value + viCycleDataGroup.IC.RMS[i].Value;
 
                 if (iCurrent > largestCurrent)
                 {
@@ -331,16 +331,16 @@ namespace FaultData.DataWriters
             return largestCurrentIndex;
         }
 
-        private int GetSmallestVoltageCycleIndex(VICycleDataSet viCycleDataSet)
+        private int GetSmallestVoltageCycleIndex(VICycleDataGroup viCycleDataGroup)
         {
-            double smallestVoltage = viCycleDataSet.VA.RMS[0].Value + viCycleDataSet.VB.RMS[0].Value + viCycleDataSet.VC.RMS[0].Value;
+            double smallestVoltage = viCycleDataGroup.VA.RMS[0].Value + viCycleDataGroup.VB.RMS[0].Value + viCycleDataGroup.VC.RMS[0].Value;
             int smallestVoltageIndex = 0;
 
             double iVoltage;
 
-            for (int i = 1; i < viCycleDataSet.VA.ToDataGroup().Samples; i++)
+            for (int i = 1; i < viCycleDataGroup.VA.ToDataGroup().Samples; i++)
             {
-                iVoltage = viCycleDataSet.VA.RMS[i].Value + viCycleDataSet.VB.RMS[i].Value + viCycleDataSet.VC.RMS[i].Value;
+                iVoltage = viCycleDataGroup.VA.RMS[i].Value + viCycleDataGroup.VB.RMS[i].Value + viCycleDataGroup.VC.RMS[i].Value;
 
                 if (iVoltage > smallestVoltage)
                 {
@@ -352,11 +352,11 @@ namespace FaultData.DataWriters
             return smallestVoltageIndex;
         }
 
-        private VICycleDataSet ToCycleDataSet(FaultLocationData.CycleDataRow cycleData)
+        private VICycleDataGroup ToCycleDataSet(FaultLocationData.CycleDataRow cycleData)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(cycleData.Data);
-            return new VICycleDataSet(dataGroup);
+            return new VICycleDataGroup(dataGroup);
         }
 
         private DataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve)

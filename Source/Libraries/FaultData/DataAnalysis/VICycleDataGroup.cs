@@ -28,7 +28,7 @@ using FaultAlgorithms;
 
 namespace FaultData.DataAnalysis
 {
-    public class VICycleDataSet
+    public class VICycleDataGroup
     {
         #region [ Members ]
 
@@ -47,7 +47,7 @@ namespace FaultData.DataAnalysis
 
         #region [ Constructors ]
 
-        public VICycleDataSet(DataGroup dataGroup)
+        public VICycleDataGroup(DataGroup dataGroup)
         {
             m_cycleDataGroups = dataGroup.DataSeries
                 .Select((series, i) => Tuple.Create(i / 4, series))
@@ -57,12 +57,12 @@ namespace FaultData.DataAnalysis
                 .ToList();
         }
 
-        public VICycleDataSet(CycleDataGroup va, CycleDataGroup vb, CycleDataGroup vc, CycleDataGroup ia, CycleDataGroup ib, CycleDataGroup ic)
+        public VICycleDataGroup(CycleDataGroup va, CycleDataGroup vb, CycleDataGroup vc, CycleDataGroup ia, CycleDataGroup ib, CycleDataGroup ic)
         {
             m_cycleDataGroups = new List<CycleDataGroup>() { va, vb, vc, ia, ib, ic };
         }
 
-        public VICycleDataSet(List<CycleDataGroup> cycleDataGroups)
+        public VICycleDataGroup(List<CycleDataGroup> cycleDataGroups)
         {
             m_cycleDataGroups = cycleDataGroups;
         }
@@ -130,9 +130,9 @@ namespace FaultData.DataAnalysis
                 .ToArray());
         }
 
-        public VICycleDataSet ToSubSet(int startIndex, int endIndex)
+        public VICycleDataGroup ToSubSet(int startIndex, int endIndex)
         {
-            return new VICycleDataSet(m_cycleDataGroups
+            return new VICycleDataGroup(m_cycleDataGroups
                 .Select(cycleDataGroup => cycleDataGroup.ToSubGroup(startIndex, endIndex))
                 .ToList());
         }

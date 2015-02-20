@@ -43,9 +43,9 @@ namespace FaultData.DataAnalysis
             return combination;
         }
 
-        public static VICycleDataSet ToVICycleDataSet(VIDataGroup dataGroup, double frequency)
+        public static VICycleDataGroup ToVICycleDataSet(VIDataGroup dataGroup, double frequency)
         {
-            return new VICycleDataSet(dataGroup.ToDataGroup().DataSeries
+            return new VICycleDataGroup(dataGroup.ToDataGroup().DataSeries
                 .Select(dataSeries => ToCycleDataGroup(dataSeries, frequency))
                 .ToList());
         }
