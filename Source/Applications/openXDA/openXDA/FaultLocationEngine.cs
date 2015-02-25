@@ -330,6 +330,8 @@ namespace openXDA
 
             IDataReader reader;
             List<MeterDataSet> meterDataSets;
+
+            List<Type> dataOperationTypes;
             List<IDataOperation> dataOperations;
 
             ConnectionStringParser connectionStringParser;
@@ -384,28 +386,42 @@ namespace openXDA
                 // Parse the file into a meter data set
                 meterDataSets = reader.Parse(filePath);
 
+                dataOperationTypes = dbAdapterContainer.SystemInfoAdapter.DataOperations
+                    .OrderBy(dataOperation => dataOperation.LoadOrder)
+                    .Select(dataOperation => LoadType(dataOperation.AssemblyName, dataOperation.TypeName))
+                    .Where(type => (object)type != null)
+                    .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
+                    .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                    .ToList();
+
                 foreach (MeterDataSet meterDataSet in meterDataSets)
                 {
                     meterDataSet.FilePath = filePath;
                     meterDataSet.FileGroup = fileGroup;
 
-                    dataOperations = dbAdapterContainer.SystemInfoAdapter.DataOperations
-                        .Select(dataOperation => Assembly.LoadFrom(dataOperation.AssemblyName).GetType(dataOperation.TypeName))
-                        .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
-                        .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
-                        .Select(type => Activator.CreateInstance(type))
+                    dataOperations = dataOperationTypes
+                        .Select(Activator.CreateInstance)
                         .Cast<IDataOperation>()
                         .ToList();
 
                     foreach (IDataOperation dataOperation in dataOperations)
                     {
+                        // Attach to messaging events
+                        dataOperation.StatusMessage += CreateMessageHandler(logger);
+                        dataOperation.ProcessException += CreateExceptionHandler(logger);
+
+                        // Provide system settings to the data operation
                         connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), dataOperation);
+
+                        // Prepare for execution of the data operation
                         dataOperation.Prepare(dbAdapterContainer);
                     }
 
+                    // Execute the data operations
                     foreach (IDataOperation dataOperation in dataOperations)
                         dataOperation.Execute(meterDataSet);
 
+                    // Load data from all data operations in a single transaction
                     using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
                     {
                         foreach (IDataOperation dataOperation in dataOperations)
@@ -698,6 +714,36 @@ namespace openXDA
 
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        private EventHandler<EventArgs<string>> CreateMessageHandler(Logger logger)
+        {
+            return (sender, args) => OnStatusMessage(logger, args.Argument);
+        }
+
+        private EventHandler<EventArgs<Exception>> CreateExceptionHandler(Logger logger)
+        {
+            return (sender, args) => OnProcessException(logger, args.Argument);
+        }
+
+        private Type LoadType(string assemblyName, string typeName)
+        {
+            Assembly assembly;
+
+            try
+            {
+                assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
+
+                if ((object)assembly != null)
+                    return assembly.GetType(typeName);
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+                return null;
+            }
         }
 
         // Gets the creation time of the file with the given file name.
