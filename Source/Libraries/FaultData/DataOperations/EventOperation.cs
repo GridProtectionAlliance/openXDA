@@ -27,10 +27,10 @@ using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
 {
@@ -43,128 +43,270 @@ namespace FaultData.DataOperations
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        private string m_connectionString;
-        private Dictionary<DataClassification, int> m_eventTypeLookup;
+        private DbAdapterContainer m_dbAdapterContainer;
+        private double m_residualCurrentTrigger;
+        private double m_phaseCurrentTrigger;
+        private double m_prefaultTrigger;
+        private double m_faultSuppressionTrigger;
+        private double m_maxFaultDistanceMultiplier;
+        private double m_minFaultDistanceMultiplier;
+
+        private MeterDataSet m_meterDataSet;
+        private MeterData.EventDataTable m_eventTable;
+        private List<Tuple<EventKey, byte[]>> m_cycleDataList;
 
         #endregion
 
-        #region [ Constructors ]
+        #region [ Properties ]
 
-        public EventOperation(string connectionString)
+        public double ResidualCurrentTrigger
         {
-            m_connectionString = connectionString;
+            get
+            {
+                return m_residualCurrentTrigger;
+            }
+            set
+            {
+                m_residualCurrentTrigger = value;
+            }
+        }
+
+        public double PhaseCurrentTrigger
+        {
+            get
+            {
+                return m_phaseCurrentTrigger;
+            }
+            set
+            {
+                m_phaseCurrentTrigger = value;
+            }
+        }
+
+        public double PrefaultTrigger
+        {
+            get
+            {
+                return m_prefaultTrigger;
+            }
+            set
+            {
+                m_prefaultTrigger = value;
+            }
+        }
+
+        public double FaultSuppressionTrigger
+        {
+            get
+            {
+                return m_faultSuppressionTrigger;
+            }
+            set
+            {
+                m_faultSuppressionTrigger = value;
+            }
+        }
+
+        public double MaxFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_maxFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_maxFaultDistanceMultiplier = value;
+            }
+        }
+
+        public double MinFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_minFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_minFaultDistanceMultiplier = value;
+            }
         }
 
         #endregion
 
         #region [ Methods ]
 
+        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        {
+            m_dbAdapterContainer = dbAdapterContainer;
+            LoadEventTypes(dbAdapterContainer);
+        }
+
         public void Execute(MeterDataSet meterDataSet)
         {
-            List<DataGroup> dataGroups;
+            EventClassificationResource.Factory factory;
+            CycleDataResource cycleDataResource;
+            EventClassificationResource eventClassificationResource;
 
             OnStatusMessage("Executing operation to load event data into the database...");
 
-            dataGroups = meterDataSet.GetResource<DataGroupsResource>().DataGroups;
+            factory = new EventClassificationResource.Factory()
+            {
+                DbAdapterContainer = m_dbAdapterContainer,
+                ResidualCurrentTrigger = m_residualCurrentTrigger,
+                PhaseCurrentTrigger = m_phaseCurrentTrigger,
+                PrefaultTrigger = m_prefaultTrigger,
+                FaultSuppressionTrigger = m_faultSuppressionTrigger,
+                MaxFaultDistanceMultiplier = m_maxFaultDistanceMultiplier,
+                MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
+            };
 
-            LoadEventTypes(dataGroups);
-            LoadEvents(meterDataSet, dataGroups);
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            eventClassificationResource = meterDataSet.GetResource(factory.Create);
+            LoadEvents(meterDataSet, cycleDataResource.DataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
+
+            m_meterDataSet = meterDataSet;
         }
 
-        private void LoadEventTypes(List<DataGroup> dataGroups)
+        public void Load(DbAdapterContainer dbAdapterContainer)
         {
-            MeterData.EventTypeDataTable eventTypeTable = new MeterData.EventTypeDataTable();
-            List<string> eventTypeNames;
+            Dictionary<EventKey, MeterData.EventRow> eventLookup;
+            MeterData.EventRow eventRow;
 
-            if ((object)m_eventTypeLookup == null)
-                m_eventTypeLookup = GetEventTypeLookup();
+            FaultLocationData.CycleDataDataTable cycleDataTable;
+            EventKey eventKey;
+            byte[] cycleData;
 
-            eventTypeNames = dataGroups
-                .Select(dataGroup => dataGroup.Classification)
-                .Distinct()
-                .Where(classification => classification != DataClassification.Trend)
-                .Where(classification => classification != DataClassification.Unknown)
-                .Where(classification => !m_eventTypeLookup.ContainsKey(classification))
-                .Select(classification => classification.ToString())
-                .ToList();
+            OnStatusMessage("Loading event data into the database...");
 
-            if (eventTypeNames.Count > 0)
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
-                foreach (string eventTypeName in eventTypeNames)
-                    eventTypeTable.AddEventTypeRow(eventTypeName, eventTypeName);
+                // Set timeout to infinite
+                bulkCopy.BulkCopyTimeout = 0;
 
-                using (SqlConnection connection = new SqlConnection(m_connectionString))
-                using (SqlBulkCopy bulkCopy = new SqlBulkCopy(connection))
+                // Write events to the database
+                bulkCopy.DestinationTableName = m_eventTable.TableName;
+                bulkCopy.WriteToServer(m_eventTable);
+
+                // Query database for event IDs and store them in a lookup table by line ID
+                dbAdapterContainer.EventAdapter.FillDataByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
+                eventLookup = m_eventTable.Where(evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+
+                // Create cycle data table
+                cycleDataTable = new FaultLocationData.CycleDataDataTable();
+
+                // Create rows for cycle data in the cycle data table
+                foreach (Tuple<EventKey, byte[]> tuple in m_cycleDataList)
                 {
-                    connection.Open();
-                    bulkCopy.BulkCopyTimeout = 0;
+                    eventKey = tuple.Item1;
+                    cycleData = tuple.Item2;
 
-                    bulkCopy.DestinationTableName = eventTypeTable.TableName;
-                    bulkCopy.WriteToServer(eventTypeTable);
+                    if (eventLookup.TryGetValue(eventKey, out eventRow))
+                        cycleDataTable.AddCycleDataRow(eventRow.ID, cycleData);
                 }
 
-                m_eventTypeLookup = GetEventTypeLookup();
+                // Write cycle data to the database
+                bulkCopy.DestinationTableName = cycleDataTable.TableName;
+                bulkCopy.WriteToServer(cycleDataTable);
+            }
+
+            OnStatusMessage(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
+        }
+
+        private void LoadEventTypes(DbAdapterContainer dbAdapterContainer)
+        {
+            if ((object)s_eventTypeLookup == null)
+            {
+                lock (s_eventTypeLock)
+                {
+                    if ((object)s_eventTypeLookup == null)
+                        s_eventTypeLookup = GetEventTypeLookup(dbAdapterContainer);
+                }
             }
         }
 
-        private void LoadEvents(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
+        private void LoadEvents(MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> classifications)
         {
-            MeterData.EventDataTable eventTable = new MeterData.EventDataTable();
-            MeterData.EventRow eventRow;
+            DataGroup dataGroup;
+            EventClassification eventClassification;
             int eventTypeID;
 
-            IEnumerable<DataGroup> eventGroups = dataGroups
-                .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
-                .Where(dataGroup => dataGroup.Classification != DataClassification.Unknown);
+            MeterData.EventRow eventRow;
 
-            foreach (DataGroup eventGroup in eventGroups)
+            m_eventTable = new MeterData.EventDataTable();
+            m_cycleDataList = new List<Tuple<EventKey, byte[]>>();
+
+            for (int i = 0; i < dataGroups.Count; i++)
             {
-                if (!m_eventTypeLookup.TryGetValue(eventGroup.Classification, out eventTypeID))
+                dataGroup = dataGroups[i];
+
+                if (dataGroup.Classification == DataClassification.Trend || dataGroup.Classification == DataClassification.Unknown)
                     continue;
 
-                OnStatusMessage(string.Format("Processing event with event type {0}.", eventGroup.Classification));
+                if (!classifications.TryGetValue(dataGroup, out eventClassification))
+                    continue;
 
-                eventRow = eventTable.NewEventRow();
+                if (!s_eventTypeLookup.TryGetValue(eventClassification, out eventTypeID))
+                    continue;
+
+                OnStatusMessage(string.Format("Processing event with event type {0}.", eventClassification));
+
+                eventRow = m_eventTable.NewEventRow();
                 eventRow.FileGroupID = meterDataSet.FileGroup.ID;
                 eventRow.MeterID = meterDataSet.Meter.ID;
-                eventRow.LineID = eventGroup.Line.ID;
+                eventRow.LineID = dataGroup.Line.ID;
                 eventRow.EventTypeID = eventTypeID;
                 eventRow.Name = string.Empty;
-                eventRow.Data = eventGroup.ToData();
-                eventRow.StartTime = eventGroup.StartTime;
-                eventRow.EndTime = eventGroup.EndTime;
+                eventRow.Data = dataGroup.ToData();
+                eventRow.StartTime = dataGroup.StartTime;
+                eventRow.EndTime = dataGroup.EndTime;
                 eventRow.Magnitude = 0.0D;
-                eventRow.Duration = (eventGroup.EndTime - eventGroup.StartTime).TotalSeconds;
-                eventTable.AddEventRow(eventRow);
+                eventRow.Duration = (dataGroup.EndTime - dataGroup.StartTime).TotalSeconds;
+                m_eventTable.AddEventRow(eventRow);
+
+                m_cycleDataList.Add(Tuple.Create(CreateEventKey(eventRow), viCycleDataGroups[i].ToDataGroup().ToData()));
             }
 
-            using (SqlConnection connection = new SqlConnection(m_connectionString))
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(connection))
-            {
-                connection.Open();
-                bulkCopy.BulkCopyTimeout = 0;
-                bulkCopy.DestinationTableName = eventTable.TableName;
-                bulkCopy.WriteToServer(eventTable);
-            }
-
-            OnStatusMessage(string.Format("Finished processing {0} events.", eventTable.Count));
+            OnStatusMessage(string.Format("Finished processing {0} events.", m_eventTable.Count));
         }
 
-        private Dictionary<DataClassification, int> GetEventTypeLookup()
+        private Dictionary<EventClassification, int> GetEventTypeLookup(DbAdapterContainer dbAdapterContainer)
         {
             MeterData.EventTypeDataTable eventTypeTable = new MeterData.EventTypeDataTable();
-            DataClassification eventClassification = default(DataClassification);
+            EventClassification eventClassification = default(EventClassification);
 
-            using (EventTypeTableAdapter eventTypeAdapter = new EventTypeTableAdapter())
-            {
-                eventTypeAdapter.Connection.ConnectionString = m_connectionString;
-                eventTypeAdapter.Fill(eventTypeTable);
+            foreach (EventClassification classification in Enum.GetValues(typeof(EventClassification)))
+                eventTypeTable.AddEventTypeRow(classification.ToString(), classification.ToString());
 
-                return eventTypeTable
-                    .Where(row => Enum.TryParse(row.Name, out eventClassification))
-                    .Select(row => Tuple.Create(eventClassification, row.ID))
-                    .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-            }
+            BulkLoader bulkLoader = new BulkLoader();
+
+            bulkLoader.Connection = dbAdapterContainer.Connection;
+
+            bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
+                                           "( " +
+                                           "    Name VARCHAR(200), " +
+                                           "    Description VARCHAR(MAX)" +
+                                           ")";
+
+            bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
+                                          "USING {1} AS Source " +
+                                          "ON Source.Name = Target.Name " +
+                                          "WHEN NOT MATCHED THEN " +
+                                          "    INSERT (Name, Description) " +
+                                          "    VALUES (Source.Name, Source.Description);";
+
+            bulkLoader.Load(eventTypeTable);
+
+            dbAdapterContainer.EventTypeAdapter.Fill(eventTypeTable);
+
+            return eventTypeTable
+                .Where(row => Enum.TryParse(row.Name, out eventClassification))
+                .Select(row => Tuple.Create(eventClassification, row.ID))
+                .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+        }
+
+        private EventKey CreateEventKey(MeterData.EventRow evt)
+        {
+            return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
         }
 
         private void OnStatusMessage(string message)
@@ -173,11 +315,13 @@ namespace FaultData.DataOperations
                 StatusMessage(this, new EventArgs<string>(message));
         }
 
-        private void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
-        }
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static object s_eventTypeLock = new object();
+        private static Dictionary<EventClassification, int> s_eventTypeLookup;
 
         #endregion
     }

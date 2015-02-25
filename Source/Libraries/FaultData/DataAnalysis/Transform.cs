@@ -54,6 +54,7 @@ namespace FaultData.DataAnalysis
         {
             DataGroup dataGroup = new DataGroup();
 
+            DataSeries rmsSeries = new DataSeries();
             DataSeries phaseSeries = new DataSeries();
             DataSeries peakSeries = new DataSeries();
             DataSeries errorSeries = new DataSeries();
@@ -61,6 +62,7 @@ namespace FaultData.DataAnalysis
             int samplesPerCycle;
             double[] yValues;
             double[] tValues;
+            double sum;
 
             DateTime cycleTime;
             SineWave sineFit;
@@ -69,6 +71,7 @@ namespace FaultData.DataAnalysis
                 return new CycleDataGroup(dataGroup);
 
             // Set series info to the source series info
+            rmsSeries.SeriesInfo = dataSeries.SeriesInfo;
             phaseSeries.SeriesInfo = dataSeries.SeriesInfo;
             peakSeries.SeriesInfo = dataSeries.SeriesInfo;
             errorSeries.SeriesInfo = dataSeries.SeriesInfo;
@@ -84,18 +87,26 @@ namespace FaultData.DataAnalysis
             {
                 // Use the time of the first data point in the cycle as the time of the cycle
                 cycleTime = dataSeries.DataPoints[i].Time;
+                sum = 0.0D;
 
                 // Copy values from the original data series into the y-value and t-value arrays
                 for (int j = 0; j < samplesPerCycle; j++)
                 {
                     yValues[j] = dataSeries.DataPoints[i + j].Value;
                     tValues[j] = (dataSeries.DataPoints[i + j].Time - cycleTime).TotalSeconds;
+                    sum += yValues[j] * yValues[j];
                 }
 
                 // Use a curve fitting algorithm to estimate the sine wave over this cycle
                 sineFit = WaveFit.SineFit(yValues, tValues, frequency);
 
                 // Add data points to each of the cycle data series
+                rmsSeries.DataPoints.Add(new DataPoint()
+                {
+                    Time = cycleTime,
+                    Value = Math.Sqrt(sum / samplesPerCycle)
+                });
+
                 phaseSeries.DataPoints.Add(new DataPoint()
                 {
                     Time = cycleTime,
@@ -120,41 +131,12 @@ namespace FaultData.DataAnalysis
             }
 
             // Add a series to the data group for each series of cycle data
-            dataGroup.Add(ToRMS(dataSeries, frequency));
+            dataGroup.Add(rmsSeries);
             dataGroup.Add(phaseSeries);
             dataGroup.Add(peakSeries);
             dataGroup.Add(errorSeries);
 
             return new CycleDataGroup(dataGroup);
-        }
-
-        public static DataSeries ToRMS(DataSeries dataSeries, double frequency)
-        {
-            DataSeries rms = new DataSeries();
-            int samplesPerCycle;
-            double sum;
-
-            if ((object)dataSeries == null)
-                return rms;
-
-            rms.SeriesInfo = dataSeries.SeriesInfo;
-            samplesPerCycle = CalculateSamplesPerCycle(dataSeries, frequency);
-
-            for (int i = 0; i <= dataSeries.DataPoints.Count - samplesPerCycle; i++)
-            {
-                sum = 0.0D;
-
-                for (int j = i; j < i + samplesPerCycle; j++)
-                    sum += dataSeries.DataPoints[j].Value * dataSeries.DataPoints[j].Value;
-
-                rms.DataPoints.Add(new DataPoint()
-                {
-                    Time = dataSeries.DataPoints[i].Time,
-                    Value = Math.Sqrt(sum / samplesPerCycle)
-                });
-            }
-
-            return rms;
         }
 
         public static List<double> ToValues(DataSeries series)

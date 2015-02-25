@@ -37,6 +37,7 @@ using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using GSF.Units;
+using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
 using Line = FaultData.Database.Line;
 
 namespace FaultData.DataWriters
@@ -56,7 +57,7 @@ namespace FaultData.DataWriters
             public Line Line;
 
             public MeterData.EventRow Event;
-            public FaultLocationData.CycleDataRow CycleData;
+            public MeterData.CycleDataRow CycleData;
             public List<FaultSegment> FaultSegments;
             public List<FaultLocationData.FaultCurveRow> FaultCurves;
         }
@@ -352,7 +353,7 @@ namespace FaultData.DataWriters
             return smallestVoltageIndex;
         }
 
-        private VICycleDataGroup ToCycleDataSet(FaultLocationData.CycleDataRow cycleData)
+        private VICycleDataGroup ToCycleDataSet(MeterData.CycleDataRow cycleData)
         {
             DataGroup dataGroup = new DataGroup();
             dataGroup.FromData(cycleData.Data);

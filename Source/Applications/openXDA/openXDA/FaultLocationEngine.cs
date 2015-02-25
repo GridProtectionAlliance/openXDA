@@ -72,15 +72,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Transactions;
 using FaultData.Database;
-using FaultData.Database.FaultLocationDataTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataOperations;
 using FaultData.DataReaders;
-using FaultData.DataResources;
 using FaultData.DataSets;
 using FaultData.DataWriters;
 using GSF;
@@ -127,9 +125,9 @@ namespace openXDA
 
         // Fields
         private SystemSettings m_systemSettings;
-        private Dictionary<string, DateTime> m_fileCreationTimes = new Dictionary<string, DateTime>();
         private FileProcessor m_fileProcessor;
-        private Logger m_currentLogger;
+
+        private Dictionary<string, DateTime> m_fileCreationTimes = new Dictionary<string, DateTime>();
 
         #endregion
 
@@ -180,9 +178,6 @@ namespace openXDA
             }
 
             m_systemSettings = new SystemSettings(settingsDictionary.JoinKeyValuePairs());
-
-            DataGroupsResource.PrefaultMultiplier = m_systemSettings.PrefaultMultiplier;
-            DataGroupsResource.RatedCurrentMultiplier = m_systemSettings.RatedCurrentMultiplier;
 
             // Attempt to authenticate to configured file shares
             foreach (FileShare fileShare in m_systemSettings.FileShareList)
@@ -241,6 +236,12 @@ namespace openXDA
         // Attempts to create the directory at the given path.
         private void TryCreateDirectory(string path)
         {
+            TryCreateDirectory(null, path);
+        }
+
+        // Attempts to create the directory at the given path.
+        private void TryCreateDirectory(Logger logger, string path)
+        {
             try
             {
                 // Make sure results directory exists
@@ -249,7 +250,7 @@ namespace openXDA
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
+                OnProcessException(logger, new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
             }
         }
 
@@ -319,35 +320,33 @@ namespace openXDA
         {
             string meterKey;
 
-            ConfigurationOperation configurationOperation = new ConfigurationOperation(m_systemSettings.DbConnectionString);
-            EventOperation eventOperation = new EventOperation(m_systemSettings.DbConnectionString);
-            FaultLocationOperation faultLocationOperation = new FaultLocationOperation(m_systemSettings.DbConnectionString);
-            HourlySummaryOperation hourlySummaryOperation = new HourlySummaryOperation(m_systemSettings.DbConnectionString);
-            HourlySummaryOperation dailySummaryOperation = new HourlySummaryOperation(m_systemSettings.DbConnectionString);
-            AlarmOperation alarmOperation = new AlarmOperation(m_systemSettings.DbConnectionString);
+            DbAdapterContainer dbAdapterContainer = null;
 
-            FaultValidator validator = new FaultValidator(m_systemSettings.DbConnectionString);
-            COMTRADEWriter comtradeWriter = new COMTRADEWriter(m_systemSettings.DbConnectionString);
-            XMLWriter xmlWriter = new XMLWriter(m_systemSettings.DbConnectionString);
-            EmailWriter emailWriter = new EmailWriter(m_systemSettings.DbConnectionString);
+            string logFilePath;
+            Logger logger = null;
+
+            string extension;
+            FileGroup fileGroup = null;
 
             IDataReader reader;
             List<MeterDataSet> meterDataSets;
-            string extension;
+            List<IDataOperation> dataOperations;
 
-            int fileGroupID;
-            int faultEventTypeID;
-            MeterData.EventDataTable events;
-            MeterData.EventTypeDataTable eventTypes;
-            FileGroup fileGroup = null;
+            ConnectionStringParser connectionStringParser;
 
             try
             {
+                dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString);
+                fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+
+                connectionStringParser = new ConnectionStringParser();
+                connectionStringParser.SerializeUnspecifiedProperties = true;
+
                 // Open a temp file to write log entries
-                string logFilePath = Path.GetTempFileName();
+                logFilePath = Path.GetTempFileName();
 
                 if (m_systemSettings.DebugLevel > 0)
-                    m_currentLogger = Logger.Open(logFilePath);
+                    logger = Logger.Open(logFilePath);
 
                 // Try to parse the name of the meter from the file path to determine whether this file needs to be parsed
                 if (!string.IsNullOrEmpty(m_systemSettings.FilePattern) && TryParseFilePath(filePath, out meterKey))
@@ -356,23 +355,15 @@ namespace openXDA
                     {
                         if (!meterInfo.Meters.Any(m => m.AssetKey == meterKey))
                         {
-                            OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
-
-                            using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                            using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
-                            {
-                                fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
-                                fileGroup.ProcessingEndTime = DateTime.UtcNow;
-                                fileInfoDataContext.SubmitChanges();
-                                transactionScope.Complete();
-                            }
-
+                            OnStatusMessage(logger, "Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
+                            fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                            dbAdapterContainer.FileInfoAdapter.SubmitChanges();
                             return;
                         }
                     }
                 }
 
-                OnStatusMessage("Found fault record \"{0}\".", filePath);
+                OnStatusMessage(logger, "Found fault record \"{0}\".", filePath);
 
                 // Determine whether the file is PQDIF, COMTRADE, or EMAX
                 extension = FilePath.GetExtension(filePath);
@@ -393,133 +384,45 @@ namespace openXDA
                 // Parse the file into a meter data set
                 meterDataSets = reader.Parse(filePath);
 
-                // Run fault location algorithms to determine fault distance
-                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
+                foreach (MeterDataSet meterDataSet in meterDataSets)
                 {
-                    fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
+                    meterDataSet.FilePath = filePath;
+                    meterDataSet.FileGroup = fileGroup;
 
-                    configurationOperation.ModifyConfiguration = false;
-                    configurationOperation.FilePathPattern = m_systemSettings.FilePattern;
-                    configurationOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
-                    configurationOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
+                    dataOperations = dbAdapterContainer.SystemInfoAdapter.DataOperations
+                        .Select(dataOperation => Assembly.LoadFrom(dataOperation.AssemblyName).GetType(dataOperation.TypeName))
+                        .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
+                        .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                        .Select(type => Activator.CreateInstance(type))
+                        .Cast<IDataOperation>()
+                        .ToList();
 
-                    eventOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
-                    eventOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
-
-                    faultLocationOperation.PrefaultMultiplier = m_systemSettings.PrefaultMultiplier;
-                    faultLocationOperation.RatedCurrentMultiplier = m_systemSettings.RatedCurrentMultiplier;
-                    faultLocationOperation.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-                    faultLocationOperation.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-                    faultLocationOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
-                    faultLocationOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
-
-                    hourlySummaryOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
-                    hourlySummaryOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
-
-                    dailySummaryOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
-                    dailySummaryOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
-
-                    alarmOperation.StatusMessage += (sender, args) => OnStatusMessage(args.Argument);
-                    alarmOperation.ProcessException += (sender, args) => OnProcessException(args.Argument);
-
-                    foreach (MeterDataSet meterDataSet in meterDataSets)
+                    foreach (IDataOperation dataOperation in dataOperations)
                     {
-                        meterDataSet.FilePath = filePath;
-                        meterDataSet.FileGroup = fileGroup;
-                        configurationOperation.Execute(meterDataSet);
-                        eventOperation.Execute(meterDataSet);
-                        faultLocationOperation.Execute(meterDataSet);
-
-                        hourlySummaryOperation.Execute(meterDataSet);
-                        dailySummaryOperation.Execute(meterDataSet);
-                        alarmOperation.Execute(meterDataSet);
+                        connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), dataOperation);
+                        dataOperation.Prepare(dbAdapterContainer);
                     }
 
-                    fileGroupID = fileGroup.ID;
+                    foreach (IDataOperation dataOperation in dataOperations)
+                        dataOperation.Execute(meterDataSet);
 
-                    transactionScope.Complete();
-                }
-
-                // Export fault results to results files
-                using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_systemSettings.DbConnectionString))
-                using (EventTableAdapter eventAdapter = new EventTableAdapter())
-                using (EventTypeTableAdapter eventTypeAdapter = new EventTypeTableAdapter())
-                using (FaultCurveTableAdapter faultAdapter = new FaultCurveTableAdapter())
-                {
-                    eventAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
-                    eventTypeAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
-                    faultAdapter.Connection.ConnectionString = m_systemSettings.DbConnectionString;
-
-                    validator.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-                    validator.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-
-                    comtradeWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-                    comtradeWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-                    comtradeWriter.LengthUnits = m_systemSettings.LengthUnits;
-
-                    xmlWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-                    xmlWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-
-                    emailWriter.SMTPServer = m_systemSettings.SMTPServer;
-                    emailWriter.FromAddress = m_systemSettings.FromAddress;
-                    emailWriter.PQDashboardURL = m_systemSettings.PQDashboardURL;
-                    emailWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-                    emailWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-                    emailWriter.LengthUnits = m_systemSettings.LengthUnits;
-
-                    events = eventAdapter.GetDataByFileGroup(fileGroupID);
-                    eventTypes = eventTypeAdapter.GetData();
-
-                    faultEventTypeID = eventTypes
-                        .Where(row => row.Name == "Fault")
-                        .Select(row => row.ID)
-                        .DefaultIfEmpty(0)
-                        .Single();
-
-                    foreach (MeterData.EventRow evt in events.Where(row => row.EventTypeID == faultEventTypeID))
+                    using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
                     {
-                        Meter meter = meterInfo.Meters.Single(m => m.ID == evt.MeterID);
-                        Line line = meterInfo.Lines.Single(l => l.ID == evt.LineID);
+                        foreach (IDataOperation dataOperation in dataOperations)
+                            dataOperation.Load(dbAdapterContainer);
 
-                        validator.Validate(evt.ID);
-
-                        if (validator.IsFaultDistanceValid)
-                        {
-                            string resultsDir;
-                            string comtradeFilePath;
-                            string xmlFilePath;
-
-                            OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, validator.FaultDistance, m_systemSettings.LengthUnits);
-
-                            resultsDir = Path.Combine(m_systemSettings.ResultsPath, meter.AssetKey);
-                            TryCreateDirectory(resultsDir);
-
-                            comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(filePath) + ".dat");
-                            comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
-                            OnStatusMessage("Results written to {0}", comtradeFilePath);
-
-                            xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(filePath) + ".xml");
-                            xmlWriter.WriteResults(evt.ID, xmlFilePath);
-                            OnStatusMessage("Summary of results written to {0}", xmlFilePath);
-
-                            emailWriter.WriteResults(evt.ID);
-                            OnStatusMessage("Summary of results sent by email");
-                        }
-                        else
-                        {
-                            OnStatusMessage("Fault found on line {0}, but fault data is suspect.", line.Name);
-                            OnStatusMessage("Fault distance: {0} {1}", validator.FaultDistance, m_systemSettings.LengthUnits);
-                            OnStatusMessage("   Line length: {0} {1}", line.Length, m_systemSettings.LengthUnits);
-                        }
+                        transactionScope.Complete();
                     }
+
+                    // Export fault results to results files
+                    WriteResults(dbAdapterContainer, meterDataSet, logger);
                 }
 
-                if ((object)m_currentLogger != null)
+                if ((object)logger != null)
                 {
                     // Close the log file so we can
                     // move it to the debug directory
-                    m_currentLogger.Close();
+                    logger.Close();
 
                     // Move the file to the debug directory
                     string debugDir = Path.Combine(m_systemSettings.DebugPath, meterDataSets.First().Meter.AssetKey);
@@ -529,10 +432,12 @@ namespace openXDA
                     File.Delete(logFilePath);
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 try
                 {
+                    OnProcessException(logger, ex);
+
                     using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
                     using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
                     {
@@ -550,34 +455,98 @@ namespace openXDA
                     // Ignore errors here as they are most likely
                     // related to the error we originally caught
                 }
-
-                throw;
             }
             finally
             {
+                if ((object)dbAdapterContainer != null)
+                    dbAdapterContainer.Dispose();
+
                 // Clean up the current log file
-                if ((object)m_currentLogger != null)
+                if ((object)logger != null)
                 {
-                    string logFile = m_currentLogger.LogFile;
-
-                    m_currentLogger.Dispose();
-                    m_currentLogger = null;
-
                     try
                     {
-                        if (File.Exists(logFile))
-                            File.Delete(logFile);
+                        logger.Close();
+
+                        if (File.Exists(logger.LogFile))
+                            File.Delete(logger.LogFile);
                     }
                     catch (Exception ex)
                     {
-                        // The logger has already been disposed so this
+                        // The logger has already been closed so this
                         // error will go only to the status log and console
                         OnProcessException(ex);
                     }
+
+                    logger.Dispose();
                 }
             }
 
             OnStatusMessage("");
+        }
+
+        private void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet, Logger logger)
+        {
+            COMTRADEWriter comtradeWriter = new COMTRADEWriter(m_systemSettings.DbConnectionString);
+            XMLWriter xmlWriter = new XMLWriter(m_systemSettings.DbConnectionString);
+            EmailWriter emailWriter = new EmailWriter(m_systemSettings.DbConnectionString);
+
+            int faultEventTypeID;
+            MeterData.EventDataTable events;
+            MeterData.EventTypeDataTable eventTypes;
+
+            comtradeWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+            comtradeWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+            comtradeWriter.LengthUnits = m_systemSettings.LengthUnits;
+
+            xmlWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+            xmlWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+
+            emailWriter.SMTPServer = m_systemSettings.SMTPServer;
+            emailWriter.FromAddress = m_systemSettings.FromAddress;
+            emailWriter.PQDashboardURL = m_systemSettings.PQDashboardURL;
+            emailWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
+            emailWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
+            emailWriter.LengthUnits = m_systemSettings.LengthUnits;
+
+            events = dbAdapterContainer.EventAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);
+            eventTypes = dbAdapterContainer.EventTypeAdapter.GetData();
+
+            faultEventTypeID = eventTypes
+                .Where(row => row.Name == "Fault")
+                .Select(row => row.ID)
+                .DefaultIfEmpty(0)
+                .Single();
+
+            foreach (MeterData.EventRow evt in events.Where(row => row.EventTypeID == faultEventTypeID))
+            {
+                Meter meter = dbAdapterContainer.MeterInfoAdapter.Meters.Single(m => m.ID == evt.MeterID);
+                Line line = dbAdapterContainer.MeterInfoAdapter.Lines.Single(l => l.ID == evt.LineID);
+                FaultLocationData.FaultSummaryDataTable faultSummaries = dbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID);
+
+                string resultsDir;
+                string comtradeFilePath;
+                string xmlFilePath;
+
+                if (faultSummaries.Count > 0)
+                {
+                    OnStatusMessage(logger, "Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().LargestCurrentDistance, m_systemSettings.LengthUnits);
+
+                    resultsDir = Path.Combine(m_systemSettings.ResultsPath, meter.AssetKey);
+                    TryCreateDirectory(resultsDir);
+
+                    comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".dat");
+                    comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
+                    OnStatusMessage(logger, "Results written to {0}", comtradeFilePath);
+
+                    xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".xml");
+                    xmlWriter.WriteResults(evt.ID, xmlFilePath);
+                    OnStatusMessage(logger, "Summary of results written to {0}", xmlFilePath);
+
+                    emailWriter.WriteResults(evt.ID);
+                    OnStatusMessage(logger, "Summary of results sent by email");
+                }
+            }
         }
 
         // Attempts to parse the meter's asset key from the file path
@@ -682,10 +651,17 @@ namespace openXDA
         [StringFormatMethod("format")]
         private void OnStatusMessage(string format, params object[] args)
         {
+            OnStatusMessage(null, format, args);
+        }
+
+        // Displays status message to the console - proxy method for service implementation
+        [StringFormatMethod("format")]
+        private void OnStatusMessage(Logger logger, string format, params object[] args)
+        {
             string message = string.Format(format, args);
 
-            if ((object)m_currentLogger != null)
-                m_currentLogger.WriteLine(message);
+            if ((object)logger != null)
+                logger.WriteLine(message);
 
             if ((object)StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(message));
@@ -694,10 +670,16 @@ namespace openXDA
         // Displays exception message to the console - proxy method for service implmentation
         private void OnProcessException(Exception ex)
         {
+            OnProcessException(null, ex);
+        }
+
+        // Displays exception message to the console - proxy method for service implmentation
+        private void OnProcessException(Logger logger, Exception ex)
+        {
             StringBuilder stackTrace;
             Exception inner;
 
-            if ((object)m_currentLogger != null)
+            if ((object)logger != null)
             {
                 stackTrace = new StringBuilder();
                 inner = ex;
@@ -708,10 +690,10 @@ namespace openXDA
                     inner = inner.InnerException;
                 }
 
-                m_currentLogger.WriteLine(string.Empty);
-                m_currentLogger.WriteLine(string.Format("ERROR: {0}", ex.Message));
-                m_currentLogger.WriteLine(stackTrace.ToString());
-                m_currentLogger.WriteLine(string.Empty);
+                logger.WriteLine(string.Empty);
+                logger.WriteLine(string.Format("ERROR: {0}", ex.Message));
+                logger.WriteLine(stackTrace.ToString());
+                logger.WriteLine(string.Empty);
             }
 
             if ((object)ProcessException != null)

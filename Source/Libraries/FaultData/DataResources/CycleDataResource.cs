@@ -37,11 +37,29 @@ namespace FaultData.DataResources
         public const double Frequency = 60.0D;
 
         // Fields
+        private List<DataGroup> m_dataGroups;
+        private List<VIDataGroup> m_viDataGroups;
         private List<VICycleDataGroup> m_viCycleDataGroups;
 
         #endregion
 
         #region [ Properties ]
+
+        public List<DataGroup> DataGroups
+        {
+            get
+            {
+                return m_dataGroups;
+            }
+        }
+
+        public List<VIDataGroup> VIDataGroups
+        {
+            get
+            {
+                return m_viDataGroups;
+            }
+        }
 
         public List<VICycleDataGroup> VICycleDataGroups
         {
@@ -59,10 +77,15 @@ namespace FaultData.DataResources
         {
             DataGroupsResource dataGroupsResource = dataSet.GetResource<DataGroupsResource>();
 
-            m_viCycleDataGroups = dataGroupsResource.DataGroups
-                .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
-                .Where(dataGroup => dataGroup.Classification != DataClassification.Unknown)
+            m_dataGroups = dataGroupsResource.DataGroups
+                .Where(dataGroup => dataGroup.Classification == DataClassification.Event)
+                .ToList();
+
+            m_viDataGroups = m_dataGroups
                 .Select(dataGroup => new VIDataGroup(dataGroup))
+                .ToList();
+
+            m_viCycleDataGroups = m_viDataGroups
                 .Select(viDataGroup => Transform.ToVICycleDataSet(viDataGroup, Frequency))
                 .ToList();
         }

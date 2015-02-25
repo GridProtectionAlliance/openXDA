@@ -31,7 +31,7 @@ namespace FaultData.Database
         #region [ Members ]
 
         // Fields
-        private string m_connectionString;
+        private SqlConnection m_connection;
         private string m_createTableFormat;
         private string m_mergeTableFormat;
 
@@ -39,15 +39,15 @@ namespace FaultData.Database
 
         #region [ Properties ]
 
-        public string ConnectionString
+        public SqlConnection Connection
         {
             get
             {
-                return m_connectionString;
+                return m_connection;
             }
             set
             {
-                m_connectionString = value;
+                m_connection = value;
             }
         }
 
@@ -84,12 +84,10 @@ namespace FaultData.Database
             string tableName;
             string tempTableName;
 
-            using (SqlConnection connection = new SqlConnection(m_connectionString))
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(connection))
-            using (SqlCommand command = connection.CreateCommand())
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connection))
+            using (SqlCommand command = m_connection.CreateCommand())
             {
-                // Open the connection and set the timeout to infinite
-                connection.Open();
+                // Set the timeout to infinite
                 bulkCopy.BulkCopyTimeout = 0;
 
                 // Get the name of the table to load data into

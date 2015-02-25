@@ -28,7 +28,6 @@ using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.DataQualityTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
@@ -44,89 +43,96 @@ namespace FaultData.DataOperations
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        private string m_connectionString;
-        private BulkLoader m_hourlySummaryLoader;
-        private BulkLoader m_channelNormalLoader;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public HourlySummaryOperation(string connectionString)
-        {
-            m_connectionString = connectionString;
-            m_hourlySummaryLoader = new BulkLoader();
-            m_channelNormalLoader = new BulkLoader();
-
-            m_hourlySummaryLoader.ConnectionString = connectionString;
-            m_channelNormalLoader.ConnectionString = connectionString;
-
-            m_hourlySummaryLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                                      "( " +
-                                                      "    ID INT, " +
-                                                      "    ChannelID INT, " +
-                                                      "    Time DATETIME, " +
-                                                      "    Minimum FLOAT, " +
-                                                      "    Maximum FLOAT, " +
-                                                      "    Average FLOAT, " +
-                                                      "    ValidCount INT, " +
-                                                      "    InvalidCount INT " +
-                                                      ")";
-
-            m_hourlySummaryLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
-                                                     "USING {1} AS Source " +
-                                                     "ON Source.ChannelID = Target.ChannelID AND Source.Time = Target.Time " +
-                                                     "WHEN MATCHED THEN " +
-                                                     "    UPDATE SET " +
-                                                     "        Maximum = CASE WHEN Target.ValidCount = 0 OR Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
-                                                     "        Minimum = CASE WHEN Target.ValidCount = 0 OR Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
-                                                     "        Average = CASE WHEN Target.ValidCount = 0 THEN Source.Average ELSE Target.Average * (CAST(Target.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) + Source.Average * (CAST(Source.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) END, " +
-                                                     "        ValidCount = Source.ValidCount + Target.ValidCount, " +
-                                                     "        InvalidCount = Source.InvalidCount + Target.InvalidCount " +
-                                                     "WHEN NOT MATCHED THEN " +
-                                                     "    INSERT (ChannelID, Time, Maximum, Minimum, Average, ValidCount, InvalidCount) " +
-                                                     "    VALUES (Source.ChannelID, Source.Time, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount);";
-
-            m_channelNormalLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                                      "( " +
-                                                      "	   ID INT, " +
-                                                      "    ChannelID INT, " +
-                                                      "	   Average FLOAT, " +
-                                                      "    MeanSquare FLOAT, " +
-                                                      "    StandardDeviation FLOAT, " +
-                                                      "    Count INT " +
-                                                      ") ";
-
-            m_channelNormalLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
-                                                     "USING {1} AS Source " +
-                                                     "ON Target.ChannelID = Source.ChannelID " +
-                                                     "WHEN MATCHED THEN " +
-                                                     "    UPDATE SET " +
-                                                     "        Average = Target.Average * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.Average * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)), " +
-                                                     "        MeanSquare = Target.MeanSquare * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.MeanSquare * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)), " +
-                                                     "        StandardDeviation = Target.MeanSquare * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.MeanSquare * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)) - POWER(Target.Average * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.Average * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)), 2), " +
-                                                     "        Count = Target.Count + Source.Count " +
-                                                     "WHEN NOT MATCHED THEN " +
-                                                     "    INSERT (ChannelID, Average, MeanSquare, StandardDeviation, Count) " +
-                                                     "    VALUES (Source.ChannelID, Source.Average, Source.MeanSquare, SQRT(Source.MeanSquare - Source.Average * Source.Average), Source.Count); ";
-        }
+        private DbAdapterContainer m_dbAdapterContainer;
+        private DataQuality.DataQualityRangeLimitDataTable m_rangeLimitTable;
+        private MeterData.HourlyTrendingSummaryDataTable m_hourlySummaryTable;
+        private MeterData.ChannelNormalDataTable m_channelNormalTable;
 
         #endregion
 
         #region [ Methods ]
 
-        public void Execute(MeterDataSet meterDataSet)
+        public void Prepare(DbAdapterContainer dbAdapterContainer)
         {
-            LoadDataQualityRangeLimits(meterDataSet);
-            LoadHourlySummaries(meterDataSet);
-            LoadChannelNormals(meterDataSet);
+            m_dbAdapterContainer = dbAdapterContainer;
+            m_rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
+            m_hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
+            m_channelNormalTable = new MeterData.ChannelNormalDataTable();
         }
 
-        private void LoadDataQualityRangeLimits(MeterDataSet meterDataSet)
+        public void Execute(MeterDataSet meterDataSet)
         {
-            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            DataQuality.DefaultDataQualityRangeLimitDataTable defaultRangeLimitTable = new DataQuality.DefaultDataQualityRangeLimitDataTable();
-            DataQuality.DataQualityRangeLimitDataTable rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
+            ProcessDataQualityRangeLimits(meterDataSet);
+            ProcessHourlySummaries(meterDataSet);
+            ProcessChannelNormals(meterDataSet);
+        }
+
+        public void Load(DbAdapterContainer dbAdapterContainer)
+        {
+            BulkLoader hourlySummaryLoader = new BulkLoader();
+            BulkLoader channelNormalLoader = new BulkLoader();
+
+            hourlySummaryLoader.Connection = dbAdapterContainer.Connection;
+            channelNormalLoader.Connection = dbAdapterContainer.Connection;
+
+            hourlySummaryLoader.CreateTableFormat = "CREATE TABLE {0} " +
+                                                    "( " +
+                                                    "    ID INT, " +
+                                                    "    ChannelID INT, " +
+                                                    "    Time DATETIME, " +
+                                                    "    Minimum FLOAT, " +
+                                                    "    Maximum FLOAT, " +
+                                                    "    Average FLOAT, " +
+                                                    "    ValidCount INT, " +
+                                                    "    InvalidCount INT " +
+                                                    ")";
+
+            hourlySummaryLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
+                                                   "USING {1} AS Source " +
+                                                   "ON Source.ChannelID = Target.ChannelID AND Source.Time = Target.Time " +
+                                                   "WHEN MATCHED THEN " +
+                                                   "    UPDATE SET " +
+                                                   "        Maximum = CASE WHEN Target.ValidCount = 0 OR Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
+                                                   "        Minimum = CASE WHEN Target.ValidCount = 0 OR Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
+                                                   "        Average = CASE WHEN Target.ValidCount = 0 THEN Source.Average ELSE Target.Average * (CAST(Target.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) + Source.Average * (CAST(Source.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) END, " +
+                                                   "        ValidCount = Source.ValidCount + Target.ValidCount, " +
+                                                   "        InvalidCount = Source.InvalidCount + Target.InvalidCount " +
+                                                   "WHEN NOT MATCHED THEN " +
+                                                   "    INSERT (ChannelID, Time, Maximum, Minimum, Average, ValidCount, InvalidCount) " +
+                                                   "    VALUES (Source.ChannelID, Source.Time, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount);";
+
+            channelNormalLoader.CreateTableFormat = "CREATE TABLE {0} " +
+                                                    "( " +
+                                                    "	   ID INT, " +
+                                                    "    ChannelID INT, " +
+                                                    "	   Average FLOAT, " +
+                                                    "    MeanSquare FLOAT, " +
+                                                    "    StandardDeviation FLOAT, " +
+                                                    "    Count INT " +
+                                                    ") ";
+
+            channelNormalLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
+                                                   "USING {1} AS Source " +
+                                                   "ON Target.ChannelID = Source.ChannelID " +
+                                                   "WHEN MATCHED THEN " +
+                                                   "    UPDATE SET " +
+                                                   "        Average = Target.Average * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.Average * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)), " +
+                                                   "        MeanSquare = Target.MeanSquare * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.MeanSquare * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)), " +
+                                                   "        StandardDeviation = Target.MeanSquare * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.MeanSquare * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)) - POWER(Target.Average * (CAST(Target.Count AS FLOAT) / (Target.Count + Source.Count)) + Source.Average * (CAST(Source.Count AS FLOAT) / (Target.Count + Source.Count)), 2), " +
+                                                   "        Count = Target.Count + Source.Count " +
+                                                   "WHEN NOT MATCHED THEN " +
+                                                   "    INSERT (ChannelID, Average, MeanSquare, StandardDeviation, Count) " +
+                                                   "    VALUES (Source.ChannelID, Source.Average, Source.MeanSquare, SQRT(Source.MeanSquare - Source.Average * Source.Average), Source.Count); ";
+
+            hourlySummaryLoader.Load(m_hourlySummaryTable);
+            channelNormalLoader.Load(m_channelNormalTable);
+        }
+
+        private void ProcessDataQualityRangeLimits(MeterDataSet meterDataSet)
+        {
+            DataQuality.DataQualityRangeLimitDataTable rangeLimitTable;
+
+            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries;
             Channel channel;
 
             TrendingDataSummaryResource.TrendingDataSummary previousSummary = null;
@@ -137,85 +143,65 @@ namespace FaultData.DataOperations
             bool minValid;
             bool maxValid;
 
-            using (DefaultDataQualityRangeLimitTableAdapter defaultRangeLimitAdapter = new DefaultDataQualityRangeLimitTableAdapter())
-            using (DataQualityRangeLimitTableAdapter rangeLimitAdapter = new DataQualityRangeLimitTableAdapter())
+            trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
+            rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
+
+            foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> keyValuePair in trendingDataSummaries)
             {
-                defaultRangeLimitAdapter.Connection.ConnectionString = m_connectionString;
-                rangeLimitAdapter.Connection.ConnectionString = m_connectionString;
+                channel = keyValuePair.Key;
+                perUnitValue = channel.PerUnitValue ?? 1.0D;
+                InitializeRangeLimitTable(rangeLimitTable, channel);
 
-                foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> keyValuePair in trendingDataSummaries)
+                foreach (TrendingDataSummaryResource.TrendingDataSummary trendingDataSummary in keyValuePair.Value)
                 {
-                    channel = keyValuePair.Key;
-                    perUnitValue = channel.PerUnitValue ?? 1.0D;
-                    rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+                    if ((object)previousSummary != null && trendingDataSummary.Minimum == previousSummary.Minimum && trendingDataSummary.Average == previousSummary.Average && trendingDataSummary.Maximum == previousSummary.Maximum)
+                        trendingDataSummary.Latched = true;
 
-                    if (rangeLimitTable.Count == 0)
+                    if (trendingDataSummary.Average < trendingDataSummary.Minimum || trendingDataSummary.Average > trendingDataSummary.Maximum)
+                        trendingDataSummary.NonCongruent = true;
+
+                    foreach (DataQuality.DataQualityRangeLimitRow row in rangeLimitTable.Where(row => row.Enabled != 0))
                     {
-                        defaultRangeLimitAdapter.FillBy(defaultRangeLimitTable, channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
+                        highLimit = 0.0D;
+                        lowLimit = 0.0D;
+                        maxValid = true;
+                        minValid = true;
 
-                        foreach (DataQuality.DefaultDataQualityRangeLimitRow row in defaultRangeLimitTable)
-                            rangeLimitTable.AddDataQualityRangeLimitRow(channel.ID, row.High, row.Low, row.RangeInclusive, row.PerUnit, 1);
-
-                        using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connectionString))
+                        if (!row.IsHighNull())
                         {
-                            bulkCopy.BulkCopyTimeout = 0;
-                            bulkCopy.DestinationTableName = rangeLimitTable.TableName;
-                            bulkCopy.WriteToServer(rangeLimitTable);
+                            highLimit = Convert.ToBoolean(row.PerUnit) ? row.High * perUnitValue : row.High;
+                            maxValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Maximum < highLimit);
+                        }
+
+                        if (!row.IsLowNull())
+                        {
+                            lowLimit = Convert.ToBoolean(row.PerUnit) ? row.Low * perUnitValue : row.Low;
+                            minValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Minimum > lowLimit);
+                        }
+
+                        if (!minValid || !maxValid)
+                        {
+                            trendingDataSummary.Unreasonable = true;
+                            trendingDataSummary.HighLimit = highLimit;
+                            trendingDataSummary.LowLimit = lowLimit;
+
+                            if (!maxValid)
+                                trendingDataSummary.UnreasonableValue = trendingDataSummary.Maximum;
+                            else
+                                trendingDataSummary.UnreasonableValue = trendingDataSummary.Minimum;
+
+                            break;
                         }
                     }
 
-                    foreach (TrendingDataSummaryResource.TrendingDataSummary trendingDataSummary in keyValuePair.Value)
-                    {
-                        if ((object)previousSummary != null && trendingDataSummary.Minimum == previousSummary.Minimum && trendingDataSummary.Average == previousSummary.Average && trendingDataSummary.Maximum == previousSummary.Maximum)
-                            trendingDataSummary.Latched = true;
-
-                        if (trendingDataSummary.Average < trendingDataSummary.Minimum || trendingDataSummary.Average > trendingDataSummary.Maximum)
-                            trendingDataSummary.NonCongruent = true;
-
-                        foreach (DataQuality.DataQualityRangeLimitRow row in rangeLimitTable.Where(row => row.Enabled != 0))
-                        {
-                            highLimit = 0.0D;
-                            lowLimit = 0.0D;
-                            maxValid = true;
-                            minValid = true;
-
-                            if (!row.IsHighNull())
-                            {
-                                highLimit = Convert.ToBoolean(row.PerUnit) ? row.High * perUnitValue : row.High;
-                                maxValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Maximum < highLimit);
-                            }
-
-                            if (!row.IsLowNull())
-                            {
-                                lowLimit = Convert.ToBoolean(row.PerUnit) ? row.Low * perUnitValue : row.Low;
-                                minValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Minimum > lowLimit);
-                            }
-
-                            if (!minValid || !maxValid)
-                            {
-                                trendingDataSummary.Unreasonable = true;
-                                trendingDataSummary.HighLimit = highLimit;
-                                trendingDataSummary.LowLimit = lowLimit;
-
-                                if (!maxValid)
-                                    trendingDataSummary.UnreasonableValue = trendingDataSummary.Maximum;
-                                else
-                                    trendingDataSummary.UnreasonableValue = trendingDataSummary.Minimum;
-
-                                break;
-                            }
-                        }
-
-                        previousSummary = trendingDataSummary;
-                    }
+                    previousSummary = trendingDataSummary;
                 }
             }
         }
 
-        private void LoadHourlySummaries(MeterDataSet meterDataSet)
+        private void ProcessHourlySummaries(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
             MeterData.HourlyTrendingSummaryRow row;
 
             List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries;
@@ -226,7 +212,7 @@ namespace FaultData.DataOperations
                 {
                     validSummaries = hourlySummary.Where(summary => summary.IsValid).ToList();
 
-                    row = hourlySummaryTable.NewHourlyTrendingSummaryRow();
+                    row = m_hourlySummaryTable.NewHourlyTrendingSummaryRow();
 
                     row.BeginEdit();
                     row.ChannelID = channelSummaries.Key.ID;
@@ -238,59 +224,100 @@ namespace FaultData.DataOperations
                     row.InvalidCount = hourlySummary.Count() - validSummaries.Count;
                     row.EndEdit();
 
-                    hourlySummaryTable.AddHourlyTrendingSummaryRow(row);
+                    m_hourlySummaryTable.AddHourlyTrendingSummaryRow(row);
                 }
             }
-
-            // Bulk insert new rows
-            m_hourlySummaryLoader.Load(hourlySummaryTable);
         }
 
-        private void LoadChannelNormals(MeterDataSet meterDataSet)
+        private void ProcessChannelNormals(MeterDataSet meterDataSet)
         {
-            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
-            MeterData.ChannelNormalDataTable channelNormalTable = new MeterData.ChannelNormalDataTable();
+            Dictionary<Channel, List<DataGroup>> trendingGroups;
+            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable;
 
             Channel channel;
             int channelID;
             double average;
             double meanSquare;
 
-            using (HourlyTrendingSummaryTableAdapter hourlySummaryAdapter = new HourlyTrendingSummaryTableAdapter())
+            trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+            hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
+
+            m_dbAdapterContainer.HourlyTrendingSummaryAdapter.ClearBeforeFill = false;
+
+            foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
             {
-                hourlySummaryAdapter.Connection.ConnectionString = m_connectionString;
-                hourlySummaryAdapter.ClearBeforeFill = false;
+                channel = channelGroups.Key;
+                channelID = channel.ID;
+                hourlySummaryTable.Clear();
 
-                channelNormalTable.Clear();
+                foreach (DataGroup dataGroup in channelGroups.Value)
+                    m_dbAdapterContainer.HourlyTrendingSummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime.AddHours(-1.0D), dataGroup.EndTime);
 
-                foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
+                for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
                 {
-                    channel = channelGroups.Key;
-                    channelID = channel.ID;
-                    hourlySummaryTable.Clear();
-
-                    foreach (DataGroup dataGroup in channelGroups.Value)
-                        hourlySummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime.AddHours(-1.0D), dataGroup.EndTime);
-
-                    for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
-                    {
-                        if (hourlySummaryTable[i].ValidCount + hourlySummaryTable[i].InvalidCount < channel.SamplesPerHour)
-                            hourlySummaryTable.Rows.RemoveAt(i);
-                    }
-
-                    RemoveDuplicateRows(hourlySummaryTable);
-
-                    if (hourlySummaryTable.Count > 0)
-                    {
-                        average = hourlySummaryTable.Average(row => row.Average);
-                        meanSquare = hourlySummaryTable.Average(row => row.Average * row.Average);
-
-                        channelNormalTable.AddChannelNormalRow(channelID, average, meanSquare, 0.0D, hourlySummaryTable.Count);
-                    }
+                    if (hourlySummaryTable[i].ValidCount + hourlySummaryTable[i].InvalidCount < channel.SamplesPerHour)
+                        hourlySummaryTable.Rows.RemoveAt(i);
                 }
 
-                m_channelNormalLoader.Load(channelNormalTable);
+                RemoveDuplicateRows(hourlySummaryTable);
+
+                if (hourlySummaryTable.Count > 0)
+                {
+                    average = hourlySummaryTable.Average(row => row.Average);
+                    meanSquare = hourlySummaryTable.Average(row => row.Average * row.Average);
+
+                    m_channelNormalTable.AddChannelNormalRow(channelID, average, meanSquare, 0.0D, hourlySummaryTable.Count);
+                }
+            }
+        }
+
+        private void InitializeRangeLimitTable(DataQuality.DataQualityRangeLimitDataTable rangeLimitTable, Channel channel)
+        {
+            DataQualityRangeLimitTableAdapter rangeLimitAdapter;
+            DefaultDataQualityRangeLimitTableAdapter defaultRangeLimitAdapter;
+            DataQuality.DefaultDataQualityRangeLimitDataTable defaultRangeLimitTable;
+
+            // Clear existing rows from the range limit table
+            rangeLimitTable.Clear();
+
+            // Fill the range limit table with range limits for the given channel
+            rangeLimitAdapter = m_dbAdapterContainer.DataQualityRangeLimitAdapter;
+            rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+
+            // If limits exist for the given channel,
+            // range limit table has been successfully initialized
+            if (rangeLimitTable.Count != 0)
+                return;
+
+            // Get the default range limits for the measurement type and characteristic of this channel
+            defaultRangeLimitAdapter = m_dbAdapterContainer.DefaultDataQualityRangeLimitAdapter;
+            defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
+
+            // If there are no default limits for the channel,
+            // then the range limit table has been successfully initialized
+            if (defaultRangeLimitTable.Count == 0)
+                return;
+
+            lock (RangeLimitLock)
+            {
+                // Fill the range limit table one more time inside the lock to
+                // ensure that no other threads have written limits for this channel
+                rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+
+                // If there are still no limits defined for this channel,
+                // update the table to include this channel's default limits
+                if (rangeLimitTable.Count == 0)
+                {
+                    foreach (DataQuality.DefaultDataQualityRangeLimitRow row in defaultRangeLimitTable)
+                        rangeLimitTable.AddDataQualityRangeLimitRow(channel.ID, row.High, row.Low, row.RangeInclusive, row.PerUnit, 1);
+
+                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
+                    {
+                        bulkCopy.BulkCopyTimeout = 0;
+                        bulkCopy.DestinationTableName = m_rangeLimitTable.TableName;
+                        bulkCopy.WriteToServer(rangeLimitTable);
+                    }
+                }
             }
         }
 
@@ -310,17 +337,12 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
-        }
+        #endregion
 
-        private void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
-        }
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly object RangeLimitLock = new object();
 
         #endregion
     }

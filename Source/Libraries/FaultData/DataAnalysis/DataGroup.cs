@@ -33,132 +33,13 @@ namespace FaultData.DataAnalysis
     public enum DataClassification
     {
         Trend,
-        Fault,
-        Interruption,
-        Sag,
-        Swell,
-        Transient,
-        Other,
+        Event,
         Unknown
     }
 
     public class DataGroup
     {
         #region [ Members ]
-
-        // Nested Classes
-        private class EventClassificationHelper
-        {
-            #region [ Members ]
-
-            // Fields
-            private List<DataSeries> m_dataSeries;
-            private double m_prefaultMultiplier;
-            private double m_ratedCurrentMultiplier;
-
-            private Dictionary<string, DataSeries> m_channelLookup;
-            private Dictionary<string, DataSeries> m_rmsLookup;
-            private double? m_nominalVoltage;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            public EventClassificationHelper(List<DataSeries> dataSeries, double prefaultMultiplier, double ratedCurrentMultiplier)
-            {
-                m_dataSeries = dataSeries;
-                m_prefaultMultiplier = prefaultMultiplier;
-                m_ratedCurrentMultiplier = ratedCurrentMultiplier;
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            public double PrefaultMultiplier
-            {
-                get
-                {
-                    return m_prefaultMultiplier;
-                }
-            }
-
-            public double RatedCurrentMultiplier
-            {
-                get
-                {
-                    return m_ratedCurrentMultiplier;
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            public double GetNominalVoltage()
-            {
-                if (m_nominalVoltage.HasValue)
-                    return m_nominalVoltage.Value;
-
-                m_nominalVoltage = m_dataSeries
-                    .Select(dataSeries => dataSeries.SeriesInfo.Channel.Line.VoltageKV)
-                    .First();
-
-                return m_nominalVoltage.Value;
-            }
-
-            public DataSeries GetDataSeries(string typeID)
-            {
-                DataSeries channelData;
-
-                if ((object)m_channelLookup == null)
-                {
-                    try
-                    {
-                        m_channelLookup = m_dataSeries.Where(IsInstantaneous)
-                            .ToDictionary(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name + " " + dataSeries.SeriesInfo.Channel.Phase.Name);
-                    }
-                    catch (Exception)
-                    {
-                        // This could fail if there are two identical channels in the group -
-                        // the ambiguity cannot be reasonably handled automatically,
-                        // so we ignore the anomaly and assume this is not relevant event data
-                        m_channelLookup = new Dictionary<string, DataSeries>();
-                    }
-                }
-
-                return m_channelLookup.TryGetValue(typeID, out channelData) ? channelData : null;
-            }
-
-            public DataSeries GetRMS(string typeID)
-            {
-                DataSeries dataSeries;
-                DataSeries rms;
-
-                if ((object)m_rmsLookup == null)
-                    m_rmsLookup = new Dictionary<string, DataSeries>();
-                else if (m_rmsLookup.TryGetValue(typeID, out rms))
-                    return rms;
-
-                dataSeries = GetDataSeries(typeID);
-
-                if ((object)dataSeries == null)
-                    return null;
-
-                return Transform.ToRMS(dataSeries, 60.0D); // TODO: Nominal frequency is hardcoded
-            }
-
-            private bool IsInstantaneous(DataSeries dataSeries)
-            {
-                string characteristicName = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
-                string seriesTypeName = dataSeries.SeriesInfo.SeriesType.Name;
-
-                return (characteristicName == "Instantaneous") &&
-                       (seriesTypeName == "Values" || seriesTypeName == "Instantaneous");
-            }
-
-            #endregion
-        }
 
         // Constants
         
@@ -186,7 +67,7 @@ namespace FaultData.DataAnalysis
         public DataGroup()
         {
             m_dataSeries = new List<DataSeries>();
-            m_classification = DataClassification.Other;
+            m_classification = DataClassification.Unknown;
         }
 
         /// <summary>
@@ -266,6 +147,9 @@ namespace FaultData.DataAnalysis
         {
             get
             {
+                if (m_classification == DataClassification.Unknown)
+                    Classify();
+
                 return m_classification;
             }
         }
@@ -346,181 +230,13 @@ namespace FaultData.DataAnalysis
         /// <returns>True if the channel existed in the group and was removed; false otherwise.</returns>
         public bool Remove(DataSeries dataSeries)
         {
-            return m_dataSeries.Remove(dataSeries);
-        }
-
-        /// <summary>
-        /// Classifies the data group and returns the classification.
-        /// </summary>
-        /// <returns>The classification of the data group determined by the data in the group.</returns>
-        public DataClassification Classify()
-        {
-            return Classify(4.0D, 1.5D);
-        }
-
-        /// <summary>
-        /// Classifies the data group and returns the classification.
-        /// </summary>
-        /// <param name="prefaultMultiplier">The factor by which the RMS current needs to increase in order to classify the event as a fault.</param>
-        /// <param name="ratedCurrentMultiplier">The factor by which the rated current is multiplied to determine how large the current needs to be to be considered a fault.</param>
-        /// <returns>The classification of the data group determined by the data in the group.</returns>
-        public DataClassification Classify(double prefaultMultiplier, double ratedCurrentMultiplier)
-        {
-            EventClassificationHelper eventClassificationHelper;
-
-            eventClassificationHelper = new EventClassificationHelper(m_dataSeries, prefaultMultiplier, ratedCurrentMultiplier);
-
-            if (IsTrend())
-            {
-                m_classification = DataClassification.Trend;
-            }
-            else if (IsEvent(eventClassificationHelper))
-            {
-                if (IsFault(eventClassificationHelper))
-                    m_classification = DataClassification.Fault;
-                else if (IsInterruption(eventClassificationHelper))
-                    m_classification = DataClassification.Interruption;
-                else if (IsSag(eventClassificationHelper))
-                    m_classification = DataClassification.Sag;
-                else if (IsSwell(eventClassificationHelper))
-                    m_classification = DataClassification.Swell;
-                else
-                    m_classification = DataClassification.Other;
-            }
-            else
+            if (m_dataSeries.Remove(dataSeries))
             {
                 m_classification = DataClassification.Unknown;
-            }
-
-            return m_classification;
-        }
-
-        private bool IsTrend()
-        {
-            double samplesPerMinute = m_samples / (m_endTime - m_startTime).TotalMinutes;
-            return samplesPerMinute <= TrendThreshold;
-        }
-
-        private bool IsEvent(EventClassificationHelper eventClassificationHelper)
-        {
-            // Create a list of relevant type names and phase names
-            List<string> eventWaveforms = new List<string>()
-            {
-                "Voltage AN",
-                "Voltage BN",
-                "Voltage CN",
-                "Current AN",
-                "Current BN",
-                "Current CN",
-            };
-
-            // Determine if a channel exists for each type and phase
-            return eventWaveforms.All(channelData => (object)eventClassificationHelper.GetDataSeries(channelData) != null);
-        }
-
-        private bool IsFault(EventClassificationHelper eventClassificationHelper)
-        {
-            // Create a list of current phase names
-            List<string> currents = new List<string>()
-            {
-                "Current AN",
-                "Current BN",
-                "Current CN"
-            };
-
-            double ratedCurrent = 0.0D;
-            double prefaultMultiplied;
-            double ratedCurrentMultiplied;
-
-            if ((object)m_line != null)
-                ratedCurrent = m_line.ThermalRating;
-
-            ratedCurrentMultiplied = ratedCurrent * eventClassificationHelper.RatedCurrentMultiplier;
-
-            foreach (DataSeries rmsSeries in currents.Select(eventClassificationHelper.GetRMS))
-            {
-                prefaultMultiplied = rmsSeries.DataPoints[0].Value * eventClassificationHelper.PrefaultMultiplier;
-
-                if (rmsSeries.DataPoints.Any(dataPoint => dataPoint.Value >= prefaultMultiplied && dataPoint.Value >= ratedCurrentMultiplied))
-                    return true;
+                return true;
             }
 
             return false;
-        }
-
-        private bool IsInterruption(EventClassificationHelper eventClassificationHelper)
-        {
-            List<string> voltages;
-            double nominalVoltage;
-            double voltageThreshold;
-
-            nominalVoltage = eventClassificationHelper.GetNominalVoltage();
-
-            if (double.IsNaN(nominalVoltage))
-                return false;
-
-            // 10% of nominal, converted to volts
-            voltageThreshold = nominalVoltage * 0.1D * 1000.0D;
-
-            voltages = new List<string>()
-            {
-                "Voltage AN",
-                "Voltage BN",
-                "Voltage CN"
-            };
-
-            return voltages.Select(eventClassificationHelper.GetRMS)
-                .Any(rms => rms.DataPoints.Any(dataPoint => dataPoint.Value < voltageThreshold));
-        }
-
-        private bool IsSag(EventClassificationHelper eventClassificationHelper)
-        {
-            List<string> voltages;
-            double nominalVoltage;
-            double voltageThreshold;
-
-            nominalVoltage = eventClassificationHelper.GetNominalVoltage();
-
-            if (double.IsNaN(nominalVoltage))
-                return false;
-
-            // 90% of nominal, converted to volts
-            voltageThreshold = nominalVoltage * 0.9D * 1000.0D;
-
-            voltages = new List<string>()
-            {
-                "Voltage AN",
-                "Voltage BN",
-                "Voltage CN"
-            };
-
-            return voltages.Select(eventClassificationHelper.GetRMS)
-                .Any(rms => rms.DataPoints.Any(dataPoint => dataPoint.Value < voltageThreshold));
-        }
-
-        private bool IsSwell(EventClassificationHelper eventClassificationHelper)
-        {
-            List<string> voltages;
-            double nominalVoltageKV;
-            double voltageThreshold;
-
-            nominalVoltageKV = eventClassificationHelper.GetNominalVoltage();
-
-            if (double.IsNaN(nominalVoltageKV))
-                return false;
-
-            // 110% of nominal, converted to volts
-            voltageThreshold = nominalVoltageKV * 1.1D * 1000.0D;
-
-            voltages = new List<string>()
-            {
-                "Voltage AN",
-                "Voltage BN",
-                "Voltage CN"
-            };
-
-            return voltages.Select(eventClassificationHelper.GetRMS)
-                .Any(rms => rms.DataPoints.Any(dataPoint => dataPoint.Value > voltageThreshold));
         }
 
         public DataGroup ToSubGroup(int startIndex, int endIndex)
@@ -628,6 +344,71 @@ namespace FaultData.DataAnalysis
 
                 Add(series);
             }
+        }
+
+        private void Classify()
+        {
+            if (IsTrend())
+                m_classification = DataClassification.Trend;
+            else if (IsEvent())
+                m_classification = DataClassification.Event;
+            else
+                m_classification = DataClassification.Unknown;
+        }
+
+        private bool IsTrend()
+        {
+            double samplesPerMinute = m_samples / (m_endTime - m_startTime).TotalMinutes;
+            return samplesPerMinute <= TrendThreshold;
+        }
+
+        private bool IsEvent()
+        {
+            // Create a list of relevant type names and phase names
+            List<string> voltageWaveforms = new List<string>()
+            {
+                "Voltage AN",
+                "Voltage BN",
+                "Voltage CN"
+            };
+
+            List<string> currentWaveforms = new List<string>()
+            {
+                "Current AN",
+                "Current BN",
+                "Current CN",
+                "Current RES"
+            };
+
+            IEnumerable<string> waveFormsInGroup = m_dataSeries
+                .Where(IsInstantaneous)
+                .Where(dataSeries => (object)dataSeries.SeriesInfo != null)
+                .Select(dataSeries => GetMeasurementType(dataSeries) + " " + GetPhase(dataSeries));
+
+            HashSet<string> waveFormsHashSet = new HashSet<string>(waveFormsInGroup);
+
+            // Determine if a channel exists for each type and phase
+            return voltageWaveforms.All(waveFormType => waveFormsHashSet.Contains(waveFormType))
+                && (currentWaveforms.Count(waveFormType => waveFormsHashSet.Contains(waveFormType)) >= 3);
+        }
+
+        private bool IsInstantaneous(DataSeries dataSeries)
+        {
+            string characteristicName = dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name;
+            string seriesTypeName = dataSeries.SeriesInfo.SeriesType.Name;
+
+            return (characteristicName == "Instantaneous") &&
+                   (seriesTypeName == "Values" || seriesTypeName == "Instantaneous");
+        }
+
+        private string GetMeasurementType(DataSeries dataSeries)
+        {
+            return dataSeries.SeriesInfo.Channel.MeasurementType.Name;
+        }
+
+        private string GetPhase(DataSeries dataSeries)
+        {
+            return dataSeries.SeriesInfo.Channel.Phase.Name;
         }
 
         #endregion

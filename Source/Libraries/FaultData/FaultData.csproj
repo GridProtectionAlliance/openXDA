@@ -67,6 +67,7 @@
     <Compile Include="DataAnalysis\DataGroup.cs" />
     <Compile Include="DataAnalysis\DataPoint.cs" />
     <Compile Include="DataAnalysis\DataSeries.cs" />
+    <Compile Include="DataAnalysis\Fault.cs" />
     <Compile Include="DataAnalysis\Transform.cs" />
     <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
@@ -83,6 +84,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DataQuality.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Database\DbAdapterContainer.cs" />
     <Compile Include="Database\FaultLocationData.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -120,12 +122,14 @@
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
+    <Compile Include="DataResources\EventClassificationResource.cs" />
     <Compile Include="DataResources\DataGroupsResource.cs" />
     <Compile Include="DataResources\DataResourceBase.cs" />
     <Compile Include="DataOperations\EventOperation.cs" />
     <Compile Include="DataOperations\FaultLocationOperation.cs" />
     <Compile Include="DataOperations\HourlySummaryOperation.cs" />
     <Compile Include="DataOperations\IDataOperation.cs" />
+    <Compile Include="DataResources\FaultDataResource.cs" />
     <Compile Include="DataResources\IDataResource.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />

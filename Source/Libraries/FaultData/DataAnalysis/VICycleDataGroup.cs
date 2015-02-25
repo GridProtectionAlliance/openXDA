@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  VICycleDataSet.cs - Gbtc
+//  VICycleDataGroup.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -39,6 +39,7 @@ namespace FaultData.DataAnalysis
         private const int IAIndex = 3;
         private const int IBIndex = 4;
         private const int ICIndex = 5;
+        private const int IRIndex = 6;
 
         // Fields
         private List<CycleDataGroup> m_cycleDataGroups;
@@ -116,6 +117,14 @@ namespace FaultData.DataAnalysis
             get
             {
                 return m_cycleDataGroups[ICIndex];
+            }
+        }
+
+        public CycleDataGroup IR
+        {
+            get
+            {
+                return m_cycleDataGroups[IRIndex];
             }
         }
 

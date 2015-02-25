@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
@@ -45,40 +44,38 @@ namespace FaultData.DataOperations
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        private string m_connectionString;
+        private DbAdapterContainer m_dbAdapterContainer;
         private AlarmData.AlarmTypeDataTable m_alarmTypeTable;
         private AlarmData.AlarmLogDataTable m_alarmLogTable;
 
         #endregion
 
-        #region [ Constructors ]
+        #region [ Methods ]
 
-        public AlarmOperation(string connectionString)
+        public void Prepare(DbAdapterContainer dbAdapterContainer)
         {
-            m_connectionString = connectionString;
             m_alarmTypeTable = new AlarmData.AlarmTypeDataTable();
             m_alarmLogTable = new AlarmData.AlarmLogDataTable();
+            dbAdapterContainer.AlarmTypeAdapter.Fill(m_alarmTypeTable);
+
+            m_dbAdapterContainer = dbAdapterContainer;
         }
-
-        #endregion
-
-        #region [ Methods ]
 
         public void Execute(MeterDataSet meterDataSet)
         {
-            LoadAlarmTypes();
             LoadDataQualityAlarmLogs(meterDataSet);
             LoadRangeLimits(meterDataSet);
             LoadHourOfWeekLimits(meterDataSet);
-            LoadAlarmLogs();
         }
 
-        private void LoadAlarmTypes()
+        public void Load(DbAdapterContainer dbAdapterContainer)
         {
-            using (AlarmTypeTableAdapter alarmTypeAdapter = new AlarmTypeTableAdapter())
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
-                alarmTypeAdapter.Connection.ConnectionString = m_connectionString;
-                alarmTypeAdapter.Fill(m_alarmTypeTable);
+                bulkCopy.BulkCopyTimeout = 0;
+                bulkCopy.DestinationTableName = m_alarmLogTable.TableName;
+                bulkCopy.WriteToServer(m_alarmLogTable);
+                m_alarmLogTable.Clear();
             }
         }
 
@@ -119,140 +116,59 @@ namespace FaultData.DataOperations
 
         private void LoadRangeLimits(MeterDataSet meterDataSet)
         {
-            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
-            AlarmData.DefaultAlarmRangeLimitDataTable defaultRangeLimitTable = new AlarmData.DefaultAlarmRangeLimitDataTable();
-            AlarmData.AlarmRangeLimitDataTable rangeLimitTable = new AlarmData.AlarmRangeLimitDataTable();
+            Dictionary<Channel, List<DataGroup>> trendingGroups;
 
-            IEnumerable<AlarmData.DefaultAlarmRangeLimitRow> undefinedDefaults;
-            AlarmData.AlarmRangeLimitRow limitRow;
-            AlarmData.AlarmLogRow logRow;
+            HourlyTrendingSummaryTableAdapter hourlySummaryAdapter;
+            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable;
+            AlarmData.AlarmRangeLimitDataTable rangeLimitTable;
 
             Channel channel;
-            int channelID;
 
-            double perUnitValue;
-            double highLimit;
-            double lowLimit;
-            bool highValid;
-            bool lowValid;
+            trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
 
-            using (DefaultAlarmRangeLimitTableAdapter defaultRangeLimitAdapter = new DefaultAlarmRangeLimitTableAdapter())
-            using (AlarmRangeLimitTableAdapter rangeLimitAdapter = new AlarmRangeLimitTableAdapter())
-            using (HourlyTrendingSummaryTableAdapter hourlySummaryAdapter = new HourlyTrendingSummaryTableAdapter())
+            hourlySummaryAdapter = m_dbAdapterContainer.HourlyTrendingSummaryAdapter;
+            hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
+            rangeLimitTable = new AlarmData.AlarmRangeLimitDataTable();
+
+            hourlySummaryAdapter.ClearBeforeFill = false;
+
+            foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
             {
-                defaultRangeLimitAdapter.Connection.ConnectionString = m_connectionString;
-                rangeLimitAdapter.Connection.ConnectionString = m_connectionString;
-                hourlySummaryAdapter.Connection.ConnectionString = m_connectionString;
-                hourlySummaryAdapter.ClearBeforeFill = false;
+                channel = channelGroups.Key;
 
-                foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
+                InitializeRangeLimitTable(rangeLimitTable, channel);
+
+                // Get hourly summary records for these data groups
+                hourlySummaryTable.Clear();
+
+                foreach (DataGroup dataGroup in channelGroups.Value)
+                    hourlySummaryAdapter.FillBy(hourlySummaryTable, channel.ID, dataGroup.StartTime, dataGroup.EndTime);
+
+                for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
                 {
-                    channel = channelGroups.Key;
-                    channelID = channel.ID;
-                    perUnitValue = channel.PerUnitValue ?? 1.0D;
+                    if (hourlySummaryTable[i].ValidCount + hourlySummaryTable[i].InvalidCount < channel.SamplesPerHour)
+                        hourlySummaryTable.Rows.RemoveAt(i);
+                }
 
-                    defaultRangeLimitAdapter.FillBy(defaultRangeLimitTable, channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
-                    rangeLimitAdapter.FillBy(rangeLimitTable, channelID);
+                RemoveDuplicateRows(hourlySummaryTable);
 
-                    // Get range limits for this channel
-                    undefinedDefaults = defaultRangeLimitTable
-                        .GroupJoin(rangeLimitTable, row => row.AlarmTypeID, row => row.AlarmTypeID, (row, rows) => Tuple.Create(row, rows.Any()))
-                        .Where(tuple => !tuple.Item2)
-                        .Select(tuple => tuple.Item1);
-
-                    foreach (AlarmData.DefaultAlarmRangeLimitRow defaultRow in undefinedDefaults)
-                    {
-                        limitRow = rangeLimitTable.NewAlarmRangeLimitRow();
-
-                        limitRow.ChannelID = channelID;
-                        limitRow.AlarmTypeID = defaultRow.AlarmTypeID;
-                        limitRow.Severity = defaultRow.Severity;
-                        limitRow.RangeInclusive = defaultRow.RangeInclusive;
-                        limitRow.PerUnit = defaultRow.PerUnit;
-                        limitRow.Enabled = 1;
-
-                        if (!defaultRow.IsHighNull())
-                            limitRow.High = defaultRow.High;
-
-                        if (!defaultRow.IsLowNull())
-                            limitRow.Low = defaultRow.Low;
-
-                        rangeLimitTable.AddAlarmRangeLimitRow(limitRow);
-                    }
-
-                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connectionString))
-                    {
-                        bulkCopy.BulkCopyTimeout = 0;
-                        bulkCopy.DestinationTableName = rangeLimitTable.TableName;
-                        bulkCopy.WriteToServer(Enumerable.Where(rangeLimitTable, row => row.ID <= 0).ToArray<DataRow>());
-                    }
-
-                    // Get hourly summary records for these data groups
-                    hourlySummaryTable.Clear();
-
-                    foreach (DataGroup dataGroup in channelGroups.Value)
-                        hourlySummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime, dataGroup.EndTime);
-
-                    for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
-                    {
-                        if (hourlySummaryTable[i].ValidCount + hourlySummaryTable[i].InvalidCount < channel.SamplesPerHour)
-                            hourlySummaryTable.Rows.RemoveAt(i);
-                    }
-
-                    RemoveDuplicateRows(hourlySummaryTable);
-
-                    // Update alarm log for each excursion
-                    foreach (MeterData.HourlyTrendingSummaryRow hourlySummary in hourlySummaryTable)
-                    {
-                        foreach (AlarmData.AlarmRangeLimitRow rangeLimit in Enumerable.Where(rangeLimitTable, row => row.Enabled != 0))
-                        {
-                            highLimit = 0.0D;
-                            lowLimit = 0.0D;
-                            highValid = true;
-                            lowValid = true;
-
-                            if (!rangeLimit.IsHighNull())
-                            {
-                                highLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.High * perUnitValue : rangeLimit.High;
-                                highValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (hourlySummary.Average < highLimit);
-                            }
-
-                            if (!rangeLimit.IsLowNull())
-                            {
-                                lowLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.Low * perUnitValue : rangeLimit.Low;
-                                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (hourlySummary.Average < lowLimit);
-                            }
-
-                            if (!lowValid || !highValid)
-                            {
-                                logRow = m_alarmLogTable.NewAlarmLogRow();
-
-                                logRow.ChannelID = channelID;
-                                logRow.AlarmTypeID = rangeLimit.AlarmTypeID;
-                                logRow.Time = hourlySummary.Time;
-                                logRow.Severity = rangeLimit.Severity;
-                                logRow.Value = hourlySummary.Average;
-
-                                if (!rangeLimit.IsHighNull())
-                                    logRow.LimitHigh = highLimit;
-
-                                if (!rangeLimit.IsLowNull())
-                                    logRow.LimitLow = lowLimit;
-
-                                m_alarmLogTable.AddAlarmLogRow(logRow);
-                            }
-                        }
-                    }
+                // Update alarm log for each excursion
+                foreach (MeterData.HourlyTrendingSummaryRow hourlySummary in hourlySummaryTable)
+                {
+                    foreach (AlarmData.AlarmRangeLimitRow rangeLimit in Enumerable.Where(rangeLimitTable, row => row.Enabled != 0))
+                        CheckAlarm(channel, hourlySummary, rangeLimit);
                 }
             }
         }
 
         private void LoadHourOfWeekLimits(MeterDataSet meterDataSet)
         {
-            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
-            AlarmData.HourOfWeekLimitDataTable hourlyLimitTable = new AlarmData.HourOfWeekLimitDataTable();
+            Dictionary<Channel, List<DataGroup>> trendingGroups;
+
+            HourOfWeekLimitTableAdapter hourlyLimitAdapter;
+            HourlyTrendingSummaryTableAdapter hourlySummaryAdapter;
+            MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable;
+            AlarmData.HourOfWeekLimitDataTable hourlyLimitTable;
 
             MeterData.HourlyTrendingSummaryRow hourlySummary;
             AlarmData.HourOfWeekLimitRow hourlyLimit;
@@ -260,54 +176,137 @@ namespace FaultData.DataOperations
             Channel channel;
             int channelID;
 
-            using (HourOfWeekLimitTableAdapter hourlyLimitAdapter = new HourOfWeekLimitTableAdapter())
-            using (HourlyTrendingSummaryTableAdapter hourlySummaryAdapter = new HourlyTrendingSummaryTableAdapter())
+            trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+
+            hourlyLimitAdapter = m_dbAdapterContainer.HourOfWeekLimitAdapter;
+            hourlySummaryAdapter = m_dbAdapterContainer.HourlyTrendingSummaryAdapter;
+            hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
+            hourlyLimitTable = new AlarmData.HourOfWeekLimitDataTable();
+
+            hourlySummaryAdapter.ClearBeforeFill = false;
+
+            foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
             {
-                hourlyLimitAdapter.Connection.ConnectionString = m_connectionString;
-                hourlySummaryAdapter.Connection.ConnectionString = m_connectionString;
-                hourlySummaryAdapter.ClearBeforeFill = false;
+                channel = channelGroups.Key;
+                channelID = channel.ID;
+                hourlyLimitAdapter.FillBy(hourlyLimitTable, channelID);
 
-                foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
+                // Get hourly summary records for these data groups
+                hourlySummaryTable.Clear();
+
+                foreach (DataGroup dataGroup in channelGroups.Value)
+                    hourlySummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime, dataGroup.EndTime);
+
+                for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
                 {
-                    channel = channelGroups.Key;
-                    channelID = channel.ID;
-                    hourlyLimitAdapter.FillBy(hourlyLimitTable, channelID);
+                    if (hourlySummaryTable[i].ValidCount + hourlySummaryTable[i].InvalidCount < channel.SamplesPerHour)
+                        hourlySummaryTable.Rows.RemoveAt(i);
+                }
 
-                    // Get hourly summary records for these data groups
-                    hourlySummaryTable.Clear();
+                RemoveDuplicateRows(hourlySummaryTable);
 
-                    foreach (DataGroup dataGroup in channelGroups.Value)
-                        hourlySummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime, dataGroup.EndTime);
+                // Update alarm log for each excursion
+                foreach (Tuple<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow> tuple in hourlySummaryTable.Join<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow, int, Tuple<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow>>(hourlyLimitTable, row => GetHourOfWeek(row.Time), row => row.HourOfWeek, Tuple.Create))
+                {
+                    hourlySummary = tuple.Item1;
+                    hourlyLimit = tuple.Item2;
 
-                    for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
+                    if (hourlySummary.Average < hourlyLimit.Low || hourlySummary.Average > hourlyLimit.High)
+                        m_alarmLogTable.AddAlarmLogRow(channelID, hourlyLimit.AlarmTypeID, hourlySummary.Time, hourlyLimit.Severity, hourlyLimit.High, hourlyLimit.Low, hourlySummary.Average);
+                }
+            }
+        }
+
+        private void InitializeRangeLimitTable(AlarmData.AlarmRangeLimitDataTable rangeLimitTable, Channel channel)
+        {
+            AlarmRangeLimitTableAdapter rangeLimitAdapter;
+            DefaultAlarmRangeLimitTableAdapter defaultRangeLimitAdapter;
+            AlarmData.DefaultAlarmRangeLimitDataTable defaultRangeLimitTable;
+
+            // Clear existing rows from the range limit table
+            rangeLimitTable.Clear();
+
+            // Fill the range limit table with range limits for the given channel
+            rangeLimitAdapter = m_dbAdapterContainer.AlarmRangeLimitAdapter;
+            rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+
+            // If limits exist for the given channel,
+            // range limit table has been successfully initialized
+            if (rangeLimitTable.Count != 0)
+                return;
+
+            // Get the default range limits for the measurement type and characteristic of this channel
+            defaultRangeLimitAdapter = m_dbAdapterContainer.DefaultAlarmRangeLimitAdapter;
+            defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
+
+            // If there are no default limits for the channel,
+            // then the range limit table has been successfully initialized
+            if (defaultRangeLimitTable.Count == 0)
+                return;
+
+            lock (RangeLimitLock)
+            {
+                // Fill the range limit table one more time inside the lock to
+                // ensure that no other threads have written limits for this channel
+                rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+
+                // If there are still no limits defined for this channel,
+                // update the table to include this channel's default limits
+                if (rangeLimitTable.Count == 0)
+                {
+                    foreach (AlarmData.DefaultAlarmRangeLimitRow row in defaultRangeLimitTable)
+                        rangeLimitTable.AddAlarmRangeLimitRow(channel.ID, row.AlarmTypeID, row.Severity, row.High, row.Low, row.RangeInclusive, row.PerUnit, 1);
+
+                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
                     {
-                        if (hourlySummaryTable[i].ValidCount + hourlySummaryTable[i].InvalidCount < channel.SamplesPerHour)
-                            hourlySummaryTable.Rows.RemoveAt(i);
-                    }
-
-                    RemoveDuplicateRows(hourlySummaryTable);
-
-                    // Update alarm log for each excursion
-                    foreach (Tuple<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow> tuple in hourlySummaryTable.Join(hourlyLimitTable, row => GetHourOfWeek(row.Time), row => row.HourOfWeek, Tuple.Create))
-                    {
-                        hourlySummary = tuple.Item1;
-                        hourlyLimit = tuple.Item2;
-
-                        if (hourlySummary.Average < hourlyLimit.Low || hourlySummary.Average > hourlyLimit.High)
-                            m_alarmLogTable.AddAlarmLogRow(channelID, hourlyLimit.AlarmTypeID, hourlySummary.Time, hourlyLimit.Severity, hourlyLimit.High, hourlyLimit.Low, hourlySummary.Average);
+                        bulkCopy.BulkCopyTimeout = 0;
+                        bulkCopy.DestinationTableName = rangeLimitTable.TableName;
+                        bulkCopy.WriteToServer(rangeLimitTable);
                     }
                 }
             }
         }
 
-        private void LoadAlarmLogs()
+        private void CheckAlarm(Channel channel, MeterData.HourlyTrendingSummaryRow hourlySummary, AlarmData.AlarmRangeLimitRow rangeLimit)
         {
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connectionString))
+            double perUnitValue;
+
+            var highLimit = 0.0D;
+            var lowLimit = 0.0D;
+            var highValid = true;
+            var lowValid = true;
+
+            perUnitValue = channel.PerUnitValue ?? 1.0D;
+
+            if (!rangeLimit.IsHighNull())
             {
-                bulkCopy.BulkCopyTimeout = 0;
-                bulkCopy.DestinationTableName = m_alarmLogTable.TableName;
-                bulkCopy.WriteToServer(m_alarmLogTable);
-                m_alarmLogTable.Clear();
+                highLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.High * perUnitValue : rangeLimit.High;
+                highValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (hourlySummary.Average < highLimit);
+            }
+
+            if (!rangeLimit.IsLowNull())
+            {
+                lowLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.Low * perUnitValue : rangeLimit.Low;
+                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (hourlySummary.Average < lowLimit);
+            }
+
+            if (!lowValid || !highValid)
+            {
+                var logRow = m_alarmLogTable.NewAlarmLogRow();
+
+                logRow.ChannelID = channel.ID;
+                logRow.AlarmTypeID = rangeLimit.AlarmTypeID;
+                logRow.Time = hourlySummary.Time;
+                logRow.Severity = rangeLimit.Severity;
+                logRow.Value = hourlySummary.Average;
+
+                if (!rangeLimit.IsHighNull())
+                    logRow.LimitHigh = highLimit;
+
+                if (!rangeLimit.IsLowNull())
+                    logRow.LimitLow = lowLimit;
+
+                m_alarmLogTable.AddAlarmLogRow(logRow);
             }
         }
 
@@ -333,11 +332,12 @@ namespace FaultData.DataOperations
                 StatusMessage(this, new EventArgs<string>(message));
         }
 
-        private void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
-        }
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly object RangeLimitLock = new object();
 
         #endregion
     }

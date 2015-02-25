@@ -36,6 +36,7 @@ using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using GSF;
+using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
 using DataPoint = FaultData.DataAnalysis.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 

@@ -44,8 +44,10 @@ namespace openXDA.Configuration
         private string m_resultsPath;
         private string m_debugPath;
         private string m_filePattern;
-        private double m_prefaultMultiplier;
-        private double m_ratedCurrentMultiplier;
+        private double m_residualCurrentTrigger;
+        private double m_phaseCurrentTrigger;
+        private double m_prefaultTrigger;
+        private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private string m_lengthUnits;
@@ -176,38 +178,75 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the multiplier applied to the first cycle of data in
-        /// order to determine whether another cycle contains fault data.
+        /// Gets or sets the per-unit threshold at which the
+        /// residual current indicates faulted conditions.
         /// </summary>
         [Setting]
-        [DefaultValue(4.0D)]
-        public double PrefaultMultiplier
+        [DefaultValue(0.5D)]
+        public double ResidualCurrentTrigger
         {
             get
             {
-                return m_prefaultMultiplier;
+                return m_residualCurrentTrigger;
             }
             set
             {
-                m_prefaultMultiplier = value;
+                m_residualCurrentTrigger = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the multiplier applied to the rated current on the
-        /// line in order to determine whether a cycle contains fault data.
+        /// Gets or sets the per-unit threshold at which the
+        /// phase currents indicate faulted conditions.
         /// </summary>
         [Setting]
-        [DefaultValue(1.5D)]
-        public double RatedCurrentMultiplier
+        [DefaultValue(4.0D)]
+        public double PhaseCurrentTrigger
         {
             get
             {
-                return m_ratedCurrentMultiplier;
+                return m_phaseCurrentTrigger;
             }
             set
             {
-                m_ratedCurrentMultiplier = value;
+                m_phaseCurrentTrigger = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the threshold at which the ratio between RMS
+        /// current and prefault RMS current indicates faulted conditions.
+        /// </summary>
+        [Setting]
+        [DefaultValue(5.0D)]
+        public double PrefaultTrigger
+        {
+            get
+            {
+                return m_prefaultTrigger;
+            }
+            set
+            {
+                m_prefaultTrigger = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the threshold at which the distance between
+        /// median and mean indicates the sine wave is no longer pure
+        /// and that fault detection logic should be suppressed.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.2D)]
+        public double FaultSuppressionTrigger
+        {
+            get
+            {
+                return m_faultSuppressionTrigger;
+            }
+            set
+            {
+                m_faultSuppressionTrigger = value;
             }
         }
 
@@ -400,6 +439,16 @@ namespace openXDA.Configuration
             {
                 return m_fileShareList.AsReadOnly();
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public string ToConnectionString()
+        {
+            ConnectionStringParser<SettingAttribute> parser = new ConnectionStringParser<SettingAttribute>();
+            return parser.ComposeConnectionString(this);
         }
 
         #endregion

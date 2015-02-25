@@ -40,50 +40,20 @@ namespace FaultData.DataOperations
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        private BulkLoader m_bulkLoader;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public DailySummaryOperation(string connectionString)
-        {
-            m_bulkLoader = new BulkLoader();
-            m_bulkLoader.ConnectionString = connectionString;
-
-            m_bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                             "( " +
-                                             "    ID INT, " +
-                                             "    ChannelID INT, " +
-                                             "    Date DATE, " +
-                                             "    Minimum FLOAT, " +
-                                             "    Maximum FLOAT, " +
-                                             "    Average FLOAT, " +
-                                             "    Count INT " +
-                                             ")";
-
-            m_bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
-                                            "USING {1} AS Source " +
-                                            "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
-                                            "WHEN MATCHED THEN " +
-                                            "    UPDATE SET " +
-                                            "        Maximum = CASE WHEN Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
-                                            "        Minimum = CASE WHEN Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
-                                            "        Average = Target.Average + (Source.Count * (Source.Average - Target.Average) / (Source.Count + Target.Count)), " +
-                                            "        Count = Source.Count + Target.Count " +
-                                            "WHEN NOT MATCHED THEN " +
-                                            "    INSERT (ChannelID, Date, Maximum, Minimum, Average, Count) " +
-                                            "    VALUES (Source.ChannelID, Source.Date, Source.Maximum, Source.Minimum, Source.Average, Source.Count);";
-        }
+        private MeterData.DailyTrendingSummaryDataTable m_dailySummaryTable;
 
         #endregion
 
         #region [ Methods ]
 
+        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        {
+            m_dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
+        }
+
         public void Execute(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            MeterData.DailyTrendingSummaryDataTable dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
             MeterData.DailyTrendingSummaryRow row;
 
             List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries;
@@ -94,7 +64,7 @@ namespace FaultData.DataOperations
                 {
                     validSummaries = dailySummary.Where(summary => summary.IsValid).ToList();
 
-                    row = dailySummaryTable.NewDailyTrendingSummaryRow();
+                    row = m_dailySummaryTable.NewDailyTrendingSummaryRow();
 
                     row.BeginEdit();
                     row.ChannelID = channelSummaries.Key.ID;
@@ -106,29 +76,48 @@ namespace FaultData.DataOperations
                     row.InvalidCount = dailySummary.Count() - validSummaries.Count;
                     row.EndEdit();
 
-                    dailySummaryTable.AddDailyTrendingSummaryRow(row);
+                    m_dailySummaryTable.AddDailyTrendingSummaryRow(row);
                 }
             }
+        }
 
+        public void Load(DbAdapterContainer dbAdapterContainer)
+        {
+            BulkLoader bulkLoader = new BulkLoader();
+
+            bulkLoader.Connection = dbAdapterContainer.Connection;
+
+            bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
+                                           "( " +
+                                           "    ID INT, " +
+                                           "    ChannelID INT, " +
+                                           "    Date DATE, " +
+                                           "    Minimum FLOAT, " +
+                                           "    Maximum FLOAT, " +
+                                           "    Average FLOAT, " +
+                                           "    Count INT " +
+                                           ")";
+
+            bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
+                                          "USING {1} AS Source " +
+                                          "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
+                                          "WHEN MATCHED THEN " +
+                                          "    UPDATE SET " +
+                                          "        Maximum = CASE WHEN Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
+                                          "        Minimum = CASE WHEN Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
+                                          "        Average = Target.Average + (Source.Count * (Source.Average - Target.Average) / (Source.Count + Target.Count)), " +
+                                          "        Count = Source.Count + Target.Count " +
+                                          "WHEN NOT MATCHED THEN " +
+                                          "    INSERT (ChannelID, Date, Maximum, Minimum, Average, Count) " +
+                                          "    VALUES (Source.ChannelID, Source.Date, Source.Maximum, Source.Minimum, Source.Average, Source.Count);";
+            
             // Bulk insert new rows
-            m_bulkLoader.Load(dailySummaryTable);
+            bulkLoader.Load(m_dailySummaryTable);
         }
 
         private DateTime GetDate(DateTime time)
         {
             return new DateTime(time.Year, time.Month, time.Day);
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
-        }
-
-        private void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion
