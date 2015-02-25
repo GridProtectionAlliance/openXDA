@@ -105,11 +105,6 @@ namespace openXDA
         /// </summary>
         private static readonly Guid FileProcessorID = new Guid("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D");
 
-        /// <summary>
-        /// List of file extensions that can trigger file processing events.
-        /// </summary>
-        private static readonly string[] ValidExtensions = { ".pqd", ".dat", ".d00", ".rcd", ".rcl" };
-
         // Events
 
         /// <summary>
@@ -145,6 +140,8 @@ namespace openXDA
             Dictionary<string, string> settingsDictionary;
             string fileShares;
 
+            IEnumerable<string> validExtensions;
+
             // Retrieve the connection string from the config file
             category.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
             connectionString = category["ConnectionString"].Value;
@@ -175,6 +172,10 @@ namespace openXDA
                     if (!string.IsNullOrEmpty(fileShares))
                         settingsDictionary["fileShares"] = fileShares;
                 }
+
+                validExtensions = systemInfo.DataReaders
+                    .Select(reader => reader.FileExtension)
+                    .Select(extension => string.Format("*.{0}", extension));
             }
 
             m_systemSettings = new SystemSettings(settingsDictionary.JoinKeyValuePairs());
@@ -200,7 +201,7 @@ namespace openXDA
             if ((object)m_fileProcessor == null)
             {
                 m_fileProcessor = new FileProcessor(FileProcessorID);
-                m_fileProcessor.Filter = string.Join(Path.PathSeparator.ToString(), ValidExtensions.Select(ext => "*" + ext));
+                m_fileProcessor.Filter = string.Join(Path.PathSeparator.ToString(), validExtensions);
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
 
@@ -254,93 +255,17 @@ namespace openXDA
             }
         }
 
-        // Determines whether the file on the given file path
-        // can be processed at the time this method is called.
-        private bool CanProcessFile(string filePath)
-        {
-            string directory;
-            string rootFileName;
-            string extension;
-
-            string cfgFileName;
-            TimeSpan timeSinceCreation;
-
-            if ((object)filePath == null || !File.Exists(filePath))
-                return false;
-
-            rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            extension = FilePath.GetExtension(filePath).ToLowerInvariant().Trim();
-
-            // If the data file is COMTRADE and the schema file does not exist, the file cannot be processed
-            if (extension.Equals(".dat", StringComparison.OrdinalIgnoreCase) || extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
-            {
-                directory = FilePath.GetDirectoryName(filePath);
-                cfgFileName = Path.Combine(directory, rootFileName + ".cfg");
-
-                if (!File.Exists(cfgFileName))
-                    return false;
-
-                if (!FilePath.TryGetReadLockExclusive(cfgFileName))
-                    return false;
-
-                // If the extension for the data file is .d00, inject a delay before allowing the file to be processed
-                if (extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
-                {
-                    timeSinceCreation = DateTime.Now - GetFileCreationTime(filePath);
-
-                    if (timeSinceCreation.TotalSeconds < m_systemSettings.COMTRADEMinWaitTime)
-                        return false;
-
-                    foreach (string file in FilePath.GetFileList(rootFileName + ".d*"))
-                    {
-                        if (!FilePath.TryGetReadLockExclusive(file))
-                            return false;
-                    }
-                }
-            }
-
-            // if the data file is EMAX and the control file does not exist, the file cannot be processed
-            if (extension.Equals(".rcd", StringComparison.OrdinalIgnoreCase) || extension.Equals(".rcl", StringComparison.OrdinalIgnoreCase))
-            {
-                directory = FilePath.GetDirectoryName(filePath);
-                cfgFileName = Path.Combine(directory, rootFileName + ".ctl");
-
-                if (!File.Exists(cfgFileName))
-                    return false;
-
-                if (!FilePath.TryGetReadLockExclusive(cfgFileName))
-                    return false;
-            }
-
-            return true;
-        }
-
         // Processes the file on the given file path.
-        private void ProcessFile(string filePath)
+        private void ProcessMeterData(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
         {
-            string meterKey;
-
-            DbAdapterContainer dbAdapterContainer = null;
-
             string logFilePath;
             Logger logger = null;
 
-            string extension;
-            FileGroup fileGroup = null;
-
-            IDataReader reader;
-            List<MeterDataSet> meterDataSets;
-
-            List<Type> dataOperationTypes;
             List<IDataOperation> dataOperations;
-
             ConnectionStringParser connectionStringParser;
 
             try
             {
-                dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString);
-                fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
-
                 connectionStringParser = new ConnectionStringParser();
                 connectionStringParser.SerializeUnspecifiedProperties = true;
 
@@ -350,89 +275,47 @@ namespace openXDA
                 if (m_systemSettings.DebugLevel > 0)
                     logger = Logger.Open(logFilePath);
 
-                // Try to parse the name of the meter from the file path to determine whether this file needs to be parsed
-                if (!string.IsNullOrEmpty(m_systemSettings.FilePattern) && TryParseFilePath(filePath, out meterKey))
-                {
-                    using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_systemSettings.DbConnectionString))
-                    {
-                        if (!meterInfo.Meters.Any(m => m.AssetKey == meterKey))
-                        {
-                            OnStatusMessage(logger, "Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
-                            fileGroup.ProcessingEndTime = DateTime.UtcNow;
-                            dbAdapterContainer.FileInfoAdapter.SubmitChanges();
-                            return;
-                        }
-                    }
-                }
+                OnStatusMessage(logger, "Processing meter data from file \"{0}\"...", meterDataSet.FilePath);
 
-                OnStatusMessage(logger, "Found fault record \"{0}\".", filePath);
-
-                // Determine whether the file is PQDIF, COMTRADE, or EMAX
-                extension = FilePath.GetExtension(filePath);
-
-                if (extension.Equals(".pqd", StringComparison.OrdinalIgnoreCase))
-                    reader = new PQDIFReader();
-                else if (extension.Equals(".dat", StringComparison.OrdinalIgnoreCase))
-                    reader = new COMTRADEReader();
-                else if (extension.Equals(".d00", StringComparison.OrdinalIgnoreCase))
-                    reader = new COMTRADEReader();
-                else if (extension.Equals(".rcd", StringComparison.OrdinalIgnoreCase))
-                    reader = new EMAXReader();
-                else if (extension.Equals(".rcl", StringComparison.OrdinalIgnoreCase))
-                    reader = new EMAXReader();
-                else
-                    throw new InvalidOperationException(string.Format("Unable to parse file with unrecognized file extension '{0}'", extension));
-
-                // Parse the file into a meter data set
-                meterDataSets = reader.Parse(filePath);
-
-                dataOperationTypes = dbAdapterContainer.SystemInfoAdapter.DataOperations
+                // Load data operations from the database
+                dataOperations = dbAdapterContainer.SystemInfoAdapter.DataOperations
                     .OrderBy(dataOperation => dataOperation.LoadOrder)
                     .Select(dataOperation => LoadType(dataOperation.AssemblyName, dataOperation.TypeName))
                     .Where(type => (object)type != null)
                     .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
                     .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                    .Select(Activator.CreateInstance)
+                    .Cast<IDataOperation>()
                     .ToList();
 
-                foreach (MeterDataSet meterDataSet in meterDataSets)
+                foreach (IDataOperation dataOperation in dataOperations)
                 {
-                    meterDataSet.FilePath = filePath;
-                    meterDataSet.FileGroup = fileGroup;
+                    // Attach to messaging events
+                    dataOperation.StatusMessage += CreateMessageHandler(logger);
+                    dataOperation.ProcessException += CreateExceptionHandler(logger);
 
-                    dataOperations = dataOperationTypes
-                        .Select(Activator.CreateInstance)
-                        .Cast<IDataOperation>()
-                        .ToList();
+                    // Provide system settings to the data operation
+                    connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), dataOperation);
 
-                    foreach (IDataOperation dataOperation in dataOperations)
-                    {
-                        // Attach to messaging events
-                        dataOperation.StatusMessage += CreateMessageHandler(logger);
-                        dataOperation.ProcessException += CreateExceptionHandler(logger);
-
-                        // Provide system settings to the data operation
-                        connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), dataOperation);
-
-                        // Prepare for execution of the data operation
-                        dataOperation.Prepare(dbAdapterContainer);
-                    }
-
-                    // Execute the data operations
-                    foreach (IDataOperation dataOperation in dataOperations)
-                        dataOperation.Execute(meterDataSet);
-
-                    // Load data from all data operations in a single transaction
-                    using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                    {
-                        foreach (IDataOperation dataOperation in dataOperations)
-                            dataOperation.Load(dbAdapterContainer);
-
-                        transactionScope.Complete();
-                    }
-
-                    // Export fault results to results files
-                    WriteResults(dbAdapterContainer, meterDataSet, logger);
+                    // Prepare for execution of the data operation
+                    dataOperation.Prepare(dbAdapterContainer);
                 }
+
+                // Execute the data operations
+                foreach (IDataOperation dataOperation in dataOperations)
+                    dataOperation.Execute(meterDataSet);
+
+                // Load data from all data operations in a single transaction
+                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                {
+                    foreach (IDataOperation dataOperation in dataOperations)
+                        dataOperation.Load(dbAdapterContainer);
+
+                    transactionScope.Complete();
+                }
+
+                // Export fault results to results files
+                WriteResults(dbAdapterContainer, meterDataSet, logger);
 
                 if ((object)logger != null)
                 {
@@ -441,8 +324,8 @@ namespace openXDA
                     logger.Close();
 
                     // Move the file to the debug directory
-                    string debugDir = Path.Combine(m_systemSettings.DebugPath, meterDataSets.First().Meter.AssetKey);
-                    string debugPath = Path.Combine(debugDir, FilePath.GetFileNameWithoutExtension(filePath) + ".log");
+                    string debugDir = Path.Combine(m_systemSettings.DebugPath, meterDataSet.Meter.AssetKey);
+                    string debugPath = Path.Combine(debugDir, FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".log");
                     TryCreateDirectory(debugDir);
                     File.Copy(logFilePath, FilePath.GetUniqueFilePathWithBinarySearch(debugPath), true);
                     File.Delete(logFilePath);
@@ -453,18 +336,9 @@ namespace openXDA
                 try
                 {
                     OnProcessException(logger, ex);
-
-                    using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                    using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
-                    {
-                        if ((object)fileGroup == null)
-                            fileGroup = LoadFileGroup(fileInfoDataContext, filePath);
-
-                        fileGroup.ProcessingEndTime = DateTime.UtcNow;
-                        fileGroup.Error = 1;
-                        fileInfoDataContext.SubmitChanges();
-                        transactionScope.Complete();
-                    }
+                    meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
+                    meterDataSet.FileGroup.Error = 1;
+                    dbAdapterContainer.FileInfoAdapter.SubmitChanges();
                 }
                 catch
                 {
@@ -474,9 +348,6 @@ namespace openXDA
             }
             finally
             {
-                if ((object)dbAdapterContainer != null)
-                    dbAdapterContainer.Dispose();
-
                 // Clean up the current log file
                 if ((object)logger != null)
                 {
@@ -623,31 +494,92 @@ namespace openXDA
         // directories. This handler validates the file and processes it if able.
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
-            string filePath = fileProcessorEventArgs.FullPath;
+            string filePath;
+            FileGroup fileGroup;
+
+            string meterKey;
+            string extension;
+            Type readerType;
+
+            IDataReader reader;
+            ConnectionStringParser connectionStringParser;
+            List<MeterDataSet> meterDataSets;
+
+            filePath = fileProcessorEventArgs.FullPath;
 
             try
             {
-                if (fileProcessorEventArgs.AlreadyProcessed)
+                using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString))
                 {
-                    using (FileInfoDataContext fileInfoDataContext = new FileInfoDataContext(m_systemSettings.DbConnectionString))
+                    // Determine whether the file has already been processed
+                    if (fileProcessorEventArgs.AlreadyProcessed)
                     {
-                        // Check that this file has not already been processed
-                        if (fileInfoDataContext.DataFiles.Any(dataFile => dataFile.FilePath == filePath))
+                        if (dbAdapterContainer.FileInfoAdapter.DataFiles.Any(dataFile => dataFile.FilePath == filePath))
                         {
                             OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
                             return;
                         }
                     }
-                }
 
-                if (CanProcessFile(filePath))
-                {
-                    ProcessFile(filePath);
-                    m_fileCreationTimes.Remove(filePath);
-                }
-                else
-                {
-                    fileProcessorEventArgs.Requeue = true;
+                    // Create a file group for this file in the database
+                    fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+
+                    // Try to parse the name of the meter from the file path to determine whether this file needs to be parsed
+                    if (!string.IsNullOrEmpty(m_systemSettings.FilePattern) && TryParseFilePath(filePath, out meterKey))
+                    {
+                        if (!dbAdapterContainer.MeterInfoAdapter.Meters.Any(m => m.AssetKey == meterKey))
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
+                            fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                            dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                            return;
+                        }
+                    }
+
+                    // Determine what data reader to use based on file extension
+                    extension = FilePath.GetExtension(filePath);
+
+                    // Load type used to parse this file from the database
+                    readerType = dbAdapterContainer.SystemInfoAdapter.DataReaders
+                        .Where(dataReader => extension.EndsWith(dataReader.FileExtension, StringComparison.OrdinalIgnoreCase))
+                        .Select(dataReader => LoadType(dataReader.AssemblyName, dataReader.TypeName))
+                        .Where(type => (object)type != null)
+                        .Where(type => typeof(IDataReader).IsAssignableFrom(type))
+                        .SingleOrDefault(type => (object)type.GetConstructor(Type.EmptyTypes) != null);
+
+                    if ((object)readerType == null)
+                    {
+                        OnStatusMessage("Skipped file \"{0}\" because no valid data reader was found for file extension '{1}'.", filePath, extension);
+                        return;
+                    }
+
+                    // Create the data reader
+                    reader = (IDataReader)Activator.CreateInstance(readerType);
+
+                    connectionStringParser = new ConnectionStringParser();
+                    connectionStringParser.SerializeUnspecifiedProperties = true;
+                    connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), reader);
+
+                    if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
+                    {
+                        // Parse the file
+                        meterDataSets = reader.Parse(filePath);
+
+                        // Process the meter data sets
+                        foreach (MeterDataSet meterDataSet in meterDataSets)
+                        {
+                            meterDataSet.FilePath = filePath;
+                            meterDataSet.FileGroup = fileGroup;
+                            ProcessMeterData(dbAdapterContainer, meterDataSet);
+                        }
+
+                        m_fileCreationTimes.Remove(filePath);
+                    }
+                    else
+                    {
+                        // Requeue the file if the reader is unable to process
+                        fileProcessorEventArgs.Requeue = true;
+                    }
                 }
             }
             catch (Exception ex)

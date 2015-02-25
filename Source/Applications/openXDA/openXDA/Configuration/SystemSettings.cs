@@ -448,6 +448,7 @@ namespace openXDA.Configuration
         public string ToConnectionString()
         {
             ConnectionStringParser<SettingAttribute> parser = new ConnectionStringParser<SettingAttribute>();
+            parser.ExplicitlySpecifyDefaults = true;
             return parser.ComposeConnectionString(this);
         }
 

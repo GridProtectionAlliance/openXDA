@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using FaultData.DataSets;
 
@@ -32,8 +33,9 @@ namespace FaultData.DataReaders
         /// Determines whether the file can be parsed at this time.
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
+        /// <param name="fileCreationTime">The time the file was created.</param>
         /// <returns>True if the file can be parsed; false otherwise.</returns>
-        bool CanParse(string filePath);
+        bool CanParse(string filePath, DateTime fileCreationTime);
 
         /// <summary>
         /// Parses the file into a meter data set per meter contained in the file.

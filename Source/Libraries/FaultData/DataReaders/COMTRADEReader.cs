@@ -35,7 +35,22 @@ namespace FaultData.DataReaders
 {
     public class COMTRADEReader : IDataReader
     {
+        #region [ Members ]
+
+        // Nested Types
+
+        // Constants
+
+        // Delegates
+
+        // Events
+
+        // Fields
         private TimeSpan m_minWaitTime;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public COMTRADEReader()
         {
@@ -43,7 +58,27 @@ namespace FaultData.DataReaders
             m_minWaitTime = TimeSpan.FromSeconds(15.0D);
         }
 
-        public bool CanParse(string filePath)
+        #endregion
+
+        #region [ Properties ]
+
+        public double COMTRADEMinWaitTime
+        {
+            get
+            {
+                return m_minWaitTime.TotalSeconds;
+            }
+            set
+            {
+                m_minWaitTime = TimeSpan.FromSeconds(value);
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public bool CanParse(string filePath, DateTime fileCreationTime)
         {
             string directory = FilePath.GetDirectoryName(filePath);
             string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
@@ -58,7 +93,7 @@ namespace FaultData.DataReaders
             if (fileList.Any(file => !FilePath.TryGetReadLockExclusive(file)))
                 return false;
 
-            if (multipleDataFiles && fileList.Any(file => DateTime.UtcNow - File.GetCreationTime(filePath) < m_minWaitTime))
+            if (multipleDataFiles && fileList.Any(file => DateTime.UtcNow - fileCreationTime < m_minWaitTime))
                 return false;
 
             return true;
@@ -146,5 +181,7 @@ namespace FaultData.DataReaders
 
             return channel;
         }
+
+        #endregion
     }
 }

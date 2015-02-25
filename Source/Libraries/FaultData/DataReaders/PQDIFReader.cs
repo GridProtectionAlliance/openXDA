@@ -37,11 +37,22 @@ namespace FaultData.DataReaders
     {
         #region [ Methods ]
 
-        public bool CanParse(string filePath)
+        /// <summary>
+        /// Determines whether the file can be parsed at this time.
+        /// </summary>
+        /// <param name="filePath">The path to the file to be parsed.</param>
+        /// <param name="fileCreationTime">The time the file was created.</param>
+        /// <returns>True if the file can be parsed; false otherwise.</returns>
+        public bool CanParse(string filePath, DateTime fileCreationTime)
         {
             return FilePath.TryGetReadLockExclusive(filePath);
         }
 
+        /// <summary>
+        /// Parses the file into a meter data set per meter contained in the file.
+        /// </summary>
+        /// <param name="filePath">The path to the file to be parsed.</param>
+        /// <returns>List of meter data sets, one per meter.</returns>
         public List<MeterDataSet> Parse(string filePath)
         {
             return ParseFile(filePath);

@@ -35,7 +35,7 @@ namespace FaultData.DataReaders
 {
     public class EMAXReader : IDataReader
     {
-        public bool CanParse(string filePath)
+        public bool CanParse(string filePath, DateTime fileCreationTime)
         {
             string directory = FilePath.GetDirectoryName(filePath);
             string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
