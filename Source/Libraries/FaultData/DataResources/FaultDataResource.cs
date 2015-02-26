@@ -45,6 +45,14 @@ namespace FaultData.DataResources
         public class Factory
         {
             public DbAdapterContainer DbAdapterContainer;
+
+            public double MaxVoltage;
+            public double MaxCurrent;
+            public double LowVoltageThreshold;
+            public double MaxLowVoltageCurrent;
+            public double MaxTimeOffset;
+            public double MinTimeOffset;
+
             public double ResidualCurrentTrigger;
             public double PhaseCurrentTrigger;
             public double PrefaultTrigger;
@@ -57,6 +65,12 @@ namespace FaultData.DataResources
                 return new FaultDataResource()
                 {
                     m_dbAdapterContainer = DbAdapterContainer,
+                    m_maxVoltage = MaxVoltage,
+                    m_maxCurrent = MaxCurrent,
+                    m_lowVoltageThreshold = LowVoltageThreshold,
+                    m_maxLowVoltageCurrent = MaxLowVoltageCurrent,
+                    m_maxTimeOffset = MaxTimeOffset,
+                    m_minTimeOffset = MinTimeOffset,
                     m_residualCurrentTrigger = ResidualCurrentTrigger,
                     m_phaseCurrentTrigger = PhaseCurrentTrigger,
                     m_prefaultTrigger = PrefaultTrigger,
@@ -242,6 +256,14 @@ namespace FaultData.DataResources
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
+
+        private double m_maxVoltage;
+        private double m_maxCurrent;
+        private double m_lowVoltageThreshold;
+        private double m_maxLowVoltageCurrent;
+        private double m_maxTimeOffset;
+        private double m_minTimeOffset;
+
         private double m_residualCurrentTrigger;
         private double m_phaseCurrentTrigger;
         private double m_prefaultTrigger;
@@ -276,6 +298,66 @@ namespace FaultData.DataResources
 
         #region [ Methods ]
 
+        private bool IsReasonable(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            // Get the current system time and time thresholds
+            DateTime now = DateTime.Now;
+            DateTime minTime = now.AddHours(-m_minTimeOffset);
+            DateTime maxTime = now.AddHours(m_maxTimeOffset);
+
+            // Get the line-to-neutral nominal voltage in volts
+            double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
+
+            // Get the thermal rating in amps
+            double thermalRating = dataGroup.Line.ThermalRating;
+
+            DataSeries[] voltages =
+            {
+                viCycleDataGroup.VA.RMS.Multiply(1.0D / nominalVoltage),
+                viCycleDataGroup.VB.RMS.Multiply(1.0D / nominalVoltage),
+                viCycleDataGroup.VC.RMS.Multiply(1.0D / nominalVoltage)
+            };
+
+            DataSeries[] currents =
+            {
+                viCycleDataGroup.IA.RMS.Multiply(1.0D / thermalRating),
+                viCycleDataGroup.IB.RMS.Multiply(1.0D / thermalRating),
+                viCycleDataGroup.IC.RMS.Multiply(1.0D / thermalRating),
+                viCycleDataGroup.IR.RMS.Multiply(1.0D / thermalRating)
+            };
+
+            // Determine if the time of the record is
+            // too far in the past to be reasonable
+            if (dataGroup.StartTime < minTime)
+                return false;
+
+            // Determine if the time of the record is
+            // too far in the future to be reasonable
+            if (dataGroup.StartTime > maxTime)
+                return false;
+
+            // Determine if any of the RMS voltages are unreasonably high
+            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxVoltage)))
+                return false;
+
+            // Determine if any of the RMS currents are unreasonably low
+            if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxCurrent)))
+                return false;
+
+            // Determine if any of the cycles suggest that the
+            // voltage was too low to be able to serve the current
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < voltages[i].DataPoints.Count; j++)
+                {
+                    if (voltages[i][j].Value < m_lowVoltageThreshold && currents[i][j].Value > m_maxLowVoltageCurrent)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
         public override void Initialize(MeterDataSet dataSet)
         {
             DataGroup dataGroup;
@@ -299,8 +381,16 @@ namespace FaultData.DataResources
                 viDataGroup = cycleDataResource.VIDataGroups[i];
                 viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
+                // Engineering reasonableness checks
+                if (!IsReasonable(dataGroup, viCycleDataGroup))
+                    continue;
+
                 // Break into faults and segments
                 faults = DetectFaults(dataGroup, viDataGroup, viCycleDataGroup);
+
+                if (faults.Count == 0)
+                    continue;
+
                 ClassifyFaults(faults, viCycleDataGroup);
 
                 // Add list of faults to lookup table

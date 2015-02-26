@@ -105,8 +105,8 @@ namespace openXDA
             #region [ Members ]
 
             // Fields
-            public string SystemSettings;
             public string MeterDataFile;
+            public SystemSettings SystemSettings;
             public DbAdapterContainer DbAdapterContainer;
             public List<MeterDataSet> MeterDataSets;
             public Logger Logger;
@@ -132,8 +132,12 @@ namespace openXDA
                 {
                     using (Logger)
                     {
+                        OnStatusMessage("Processing meter data from file \"{0}\"...", MeterDataFile);
+
                         foreach (MeterDataSet meterDataSet in MeterDataSets)
                             ProcessMeterData(meterDataSet);
+
+                        OnStatusMessage("Finished processing data from file \"{0}\".", MeterDataFile);
                     }
 
                     threadIDs.Add(m_threadID);
@@ -147,11 +151,10 @@ namespace openXDA
             {
                 List<IDataOperation> dataOperations;
                 ConnectionStringParser connectionStringParser;
+                string systemSettings;
 
                 try
                 {
-                    OnStatusMessage("Processing meter data from file \"{0}\"...", MeterDataFile);
-
                     // Load data operations from the database
                     dataOperations = DbAdapterContainer.SystemInfoAdapter.DataOperations
                         .OrderBy(dataOperation => dataOperation.LoadOrder)
@@ -163,6 +166,7 @@ namespace openXDA
                         .Cast<IDataOperation>()
                         .ToList();
 
+                    systemSettings = SystemSettings.ToConnectionString();
                     connectionStringParser = new ConnectionStringParser();
                     connectionStringParser.SerializeUnspecifiedProperties = true;
 
@@ -173,7 +177,7 @@ namespace openXDA
                         dataOperation.ProcessException += (sender, args) => OnHandleException(args.Argument);
 
                         // Provide system settings to the data operation
-                        connectionStringParser.ParseConnectionString(SystemSettings, dataOperation);
+                        connectionStringParser.ParseConnectionString(systemSettings, dataOperation);
 
                         // Prepare for execution of the data operation
                         dataOperation.Prepare(DbAdapterContainer);
@@ -216,29 +220,27 @@ namespace openXDA
 
             private void WriteResults(MeterDataSet meterDataSet)
             {
-                SystemSettings systemSettings = new SystemSettings(SystemSettings);
-
-                COMTRADEWriter comtradeWriter = new COMTRADEWriter(systemSettings.DbConnectionString);
-                XMLWriter xmlWriter = new XMLWriter(systemSettings.DbConnectionString);
-                EmailWriter emailWriter = new EmailWriter(systemSettings.DbConnectionString);
+                COMTRADEWriter comtradeWriter = new COMTRADEWriter(SystemSettings.DbConnectionString);
+                XMLWriter xmlWriter = new XMLWriter(SystemSettings.DbConnectionString);
+                EmailWriter emailWriter = new EmailWriter(SystemSettings.DbConnectionString);
 
                 int faultEventTypeID;
                 MeterData.EventDataTable events;
                 MeterData.EventTypeDataTable eventTypes;
 
-                comtradeWriter.MaxFaultDistanceMultiplier = systemSettings.MaxFaultDistanceMultiplier;
-                comtradeWriter.MinFaultDistanceMultiplier = systemSettings.MinFaultDistanceMultiplier;
-                comtradeWriter.LengthUnits = systemSettings.LengthUnits;
+                comtradeWriter.MaxFaultDistanceMultiplier = SystemSettings.MaxFaultDistanceMultiplier;
+                comtradeWriter.MinFaultDistanceMultiplier = SystemSettings.MinFaultDistanceMultiplier;
+                comtradeWriter.LengthUnits = SystemSettings.LengthUnits;
 
-                xmlWriter.MaxFaultDistanceMultiplier = systemSettings.MaxFaultDistanceMultiplier;
-                xmlWriter.MinFaultDistanceMultiplier = systemSettings.MinFaultDistanceMultiplier;
+                xmlWriter.MaxFaultDistanceMultiplier = SystemSettings.MaxFaultDistanceMultiplier;
+                xmlWriter.MinFaultDistanceMultiplier = SystemSettings.MinFaultDistanceMultiplier;
 
-                emailWriter.SMTPServer = systemSettings.SMTPServer;
-                emailWriter.FromAddress = systemSettings.FromAddress;
-                emailWriter.PQDashboardURL = systemSettings.PQDashboardURL;
-                emailWriter.MaxFaultDistanceMultiplier = systemSettings.MaxFaultDistanceMultiplier;
-                emailWriter.MinFaultDistanceMultiplier = systemSettings.MinFaultDistanceMultiplier;
-                emailWriter.LengthUnits = systemSettings.LengthUnits;
+                emailWriter.SMTPServer = SystemSettings.SMTPServer;
+                emailWriter.FromAddress = SystemSettings.FromAddress;
+                emailWriter.PQDashboardURL = SystemSettings.PQDashboardURL;
+                emailWriter.MaxFaultDistanceMultiplier = SystemSettings.MaxFaultDistanceMultiplier;
+                emailWriter.MinFaultDistanceMultiplier = SystemSettings.MinFaultDistanceMultiplier;
+                emailWriter.LengthUnits = SystemSettings.LengthUnits;
 
                 events = DbAdapterContainer.EventAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);
                 eventTypes = DbAdapterContainer.EventTypeAdapter.GetData();
@@ -261,9 +263,9 @@ namespace openXDA
 
                     if (faultSummaries.Count > 0)
                     {
-                        OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().LargestCurrentDistance, systemSettings.LengthUnits);
+                        OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().LargestCurrentDistance, SystemSettings.LengthUnits);
 
-                        resultsDir = Path.Combine(systemSettings.ResultsPath, meter.AssetKey);
+                        resultsDir = Path.Combine(SystemSettings.ResultsPath, meter.AssetKey);
                         TryCreateDirectory(resultsDir);
 
                         comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".dat");
@@ -501,7 +503,7 @@ namespace openXDA
             IDataReader reader;
             ConnectionStringParser connectionStringParser;
 
-            string systemSettings;
+            SystemSettings systemSettings;
             MeterDataProcessor meterDataProcessor;
 
             filePath = fileProcessorEventArgs.FullPath;
@@ -565,11 +567,11 @@ namespace openXDA
 
                     // Create the data reader
                     reader = (IDataReader)Activator.CreateInstance(readerType);
-                    systemSettings = LoadSystemSettings(dbAdapterContainer.SystemInfoAdapter);
+                    systemSettings = new SystemSettings(LoadSystemSettings(dbAdapterContainer.SystemInfoAdapter));
 
                     connectionStringParser = new ConnectionStringParser();
                     connectionStringParser.SerializeUnspecifiedProperties = true;
-                    connectionStringParser.ParseConnectionString(systemSettings, reader);
+                    connectionStringParser.ParseConnectionString(systemSettings.ToConnectionString(), reader);
 
                     if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
                     {
@@ -587,7 +589,7 @@ namespace openXDA
                         meterDataProcessor.ExceptionHandler = OnProcessException;
 
                         // Create the logger used to log messages from the meter data processor
-                        if (m_systemSettings.DebugLevel > 0)
+                        if (systemSettings.DebugLevel > 0)
                             meterDataProcessor.Logger = CreateLogger(filePath, meterKey);
 
                         // Parse the file
