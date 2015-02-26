@@ -69,12 +69,13 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Transactions;
 using FaultData.Database;
 using FaultData.DataOperations;
@@ -97,6 +98,260 @@ namespace openXDA
     public class FaultLocationEngine : IDisposable
     {
         #region [ Members ]
+
+        // Nested Types
+        private class MeterDataProcessor
+        {
+            #region [ Members ]
+
+            // Fields
+            public string SystemSettings;
+            public string MeterDataFile;
+            public DbAdapterContainer DbAdapterContainer;
+            public List<MeterDataSet> MeterDataSets;
+            public Logger Logger;
+
+            public Action<string> StatusMessageHandler;
+            public Action<Exception> ExceptionHandler;
+
+            private int m_threadID;
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void Process()
+            {
+                m_threadID = s_threadIDs.Take();
+
+                Thread processThread = new Thread(() =>
+                {
+                    using (Logger)
+                    {
+                        foreach (MeterDataSet meterDataSet in MeterDataSets)
+                            ProcessMeterData(meterDataSet);
+                    }
+
+                    s_threadIDs.Add(m_threadID);
+                });
+
+                processThread.IsBackground = true;
+                processThread.Start();
+            }
+
+            private void ProcessMeterData(MeterDataSet meterDataSet)
+            {
+                List<IDataOperation> dataOperations;
+                ConnectionStringParser connectionStringParser;
+
+                try
+                {
+                    OnStatusMessage("Processing meter data from file \"{0}\"...", MeterDataFile);
+
+                    // Load data operations from the database
+                    dataOperations = DbAdapterContainer.SystemInfoAdapter.DataOperations
+                        .OrderBy(dataOperation => dataOperation.LoadOrder)
+                        .Select(dataOperation => LoadType(dataOperation.AssemblyName, dataOperation.TypeName))
+                        .Where(type => (object)type != null)
+                        .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
+                        .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                        .Select(Activator.CreateInstance)
+                        .Cast<IDataOperation>()
+                        .ToList();
+
+                    connectionStringParser = new ConnectionStringParser();
+                    connectionStringParser.SerializeUnspecifiedProperties = true;
+
+                    foreach (IDataOperation dataOperation in dataOperations)
+                    {
+                        // Attach to messaging events
+                        dataOperation.StatusMessage += (sender, args) => OnStatusMessage("{0}", args.Argument);
+                        dataOperation.ProcessException += (sender, args) => OnHandleException(args.Argument);
+
+                        // Provide system settings to the data operation
+                        connectionStringParser.ParseConnectionString(SystemSettings, dataOperation);
+
+                        // Prepare for execution of the data operation
+                        dataOperation.Prepare(DbAdapterContainer);
+                    }
+
+                    // Execute the data operations
+                    foreach (IDataOperation dataOperation in dataOperations)
+                        dataOperation.Execute(meterDataSet);
+
+                    // Load data from all data operations in a single transaction
+                    using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                    {
+                        foreach (IDataOperation dataOperation in dataOperations)
+                            dataOperation.Load(DbAdapterContainer);
+
+                        transactionScope.Complete();
+                    }
+
+                    // Export fault results to results files
+                    WriteResults(meterDataSet);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        OnHandleException(ex);
+                        meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
+                        meterDataSet.FileGroup.Error = 1;
+                        DbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                    }
+                    catch
+                    {
+                        // Ignore errors here as they are most likely
+                        // related to the error we originally caught
+                    }
+                }
+
+                OnStatusMessage("");
+            }
+
+            private void WriteResults(MeterDataSet meterDataSet)
+            {
+                SystemSettings systemSettings = new SystemSettings(SystemSettings);
+
+                COMTRADEWriter comtradeWriter = new COMTRADEWriter(systemSettings.DbConnectionString);
+                XMLWriter xmlWriter = new XMLWriter(systemSettings.DbConnectionString);
+                EmailWriter emailWriter = new EmailWriter(systemSettings.DbConnectionString);
+
+                int faultEventTypeID;
+                MeterData.EventDataTable events;
+                MeterData.EventTypeDataTable eventTypes;
+
+                comtradeWriter.MaxFaultDistanceMultiplier = systemSettings.MaxFaultDistanceMultiplier;
+                comtradeWriter.MinFaultDistanceMultiplier = systemSettings.MinFaultDistanceMultiplier;
+                comtradeWriter.LengthUnits = systemSettings.LengthUnits;
+
+                xmlWriter.MaxFaultDistanceMultiplier = systemSettings.MaxFaultDistanceMultiplier;
+                xmlWriter.MinFaultDistanceMultiplier = systemSettings.MinFaultDistanceMultiplier;
+
+                emailWriter.SMTPServer = systemSettings.SMTPServer;
+                emailWriter.FromAddress = systemSettings.FromAddress;
+                emailWriter.PQDashboardURL = systemSettings.PQDashboardURL;
+                emailWriter.MaxFaultDistanceMultiplier = systemSettings.MaxFaultDistanceMultiplier;
+                emailWriter.MinFaultDistanceMultiplier = systemSettings.MinFaultDistanceMultiplier;
+                emailWriter.LengthUnits = systemSettings.LengthUnits;
+
+                events = DbAdapterContainer.EventAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);
+                eventTypes = DbAdapterContainer.EventTypeAdapter.GetData();
+
+                faultEventTypeID = eventTypes
+                    .Where(row => row.Name == "Fault")
+                    .Select(row => row.ID)
+                    .DefaultIfEmpty(0)
+                    .Single();
+
+                foreach (MeterData.EventRow evt in events.Where(row => row.EventTypeID == faultEventTypeID))
+                {
+                    Meter meter = DbAdapterContainer.MeterInfoAdapter.Meters.Single(m => m.ID == evt.MeterID);
+                    Line line = DbAdapterContainer.MeterInfoAdapter.Lines.Single(l => l.ID == evt.LineID);
+                    FaultLocationData.FaultSummaryDataTable faultSummaries = DbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID);
+
+                    string resultsDir;
+                    string comtradeFilePath;
+                    string xmlFilePath;
+
+                    if (faultSummaries.Count > 0)
+                    {
+                        OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().LargestCurrentDistance, systemSettings.LengthUnits);
+
+                        resultsDir = Path.Combine(systemSettings.ResultsPath, meter.AssetKey);
+                        TryCreateDirectory(resultsDir);
+
+                        comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".dat");
+                        comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
+                        OnStatusMessage("Results written to {0}", comtradeFilePath);
+
+                        xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".xml");
+                        xmlWriter.WriteResults(evt.ID, xmlFilePath);
+                        OnStatusMessage("Summary of results written to {0}", xmlFilePath);
+
+                        emailWriter.WriteResults(evt.ID);
+                        OnStatusMessage("Summary of results sent by email");
+                    }
+                }
+            }
+
+            private Type LoadType(string assemblyName, string typeName)
+            {
+                Assembly assembly;
+
+                try
+                {
+                    assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
+
+                    if ((object)assembly != null)
+                        return assembly.GetType(typeName);
+
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    OnHandleException(ex);
+                    return null;
+                }
+            }
+
+            // Attempts to create the directory at the given path.
+            private void TryCreateDirectory(string path)
+            {
+                try
+                {
+                    // Make sure results directory exists
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
+                }
+                catch (Exception ex)
+                {
+                    OnHandleException(new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
+                }
+            }
+
+            [StringFormatMethod("format")]
+            private void OnStatusMessage(string format, params object[] args)
+            {
+                string message = string.Format(format, args);
+
+                if ((object)Logger != null)
+                    Logger.WriteLine(message);
+
+                if ((object)StatusMessageHandler != null)
+                    StatusMessageHandler(string.Format("[{0}] {1}", m_threadID, message));
+            }
+
+            private void OnHandleException(Exception ex)
+            {
+                if ((object)Logger != null)
+                    Logger.WriteException(ex);
+
+                if ((object)StatusMessageHandler != null)
+                    StatusMessageHandler(string.Format("[{0}] ERROR: {1}", m_threadID, ex.Message));
+
+                if ((object)ExceptionHandler != null)
+                    ExceptionHandler(ex);
+            }
+
+            #endregion
+
+            #region [ Static ]
+
+            // Static Fields
+            private static BlockingCollection<int> s_threadIDs;
+
+            // Static Constructor
+            static MeterDataProcessor()
+            {
+                IEnumerable<int> threadIDs = Enumerable.Range(1, Environment.ProcessorCount);
+                ConcurrentQueue<int> threadIDQueue = new ConcurrentQueue<int>(threadIDs);
+                s_threadIDs = new BlockingCollection<int>(threadIDQueue);
+            }
+
+            #endregion
+        }
 
         // Constants
 
@@ -137,9 +392,6 @@ namespace openXDA
             CategorizedSettingsElementCollection category = configFile.Settings["systemSettings"];
             string connectionString;
 
-            Dictionary<string, string> settingsDictionary;
-            string fileShares;
-
             IEnumerable<string> validExtensions;
 
             // Retrieve the connection string from the config file
@@ -149,36 +401,12 @@ namespace openXDA
             // Get system settings from the database
             using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(connectionString))
             {
-                settingsDictionary = systemInfo.Settings
-                    .Where(setting => setting.Name.IndexOf('.') < 0)
-                    .ToDictionary(setting => setting.Name, setting => setting.Value);
-
-                if (!settingsDictionary.ContainsKey("dbConnectionString"))
-                    settingsDictionary["dbConnectionString"] = connectionString;
-
-                if (!settingsDictionary.ContainsKey("fileShares"))
-                {
-                    fileShares = systemInfo.Settings.ToList()
-                        .Where(setting => setting.Name.StartsWith("FileShare.", StringComparison.OrdinalIgnoreCase))
-                        .Select(setting => Tuple.Create(setting.Name.Split('.'), setting.Value))
-                        .Where(tuple => tuple.Item1.Length == 3)
-                        .GroupBy(tuple => tuple.Item1[1])
-                        .Select(grouping => grouping.ToDictionary(tuple => tuple.Item1[2], tuple => tuple.Item2))
-                        .Select(dict => dict.JoinKeyValuePairs().Trim(' ', ';'))
-                        .Select((shareSettings, index) => Tuple.Create(index, shareSettings))
-                        .ToDictionary(tuple => tuple.Item1.ToString(), tuple => tuple.Item2)
-                        .JoinKeyValuePairs();
-
-                    if (!string.IsNullOrEmpty(fileShares))
-                        settingsDictionary["fileShares"] = fileShares;
-                }
+                m_systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
 
                 validExtensions = systemInfo.DataReaders
                     .Select(reader => reader.FileExtension)
                     .Select(extension => string.Format("*.{0}", extension));
             }
-
-            m_systemSettings = new SystemSettings(settingsDictionary.JoinKeyValuePairs());
 
             // Attempt to authenticate to configured file shares
             foreach (FileShare fileShare in m_systemSettings.FileShareList)
@@ -247,12 +475,11 @@ namespace openXDA
 
             IDataReader reader;
             ConnectionStringParser connectionStringParser;
-            List<MeterDataSet> meterDataSets;
 
-            Logger logger;
+            string systemSettings;
+            MeterDataProcessor meterDataProcessor;
 
             filePath = fileProcessorEventArgs.FullPath;
-            logger = null;
 
             try
             {
@@ -313,37 +540,46 @@ namespace openXDA
 
                     // Create the data reader
                     reader = (IDataReader)Activator.CreateInstance(readerType);
+                    systemSettings = LoadSystemSettings(dbAdapterContainer.SystemInfoAdapter);
 
                     connectionStringParser = new ConnectionStringParser();
                     connectionStringParser.SerializeUnspecifiedProperties = true;
-                    connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), reader);
+                    connectionStringParser.ParseConnectionString(systemSettings, reader);
 
                     if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
                     {
+                        // Create a file group for this file in the database
+                        fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+
+                        // Create the meter data processor that will be processing this file
+                        meterDataProcessor = new MeterDataProcessor();
+
+                        // Initialize properties of the meter data processor
+                        meterDataProcessor.SystemSettings = systemSettings;
+                        meterDataProcessor.MeterDataFile = filePath;
+                        meterDataProcessor.DbAdapterContainer = dbAdapterContainer;
+                        meterDataProcessor.StatusMessageHandler = OnStatusMessage;
+                        meterDataProcessor.ExceptionHandler = OnProcessException;
+
+                        // Create the logger used to log messages from the meter data processor
                         if (m_systemSettings.DebugLevel > 0)
-                            logger = CreateLogger(filePath, meterKey);
+                            meterDataProcessor.Logger = CreateLogger(filePath, meterKey);
 
-                        using (logger)
+                        // Parse the file
+                        meterDataProcessor.MeterDataSets = reader.Parse(filePath);
+
+                        // Set properties on each of the meter data sets
+                        foreach (MeterDataSet meterDataSet in meterDataProcessor.MeterDataSets)
                         {
-                            OnStatusMessage(logger, "Processing meter data from file \"{0}\"...", filePath);
-
-                            // Create a file group for this file in the database
-                            fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
-
-                            // Parse the file
-                            meterDataSets = reader.Parse(filePath);
-
-                            // Process the meter data sets
-                            foreach (MeterDataSet meterDataSet in meterDataSets)
-                            {
-                                meterDataSet.FilePath = filePath;
-                                meterDataSet.FileGroup = fileGroup;
-                                meterDataSet.Meter.AssetKey = meterKey;
-                                ProcessMeterData(dbAdapterContainer, meterDataSet, logger);
-                            }
-
-                            m_fileCreationTimes.Remove(filePath);
+                            meterDataSet.FilePath = filePath;
+                            meterDataSet.FileGroup = fileGroup;
+                            meterDataSet.Meter.AssetKey = meterKey;
                         }
+
+                        // Process meter data using the meter data processor
+                        meterDataProcessor.Process();
+
+                        m_fileCreationTimes.Remove(filePath);
                     }
                     else
                     {
@@ -356,140 +592,6 @@ namespace openXDA
             {
                 string message = string.Format("Failed to process file \"{0}\" due to exception: {1}", filePath, ex.Message);
                 OnProcessException(new InvalidOperationException(message, ex));
-            }
-        }
-
-        // Processes the file on the given file path.
-        private void ProcessMeterData(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet, Logger logger)
-        {
-            List<IDataOperation> dataOperations;
-            ConnectionStringParser connectionStringParser;
-
-            try
-            {
-                // Load data operations from the database
-                dataOperations = dbAdapterContainer.SystemInfoAdapter.DataOperations
-                    .OrderBy(dataOperation => dataOperation.LoadOrder)
-                    .Select(dataOperation => LoadType(dataOperation.AssemblyName, dataOperation.TypeName))
-                    .Where(type => (object)type != null)
-                    .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
-                    .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
-                    .Select(Activator.CreateInstance)
-                    .Cast<IDataOperation>()
-                    .ToList();
-
-                connectionStringParser = new ConnectionStringParser();
-                connectionStringParser.SerializeUnspecifiedProperties = true;
-
-                foreach (IDataOperation dataOperation in dataOperations)
-                {
-                    // Attach to messaging events
-                    dataOperation.StatusMessage += (sender, args) => OnStatusMessage(logger, "{0}", args.Argument);
-                    dataOperation.ProcessException += (sender, args) => OnProcessException(logger, args.Argument);
-
-                    // Provide system settings to the data operation
-                    connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), dataOperation);
-
-                    // Prepare for execution of the data operation
-                    dataOperation.Prepare(dbAdapterContainer);
-                }
-
-                // Execute the data operations
-                foreach (IDataOperation dataOperation in dataOperations)
-                    dataOperation.Execute(meterDataSet);
-
-                // Load data from all data operations in a single transaction
-                using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                {
-                    foreach (IDataOperation dataOperation in dataOperations)
-                        dataOperation.Load(dbAdapterContainer);
-
-                    transactionScope.Complete();
-                }
-
-                // Export fault results to results files
-                WriteResults(dbAdapterContainer, meterDataSet, logger);
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    OnProcessException(logger, ex);
-                    meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
-                    meterDataSet.FileGroup.Error = 1;
-                    dbAdapterContainer.FileInfoAdapter.SubmitChanges();
-                }
-                catch
-                {
-                    // Ignore errors here as they are most likely
-                    // related to the error we originally caught
-                }
-            }
-
-            OnStatusMessage("");
-        }
-
-        private void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet, Logger logger)
-        {
-            COMTRADEWriter comtradeWriter = new COMTRADEWriter(m_systemSettings.DbConnectionString);
-            XMLWriter xmlWriter = new XMLWriter(m_systemSettings.DbConnectionString);
-            EmailWriter emailWriter = new EmailWriter(m_systemSettings.DbConnectionString);
-
-            int faultEventTypeID;
-            MeterData.EventDataTable events;
-            MeterData.EventTypeDataTable eventTypes;
-
-            comtradeWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-            comtradeWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-            comtradeWriter.LengthUnits = m_systemSettings.LengthUnits;
-
-            xmlWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-            xmlWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-
-            emailWriter.SMTPServer = m_systemSettings.SMTPServer;
-            emailWriter.FromAddress = m_systemSettings.FromAddress;
-            emailWriter.PQDashboardURL = m_systemSettings.PQDashboardURL;
-            emailWriter.MaxFaultDistanceMultiplier = m_systemSettings.MaxFaultDistanceMultiplier;
-            emailWriter.MinFaultDistanceMultiplier = m_systemSettings.MinFaultDistanceMultiplier;
-            emailWriter.LengthUnits = m_systemSettings.LengthUnits;
-
-            events = dbAdapterContainer.EventAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);
-            eventTypes = dbAdapterContainer.EventTypeAdapter.GetData();
-
-            faultEventTypeID = eventTypes
-                .Where(row => row.Name == "Fault")
-                .Select(row => row.ID)
-                .DefaultIfEmpty(0)
-                .Single();
-
-            foreach (MeterData.EventRow evt in events.Where(row => row.EventTypeID == faultEventTypeID))
-            {
-                Meter meter = dbAdapterContainer.MeterInfoAdapter.Meters.Single(m => m.ID == evt.MeterID);
-                Line line = dbAdapterContainer.MeterInfoAdapter.Lines.Single(l => l.ID == evt.LineID);
-                FaultLocationData.FaultSummaryDataTable faultSummaries = dbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID);
-
-                string resultsDir;
-                string comtradeFilePath;
-                string xmlFilePath;
-
-                if (faultSummaries.Count > 0)
-                {
-                    OnStatusMessage(logger, "Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().LargestCurrentDistance, m_systemSettings.LengthUnits);
-
-                    resultsDir = Path.Combine(m_systemSettings.ResultsPath, meter.AssetKey);
-                    TryCreateDirectory(resultsDir);
-
-                    comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".dat");
-                    comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
-                    OnStatusMessage(logger, "Results written to {0}", comtradeFilePath);
-
-                    xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".xml");
-                    xmlWriter.WriteResults(evt.ID, xmlFilePath);
-                    OnStatusMessage(logger, "Summary of results written to {0}", xmlFilePath);
-
-                    emailWriter.WriteResults(evt.ID);
-                    OnStatusMessage(logger, "Summary of results sent by email");
-                }
             }
         }
 
@@ -534,6 +636,47 @@ namespace openXDA
             }
 
             return logger;
+        }
+
+        private string LoadSystemSettings(SystemInfoDataContext systemInfo)
+        {
+            Dictionary<string, string> settingsDictionary;
+            string dbConnectionString;
+            string fileShares;
+
+            // Retrieve the connection string from the active database connection
+            dbConnectionString = systemInfo.Connection.ConnectionString;
+
+            // Convert the Setting table to a dictionary
+            settingsDictionary = systemInfo.Settings
+                .Where(setting => setting.Name.IndexOf('.') < 0)
+                .ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.OrdinalIgnoreCase);
+
+            // Add the database connection string if there is not
+            // already one explicitly specified in the Setting table
+            if (!settingsDictionary.ContainsKey("dbConnectionString"))
+                settingsDictionary["dbConnectionString"] = dbConnectionString;
+
+            // Convert settings prefixed with "FileShare." to a nested connection string
+            if (!settingsDictionary.ContainsKey("fileShares"))
+            {
+                fileShares = systemInfo.Settings.ToList()
+                    .Where(setting => setting.Name.StartsWith("FileShare.", StringComparison.OrdinalIgnoreCase))
+                    .Select(setting => Tuple.Create(setting.Name.Split('.'), setting.Value))
+                    .Where(tuple => tuple.Item1.Length == 3)
+                    .GroupBy(tuple => tuple.Item1[1])
+                    .Select(grouping => grouping.ToDictionary(tuple => tuple.Item1[2], tuple => tuple.Item2))
+                    .Select(dict => dict.JoinKeyValuePairs().Trim(' ', ';'))
+                    .Select((shareSettings, index) => Tuple.Create(index, shareSettings))
+                    .ToDictionary(tuple => tuple.Item1.ToString(), tuple => tuple.Item2)
+                    .JoinKeyValuePairs();
+
+                if (!string.IsNullOrEmpty(fileShares))
+                    settingsDictionary["fileShares"] = fileShares;
+            }
+
+            // Convert dictionary to a connection string and return it
+            return settingsDictionary.JoinKeyValuePairs();
         }
 
         // Loads a file group containing information about the file on the given
@@ -603,7 +746,7 @@ namespace openXDA
             return creationTime;
         }
 
-        private TransactionOptions GetTransactionOptions()
+        private static TransactionOptions GetTransactionOptions()
         {
             return new TransactionOptions()
             {
@@ -615,12 +758,6 @@ namespace openXDA
         // Attempts to create the directory at the given path.
         private void TryCreateDirectory(string path)
         {
-            TryCreateDirectory(null, path);
-        }
-
-        // Attempts to create the directory at the given path.
-        private void TryCreateDirectory(Logger logger, string path)
-        {
             try
             {
                 // Make sure results directory exists
@@ -629,7 +766,7 @@ namespace openXDA
             }
             catch (Exception ex)
             {
-                OnProcessException(logger, new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
             }
         }
 
@@ -655,20 +792,16 @@ namespace openXDA
         }
 
         // Displays status message to the console - proxy method for service implementation
-        [StringFormatMethod("format")]
-        private void OnStatusMessage(string format, params object[] args)
+        private void OnStatusMessage(string message)
         {
-            OnStatusMessage(null, format, args);
+            OnStatusMessage("{0}", message);
         }
 
         // Displays status message to the console - proxy method for service implementation
         [StringFormatMethod("format")]
-        private void OnStatusMessage(Logger logger, string format, params object[] args)
+        private void OnStatusMessage(string format, params object[] args)
         {
             string message = string.Format(format, args);
-
-            if ((object)logger != null)
-                logger.WriteLine(message);
 
             if ((object)StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(message));
@@ -677,32 +810,6 @@ namespace openXDA
         // Displays exception message to the console - proxy method for service implmentation
         private void OnProcessException(Exception ex)
         {
-            OnProcessException(null, ex);
-        }
-
-        // Displays exception message to the console - proxy method for service implmentation
-        private void OnProcessException(Logger logger, Exception ex)
-        {
-            StringBuilder stackTrace;
-            Exception inner;
-
-            if ((object)logger != null)
-            {
-                stackTrace = new StringBuilder();
-                inner = ex;
-
-                while ((object)inner != null)
-                {
-                    stackTrace.AppendLine(inner.StackTrace);
-                    inner = inner.InnerException;
-                }
-
-                logger.WriteLine(string.Empty);
-                logger.WriteLine(string.Format("ERROR: {0}", ex.Message));
-                logger.WriteLine(stackTrace.ToString());
-                logger.WriteLine(string.Empty);
-            }
-
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }

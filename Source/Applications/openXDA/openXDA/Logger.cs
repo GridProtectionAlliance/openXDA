@@ -68,6 +68,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace openXDA
 {
@@ -87,8 +88,36 @@ namespace openXDA
 
         public void WriteLine(string line)
         {
+            if ((object)line == null)
+                return;
+
             m_fileWriter.WriteLine("[{0}] {1} - {2}", m_recordCount, DateTime.Now.ToString(DateTimeFormat), line);
             m_recordCount++;
+        }
+
+        public void WriteException(Exception ex)
+        {
+            StringBuilder stackTrace;
+            Exception inner;
+
+            if ((object)ex == null)
+                return;
+
+            stackTrace = new StringBuilder(ex.StackTrace);
+            inner = ex.InnerException;
+
+            while ((object)inner != null)
+            {
+                stackTrace.AppendLine();
+                stackTrace.AppendLine("(Inner Exception)");
+                stackTrace.AppendLine(inner.StackTrace);
+                inner = inner.InnerException;
+            }
+
+            WriteLine(string.Empty);
+            WriteLine(string.Format("ERROR: {0}", ex.Message));
+            WriteLine(stackTrace.ToString());
+            WriteLine(string.Empty);
         }
 
         public void Close()
