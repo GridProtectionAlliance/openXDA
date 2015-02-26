@@ -234,49 +234,139 @@ namespace openXDA
             }
         }
 
-        // Attempts to create the directory at the given path.
-        private void TryCreateDirectory(string path)
+        // Called when the file processor has picked up a file in one of the watch
+        // directories. This handler validates the file and processes it if able.
+        private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
-            TryCreateDirectory(null, path);
-        }
+            string filePath;
+            FileGroup fileGroup;
 
-        // Attempts to create the directory at the given path.
-        private void TryCreateDirectory(Logger logger, string path)
-        {
+            string meterKey;
+            string extension;
+            Type readerType;
+
+            IDataReader reader;
+            ConnectionStringParser connectionStringParser;
+            List<MeterDataSet> meterDataSets;
+
+            Logger logger;
+
+            filePath = fileProcessorEventArgs.FullPath;
+            logger = null;
+
             try
             {
-                // Make sure results directory exists
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
+                using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString))
+                {
+                    // Determine whether the file has already been processed
+                    if (fileProcessorEventArgs.AlreadyProcessed)
+                    {
+                        if (dbAdapterContainer.FileInfoAdapter.DataFiles.Any(dataFile => dataFile.FilePath == filePath))
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
+                            return;
+                        }
+                    }
+
+                    // Try to parse the name of the meter from the file path to determine whether this file can be parsed
+                    if (string.IsNullOrEmpty(m_systemSettings.FilePattern) || !TryParseFilePath(filePath, out meterKey))
+                    {
+                        OnStatusMessage("Skipped file \"{0}\" because no meter could not be determined based on the FilePattern system setting.", filePath);
+                        fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                        fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                        fileGroup.Error = 1;
+                        dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                        return;
+                    }
+
+                    // Attempt to find a meter in the database matching the meter name parsed from the file path
+                    if (!dbAdapterContainer.MeterInfoAdapter.Meters.Any(m => m.AssetKey == meterKey))
+                    {
+                        OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
+                        fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                        fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                        fileGroup.Error = 1;
+                        dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                        return;
+                    }
+
+                    // Determine what data reader to use based on file extension
+                    extension = FilePath.GetExtension(filePath);
+
+                    // Load type used to parse this file from the database
+                    readerType = dbAdapterContainer.SystemInfoAdapter.DataReaders
+                        .Where(dataReader => extension.EndsWith(dataReader.FileExtension, StringComparison.OrdinalIgnoreCase))
+                        .Select(dataReader => LoadType(dataReader.AssemblyName, dataReader.TypeName))
+                        .Where(type => (object)type != null)
+                        .Where(type => typeof(IDataReader).IsAssignableFrom(type))
+                        .SingleOrDefault(type => (object)type.GetConstructor(Type.EmptyTypes) != null);
+
+                    if ((object)readerType == null)
+                    {
+                        OnStatusMessage("Skipped file \"{0}\" because no valid data reader was found for file extension '{1}'.", filePath, extension);
+                        fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                        fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                        fileGroup.Error = 1;
+                        dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                        return;
+                    }
+
+                    // Create the data reader
+                    reader = (IDataReader)Activator.CreateInstance(readerType);
+
+                    connectionStringParser = new ConnectionStringParser();
+                    connectionStringParser.SerializeUnspecifiedProperties = true;
+                    connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), reader);
+
+                    if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
+                    {
+                        if (m_systemSettings.DebugLevel > 0)
+                            logger = CreateLogger(filePath, meterKey);
+
+                        using (logger)
+                        {
+                            OnStatusMessage(logger, "Processing meter data from file \"{0}\"...", filePath);
+
+                            // Create a file group for this file in the database
+                            fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+
+                            // Parse the file
+                            meterDataSets = reader.Parse(filePath);
+
+                            // Process the meter data sets
+                            foreach (MeterDataSet meterDataSet in meterDataSets)
+                            {
+                                meterDataSet.FilePath = filePath;
+                                meterDataSet.FileGroup = fileGroup;
+                                meterDataSet.Meter.AssetKey = meterKey;
+                                ProcessMeterData(dbAdapterContainer, meterDataSet, logger);
+                            }
+
+                            m_fileCreationTimes.Remove(filePath);
+                        }
+                    }
+                    else
+                    {
+                        // Requeue the file if the reader is unable to process
+                        fileProcessorEventArgs.Requeue = true;
+                    }
+                }
             }
             catch (Exception ex)
             {
-                OnProcessException(logger, new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
+                string message = string.Format("Failed to process file \"{0}\" due to exception: {1}", filePath, ex.Message);
+                OnProcessException(new InvalidOperationException(message, ex));
             }
         }
 
         // Processes the file on the given file path.
-        private void ProcessMeterData(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
+        private void ProcessMeterData(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet, Logger logger)
         {
-            string logFilePath;
-            Logger logger = null;
-
             List<IDataOperation> dataOperations;
             ConnectionStringParser connectionStringParser;
 
             try
             {
-                connectionStringParser = new ConnectionStringParser();
-                connectionStringParser.SerializeUnspecifiedProperties = true;
-
-                // Open a temp file to write log entries
-                logFilePath = Path.GetTempFileName();
-
-                if (m_systemSettings.DebugLevel > 0)
-                    logger = Logger.Open(logFilePath);
-
-                OnStatusMessage(logger, "Processing meter data from file \"{0}\"...", meterDataSet.FilePath);
-
                 // Load data operations from the database
                 dataOperations = dbAdapterContainer.SystemInfoAdapter.DataOperations
                     .OrderBy(dataOperation => dataOperation.LoadOrder)
@@ -288,11 +378,14 @@ namespace openXDA
                     .Cast<IDataOperation>()
                     .ToList();
 
+                connectionStringParser = new ConnectionStringParser();
+                connectionStringParser.SerializeUnspecifiedProperties = true;
+
                 foreach (IDataOperation dataOperation in dataOperations)
                 {
                     // Attach to messaging events
-                    dataOperation.StatusMessage += CreateMessageHandler(logger);
-                    dataOperation.ProcessException += CreateExceptionHandler(logger);
+                    dataOperation.StatusMessage += (sender, args) => OnStatusMessage(logger, "{0}", args.Argument);
+                    dataOperation.ProcessException += (sender, args) => OnProcessException(logger, args.Argument);
 
                     // Provide system settings to the data operation
                     connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), dataOperation);
@@ -316,20 +409,6 @@ namespace openXDA
 
                 // Export fault results to results files
                 WriteResults(dbAdapterContainer, meterDataSet, logger);
-
-                if ((object)logger != null)
-                {
-                    // Close the log file so we can
-                    // move it to the debug directory
-                    logger.Close();
-
-                    // Move the file to the debug directory
-                    string debugDir = Path.Combine(m_systemSettings.DebugPath, meterDataSet.Meter.AssetKey);
-                    string debugPath = Path.Combine(debugDir, FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".log");
-                    TryCreateDirectory(debugDir);
-                    File.Copy(logFilePath, FilePath.GetUniqueFilePathWithBinarySearch(debugPath), true);
-                    File.Delete(logFilePath);
-                }
             }
             catch (Exception ex)
             {
@@ -344,28 +423,6 @@ namespace openXDA
                 {
                     // Ignore errors here as they are most likely
                     // related to the error we originally caught
-                }
-            }
-            finally
-            {
-                // Clean up the current log file
-                if ((object)logger != null)
-                {
-                    try
-                    {
-                        logger.Close();
-
-                        if (File.Exists(logger.LogFile))
-                            File.Delete(logger.LogFile);
-                    }
-                    catch (Exception ex)
-                    {
-                        // The logger has already been closed so this
-                        // error will go only to the status log and console
-                        OnProcessException(ex);
-                    }
-
-                    logger.Dispose();
                 }
             }
 
@@ -436,25 +493,47 @@ namespace openXDA
             }
         }
 
-        // Attempts to parse the meter's asset key from the file path
-        private bool TryParseFilePath(string fileName, out string meterKey)
+        // Called when the file processor encounters an unexpected error.
+        private void FileProcessor_Error(object sender, ErrorEventArgs args)
         {
-            Match match = Regex.Match(fileName, m_systemSettings.FilePattern);
-            Group meterKeyGroup;
+            OnProcessException(args.GetException());
+        }
 
-            if (match.Success)
+        private Logger CreateLogger(string filePath, string meterKey)
+        {
+            string debugDir;
+            string logFilePath;
+            string logFileFullPath = null;
+            Logger logger = null;
+
+            try
             {
-                meterKeyGroup = match.Groups["AssetKey"];
-
-                if ((object)meterKeyGroup != null)
+                while ((object)logger == null)
                 {
-                    meterKey = meterKeyGroup.Value;
-                    return true;
+                    try
+                    {
+                        debugDir = Path.Combine(m_systemSettings.DebugPath, meterKey);
+                        logFilePath = Path.Combine(debugDir, FilePath.GetFileNameWithoutExtension(filePath) + ".log");
+                        logFileFullPath = FilePath.GetUniqueFilePathWithBinarySearch(logFilePath);
+                        logger = Logger.Open(logFileFullPath);
+                    }
+                    catch (IOException)
+                    {
+                        // Exceptions can occur if two threads are vying for the same file
+                        // path where both will attempt to open the log and one will fail.
+                        // If this happens, we can simply try again getting a different file path
+                        if (!File.Exists(logFileFullPath))
+                            throw;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                string message = string.Format("Unable to open log file due to exception: {0}", ex.Message);
+                OnProcessException(new InvalidOperationException(message, ex));
+            }
 
-            meterKey = null;
-            return false;
+            return logger;
         }
 
         // Loads a file group containing information about the file on the given
@@ -490,109 +569,89 @@ namespace openXDA
             return fileGroup;
         }
 
-        // Called when the file processor has picked up a file in one of the watch
-        // directories. This handler validates the file and processes it if able.
-        private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
+        private Type LoadType(string assemblyName, string typeName)
         {
-            string filePath;
-            FileGroup fileGroup;
-
-            string meterKey;
-            string extension;
-            Type readerType;
-
-            IDataReader reader;
-            ConnectionStringParser connectionStringParser;
-            List<MeterDataSet> meterDataSets;
-
-            filePath = fileProcessorEventArgs.FullPath;
+            Assembly assembly;
 
             try
             {
-                using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString))
-                {
-                    // Determine whether the file has already been processed
-                    if (fileProcessorEventArgs.AlreadyProcessed)
-                    {
-                        if (dbAdapterContainer.FileInfoAdapter.DataFiles.Any(dataFile => dataFile.FilePath == filePath))
-                        {
-                            OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
-                            return;
-                        }
-                    }
+                assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
 
-                    // Create a file group for this file in the database
-                    fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                if ((object)assembly != null)
+                    return assembly.GetType(typeName);
 
-                    // Try to parse the name of the meter from the file path to determine whether this file needs to be parsed
-                    if (!string.IsNullOrEmpty(m_systemSettings.FilePattern) && TryParseFilePath(filePath, out meterKey))
-                    {
-                        if (!dbAdapterContainer.MeterInfoAdapter.Meters.Any(m => m.AssetKey == meterKey))
-                        {
-                            OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
-                            fileGroup.ProcessingEndTime = DateTime.UtcNow;
-                            dbAdapterContainer.FileInfoAdapter.SubmitChanges();
-                            return;
-                        }
-                    }
-
-                    // Determine what data reader to use based on file extension
-                    extension = FilePath.GetExtension(filePath);
-
-                    // Load type used to parse this file from the database
-                    readerType = dbAdapterContainer.SystemInfoAdapter.DataReaders
-                        .Where(dataReader => extension.EndsWith(dataReader.FileExtension, StringComparison.OrdinalIgnoreCase))
-                        .Select(dataReader => LoadType(dataReader.AssemblyName, dataReader.TypeName))
-                        .Where(type => (object)type != null)
-                        .Where(type => typeof(IDataReader).IsAssignableFrom(type))
-                        .SingleOrDefault(type => (object)type.GetConstructor(Type.EmptyTypes) != null);
-
-                    if ((object)readerType == null)
-                    {
-                        OnStatusMessage("Skipped file \"{0}\" because no valid data reader was found for file extension '{1}'.", filePath, extension);
-                        return;
-                    }
-
-                    // Create the data reader
-                    reader = (IDataReader)Activator.CreateInstance(readerType);
-
-                    connectionStringParser = new ConnectionStringParser();
-                    connectionStringParser.SerializeUnspecifiedProperties = true;
-                    connectionStringParser.ParseConnectionString(m_systemSettings.ToConnectionString(), reader);
-
-                    if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
-                    {
-                        // Parse the file
-                        meterDataSets = reader.Parse(filePath);
-
-                        // Process the meter data sets
-                        foreach (MeterDataSet meterDataSet in meterDataSets)
-                        {
-                            meterDataSet.FilePath = filePath;
-                            meterDataSet.FileGroup = fileGroup;
-                            ProcessMeterData(dbAdapterContainer, meterDataSet);
-                        }
-
-                        m_fileCreationTimes.Remove(filePath);
-                    }
-                    else
-                    {
-                        // Requeue the file if the reader is unable to process
-                        fileProcessorEventArgs.Requeue = true;
-                    }
-                }
+                return null;
             }
             catch (Exception ex)
             {
-                string message = string.Format("Unable to process file \"{0}\" due to exception: {1}", filePath, ex.Message);
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(ex);
+                return null;
             }
         }
 
-        // Called when the file processor encounters an unexpected error.
-        private void FileProcessor_Error(object sender, ErrorEventArgs args)
+        // Gets the creation time of the file with the given file name.
+        private DateTime GetFileCreationTime(string fileName)
         {
-            OnProcessException(args.GetException());
+            DateTime creationTime;
+
+            if (!m_fileCreationTimes.TryGetValue(fileName, out creationTime))
+            {
+                creationTime = DateTime.Now;
+                m_fileCreationTimes.Add(fileName, creationTime);
+            }
+
+            return creationTime;
+        }
+
+        private TransactionOptions GetTransactionOptions()
+        {
+            return new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+        }
+
+        // Attempts to create the directory at the given path.
+        private void TryCreateDirectory(string path)
+        {
+            TryCreateDirectory(null, path);
+        }
+
+        // Attempts to create the directory at the given path.
+        private void TryCreateDirectory(Logger logger, string path)
+        {
+            try
+            {
+                // Make sure results directory exists
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(logger, new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
+            }
+        }
+
+        // Attempts to parse the meter's asset key from the file path
+        private bool TryParseFilePath(string fileName, out string meterKey)
+        {
+            Match match = Regex.Match(fileName, m_systemSettings.FilePattern);
+            Group meterKeyGroup;
+
+            if (match.Success)
+            {
+                meterKeyGroup = match.Groups["AssetKey"];
+
+                if ((object)meterKeyGroup != null)
+                {
+                    meterKey = meterKeyGroup.Value;
+                    return true;
+                }
+            }
+
+            meterKey = null;
+            return false;
         }
 
         // Displays status message to the console - proxy method for service implementation
@@ -646,59 +705,6 @@ namespace openXDA
 
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
-        }
-
-        private EventHandler<EventArgs<string>> CreateMessageHandler(Logger logger)
-        {
-            return (sender, args) => OnStatusMessage(logger, args.Argument);
-        }
-
-        private EventHandler<EventArgs<Exception>> CreateExceptionHandler(Logger logger)
-        {
-            return (sender, args) => OnProcessException(logger, args.Argument);
-        }
-
-        private Type LoadType(string assemblyName, string typeName)
-        {
-            Assembly assembly;
-
-            try
-            {
-                assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
-
-                if ((object)assembly != null)
-                    return assembly.GetType(typeName);
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-                return null;
-            }
-        }
-
-        // Gets the creation time of the file with the given file name.
-        private DateTime GetFileCreationTime(string fileName)
-        {
-            DateTime creationTime;
-
-            if (!m_fileCreationTimes.TryGetValue(fileName, out creationTime))
-            {
-                creationTime = DateTime.Now;
-                m_fileCreationTimes.Add(fileName, creationTime);
-            }
-
-            return creationTime;
-        }
-
-        private TransactionOptions GetTransactionOptions()
-        {
-            return new TransactionOptions()
-            {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
         }
 
         #endregion
