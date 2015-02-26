@@ -31,17 +31,12 @@ using FaultData.Database.AlarmDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
 
 namespace FaultData.DataOperations
 {
-    public class AlarmOperation : IDataOperation
+    public class AlarmOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
-
-        // Events
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
@@ -52,7 +47,7 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_alarmTypeTable = new AlarmData.AlarmTypeDataTable();
             m_alarmLogTable = new AlarmData.AlarmLogDataTable();
@@ -61,14 +56,14 @@ namespace FaultData.DataOperations
             m_dbAdapterContainer = dbAdapterContainer;
         }
 
-        public void Execute(MeterDataSet meterDataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             LoadDataQualityAlarmLogs(meterDataSet);
             LoadRangeLimits(meterDataSet);
             LoadHourOfWeekLimits(meterDataSet);
         }
 
-        public void Load(DbAdapterContainer dbAdapterContainer)
+        public override void Load(DbAdapterContainer dbAdapterContainer)
         {
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
@@ -206,7 +201,7 @@ namespace FaultData.DataOperations
                 RemoveDuplicateRows(hourlySummaryTable);
 
                 // Update alarm log for each excursion
-                foreach (Tuple<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow> tuple in hourlySummaryTable.Join<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow, int, Tuple<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow>>(hourlyLimitTable, row => GetHourOfWeek(row.Time), row => row.HourOfWeek, Tuple.Create))
+                foreach (Tuple<MeterData.HourlyTrendingSummaryRow, AlarmData.HourOfWeekLimitRow> tuple in hourlySummaryTable.Join(hourlyLimitTable, row => GetHourOfWeek(row.Time), row => row.HourOfWeek, Tuple.Create))
                 {
                     hourlySummary = tuple.Item1;
                     hourlyLimit = tuple.Item2;
@@ -324,12 +319,6 @@ namespace FaultData.DataOperations
         private int GetHourOfWeek(DateTime time)
         {
             return (int)time.DayOfWeek * 24 + time.Hour;
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
         }
 
         #endregion

@@ -28,19 +28,14 @@ using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
-using GSF;
 using SeriesKey = System.Tuple<int, string, string, string, string, string>;
 
 namespace FaultData.DataOperations
 {
-    public class ConfigurationOperation : IDataOperation
+    public class ConfigurationOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
 
-        // Events
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
-		
         // Fields
         private string m_filePattern;
         private MeterInfoDataContext m_meterInfo;
@@ -65,12 +60,12 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_meterInfo = dbAdapterContainer.MeterInfoAdapter;
         }
 
-        public void Execute(MeterDataSet meterDataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             Meter meter;
             MeterFileGroup meterFileGroup;
@@ -150,7 +145,7 @@ namespace FaultData.DataOperations
             m_meterInfo.SubmitChanges();
         }
 
-        public void Load(DbAdapterContainer dbAdapterContainer)
+        public override void Load(DbAdapterContainer dbAdapterContainer)
         {
         }
 
@@ -213,12 +208,6 @@ namespace FaultData.DataOperations
                 channel.MeasurementCharacteristic.Name,
                 channel.Phase.Name,
                 series.SeriesType.Name);
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
         }
 
         #endregion

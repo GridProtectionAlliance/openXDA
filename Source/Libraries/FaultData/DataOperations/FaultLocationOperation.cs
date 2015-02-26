@@ -29,13 +29,12 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
 using GSF.Collections;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
 {
-    public class FaultLocationOperation : IDataOperation
+    public class FaultLocationOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
 
@@ -312,10 +311,6 @@ namespace FaultData.DataOperations
         // TODO: Hardcoded frequency
         private const double Frequency = 60.0D;
 
-        // Events
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
-
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
         private double m_residualCurrentTrigger;
@@ -407,7 +402,7 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             if ((object)s_segmentTypeLookup == null)
             {
@@ -421,7 +416,7 @@ namespace FaultData.DataOperations
             m_dbAdapterContainer = dbAdapterContainer;
         }
 
-        public void Execute(MeterDataSet meterDataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             FaultDataResource.Factory faultDataResourceFactory = new FaultDataResource.Factory()
             {
@@ -455,7 +450,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        public void Load(DbAdapterContainer dbAdapterContainer)
+        public override void Load(DbAdapterContainer dbAdapterContainer)
         {
             FaultLocationData.FaultCurveDataTable faultCurveTable;
             FaultLocationData.FaultSummaryDataTable faultSummaryTable;
@@ -515,12 +510,6 @@ namespace FaultData.DataOperations
             s_segmentTypeLookup.GetOrAdd("3-Phase Fault", segmentTypeFactory);
 
             dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
         }
 
         #endregion

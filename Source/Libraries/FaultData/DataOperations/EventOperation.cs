@@ -29,18 +29,13 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
 {
-    public class EventOperation : IDataOperation
+    public class EventOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
-
-        // Events
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
@@ -135,13 +130,13 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_dbAdapterContainer = dbAdapterContainer;
             LoadEventTypes(dbAdapterContainer);
         }
 
-        public void Execute(MeterDataSet meterDataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             EventClassificationResource.Factory factory;
             CycleDataResource cycleDataResource;
@@ -167,7 +162,7 @@ namespace FaultData.DataOperations
             m_meterDataSet = meterDataSet;
         }
 
-        public void Load(DbAdapterContainer dbAdapterContainer)
+        public override void Load(DbAdapterContainer dbAdapterContainer)
         {
             Dictionary<EventKey, MeterData.EventRow> eventLookup;
             MeterData.EventRow eventRow;
@@ -307,12 +302,6 @@ namespace FaultData.DataOperations
         private EventKey CreateEventKey(MeterData.EventRow evt)
         {
             return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
         }
 
         #endregion

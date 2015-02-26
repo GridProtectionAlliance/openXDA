@@ -30,17 +30,12 @@ using FaultData.Database;
 using FaultData.Database.DataQualityTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
 
 namespace FaultData.DataOperations
 {
-    public class HourlySummaryOperation : IDataOperation
+    public class HourlySummaryOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
-
-        // Events
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
@@ -52,7 +47,7 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_dbAdapterContainer = dbAdapterContainer;
             m_rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
@@ -60,14 +55,14 @@ namespace FaultData.DataOperations
             m_channelNormalTable = new MeterData.ChannelNormalDataTable();
         }
 
-        public void Execute(MeterDataSet meterDataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             ProcessDataQualityRangeLimits(meterDataSet);
             ProcessHourlySummaries(meterDataSet);
             ProcessChannelNormals(meterDataSet);
         }
 
-        public void Load(DbAdapterContainer dbAdapterContainer)
+        public override void Load(DbAdapterContainer dbAdapterContainer)
         {
             BulkLoader hourlySummaryLoader = new BulkLoader();
             BulkLoader channelNormalLoader = new BulkLoader();

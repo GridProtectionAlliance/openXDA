@@ -27,17 +27,12 @@ using System.Linq;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
 
 namespace FaultData.DataOperations
 {
-    public class DailySummaryOperation : IDataOperation
+    public class DailySummaryOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
-
-        // Events
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private MeterData.DailyTrendingSummaryDataTable m_dailySummaryTable;
@@ -46,12 +41,12 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public void Prepare(DbAdapterContainer dbAdapterContainer)
+        public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
         }
 
-        public void Execute(MeterDataSet meterDataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
             MeterData.DailyTrendingSummaryRow row;
@@ -81,7 +76,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        public void Load(DbAdapterContainer dbAdapterContainer)
+        public override void Load(DbAdapterContainer dbAdapterContainer)
         {
             BulkLoader bulkLoader = new BulkLoader();
 

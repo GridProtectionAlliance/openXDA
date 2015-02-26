@@ -33,7 +33,7 @@ namespace FaultData.DataOperations
         event EventHandler<EventArgs<string>> StatusMessage;
         event EventHandler<EventArgs<Exception>> ProcessException;
         void Prepare(DbAdapterContainer dbAdapterContainer);
-        void Execute(MeterDataSet meterDataSet);
+        void Execute(IDataSet meterDataSet);
         void Load(DbAdapterContainer dbAdapterContainer);
     }
 }
