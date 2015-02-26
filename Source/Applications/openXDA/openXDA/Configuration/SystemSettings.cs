@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -40,22 +41,29 @@ namespace openXDA.Configuration
 
         // Fields
         private string m_dbConnectionString;
+
         private string m_watchDirectories;
         private string m_resultsPath;
         private string m_debugPath;
         private string m_filePattern;
+
         private double m_residualCurrentTrigger;
         private double m_phaseCurrentTrigger;
         private double m_prefaultTrigger;
         private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
+
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
+        private int m_processingThreadCount;
         private string m_fileShares;
+
         private string m_smtpServer;
         private string m_fromAddress;
+
         private string m_pqDashboardUrl;
+
         private int m_debugLevel;
 
         private List<string> m_watchDirectoryList;
@@ -319,6 +327,30 @@ namespace openXDA.Configuration
             set
             {
                 m_comtradeMinWaitTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of threads used
+        /// for processing meter data concurrently.
+        /// </summary>
+        /// <remarks>
+        /// Values less than or equal to zero will be set to the number of logical processors.
+        /// </remarks>
+        [Setting]
+        [DefaultValue(0)]
+        public int ProcessingThreadCount
+        {
+            get
+            {
+                return m_processingThreadCount;
+            }
+            set
+            {
+                m_processingThreadCount = value;
+
+                if (m_processingThreadCount <= 0)
+                    m_processingThreadCount = Environment.ProcessorCount;
             }
         }
 

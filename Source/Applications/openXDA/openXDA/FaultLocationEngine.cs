@@ -122,9 +122,13 @@ namespace openXDA
 
             public void Process()
             {
-                m_threadID = s_threadIDs.Take();
+                BlockingCollection<int> threadIDs;
+                Thread processThread;
 
-                Thread processThread = new Thread(() =>
+                threadIDs = Interlocked.CompareExchange(ref s_threadIDs, null, null);
+                m_threadID = threadIDs.Take();
+
+                processThread = new Thread(() =>
                 {
                     using (Logger)
                     {
@@ -132,7 +136,7 @@ namespace openXDA
                             ProcessMeterData(meterDataSet);
                     }
 
-                    s_threadIDs.Add(m_threadID);
+                    threadIDs.Add(m_threadID);
                 });
 
                 processThread.IsBackground = true;
@@ -345,12 +349,19 @@ namespace openXDA
             // Static Constructor
             static MeterDataProcessor()
             {
-                IEnumerable<int> threadIDs = Enumerable.Range(1, Environment.ProcessorCount);
+                SetThreadCount(Environment.ProcessorCount);
+            }
+
+            // Static Methods
+            public static void SetThreadCount(int threadCount)
+            {
+                IEnumerable<int> threadIDs = Enumerable.Range(1, threadCount);
                 ConcurrentQueue<int> threadIDQueue = new ConcurrentQueue<int>(threadIDs);
-                s_threadIDs = new BlockingCollection<int>(threadIDQueue);
+                Interlocked.Exchange(ref s_threadIDs, new BlockingCollection<int>(threadIDQueue));
             }
 
             #endregion
+
         }
 
         // Constants
@@ -425,6 +436,9 @@ namespace openXDA
             // Make sure debug directory exists
             TryCreateDirectory(m_systemSettings.DebugPath);
 
+            // Set the number of threads used for processing meter data
+            MeterDataProcessor.SetThreadCount(m_systemSettings.ProcessingThreadCount);
+
             // Setup new file processor to monitor the watch directories
             if ((object)m_fileProcessor == null)
             {
@@ -435,6 +449,17 @@ namespace openXDA
 
                 foreach (string path in m_systemSettings.WatchDirectoryList)
                     m_fileProcessor.AddTrackedDirectory(path);
+            }
+        }
+
+        /// <summary>
+        /// Reloads system settings from the database.
+        /// </summary>
+        public void ReloadSystemSettings()
+        {
+            using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(m_systemSettings.DbConnectionString))
+            {
+                m_systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
             }
         }
 
