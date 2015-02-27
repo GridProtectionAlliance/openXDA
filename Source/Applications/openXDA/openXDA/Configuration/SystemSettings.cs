@@ -44,7 +44,6 @@ namespace openXDA.Configuration
 
         private string m_watchDirectories;
         private string m_resultsPath;
-        private string m_debugPath;
         private string m_filePattern;
 
         private double m_maxVoltage;
@@ -151,24 +150,6 @@ namespace openXDA.Configuration
             set
             {
                 m_resultsPath = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the path to the directory to
-        /// which debug information is to be written.
-        /// </summary>
-        [Setting]
-        [DefaultValue("Debug")]
-        public string DebugPath
-        {
-            get
-            {
-                return m_debugPath;
-            }
-            set
-            {
-                m_debugPath = value;
             }
         }
 

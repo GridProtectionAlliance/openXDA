@@ -407,9 +407,6 @@ namespace openXDA
             // Make sure results directory exists
             TryCreateDirectory(m_systemSettings.ResultsPath);
 
-            // Make sure debug directory exists
-            TryCreateDirectory(m_systemSettings.DebugPath);
-
             // Set the number of threads used for processing meter data
             MeterDataProcessor.SetThreadCount(m_systemSettings.ProcessingThreadCount);
 
