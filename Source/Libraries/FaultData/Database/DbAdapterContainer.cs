@@ -76,6 +76,7 @@ namespace FaultData.Database
         public DbAdapterContainer(string connectionString)
         {
             m_connection = new SqlConnection(connectionString);
+            m_connection.Open();
         }
 
         public DbAdapterContainer(SqlConnection connection)
