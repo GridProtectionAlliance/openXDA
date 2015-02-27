@@ -453,18 +453,24 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
+            List<FaultSegment> faultSegmentTable;
             FaultLocationData.FaultCurveDataTable faultCurveTable;
             FaultLocationData.FaultSummaryDataTable faultSummaryTable;
 
             m_faultSummarizer.FillTables(dbAdapterContainer);
+
+            faultSegmentTable = m_faultSummarizer.FaultSegmentTable;
             faultCurveTable = m_faultSummarizer.FaultCurveTable;
             faultSummaryTable = m_faultSummarizer.FaultSummaryTable;
 
-            // Submit fault segments to the database
-            dbAdapterContainer.FaultLocationInfoAdapter.FaultSegments.InsertAllOnSubmit(m_faultSummarizer.FaultSegmentTable);
-            dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
+            if (faultSegmentTable.Count == 0 && faultCurveTable.Count == 0 && faultSummaryTable.Count == 0)
+                return;
 
             Log.Info("Loading fault data into the database...");
+
+            // Submit fault segments to the database
+            dbAdapterContainer.FaultLocationInfoAdapter.FaultSegments.InsertAllOnSubmit(faultSegmentTable);
+            dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
 
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {

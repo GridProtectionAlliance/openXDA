@@ -31,6 +31,7 @@ using FaultData.Database.AlarmDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using log4net;
 
 namespace FaultData.DataOperations
 {
@@ -58,6 +59,7 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            Log.Info("Executing operation to load alarm data into the database...");
             LoadDataQualityAlarmLogs(meterDataSet);
             LoadRangeLimits(meterDataSet);
             LoadHourOfWeekLimits(meterDataSet);
@@ -65,13 +67,19 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
+            if (m_alarmLogTable.Count == 0)
+                return;
+
+            Log.Info("Loading alarm data into the database...");
+
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
                 bulkCopy.BulkCopyTimeout = 0;
                 bulkCopy.DestinationTableName = m_alarmLogTable.TableName;
                 bulkCopy.WriteToServer(m_alarmLogTable);
-                m_alarmLogTable.Clear();
             }
+
+            Log.Info(string.Format("Loaded {0} alarm log records into the database...", m_alarmLogTable.Count));
         }
 
         private void LoadDataQualityAlarmLogs(MeterDataSet meterDataSet)
@@ -328,6 +336,7 @@ namespace FaultData.DataOperations
 
         // Static Fields
         private static readonly object RangeLimitLock = new object();
+        private static readonly ILog Log = LogManager.GetLogger(typeof(AlarmOperation));
 
         #endregion
     }

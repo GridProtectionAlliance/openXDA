@@ -29,7 +29,6 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF.Annotations;
 using log4net;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
@@ -144,7 +143,7 @@ namespace FaultData.DataOperations
             CycleDataResource cycleDataResource;
             EventClassificationResource eventClassificationResource;
 
-            OnStatusMessage("Executing operation to load event data into the database...");
+            Log.Info("Executing operation to load event data into the database...");
 
             factory = new EventClassificationResource.Factory()
             {
@@ -173,7 +172,10 @@ namespace FaultData.DataOperations
             EventKey eventKey;
             byte[] cycleData;
 
-            OnStatusMessage("Loading event data into the database...");
+            if (m_eventTable.Count == 0 && m_cycleDataList.Count == 0)
+                return;
+
+            Log.Info("Loading event data into the database...");
 
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
@@ -206,7 +208,7 @@ namespace FaultData.DataOperations
                 bulkCopy.WriteToServer(cycleDataTable);
             }
 
-            OnStatusMessage("Loaded {0} events into the database.", m_eventTable.Count);
+            Log.Info(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
         }
 
         private void LoadEventTypes(DbAdapterContainer dbAdapterContainer)
@@ -245,7 +247,7 @@ namespace FaultData.DataOperations
                 if (!s_eventTypeLookup.TryGetValue(eventClassification, out eventTypeID))
                     continue;
 
-                OnStatusMessage("Processing event with event type {0}.", eventClassification);
+                Log.Debug(string.Format("Processing event with event type {0}.", eventClassification));
 
                 eventRow = m_eventTable.NewEventRow();
                 eventRow.FileGroupID = meterDataSet.FileGroup.ID;
@@ -263,7 +265,7 @@ namespace FaultData.DataOperations
                 m_cycleDataList.Add(Tuple.Create(CreateEventKey(eventRow), viCycleDataGroups[i].ToDataGroup().ToData()));
             }
 
-            OnStatusMessage("Finished processing {0} events.", m_eventTable.Count);
+            Log.Info(string.Format("Finished processing {0} events.", m_eventTable.Count));
         }
 
         private Dictionary<EventClassification, int> GetEventTypeLookup(DbAdapterContainer dbAdapterContainer)
@@ -304,12 +306,6 @@ namespace FaultData.DataOperations
         private EventKey CreateEventKey(MeterData.EventRow evt)
         {
             return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
-        }
-
-        [StringFormatMethod("format")]
-        private void OnStatusMessage(string format, params object[] args)
-        {
-            Log.Info(string.Format(format, args));
         }
 
         #endregion

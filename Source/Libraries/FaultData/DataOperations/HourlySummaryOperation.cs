@@ -30,6 +30,7 @@ using FaultData.Database;
 using FaultData.Database.DataQualityTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using log4net;
 
 namespace FaultData.DataOperations
 {
@@ -57,6 +58,7 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            Log.Info("Executing operation to load hourly summary data into the database...");
             ProcessDataQualityRangeLimits(meterDataSet);
             ProcessHourlySummaries(meterDataSet);
             ProcessChannelNormals(meterDataSet);
@@ -64,8 +66,16 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
-            BulkLoader hourlySummaryLoader = new BulkLoader();
-            BulkLoader channelNormalLoader = new BulkLoader();
+            BulkLoader hourlySummaryLoader;
+            BulkLoader channelNormalLoader;
+
+            if (m_hourlySummaryTable.Count == 0 && m_channelNormalTable.Count == 0)
+                return;
+
+            Log.Info("Loading hourly summary data into the database...");
+
+            hourlySummaryLoader = new BulkLoader();
+            channelNormalLoader = new BulkLoader();
 
             hourlySummaryLoader.Connection = dbAdapterContainer.Connection;
             channelNormalLoader.Connection = dbAdapterContainer.Connection;
@@ -121,6 +131,8 @@ namespace FaultData.DataOperations
 
             hourlySummaryLoader.Load(m_hourlySummaryTable);
             channelNormalLoader.Load(m_channelNormalTable);
+
+            Log.Info(string.Format("Loaded {0} hourly summary records into the database.", m_hourlySummaryTable.Count));
         }
 
         private void ProcessDataQualityRangeLimits(MeterDataSet meterDataSet)
@@ -338,6 +350,7 @@ namespace FaultData.DataOperations
 
         // Static Fields
         private static readonly object RangeLimitLock = new object();
+        private static readonly ILog Log = LogManager.GetLogger(typeof(HourlySummaryOperation));
 
         #endregion
     }

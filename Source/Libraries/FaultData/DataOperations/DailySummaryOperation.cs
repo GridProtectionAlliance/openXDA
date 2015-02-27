@@ -27,6 +27,7 @@ using System.Linq;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using log4net;
 
 namespace FaultData.DataOperations
 {
@@ -53,6 +54,8 @@ namespace FaultData.DataOperations
 
             List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries;
 
+            Log.Info("Executing operation to load daily summary data into the database...");
+
             foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
             {
                 foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> dailySummary in channelSummaries.Value.GroupBy(summary => GetDate(summary.Time)))
@@ -78,8 +81,14 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
-            BulkLoader bulkLoader = new BulkLoader();
+            BulkLoader bulkLoader;
 
+            if (m_dailySummaryTable.Count == 0)
+                return;
+
+            Log.Info("Executing operation to load daily summary data into the database...");
+
+            bulkLoader = new BulkLoader();
             bulkLoader.Connection = dbAdapterContainer.Connection;
 
             bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
@@ -108,12 +117,21 @@ namespace FaultData.DataOperations
             
             // Bulk insert new rows
             bulkLoader.Load(m_dailySummaryTable);
+
+            Log.Info(string.Format("Loaded {0} daily summary records into the database.", m_dailySummaryTable.Count));
         }
 
         private DateTime GetDate(DateTime time)
         {
             return new DateTime(time.Year, time.Month, time.Day);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DailySummaryOperation));
 
         #endregion
     }

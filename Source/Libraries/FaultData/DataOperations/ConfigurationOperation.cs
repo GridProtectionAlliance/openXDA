@@ -76,7 +76,7 @@ namespace FaultData.DataOperations
             Dictionary<SeriesKey, Series> seriesLookup;
             Series seriesInfo;
 
-            OnStatusMessage("Executing operation to locate meter in database...");
+            Log.Info("Executing operation to locate meter in database...");
 
             // Try to parse the name of the meter from the file path
             if (!string.IsNullOrEmpty(FilePattern) && TryParseFilePath(meterDataSet.FilePath, out meterKey))
@@ -87,7 +87,7 @@ namespace FaultData.DataOperations
 
             if ((object)meter != null)
             {
-                OnStatusMessage("Found meter {0} in database.", meter.Name);
+                Log.Info(string.Format("Found meter {0} in database.", meter.Name));
 
                 // Match the parsed series with the ones associated with the meter in the database
                 seriesLookup = meter.Channels
@@ -127,7 +127,7 @@ namespace FaultData.DataOperations
             }
             else
             {
-                OnStatusMessage("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name);
+                Log.Info(string.Format("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name));
 
                 // If configuration cannot be modified and existing configuration cannot be found for this meter,
                 // throw an exception to indicate the operation could not be executed
@@ -210,12 +210,6 @@ namespace FaultData.DataOperations
                 channel.MeasurementCharacteristic.Name,
                 channel.Phase.Name,
                 series.SeriesType.Name);
-        }
-
-        [StringFormatMethod("format")]
-        private void OnStatusMessage(string format, params object[] args)
-        {
-            Log.Info(string.Format(format, args));
         }
 
         #endregion
