@@ -115,9 +115,8 @@ namespace FaultData.DataOperations
 
                 foreach (Fault fault in Faults)
                 {
-                    // If the distance algorithm is null,
-                    // this fault is not valid
-                    if ((object)fault.Info.DistanceAlgorithm == null)
+                    // Detemrine if the fault is valid
+                    if (fault.Info.NumberOfValidDistances == 0)
                         continue;
 
                     // Create a fault segment for the fault itself
@@ -144,7 +143,7 @@ namespace FaultData.DataOperations
                 }
 
                 // Generate fault curves for each algorithm used to analyze the fault
-                if (Faults.Any(fault => (object)fault.Info.DistanceAlgorithm != null))
+                if (Faults.Any(fault => fault.Info.NumberOfValidDistances > 0))
                 {
                     for (int i = 0; i < Faults[0].Curves.Count; i++)
                     {
@@ -244,7 +243,7 @@ namespace FaultData.DataOperations
 
                 foreach (Fault fault in Faults)
                 {
-                    if ((object)fault.Info.DistanceAlgorithm == null)
+                    if (fault.Info.NumberOfValidDistances == 0)
                         continue;
 
                     for (int sample = fault.Info.StartSample; sample <= fault.Info.EndSample; sample++)

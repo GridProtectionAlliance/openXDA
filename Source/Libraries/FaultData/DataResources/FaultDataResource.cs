@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using FaultAlgorithms;
@@ -31,6 +32,7 @@ using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 using GSF.Collections;
+using log4net;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
 using Line = FaultData.Database.Line;
 
@@ -329,20 +331,32 @@ namespace FaultData.DataResources
             // Determine if the time of the record is
             // too far in the past to be reasonable
             if (dataGroup.StartTime < minTime)
+            {
+                Log.Debug("Data unreasonable: dataGroup.StartTime < minTime");
                 return false;
+            }
 
             // Determine if the time of the record is
             // too far in the future to be reasonable
             if (dataGroup.StartTime > maxTime)
+            {
+                Log.Debug("Data unreasonable: dataGroup.StartTime > maxTime");
                 return false;
+            }
 
             // Determine if any of the RMS voltages are unreasonably high
             if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxVoltage)))
+            {
+                Log.Debug("Data unreasonable: voltage > maxVoltage");
                 return false;
+            }
 
             // Determine if any of the RMS currents are unreasonably low
             if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxCurrent)))
+            {
+                Log.Debug("Data unreasonable: current > maxCurrent");
                 return false;
+            }
 
             // Determine if any of the cycles suggest that the
             // voltage was too low to be able to serve the current
@@ -351,7 +365,10 @@ namespace FaultData.DataResources
                 for (int j = 0; j < voltages[i].DataPoints.Count; j++)
                 {
                     if (voltages[i][j].Value < m_lowVoltageThreshold && currents[i][j].Value > m_maxLowVoltageCurrent)
+                    {
+                        Log.Debug("Data unreasonable: voltage too low to serve current");
                         return false;
+                    }
                 }
             }
 
@@ -371,9 +388,15 @@ namespace FaultData.DataResources
             ImpedanceExtractor impedanceExtractor;
             FaultCurveGenerator faultCurveGenerator;
 
-            CycleDataResource cycleDataResource = dataSet.GetResource<CycleDataResource>();
+            CycleDataResource cycleDataResource;
 
+            Stopwatch stopwatch;
+
+            stopwatch = new Stopwatch();
+            cycleDataResource = dataSet.GetResource<CycleDataResource>();
             faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.FaultLocationInfoAdapter);
+
+            Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
@@ -382,16 +405,38 @@ namespace FaultData.DataResources
                 viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
                 // Engineering reasonableness checks
-                if (!IsReasonable(dataGroup, viCycleDataGroup))
-                    continue;
+                Log.Debug("Checking for engineering reasonableness...");
+
+                try
+                {
+                    stopwatch.Restart();
+
+                    if (!IsReasonable(dataGroup, viCycleDataGroup))
+                        continue;
+                }
+                finally
+                {
+                    Log.Debug(stopwatch.Elapsed);
+                }
 
                 // Break into faults and segments
-                faults = DetectFaults(dataGroup, viDataGroup, viCycleDataGroup);
+                Log.Debug("Classifying data into faults and segments...");
 
-                if (faults.Count == 0)
-                    continue;
+                try
+                {
+                    stopwatch.Restart();
 
-                ClassifyFaults(faults, viCycleDataGroup);
+                    faults = DetectFaults(dataGroup, viDataGroup, viCycleDataGroup);
+
+                    if (faults.Count == 0)
+                        continue;
+
+                    ClassifyFaults(faults, viCycleDataGroup);
+                }
+                finally
+                {
+                    Log.Debug(stopwatch.Elapsed);
+                }
 
                 // Add list of faults to lookup table
                 m_faultLookup.Add(dataGroup, faults);
@@ -414,6 +459,9 @@ namespace FaultData.DataResources
                     continue;
 
                 // Generate fault curves for fault analysis
+                Log.Debug("Generating fault curves...");
+                stopwatch.Restart();
+
                 faultCurveGenerator = new FaultCurveGenerator();
                 faultCurveGenerator.SamplesPerCycle = (int)(viDataGroup.VA.SampleRate / Frequency);
                 faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
@@ -421,6 +469,8 @@ namespace FaultData.DataResources
                 faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
                 faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
                 faultCurveGenerator.GenerateFaultCurves();
+
+                Log.Debug(stopwatch.Elapsed);
 
                 // Gather additional info about each fault
                 // based on the results of the above analysis
@@ -876,6 +926,13 @@ namespace FaultData.DataResources
 
             return maxIndex;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(FaultDataResource));
 
         #endregion
     }

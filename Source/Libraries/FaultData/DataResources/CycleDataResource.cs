@@ -22,9 +22,11 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using log4net;
 
 namespace FaultData.DataResources
 {
@@ -76,19 +78,35 @@ namespace FaultData.DataResources
         public override void Initialize(MeterDataSet dataSet)
         {
             DataGroupsResource dataGroupsResource = dataSet.GetResource<DataGroupsResource>();
+            Stopwatch stopwatch = new Stopwatch();
 
             m_dataGroups = dataGroupsResource.DataGroups
                 .Where(dataGroup => dataGroup.Classification == DataClassification.Event)
                 .ToList();
 
+            Log.Info(string.Format("Found data for {0} events.", m_dataGroups.Count));
+
             m_viDataGroups = m_dataGroups
                 .Select(dataGroup => new VIDataGroup(dataGroup))
                 .ToList();
 
+            Log.Info(string.Format("Calculating cycle data for all {0} events.", m_dataGroups.Count));
+
+            stopwatch.Start();
+
             m_viCycleDataGroups = m_viDataGroups
                 .Select(viDataGroup => Transform.ToVICycleDataSet(viDataGroup, Frequency))
                 .ToList();
+
+            Log.Debug(string.Format("Cycle data calculated in {0}.", stopwatch.Elapsed));
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(CycleDataResource));
 
         #endregion
     }
