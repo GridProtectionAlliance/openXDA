@@ -118,7 +118,7 @@ namespace openXDA
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
             ServiceHelperAppender serviceHelperAppender;
-            FileAppender fileAppender;
+            RollingFileAppender fileAppender;
 
             // Set current working directory to fix relative paths
             Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
@@ -126,12 +126,25 @@ namespace openXDA
             // Set up logging
             serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
 
-            fileAppender = new FileAppender();
-            fileAppender.File = "openXDA.log";
+            fileAppender = new RollingFileAppender();
             fileAppender.AppendToFile = true;
+            fileAppender.MaxFileSize = 1048576L;
             fileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
-            fileAppender.ActivateOptions();
 
+            try
+            {
+                if (!Directory.Exists("Debug"))
+                    Directory.CreateDirectory("Debug");
+
+                fileAppender.File = @"Debug\openXDA.log";
+            }
+            catch (Exception ex)
+            {
+                fileAppender.File = "openXDA.log";
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
+
+            fileAppender.ActivateOptions();
             BasicConfigurator.Configure(serviceHelperAppender, fileAppender);
 
             // Set up heartbeat and client request handlers
