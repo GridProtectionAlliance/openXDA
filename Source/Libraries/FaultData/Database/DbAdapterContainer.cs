@@ -385,7 +385,7 @@ namespace FaultData.Database
         private void Dispose(IDisposable obj)
         {
             if ((object)obj != null)
-                Dispose(obj);
+                obj.Dispose();
         }
 
         #endregion

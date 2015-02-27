@@ -30,6 +30,7 @@ using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Collections;
+using log4net;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
@@ -433,7 +434,7 @@ namespace FaultData.DataOperations
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             List<Fault> faults;
 
-            OnStatusMessage("Executing operation to load fault location data into the database...");
+            Log.Info("Executing operation to load fault location data into the database...");
 
             m_faultSummarizer = new FaultSummarizer();
             m_faultSummarizer.MeterDataSet = meterDataSet;
@@ -463,6 +464,8 @@ namespace FaultData.DataOperations
             dbAdapterContainer.FaultLocationInfoAdapter.FaultSegments.InsertAllOnSubmit(m_faultSummarizer.FaultSegmentTable);
             dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
 
+            Log.Info("Loading fault data into the database...");
+
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
                 // Set timeout to infinite
@@ -476,6 +479,8 @@ namespace FaultData.DataOperations
                 bulkCopy.DestinationTableName = faultSummaryTable.TableName;
                 bulkCopy.WriteToServer(faultSummaryTable);
             }
+
+            Log.Info(string.Format("Loaded {0} faults into the database.", faultSummaryTable.Count));
         }
 
         private void InitializeSegmentTypeLookup(DbAdapterContainer dbAdapterContainer)
@@ -519,6 +524,7 @@ namespace FaultData.DataOperations
         // Static Fields
         private static readonly object SegmentTypeLookupLock = new object();
         private static Dictionary<string, SegmentType> s_segmentTypeLookup;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(FaultLocationOperation));
 
         #endregion
     }

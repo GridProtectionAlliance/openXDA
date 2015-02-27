@@ -266,10 +266,12 @@ namespace FaultData.DataOperations
         {
             double perUnitValue;
 
-            var highLimit = 0.0D;
-            var lowLimit = 0.0D;
-            var highValid = true;
-            var lowValid = true;
+            double highLimit = 0.0D;
+            double lowLimit = 0.0D;
+            bool highValid = true;
+            bool lowValid = true;
+
+            AlarmData.AlarmLogRow logRow;
 
             perUnitValue = channel.PerUnitValue ?? 1.0D;
 
@@ -287,8 +289,7 @@ namespace FaultData.DataOperations
 
             if (!lowValid || !highValid)
             {
-                var logRow = m_alarmLogTable.NewAlarmLogRow();
-
+                logRow = m_alarmLogTable.NewAlarmLogRow();
                 logRow.ChannelID = channel.ID;
                 logRow.AlarmTypeID = rangeLimit.AlarmTypeID;
                 logRow.Time = hourlySummary.Time;

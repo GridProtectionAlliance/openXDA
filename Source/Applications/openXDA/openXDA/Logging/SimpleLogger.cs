@@ -70,9 +70,9 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace openXDA
+namespace openXDA.Logging
 {
-    public class Logger : IDisposable
+    public class SimpleLogger : IDisposable
     {
         private const string DateTimeFormat = "HH:mm:ss";
 
@@ -80,7 +80,7 @@ namespace openXDA
         private TextWriter m_fileWriter;
         private int m_recordCount;
 
-        private Logger(string logFile)
+        private SimpleLogger(string logFile)
         {
             m_logFile = logFile;
             m_fileWriter = new StreamWriter(File.Create(logFile));
@@ -130,9 +130,9 @@ namespace openXDA
             Close();
         }
 
-        public static Logger Open(string logFile)
+        public static SimpleLogger Open(string logFile)
         {
-            return new Logger(logFile);
+            return new SimpleLogger(logFile);
         }
 
         public string LogFile

@@ -29,6 +29,8 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF.Annotations;
+using log4net;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
@@ -204,7 +206,7 @@ namespace FaultData.DataOperations
                 bulkCopy.WriteToServer(cycleDataTable);
             }
 
-            OnStatusMessage(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
+            OnStatusMessage("Loaded {0} events into the database.", m_eventTable.Count);
         }
 
         private void LoadEventTypes(DbAdapterContainer dbAdapterContainer)
@@ -243,7 +245,7 @@ namespace FaultData.DataOperations
                 if (!s_eventTypeLookup.TryGetValue(eventClassification, out eventTypeID))
                     continue;
 
-                OnStatusMessage(string.Format("Processing event with event type {0}.", eventClassification));
+                OnStatusMessage("Processing event with event type {0}.", eventClassification);
 
                 eventRow = m_eventTable.NewEventRow();
                 eventRow.FileGroupID = meterDataSet.FileGroup.ID;
@@ -261,7 +263,7 @@ namespace FaultData.DataOperations
                 m_cycleDataList.Add(Tuple.Create(CreateEventKey(eventRow), viCycleDataGroups[i].ToDataGroup().ToData()));
             }
 
-            OnStatusMessage(string.Format("Finished processing {0} events.", m_eventTable.Count));
+            OnStatusMessage("Finished processing {0} events.", m_eventTable.Count);
         }
 
         private Dictionary<EventClassification, int> GetEventTypeLookup(DbAdapterContainer dbAdapterContainer)
@@ -304,6 +306,12 @@ namespace FaultData.DataOperations
             return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
         }
 
+        [StringFormatMethod("format")]
+        private void OnStatusMessage(string format, params object[] args)
+        {
+            Log.Info(string.Format(format, args));
+        }
+
         #endregion
 
         #region [ Static ]
@@ -311,6 +319,7 @@ namespace FaultData.DataOperations
         // Static Fields
         private static object s_eventTypeLock = new object();
         private static Dictionary<EventClassification, int> s_eventTypeLookup;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EventOperation));
 
         #endregion
     }

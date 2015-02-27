@@ -30,8 +30,6 @@ namespace FaultData.DataOperations
 {
     public interface IDataOperation
     {
-        event EventHandler<EventArgs<string>> StatusMessage;
-        event EventHandler<EventArgs<Exception>> ProcessException;
         void Prepare(DbAdapterContainer dbAdapterContainer);
         void Execute(IDataSet meterDataSet);
         void Load(DbAdapterContainer dbAdapterContainer);

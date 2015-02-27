@@ -71,8 +71,6 @@ namespace openXDA.Configuration
 
         private string m_pqDashboardUrl;
 
-        private int m_debugLevel;
-
         private List<string> m_watchDirectoryList;
         private List<FileShare> m_fileShareList;
 
@@ -544,24 +542,6 @@ namespace openXDA.Configuration
             set
             {
                 m_pqDashboardUrl = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a value that determines the level of debug
-        /// information that should be produced by the system.
-        /// </summary>
-        [Setting]
-        [DefaultValue(1)]
-        public int DebugLevel
-        {
-            get
-            {
-                return m_debugLevel;
-            }
-            set
-            {
-                m_debugLevel = value;
             }
         }
 

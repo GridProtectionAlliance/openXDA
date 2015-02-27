@@ -76,6 +76,10 @@ using GSF;
 using GSF.Console;
 using GSF.IO;
 using GSF.ServiceProcess;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Layout;
+using openXDA.Logging;
 
 namespace openXDA
 {
@@ -113,8 +117,22 @@ namespace openXDA
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
+            ServiceHelperAppender serviceHelperAppender;
+            FileAppender fileAppender;
+
             // Set current working directory to fix relative paths
             Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
+
+            // Set up logging
+            serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
+
+            fileAppender = new FileAppender();
+            fileAppender.File = "openXDA.log";
+            fileAppender.AppendToFile = true;
+            fileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+            fileAppender.ActivateOptions();
+
+            BasicConfigurator.Configure(serviceHelperAppender, fileAppender);
 
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
@@ -130,8 +148,6 @@ namespace openXDA
 
             // Set up fault location engine
             m_faultLocationEngine = new FaultLocationEngine();
-            m_faultLocationEngine.StatusMessage += FaultLocationEngine_StatusMessage;
-            m_faultLocationEngine.ProcessException += FaultLocationEngine_ProcessException;
             m_faultLocationEngine.Start();
         }
 
@@ -143,8 +159,6 @@ namespace openXDA
             m_serviceMonitors.Dispose();
 
             // Dispose of fault location engine
-            m_faultLocationEngine.StatusMessage -= FaultLocationEngine_StatusMessage;
-            m_faultLocationEngine.ProcessException -= FaultLocationEngine_ProcessException;
             m_faultLocationEngine.Stop();
             m_faultLocationEngine.Dispose();
         }
@@ -267,22 +281,6 @@ namespace openXDA
         private void ServiceMonitors_AdapterUnloaded(object sender, EventArgs<IServiceMonitor> e)
         {
             m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been unloaded", e.Argument.GetType().Name);
-        }
-
-        #endregion
-
-        #region [ Fault Location Engine Handlers ]
-
-        // Sends status messages to the service helper
-        private void FaultLocationEngine_StatusMessage(object sender, EventArgs<string> e)
-        {
-            m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, e.Argument);
-        }
-
-        // Handles exceptions encountered while performing fault location analysis
-        private void FaultLocationEngine_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            HandleException(e.Argument);
         }
 
         #endregion

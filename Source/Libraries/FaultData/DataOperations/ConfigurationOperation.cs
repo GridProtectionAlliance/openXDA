@@ -28,6 +28,8 @@ using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
+using GSF.Annotations;
+using log4net;
 using SeriesKey = System.Tuple<int, string, string, string, string, string>;
 
 namespace FaultData.DataOperations
@@ -85,7 +87,7 @@ namespace FaultData.DataOperations
 
             if ((object)meter != null)
             {
-                OnStatusMessage(string.Format("Found meter {0} in database.", meter.Name));
+                OnStatusMessage("Found meter {0} in database.", meter.Name);
 
                 // Match the parsed series with the ones associated with the meter in the database
                 seriesLookup = meter.Channels
@@ -125,7 +127,7 @@ namespace FaultData.DataOperations
             }
             else
             {
-                OnStatusMessage(string.Format("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name));
+                OnStatusMessage("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name);
 
                 // If configuration cannot be modified and existing configuration cannot be found for this meter,
                 // throw an exception to indicate the operation could not be executed
@@ -209,6 +211,19 @@ namespace FaultData.DataOperations
                 channel.Phase.Name,
                 series.SeriesType.Name);
         }
+
+        [StringFormatMethod("format")]
+        private void OnStatusMessage(string format, params object[] args)
+        {
+            Log.Info(string.Format(format, args));
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationOperation));
 
         #endregion
     }

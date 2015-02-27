@@ -50,6 +50,9 @@
     <Reference Include="Ionic.Zlib">
       <HintPath>..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Linq" />
@@ -217,6 +220,7 @@
       <LastGenOutput>SystemInfo.designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

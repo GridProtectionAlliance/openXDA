@@ -22,10 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
@@ -34,9 +30,6 @@ namespace FaultData.DataOperations
 {
     public abstract class DataOperationBase<T> : IDataOperation where T : class, IDataSet
     {
-        public event EventHandler<EventArgs<string>> StatusMessage;
-        public event EventHandler<EventArgs<Exception>> ProcessException;
-
         public abstract void Prepare(DbAdapterContainer dbAdapterContainer);
         public abstract void Execute(T dataSet);
         public abstract void Load(DbAdapterContainer dbAdapterContainer);
@@ -47,18 +40,6 @@ namespace FaultData.DataOperations
 
             if ((object)dataSetAsT != null)
                 Execute(dataSetAsT);
-        }
-
-        protected void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
-        }
-
-        protected void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
         }
     }
 }
