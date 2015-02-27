@@ -94,6 +94,17 @@ namespace FaultData.DataOperations
 
             #endregion
 
+            #region [ Constructors ]
+
+            public FaultSummarizer()
+            {
+                m_faultSegmentList = new List<Tuple<EventKey, FaultSegment>>();
+                m_faultCurveList = new List<Tuple<EventKey, FaultLocationData.FaultCurveRow>>();
+                m_faultSummaryList = new List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>>();
+            }
+
+            #endregion
+
             #region [ Methods ]
 
             public void SummarizeFault()
@@ -105,10 +116,6 @@ namespace FaultData.DataOperations
                 EventKey eventKey;
 
                 int faultNumber;
-
-                m_faultSegmentList = new List<Tuple<EventKey, FaultSegment>>();
-                m_faultCurveList = new List<Tuple<EventKey, FaultLocationData.FaultCurveRow>>();
-                m_faultSummaryList = new List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>>();
 
                 eventKey = Tuple.Create(DataGroup.Line.ID, DataGroup.StartTime, DataGroup.EndTime);
                 faultNumber = 1;

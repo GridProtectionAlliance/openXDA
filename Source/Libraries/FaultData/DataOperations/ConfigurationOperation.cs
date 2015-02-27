@@ -28,7 +28,6 @@ using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
-using GSF.Annotations;
 using log4net;
 using SeriesKey = System.Tuple<int, string, string, string, string, string>;
 

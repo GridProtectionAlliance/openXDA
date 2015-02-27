@@ -282,6 +282,7 @@ namespace FaultData.DataOperations
 
             bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
                                            "( " +
+                                           "    ID INT," +
                                            "    Name VARCHAR(200), " +
                                            "    Description VARCHAR(MAX)" +
                                            ")";
