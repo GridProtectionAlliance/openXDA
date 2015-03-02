@@ -209,8 +209,6 @@ namespace openXDA
                         // related to the error we originally caught
                     }
                 }
-
-                OnStatusMessage("");
             }
 
             private void WriteResults(MeterDataSet meterDataSet)

@@ -127,8 +127,12 @@ namespace openXDA
             serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
 
             fileAppender = new RollingFileAppender();
+            fileAppender.StaticLogFileName = false;
             fileAppender.AppendToFile = true;
-            fileAppender.MaxFileSize = 1048576L;
+            fileAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
+            fileAppender.MaxSizeRollBackups = 10;
+            fileAppender.PreserveLogFileNameExtension = true;
+            fileAppender.MaximumFileSize = "1MB";
             fileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
 
             try
