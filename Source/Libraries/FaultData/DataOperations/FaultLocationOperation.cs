@@ -320,6 +320,14 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
+
+        private double m_maxVoltage;
+        private double m_maxCurrent;
+        private double m_lowVoltageThreshold;
+        private double m_maxLowVoltageCurrent;
+        private double m_maxTimeOffset;
+        private double m_minTimeOffset;
+
         private double m_residualCurrentTrigger;
         private double m_phaseCurrentTrigger;
         private double m_prefaultTrigger;
@@ -332,6 +340,78 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
+
+        public double MaxVoltage
+        {
+            get
+            {
+                return m_maxVoltage;
+            }
+            set
+            {
+                m_maxVoltage = value;
+            }
+        }
+
+        public double MaxCurrent
+        {
+            get
+            {
+                return m_maxCurrent;
+            }
+            set
+            {
+                m_maxCurrent = value;
+            }
+        }
+
+        public double LowVoltageThreshold
+        {
+            get
+            {
+                return m_lowVoltageThreshold;
+            }
+            set
+            {
+                m_lowVoltageThreshold = value;
+            }
+        }
+
+        public double MaxLowVoltageCurrent
+        {
+            get
+            {
+                return m_maxLowVoltageCurrent;
+            }
+            set
+            {
+                m_maxLowVoltageCurrent = value;
+            }
+        }
+
+        public double MaxTimeOffset
+        {
+            get
+            {
+                return m_maxTimeOffset;
+            }
+            set
+            {
+                m_maxTimeOffset = value;
+            }
+        }
+
+        public double MinTimeOffset
+        {
+            get
+            {
+                return m_minTimeOffset;
+            }
+            set
+            {
+                m_minTimeOffset = value;
+            }
+        }
 
         public double ResidualCurrentTrigger
         {
@@ -428,6 +508,12 @@ namespace FaultData.DataOperations
             FaultDataResource.Factory faultDataResourceFactory = new FaultDataResource.Factory()
             {
                 DbAdapterContainer = m_dbAdapterContainer,
+                MaxVoltage = m_maxVoltage,
+                MaxCurrent = m_maxCurrent,
+                LowVoltageThreshold = m_lowVoltageThreshold,
+                MaxLowVoltageCurrent = m_maxLowVoltageCurrent,
+                MaxTimeOffset = m_maxTimeOffset,
+                MinTimeOffset = m_minTimeOffset,
                 ResidualCurrentTrigger = m_residualCurrentTrigger,
                 PhaseCurrentTrigger = m_phaseCurrentTrigger,
                 PrefaultTrigger = m_prefaultTrigger,

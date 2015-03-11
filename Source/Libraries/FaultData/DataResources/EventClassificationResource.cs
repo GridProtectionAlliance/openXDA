@@ -128,7 +128,7 @@ namespace FaultData.DataResources
 
         #region [ Methods ]
 
-        public override void Initialize(MeterDataSet dataSet)
+        public override void Initialize(MeterDataSet meterDataSet)
         {
             FaultDataResource.Factory faultDataResourceFactory = new FaultDataResource.Factory()
             {
@@ -147,8 +147,8 @@ namespace FaultData.DataResources
                 MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
             };
 
-            CycleDataResource cycleDataResource = dataSet.GetResource<CycleDataResource>();
-            FaultDataResource faultDataResource = dataSet.GetResource(faultDataResourceFactory.Create);
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            FaultDataResource faultDataResource = meterDataSet.GetResource(faultDataResourceFactory.Create);
             List<Fault> faults;
 
             DataGroup dataGroup;

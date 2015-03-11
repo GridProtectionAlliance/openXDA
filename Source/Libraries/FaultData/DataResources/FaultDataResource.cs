@@ -300,82 +300,7 @@ namespace FaultData.DataResources
 
         #region [ Methods ]
 
-        private bool IsReasonable(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
-        {
-            // Get the current system time and time thresholds
-            DateTime now = DateTime.Now;
-            DateTime minTime = now.AddHours(-m_minTimeOffset);
-            DateTime maxTime = now.AddHours(m_maxTimeOffset);
-
-            // Get the line-to-neutral nominal voltage in volts
-            double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
-
-            // Get the thermal rating in amps
-            double thermalRating = dataGroup.Line.ThermalRating;
-
-            DataSeries[] voltages =
-            {
-                viCycleDataGroup.VA.RMS.Multiply(1.0D / nominalVoltage),
-                viCycleDataGroup.VB.RMS.Multiply(1.0D / nominalVoltage),
-                viCycleDataGroup.VC.RMS.Multiply(1.0D / nominalVoltage)
-            };
-
-            DataSeries[] currents =
-            {
-                viCycleDataGroup.IA.RMS.Multiply(1.0D / thermalRating),
-                viCycleDataGroup.IB.RMS.Multiply(1.0D / thermalRating),
-                viCycleDataGroup.IC.RMS.Multiply(1.0D / thermalRating),
-                viCycleDataGroup.IR.RMS.Multiply(1.0D / thermalRating)
-            };
-
-            // Determine if the time of the record is
-            // too far in the past to be reasonable
-            if (dataGroup.StartTime < minTime)
-            {
-                Log.Debug("Data unreasonable: dataGroup.StartTime < minTime");
-                return false;
-            }
-
-            // Determine if the time of the record is
-            // too far in the future to be reasonable
-            if (dataGroup.StartTime > maxTime)
-            {
-                Log.Debug("Data unreasonable: dataGroup.StartTime > maxTime");
-                return false;
-            }
-
-            // Determine if any of the RMS voltages are unreasonably high
-            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxVoltage)))
-            {
-                Log.Debug("Data unreasonable: voltage > maxVoltage");
-                return false;
-            }
-
-            // Determine if any of the RMS currents are unreasonably low
-            if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxCurrent)))
-            {
-                Log.Debug("Data unreasonable: current > maxCurrent");
-                return false;
-            }
-
-            // Determine if any of the cycles suggest that the
-            // voltage was too low to be able to serve the current
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < voltages[i].DataPoints.Count; j++)
-                {
-                    if (voltages[i][j].Value < m_lowVoltageThreshold && currents[i][j].Value > m_maxLowVoltageCurrent)
-                    {
-                        Log.Debug("Data unreasonable: voltage too low to serve current");
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        public override void Initialize(MeterDataSet dataSet)
+        public override void Initialize(MeterDataSet meterDataSet)
         {
             DataGroup dataGroup;
             VIDataGroup viDataGroup;
@@ -393,7 +318,7 @@ namespace FaultData.DataResources
             Stopwatch stopwatch;
 
             stopwatch = new Stopwatch();
-            cycleDataResource = dataSet.GetResource<CycleDataResource>();
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.FaultLocationInfoAdapter);
 
             Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
@@ -452,7 +377,7 @@ namespace FaultData.DataResources
                 impedanceExtractor = new ImpedanceExtractor();
                 impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
                 impedanceExtractor.FaultLocationInfo = m_dbAdapterContainer.FaultLocationInfoAdapter;
-                impedanceExtractor.Meter = dataSet.Meter;
+                impedanceExtractor.Meter = meterDataSet.Meter;
                 impedanceExtractor.Line = dataGroup.Line;
 
                 if (!impedanceExtractor.TryExtractImpedances())
@@ -568,6 +493,81 @@ namespace FaultData.DataResources
             return faults;
         }
 
+        private bool IsReasonable(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            // Get the current system time and time thresholds
+            DateTime now = DateTime.Now;
+            DateTime minTime = now.AddHours(-m_minTimeOffset);
+            DateTime maxTime = now.AddHours(m_maxTimeOffset);
+
+            // Get the line-to-neutral nominal voltage in volts
+            double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
+
+            // Get the thermal rating in amps
+            double thermalRating = dataGroup.Line.ThermalRating;
+
+            DataSeries[] voltages =
+            {
+                viCycleDataGroup.VA.RMS.Multiply(1.0D / nominalVoltage),
+                viCycleDataGroup.VB.RMS.Multiply(1.0D / nominalVoltage),
+                viCycleDataGroup.VC.RMS.Multiply(1.0D / nominalVoltage)
+            };
+
+            DataSeries[] currents =
+            {
+                viCycleDataGroup.IA.RMS.Multiply(1.0D / thermalRating),
+                viCycleDataGroup.IB.RMS.Multiply(1.0D / thermalRating),
+                viCycleDataGroup.IC.RMS.Multiply(1.0D / thermalRating),
+                viCycleDataGroup.IR.RMS.Multiply(1.0D / thermalRating)
+            };
+
+            // Determine if the time of the record is
+            // too far in the past to be reasonable
+            if (dataGroup.StartTime < minTime)
+            {
+                Log.Debug("Data unreasonable: dataGroup.StartTime < minTime");
+                return false;
+            }
+
+            // Determine if the time of the record is
+            // too far in the future to be reasonable
+            if (dataGroup.StartTime > maxTime)
+            {
+                Log.Debug("Data unreasonable: dataGroup.StartTime > maxTime");
+                return false;
+            }
+
+            // Determine if any of the RMS voltages are unreasonably high
+            if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxVoltage)))
+            {
+                Log.Debug("Data unreasonable: voltage > maxVoltage");
+                return false;
+            }
+
+            // Determine if any of the RMS currents are unreasonably low
+            if (currents.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxCurrent)))
+            {
+                Log.Debug("Data unreasonable: current > maxCurrent");
+                return false;
+            }
+
+            // Determine if any of the cycles suggest that the
+            // voltage was too low to be able to serve the current
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < voltages[i].DataPoints.Count; j++)
+                {
+                    if (voltages[i][j].Value < m_lowVoltageThreshold && currents[i][j].Value > m_maxLowVoltageCurrent)
+                    {
+                        Log.Debug("Data unreasonable: voltage too low to serve current");
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         private bool IsFaultObvious(double ia, double ib, double ic, double ir)
         {
             if (ir > m_residualCurrentTrigger)
@@ -620,7 +620,7 @@ namespace FaultData.DataResources
             List<double> cycle;
             double dist;
 
-            foreach (var series in phaseCurrents)
+            foreach (DataSeries series in phaseCurrents)
             {
                 // Calculate the sample rate of the series
                 samplesPerCycle = (int)Math.Round(series.SampleRate / Frequency);

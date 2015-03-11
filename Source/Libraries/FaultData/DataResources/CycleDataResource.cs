@@ -75,9 +75,9 @@ namespace FaultData.DataResources
 
         #region [ Methods ]
 
-        public override void Initialize(MeterDataSet dataSet)
+        public override void Initialize(MeterDataSet meterDataSet)
         {
-            DataGroupsResource dataGroupsResource = dataSet.GetResource<DataGroupsResource>();
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
             Stopwatch stopwatch = new Stopwatch();
 
             m_dataGroups = dataGroupsResource.DataGroups
@@ -95,7 +95,7 @@ namespace FaultData.DataResources
             stopwatch.Start();
 
             m_viCycleDataGroups = m_viDataGroups
-                .Select(viDataGroup => Transform.ToVICycleDataSet(viDataGroup, Frequency))
+                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, Frequency))
                 .ToList();
 
             Log.Debug(string.Format("Cycle data calculated in {0}.", stopwatch.Elapsed));

@@ -58,9 +58,9 @@ namespace FaultData.DataAnalysis
                 .ToList();
         }
 
-        public VICycleDataGroup(CycleDataGroup va, CycleDataGroup vb, CycleDataGroup vc, CycleDataGroup ia, CycleDataGroup ib, CycleDataGroup ic)
+        public VICycleDataGroup(CycleDataGroup va, CycleDataGroup vb, CycleDataGroup vc, CycleDataGroup ia, CycleDataGroup ib, CycleDataGroup ic, CycleDataGroup ir)
         {
-            m_cycleDataGroups = new List<CycleDataGroup>() { va, vb, vc, ia, ib, ic };
+            m_cycleDataGroups = new List<CycleDataGroup>() { va, vb, vc, ia, ib, ic, ir };
         }
 
         public VICycleDataGroup(List<CycleDataGroup> cycleDataGroups)
