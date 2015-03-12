@@ -280,6 +280,10 @@ namespace FaultData.DataWriters
             COMTRADEData comtradeData = new COMTRADEData();
             DataGroup eventDataGroup = new DataGroup();
 
+            // If there are no waveforms to be written to the file, give up
+            if (!faultRecordInfo.WaveformChannels.Any())
+                return;
+
             eventDataGroup.FromData(faultRecordInfo.Event.Data);
 
             comtradeData.StationName = faultRecordInfo.Meter.Name;

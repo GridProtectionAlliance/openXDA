@@ -871,7 +871,7 @@ namespace FaultData.DataResources
                     .FaultType;
             }
 
-            if (fault.Curves.Any())
+            if (largestFaultCycle >= 0)
             {
                 distances = fault.Curves
                     .Select((curve, index) => Tuple.Create(index, curve.Algorithm, curve[largestFaultCycle].Value))
@@ -907,10 +907,22 @@ namespace FaultData.DataResources
             double max;
             int maxIndex;
 
+            int startSample;
+            int endSample;
+
+            if (!fault.Curves.Any())
+                return -1;
+
+            startSample = fault.Info.StartSample;
+            endSample = startSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+
+            if (startSample > endSample)
+                return -1;
+
             max = double.MinValue;
             maxIndex = -1;
 
-            for (int i = fault.Info.StartSample; i <= fault.Info.EndSample; i++)
+            for (int i = startSample; i <= endSample; i++)
             {
                 ia = viCycleDataGroup.IA.RMS[i].Value;
                 ib = viCycleDataGroup.IB.RMS[i].Value;
@@ -924,7 +936,7 @@ namespace FaultData.DataResources
                 }
             }
 
-            return maxIndex;
+            return maxIndex - startSample;
         }
 
         #endregion

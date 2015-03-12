@@ -91,17 +91,6 @@ namespace FaultData.DataOperations
             bulkLoader = new BulkLoader();
             bulkLoader.Connection = dbAdapterContainer.Connection;
 
-            bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                           "( " +
-                                           "    ID INT, " +
-                                           "    ChannelID INT, " +
-                                           "    Date DATE, " +
-                                           "    Minimum FLOAT, " +
-                                           "    Maximum FLOAT, " +
-                                           "    Average FLOAT, " +
-                                           "    Count INT " +
-                                           ")";
-
             bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                           "USING {1} AS Source " +
                                           "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Reflection;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
@@ -241,6 +242,8 @@ namespace FaultData.DataOperations
             {
                 FaultLocationData.FaultCurveRow faultCurveRow;
                 DataSeries series;
+                int startSample;
+                int endSample;
 
                 // Create the fault curve record to be written to the database
                 faultCurveRow = FaultCurveTable.NewFaultCurveRow();
@@ -250,10 +253,13 @@ namespace FaultData.DataOperations
 
                 foreach (Fault fault in Faults)
                 {
+                    startSample = fault.Info.StartSample;
+                    endSample = startSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+
                     if (fault.Info.NumberOfValidDistances == 0)
                         continue;
 
-                    for (int sample = fault.Info.StartSample; sample <= fault.Info.EndSample; sample++)
+                    for (int sample = fault.Info.StartSample; sample <= endSample; sample++)
                         series[sample].Value = fault.Curves[curveIndex].Series[sample - fault.Info.StartSample].Value;
                 }
 
@@ -562,6 +568,7 @@ namespace FaultData.DataOperations
 
             // Submit fault segments to the database
             dbAdapterContainer.FaultLocationInfoAdapter.FaultSegments.InsertAllOnSubmit(faultSegmentTable);
+            ClearCache(dbAdapterContainer.FaultLocationInfoAdapter);
             dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
 
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
@@ -613,6 +620,17 @@ namespace FaultData.DataOperations
             s_segmentTypeLookup.GetOrAdd("3-Phase Fault", segmentTypeFactory);
 
             dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
+        }
+
+        private void ClearCache(FaultLocationInfoDataContext faultInfo)
+        {
+            // TODO: Eliminate the necessity of this using Linq-to-DataSets
+            // The cache needs to be cleared before submitting changes to the
+            // FaultSegment table because the faultInfo object isn't necessarily
+            // aware that Events were inserted since it built its cache
+            const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            MethodInfo method = faultInfo.GetType().GetMethod("ClearCache", Flags);
+            method.Invoke(faultInfo, null);
         }
 
         #endregion

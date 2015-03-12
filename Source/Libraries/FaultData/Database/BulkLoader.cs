@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -32,7 +33,6 @@ namespace FaultData.Database
 
         // Fields
         private SqlConnection m_connection;
-        private string m_createTableFormat;
         private string m_mergeTableFormat;
 
         #endregion
@@ -48,18 +48,6 @@ namespace FaultData.Database
             set
             {
                 m_connection = value;
-            }
-        }
-
-        public string CreateTableFormat
-        {
-            get
-            {
-                return m_createTableFormat;
-            }
-            set
-            {
-                m_createTableFormat = value;
             }
         }
 
@@ -81,7 +69,6 @@ namespace FaultData.Database
 
         public void Load(DataTable table)
         {
-            string tableName;
             string tempTableName;
 
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connection))
@@ -90,26 +77,70 @@ namespace FaultData.Database
                 // Set the timeout to infinite
                 bulkCopy.BulkCopyTimeout = 0;
 
-                // Get the name of the table to load data into
-                tableName = table.TableName;
-                tempTableName = "#temp" + tableName;
-
                 // Create the temp table where data will be loaded directly
-                command.CommandText = string.Format(m_createTableFormat, tempTableName);
-                command.ExecuteNonQuery();
+                tempTableName = CreateTempTable(table, command);
 
                 // Bulk load the data to the temp table
                 bulkCopy.DestinationTableName = tempTableName;
                 bulkCopy.WriteToServer(table);
 
-                // Merge the data from the temp table into the destination table
-                command.CommandText = string.Format(m_mergeTableFormat, tableName, tempTableName);
-                command.ExecuteNonQuery();
+                // Migrate data from the temp table to the target table
+                if ((object)m_mergeTableFormat == null)
+                    DumpTempTable(table, command, tempTableName);
+                else
+                    MergeTempTable(table, command, tempTableName);
 
                 // Drop the temp table
                 command.CommandText = string.Format("DROP TABLE {0}", tempTableName);
                 command.ExecuteNonQuery();
             }
+        }
+
+        private string CreateTempTable(DataTable table, SqlCommand command)
+        {
+            string guid = Guid.NewGuid().ToString("N");
+            string variableName = "@var" + guid;
+            string tempTableName = "#temp" + guid;
+
+            // Populate the variable with CREATE TABLE syntax
+            command.CommandText = string.Format("SELECT {0} = COALESCE({0} + ', ', 'CREATE TABLE {1} (') + c.name + ' ' + t.name + " +
+                                                "CASE WHEN t.name = 'varchar' OR t.name = 'varbinary' THEN '(' + CAST(c.max_length AS VARCHAR(3)) + ')' ELSE '' END " +
+                                                "FROM sys.columns c INNER JOIN sys.types AS t ON c.system_type_id = t.system_type_id " +
+                                                "WHERE object_id = (SELECT object_id from sys.objects where name = '{2}') " +
+                                                "ORDER BY c.column_id", variableName, tempTableName, table.TableName);
+
+            command.Parameters.Add(variableName, SqlDbType.VarChar, -1);
+            command.Parameters[0].Direction = ParameterDirection.Output;
+            command.ExecuteNonQuery();
+
+            // Execute the CREATE TABLE statement
+            command.CommandText = command.Parameters[0].Value.ToString().Replace("(-1)", "(max)") + ")";
+            command.Parameters.Clear();
+            command.ExecuteNonQuery();
+
+            return tempTableName;
+        }
+
+        private void DumpTempTable(DataTable table, SqlCommand command, string tempTableName)
+        {
+            // Drop the ID column which, by convention,
+            // is an autoincrementing integer primary key field
+            if (table.Columns.Contains("ID"))
+            {
+                command.CommandText = string.Format("ALTER TABLE {0} DROP COLUMN ID", tempTableName);
+                command.ExecuteNonQuery();
+            }
+
+            // Execute the CREATE TABLE statement
+            command.CommandText = string.Format("INSERT INTO {0} SELECT * FROM {1}", table.TableName, tempTableName);
+            command.ExecuteNonQuery();
+        }
+
+        private void MergeTempTable(DataTable table, SqlCommand command, string tempTableName)
+        {
+            // Merge the data from the temp table into the destination table
+            command.CommandText = string.Format(m_mergeTableFormat, table.TableName, tempTableName);
+            command.ExecuteNonQuery();
         }
 
         #endregion

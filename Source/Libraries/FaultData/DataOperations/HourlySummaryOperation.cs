@@ -80,18 +80,6 @@ namespace FaultData.DataOperations
             hourlySummaryLoader.Connection = dbAdapterContainer.Connection;
             channelNormalLoader.Connection = dbAdapterContainer.Connection;
 
-            hourlySummaryLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                                    "( " +
-                                                    "    ID INT, " +
-                                                    "    ChannelID INT, " +
-                                                    "    Time DATETIME, " +
-                                                    "    Minimum FLOAT, " +
-                                                    "    Maximum FLOAT, " +
-                                                    "    Average FLOAT, " +
-                                                    "    ValidCount INT, " +
-                                                    "    InvalidCount INT " +
-                                                    ")";
-
             hourlySummaryLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                                    "USING {1} AS Source " +
                                                    "ON Source.ChannelID = Target.ChannelID AND Source.Time = Target.Time " +
@@ -105,16 +93,6 @@ namespace FaultData.DataOperations
                                                    "WHEN NOT MATCHED THEN " +
                                                    "    INSERT (ChannelID, Time, Maximum, Minimum, Average, ValidCount, InvalidCount) " +
                                                    "    VALUES (Source.ChannelID, Source.Time, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount);";
-
-            channelNormalLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                                    "( " +
-                                                    "	   ID INT, " +
-                                                    "    ChannelID INT, " +
-                                                    "	   Average FLOAT, " +
-                                                    "    MeanSquare FLOAT, " +
-                                                    "    StandardDeviation FLOAT, " +
-                                                    "    Count INT " +
-                                                    ") ";
 
             channelNormalLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                                    "USING {1} AS Source " +

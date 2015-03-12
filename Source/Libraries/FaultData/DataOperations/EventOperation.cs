@@ -251,6 +251,8 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
+            BulkLoader bulkLoader;
+
             Dictionary<EventKey, MeterData.EventRow> eventLookup;
             MeterData.EventRow eventRow;
 
@@ -263,36 +265,32 @@ namespace FaultData.DataOperations
 
             Log.Info("Loading event data into the database...");
 
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
+            // Create the bulk loader for loading data into the database
+            bulkLoader = new BulkLoader();
+            bulkLoader.Connection = dbAdapterContainer.Connection;
+
+            // Write events to the database
+            bulkLoader.Load(m_eventTable);
+
+            // Query database for event IDs and store them in a lookup table by line ID
+            dbAdapterContainer.EventAdapter.FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
+            eventLookup = m_eventTable.Where(evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+
+            // Create cycle data table
+            cycleDataTable = new FaultLocationData.CycleDataDataTable();
+
+            // Create rows for cycle data in the cycle data table
+            foreach (Tuple<EventKey, byte[]> tuple in m_cycleDataList)
             {
-                // Set timeout to infinite
-                bulkCopy.BulkCopyTimeout = 0;
+                eventKey = tuple.Item1;
+                cycleData = tuple.Item2;
 
-                // Write events to the database
-                bulkCopy.DestinationTableName = m_eventTable.TableName;
-                bulkCopy.WriteToServer(m_eventTable);
-
-                // Query database for event IDs and store them in a lookup table by line ID
-                dbAdapterContainer.EventAdapter.FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
-                eventLookup = m_eventTable.Where(evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
-
-                // Create cycle data table
-                cycleDataTable = new FaultLocationData.CycleDataDataTable();
-
-                // Create rows for cycle data in the cycle data table
-                foreach (Tuple<EventKey, byte[]> tuple in m_cycleDataList)
-                {
-                    eventKey = tuple.Item1;
-                    cycleData = tuple.Item2;
-
-                    if (eventLookup.TryGetValue(eventKey, out eventRow))
-                        cycleDataTable.AddCycleDataRow(eventRow.ID, cycleData);
-                }
-
-                // Write cycle data to the database
-                bulkCopy.DestinationTableName = cycleDataTable.TableName;
-                bulkCopy.WriteToServer(cycleDataTable);
+                if (eventLookup.TryGetValue(eventKey, out eventRow))
+                    cycleDataTable.AddCycleDataRow(eventRow.ID, cycleData);
             }
+
+            // Write cycle data to the database
+            bulkLoader.Load(cycleDataTable);
 
             Log.Info(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
         }
@@ -365,13 +363,6 @@ namespace FaultData.DataOperations
             BulkLoader bulkLoader = new BulkLoader();
 
             bulkLoader.Connection = dbAdapterContainer.Connection;
-
-            bulkLoader.CreateTableFormat = "CREATE TABLE {0} " +
-                                           "( " +
-                                           "    ID INT," +
-                                           "    Name VARCHAR(200), " +
-                                           "    Description VARCHAR(MAX)" +
-                                           ")";
 
             bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                           "USING {1} AS Source " +
