@@ -126,6 +126,8 @@ namespace openXDA
 
                 processThread = new Thread(() =>
                 {
+                    DateTime processingEndTime;
+
                     ThreadContext.Properties["ID"] = threadID;
 
                     using (DbAdapterContainer)
@@ -134,6 +136,11 @@ namespace openXDA
 
                         foreach (MeterDataSet meterDataSet in MeterDataSets)
                             ProcessMeterData(meterDataSet);
+
+                        processingEndTime = DateTime.UtcNow;
+
+                        foreach (MeterDataSet meterDataSet in MeterDataSets)
+                            meterDataSet.FileGroup.ProcessingEndTime = processingEndTime;
 
                         OnStatusMessage("Finished processing data from file \"{0}\".", MeterDataFile);
                     }
@@ -462,6 +469,8 @@ namespace openXDA
         {
             string filePath;
             FileGroup fileGroup;
+            DateTime dataStartTime;
+            DateTime dataEndTime;
 
             string meterKey;
             string extension;
@@ -566,6 +575,26 @@ namespace openXDA
                         meterDataSet.FileGroup = fileGroup;
                         meterDataSet.Meter.AssetKey = meterKey;
                     }
+
+                    dataStartTime = meterDataProcessor.MeterDataSets
+                        .SelectMany(meterDataSet => meterDataSet.DataSeries)
+                        .Where(dataSeries => dataSeries.DataPoints.Any())
+                        .Select(dataSeries => dataSeries.DataPoints.First().Time)
+                        .DefaultIfEmpty()
+                        .Min();
+
+                    dataEndTime = meterDataProcessor.MeterDataSets
+                        .SelectMany(meterDataSet => meterDataSet.DataSeries)
+                        .Where(dataSeries => dataSeries.DataPoints.Any())
+                        .Select(dataSeries => dataSeries.DataPoints.Last().Time)
+                        .DefaultIfEmpty()
+                        .Max();
+
+                    if (dataStartTime != default(DateTime))
+                        fileGroup.DataStartTime = dataStartTime;
+
+                    if (dataEndTime != default(DateTime))
+                        fileGroup.DataEndTime = dataEndTime;
 
                     // Process meter data using the meter data processor
                     meterDataProcessor.Process();
