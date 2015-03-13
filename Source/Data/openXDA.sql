@@ -228,6 +228,27 @@ CREATE TABLE MeterRecipient
 )
 GO
 
+INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('DAT', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader')
+GO
+
+INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('D00', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader')
+GO
+
+INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('RCD', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader')
+GO
+
+INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('RCL', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader')
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3)
+GO
+
 -- ------ --
 -- Events --
 -- ------ --
@@ -259,10 +280,6 @@ CREATE TABLE Event
 )
 GO
 
--- -------------- --
--- Fault Location --
--- -------------- --
-
 CREATE TABLE CycleData
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -270,6 +287,10 @@ CREATE TABLE CycleData
     Data VARBINARY(MAX) NOT NULL
 )
 GO
+
+-- -------------- --
+-- Fault Location --
+-- -------------- --
 
 CREATE TABLE OutputChannel
 (
@@ -355,6 +376,21 @@ CREATE TABLE FaultSummary
 	DurationCycles FLOAT NOT NULL,
 	FaultType VARCHAR(200) NOT NULL
 )
+GO
+
+INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Simple', 1)
+GO
+
+INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Reactance', 2)
+GO
+
+INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Takagi', 3)
+GO
+
+INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'ModifiedTakagi', 4)
+GO
+
+INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Novosel', 5)
 GO
 
 INSERT INTO SegmentType(Name, Description) VALUES('Prefault', 'Before fault inception')
