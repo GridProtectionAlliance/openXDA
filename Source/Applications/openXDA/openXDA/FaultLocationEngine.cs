@@ -268,11 +268,11 @@ namespace openXDA
                         resultsDir = Path.Combine(SystemSettings.ResultsPath, meter.AssetKey);
                         TryCreateDirectory(resultsDir);
 
-                        comtradeFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".dat");
+                        comtradeFilePath = Path.Combine(resultsDir, string.Concat(FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath), ",", evt.ID.ToString("000000"), ",Line", line.AssetKey, ".dat"));
                         comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
                         OnStatusMessage("Results written to {0}", comtradeFilePath);
 
-                        xmlFilePath = Path.Combine(resultsDir, evt.ID.ToString("000000") + "_" + FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath) + ".xml");
+                        xmlFilePath = Path.Combine(resultsDir, string.Concat(FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath), ",", evt.ID.ToString("000000"), ",Line", line.AssetKey, ".xml"));
                         xmlWriter.WriteResults(evt.ID, xmlFilePath);
                         OnStatusMessage("Summary of results written to {0}", xmlFilePath);
 
