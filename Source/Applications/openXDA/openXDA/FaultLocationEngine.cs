@@ -142,6 +142,8 @@ namespace openXDA
                         foreach (MeterDataSet meterDataSet in MeterDataSets)
                             meterDataSet.FileGroup.ProcessingEndTime = processingEndTime;
 
+                        DbAdapterContainer.FileInfoAdapter.SubmitChanges();
+
                         OnStatusMessage("Finished processing data from file \"{0}\".", MeterDataFile);
                     }
 
@@ -493,7 +495,7 @@ namespace openXDA
                 // Determine whether the file has already been processed
                 if (fileProcessorEventArgs.AlreadyProcessed)
                 {
-                    if (dbAdapterContainer.FileInfoAdapter.DataFiles.Any(dataFile => dataFile.FilePath == filePath))
+                    if (dbAdapterContainer.FileInfoAdapter.DataFiles.Any(dataFile => dataFile.FilePath == filePath && dataFile.FileGroup.ProcessingEndTime > DateTime.MinValue))
                     {
                         OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
                         return;
