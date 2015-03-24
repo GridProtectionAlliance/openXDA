@@ -32,6 +32,7 @@ using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 using GSF.Collections;
+using GSF.Data;
 using log4net;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
 using Line = FaultData.Database.Line;
@@ -444,11 +445,13 @@ namespace FaultData.DataResources
             double ic;
             double ir;
 
-            bool isFault;
-
             int iaIndex;
             int ibIndex;
             int icIndex;
+
+            bool obvious;
+            bool apparent;
+            bool suppressed;
 
             for (int i = 0; i < iaRMS.DataPoints.Count; i++)
             {
@@ -457,10 +460,11 @@ namespace FaultData.DataResources
                 ic = icRMS.DataPoints[i].Value;
                 ir = irRMS.DataPoints[i].Value;
 
-                isFault = IsFaultObvious(ia, ib, ic, ir) ||
-                          (IsFaultApparent(viCycleDataGroup, i) && !IsFaultSuppressed(viDataGroup, i));
+                obvious = IsFaultObvious(ia, ib, ic, ir);
+                apparent = !obvious && IsFaultApparent(viCycleDataGroup, i);
+                suppressed = apparent && IsFaultSuppressed(ia, ib, ic);
 
-                if (isFault)
+                if (obvious || (apparent && !suppressed))
                 {
                     if ((object)currentFault == null)
                     {
@@ -607,41 +611,18 @@ namespace FaultData.DataResources
             return false;
         }
 
-        private bool IsFaultSuppressed(VIDataGroup viDataGroup, int index)
+        private bool IsFaultSuppressed(double ia, double ib, double ic)
         {
-            DataSeries[] phaseCurrents =
-            {
-                viDataGroup.IA,
-                viDataGroup.IB,
-                viDataGroup.IC
-            };
+            if (ia > m_faultSuppressionTrigger)
+                return false;
 
-            int samplesPerCycle;
-            List<double> cycle;
-            double dist;
+            if (ib > m_faultSuppressionTrigger)
+                return false;
 
-            foreach (DataSeries series in phaseCurrents)
-            {
-                // Calculate the sample rate of the series
-                samplesPerCycle = (int)Math.Round(series.SampleRate / Frequency);
+            if (ic > m_faultSuppressionTrigger)
+                return false;
 
-                // Get the values of the data points
-                // in the cycle in sorted order
-                cycle = series
-                    .ToSubSeries(index, index + samplesPerCycle - 1)
-                    .DataPoints.Select(dataPoint => dataPoint.Value)
-                    .OrderBy(value => value)
-                    .ToList();
-
-                // Distance between median and average of the cycle
-                dist = Math.Abs(cycle[cycle.Count / 2] - cycle.Average());
-
-                // If the distance exceeds the trigger, fault is suppressed
-                if (dist > m_faultSuppressionTrigger)
-                    return true;
-            }
-
-            return false;
+            return true;
         }
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
@@ -851,7 +832,8 @@ namespace FaultData.DataResources
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int largestFaultCycle = GetLargestFaultCycle(fault, viCycleDataGroup);
+            int samplesPerCycle = (int)Math.Round(dataGroup.DataSeries[0].SampleRate / Frequency);
+            int largestFaultCycle = GetLargestFaultCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = viCycleDataGroup.IA.RMS[fault.Info.StartSample].Time;
             DateTime endTime = viCycleDataGroup.IA.RMS[fault.Info.EndSample].Time;
 
@@ -897,7 +879,7 @@ namespace FaultData.DataResources
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 
-        private int GetLargestFaultCycle(Fault fault, VICycleDataGroup viCycleDataGroup)
+        private int GetLargestFaultCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
         {
             double ia;
             double ib;
@@ -913,8 +895,11 @@ namespace FaultData.DataResources
             if (!fault.Curves.Any())
                 return -1;
 
-            startSample = fault.Info.StartSample;
-            endSample = startSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+            startSample = fault.Info.StartSample + samplesPerCycle;
+            endSample = fault.Info.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+
+            if (startSample > endSample)
+                startSample = fault.Info.StartSample;
 
             if (startSample > endSample)
                 return -1;

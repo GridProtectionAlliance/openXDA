@@ -334,12 +334,11 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the threshold at which the distance between
-        /// median and mean indicates the sine wave is no longer pure
-        /// and that fault detection logic should be suppressed.
+        /// Gets or sets the per-unit threshold under which the current indicates
+        /// non-faulted conditions even if the current exceeds the prefault trigger.
         /// </summary>
         [Setting]
-        [DefaultValue(0.2D)]
+        [DefaultValue(1.5D)]
         public double FaultSuppressionTrigger
         {
             get
