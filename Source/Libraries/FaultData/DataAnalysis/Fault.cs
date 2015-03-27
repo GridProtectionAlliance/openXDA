@@ -51,6 +51,7 @@ namespace FaultData.DataAnalysis
             private int m_distanceAlgorithmIndex;
             private string m_distanceAlgorithm;
             private double m_distance;
+            private double m_currentMagnitude;
             private int m_numberOfValidDistances;
 
             #endregion
@@ -174,6 +175,18 @@ namespace FaultData.DataAnalysis
                 set
                 {
                     m_distance = value;
+                }
+            }
+
+            public double CurrentMagnitude
+            {
+                get
+                {
+                    return m_currentMagnitude;
+                }
+                set
+                {
+                    m_currentMagnitude = value;
                 }
             }
 

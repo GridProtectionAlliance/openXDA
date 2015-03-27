@@ -130,9 +130,8 @@ namespace openXDA
 
                 // Get the valid fault summary records for this event
                 faultSummaries = faultTable
-                    .Where(faultSummary => faultSummary.DistanceDeviation < 0.5D * line.Length)
-                    .Where(faultSummary => faultSummary.LargestCurrentDistance >= MinFaultDistanceMultiplier * line.Length)
-                    .Where(faultSummary => faultSummary.LargestCurrentDistance <= MaxFaultDistanceMultiplier * line.Length)
+                    .Where(faultSummary => faultSummary.Distance >= MinFaultDistanceMultiplier * line.Length)
+                    .Where(faultSummary => faultSummary.Distance <= MaxFaultDistanceMultiplier * line.Length)
                     .ToList();
 
                 if (faultSummaries.Count > 0)
@@ -142,16 +141,16 @@ namespace openXDA
                     faultSummaries = faultSummaries
                         .GroupBy(faultSummary => faultSummary.FaultNumber)
                         .MinBy(grouping => grouping.Key)
-                        .OrderBy(faultSummary => faultSummary.LargestCurrentDistance)
+                        .OrderBy(faultSummary => faultSummary.Distance)
                         .ToList();
 
-                    m_faultDistance = faultSummaries[faultSummaries.Count / 2].LargestCurrentDistance;
+                    m_faultDistance = faultSummaries[faultSummaries.Count / 2].Distance;
                     m_isFaultDistanceValid = true;
                 }
                 else if (faultTable.Count > 0)
                 {
                     // If no fault distances are valid, simply pick the first one and mark as invalid
-                    m_faultDistance = faultTable[0].LargestCurrentDistance;
+                    m_faultDistance = faultTable[0].Distance;
                     m_isFaultDistanceValid = false;
                 }
                 else
@@ -162,14 +161,6 @@ namespace openXDA
                     m_isFaultDistanceValid = false;
                 }
             }
-        }
-
-        // Converts the given fault curve to a DataSeries.
-        private DataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve)
-        {
-            DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(faultCurve.Data);
-            return dataGroup.DataSeries[0];
         }
 
         #endregion

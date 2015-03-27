@@ -31,15 +31,13 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
-using GSF.Collections;
-using GSF.Data;
+using GSF.Units;
 using log4net;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
 using Line = FaultData.Database.Line;
 
 namespace FaultData.DataResources
 {
-
     public class FaultDataResource : DataResourceBase<MeterDataSet>
     {
         #region [ Members ]
@@ -833,13 +831,14 @@ namespace FaultData.DataResources
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = (int)Math.Round(dataGroup.DataSeries[0].SampleRate / Frequency);
-            int largestFaultCycle = GetLargestFaultCycle(fault, viCycleDataGroup, samplesPerCycle);
+            int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = viCycleDataGroup.IA.RMS[fault.Info.StartSample].Time;
             DateTime endTime = viCycleDataGroup.IA.RMS[fault.Info.EndSample].Time;
 
+            int faultIndex;
             List<Tuple<int, string, double>> distances;
 
-            fault.Info.CalculationCycle = largestFaultCycle;
+            fault.Info.CalculationCycle = calculationCycle;
             fault.Info.StartSample = fault.Info.StartSample;
             fault.Info.EndSample = fault.Info.EndSample;
             fault.Info.InceptionTime = startTime;
@@ -849,14 +848,18 @@ namespace FaultData.DataResources
             if (fault.Segments.Any())
             {
                 fault.Info.Type = fault.Segments
-                    .MaxBy(segment => segment.EndSample - segment.StartSample)
-                    .FaultType;
+                    .Where(segment => segment.StartSample <= fault.Info.CalculationCycle)
+                    .Where(segment => fault.Info.CalculationCycle <= segment.EndSample)
+                    .Select(segment => segment.FaultType)
+                    .FirstOrDefault();
             }
 
-            if (largestFaultCycle >= 0)
+            if (calculationCycle >= 0)
             {
+                faultIndex = calculationCycle - fault.Info.StartSample;
+
                 distances = fault.Curves
-                    .Select((curve, index) => Tuple.Create(index, curve.Algorithm, curve[largestFaultCycle].Value))
+                    .Select((curve, index) => Tuple.Create(index, curve.Algorithm, curve[faultIndex].Value))
                     .Where(tuple => IsValid(tuple.Item3, dataGroup))
                     .OrderBy(tuple => tuple.Item3)
                     .ToList();
@@ -866,6 +869,7 @@ namespace FaultData.DataResources
                     fault.Info.DistanceAlgorithmIndex = distances[distances.Count / 2].Item1;
                     fault.Info.DistanceAlgorithm = distances[distances.Count / 2].Item2;
                     fault.Info.Distance = distances[distances.Count / 2].Item3;
+                    fault.Info.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Info.Type, calculationCycle);
                     fault.Info.NumberOfValidDistances = distances.Count;
                 }
             }
@@ -879,7 +883,7 @@ namespace FaultData.DataResources
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 
-        private int GetLargestFaultCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
         {
             double ia;
             double ib;
@@ -921,7 +925,76 @@ namespace FaultData.DataResources
                 }
             }
 
-            return maxIndex - startSample;
+            return maxIndex;
+        }
+
+        private double GetFaultCurrentMagnitude(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
+        {
+            FaultType viFaultType;
+
+            double anError;
+            double bnError;
+            double cnError;
+
+            ComplexNumber an;
+            ComplexNumber bn;
+            ComplexNumber cn;
+
+            viFaultType = faultType;
+
+            if (viFaultType == FaultType.ABC)
+            {
+                anError = viCycleDataGroup.IA.Error[cycle].Value;
+                bnError = viCycleDataGroup.IB.Error[cycle].Value;
+                cnError = viCycleDataGroup.IC.Error[cycle].Value;
+
+                if (anError < bnError && anError < cnError)
+                    viFaultType = FaultType.AN;
+                else if (bnError < anError && bnError < cnError)
+                    viFaultType = FaultType.BN;
+                else
+                    viFaultType = FaultType.CN;
+            }
+
+            switch (viFaultType)
+            {
+                case FaultType.AN:
+                    return viCycleDataGroup.IA.RMS[cycle].Value;
+
+                case FaultType.BN:
+                    return viCycleDataGroup.IB.RMS[cycle].Value;
+
+                case FaultType.CN:
+                    return viCycleDataGroup.IC.RMS[cycle].Value;
+
+                case FaultType.AB:
+                case FaultType.ABG:
+                    an = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    bn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    return (an - bn).Magnitude;
+
+                case FaultType.BC:
+                case FaultType.BCG:
+                    bn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    return (bn - cn).Magnitude;
+
+                case FaultType.CA:
+                case FaultType.CAG:
+                    cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    an = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    return (cn - an).Magnitude;
+
+                default:
+                    return double.NaN;
+            }
+        }
+
+        private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
+        {
+            Angle angle = cycleDataGroup.Phase[cycle].Value;
+            double magnitude = cycleDataGroup.RMS[cycle].Value;
+            return new ComplexNumber(angle, magnitude);
         }
 
         #endregion

@@ -265,7 +265,7 @@ namespace openXDA
 
                     if (faultSummaries.Count > 0)
                     {
-                        OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().LargestCurrentDistance, SystemSettings.LengthUnits);
+                        OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().Distance, SystemSettings.LengthUnits);
 
                         resultsDir = Path.Combine(SystemSettings.ResultsPath, meter.AssetKey);
                         TryCreateDirectory(resultsDir);

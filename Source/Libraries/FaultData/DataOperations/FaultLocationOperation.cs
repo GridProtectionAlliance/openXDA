@@ -41,41 +41,6 @@ namespace FaultData.DataOperations
         #region [ Members ]
 
         // Nested Types
-        private class StatCalculator
-        {
-            #region [ Members ]
-
-            // Fields
-            public List<DataPoint> DataPoints;
-
-            public double Maximum;
-            public double Minimum;
-            public double Average;
-            public double StandardDeviation;
-
-            #endregion
-
-            #region [ Methods ]
-
-            public void CalculateStatistics()
-            {
-                double variance;
-
-                DataPoints.Sort((point1, point2) => point1.Value.CompareTo(point2.Value));
-                Maximum = DataPoints[DataPoints.Count - 1].Value;
-                Minimum = DataPoints[0].Value;
-                Average = DataPoints.Average(dataPoint => dataPoint.Value);
-
-                variance = DataPoints
-                    .Select(dataPoint => dataPoint.Value - Average)
-                    .Average(diff => diff * diff);
-
-                StandardDeviation = Math.Sqrt(variance);
-            }
-
-            #endregion
-        }
-
         private class FaultSummarizer
         {
             #region [ Members ]
@@ -209,27 +174,18 @@ namespace FaultData.DataOperations
             private FaultLocationData.FaultSummaryRow CreateFaultSummaryRow(Fault fault, int faultNumber)
             {
                 FaultLocationData.FaultSummaryRow faultSummaryRow;
-                StatCalculator statCalculator;
                 double durationSeconds;
 
                 // Calculate the duration of the fault in seconds
                 durationSeconds = fault.Info.Duration.TotalSeconds;
 
-                // Calculate statistics about the fault
-                // using fault data from this fault curve
-                statCalculator = new StatCalculator();
-                statCalculator.DataPoints = fault.Curves[fault.Info.DistanceAlgorithmIndex].Series.DataPoints;
-                statCalculator.CalculateStatistics();
-
                 // Create the fault summary record to be written to the database
                 faultSummaryRow = FaultSummaryTable.NewFaultSummaryRow();
                 faultSummaryRow.Algorithm = fault.Info.DistanceAlgorithm;
                 faultSummaryRow.FaultNumber = faultNumber;
-                faultSummaryRow.LargestCurrentDistance = fault.Info.Distance;
-                faultSummaryRow.MaximumDistance = statCalculator.Maximum;
-                faultSummaryRow.MinimumDistance = statCalculator.Minimum;
-                faultSummaryRow.AverageDistance = statCalculator.Average;
-                faultSummaryRow.DistanceDeviation = statCalculator.StandardDeviation;
+                faultSummaryRow.CalculationCycle = fault.Info.CalculationCycle;
+                faultSummaryRow.Distance = fault.Info.Distance;
+                faultSummaryRow.CurrentMagnitude = fault.Info.CurrentMagnitude;
                 faultSummaryRow.Inception = fault.Info.InceptionTime;
                 faultSummaryRow.DurationSeconds = durationSeconds;
                 faultSummaryRow.DurationCycles = durationSeconds * Frequency;

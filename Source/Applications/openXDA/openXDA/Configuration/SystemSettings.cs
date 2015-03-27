@@ -45,6 +45,7 @@ namespace openXDA.Configuration
         private string m_watchDirectories;
         private string m_resultsPath;
         private string m_filePattern;
+        private string m_timeZone;
 
         private double m_maxVoltage;
         private double m_maxCurrent;
@@ -168,6 +169,24 @@ namespace openXDA.Configuration
             set
             {
                 m_filePattern = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the time zone identifier for the
+        /// time zone used by all meters in the system.
+        /// </summary>
+        [Setting]
+        [DefaultValue("UTC")]
+        public string TimeZone
+        {
+            get
+            {
+                return m_timeZone;
+            }
+            set
+            {
+                m_timeZone = value;
             }
         }
 

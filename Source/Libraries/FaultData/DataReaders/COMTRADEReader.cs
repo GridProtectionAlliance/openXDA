@@ -37,14 +37,6 @@ namespace FaultData.DataReaders
     {
         #region [ Members ]
 
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
         // Fields
         private TimeSpan m_minWaitTime;
 

@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -54,6 +53,8 @@ namespace FaultData.DataOperations
         private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
+
+        private TimeZoneInfo m_timeZone;
 
         private MeterDataSet m_meterDataSet;
         private MeterData.EventDataTable m_eventTable;
@@ -207,6 +208,18 @@ namespace FaultData.DataOperations
             }
         }
 
+        public string TimeZone
+        {
+            get
+            {
+                return m_timeZone.Id;
+            }
+            set
+            {
+                m_timeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -342,6 +355,7 @@ namespace FaultData.DataOperations
                 eventRow.Data = dataGroup.ToData();
                 eventRow.StartTime = dataGroup.StartTime;
                 eventRow.EndTime = dataGroup.EndTime;
+                eventRow.TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes;
                 eventRow.Magnitude = 0.0D;
                 eventRow.Duration = (dataGroup.EndTime - dataGroup.StartTime).TotalSeconds;
                 m_eventTable.AddEventRow(eventRow);

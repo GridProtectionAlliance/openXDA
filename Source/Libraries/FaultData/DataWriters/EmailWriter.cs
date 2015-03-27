@@ -287,7 +287,7 @@ namespace FaultData.DataWriters
 
             IEnumerable<FaultLocationData.FaultSummaryRow> faults = faultSummaries
                 .GroupBy(faultSummary => faultSummary.FaultNumber)
-                .Select(grouping => grouping.OrderBy(faultSummary => faultSummary.LargestCurrentDistance).ToList())
+                .Select(grouping => grouping.OrderBy(faultSummary => faultSummary.Distance).ToList())
                 .Select(list => list[list.Count / 2])
                 .OrderBy(faultSummary => faultSummary.FaultNumber);
 
@@ -300,7 +300,7 @@ namespace FaultData.DataWriters
                                       "<span style=\"font-weight: bold\">Duration:</span> {3:0.000} milliseconds ({4:0.00} cycles)<br />" +
                                       "<span style=\"font-weight: bold\">Distance:</span> {5:0.000} {6} ({7})<br />" +
                                       "</p>", fault.FaultNumber, fault.FaultType, fault.Inception, fault.DurationSeconds * 1000,
-                                      fault.DurationCycles, fault.LargestCurrentDistance, LengthUnits, fault.Algorithm);
+                                      fault.DurationCycles, fault.Distance, LengthUnits, fault.Algorithm);
             }
 
             return html;
@@ -308,19 +308,12 @@ namespace FaultData.DataWriters
 
         private string GetTableHeader()
         {
-            string header = string.Format("<tr><th colspan=\"3\"></th><th colspan=\"5\">Fault Distances ({0})</th></tr>", LengthUnits);
-
-            header += string.Format("<tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3}</th><th>{4}</th><th>{5}</th><th>{6}</th><th>{7}</th></tr>",
+            return string.Format("<tr><th>{0}</th><th>{1}</th><th>{2}</th><th>{3} ({4})</th></tr>",
                 "Fault Number",
                 "Algorithm",
                 "Valid",
-                "At Largest Current Cycle",
-                "Maximum",
-                "Minimum",
-                "Average",
-                "Standard Deviation");
-
-            return header;
+                "Distance",
+                LengthUnits);
         }
 
         private string GetTableRows(List<FaultLocationData.FaultSummaryRow> faultSummaryRows, Line line)
@@ -335,15 +328,11 @@ namespace FaultData.DataWriters
 
         private string ToTableRow(FaultLocationData.FaultSummaryRow faultSummaryRow, Line line)
         {
-            return string.Format("<tr><td style=\"text-align: center\">{0}</td><td style=\"text-align: left\">{1}</td><td style=\"text-align: center\">{2}</td><td>{3:0.000}</td><td>{4:0.000}</td><td>{5:0.000}</td><td>{6:0.000}</td><td>{7:0.000}</td></tr>",
+            return string.Format("<tr><td style=\"text-align: center\">{0}</td><td style=\"text-align: left\">{1}</td><td style=\"text-align: center\">{2}</td><td>{3:0.000}</td></tr>",
                 faultSummaryRow.FaultNumber,
                 faultSummaryRow.Algorithm,
                 IsValid(faultSummaryRow, line.Length) ? "Yes" : "No",
-                faultSummaryRow.LargestCurrentDistance,
-                faultSummaryRow.MaximumDistance,
-                faultSummaryRow.MinimumDistance,
-                faultSummaryRow.AverageDistance,
-                faultSummaryRow.DistanceDeviation);
+                faultSummaryRow.Distance);
         }
 
         private Stream ToImageStream(List<NamedDataSeries> faultCurves)
@@ -548,9 +537,8 @@ namespace FaultData.DataWriters
 
         private bool IsValid(FaultLocationData.FaultSummaryRow faultSummary, double lineLength)
         {
-            return (faultSummary.DistanceDeviation < 0.5D * lineLength)
-                && (faultSummary.LargestCurrentDistance >= MinFaultDistanceMultiplier * lineLength)
-                && (faultSummary.LargestCurrentDistance <= MaxFaultDistanceMultiplier * lineLength);
+            return (faultSummary.Distance >= MinFaultDistanceMultiplier * lineLength)
+                && (faultSummary.Distance <= MaxFaultDistanceMultiplier * lineLength);
         }
 
         #endregion

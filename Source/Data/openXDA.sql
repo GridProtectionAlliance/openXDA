@@ -99,6 +99,7 @@ CREATE TABLE Meter
     ShortName VARCHAR(50) NULL,
     Make VARCHAR(200) NOT NULL,
     Model VARCHAR(200) NOT NULL,
+    TimeZone VARCHAR(200) NULL,
     Description VARCHAR(MAX) NULL
 )
 GO
@@ -273,6 +274,7 @@ CREATE TABLE Event
     ShortName VARCHAR(50) NULL,
     StartTime DATETIME2 NOT NULL,
     EndTime DATETIME2 NOT NULL,
+    TimeZoneOffset INT NOT NULL,
     Magnitude FLOAT NOT NULL,
     Duration FLOAT NOT NULL,
     Description VARCHAR(MAX) NULL,
@@ -366,11 +368,9 @@ CREATE TABLE FaultSummary
     EventID INT NOT NULL REFERENCES Event(ID),
     Algorithm VARCHAR(80) NOT NULL,
     FaultNumber INT NOT NULL,
-	LargestCurrentDistance FLOAT NOT NULL,
-	MaximumDistance FLOAT NOT NULL,
-	MinimumDistance FLOAT NOT NULL,
-	AverageDistance FLOAT NOT NULL,
-	DistanceDeviation FLOAT NOT NULL,
+    CalculationCycle INT NOT NULL,
+	Distance FLOAT NOT NULL,
+    CurrentMagnitude FLOAT NOT NULL,
 	Inception DATETIME2 NOT NULL,
 	DurationSeconds FLOAT NOT NULL,
 	DurationCycles FLOAT NOT NULL,
