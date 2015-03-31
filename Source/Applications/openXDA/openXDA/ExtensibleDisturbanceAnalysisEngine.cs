@@ -71,7 +71,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -497,7 +496,6 @@ namespace openXDA
 
         // Called when the file processor has picked up a file in one of the watch
         // directories. This handler validates the file and processes it if able.
-        [SuppressMessage("ReSharper", "ExpressionIsAlwaysNull")]
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
             string filePath;
