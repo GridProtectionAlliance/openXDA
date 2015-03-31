@@ -45,16 +45,6 @@ namespace FaultData.DataReaders
 
         #endregion
 
-        #region [ Constructors ]
-
-        public COMTRADEReader()
-        {
-            // TODO: Hardcoded min wait time
-            m_minWaitTime = TimeSpan.FromSeconds(15.0D);
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         public double COMTRADEMinWaitTime
