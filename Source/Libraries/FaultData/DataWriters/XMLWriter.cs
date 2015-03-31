@@ -53,6 +53,8 @@ namespace FaultData.DataWriters
         private class FaultRecordInfo
         {
             public FileGroup FileGroup;
+
+            public string LineName;
             public Meter Meter;
             public Line Line;
 
@@ -140,6 +142,12 @@ namespace FaultData.DataWriters
                 faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
                 faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
 
+                faultRecordInfo.LineName = meterInfo.MeterLines
+                    .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
+                    .Select(ml => ml.LineName)
+                    .DefaultIfEmpty(faultRecordInfo.Line.AssetKey)
+                    .First();
+
                 faultRecordInfo.CycleData = cycleDataAdapter.GetDataBy(eventID).Single();
                 faultRecordInfo.FaultSegments = faultLocationInfo.FaultSegments.Where(segment => segment.EventID == eventID).ToList();
                 faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
@@ -160,7 +168,7 @@ namespace FaultData.DataWriters
                     new XElement("meter", faultRecordInfo.Meter.Name),
                     new XElement("disturbanceFiles", GetPathElements(faultRecordInfo)),
                     new XElement("line",
-                        new XElement("name", faultRecordInfo.Line.Name),
+                        new XElement("name", faultRecordInfo.LineName),
                         new XElement("length", faultRecordInfo.Line.Length.ToString(DoubleFormat))
                     ),
                     new XElement("prefault",

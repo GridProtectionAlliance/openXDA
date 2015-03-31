@@ -54,6 +54,7 @@ namespace FaultData.DataWriters
         {
             public Meter Meter;
             public Line Line;
+            public string LineName;
 
             public MeterData.EventRow Event;
             public List<FaultLocationData.FaultCurveRow> FaultCurves;
@@ -196,6 +197,12 @@ namespace FaultData.DataWriters
                     faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
                     faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
 
+                    faultRecordInfo.LineName = meterInfo.MeterLines
+                        .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
+                        .Select(ml => ml.LineName)
+                        .DefaultIfEmpty(faultRecordInfo.Line.AssetKey)
+                        .First();
+
                     faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
                     faultRecordInfo.FaultSummaries = faultSummaryAdapter.GetDataBy(eventID).ToList();
 
@@ -237,7 +244,7 @@ namespace FaultData.DataWriters
 
                 if (faultCount > 0)
                 {
-                    subject = string.Format("Fault detected by openXDA  Line: {0}  Time: {1:MM/dd/yyyy HH:mm}", faultRecordInfo.Line.Name, ToDataSeries(faultRecordInfo.FaultCurves[0]).Series[0].Time);
+                    subject = string.Format("Fault detected by openXDA  Line: {0}  Time: {1:MM/dd/yyyy HH:mm}", faultRecordInfo.LineName, ToDataSeries(faultRecordInfo.FaultCurves[0]).Series[0].Time);
                     body = template;
 
                     faultCurvesHTML = new Lazy<string>(() => "<img src=\"cid:FaultCurves.png\" width=\"650\" height=\"340\" />");
@@ -245,7 +252,7 @@ namespace FaultData.DataWriters
                     body = Replace(body, "{eventID}", faultRecordInfo.Event.ID.ToString());
                     body = Replace(body, "{meter}", faultRecordInfo.Meter.Name);
                     body = Replace(body, "{station}", faultRecordInfo.Meter.MeterLocation.Name);
-                    body = Replace(body, "{line}", faultRecordInfo.Line.Name);
+                    body = Replace(body, "{line}", faultRecordInfo.LineName);
                     body = Replace(body, "{nFaults}", string.Format("{0} fault{1}", faultCount, (faultCount > 1) ? "s" : ""));
                     body = Replace(body, "{faultSummaries}", () => ToHTML(faultSummaries));
                     body = Replace(body, "{distanceSummaryTable}", () => string.Format("<table>{0}{1}</table>", GetTableHeader(), GetTableRows(faultRecordInfo.FaultSummaries, faultRecordInfo.Line)));

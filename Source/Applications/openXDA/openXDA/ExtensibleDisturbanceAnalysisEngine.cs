@@ -270,13 +270,19 @@ namespace openXDA
                     Line line = DbAdapterContainer.MeterInfoAdapter.Lines.Single(l => l.ID == evt.LineID);
                     FaultLocationData.FaultSummaryDataTable faultSummaries = DbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID);
 
+                    string lineName = DbAdapterContainer.MeterInfoAdapter.MeterLines
+                        .Where(ml => meter.ID == ml.MeterID && line.ID == ml.LineID)
+                        .Select(ml => ml.LineName)
+                        .DefaultIfEmpty(line.AssetKey)
+                        .First();
+
                     string resultsDir;
                     string comtradeFilePath;
                     string xmlFilePath;
 
                     if (faultSummaries.Count > 0)
                     {
-                        OnStatusMessage("Fault found on line {0} at {1} {2}", line.Name, faultSummaries.First().Distance, SystemSettings.LengthUnits);
+                        OnStatusMessage("Fault found on line {0} at {1} {2}", lineName, faultSummaries.First().Distance, SystemSettings.LengthUnits);
 
                         resultsDir = Path.Combine(SystemSettings.ResultsPath, meter.AssetKey);
                         TryCreateDirectory(resultsDir);

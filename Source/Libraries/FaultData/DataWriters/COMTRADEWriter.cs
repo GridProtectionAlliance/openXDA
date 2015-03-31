@@ -72,6 +72,8 @@ namespace FaultData.DataWriters
         private class FaultRecordInfo
         {
             public FileGroup FileGroup;
+
+            public string LineName;
             public Meter Meter;
             public Line Line;
 
@@ -196,6 +198,12 @@ namespace FaultData.DataWriters
                 faultRecordInfo.FileGroup = fileInfo.FileGroups.Single(fg => faultRecordInfo.Event.FileGroupID == fg.ID);
                 faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
                 faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
+
+                faultRecordInfo.LineName = meterInfo.MeterLines
+                    .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
+                    .Select(ml => ml.LineName)
+                    .DefaultIfEmpty(faultRecordInfo.Line.AssetKey)
+                    .First();
 
                 // Get the cycle data, fault segments, and fault curves calculated by the fault location engine
                 faultRecordInfo.CycleData = cycleDataAdapter.GetDataBy(eventID).Single();
@@ -356,7 +364,7 @@ namespace FaultData.DataWriters
                 writer.WriteLine("Meter: " + faultRecordInfo.Meter.Name);
 
                 // Write out the name and length of the line on which the fault(s) occurred
-                writer.WriteLine("Line: {0} ({1} {2})", faultRecordInfo.Line.Name, faultRecordInfo.Line.Length, LengthUnits);
+                writer.WriteLine("Line: {0} ({1} {2})", faultRecordInfo.LineName, faultRecordInfo.Line.Length, LengthUnits);
                 writer.WriteLine();
 
                 // For each fault, write the distance, the most prominent fault type, the time of

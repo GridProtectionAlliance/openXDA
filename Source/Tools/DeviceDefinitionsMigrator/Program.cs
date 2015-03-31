@@ -141,6 +141,7 @@ namespace DeviceDefinitionsMigrator
             public Dictionary<string, Meter> MeterLookup;
             public Dictionary<string, Line> LineLookup;
             public Dictionary<string, MeterLocation> MeterLocationLookup;
+            public Dictionary<Tuple<string, string>, MeterLine> MeterLineLookup;
             public Dictionary<Tuple<string, string>, MeterLocationLine> MeterLocationLineLookup;
             public Dictionary<string, MeasurementType> MeasurementTypeLookup;
             public Dictionary<string, MeasurementCharacteristic> MeasurementCharacteristicLookup;
@@ -164,6 +165,7 @@ namespace DeviceDefinitionsMigrator
                 MeterLookup = GetMeterLookup(deviceElements, m_meterInfo);
                 LineLookup = GetLineLookup(lineElements, m_meterInfo);
                 MeterLocationLookup = GetMeterLocationLookup(deviceElements, lineElements, m_meterInfo);
+                MeterLineLookup = GetMeterLineLookup(MeterLookup.Values, LineLookup.Values, m_meterInfo);
                 MeterLocationLineLookup = GetMeterLocationLineLookup(MeterLocationLookup.Values, LineLookup.Values, m_meterInfo);
                 MeasurementTypeLookup = GetMeasurementTypeLookup(m_meterInfo);
                 MeasurementCharacteristicLookup = GetMeasurementCharacteristicLookup(m_meterInfo);
@@ -221,6 +223,22 @@ namespace DeviceDefinitionsMigrator
                 return meterInfo.MeterLocations
                     .Where(meterLocation => meterLocationIDs.Contains(meterLocation.AssetKey))
                     .ToDictionary(meterLocation => meterLocation.AssetKey);
+            }
+
+            private Dictionary<Tuple<string, string>, MeterLine> GetMeterLineLookup(IEnumerable<Meter> meters, IEnumerable<Line> lines, MeterInfoDataContext meterInfo)
+            {
+                List<int> meterIDs = meters
+                    .Select(meter => meter.ID)
+                    .ToList();
+
+                List<int> lineIDs = lines
+                    .Select(line => line.ID)
+                    .ToList();
+
+                return meterInfo.MeterLines
+                    .Where(meterLine => meterIDs.Contains(meterLine.MeterID))
+                    .Where(meterLine => lineIDs.Contains(meterLine.LineID))
+                    .ToDictionary(meterLine => Tuple.Create(meterLine.Meter.AssetKey, meterLine.Line.AssetKey));
             }
 
             private Dictionary<Tuple<string, string>, MeterLocationLine> GetMeterLocationLineLookup(IEnumerable<MeterLocation> meterLocations, IEnumerable<Line> lines, MeterInfoDataContext meterInfo)
@@ -362,6 +380,7 @@ namespace DeviceDefinitionsMigrator
                         LoadLineAttributes(line, lineElement);
 
                         // Provide a link between this line and the location housing the meter
+                        Link(meter, line, lineElement, lookupTables.MeterLineLookup);
                         localLink = Link(meterLocation, line, lookupTables.MeterLocationLineLookup);
 
                         if ((string)lineElement.Element("endStationID") != null)
@@ -563,17 +582,29 @@ namespace DeviceDefinitionsMigrator
 
         private static void LoadLineAttributes(Line line, XElement lineElement)
         {
-            string lineName = (string)lineElement.Element("name");
-
-            if (line.Name != lineName)
-            {
-                line.Name = lineName;
-                line.ShortName = new string(lineName.Take(50).ToArray());
-            }
-
             line.VoltageKV = Convert.ToDouble((string)lineElement.Element("voltage"));
             line.ThermalRating = Convert.ToDouble((string)lineElement.Element("rating50F"));
             line.Length = Convert.ToDouble((string)lineElement.Element("length"));
+        }
+
+        private static MeterLine Link(Meter meter, Line line, XElement lineElement, Dictionary<Tuple<string, string>, MeterLine> meterLineLookup)
+        {
+            Tuple<string, string> key = Tuple.Create(meter.AssetKey, line.AssetKey);
+            MeterLine meterLine;
+
+            if (!meterLineLookup.TryGetValue(key, out meterLine))
+            {
+                meterLine = new MeterLine()
+                {
+                    Meter = meter,
+                    Line = line,
+                    LineName = (string)lineElement.Element("name")
+                };
+
+                meterLineLookup.Add(key, meterLine);
+            }
+
+            return meterLine;
         }
 
         private static MeterLocationLine Link(MeterLocation meterLocation, Line line, Dictionary<Tuple<string, string>, MeterLocationLine> meterLocationLineLookup)
@@ -597,17 +628,15 @@ namespace DeviceDefinitionsMigrator
 
         private static void LoadChannelAttributes(Meter meter, Line line, MeterLocation remoteMeterLocation, Channel channel, string channelKey, LookupTables lookupTables)
         {
-            string channelName = channelKey;
-
             if ((object)remoteMeterLocation != null)
-                channel.Name = string.Format("{0}({1}) {2}", remoteMeterLocation.Name, line.Name, channelName);
+                channel.Name = string.Format("{0}({1}) {2}", remoteMeterLocation.Name, line.AssetKey, channelKey);
             else
-                channel.Name = string.Format("({0}) {1}", line.Name, channelName);
+                channel.Name = string.Format("({0}) {1}", line.AssetKey, channelKey);
 
             channel.HarmonicGroup = 0;
-            channel.MeasurementType = lookupTables.MeasurementTypeLookup.GetOrAdd(GetMeasurementTypeName(channelName), name => new MeasurementType() { Name = name, Description = name });
+            channel.MeasurementType = lookupTables.MeasurementTypeLookup.GetOrAdd(GetMeasurementTypeName(channelKey), name => new MeasurementType() { Name = name, Description = name });
             channel.MeasurementCharacteristic = lookupTables.MeasurementCharacteristicLookup.GetOrAdd("Instantaneous", name => new MeasurementCharacteristic() { Name = name, Description = name });
-            channel.Phase = lookupTables.PhaseLookup.GetOrAdd(GetPhaseName(channelName), name => new Phase() { Name = name, Description = name });
+            channel.Phase = lookupTables.PhaseLookup.GetOrAdd(GetPhaseName(channelKey), name => new Phase() { Name = name, Description = name });
 
             channel.Meter = meter;
             channel.Line = line;
