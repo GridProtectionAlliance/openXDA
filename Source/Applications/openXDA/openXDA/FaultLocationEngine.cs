@@ -85,6 +85,7 @@ using FaultData.DataSets;
 using FaultData.DataWriters;
 using GSF;
 using GSF.Annotations;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
 using log4net;
@@ -581,7 +582,7 @@ namespace openXDA
                     connectionStringParser.SerializeUnspecifiedProperties = true;
                     connectionStringParser.ParseConnectionString(systemSettings.ToConnectionString(), reader);
 
-                    if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
+                    if (reader.CanParse(filePath, GetMaxFileCreationTime(filePath)))
                     {
                         // Create a file group for this file in the database
                         fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
@@ -634,7 +635,7 @@ namespace openXDA
                         // Ownership of the dbAdapterContainer has passed to the meterDataProcessor
                         dbAdapterContainer = null;
 
-                        m_fileCreationTimes.Remove(filePath);
+                        ClearFileCreationTimes(filePath);
                     }
                     else
                     {
@@ -756,17 +757,33 @@ namespace openXDA
         }
 
         // Gets the creation time of the file with the given file name.
-        private DateTime GetFileCreationTime(string fileName)
+        private DateTime GetMaxFileCreationTime(string fileName)
         {
-            DateTime creationTime;
+            string directory;
+            string rootFileName;
+            string[] fileList;
 
-            if (!m_fileCreationTimes.TryGetValue(fileName, out creationTime))
-            {
-                creationTime = DateTime.Now;
-                m_fileCreationTimes.Add(fileName, creationTime);
-            }
+            directory = FilePath.GetDirectoryName(fileName);
+            rootFileName = FilePath.GetFileNameWithoutExtension(fileName);
+            fileList = FilePath.GetFileList(Path.Combine(directory, rootFileName + ".*"));
 
-            return creationTime;
+            return fileList.Max(file => m_fileCreationTimes.GetOrAdd(file, path => DateTime.Now));
+        }
+
+        // Removes the creation time of the file with the given
+        // file name from the collection of file creation times.
+        private void ClearFileCreationTimes(string fileName)
+        {
+            string directory;
+            string rootFileName;
+            string[] fileList;
+
+            directory = FilePath.GetDirectoryName(fileName);
+            rootFileName = FilePath.GetFileNameWithoutExtension(fileName);
+            fileList = FilePath.GetFileList(Path.Combine(directory, rootFileName + ".*"));
+
+            foreach (string file in fileList)
+                m_fileCreationTimes.Remove(file);
         }
 
         private static TransactionOptions GetTransactionOptions()
