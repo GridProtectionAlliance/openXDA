@@ -89,7 +89,7 @@ namespace openXDA
 
         // Fields
         private ServiceMonitors m_serviceMonitors;
-        private FaultLocationEngine m_faultLocationEngine;
+        private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
 
         #endregion
 
@@ -164,8 +164,8 @@ namespace openXDA
             m_serviceMonitors.Initialize();
 
             // Set up fault location engine
-            m_faultLocationEngine = new FaultLocationEngine();
-            m_faultLocationEngine.Start();
+            m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
+            m_extensibleDisturbanceAnalysisEngine.Start();
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
@@ -176,8 +176,8 @@ namespace openXDA
             m_serviceMonitors.Dispose();
 
             // Dispose of fault location engine
-            m_faultLocationEngine.Stop();
-            m_faultLocationEngine.Dispose();
+            m_extensibleDisturbanceAnalysisEngine.Stop();
+            m_extensibleDisturbanceAnalysisEngine.Dispose();
         }
 
         private void ServiceHeartbeatHandler(string s, object[] args)
@@ -202,7 +202,7 @@ namespace openXDA
         // Reloads system settings from the database
         private void ReloadSystemSettingsRequestHandler(ClientRequestInfo requestInfo)
         {
-            m_faultLocationEngine.ReloadSystemSettings();
+            m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
         }
 
         // Send a message to the service monitors on request

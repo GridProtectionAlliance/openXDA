@@ -1,5 +1,5 @@
 ﻿//*********************************************************************************************************************
-// FaultLocationEngine.cs
+// ExtensibleDisturbanceAnalysisEngine.cs
 // Version 1.1 and subsequent releases
 //
 //  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
@@ -98,7 +98,7 @@ namespace openXDA
     /// Represents an engine that processes power quality data
     /// to determine the locations of faults along power lines.
     /// </summary>
-    public class FaultLocationEngine : IDisposable
+    public class ExtensibleDisturbanceAnalysisEngine : IDisposable
     {
         #region [ Members ]
 
@@ -863,7 +863,7 @@ namespace openXDA
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(FaultLocationEngine));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ExtensibleDisturbanceAnalysisEngine));
 
         #endregion
     }

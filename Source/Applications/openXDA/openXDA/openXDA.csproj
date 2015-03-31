@@ -157,7 +157,7 @@
     <Compile Include="DebugHost.Designer.cs">
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
-    <Compile Include="FaultLocationEngine.cs" />
+    <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="FaultValidator.cs" />
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
