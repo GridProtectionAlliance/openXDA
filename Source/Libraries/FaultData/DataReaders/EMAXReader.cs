@@ -33,81 +33,110 @@ using GSF.IO;
 
 namespace FaultData.DataReaders
 {
-    public class EMAXReader : IDataReader
+    public class EMAXReader : IDataReader, IDisposable
     {
+        #region [ Members ]
+
+        // Fields
+        private CorrectiveParser m_parser;
+        private bool m_disposed;
+
+        #endregion
+
+        #region [ Methods ]
+
         public bool CanParse(string filePath, DateTime fileCreationTime)
         {
             string directory = FilePath.GetDirectoryName(filePath);
             string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
             string controlFileName = Path.Combine(directory, rootFileName + ".ctl");
-            string[] fileList = FilePath.GetFileList(rootFileName + ".*");
 
             if (!File.Exists(controlFileName))
                 return false;
 
-            if (fileList.Any(file => !FilePath.TryGetReadLockExclusive(file)))
+            try
+            {
+                m_parser = new CorrectiveParser();
+                m_parser.ControlFile = new ControlFile(controlFileName);
+                m_parser.FileName = filePath;
+                m_parser.OpenFiles();
+            }
+            catch (IOException)
+            {
                 return false;
+            }
 
             return true;
         }
 
         public List<MeterDataSet> Parse(string filePath)
         {
-            MeterDataSet meterDataSet = new MeterDataSet();
+            MeterDataSet meterDataSet;
 
-            string directory = FilePath.GetDirectoryName(filePath) ?? string.Empty;
-            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            string controlFileName = Path.Combine(directory, rootFileName + ".ctl");
-
-            ControlFile controlFile = new ControlFile(controlFileName);
+            ControlFile controlFile;
             string identityString;
             string deviceName;
 
             Channel channel;
             DataSeries series;
 
-            using (CorrectiveParser parser = new CorrectiveParser())
+            meterDataSet = new MeterDataSet();
+
+            controlFile = m_parser.ControlFile;
+            identityString = controlFile.IdentityString.value;
+            deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
+
+            meterDataSet.Meter = new Meter();
+            meterDataSet.Meter.AssetKey = deviceName;
+            meterDataSet.Meter.Name = deviceName;
+            meterDataSet.Meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
+
+            foreach (ANLG_CHNL_NEW analogChannel in controlFile.AnalogChannelSettings.Values)
             {
-                parser.ControlFile = controlFile;
-                parser.FileName = filePath;
-                parser.OpenFiles();
+                channel = ParseSeries(analogChannel);
 
-                identityString = controlFile.IdentityString.value;
-                deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
+                series = new DataSeries();
+                series.SeriesInfo = channel.Series[0];
 
-                meterDataSet.Meter = new Meter();
-                meterDataSet.Meter.AssetKey = deviceName;
-                meterDataSet.Meter.Name = deviceName;
-                meterDataSet.Meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
+                meterDataSet.Meter.Channels.Add(channel);
 
-                foreach (ANLG_CHNL_NEW analogChannel in controlFile.AnalogChannelSettings.Values)
+                while (meterDataSet.DataSeries.Count <= analogChannel.ChannelNumber)
+                    meterDataSet.DataSeries.Add(new DataSeries());
+
+                meterDataSet.DataSeries[analogChannel.ChannelNumber] = series;
+            }
+
+            while (m_parser.ReadNext())
+            {
+                int i = 0;
+
+                foreach (int channelNumber in controlFile.AnalogChannelSettings.Keys.OrderBy(key => key))
                 {
-                    channel = ParseSeries(analogChannel);
-
-                    series = new DataSeries();
-                    series.SeriesInfo = channel.Series[0];
-
-                    meterDataSet.Meter.Channels.Add(channel);
-
-                    while (meterDataSet.DataSeries.Count <= analogChannel.ChannelNumber)
-                        meterDataSet.DataSeries.Add(new DataSeries());
-
-                    meterDataSet.DataSeries[analogChannel.ChannelNumber] = series;
-                }
-
-                while (parser.ReadNext())
-                {
-                    int i = 0;
-
-                    foreach (int channelNumber in controlFile.AnalogChannelSettings.Keys.OrderBy(key => key))
-                    {
-                        meterDataSet.DataSeries[channelNumber].DataPoints.Add(new DataPoint() { Time = parser.CalculatedTimestamp, Value = parser.CorrectedValues[i] });
-                        i++;
-                    }
+                    meterDataSet.DataSeries[channelNumber].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
+                    i++;
                 }
             }
 
             return new List<MeterDataSet>() { meterDataSet };
+        }
+
+        public void Dispose()
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if ((object)m_parser != null)
+                    {
+                        m_parser.Dispose();
+                        m_parser = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
         }
 
         private Channel ParseSeries(ANLG_CHNL_NEW analogChannel)
@@ -142,5 +171,7 @@ namespace FaultData.DataReaders
 
             return index;
         }
+
+        #endregion
     }
 }

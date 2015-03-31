@@ -33,12 +33,15 @@ using FaultData.DataSets;
 
 namespace FaultData.DataReaders
 {
-    public class COMTRADEReader : IDataReader
+    public class COMTRADEReader : IDataReader, IDisposable
     {
         #region [ Members ]
 
         // Fields
         private TimeSpan m_minWaitTime;
+        private Parser m_parser;
+
+        private bool m_disposed;
 
         #endregion
 
@@ -85,71 +88,92 @@ namespace FaultData.DataReaders
             if (fileList.Any(file => !FilePath.TryGetReadLockExclusive(file)))
                 return false;
 
-            if (multipleDataFiles && fileList.Any(file => DateTime.UtcNow - fileCreationTime < m_minWaitTime))
+            if (multipleDataFiles && DateTime.UtcNow - fileCreationTime < m_minWaitTime)
                 return false;
+
+            try
+            {
+                m_parser = new Parser();
+                m_parser.Schema = new Schema(schemaFileName);
+                m_parser.FileName = filePath;
+                m_parser.InferTimeFromSampleRates = true;
+                m_parser.OpenFiles();
+            }
+            catch (IOException)
+            {
+                return false;
+            }
 
             return true;
         }
 
         public List<MeterDataSet> Parse(string filePath)
         {
-            MeterDataSet meterDataSet = new MeterDataSet();
-
-            string directory = FilePath.GetDirectoryName(filePath) ?? string.Empty;
-            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            string configurationFileName = Path.Combine(directory, rootFileName + ".cfg");
-
-            Schema schema = new Schema(configurationFileName);
-
+            MeterDataSet meterDataSet;
+            Schema schema;
             Channel channel;
             DataSeries series;
 
-            using (Parser parser = new Parser())
+            meterDataSet = new MeterDataSet();
+            schema = m_parser.Schema;
+
+            meterDataSet.Meter = new Meter();
+            meterDataSet.Meter.AssetKey = schema.DeviceID;
+            meterDataSet.Meter.Name = schema.DeviceID;
+            meterDataSet.Meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
+
+            meterDataSet.Meter.MeterLocation = new MeterLocation();
+            meterDataSet.Meter.MeterLocation.AssetKey = schema.StationName;
+            meterDataSet.Meter.MeterLocation.Name = schema.StationName;
+            meterDataSet.Meter.MeterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
+            meterDataSet.Meter.MeterLocation.Description = schema.StationName;
+
+            foreach (AnalogChannel analogChannel in schema.AnalogChannels)
             {
-                parser.Schema = schema;
-                parser.FileName = filePath;
-                parser.InferTimeFromSampleRates = true;
-                parser.OpenFiles();
+                channel = ParseSeries(analogChannel);
 
-                meterDataSet.Meter = new Meter();
-                meterDataSet.Meter.AssetKey = schema.DeviceID;
-                meterDataSet.Meter.Name = schema.DeviceID;
-                meterDataSet.Meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
+                series = new DataSeries();
+                series.SeriesInfo = channel.Series[0];
 
-                meterDataSet.Meter.MeterLocation = new MeterLocation();
-                meterDataSet.Meter.MeterLocation.AssetKey = schema.StationName;
-                meterDataSet.Meter.MeterLocation.Name = schema.StationName;
-                meterDataSet.Meter.MeterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
-                meterDataSet.Meter.MeterLocation.Description = schema.StationName;
+                meterDataSet.Meter.Channels.Add(channel);
 
-                foreach (AnalogChannel analogChannel in schema.AnalogChannels)
+                while (meterDataSet.DataSeries.Count <= analogChannel.Index)
+                    meterDataSet.DataSeries.Add(new DataSeries());
+
+                meterDataSet.DataSeries[analogChannel.Index] = series;
+            }
+
+            while (m_parser.ReadNext())
+            {
+                for (int i = 0; i < schema.AnalogChannels.Length; i++)
                 {
-                    channel = ParseSeries(analogChannel);
-
-                    series = new DataSeries();
-                    series.SeriesInfo = channel.Series[0];
-
-                    meterDataSet.Meter.Channels.Add(channel);
-
-                    while (meterDataSet.DataSeries.Count <= analogChannel.Index)
-                        meterDataSet.DataSeries.Add(new DataSeries());
-
-                    meterDataSet.DataSeries[analogChannel.Index] = series;
-                }
-
-                while (parser.ReadNext())
-                {
-                    for (int i = 0; i < schema.AnalogChannels.Length; i++)
-                    {
-                        int seriesIndex = schema.AnalogChannels[i].Index;
-                        string units = schema.AnalogChannels[i].Units.ToUpper();
-                        double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
-                        meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = parser.Timestamp, Value = multiplier * parser.Values[i] });
-                    }
+                    int seriesIndex = schema.AnalogChannels[i].Index;
+                    string units = schema.AnalogChannels[i].Units.ToUpper();
+                    double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
+                    meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.Values[i] });
                 }
             }
 
             return new List<MeterDataSet>() { meterDataSet };
+        }
+
+        public void Dispose()
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if ((object)m_parser != null)
+                    {
+                        m_parser.Dispose();
+                        m_parser = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
         }
 
         private Channel ParseSeries(AnalogChannel analogChannel)

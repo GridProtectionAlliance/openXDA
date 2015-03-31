@@ -71,6 +71,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -156,7 +157,7 @@ namespace openXDA
 
             private void ProcessMeterData(MeterDataSet meterDataSet)
             {
-                List<IDataOperation> dataOperations;
+                List<IDataOperation> dataOperations = null;
                 ConnectionStringParser connectionStringParser;
                 string systemSettings;
 
@@ -216,6 +217,15 @@ namespace openXDA
                     {
                         // Ignore errors here as they are most likely
                         // related to the error we originally caught
+                    }
+                }
+                finally
+                {
+                    if ((object)dataOperations != null)
+                    {
+                        // ReSharper disable once SuspiciousTypeConversion.Global
+                        foreach (IDataOperation dataOperation in dataOperations)
+                            TryDispose(dataOperation as IDisposable);
                     }
                 }
             }
@@ -316,6 +326,19 @@ namespace openXDA
                 catch (Exception ex)
                 {
                     OnHandleException(new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
+                }
+            }
+
+            private void TryDispose(IDisposable obj)
+            {
+                try
+                {
+                    if ((object)obj != null)
+                        obj.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    OnHandleException(ex);
                 }
             }
 
@@ -467,6 +490,7 @@ namespace openXDA
 
         // Called when the file processor has picked up a file in one of the watch
         // directories. This handler validates the file and processes it if able.
+        [SuppressMessage("ReSharper", "ExpressionIsAlwaysNull")]
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
             string filePath;
@@ -548,68 +572,75 @@ namespace openXDA
 
                 // Create the data reader
                 reader = (IDataReader)Activator.CreateInstance(readerType);
-                systemSettings = new SystemSettings(LoadSystemSettings(dbAdapterContainer.SystemInfoAdapter));
 
-                connectionStringParser = new ConnectionStringParser();
-                connectionStringParser.SerializeUnspecifiedProperties = true;
-                connectionStringParser.ParseConnectionString(systemSettings.ToConnectionString(), reader);
-
-                if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
+                using (reader as IDisposable)
                 {
-                    // Create a file group for this file in the database
-                    fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                    systemSettings = new SystemSettings(LoadSystemSettings(dbAdapterContainer.SystemInfoAdapter));
 
-                    // Create the meter data processor that will be processing this file
-                    meterDataProcessor = new MeterDataProcessor();
+                    connectionStringParser = new ConnectionStringParser();
+                    connectionStringParser.SerializeUnspecifiedProperties = true;
+                    connectionStringParser.ParseConnectionString(systemSettings.ToConnectionString(), reader);
 
-                    // Initialize properties of the meter data processor
-                    meterDataProcessor.SystemSettings = systemSettings;
-                    meterDataProcessor.MeterDataFile = filePath;
-                    meterDataProcessor.DbAdapterContainer = dbAdapterContainer;
-
-                    // Parse the file
-                    meterDataProcessor.MeterDataSets = reader.Parse(filePath);
-
-                    // Set properties on each of the meter data sets
-                    foreach (MeterDataSet meterDataSet in meterDataProcessor.MeterDataSets)
+                    if (reader.CanParse(filePath, GetFileCreationTime(filePath)))
                     {
-                        meterDataSet.FilePath = filePath;
-                        meterDataSet.FileGroup = fileGroup;
-                        meterDataSet.Meter.AssetKey = meterKey;
+                        // Create a file group for this file in the database
+                        fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+
+                        // Create the meter data processor that will be processing this file
+                        meterDataProcessor = new MeterDataProcessor();
+
+                        // Initialize properties of the meter data processor
+                        meterDataProcessor.SystemSettings = systemSettings;
+                        meterDataProcessor.MeterDataFile = filePath;
+                        meterDataProcessor.DbAdapterContainer = dbAdapterContainer;
+
+                        // Parse the file
+                        meterDataProcessor.MeterDataSets = reader.Parse(filePath);
+
+                        // If reader is keeping the file open, go ahead and close it now
+                        TryDispose(reader as IDisposable);
+
+                        // Set properties on each of the meter data sets
+                        foreach (MeterDataSet meterDataSet in meterDataProcessor.MeterDataSets)
+                        {
+                            meterDataSet.FilePath = filePath;
+                            meterDataSet.FileGroup = fileGroup;
+                            meterDataSet.Meter.AssetKey = meterKey;
+                        }
+
+                        dataStartTime = meterDataProcessor.MeterDataSets
+                            .SelectMany(meterDataSet => meterDataSet.DataSeries)
+                            .Where(dataSeries => dataSeries.DataPoints.Any())
+                            .Select(dataSeries => dataSeries.DataPoints.First().Time)
+                            .DefaultIfEmpty()
+                            .Min();
+
+                        dataEndTime = meterDataProcessor.MeterDataSets
+                            .SelectMany(meterDataSet => meterDataSet.DataSeries)
+                            .Where(dataSeries => dataSeries.DataPoints.Any())
+                            .Select(dataSeries => dataSeries.DataPoints.Last().Time)
+                            .DefaultIfEmpty()
+                            .Max();
+
+                        if (dataStartTime != default(DateTime))
+                            fileGroup.DataStartTime = dataStartTime;
+
+                        if (dataEndTime != default(DateTime))
+                            fileGroup.DataEndTime = dataEndTime;
+
+                        // Process meter data using the meter data processor
+                        meterDataProcessor.Process();
+
+                        // Ownership of the dbAdapterContainer has passed to the meterDataProcessor
+                        dbAdapterContainer = null;
+
+                        m_fileCreationTimes.Remove(filePath);
                     }
-
-                    dataStartTime = meterDataProcessor.MeterDataSets
-                        .SelectMany(meterDataSet => meterDataSet.DataSeries)
-                        .Where(dataSeries => dataSeries.DataPoints.Any())
-                        .Select(dataSeries => dataSeries.DataPoints.First().Time)
-                        .DefaultIfEmpty()
-                        .Min();
-
-                    dataEndTime = meterDataProcessor.MeterDataSets
-                        .SelectMany(meterDataSet => meterDataSet.DataSeries)
-                        .Where(dataSeries => dataSeries.DataPoints.Any())
-                        .Select(dataSeries => dataSeries.DataPoints.Last().Time)
-                        .DefaultIfEmpty()
-                        .Max();
-
-                    if (dataStartTime != default(DateTime))
-                        fileGroup.DataStartTime = dataStartTime;
-
-                    if (dataEndTime != default(DateTime))
-                        fileGroup.DataEndTime = dataEndTime;
-
-                    // Process meter data using the meter data processor
-                    meterDataProcessor.Process();
-
-                    // Ownership of the dbAdapterContainer has passed to the meterDataProcessor
-                    dbAdapterContainer = null;
-
-                    m_fileCreationTimes.Remove(filePath);
-                }
-                else
-                {
-                    // Requeue the file if the reader is unable to process
-                    fileProcessorEventArgs.Requeue = true;
+                    else
+                    {
+                        // Requeue the file if the reader is unable to process
+                        fileProcessorEventArgs.Requeue = true;
+                    }
                 }
             }
             catch (Exception ex)
@@ -794,6 +825,20 @@ namespace openXDA
         private void OnProcessException(Exception ex)
         {
             Log.Error(ex.Message, ex);
+        }
+
+        // Attempts to dispose of the object if it is not null
+        private void TryDispose(IDisposable obj)
+        {
+            try
+            {
+                if ((object)obj != null)
+                    obj.Dispose();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+            }
         }
 
         #endregion

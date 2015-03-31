@@ -23,18 +23,26 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using GSF.IO;
-using GSF.PQDIF.Logical;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
+using GSF.PQDIF.Logical;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
 {
-    public class PQDIFReader : IDataReader
+    public class PQDIFReader : IDataReader, IDisposable
     {
+        #region [ Members ]
+
+        // Fields
+        private LogicalParser m_parser;
+        private bool m_disposed;
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -45,7 +53,16 @@ namespace FaultData.DataReaders
         /// <returns>True if the file can be parsed; false otherwise.</returns>
         public bool CanParse(string filePath, DateTime fileCreationTime)
         {
-            return FilePath.TryGetReadLockExclusive(filePath);
+            try
+            {
+                m_parser = new LogicalParser(filePath);
+                m_parser.Open();
+                return true;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -55,7 +72,82 @@ namespace FaultData.DataReaders
         /// <returns>List of meter data sets, one per meter.</returns>
         public List<MeterDataSet> Parse(string filePath)
         {
-            return ParseFile(filePath);
+            List<MeterDataSet> meterDataSets = new List<MeterDataSet>();
+
+            DataSourceRecord dataSource = null;
+            ObservationRecord observation;
+
+            MeterDataSet meterDataSet = null;
+            Meter meter = null;
+
+            IEnumerable<ChannelInstance> channelInstances;
+            Channel channel;
+            DataSeries dataSeries;
+            DateTime[] timeData;
+
+            while (m_parser.HasNextObservationRecord())
+            {
+                observation = m_parser.NextObservationRecord();
+
+                if ((object)observation.DataSource == null)
+                    continue;
+
+                if (!ReferenceEquals(dataSource, observation.DataSource))
+                {
+                    dataSource = observation.DataSource;
+                    meterDataSet = new MeterDataSet();
+                    meter = ParseDataSource(dataSource);
+
+                    meterDataSet.Meter = meter;
+                    meterDataSets.Add(meterDataSet);
+                }
+
+                if ((object)meter == null)
+                    continue;
+
+                channelInstances = observation.ChannelInstances
+                    .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
+                    .Where(channelInstance => channelInstance.SeriesInstances.Any())
+                    .Where(channelInstance => channelInstance.SeriesInstances[0].Definition.ValueTypeID == SeriesValueType.Time);
+
+                foreach (ChannelInstance channelInstance in channelInstances)
+                {
+                    timeData = ParseTimeData(channelInstance);
+
+                    foreach (SeriesInstance seriesInstance in channelInstance.SeriesInstances.Skip(1))
+                    {
+                        channel = ParseSeries(seriesInstance);
+
+                        dataSeries = new DataSeries();
+                        dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d }).ToList();
+                        dataSeries.SeriesInfo = channel.Series[0];
+
+                        meter.Channels.Add(channel);
+                        meterDataSet.DataSeries.Add(dataSeries);
+                    }
+                }
+            }
+
+            return meterDataSets;
+        }
+
+        public void Dispose()
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if ((object)m_parser != null)
+                    {
+                        m_parser.Dispose();
+                        m_parser = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
         }
 
         #endregion
