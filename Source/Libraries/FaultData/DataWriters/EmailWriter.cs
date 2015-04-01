@@ -200,8 +200,7 @@ namespace FaultData.DataWriters
                     faultRecordInfo.LineName = meterInfo.MeterLines
                         .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
                         .Select(ml => ml.LineName)
-                        .DefaultIfEmpty(faultRecordInfo.Line.AssetKey)
-                        .First();
+                        .FirstOrDefault() ?? faultRecordInfo.Line.AssetKey;
 
                     faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
                     faultRecordInfo.FaultSummaries = faultSummaryAdapter.GetDataBy(eventID).ToList();

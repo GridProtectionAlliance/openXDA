@@ -272,8 +272,7 @@ namespace openXDA
                     string lineName = DbAdapterContainer.MeterInfoAdapter.MeterLines
                         .Where(ml => meter.ID == ml.MeterID && line.ID == ml.LineID)
                         .Select(ml => ml.LineName)
-                        .DefaultIfEmpty(line.AssetKey)
-                        .First();
+                        .FirstOrDefault() ?? line.AssetKey;
 
                     string resultsDir;
                     string comtradeFilePath;

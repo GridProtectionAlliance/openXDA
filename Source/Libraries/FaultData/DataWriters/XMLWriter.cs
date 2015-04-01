@@ -145,8 +145,7 @@ namespace FaultData.DataWriters
                 faultRecordInfo.LineName = meterInfo.MeterLines
                     .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
                     .Select(ml => ml.LineName)
-                    .DefaultIfEmpty(faultRecordInfo.Line.AssetKey)
-                    .First();
+                    .FirstOrDefault() ?? faultRecordInfo.Line.AssetKey;
 
                 faultRecordInfo.CycleData = cycleDataAdapter.GetDataBy(eventID).Single();
                 faultRecordInfo.FaultSegments = faultLocationInfo.FaultSegments.Where(segment => segment.EventID == eventID).ToList();
