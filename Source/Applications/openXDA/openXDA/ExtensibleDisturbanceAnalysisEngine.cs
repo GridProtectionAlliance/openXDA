@@ -157,6 +157,33 @@ namespace openXDA
 
             private void ProcessMeterData(MeterDataSet meterDataSet)
             {
+                try
+                {
+                    ExecuteDataOperations(meterDataSet);
+                    ExecuteDataWriters(meterDataSet);
+
+                    // Export fault results to results files
+                    WriteEmail(meterDataSet);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        OnHandleException(ex);
+                        meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
+                        meterDataSet.FileGroup.Error = 1;
+                        DbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                    }
+                    catch
+                    {
+                        // Ignore errors here as they are most likely
+                        // related to the error we originally caught
+                    }
+                }
+            }
+
+            private void ExecuteDataOperations(MeterDataSet meterDataSet)
+            {
                 List<IDataOperation> dataOperations = null;
                 ConnectionStringParser connectionStringParser;
                 string systemSettings;
@@ -200,24 +227,6 @@ namespace openXDA
 
                         transactionScope.Complete();
                     }
-
-                    // Export fault results to results files
-                    WriteResults(meterDataSet);
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        OnHandleException(ex);
-                        meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
-                        meterDataSet.FileGroup.Error = 1;
-                        DbAdapterContainer.FileInfoAdapter.SubmitChanges();
-                    }
-                    catch
-                    {
-                        // Ignore errors here as they are most likely
-                        // related to the error we originally caught
-                    }
                 }
                 finally
                 {
@@ -230,22 +239,56 @@ namespace openXDA
                 }
             }
 
-            private void WriteResults(MeterDataSet meterDataSet)
+            private void ExecuteDataWriters(MeterDataSet meterDataSet)
             {
-                COMTRADEWriter comtradeWriter = new COMTRADEWriter(SystemSettings.DbConnectionString);
-                XMLWriter xmlWriter = new XMLWriter(SystemSettings.DbConnectionString);
+                List<IDataWriter> dataWriters = null;
+                ConnectionStringParser connectionStringParser;
+                string systemSettings;
+
+                try
+                {
+                    // Load data operations from the database
+                    dataWriters = DbAdapterContainer.SystemInfoAdapter.DataWriters
+                        .ToList()
+                        .Select(dataWriter => LoadType(dataWriter.AssemblyName, dataWriter.TypeName))
+                        .Where(type => (object)type != null)
+                        .Where(type => typeof(IDataWriter).IsAssignableFrom(type))
+                        .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                        .Select(Activator.CreateInstance)
+                        .Cast<IDataWriter>()
+                        .ToList();
+
+                    systemSettings = SystemSettings.ToConnectionString();
+                    connectionStringParser = new ConnectionStringParser();
+                    connectionStringParser.SerializeUnspecifiedProperties = true;
+
+                    foreach (IDataWriter dataWriter in dataWriters)
+                    {
+                        // Provide system settings to the data operation
+                        connectionStringParser.ParseConnectionString(systemSettings, dataWriter);
+
+                        // Prepare for execution of the data operation
+                        dataWriter.WriteResults(DbAdapterContainer, meterDataSet);
+                    }
+                }
+                finally
+                {
+                    if ((object)dataWriters != null)
+                    {
+                        // ReSharper disable once SuspiciousTypeConversion.Global
+                        foreach (IDataWriter dataWriter in dataWriters)
+                            TryDispose(dataWriter as IDisposable);
+                    }
+                }
+            }
+
+            private void WriteEmail(MeterDataSet meterDataSet)
+            {
                 EmailWriter emailWriter = new EmailWriter(SystemSettings.DbConnectionString);
 
                 int faultEventTypeID;
                 MeterData.EventDataTable events;
                 MeterData.EventTypeDataTable eventTypes;
-
-                comtradeWriter.MaxFaultDistanceMultiplier = SystemSettings.MaxFaultDistanceMultiplier;
-                comtradeWriter.MinFaultDistanceMultiplier = SystemSettings.MinFaultDistanceMultiplier;
-                comtradeWriter.LengthUnits = SystemSettings.LengthUnits;
-
-                xmlWriter.MaxFaultDistanceMultiplier = SystemSettings.MaxFaultDistanceMultiplier;
-                xmlWriter.MinFaultDistanceMultiplier = SystemSettings.MinFaultDistanceMultiplier;
 
                 emailWriter.SMTPServer = SystemSettings.SMTPServer;
                 emailWriter.FromAddress = SystemSettings.FromAddress;
@@ -274,24 +317,9 @@ namespace openXDA
                         .Select(ml => ml.LineName)
                         .FirstOrDefault() ?? line.AssetKey;
 
-                    string resultsDir;
-                    string comtradeFilePath;
-                    string xmlFilePath;
-
                     if (faultSummaries.Count > 0)
                     {
                         OnStatusMessage("Fault found on line {0} at {1} {2}", lineName, faultSummaries.First().Distance, SystemSettings.LengthUnits);
-
-                        resultsDir = Path.Combine(SystemSettings.ResultsPath, meter.AssetKey);
-                        TryCreateDirectory(resultsDir);
-
-                        comtradeFilePath = Path.Combine(resultsDir, string.Concat(FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath), ",", evt.ID.ToString("000000"), ",Line", line.AssetKey, ".dat"));
-                        comtradeWriter.WriteResults(evt.ID, comtradeFilePath);
-                        OnStatusMessage("Results written to {0}", comtradeFilePath);
-
-                        xmlFilePath = Path.Combine(resultsDir, string.Concat(FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath), ",", evt.ID.ToString("000000"), ",Line", line.AssetKey, ".xml"));
-                        xmlWriter.WriteResults(evt.ID, xmlFilePath);
-                        OnStatusMessage("Summary of results written to {0}", xmlFilePath);
 
                         emailWriter.WriteResults(evt.ID);
                         OnStatusMessage("Summary of results sent by email");
@@ -316,21 +344,6 @@ namespace openXDA
                 {
                     OnHandleException(ex);
                     return null;
-                }
-            }
-
-            // Attempts to create the directory at the given path.
-            private void TryCreateDirectory(string path)
-            {
-                try
-                {
-                    // Make sure results directory exists
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
-                }
-                catch (Exception ex)
-                {
-                    OnHandleException(new InvalidOperationException(string.Format("Failed to create directory \"{0}\" due to exception: {1}", FilePath.GetAbsolutePath(path), ex.Message), ex));
                 }
             }
 

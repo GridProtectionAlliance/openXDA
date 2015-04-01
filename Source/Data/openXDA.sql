@@ -53,6 +53,14 @@ CREATE TABLE DataOperation
 )
 GO
 
+CREATE TABLE DataWriter
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssemblyName VARCHAR(200) NOT NULL,
+    TypeName VARCHAR(200) NOT NULL
+)
+GO
+
 CREATE TABLE FileGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -254,6 +262,12 @@ INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.d
 GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3)
+GO
+
+INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter')
+GO
+
+INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.COMTRADEWriter')
 GO
 
 -- ------ --

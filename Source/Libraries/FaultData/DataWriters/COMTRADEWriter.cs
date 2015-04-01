@@ -27,19 +27,17 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using FaultAlgorithms;
+using FaultData.DataAnalysis;
+using FaultData.Database;
+using FaultData.DataResources;
+using FaultData.DataSets;
 using GSF;
 using GSF.COMTRADE;
 using GSF.IO;
-using FaultData.DataAnalysis;
-using FaultData.Database;
-using FaultData.Database.FaultLocationDataTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
-using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
-using Line = FaultData.Database.Line;
 
 namespace FaultData.DataWriters
 {
-    public class COMTRADEWriter
+    public class COMTRADEWriter : IDataWriter
     {
         #region [ Members ]
 
@@ -69,56 +67,174 @@ namespace FaultData.DataWriters
             public DigitalChannel OriginalDigitalChannel;
         }
 
-        private class FaultRecordInfo
+        private class EventDataSet
         {
-            public FileGroup FileGroup;
-
-            public string LineName;
-            public Meter Meter;
-            public Line Line;
-
-            public MeterData.EventRow Event;
-            public MeterData.CycleDataRow CycleData;
-            public List<FaultSegment> FaultSegments;
-            public List<FaultLocationData.FaultCurveRow> FaultCurves;
-
-            public List<Tuple<OutputChannel, DataSeries>> WaveformChannels;
-            public VICycleDataGroup CycleDataGroup;
+            public string ResultsPath;
+            public MeterDataSet MeterDataSet;
+            public DataGroup DataGroup;
+            public VICycleDataGroup VICycleDataGroup;
+            public List<Fault> Faults;
+            public List<OutputChannel> OutputChannels;
         }
 
         // Constants
         // TODO: Hardcoded frequency
         private const double Frequency = 60.0D;
 
-        private const double DefaultMaxFaultDistanceMultiplier = 1.25D;
-        private const double DefaultMinFaultDistanceMultiplier = -0.1D;
-        private const string DefaultLengthUnits = "miles";
-
         // Fields
-        private string m_connectionString;
+        private string m_resultsPath;
+
+        private double m_maxVoltage;
+        private double m_maxCurrent;
+        private double m_lowVoltageThreshold;
+        private double m_maxLowVoltageCurrent;
+        private double m_maxTimeOffset;
+        private double m_minTimeOffset;
+
+        private double m_residualCurrentTrigger;
+        private double m_phaseCurrentTrigger;
+        private double m_prefaultTrigger;
+        private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
+
         private string m_lengthUnits;
 
         #endregion
 
-        #region [ Constructors ]
+        #region [ Properties ]
 
-        /// <summary>
-        /// Creates a new instance of the <see cref="COMTRADEWriter"/> class.
-        /// </summary>
-        /// <param name="connectionString">The connection string used to connect to the database that contains the fault location data.</param>
-        public COMTRADEWriter(string connectionString)
+        public string ResultsPath
         {
-            m_connectionString = connectionString;
-            m_maxFaultDistanceMultiplier = DefaultMaxFaultDistanceMultiplier;
-            m_minFaultDistanceMultiplier = DefaultMinFaultDistanceMultiplier;
-            m_lengthUnits = DefaultLengthUnits;
+            get
+            {
+                return m_resultsPath;
+            }
+            set
+            {
+                m_resultsPath = value;
+            }
         }
 
-        #endregion
+        public double MaxVoltage
+        {
+            get
+            {
+                return m_maxVoltage;
+            }
+            set
+            {
+                m_maxVoltage = value;
+            }
+        }
 
-        #region [ Properties ]
+        public double MaxCurrent
+        {
+            get
+            {
+                return m_maxCurrent;
+            }
+            set
+            {
+                m_maxCurrent = value;
+            }
+        }
+
+        public double LowVoltageThreshold
+        {
+            get
+            {
+                return m_lowVoltageThreshold;
+            }
+            set
+            {
+                m_lowVoltageThreshold = value;
+            }
+        }
+
+        public double MaxLowVoltageCurrent
+        {
+            get
+            {
+                return m_maxLowVoltageCurrent;
+            }
+            set
+            {
+                m_maxLowVoltageCurrent = value;
+            }
+        }
+
+        public double MaxTimeOffset
+        {
+            get
+            {
+                return m_maxTimeOffset;
+            }
+            set
+            {
+                m_maxTimeOffset = value;
+            }
+        }
+
+        public double MinTimeOffset
+        {
+            get
+            {
+                return m_minTimeOffset;
+            }
+            set
+            {
+                m_minTimeOffset = value;
+            }
+        }
+
+        public double ResidualCurrentTrigger
+        {
+            get
+            {
+                return m_residualCurrentTrigger;
+            }
+            set
+            {
+                m_residualCurrentTrigger = value;
+            }
+        }
+
+        public double PhaseCurrentTrigger
+        {
+            get
+            {
+                return m_phaseCurrentTrigger;
+            }
+            set
+            {
+                m_phaseCurrentTrigger = value;
+            }
+        }
+
+        public double PrefaultTrigger
+        {
+            get
+            {
+                return m_prefaultTrigger;
+            }
+            set
+            {
+                m_prefaultTrigger = value;
+            }
+        }
+
+        public double FaultSuppressionTrigger
+        {
+            get
+            {
+                return m_faultSuppressionTrigger;
+            }
+            set
+            {
+                m_faultSuppressionTrigger = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the multiplier used to determine the
@@ -171,77 +287,86 @@ namespace FaultData.DataWriters
 
         #region [ Methods ]
 
-        public void WriteResults(int eventID, string resultsFilePath)
+        public void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
         {
-            FaultRecordInfo faultRecordInfo = new FaultRecordInfo();
-            DataGroup eventDataGroup = new DataGroup();
-            DataGroup cycleDataGroup = new DataGroup();
+            CycleDataResource cycleDataResource;
+            FaultDataResource faultDataResource;
+            FaultDataResource.Factory faultDataResourceFactory;
 
-            // Populate faultRecordInfo with all the information from the database needed to create the COMTRADE fault record
-            using (FileInfoDataContext fileInfo = new FileInfoDataContext(m_connectionString))
-            using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_connectionString))
-            using (FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(m_connectionString))
-            using (EventTableAdapter eventAdapter = new EventTableAdapter())
-            using (CycleDataTableAdapter cycleDataAdapter = new CycleDataTableAdapter())
-            using (FaultCurveTableAdapter faultCurveAdapter = new FaultCurveTableAdapter())
+            DataGroup dataGroup;
+            List<Fault> faults;
+            List<int> seriesIDs;
+            EventDataSet eventDataSet;
+
+            string rootFileName;
+            string fileName;
+
+            faultDataResourceFactory = new FaultDataResource.Factory()
             {
-                // Set the connection strings of the LINQ-to-DataSet adapters
-                eventAdapter.Connection.ConnectionString = m_connectionString;
-                cycleDataAdapter.Connection.ConnectionString = m_connectionString;
-                faultCurveAdapter.Connection.ConnectionString = m_connectionString;
+                DbAdapterContainer = dbAdapterContainer,
+                MaxVoltage = m_maxVoltage,
+                MaxCurrent = m_maxCurrent,
+                LowVoltageThreshold = m_lowVoltageThreshold,
+                MaxLowVoltageCurrent = m_maxLowVoltageCurrent,
+                MaxTimeOffset = m_maxTimeOffset,
+                MinTimeOffset = m_minTimeOffset,
+                ResidualCurrentTrigger = m_residualCurrentTrigger,
+                PhaseCurrentTrigger = m_phaseCurrentTrigger,
+                PrefaultTrigger = m_prefaultTrigger,
+                FaultSuppressionTrigger = m_faultSuppressionTrigger,
+                MaxFaultDistanceMultiplier = m_maxFaultDistanceMultiplier,
+                MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
+            };
 
-                // Get the event for the given event ID
-                faultRecordInfo.Event = eventAdapter.GetDataByID(eventID).Single();
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            faultDataResource = meterDataSet.GetResource(faultDataResourceFactory.Create);
 
-                // Get the group of files that contained the event data as well as the
-                // meter that monitored the event and the line on which the event occurred
-                faultRecordInfo.FileGroup = fileInfo.FileGroups.Single(fg => faultRecordInfo.Event.FileGroupID == fg.ID);
-                faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
-                faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
+            if (!Directory.Exists(m_resultsPath))
+                Directory.CreateDirectory(m_resultsPath);
 
-                faultRecordInfo.LineName = meterInfo.MeterLines
-                    .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
-                    .Select(ml => ml.LineName)
-                    .FirstOrDefault() ?? faultRecordInfo.Line.AssetKey;
+            for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
+            {
+                dataGroup = cycleDataResource.DataGroups[i];
 
-                // Get the cycle data, fault segments, and fault curves calculated by the fault location engine
-                faultRecordInfo.CycleData = cycleDataAdapter.GetDataBy(eventID).Single();
-                faultRecordInfo.FaultSegments = faultLocationInfo.FaultSegments.Where(segment => segment.EventID == eventID).ToList();
-                faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).Where(curve => curve.EventID == eventID).ToList();
+                if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out faults))
+                {
+                    rootFileName = FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath);
+                    fileName = string.Format("{0},{1:000},Line{2}.dat", rootFileName, i, dataGroup.Line.AssetKey);
 
-                // Extract the waveform and cycle data from the blobs stored in the database
-                eventDataGroup.FromData(faultRecordInfo.Meter, faultRecordInfo.Event.Data);
-                cycleDataGroup.FromData(faultRecordInfo.Meter, faultRecordInfo.CycleData.Data);
+                    seriesIDs = dataGroup.DataSeries
+                        .Select(series => series.SeriesInfo.ID)
+                        .ToList();
 
-                // Get the "output channels" that define the order in which the
-                // waveforms should be written to the COMTRADE fault record
-                faultRecordInfo.WaveformChannels = faultLocationInfo.OutputChannels
-                    .Join(eventDataGroup.DataSeries.Where(series => (object)series.SeriesInfo != null), channel => channel.SeriesID, series => series.SeriesInfo.ID, Tuple.Create)
-                    .OrderBy(tuple => tuple.Item1.LoadOrder)
-                    .ToList();
+                    eventDataSet = new EventDataSet()
+                    {
+                        ResultsPath = Path.Combine(m_resultsPath, fileName),
+                        MeterDataSet = meterDataSet,
+                        DataGroup = dataGroup,
+                        VICycleDataGroup = cycleDataResource.VICycleDataGroups[i],
+                        Faults = faults,
+                        OutputChannels = dbAdapterContainer.FaultLocationInfoAdapter.OutputChannels.Where(channel => seriesIDs.Contains(channel.SeriesID)).ToList()
+                    };
 
-                // Create a cycle data set to identify what each series is in the cycleDataGroup
-                faultRecordInfo.CycleDataGroup = new VICycleDataGroup(cycleDataGroup);
-
-                // Use the fault record info to write the results to the COMTRADE files
-                WriteResults(faultRecordInfo, resultsFilePath);
+                    WriteResults(eventDataSet);
+                }
             }
         }
 
-        private void WriteResults(FaultRecordInfo faultRecordInfo, string resultsFilePath)
+        private void WriteResults(EventDataSet eventDataSet)
         {
             const StringComparison IgnoreCase = StringComparison.OrdinalIgnoreCase;
 
             // Get the path to the original data file
-            string dataFilePath = faultRecordInfo.FileGroup.DataFiles
-                .Select(dataFile => dataFile.FilePath)
-                .FirstOrDefault(path => path.EndsWith(".dat", IgnoreCase) || path.EndsWith(".d00", IgnoreCase));
-
+            string dataFilePath;
             string directory;
             string rootFileName;
             string schemaFilePath;
 
             Parser originalFileParser = null;
+
+            dataFilePath = eventDataSet.MeterDataSet.FileGroup.DataFiles
+                .Select(dataFile => dataFile.FilePath)
+                .FirstOrDefault(path => path.EndsWith(".dat", IgnoreCase) || path.EndsWith(".d00", IgnoreCase));
 
             if (File.Exists(dataFilePath))
             {
@@ -268,39 +393,36 @@ namespace FaultData.DataWriters
                     originalFileParser.OpenFiles();
 
                 // Write results to the COMTRADE fault record using the parser
-                WriteResults(faultRecordInfo, originalFileParser, resultsFilePath);
+                WriteResults(eventDataSet, originalFileParser);
             }
         }
 
-        private void WriteResults(FaultRecordInfo faultRecordInfo, Parser originalFileParser, string resultsFilePath)
+        private void WriteResults(EventDataSet eventDataSet, Parser originalFileParser)
         {
             // Assume the data file path is the same as the results file path
             // and determine the path to the header and schema files
-            string directory = FilePath.GetDirectoryName(resultsFilePath);
-            string rootFileName = FilePath.GetFileNameWithoutExtension(resultsFilePath);
+            string directory = FilePath.GetDirectoryName(eventDataSet.ResultsPath);
+            string rootFileName = FilePath.GetFileNameWithoutExtension(eventDataSet.ResultsPath);
             string headerFilePath = Path.Combine(directory, rootFileName + ".hdr");
             string schemaFilePath = Path.Combine(directory, rootFileName + ".cfg");
-            string dataFilePath = resultsFilePath;
+            string dataFilePath = eventDataSet.ResultsPath;
             Schema schema;
 
             // Get structures containing the data to be written to the results files
             COMTRADEData comtradeData = new COMTRADEData();
-            DataGroup eventDataGroup = new DataGroup();
 
             // If there are no waveforms to be written to the file, give up
-            if (!faultRecordInfo.WaveformChannels.Any())
+            if (!eventDataSet.OutputChannels.Any())
                 return;
 
-            eventDataGroup.FromData(faultRecordInfo.Event.Data);
+            comtradeData.StationName = eventDataSet.MeterDataSet.Meter.Name;
+            comtradeData.DeviceID = eventDataSet.MeterDataSet.Meter.AssetKey;
+            comtradeData.DataStartTime = eventDataSet.DataGroup.StartTime;
+            comtradeData.SampleCount = eventDataSet.DataGroup.Samples;
+            comtradeData.SamplingRate = eventDataSet.DataGroup.Samples / (eventDataSet.DataGroup.EndTime - eventDataSet.DataGroup.StartTime).TotalSeconds;
 
-            comtradeData.StationName = faultRecordInfo.Meter.Name;
-            comtradeData.DeviceID = faultRecordInfo.Meter.AssetKey;
-            comtradeData.DataStartTime = eventDataGroup.StartTime;
-            comtradeData.SampleCount = eventDataGroup.Samples;
-            comtradeData.SamplingRate = eventDataGroup.Samples / (eventDataGroup.EndTime - eventDataGroup.StartTime).TotalSeconds;
-
-            comtradeData.AnalogChannelData = GetAnalogChannelData(faultRecordInfo);
-            comtradeData.DigitalChannelData = GetDigitalChannelData(faultRecordInfo);
+            comtradeData.AnalogChannelData = GetAnalogChannelData(eventDataSet);
+            comtradeData.DigitalChannelData = GetDigitalChannelData(eventDataSet);
 
             // If the original file is available, use data from the original file
             // in order to update the data to be written to the results files
@@ -308,7 +430,7 @@ namespace FaultData.DataWriters
                 FixCOMTRADEData(comtradeData, originalFileParser);
 
             // Write data to the header file
-            WriteHeaderFile(faultRecordInfo, headerFilePath);
+            WriteHeaderFile(eventDataSet, headerFilePath);
 
             // Write data to the schema file
             schema = WriteSchemaFile(comtradeData, schemaFilePath);
@@ -317,35 +439,15 @@ namespace FaultData.DataWriters
             WriteDataFile(comtradeData, schema, dataFilePath);
         }
 
-        private void WriteHeaderFile(FaultRecordInfo faultRecordInfo, string headerFilePath)
+        private void WriteHeaderFile(EventDataSet eventDataSet, string headerFilePath)
         {
             // Date-time format used in the header file
             const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
 
-            // Get the list of faults, which are the defined as a list of consecutive segments
-            // where a fault was detected (an evolving fault is a fault with multiple segments)
-            List<List<FaultSegment>> faults = faultRecordInfo.FaultSegments
-                .Aggregate(new List<List<FaultSegment>>(), (list, segment) =>
-                {
-                    if (segment.SegmentType.Name == "Prefault" || segment.SegmentType.Name == "Postfault")
-                    {
-                        list.Add(new List<FaultSegment>());
-                    }
-                    else
-                    {
-                        if (list.Count == 0)
-                            list.Add(new List<FaultSegment>());
-
-                        list.Last().Add(segment);
-                    }
-
-                    return list;
-                });
-
-            // Get the fault curves calculated by the fault location engine
-            List<DataSeries> faultCurves = faultRecordInfo.FaultCurves
-                .Select(faultCurve => ToDataSeries(faultCurve))
-                .ToList();
+            string lineName = eventDataSet.MeterDataSet.Meter.MeterLines
+                .Where(ml => ml.LineID == eventDataSet.DataGroup.Line.ID)
+                .Select(ml => ml.LineName)
+                .FirstOrDefault() ?? eventDataSet.DataGroup.Line.AssetKey;
 
             using (FileStream stream = File.Create(FilePath.GetAbsolutePath(headerFilePath)))
             using (StreamWriter writer = new StreamWriter(stream, Encoding.ASCII))
@@ -354,56 +456,37 @@ namespace FaultData.DataWriters
                 // the data used to generate this fault record
                 writer.WriteLine("Disturbance files:");
 
-                foreach (DataFile dataFile in faultRecordInfo.FileGroup.DataFiles)
+                foreach (DataFile dataFile in eventDataSet.MeterDataSet.FileGroup.DataFiles)
                     writer.WriteLine(dataFile.FilePath);
 
                 writer.WriteLine();
 
                 // Write the meter name to the header file
-                writer.WriteLine("Meter: " + faultRecordInfo.Meter.Name);
+                writer.WriteLine("Meter: " + eventDataSet.MeterDataSet.Meter.Name);
 
                 // Write out the name and length of the line on which the fault(s) occurred
-                writer.WriteLine("Line: {0} ({1} {2})", faultRecordInfo.LineName, faultRecordInfo.Line.Length, LengthUnits);
+                writer.WriteLine("Line: {0} ({1} {2})", lineName, eventDataSet.DataGroup.Line.Length, LengthUnits);
                 writer.WriteLine();
 
                 // For each fault, write the distance, the most prominent fault type, the time of
                 // inception, the time of clearing, and the duration of the fault to the header file
-                for (int i = 0; i < faults.Count; i++)
+                for (int i = 0; i < eventDataSet.Faults.Count; i++)
                 {
                     int faultNumber = i + 1;
-                    List<FaultSegment> fault = faults[i];
+                    Fault fault = eventDataSet.Faults[i];
 
-                    if (fault.Count == 0)
+                    if (fault.Info.NumberOfValidDistances == 0)
                         continue;
 
-                    DateTime startTime = fault.First().StartTime;
-                    DateTime endTime = fault.Last().EndTime;
-                    int startSample = fault.First().StartSample;
-                    int endSample = fault.Last().EndSample;
-                    double duration = (endTime - startTime).TotalSeconds;
-
-                    List<double> validDistances = faultCurves
-                        .Select(series => series.ToSubSeries(startSample, endSample))
-                        .SelectMany(series => series.DataPoints)
-                        .Select(dataPoint => dataPoint.Value)
-                        .Where(value => value >= MinFaultDistanceMultiplier * faultRecordInfo.Line.Length)
-                        .Where(value => value <= MaxFaultDistanceMultiplier * faultRecordInfo.Line.Length)
-                        .OrderBy(value => value)
-                        .ToList();
-
-                    if (!validDistances.Any())
-                    {
-                        validDistances = faultCurves
-                           .Select(series => series.ToSubSeries(startSample, endSample))
-                           .SelectMany(series => series.DataPoints)
-                           .Select(dataPoint => dataPoint.Value)
-                           .OrderBy(value => value)
-                           .ToList();
-                    }
+                    DateTime startTime = fault.Info.InceptionTime;
+                    DateTime endTime = fault.Info.ClearingTime;
+                    int startSample = fault.Info.StartSample;
+                    int endSample = fault.Info.EndSample;
+                    double duration = fault.Info.Duration.TotalSeconds;
 
                     writer.WriteLine("Fault {0}:", faultNumber);
-                    writer.WriteLine("[{0}]       Fault distance: {1:0.00} {2}", faultNumber, validDistances[validDistances.Count / 2], LengthUnits);
-                    writer.WriteLine("[{0}] Prominent fault type: {1}", faultNumber, GetFaultType(fault.OrderByDescending(segment => segment.EndSample - segment.StartSample).First().SegmentType));
+                    writer.WriteLine("[{0}]       Fault distance: {1:0.00} {2}", faultNumber, fault.Info.Distance, LengthUnits);
+                    writer.WriteLine("[{0}] Prominent fault type: {1}", faultNumber, fault.Info.Type);
                     writer.WriteLine("[{0}]      Fault inception: {1} (sample #{2})", faultNumber, startTime.ToString(DateTimeFormat), startSample);
                     writer.WriteLine("[{0}]       Fault clearing: {1} (sample #{2})", faultNumber, endTime.ToString(DateTimeFormat), endSample);
                     writer.WriteLine("[{0}]       Fault duration: {1:0.0000} seconds ({2:0.00} cycles)", faultNumber, duration, duration * Frequency);
@@ -530,13 +613,44 @@ namespace FaultData.DataWriters
             }
         }
 
-        private List<COMTRADEChannelData> GetAnalogChannelData(FaultRecordInfo faultRecordInfo)
+        private List<Tuple<string, DataSeries>> ToFaultCurves(DataGroup dataGroup, List<Fault> faults)
+        {
+            double maxDistance;
+            double minDistance;
+
+            List<Tuple<string, DataSeries>> faultCurves;
+
+            string algorithm;
+            DataSeries faultCurve;
+
+            maxDistance = dataGroup.Line.Length * m_maxFaultDistanceMultiplier;
+            minDistance = dataGroup.Line.Length * m_minFaultDistanceMultiplier;
+            faultCurves = new List<Tuple<string, DataSeries>>();
+
+            for (int c = 0; c < faults[0].Curves.Count; c++)
+            {
+                algorithm = faults[0].Curves[c].Algorithm;
+                faultCurve = dataGroup[0].Multiply(0.0D);
+
+                foreach (Fault fault in faults)
+                {
+                    for (int i = 0; i < fault.Curves[c].Series.DataPoints.Count; i++)
+                        faultCurve[i + fault.Info.StartSample].Value = Common.Mid(minDistance, fault.Curves[c][i].Value, maxDistance);
+                }
+
+                faultCurves.Add(Tuple.Create(algorithm, faultCurve));
+            }
+
+            return faultCurves;
+        }
+
+        private List<COMTRADEChannelData> GetAnalogChannelData(EventDataSet eventDataSet)
         {
             int sourceIndex;
 
             // Get COMTRADE channel information for each waveform to be output to the COMTRADE file
-            IEnumerable<COMTRADEChannelData> waveformChannelData = faultRecordInfo.WaveformChannels
-                .Select(tuple => new { OutputChannel = tuple.Item1, DataSeries = tuple.Item2 })
+            IEnumerable<COMTRADEChannelData> waveformChannelData = eventDataSet.OutputChannels
+                .Join(eventDataSet.DataGroup.DataSeries, channel => channel.SeriesID, series => series.SeriesInfo.ID, (channel, series) => new { OutputChannel = channel, DataSeries = series })
                 .Select(waveformChannel => new COMTRADEChannelData()
                 {
                     GroupOrder = 0,
@@ -548,19 +662,20 @@ namespace FaultData.DataWriters
                 });
 
             // Get COMTRADE channel information for each fault curve
-            IEnumerable<COMTRADEChannelData> faultCurveChannelData = faultRecordInfo.FaultCurves
-                .Select(faultCurve => new COMTRADEChannelData()
+            IEnumerable<COMTRADEChannelData> faultCurveChannelData = ToFaultCurves(eventDataSet.DataGroup, eventDataSet.Faults)
+                .Select(tuple => new { Algorithm = tuple.Item1, DataSeries = tuple.Item2 })
+                .Select((faultCurve, i) => new COMTRADEChannelData()
                 {
                     GroupOrder = 1,
-                    LoadOrder = faultCurve.ID,
+                    LoadOrder = i,
                     OriginalChannelIndex = -1,
                     Name = faultCurve.Algorithm,
                     Units = string.Empty,
-                    Data = ToDataSeries(faultCurve, faultRecordInfo.Line.Length)
+                    Data = faultCurve.DataSeries
                 });
 
             // Get COMTRADE channel information for each cycle data series to be output to the file
-            IEnumerable<COMTRADEChannelData> cycleChannelData = GetCycleChannelData(faultRecordInfo.CycleDataGroup, faultRecordInfo.WaveformChannels.Select(tuple => tuple.Item1));
+            IEnumerable<COMTRADEChannelData> cycleChannelData = GetCycleChannelData(eventDataSet.VICycleDataGroup, eventDataSet.OutputChannels);
 
             // Return all the analog channel data in one list
             return waveformChannelData
@@ -571,11 +686,11 @@ namespace FaultData.DataWriters
                 .ToList();
         }
 
-        private List<COMTRADEChannelData> GetDigitalChannelData(FaultRecordInfo faultRecordInfo)
+        private List<COMTRADEChannelData> GetDigitalChannelData(EventDataSet eventDataSet)
         {
             // Get an arbitrary data series from the collection of waveforms so
             // that we can use it to determine the timestamp of each data point
-            DataSeries series = faultRecordInfo.WaveformChannels.First().Item2;
+            DataSeries series = eventDataSet.DataGroup[0];
 
             // Create the function to convert a name and an index to a COMTRADEChannelData
             Func<string, int, COMTRADEChannelData> toChannelData = (name, index) =>
@@ -596,10 +711,10 @@ namespace FaultData.DataWriters
 
             // Populate the data points for each digital channel
             // based on the fault type of each segment of fault data
-            foreach (FaultSegment segment in faultRecordInfo.FaultSegments)
+            foreach (Fault.Segment segment in eventDataSet.Faults.SelectMany(fault => fault.Segments))
             {
                 // Get the fault type of the segment
-                FaultType faultType = GetFaultType(segment.SegmentType);
+                FaultType faultType = segment.FaultType;
 
                 // Get the value of each digital in this segment
                 bool[] digitals =
@@ -697,7 +812,8 @@ namespace FaultData.DataWriters
                 Tuple.Create("VC", cycleDataGroup.VC),
                 Tuple.Create("IA", cycleDataGroup.IA),
                 Tuple.Create("IB", cycleDataGroup.IB),
-                Tuple.Create("IC", cycleDataGroup.IC)
+                Tuple.Create("IC", cycleDataGroup.IC),
+                Tuple.Create("IR", cycleDataGroup.IR)
             };
 
             // Join the output channels to the cycle data groups, order them by LoadOrder, and then
@@ -755,25 +871,6 @@ namespace FaultData.DataWriters
             };
         }
 
-        // Get the fault type of the given segment.
-        private static FaultType GetFaultType(SegmentType segmentType)
-        {
-            switch (segmentType.Name)
-            {
-                case "AN Fault": return FaultType.AN;
-                case "BN Fault": return FaultType.BN;
-                case "CN Fault": return FaultType.CN;
-                case "AB Fault": return FaultType.AB;
-                case "BC Fault": return FaultType.BC;
-                case "CA Fault": return FaultType.CA;
-                case "ABG Fault": return FaultType.ABG;
-                case "BCG Fault": return FaultType.BCG;
-                case "CAG Fault": return FaultType.CAG;
-                case "3-Phase Fault": return FaultType.ABC;
-                default: return FaultType.None;
-            }
-        }
-
         // Get the units for the given channel.
         private string GetUnits(string channelKey)
         {
@@ -793,34 +890,6 @@ namespace FaultData.DataWriters
                 units = string.Empty;
 
             return units;
-        }
-
-        // Convert the given fault curve to a data series capped at the given maximum fault distance.
-        private DataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve, double lineLength)
-        {
-            DataSeries series = ToDataSeries(faultCurve);
-            double maxFaultDistance = lineLength * MaxFaultDistanceMultiplier;
-            double minFaultDistance = lineLength * MinFaultDistanceMultiplier;
-
-            foreach (DataPoint dataPoint in series.DataPoints)
-            {
-                if (double.IsNaN(dataPoint.Value))
-                    dataPoint.Value = 0.0D;
-                else if (dataPoint.Value > maxFaultDistance)
-                    dataPoint.Value = maxFaultDistance;
-                else if (dataPoint.Value < minFaultDistance)
-                    dataPoint.Value = minFaultDistance;
-            }
-
-            return series;
-        }
-
-        // Convert the given fault curve to a data series.
-        private DataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve)
-        {
-            DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(faultCurve.Data);
-            return dataGroup[0];
         }
 
         #endregion

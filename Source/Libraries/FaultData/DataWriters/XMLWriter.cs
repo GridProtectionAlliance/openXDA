@@ -30,39 +30,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
-using FaultData.Database.FaultLocationDataTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
+using FaultData.DataResources;
+using FaultData.DataSets;
+using GSF.IO;
 using GSF.Units;
-using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
-using Line = FaultData.Database.Line;
 
 namespace FaultData.DataWriters
 {
     /// <summary>
     /// Writes the results of fault analysis to an XML file.
     /// </summary>
-    public class XMLWriter
+    public class XMLWriter : IDataWriter
     {
         #region [ Members ]
-
-        // Nested Types
-        private class FaultRecordInfo
-        {
-            public FileGroup FileGroup;
-
-            public string LineName;
-            public Meter Meter;
-            public Line Line;
-
-            public MeterData.EventRow Event;
-            public MeterData.CycleDataRow CycleData;
-            public List<FaultSegment> FaultSegments;
-            public List<FaultLocationData.FaultCurveRow> FaultCurves;
-        }
 
         // Constants
         // TODO: Hardcoded frequency
@@ -72,26 +57,157 @@ namespace FaultData.DataWriters
         const string DoubleFormat = "0.####";
 
         // Fields
-        private string m_connectionString;
+        private string m_resultsPath;
+
+        private double m_maxVoltage;
+        private double m_maxCurrent;
+        private double m_lowVoltageThreshold;
+        private double m_maxLowVoltageCurrent;
+        private double m_maxTimeOffset;
+        private double m_minTimeOffset;
+
+        private double m_residualCurrentTrigger;
+        private double m_phaseCurrentTrigger;
+        private double m_prefaultTrigger;
+        private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
 
         #endregion
 
-        #region [ Constructors ]
+        #region [ Properties ]
 
-        /// <summary>
-        /// Creates a new instance of the <see cref="XMLWriter"/> class.
-        /// </summary>
-        /// <param name="connectionString">The connection string used to connect to the database containing fault location data.</param>
-        public XMLWriter(string connectionString)
+        public string ResultsPath
         {
-            m_connectionString = connectionString;
+            get
+            {
+                return m_resultsPath;
+            }
+            set
+            {
+                m_resultsPath = value;
+            }
         }
 
-        #endregion
+        public double MaxVoltage
+        {
+            get
+            {
+                return m_maxVoltage;
+            }
+            set
+            {
+                m_maxVoltage = value;
+            }
+        }
 
-        #region [ Properties ]
+        public double MaxCurrent
+        {
+            get
+            {
+                return m_maxCurrent;
+            }
+            set
+            {
+                m_maxCurrent = value;
+            }
+        }
+
+        public double LowVoltageThreshold
+        {
+            get
+            {
+                return m_lowVoltageThreshold;
+            }
+            set
+            {
+                m_lowVoltageThreshold = value;
+            }
+        }
+
+        public double MaxLowVoltageCurrent
+        {
+            get
+            {
+                return m_maxLowVoltageCurrent;
+            }
+            set
+            {
+                m_maxLowVoltageCurrent = value;
+            }
+        }
+
+        public double MaxTimeOffset
+        {
+            get
+            {
+                return m_maxTimeOffset;
+            }
+            set
+            {
+                m_maxTimeOffset = value;
+            }
+        }
+
+        public double MinTimeOffset
+        {
+            get
+            {
+                return m_minTimeOffset;
+            }
+            set
+            {
+                m_minTimeOffset = value;
+            }
+        }
+
+        public double ResidualCurrentTrigger
+        {
+            get
+            {
+                return m_residualCurrentTrigger;
+            }
+            set
+            {
+                m_residualCurrentTrigger = value;
+            }
+        }
+
+        public double PhaseCurrentTrigger
+        {
+            get
+            {
+                return m_phaseCurrentTrigger;
+            }
+            set
+            {
+                m_phaseCurrentTrigger = value;
+            }
+        }
+
+        public double PrefaultTrigger
+        {
+            get
+            {
+                return m_prefaultTrigger;
+            }
+            set
+            {
+                m_prefaultTrigger = value;
+            }
+        }
+
+        public double FaultSuppressionTrigger
+        {
+            get
+            {
+                return m_faultSuppressionTrigger;
+            }
+            set
+            {
+                m_faultSuppressionTrigger = value;
+            }
+        }
 
         public double MaxFaultDistanceMultiplier
         {
@@ -121,60 +237,81 @@ namespace FaultData.DataWriters
 
         #region [ Methods ]
 
-        public void WriteResults(int eventID, string resultsFilePath)
+        public void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
         {
-            FaultRecordInfo faultRecordInfo = new FaultRecordInfo();
+            CycleDataResource cycleDataResource;
+            FaultDataResource faultDataResource;
+            FaultDataResource.Factory faultDataResourceFactory;
 
-            using (FileInfoDataContext fileInfo = new FileInfoDataContext(m_connectionString))
-            using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(m_connectionString))
-            using (FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(m_connectionString))
-            using (EventTableAdapter eventAdapter = new EventTableAdapter())
-            using (CycleDataTableAdapter cycleDataAdapter = new CycleDataTableAdapter())
-            using (FaultCurveTableAdapter faultCurveAdapter = new FaultCurveTableAdapter())
+            DataGroup dataGroup;
+            VICycleDataGroup viCycleDataGroup;
+            List<Fault> faults;
+
+            string rootFileName;
+            string fileName;
+
+            faultDataResourceFactory = new FaultDataResource.Factory()
             {
-                eventAdapter.Connection.ConnectionString = m_connectionString;
-                cycleDataAdapter.Connection.ConnectionString = m_connectionString;
-                faultCurveAdapter.Connection.ConnectionString = m_connectionString;
+                DbAdapterContainer = dbAdapterContainer,
+                MaxVoltage = m_maxVoltage,
+                MaxCurrent = m_maxCurrent,
+                LowVoltageThreshold = m_lowVoltageThreshold,
+                MaxLowVoltageCurrent = m_maxLowVoltageCurrent,
+                MaxTimeOffset = m_maxTimeOffset,
+                MinTimeOffset = m_minTimeOffset,
+                ResidualCurrentTrigger = m_residualCurrentTrigger,
+                PhaseCurrentTrigger = m_phaseCurrentTrigger,
+                PrefaultTrigger = m_prefaultTrigger,
+                FaultSuppressionTrigger = m_faultSuppressionTrigger,
+                MaxFaultDistanceMultiplier = m_maxFaultDistanceMultiplier,
+                MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
+            };
 
-                faultRecordInfo.Event = eventAdapter.GetDataByID(eventID).First();
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            faultDataResource = meterDataSet.GetResource(faultDataResourceFactory.Create);
 
-                faultRecordInfo.FileGroup = fileInfo.FileGroups.Single(fg => faultRecordInfo.Event.FileGroupID == fg.ID);
-                faultRecordInfo.Meter = meterInfo.Meters.Single(m => faultRecordInfo.Event.MeterID == m.ID);
-                faultRecordInfo.Line = meterInfo.Lines.Single(l => faultRecordInfo.Event.LineID == l.ID);
+            if (!Directory.Exists(m_resultsPath))
+                Directory.CreateDirectory(m_resultsPath);
 
-                faultRecordInfo.LineName = meterInfo.MeterLines
-                    .Where(ml => faultRecordInfo.Meter.ID == ml.MeterID && faultRecordInfo.Line.ID == ml.LineID)
-                    .Select(ml => ml.LineName)
-                    .FirstOrDefault() ?? faultRecordInfo.Line.AssetKey;
+            for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
+            {
+                dataGroup = cycleDataResource.DataGroups[i];
 
-                faultRecordInfo.CycleData = cycleDataAdapter.GetDataBy(eventID).Single();
-                faultRecordInfo.FaultSegments = faultLocationInfo.FaultSegments.Where(segment => segment.EventID == eventID).ToList();
-                faultRecordInfo.FaultCurves = faultCurveAdapter.GetDataBy(eventID).ToList();
+                if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out faults))
+                {
+                    rootFileName = FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath);
+                    fileName = string.Format("{0},{1:000},Line{2}.xml", rootFileName, i, dataGroup.Line.AssetKey);
 
-                WriteResults(faultRecordInfo, resultsFilePath);
+                    viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+                    WriteResults(meterDataSet, dataGroup, viCycleDataGroup, faults, Path.Combine(m_resultsPath, fileName));
+                }
             }
         }
 
-        private void WriteResults(FaultRecordInfo faultRecordInfo, string resultsFilePath)
+        private void WriteResults(MeterDataSet meterDataSet, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, List<Fault> faults, string resultsFilePath)
         {
             XDocument resultsDocument;
             XElement results;
+            string lineName;
 
-            VICycleDataGroup viCycleDataGroup = ToCycleDataSet(faultRecordInfo.CycleData);
+            lineName = meterDataSet.Meter.MeterLines
+                .Where(ml => ml.LineID == dataGroup.Line.ID)
+                .Select(ml => ml.LineName)
+                .FirstOrDefault() ?? dataGroup.Line.AssetKey;
 
             results =
                 new XElement("results",
-                    new XElement("meter", faultRecordInfo.Meter.Name),
-                    new XElement("disturbanceFiles", GetPathElements(faultRecordInfo)),
+                    new XElement("meter", meterDataSet.Meter.Name),
+                    new XElement("disturbanceFiles", GetPathElements(meterDataSet.FileGroup)),
                     new XElement("line",
-                        new XElement("name", faultRecordInfo.LineName),
-                        new XElement("length", faultRecordInfo.Line.Length.ToString(DoubleFormat))
+                        new XElement("name", lineName),
+                        new XElement("length", dataGroup.Line.Length.ToString(DoubleFormat))
                     ),
                     new XElement("prefault",
-                        new XElement("time", viCycleDataGroup.VA.RMS[0].Time.ToString(DateTimeFormat)),
+                        new XElement("time", dataGroup.StartTime.ToString(DateTimeFormat)),
                         GetCycleElements(viCycleDataGroup, 0)
                     ),
-                    GetFaultElements(faultRecordInfo, viCycleDataGroup)
+                    GetFaultElements(faults)
                 );
 
             // Create the XML document
@@ -186,67 +323,27 @@ namespace FaultData.DataWriters
             resultsDocument.Save(resultsFilePath);
         }
 
-        private List<XElement> GetFaultElements(FaultRecordInfo faultRecordInfo, VICycleDataGroup viCycleDataGroup)
+        private List<XElement> GetFaultElements(List<Fault> faults)
         {
-            List<List<FaultSegment>> faults = faultRecordInfo.FaultSegments
-                .Aggregate(new List<List<FaultSegment>>(), (list, segment) =>
-                {
-                    if (segment.SegmentType.Name == "Prefault" || segment.SegmentType.Name == "Postfault")
-                    {
-                        list.Add(new List<FaultSegment>());
-                    }
-                    else
-                    {
-                        if (list.Count == 0)
-                            list.Add(new List<FaultSegment>());
-
-                        list.Last().Add(segment);
-                    }
-
-                    return list;
-                });
-
-            List<DataSeries> faultCurves = faultRecordInfo.FaultCurves
-                .Select(ToDataSeries)
-                .ToList();
-
             return faults
-                .Where(fault => fault.Count > 0)
-                .Select(fault => GetFaultElement(faultRecordInfo.Line, viCycleDataGroup, faultCurves, fault))
-                .Where(element => (object)element != null)
+                .Select(GetFaultElement)
                 .ToList();
         }
 
-        private XElement GetFaultElement(Line line, VICycleDataGroup viCycleDataGroup, List<DataSeries> faultCurves, List<FaultSegment> fault)
+        private XElement GetFaultElement(Fault fault)
         {
-            DateTime startTime = fault.First().StartTime;
-            DateTime endTime = fault.Last().EndTime;
-            int startSample = fault.First().StartSample;
-            int endSample = fault.Last().EndSample;
-            double duration = (endTime - startTime).TotalSeconds;
-            VICycleDataGroup subGroup = viCycleDataGroup.ToSubSet(startSample, endSample);
-
-            List<double> validDistances = faultCurves
-                .Select(series => series.ToSubSeries(startSample, endSample))
-                .SelectMany(series => series.DataPoints)
-                .Select(dataPoint => dataPoint.Value)
-                .Where(value => value >= MinFaultDistanceMultiplier * line.Length)
-                .Where(value => value <= MaxFaultDistanceMultiplier * line.Length)
-                .OrderBy(value => value)
-                .ToList();
-
-            if (!validDistances.Any())
-            {
-                validDistances = faultCurves
-                    .Select(series => series.ToSubSeries(startSample, endSample))
-                    .SelectMany(series => series.DataPoints)
-                    .Select(dataPoint => dataPoint.Value)
-                    .OrderBy(value => value)
-                    .ToList();
-            }
+            DateTime startTime = fault.Info.InceptionTime;
+            DateTime endTime = fault.Info.ClearingTime;
+            int startSample = fault.Info.StartSample;
+            int endSample = fault.Info.EndSample;
+            double duration = fault.Info.Duration.TotalSeconds;
 
             return new XElement("fault",
-                new XElement("distance", validDistances[validDistances.Count / 2].ToString(DoubleFormat)),
+                new XElement("type", fault.Info.Type),
+                new XElement("distance", fault.Info.Distance),
+                new XElement("algorithm", fault.Info.DistanceAlgorithm),
+                new XElement("calculationCycle", fault.Info.CalculationCycle),
+                new XElement("faultCurrent", fault.Info.CurrentMagnitude),
                 new XElement("inception",
                     new XElement("time", startTime.ToString(DateTimeFormat)),
                     new XElement("sample", startSample)
@@ -259,25 +356,23 @@ namespace FaultData.DataWriters
                     new XElement("seconds", duration.ToString(DoubleFormat)),
                     new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))
                 ),
-                GetSegmentElements(fault),
-                new XElement("largestCurrent", GetCycleElements(subGroup, GetLargestCurrentCycleIndex(subGroup))),
-                new XElement("smallestVoltage", GetCycleElements(subGroup, GetSmallestVoltageCycleIndex(subGroup)))
+                GetSegmentElements(fault)
             );
         }
 
-        private List<XElement> GetSegmentElements(List<FaultSegment> segments)
+        private List<XElement> GetSegmentElements(Fault fault)
         {
-            return segments
+            return fault.Segments
                 .Select(GetSegmentElement)
                 .ToList();
         }
 
-        private XElement GetSegmentElement(FaultSegment segment)
+        private XElement GetSegmentElement(Fault.Segment segment)
         {
             double duration = (segment.EndTime - segment.StartTime).TotalSeconds;
 
             return new XElement("segment",
-                new XElement("type", segment.SegmentType.Name),
+                new XElement("type", segment.FaultType),
                 new XElement("start",
                     new XElement("time", segment.StartTime.ToString(DateTimeFormat)),
                     new XElement("index", segment.StartSample)),
@@ -289,9 +384,9 @@ namespace FaultData.DataWriters
                     new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))));
         }
 
-        private static List<XElement> GetPathElements(FaultRecordInfo faultRecordInfo)
+        private static List<XElement> GetPathElements(FileGroup fileGroup)
         {
-            List<XElement> pathElements = faultRecordInfo.FileGroup.DataFiles
+            List<XElement> pathElements = fileGroup.DataFiles
                 .Select(dataFile => new XElement("path", dataFile.FilePath))
                 .ToList();
 
@@ -316,62 +411,6 @@ namespace FaultData.DataWriters
             return new XElement(name,
                 new XElement("RMSMagnitude", cycleDataGroup.RMS[cycleIndex].Value.ToString(DoubleFormat)),
                 new XElement("PhaseAngle", new Angle(cycleDataGroup.Phase[cycleIndex].Value).ToDegrees().ToString(DoubleFormat)));
-        }
-
-        private int GetLargestCurrentCycleIndex(VICycleDataGroup viCycleDataGroup)
-        {
-            double largestCurrent = viCycleDataGroup.IA.RMS[0].Value + viCycleDataGroup.IB.RMS[0].Value + viCycleDataGroup.IC.RMS[0].Value;
-            int largestCurrentIndex = 0;
-
-            double iCurrent;
-
-            for (int i = 1; i < viCycleDataGroup.IA.ToDataGroup().Samples; i++)
-            {
-                iCurrent = viCycleDataGroup.IA.RMS[i].Value + viCycleDataGroup.IB.RMS[i].Value + viCycleDataGroup.IC.RMS[i].Value;
-
-                if (iCurrent > largestCurrent)
-                {
-                    largestCurrent = iCurrent;
-                    largestCurrentIndex = i;
-                }
-            }
-
-            return largestCurrentIndex;
-        }
-
-        private int GetSmallestVoltageCycleIndex(VICycleDataGroup viCycleDataGroup)
-        {
-            double smallestVoltage = viCycleDataGroup.VA.RMS[0].Value + viCycleDataGroup.VB.RMS[0].Value + viCycleDataGroup.VC.RMS[0].Value;
-            int smallestVoltageIndex = 0;
-
-            double iVoltage;
-
-            for (int i = 1; i < viCycleDataGroup.VA.ToDataGroup().Samples; i++)
-            {
-                iVoltage = viCycleDataGroup.VA.RMS[i].Value + viCycleDataGroup.VB.RMS[i].Value + viCycleDataGroup.VC.RMS[i].Value;
-
-                if (iVoltage > smallestVoltage)
-                {
-                    smallestVoltage = iVoltage;
-                    smallestVoltageIndex = i;
-                }
-            }
-
-            return smallestVoltageIndex;
-        }
-
-        private VICycleDataGroup ToCycleDataSet(MeterData.CycleDataRow cycleData)
-        {
-            DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(cycleData.Data);
-            return new VICycleDataGroup(dataGroup);
-        }
-
-        private DataSeries ToDataSeries(FaultLocationData.FaultCurveRow faultCurve)
-        {
-            DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(faultCurve.Data);
-            return dataGroup[0];
         }
 
         #endregion

@@ -145,6 +145,7 @@
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\CSVWriter.cs" />
     <Compile Include="DataWriters\EmailWriter.cs" />
+    <Compile Include="DataWriters\IDataWriter.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
