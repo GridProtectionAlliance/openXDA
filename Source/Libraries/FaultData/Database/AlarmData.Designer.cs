@@ -3128,7 +3128,7 @@ namespace FaultData.Database.AlarmDataTableAdapters {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -3490,7 +3490,7 @@ SELECT ID, ChannelID, AlarmTypeID, Time, Severity, LimitHigh, LimitLow, Value FR
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -3914,7 +3914,7 @@ SELECT ID, MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -4395,7 +4395,7 @@ SELECT ID, ChannelID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit,
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -4865,7 +4865,7 @@ SELECT ID, ChannelID, AlarmTypeID, HourOfWeek, Severity, High, Low, Enabled FROM
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

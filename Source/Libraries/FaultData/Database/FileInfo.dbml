@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="MeterDB" Class="FileInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=SWILLS-PC\SQLEXPRESS;Initial Catalog=MeterDB;Integrated Security=True" SettingsObjectName="MeterDataEngine.Properties.Settings" SettingsPropertyName="MeterDBConnectionString" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=SWILLS-PC\SQLEXPRESS;Initial Catalog=MeterDB;Integrated Security=True" SettingsObjectName="MeterDataEngine.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.DataFile" Member="DataFiles">
     <Type Name="DataFile">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />

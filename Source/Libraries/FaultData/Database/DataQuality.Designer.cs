@@ -1511,7 +1511,7 @@ SELECT ID, MeasurementTypeID, MeasurementCharacteristicID, High, Low, RangeInclu
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1941,7 +1941,7 @@ SELECT ID, ChannelID, High, Low, RangeInclusive, PerUnit, Enabled FROM DataQuali
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

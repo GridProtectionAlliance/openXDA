@@ -3603,7 +3603,7 @@ namespace FaultData.Database.MeterDataTableAdapters {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -3951,7 +3951,7 @@ SELECT ID, ChannelID, Average, MeanSquare, StandardDeviation, Count FROM Channel
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -4294,7 +4294,7 @@ SELECT ID, ChannelID, Time, Minimum, Maximum, Average, ValidCount, InvalidCount 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -4700,7 +4700,7 @@ SELECT ID, ChannelID, Date, Minimum, Maximum, Average, ValidCount, InvalidCount 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -5101,7 +5101,7 @@ SELECT ID, ChannelID, Date, Minimum, Maximum, Average, ValidCount, InvalidCount 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -5505,7 +5505,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitConnection() {
             this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.MeterDBConnectionString;
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

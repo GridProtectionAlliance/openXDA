@@ -39,7 +39,7 @@ namespace FaultData.Database
     #endregion
 		
 		public FileInfoDataContext() : 
-				base(global::FaultData.Properties.Settings.Default.MeterDBConnectionString, mappingSource)
+				base(global::FaultData.Properties.Settings.Default.openXDAConnectionString, mappingSource)
 		{
 			OnCreated();
 		}

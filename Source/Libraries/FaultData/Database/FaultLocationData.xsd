@@ -4,12 +4,12 @@
     <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
       <DataSource DefaultConnectionIndex="1" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
         <Connections>
-          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="MeterDBConnectionString" IsAppSettingsProperty="true" Modifier="Public" Name="MeterDBConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.MeterDBConnectionString" Provider="System.Data.SqlClient" />
+          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="openXDAConnectionString" IsAppSettingsProperty="true" Modifier="Public" Name="openXDAConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.FaultData.Properties.Settings.GlobalReference.Default.openXDAConnectionString" Provider="System.Data.SqlClient" />
         </Connections>
         <Tables>
           <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="CycleDataTableAdapter" GeneratorDataComponentClassName="CycleDataTableAdapter" Name="CycleData" UserDataComponentName="CycleDataTableAdapter">
             <MainSource>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
+              <DbSource ConnectionRef="openXDAConnectionString (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
                 <DeleteCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="false">
                     <CommandText>DELETE FROM [dbo].[CycleData] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID))</CommandText>
@@ -56,7 +56,7 @@ SELECT ID, EventID, Data FROM CycleData WHERE (ID = @ID)</CommandText>
               <Mapping SourceColumn="Data" DataSetColumn="Data" />
             </Mappings>
             <Sources>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
+              <DbSource ConnectionRef="openXDAConnectionString (Settings)" DbObjectName="MeterDB.dbo.CycleData" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
                     <CommandText>SELECT ID, EventID, Data FROM dbo.CycleData WHERE EventID = @eventID</CommandText>
@@ -70,7 +70,7 @@ SELECT ID, EventID, Data FROM CycleData WHERE (ID = @ID)</CommandText>
           </TableAdapter>
           <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="FaultCurveTableAdapter" GeneratorDataComponentClassName="FaultCurveTableAdapter" Name="FaultCurve" UserDataComponentName="FaultCurveTableAdapter">
             <MainSource>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultCurve" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
+              <DbSource ConnectionRef="openXDAConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultCurve" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
                 <DeleteCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="false">
                     <CommandText>DELETE FROM [dbo].[FaultCurve] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm))</CommandText>
@@ -122,7 +122,7 @@ SELECT ID, EventID, Algorithm, Data FROM FaultCurve WHERE (ID = @ID)</CommandTex
               <Mapping SourceColumn="Data" DataSetColumn="Data" />
             </Mappings>
             <Sources>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultCurve" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
+              <DbSource ConnectionRef="openXDAConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultCurve" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
                     <CommandText>SELECT ID, EventID, Algorithm, Data FROM dbo.FaultCurve WHERE EventID = @eventID</CommandText>
@@ -136,7 +136,7 @@ SELECT ID, EventID, Algorithm, Data FROM FaultCurve WHERE (ID = @ID)</CommandTex
           </TableAdapter>
           <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="FaultSummaryTableAdapter" GeneratorDataComponentClassName="FaultSummaryTableAdapter" Name="FaultSummary" UserDataComponentName="FaultSummaryTableAdapter">
             <MainSource>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultSummary" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
+              <DbSource ConnectionRef="openXDAConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultSummary" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetData" UserSourceName="Fill">
                 <DeleteCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="false">
                     <CommandText>DELETE FROM [dbo].[FaultSummary] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([FaultNumber] = @Original_FaultNumber) AND ([CalculationCycle] = @Original_CalculationCycle) AND ([Distance] = @Original_Distance) AND ([CurrentMagnitude] = @Original_CurrentMagnitude) AND ([Inception] = @Original_Inception) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType))</CommandText>
@@ -225,7 +225,7 @@ SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentM
               <Mapping SourceColumn="FaultType" DataSetColumn="FaultType" />
             </Mappings>
             <Sources>
-              <DbSource ConnectionRef="MeterDBConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultSummary" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
+              <DbSource ConnectionRef="openXDAConnectionString (Settings)" DbObjectName="openXDA.dbo.FaultSummary" DbObjectType="Table" FillMethodModifier="Public" FillMethodName="FillBy" GenerateMethods="Both" GenerateShortCommands="true" GeneratorGetMethodName="GetDataBy" GeneratorSourceName="FillBy" GetMethodModifier="Public" GetMethodName="GetDataBy" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="true" UserGetMethodName="GetDataBy" UserSourceName="FillBy">
                 <SelectCommand>
                   <DbCommand CommandType="Text" ModifiedByUser="true">
                     <CommandText>SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, Inception, DurationSeconds, DurationCycles, FaultType FROM dbo.FaultSummary WHERE EventID = @eventID</CommandText>
