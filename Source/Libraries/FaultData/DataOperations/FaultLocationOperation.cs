@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Reflection;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
@@ -46,7 +45,7 @@ namespace FaultData.DataOperations
             #region [ Members ]
 
             // Fields
-            public List<FaultSegment> FaultSegmentTable = new List<FaultSegment>();
+            public FaultLocationData.FaultSegmentDataTable FaultSegmentTable = new FaultLocationData.FaultSegmentDataTable();
             public FaultLocationData.FaultCurveDataTable FaultCurveTable = new FaultLocationData.FaultCurveDataTable();
             public FaultLocationData.FaultSummaryDataTable FaultSummaryTable = new FaultLocationData.FaultSummaryDataTable();
 
@@ -54,7 +53,7 @@ namespace FaultData.DataOperations
             public DataGroup DataGroup;
             public List<Fault> Faults;
 
-            private List<Tuple<EventKey, FaultSegment>> m_faultSegmentList;
+            private List<Tuple<EventKey, FaultLocationData.FaultSegmentRow>> m_faultSegmentList;
             private List<Tuple<EventKey, FaultLocationData.FaultCurveRow>> m_faultCurveList;
             private List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>> m_faultSummaryList;
 
@@ -64,7 +63,7 @@ namespace FaultData.DataOperations
 
             public FaultSummarizer()
             {
-                m_faultSegmentList = new List<Tuple<EventKey, FaultSegment>>();
+                m_faultSegmentList = new List<Tuple<EventKey, FaultLocationData.FaultSegmentRow>>();
                 m_faultCurveList = new List<Tuple<EventKey, FaultLocationData.FaultCurveRow>>();
                 m_faultSummaryList = new List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>>();
             }
@@ -75,7 +74,7 @@ namespace FaultData.DataOperations
 
             public void SummarizeFault()
             {
-                FaultSegment faultSegment;
+                FaultLocationData.FaultSegmentRow faultSegment;
                 FaultLocationData.FaultCurveRow faultCurveRow;
                 FaultLocationData.FaultSummaryRow faultSummaryRow;
 
@@ -126,16 +125,16 @@ namespace FaultData.DataOperations
                 }
             }
 
-            private FaultSegment CreateFaultSegment(Fault fault)
+            private FaultLocationData.FaultSegmentRow CreateFaultSegment(Fault fault)
             {
                 SegmentType segmentType;
-                FaultSegment faultSegment;
+                FaultLocationData.FaultSegmentRow faultSegment;
 
                 // ReSharper disable once InconsistentlySynchronizedField
                 if (s_segmentTypeLookup.TryGetValue("Fault", out segmentType))
                 {
-                    faultSegment = new FaultSegment();
-                    faultSegment.SegmentType = segmentType;
+                    faultSegment = FaultSegmentTable.NewFaultSegmentRow();
+                    faultSegment.SegmentTypeID = segmentType.ID;
                     faultSegment.StartTime = fault.Info.InceptionTime;
                     faultSegment.EndTime = fault.Info.ClearingTime;
                     faultSegment.StartSample = fault.Info.StartSample;
@@ -147,19 +146,19 @@ namespace FaultData.DataOperations
                 return null;
             }
 
-            private FaultSegment CreateFaultSegment(Fault.Segment segment)
+            private FaultLocationData.FaultSegmentRow CreateFaultSegment(Fault.Segment segment)
             {
                 string segmentTypeName;
                 SegmentType segmentType;
-                FaultSegment faultSegment;
+                FaultLocationData.FaultSegmentRow faultSegment;
 
                 segmentTypeName = string.Format("{0} Fault", segment.FaultType).Replace("ABC", "3-Phase");
 
                 // ReSharper disable once InconsistentlySynchronizedField
                 if (s_segmentTypeLookup.TryGetValue(segmentTypeName, out segmentType))
                 {
-                    faultSegment = new FaultSegment();
-                    faultSegment.SegmentType = segmentType;
+                    faultSegment = FaultSegmentTable.NewFaultSegmentRow();
+                    faultSegment.SegmentTypeID = segmentType.ID;
                     faultSegment.StartTime = segment.StartTime;
                     faultSegment.EndTime = segment.EndTime;
                     faultSegment.StartSample = segment.StartSample;
@@ -231,14 +230,14 @@ namespace FaultData.DataOperations
                 MeterData.EventRow eventRow;
 
                 eventTable = dbAdapterContainer.EventAdapter.GetDataByFileGroup(MeterDataSet.FileGroup.ID);
-                eventLookup = eventTable.Where(evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+                eventLookup = Enumerable.Where(eventTable, evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
 
-                foreach (Tuple<EventKey, FaultSegment> faultSegment in m_faultSegmentList)
+                foreach (Tuple<EventKey, FaultLocationData.FaultSegmentRow> faultSegment in m_faultSegmentList)
                 {
                     if (eventLookup.TryGetValue(faultSegment.Item1, out eventRow))
                     {
                         faultSegment.Item2.EventID = eventRow.ID;
-                        FaultSegmentTable.Add(faultSegment.Item2);
+                        FaultSegmentTable.AddFaultSegmentRow(faultSegment.Item2);
                     }
                 }
 
@@ -507,7 +506,7 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
-            List<FaultSegment> faultSegmentTable;
+            FaultLocationData.FaultSegmentDataTable faultSegmentTable;
             FaultLocationData.FaultCurveDataTable faultCurveTable;
             FaultLocationData.FaultSummaryDataTable faultSummaryTable;
 
@@ -522,15 +521,14 @@ namespace FaultData.DataOperations
 
             Log.Info("Loading fault data into the database...");
 
-            // Submit fault segments to the database
-            dbAdapterContainer.FaultLocationInfoAdapter.FaultSegments.InsertAllOnSubmit(faultSegmentTable);
-            ClearCache(dbAdapterContainer.FaultLocationInfoAdapter);
-            dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
-
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
             {
                 // Set timeout to infinite
                 bulkCopy.BulkCopyTimeout = 0;
+
+                // Submit fault segments to the database
+                bulkCopy.DestinationTableName = faultSegmentTable.TableName;
+                bulkCopy.WriteToServer(faultSegmentTable);
 
                 // Submit fault curves to the database
                 bulkCopy.DestinationTableName = faultCurveTable.TableName;
@@ -576,17 +574,6 @@ namespace FaultData.DataOperations
             s_segmentTypeLookup.GetOrAdd("3-Phase Fault", segmentTypeFactory);
 
             dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
-        }
-
-        private void ClearCache(FaultLocationInfoDataContext faultInfo)
-        {
-            // TODO: Eliminate the necessity of this using Linq-to-DataSets
-            // The cache needs to be cleared before submitting changes to the
-            // FaultSegment table because the faultInfo object isn't necessarily
-            // aware that Events were inserted since it built its cache
-            const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            MethodInfo method = faultInfo.GetType().GetMethod("ClearCache", Flags);
-            method.Invoke(faultInfo, null);
         }
 
         #endregion
