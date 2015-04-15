@@ -46,8 +46,9 @@ namespace openXDA.Configuration
         private string m_resultsPath;
         private string m_filePattern;
 
-        private string m_timeZone;
         private double m_timeTolerance;
+        private string m_defaultMeterTimeZone;
+        private string m_xdaTimeZone;
 
         private double m_maxVoltage;
         private double m_maxCurrent;
@@ -175,20 +176,46 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the time zone identifier for the
-        /// time zone used by all meters in the system.
+        /// Gets or sets the time zone identifier for the time zone
+        /// used by meters in the system unless configured otherwise.
         /// </summary>
         [Setting]
         [DefaultValue("UTC")]
-        public string TimeZone
+        public string DefaultMeterTimeZone
         {
             get
             {
-                return m_timeZone;
+                return m_defaultMeterTimeZone;
             }
             set
             {
-                m_timeZone = value;
+                m_defaultMeterTimeZone = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the time zone identifier for the
+        /// time zone used by openXDA to store data.
+        /// </summary>
+        /// <remarks>
+        /// The default value for this setting (empty string)
+        /// causes the setting to assume the value of the local
+        /// time zone of the system openXDA is running on.
+        /// </remarks>
+        [Setting]
+        [DefaultValue("")]
+        public string XDATimeZone
+        {
+            get
+            {
+                return m_xdaTimeZone;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    m_xdaTimeZone = TimeZoneInfo.Local.Id;
+                else
+                    m_xdaTimeZone = value;
             }
         }
 

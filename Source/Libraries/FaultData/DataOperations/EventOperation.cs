@@ -210,7 +210,7 @@ namespace FaultData.DataOperations
             }
         }
 
-        public string TimeZone
+        public string XDATimeZone
         {
             get
             {

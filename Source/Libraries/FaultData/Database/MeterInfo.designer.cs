@@ -33,9 +33,6 @@ namespace FaultData.Database
     partial void InsertMeterLocation(MeterLocation instance);
     partial void UpdateMeterLocation(MeterLocation instance);
     partial void DeleteMeterLocation(MeterLocation instance);
-    partial void InsertMeter(Meter instance);
-    partial void UpdateMeter(Meter instance);
-    partial void DeleteMeter(Meter instance);
     partial void InsertMeasurementType(MeasurementType instance);
     partial void UpdateMeasurementType(MeasurementType instance);
     partial void DeleteMeasurementType(MeasurementType instance);
@@ -66,6 +63,9 @@ namespace FaultData.Database
     partial void InsertMeterLine(MeterLine instance);
     partial void UpdateMeterLine(MeterLine instance);
     partial void DeleteMeterLine(MeterLine instance);
+    partial void InsertMeter(Meter instance);
+    partial void UpdateMeter(Meter instance);
+    partial void DeleteMeter(Meter instance);
     #endregion
 		
 		public MeterInfoDataContext() : 
@@ -103,14 +103,6 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<MeterLocation>();
-			}
-		}
-		
-		public System.Data.Linq.Table<Meter> Meters
-		{
-			get
-			{
-				return this.GetTable<Meter>();
 			}
 		}
 		
@@ -193,6 +185,14 @@ namespace FaultData.Database
 				return this.GetTable<MeterLine>();
 			}
 		}
+		
+		public System.Data.Linq.Table<Meter> Meters
+		{
+			get
+			{
+				return this.GetTable<Meter>();
+			}
+		}
 	}
 	
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.MeterLocation")]
@@ -217,9 +217,9 @@ namespace FaultData.Database
 		
 		private string _Description;
 		
-		private EntitySet<Meter> _Meters;
-		
 		private EntitySet<MeterLocationLine> _MeterLocationLines;
+		
+		private EntitySet<Meter> _Meters;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -245,8 +245,8 @@ namespace FaultData.Database
 		
 		public MeterLocation()
 		{
-			this._Meters = new EntitySet<Meter>(new Action<Meter>(this.attach_Meters), new Action<Meter>(this.detach_Meters));
 			this._MeterLocationLines = new EntitySet<MeterLocationLine>(new Action<MeterLocationLine>(this.attach_MeterLocationLines), new Action<MeterLocationLine>(this.detach_MeterLocationLines));
+			this._Meters = new EntitySet<Meter>(new Action<Meter>(this.attach_Meters), new Action<Meter>(this.detach_Meters));
 			OnCreated();
 		}
 		
@@ -410,19 +410,6 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeterLocation_Meter", Storage="_Meters", ThisKey="ID", OtherKey="MeterLocationID")]
-		public EntitySet<Meter> Meters
-		{
-			get
-			{
-				return this._Meters;
-			}
-			set
-			{
-				this._Meters.Assign(value);
-			}
-		}
-		
 		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeterLocation_MeterLocationLine", Storage="_MeterLocationLines", ThisKey="ID", OtherKey="MeterLocationID")]
 		public EntitySet<MeterLocationLine> MeterLocationLines
 		{
@@ -436,6 +423,19 @@ namespace FaultData.Database
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeterLocation_Meter", Storage="_Meters", ThisKey="ID", OtherKey="MeterLocationID")]
+		public EntitySet<Meter> Meters
+		{
+			get
+			{
+				return this._Meters;
+			}
+			set
+			{
+				this._Meters.Assign(value);
+			}
+		}
+		
 		public event PropertyChangingEventHandler PropertyChanging;
 		
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -454,18 +454,6 @@ namespace FaultData.Database
 			{
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
-		}
-		
-		private void attach_Meters(Meter entity)
-		{
-			this.SendPropertyChanging();
-			entity.MeterLocation = this;
-		}
-		
-		private void detach_Meters(Meter entity)
-		{
-			this.SendPropertyChanging();
-			entity.MeterLocation = null;
 		}
 		
 		private void attach_MeterLocationLines(MeterLocationLine entity)
@@ -479,384 +467,17 @@ namespace FaultData.Database
 			this.SendPropertyChanging();
 			entity.MeterLocation = null;
 		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.Meter")]
-	public partial class Meter : INotifyPropertyChanging, INotifyPropertyChanged
-	{
 		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _ID;
-		
-		private string _AssetKey;
-		
-		private int _MeterLocationID;
-		
-		private string _Name;
-		
-		private string _Alias;
-		
-		private string _ShortName;
-		
-		private string _Make;
-		
-		private string _Model;
-		
-		private string _Description;
-		
-		private EntitySet<MeterFileGroup> _MeterFileGroups;
-		
-		private EntitySet<Channel> _Channels;
-		
-		private EntitySet<MeterLine> _MeterLines;
-		
-		private EntityRef<MeterLocation> _MeterLocation;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnIDChanging(int value);
-    partial void OnIDChanged();
-    partial void OnAssetKeyChanging(string value);
-    partial void OnAssetKeyChanged();
-    partial void OnMeterLocationIDChanging(int value);
-    partial void OnMeterLocationIDChanged();
-    partial void OnNameChanging(string value);
-    partial void OnNameChanged();
-    partial void OnAliasChanging(string value);
-    partial void OnAliasChanged();
-    partial void OnShortNameChanging(string value);
-    partial void OnShortNameChanged();
-    partial void OnMakeChanging(string value);
-    partial void OnMakeChanged();
-    partial void OnModelChanging(string value);
-    partial void OnModelChanged();
-    partial void OnDescriptionChanging(string value);
-    partial void OnDescriptionChanged();
-    #endregion
-		
-		public Meter()
-		{
-			this._MeterFileGroups = new EntitySet<MeterFileGroup>(new Action<MeterFileGroup>(this.attach_MeterFileGroups), new Action<MeterFileGroup>(this.detach_MeterFileGroups));
-			this._Channels = new EntitySet<Channel>(new Action<Channel>(this.attach_Channels), new Action<Channel>(this.detach_Channels));
-			this._MeterLines = new EntitySet<MeterLine>(new Action<MeterLine>(this.attach_MeterLines), new Action<MeterLine>(this.detach_MeterLines));
-			this._MeterLocation = default(EntityRef<MeterLocation>);
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int ID
-		{
-			get
-			{
-				return this._ID;
-			}
-			set
-			{
-				if ((this._ID != value))
-				{
-					this.OnIDChanging(value);
-					this.SendPropertyChanging();
-					this._ID = value;
-					this.SendPropertyChanged("ID");
-					this.OnIDChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_AssetKey", DbType="VarChar(50) NOT NULL", CanBeNull=false)]
-		public string AssetKey
-		{
-			get
-			{
-				return this._AssetKey;
-			}
-			set
-			{
-				if ((this._AssetKey != value))
-				{
-					this.OnAssetKeyChanging(value);
-					this.SendPropertyChanging();
-					this._AssetKey = value;
-					this.SendPropertyChanged("AssetKey");
-					this.OnAssetKeyChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterLocationID", DbType="Int NOT NULL")]
-		public int MeterLocationID
-		{
-			get
-			{
-				return this._MeterLocationID;
-			}
-			set
-			{
-				if ((this._MeterLocationID != value))
-				{
-					if (this._MeterLocation.HasLoadedOrAssignedValue)
-					{
-						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-					}
-					this.OnMeterLocationIDChanging(value);
-					this.SendPropertyChanging();
-					this._MeterLocationID = value;
-					this.SendPropertyChanged("MeterLocationID");
-					this.OnMeterLocationIDChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Name", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
-		public string Name
-		{
-			get
-			{
-				return this._Name;
-			}
-			set
-			{
-				if ((this._Name != value))
-				{
-					this.OnNameChanging(value);
-					this.SendPropertyChanging();
-					this._Name = value;
-					this.SendPropertyChanged("Name");
-					this.OnNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Alias", DbType="VarChar(200)")]
-		public string Alias
-		{
-			get
-			{
-				return this._Alias;
-			}
-			set
-			{
-				if ((this._Alias != value))
-				{
-					this.OnAliasChanging(value);
-					this.SendPropertyChanging();
-					this._Alias = value;
-					this.SendPropertyChanged("Alias");
-					this.OnAliasChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ShortName", DbType="VarChar(50)")]
-		public string ShortName
-		{
-			get
-			{
-				return this._ShortName;
-			}
-			set
-			{
-				if ((this._ShortName != value))
-				{
-					this.OnShortNameChanging(value);
-					this.SendPropertyChanging();
-					this._ShortName = value;
-					this.SendPropertyChanged("ShortName");
-					this.OnShortNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Make", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
-		public string Make
-		{
-			get
-			{
-				return this._Make;
-			}
-			set
-			{
-				if ((this._Make != value))
-				{
-					this.OnMakeChanging(value);
-					this.SendPropertyChanging();
-					this._Make = value;
-					this.SendPropertyChanged("Make");
-					this.OnMakeChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Model", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
-		public string Model
-		{
-			get
-			{
-				return this._Model;
-			}
-			set
-			{
-				if ((this._Model != value))
-				{
-					this.OnModelChanging(value);
-					this.SendPropertyChanging();
-					this._Model = value;
-					this.SendPropertyChanged("Model");
-					this.OnModelChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Description", DbType="VarChar(MAX)")]
-		public string Description
-		{
-			get
-			{
-				return this._Description;
-			}
-			set
-			{
-				if ((this._Description != value))
-				{
-					this.OnDescriptionChanging(value);
-					this.SendPropertyChanging();
-					this._Description = value;
-					this.SendPropertyChanged("Description");
-					this.OnDescriptionChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_MeterFileGroup", Storage="_MeterFileGroups", ThisKey="ID", OtherKey="MeterID")]
-		public EntitySet<MeterFileGroup> MeterFileGroups
-		{
-			get
-			{
-				return this._MeterFileGroups;
-			}
-			set
-			{
-				this._MeterFileGroups.Assign(value);
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_Channel", Storage="_Channels", ThisKey="ID", OtherKey="MeterID")]
-		public EntitySet<Channel> Channels
-		{
-			get
-			{
-				return this._Channels;
-			}
-			set
-			{
-				this._Channels.Assign(value);
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_MeterLine", Storage="_MeterLines", ThisKey="ID", OtherKey="MeterID")]
-		public EntitySet<MeterLine> MeterLines
-		{
-			get
-			{
-				return this._MeterLines;
-			}
-			set
-			{
-				this._MeterLines.Assign(value);
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeterLocation_Meter", Storage="_MeterLocation", ThisKey="MeterLocationID", OtherKey="ID", IsForeignKey=true)]
-		public MeterLocation MeterLocation
-		{
-			get
-			{
-				return this._MeterLocation.Entity;
-			}
-			set
-			{
-				MeterLocation previousValue = this._MeterLocation.Entity;
-				if (((previousValue != value) 
-							|| (this._MeterLocation.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._MeterLocation.Entity = null;
-						previousValue.Meters.Remove(this);
-					}
-					this._MeterLocation.Entity = value;
-					if ((value != null))
-					{
-						value.Meters.Add(this);
-						this._MeterLocationID = value.ID;
-					}
-					else
-					{
-						this._MeterLocationID = default(int);
-					}
-					this.SendPropertyChanged("MeterLocation");
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-		
-		private void attach_MeterFileGroups(MeterFileGroup entity)
+		private void attach_Meters(Meter entity)
 		{
 			this.SendPropertyChanging();
-			entity.Meter = this;
+			entity.MeterLocation = this;
 		}
 		
-		private void detach_MeterFileGroups(MeterFileGroup entity)
+		private void detach_Meters(Meter entity)
 		{
 			this.SendPropertyChanging();
-			entity.Meter = null;
-		}
-		
-		private void attach_Channels(Channel entity)
-		{
-			this.SendPropertyChanging();
-			entity.Meter = this;
-		}
-		
-		private void detach_Channels(Channel entity)
-		{
-			this.SendPropertyChanging();
-			entity.Meter = null;
-		}
-		
-		private void attach_MeterLines(MeterLine entity)
-		{
-			this.SendPropertyChanging();
-			entity.Meter = this;
-		}
-		
-		private void detach_MeterLines(MeterLine entity)
-		{
-			this.SendPropertyChanging();
-			entity.Meter = null;
+			entity.MeterLocation = null;
 		}
 	}
 	
@@ -1865,13 +1486,13 @@ namespace FaultData.Database
 		
 		private EntityRef<MeasurementType> _MeasurementType;
 		
-		private EntityRef<Meter> _Meter;
-		
 		private EntityRef<Phase> _Phase;
 		
 		private EntityRef<MeasurementCharacteristic> _MeasurementCharacteristic;
 		
 		private EntityRef<Line> _Line;
+		
+		private EntityRef<Meter> _Meter;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -1905,10 +1526,10 @@ namespace FaultData.Database
 		{
 			this._Series = new EntitySet<Series>(new Action<Series>(this.attach_Series), new Action<Series>(this.detach_Series));
 			this._MeasurementType = default(EntityRef<MeasurementType>);
-			this._Meter = default(EntityRef<Meter>);
 			this._Phase = default(EntityRef<Phase>);
 			this._MeasurementCharacteristic = default(EntityRef<MeasurementCharacteristic>);
 			this._Line = default(EntityRef<Line>);
+			this._Meter = default(EntityRef<Meter>);
 			OnCreated();
 		}
 		
@@ -2199,40 +1820,6 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_Channel", Storage="_Meter", ThisKey="MeterID", OtherKey="ID", IsForeignKey=true)]
-		public Meter Meter
-		{
-			get
-			{
-				return this._Meter.Entity;
-			}
-			set
-			{
-				Meter previousValue = this._Meter.Entity;
-				if (((previousValue != value) 
-							|| (this._Meter.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._Meter.Entity = null;
-						previousValue.Channels.Remove(this);
-					}
-					this._Meter.Entity = value;
-					if ((value != null))
-					{
-						value.Channels.Add(this);
-						this._MeterID = value.ID;
-					}
-					else
-					{
-						this._MeterID = default(int);
-					}
-					this.SendPropertyChanged("Meter");
-				}
-			}
-		}
-		
 		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Phase_Channel", Storage="_Phase", ThisKey="PhaseID", OtherKey="ID", IsForeignKey=true)]
 		public Phase Phase
 		{
@@ -2331,6 +1918,40 @@ namespace FaultData.Database
 						this._LineID = default(int);
 					}
 					this.SendPropertyChanged("Line");
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_Channel", Storage="_Meter", ThisKey="MeterID", OtherKey="ID", IsForeignKey=true)]
+		public Meter Meter
+		{
+			get
+			{
+				return this._Meter.Entity;
+			}
+			set
+			{
+				Meter previousValue = this._Meter.Entity;
+				if (((previousValue != value) 
+							|| (this._Meter.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._Meter.Entity = null;
+						previousValue.Channels.Remove(this);
+					}
+					this._Meter.Entity = value;
+					if ((value != null))
+					{
+						value.Channels.Add(this);
+						this._MeterID = value.ID;
+					}
+					else
+					{
+						this._MeterID = default(int);
+					}
+					this.SendPropertyChanged("Meter");
 				}
 			}
 		}
@@ -3009,6 +2630,409 @@ namespace FaultData.Database
 			{
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.Meter")]
+	public partial class Meter : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private string _AssetKey;
+		
+		private int _MeterLocationID;
+		
+		private string _Name;
+		
+		private string _Alias;
+		
+		private string _ShortName;
+		
+		private string _Make;
+		
+		private string _Model;
+		
+		private string _TimeZone;
+		
+		private string _Description;
+		
+		private EntitySet<MeterFileGroup> _MeterFileGroups;
+		
+		private EntitySet<Channel> _Channels;
+		
+		private EntitySet<MeterLine> _MeterLines;
+		
+		private EntityRef<MeterLocation> _MeterLocation;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnAssetKeyChanging(string value);
+    partial void OnAssetKeyChanged();
+    partial void OnMeterLocationIDChanging(int value);
+    partial void OnMeterLocationIDChanged();
+    partial void OnNameChanging(string value);
+    partial void OnNameChanged();
+    partial void OnAliasChanging(string value);
+    partial void OnAliasChanged();
+    partial void OnShortNameChanging(string value);
+    partial void OnShortNameChanged();
+    partial void OnMakeChanging(string value);
+    partial void OnMakeChanged();
+    partial void OnModelChanging(string value);
+    partial void OnModelChanged();
+    partial void OnTimeZoneChanging(string value);
+    partial void OnTimeZoneChanged();
+    partial void OnDescriptionChanging(string value);
+    partial void OnDescriptionChanged();
+    #endregion
+		
+		public Meter()
+		{
+			this._MeterFileGroups = new EntitySet<MeterFileGroup>(new Action<MeterFileGroup>(this.attach_MeterFileGroups), new Action<MeterFileGroup>(this.detach_MeterFileGroups));
+			this._Channels = new EntitySet<Channel>(new Action<Channel>(this.attach_Channels), new Action<Channel>(this.detach_Channels));
+			this._MeterLines = new EntitySet<MeterLine>(new Action<MeterLine>(this.attach_MeterLines), new Action<MeterLine>(this.detach_MeterLines));
+			this._MeterLocation = default(EntityRef<MeterLocation>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_AssetKey", DbType="VarChar(50) NOT NULL", CanBeNull=false)]
+		public string AssetKey
+		{
+			get
+			{
+				return this._AssetKey;
+			}
+			set
+			{
+				if ((this._AssetKey != value))
+				{
+					this.OnAssetKeyChanging(value);
+					this.SendPropertyChanging();
+					this._AssetKey = value;
+					this.SendPropertyChanged("AssetKey");
+					this.OnAssetKeyChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterLocationID", DbType="Int NOT NULL")]
+		public int MeterLocationID
+		{
+			get
+			{
+				return this._MeterLocationID;
+			}
+			set
+			{
+				if ((this._MeterLocationID != value))
+				{
+					if (this._MeterLocation.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnMeterLocationIDChanging(value);
+					this.SendPropertyChanging();
+					this._MeterLocationID = value;
+					this.SendPropertyChanged("MeterLocationID");
+					this.OnMeterLocationIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Name", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string Name
+		{
+			get
+			{
+				return this._Name;
+			}
+			set
+			{
+				if ((this._Name != value))
+				{
+					this.OnNameChanging(value);
+					this.SendPropertyChanging();
+					this._Name = value;
+					this.SendPropertyChanged("Name");
+					this.OnNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Alias", DbType="VarChar(200)")]
+		public string Alias
+		{
+			get
+			{
+				return this._Alias;
+			}
+			set
+			{
+				if ((this._Alias != value))
+				{
+					this.OnAliasChanging(value);
+					this.SendPropertyChanging();
+					this._Alias = value;
+					this.SendPropertyChanged("Alias");
+					this.OnAliasChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ShortName", DbType="VarChar(50)")]
+		public string ShortName
+		{
+			get
+			{
+				return this._ShortName;
+			}
+			set
+			{
+				if ((this._ShortName != value))
+				{
+					this.OnShortNameChanging(value);
+					this.SendPropertyChanging();
+					this._ShortName = value;
+					this.SendPropertyChanged("ShortName");
+					this.OnShortNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Make", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string Make
+		{
+			get
+			{
+				return this._Make;
+			}
+			set
+			{
+				if ((this._Make != value))
+				{
+					this.OnMakeChanging(value);
+					this.SendPropertyChanging();
+					this._Make = value;
+					this.SendPropertyChanged("Make");
+					this.OnMakeChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Model", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string Model
+		{
+			get
+			{
+				return this._Model;
+			}
+			set
+			{
+				if ((this._Model != value))
+				{
+					this.OnModelChanging(value);
+					this.SendPropertyChanging();
+					this._Model = value;
+					this.SendPropertyChanged("Model");
+					this.OnModelChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TimeZone", DbType="VarChar(200)")]
+		public string TimeZone
+		{
+			get
+			{
+				return this._TimeZone;
+			}
+			set
+			{
+				if ((this._TimeZone != value))
+				{
+					this.OnTimeZoneChanging(value);
+					this.SendPropertyChanging();
+					this._TimeZone = value;
+					this.SendPropertyChanged("TimeZone");
+					this.OnTimeZoneChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Description", DbType="VarChar(MAX)")]
+		public string Description
+		{
+			get
+			{
+				return this._Description;
+			}
+			set
+			{
+				if ((this._Description != value))
+				{
+					this.OnDescriptionChanging(value);
+					this.SendPropertyChanging();
+					this._Description = value;
+					this.SendPropertyChanged("Description");
+					this.OnDescriptionChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_MeterFileGroup", Storage="_MeterFileGroups", ThisKey="ID", OtherKey="MeterID")]
+		public EntitySet<MeterFileGroup> MeterFileGroups
+		{
+			get
+			{
+				return this._MeterFileGroups;
+			}
+			set
+			{
+				this._MeterFileGroups.Assign(value);
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_Channel", Storage="_Channels", ThisKey="ID", OtherKey="MeterID")]
+		public EntitySet<Channel> Channels
+		{
+			get
+			{
+				return this._Channels;
+			}
+			set
+			{
+				this._Channels.Assign(value);
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_MeterLine", Storage="_MeterLines", ThisKey="ID", OtherKey="MeterID")]
+		public EntitySet<MeterLine> MeterLines
+		{
+			get
+			{
+				return this._MeterLines;
+			}
+			set
+			{
+				this._MeterLines.Assign(value);
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeterLocation_Meter", Storage="_MeterLocation", ThisKey="MeterLocationID", OtherKey="ID", IsForeignKey=true)]
+		public MeterLocation MeterLocation
+		{
+			get
+			{
+				return this._MeterLocation.Entity;
+			}
+			set
+			{
+				MeterLocation previousValue = this._MeterLocation.Entity;
+				if (((previousValue != value) 
+							|| (this._MeterLocation.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._MeterLocation.Entity = null;
+						previousValue.Meters.Remove(this);
+					}
+					this._MeterLocation.Entity = value;
+					if ((value != null))
+					{
+						value.Meters.Add(this);
+						this._MeterLocationID = value.ID;
+					}
+					else
+					{
+						this._MeterLocationID = default(int);
+					}
+					this.SendPropertyChanged("MeterLocation");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+		
+		private void attach_MeterFileGroups(MeterFileGroup entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = this;
+		}
+		
+		private void detach_MeterFileGroups(MeterFileGroup entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = null;
+		}
+		
+		private void attach_Channels(Channel entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = this;
+		}
+		
+		private void detach_Channels(Channel entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = null;
+		}
+		
+		private void attach_MeterLines(MeterLine entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = this;
+		}
+		
+		private void detach_MeterLines(MeterLine entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = null;
 		}
 	}
 }

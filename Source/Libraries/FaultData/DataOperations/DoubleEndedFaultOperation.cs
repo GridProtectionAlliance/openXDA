@@ -182,7 +182,6 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
-        private TimeZoneInfo m_timeZone;
         private double m_timeTolerance;
 
         private List<MappingNode> m_processedMappingNodes;
@@ -205,18 +204,6 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
-
-        public string TimeZone
-        {
-            get
-            {
-                return m_timeZone.Id;
-            }
-            set
-            {
-                m_timeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
-            }
-        }
 
         public double TimeTolerance
         {
@@ -389,8 +376,8 @@ namespace FaultData.DataOperations
                 .OrderBy(dataGroup => dataGroup.StartTime)
                 .Select(dataGroup => new
                 {
-                    StartTime = TimeZoneInfo.ConvertTimeToUtc(dataGroup.StartTime, m_timeZone).AddSeconds(-m_timeTolerance),
-                    EndTime = TimeZoneInfo.ConvertTimeToUtc(dataGroup.EndTime, m_timeZone).AddSeconds(m_timeTolerance),
+                    StartTime = dataGroup.StartTime.AddSeconds(-m_timeTolerance),
+                    EndTime = dataGroup.EndTime.AddSeconds(m_timeTolerance),
                 })
                 .Aggregate(new List<Tuple<DateTime, DateTime>>(), (list, timeRange) =>
                 {
