@@ -148,43 +148,33 @@ namespace FaultData.DataAnalysis
 
         public void PushDataTo(CycleDataSet cycleDataSet)
         {
-            CycleData cycle;
+            CycleData cycleData;
+            Cycle[] cycles;
+            CycleDataGroup[] cycleDataGroups;
+
+            cycleDataGroups = new CycleDataGroup[] { VA, VB, VC, IA, IB, IC };
+            cycles = new Cycle[cycleDataGroups.Length];
 
             for (int i = 0; i < VA.ToDataGroup().Samples; i++)
             {
-                cycle = new CycleData();
+                cycleData = new CycleData();
 
-                cycle.AN.V.RMS = VA.RMS.DataPoints[i].Value;
-                cycle.AN.V.Phase = VA.Phase.DataPoints[i].Value;
-                cycle.AN.V.Peak = VA.Peak.DataPoints[i].Value;
-                cycle.AN.V.Error = VA.Error.DataPoints[i].Value;
+                cycles[0] = cycleData.AN.V;
+                cycles[1] = cycleData.BN.V;
+                cycles[2] = cycleData.CN.V;
+                cycles[3] = cycleData.AN.I;
+                cycles[4] = cycleData.BN.I;
+                cycles[5] = cycleData.CN.I;
 
-                cycle.BN.V.RMS = VB.RMS.DataPoints[i].Value;
-                cycle.BN.V.Phase = VB.Phase.DataPoints[i].Value;
-                cycle.BN.V.Peak = VB.Peak.DataPoints[i].Value;
-                cycle.BN.V.Error = VB.Error.DataPoints[i].Value;
+                for (int j = 0; j < cycles.Length; j++)
+                {
+                    cycles[j].RMS = cycleDataGroups[j].RMS[i].Value;
+                    cycles[j].Phase = cycleDataGroups[j].Phase[i].Value;
+                    cycles[j].Peak = cycleDataGroups[j].Peak[i].Value;
+                    cycles[j].Error = cycleDataGroups[j].Error[i].Value;
+                }
 
-                cycle.CN.V.RMS = VC.RMS.DataPoints[i].Value;
-                cycle.CN.V.Phase = VC.Phase.DataPoints[i].Value;
-                cycle.CN.V.Peak = VC.Peak.DataPoints[i].Value;
-                cycle.CN.V.Error = VC.Error.DataPoints[i].Value;
-
-                cycle.AN.I.RMS = IA.RMS.DataPoints[i].Value;
-                cycle.AN.I.Phase = IA.Phase.DataPoints[i].Value;
-                cycle.AN.I.Peak = IA.Peak.DataPoints[i].Value;
-                cycle.AN.I.Error = IA.Error.DataPoints[i].Value;
-
-                cycle.BN.I.RMS = IB.RMS.DataPoints[i].Value;
-                cycle.BN.I.Phase = IB.Phase.DataPoints[i].Value;
-                cycle.BN.I.Peak = IB.Peak.DataPoints[i].Value;
-                cycle.BN.I.Error = IB.Error.DataPoints[i].Value;
-
-                cycle.CN.I.RMS = IC.RMS.DataPoints[i].Value;
-                cycle.CN.I.Phase = IC.Phase.DataPoints[i].Value;
-                cycle.CN.I.Peak = IC.Peak.DataPoints[i].Value;
-                cycle.CN.I.Error = IC.Error.DataPoints[i].Value;
-
-                cycleDataSet[i] = cycle;
+                cycleDataSet[i] = cycleData;
             }
         }
 

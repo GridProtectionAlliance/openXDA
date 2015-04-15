@@ -45,7 +45,9 @@ namespace openXDA.Configuration
         private string m_watchDirectories;
         private string m_resultsPath;
         private string m_filePattern;
+
         private string m_timeZone;
+        private double m_timeTolerance;
 
         private double m_maxVoltage;
         private double m_maxCurrent;
@@ -187,6 +189,24 @@ namespace openXDA.Configuration
             set
             {
                 m_timeZone = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum distance, in seconds,
+        /// between a meter's clock and real time.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.5D)]
+        public double TimeTolerance
+        {
+            get
+            {
+                return m_timeTolerance;
+            }
+            set
+            {
+                m_timeTolerance = value;
             }
         }
 

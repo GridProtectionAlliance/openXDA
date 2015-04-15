@@ -21,10 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using FaultData.Database;
 using FaultData.DataSets;
-using GSF;
 
 namespace FaultData.DataOperations
 {

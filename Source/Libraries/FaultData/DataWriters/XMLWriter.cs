@@ -241,7 +241,6 @@ namespace FaultData.DataWriters
         {
             CycleDataResource cycleDataResource;
             FaultDataResource faultDataResource;
-            FaultDataResource.Factory faultDataResourceFactory;
 
             DataGroup dataGroup;
             VICycleDataGroup viCycleDataGroup;
@@ -250,25 +249,8 @@ namespace FaultData.DataWriters
             string rootFileName;
             string fileName;
 
-            faultDataResourceFactory = new FaultDataResource.Factory()
-            {
-                DbAdapterContainer = dbAdapterContainer,
-                MaxVoltage = m_maxVoltage,
-                MaxCurrent = m_maxCurrent,
-                LowVoltageThreshold = m_lowVoltageThreshold,
-                MaxLowVoltageCurrent = m_maxLowVoltageCurrent,
-                MaxTimeOffset = m_maxTimeOffset,
-                MinTimeOffset = m_minTimeOffset,
-                ResidualCurrentTrigger = m_residualCurrentTrigger,
-                PhaseCurrentTrigger = m_phaseCurrentTrigger,
-                PrefaultTrigger = m_prefaultTrigger,
-                FaultSuppressionTrigger = m_faultSuppressionTrigger,
-                MaxFaultDistanceMultiplier = m_maxFaultDistanceMultiplier,
-                MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
-            };
-
             cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            faultDataResource = meterDataSet.GetResource(faultDataResourceFactory.Create);
+            faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(dbAdapterContainer));
 
             if (!Directory.Exists(m_resultsPath))
                 Directory.CreateDirectory(m_resultsPath);

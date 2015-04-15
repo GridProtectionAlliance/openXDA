@@ -76,7 +76,6 @@ namespace FaultData.DataOperations
             {
                 FaultLocationData.FaultSegmentRow faultSegment;
                 FaultLocationData.FaultCurveRow faultCurveRow;
-                FaultLocationData.FaultSummaryRow faultSummaryRow;
 
                 EventKey eventKey;
 
@@ -106,9 +105,9 @@ namespace FaultData.DataOperations
                             m_faultSegmentList.Add(Tuple.Create(eventKey, faultSegment));
                     }
 
-                    // Create a fault summary row for this fault
-                    faultSummaryRow = CreateFaultSummaryRow(fault, faultNumber);
-                    m_faultSummaryList.Add(Tuple.Create(eventKey, faultSummaryRow));
+                    // Create the fault summary rows for this fault
+                    foreach (FaultLocationData.FaultSummaryRow faultSummaryRow in CreateFaultSummaryRows(fault, faultNumber))
+                        m_faultSummaryList.Add(Tuple.Create(eventKey, faultSummaryRow));
 
                     // Increment the fault number
                     faultNumber++;
@@ -170,27 +169,31 @@ namespace FaultData.DataOperations
                 return null;
             }
 
-            private FaultLocationData.FaultSummaryRow CreateFaultSummaryRow(Fault fault, int faultNumber)
+            private IEnumerable<FaultLocationData.FaultSummaryRow> CreateFaultSummaryRows(Fault fault, int faultNumber)
             {
                 FaultLocationData.FaultSummaryRow faultSummaryRow;
                 double durationSeconds;
 
-                // Calculate the duration of the fault in seconds
-                durationSeconds = fault.Info.Duration.TotalSeconds;
+                foreach (Fault.Curve curve in fault.Curves)
+                {
+                    // Calculate the duration of the fault in seconds
+                    durationSeconds = fault.Info.Duration.TotalSeconds;
 
-                // Create the fault summary record to be written to the database
-                faultSummaryRow = FaultSummaryTable.NewFaultSummaryRow();
-                faultSummaryRow.Algorithm = fault.Info.DistanceAlgorithm;
-                faultSummaryRow.FaultNumber = faultNumber;
-                faultSummaryRow.CalculationCycle = fault.Info.CalculationCycle;
-                faultSummaryRow.Distance = fault.Info.Distance;
-                faultSummaryRow.CurrentMagnitude = fault.Info.CurrentMagnitude;
-                faultSummaryRow.Inception = fault.Info.InceptionTime;
-                faultSummaryRow.DurationSeconds = durationSeconds;
-                faultSummaryRow.DurationCycles = durationSeconds * Frequency;
-                faultSummaryRow.FaultType = fault.Info.Type.ToString();
+                    // Create the fault summary record to be written to the database
+                    faultSummaryRow = FaultSummaryTable.NewFaultSummaryRow();
+                    faultSummaryRow.Algorithm = curve.Algorithm;
+                    faultSummaryRow.FaultNumber = faultNumber;
+                    faultSummaryRow.CalculationCycle = fault.Info.CalculationCycle;
+                    faultSummaryRow.Distance = curve[fault.Info.CalculationCycle].Value;
+                    faultSummaryRow.CurrentMagnitude = fault.Info.CurrentMagnitude;
+                    faultSummaryRow.Inception = fault.Info.InceptionTime;
+                    faultSummaryRow.DurationSeconds = durationSeconds;
+                    faultSummaryRow.DurationCycles = durationSeconds * Frequency;
+                    faultSummaryRow.FaultType = fault.Info.Type.ToString();
+                    faultSummaryRow.IsSelectedAlgorithm = (fault.Info.DistanceAlgorithm == curve.Algorithm) ? 1 : 0;
 
-                return faultSummaryRow;
+                    yield return faultSummaryRow;
+                }
             }
 
             private FaultLocationData.FaultCurveRow CreateFaultCurveRow(int curveIndex)
@@ -230,7 +233,7 @@ namespace FaultData.DataOperations
                 MeterData.EventRow eventRow;
 
                 eventTable = dbAdapterContainer.EventAdapter.GetDataByFileGroup(MeterDataSet.FileGroup.ID);
-                eventLookup = Enumerable.Where(eventTable, evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+                eventLookup = eventTable.Where(evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
 
                 foreach (Tuple<EventKey, FaultLocationData.FaultSegmentRow> faultSegment in m_faultSegmentList)
                 {
@@ -281,170 +284,7 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
-
-        private double m_maxVoltage;
-        private double m_maxCurrent;
-        private double m_lowVoltageThreshold;
-        private double m_maxLowVoltageCurrent;
-        private double m_maxTimeOffset;
-        private double m_minTimeOffset;
-
-        private double m_residualCurrentTrigger;
-        private double m_phaseCurrentTrigger;
-        private double m_prefaultTrigger;
-        private double m_faultSuppressionTrigger;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
-
         private FaultSummarizer m_faultSummarizer;
-
-        #endregion
-
-        #region [ Properties ]
-
-        public double MaxVoltage
-        {
-            get
-            {
-                return m_maxVoltage;
-            }
-            set
-            {
-                m_maxVoltage = value;
-            }
-        }
-
-        public double MaxCurrent
-        {
-            get
-            {
-                return m_maxCurrent;
-            }
-            set
-            {
-                m_maxCurrent = value;
-            }
-        }
-
-        public double LowVoltageThreshold
-        {
-            get
-            {
-                return m_lowVoltageThreshold;
-            }
-            set
-            {
-                m_lowVoltageThreshold = value;
-            }
-        }
-
-        public double MaxLowVoltageCurrent
-        {
-            get
-            {
-                return m_maxLowVoltageCurrent;
-            }
-            set
-            {
-                m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        public double MaxTimeOffset
-        {
-            get
-            {
-                return m_maxTimeOffset;
-            }
-            set
-            {
-                m_maxTimeOffset = value;
-            }
-        }
-
-        public double MinTimeOffset
-        {
-            get
-            {
-                return m_minTimeOffset;
-            }
-            set
-            {
-                m_minTimeOffset = value;
-            }
-        }
-
-        public double ResidualCurrentTrigger
-        {
-            get
-            {
-                return m_residualCurrentTrigger;
-            }
-            set
-            {
-                m_residualCurrentTrigger = value;
-            }
-        }
-
-        public double PhaseCurrentTrigger
-        {
-            get
-            {
-                return m_phaseCurrentTrigger;
-            }
-            set
-            {
-                m_phaseCurrentTrigger = value;
-            }
-        }
-
-        public double PrefaultTrigger
-        {
-            get
-            {
-                return m_prefaultTrigger;
-            }
-            set
-            {
-                m_prefaultTrigger = value;
-            }
-        }
-
-        public double FaultSuppressionTrigger
-        {
-            get
-            {
-                return m_faultSuppressionTrigger;
-            }
-            set
-            {
-                m_faultSuppressionTrigger = value;
-            }
-        }
-
-        public double MaxFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
-
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
 
         #endregion
 
@@ -466,24 +306,7 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            FaultDataResource.Factory faultDataResourceFactory = new FaultDataResource.Factory()
-            {
-                DbAdapterContainer = m_dbAdapterContainer,
-                MaxVoltage = m_maxVoltage,
-                MaxCurrent = m_maxCurrent,
-                LowVoltageThreshold = m_lowVoltageThreshold,
-                MaxLowVoltageCurrent = m_maxLowVoltageCurrent,
-                MaxTimeOffset = m_maxTimeOffset,
-                MinTimeOffset = m_minTimeOffset,
-                ResidualCurrentTrigger = m_residualCurrentTrigger,
-                PhaseCurrentTrigger = m_phaseCurrentTrigger,
-                PrefaultTrigger = m_prefaultTrigger,
-                FaultSuppressionTrigger = m_faultSuppressionTrigger,
-                MaxFaultDistanceMultiplier = m_maxFaultDistanceMultiplier,
-                MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
-            };
-
-            FaultDataResource faultDataResource = meterDataSet.GetResource(faultDataResourceFactory.Create);
+            FaultDataResource faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(m_dbAdapterContainer));
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             List<Fault> faults;
 

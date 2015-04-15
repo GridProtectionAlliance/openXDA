@@ -43,45 +43,6 @@ namespace FaultData.DataResources
         #region [ Members ]
 
         // Nested Types
-        public class Factory
-        {
-            public DbAdapterContainer DbAdapterContainer;
-
-            public double MaxVoltage;
-            public double MaxCurrent;
-            public double LowVoltageThreshold;
-            public double MaxLowVoltageCurrent;
-            public double MaxTimeOffset;
-            public double MinTimeOffset;
-
-            public double ResidualCurrentTrigger;
-            public double PhaseCurrentTrigger;
-            public double PrefaultTrigger;
-            public double FaultSuppressionTrigger;
-            public double MaxFaultDistanceMultiplier;
-            public double MinFaultDistanceMultiplier;
-
-            public FaultDataResource Create()
-            {
-                return new FaultDataResource()
-                {
-                    m_dbAdapterContainer = DbAdapterContainer,
-                    m_maxVoltage = MaxVoltage,
-                    m_maxCurrent = MaxCurrent,
-                    m_lowVoltageThreshold = LowVoltageThreshold,
-                    m_maxLowVoltageCurrent = MaxLowVoltageCurrent,
-                    m_maxTimeOffset = MaxTimeOffset,
-                    m_minTimeOffset = MinTimeOffset,
-                    m_residualCurrentTrigger = ResidualCurrentTrigger,
-                    m_phaseCurrentTrigger = PhaseCurrentTrigger,
-                    m_prefaultTrigger = PrefaultTrigger,
-                    m_faultSuppressionTrigger = FaultSuppressionTrigger,
-                    m_maxFaultDistanceMultiplier = MaxFaultDistanceMultiplier,
-                    m_minFaultDistanceMultiplier = MinFaultDistanceMultiplier
-                };
-            }
-        }
-
         private class ImpedanceExtractor
         {
             #region [ Members ]
@@ -227,6 +188,7 @@ namespace FaultData.DataResources
                                 }
 
                                 // Add the data points to the current fault curve
+                                fault.Curves[i].StartIndex = segment.StartSample;
                                 fault.Curves[i].Series.DataPoints.AddRange(faultDataPoints);
                             }
                         }
@@ -278,8 +240,9 @@ namespace FaultData.DataResources
 
         #region [ Constructors ]
 
-        private FaultDataResource()
+        public FaultDataResource(DbAdapterContainer dbAdapterContainer)
         {
+            m_dbAdapterContainer = dbAdapterContainer;
             m_faultLookup = new Dictionary<DataGroup, List<Fault>>();
         }
 
@@ -292,6 +255,150 @@ namespace FaultData.DataResources
             get
             {
                 return m_faultLookup;
+            }
+        }
+
+        public double MaxVoltage
+        {
+            get
+            {
+                return m_maxVoltage;
+            }
+            set
+            {
+                m_maxVoltage = value;
+            }
+        }
+
+        public double MaxCurrent
+        {
+            get
+            {
+                return m_maxCurrent;
+            }
+            set
+            {
+                m_maxCurrent = value;
+            }
+        }
+
+        public double LowVoltageThreshold
+        {
+            get
+            {
+                return m_lowVoltageThreshold;
+            }
+            set
+            {
+                m_lowVoltageThreshold = value;
+            }
+        }
+
+        public double MaxLowVoltageCurrent
+        {
+            get
+            {
+                return m_maxLowVoltageCurrent;
+            }
+            set
+            {
+                m_maxLowVoltageCurrent = value;
+            }
+        }
+
+        public double MaxTimeOffset
+        {
+            get
+            {
+                return m_maxTimeOffset;
+            }
+            set
+            {
+                m_maxTimeOffset = value;
+            }
+        }
+
+        public double MinTimeOffset
+        {
+            get
+            {
+                return m_minTimeOffset;
+            }
+            set
+            {
+                m_minTimeOffset = value;
+            }
+        }
+
+        public double ResidualCurrentTrigger
+        {
+            get
+            {
+                return m_residualCurrentTrigger;
+            }
+            set
+            {
+                m_residualCurrentTrigger = value;
+            }
+        }
+
+        public double PhaseCurrentTrigger
+        {
+            get
+            {
+                return m_phaseCurrentTrigger;
+            }
+            set
+            {
+                m_phaseCurrentTrigger = value;
+            }
+        }
+
+        public double PrefaultTrigger
+        {
+            get
+            {
+                return m_prefaultTrigger;
+            }
+            set
+            {
+                m_prefaultTrigger = value;
+            }
+        }
+
+        public double FaultSuppressionTrigger
+        {
+            get
+            {
+                return m_faultSuppressionTrigger;
+            }
+            set
+            {
+                m_faultSuppressionTrigger = value;
+            }
+        }
+
+        public double MaxFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_maxFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_maxFaultDistanceMultiplier = value;
+            }
+        }
+
+        public double MinFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_minFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_minFaultDistanceMultiplier = value;
             }
         }
 
@@ -834,8 +941,6 @@ namespace FaultData.DataResources
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = viCycleDataGroup.IA.RMS[fault.Info.StartSample].Time;
             DateTime endTime = viCycleDataGroup.IA.RMS[fault.Info.EndSample].Time;
-
-            int faultIndex;
             List<Tuple<int, string, double>> distances;
 
             fault.Info.CalculationCycle = calculationCycle;
@@ -856,10 +961,8 @@ namespace FaultData.DataResources
 
             if (calculationCycle >= 0)
             {
-                faultIndex = calculationCycle - fault.Info.StartSample;
-
                 distances = fault.Curves
-                    .Select((curve, index) => Tuple.Create(index, curve.Algorithm, curve[faultIndex].Value))
+                    .Select((curve, index) => Tuple.Create(index, curve.Algorithm, curve[calculationCycle].Value))
                     .Where(tuple => IsValid(tuple.Item3, dataGroup))
                     .OrderBy(tuple => tuple.Item3)
                     .ToList();

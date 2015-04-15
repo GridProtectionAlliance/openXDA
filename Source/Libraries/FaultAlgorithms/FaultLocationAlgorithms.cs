@@ -53,7 +53,7 @@ using GSF.Units;
 
 namespace FaultAlgorithms
 {
-    internal class FaultLocationAlgorithms
+    public class FaultLocationAlgorithms
     {
         #region [ Fault Location Methods ]
         
@@ -67,7 +67,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] Simple(FaultLocationDataSet faultDataSet, string parameters)
+        public static double[] Simple(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber nominalImpedance;
@@ -94,7 +94,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] Reactance(FaultLocationDataSet faultDataSet, string parameters)
+        public static double[] Reactance(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber nominalImpedance;
@@ -121,7 +121,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] Takagi(FaultLocationDataSet faultDataSet, string parameters)
+        public static double[] Takagi(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber z;
@@ -154,7 +154,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] ModifiedTakagi(FaultLocationDataSet faultDataSet, string parameters)
+        public static double[] ModifiedTakagi(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber z;
@@ -196,7 +196,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] Novosel(FaultLocationDataSet faultDataSet, string parameters)
+        public static double[] Novosel(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber z;
@@ -255,7 +255,7 @@ namespace FaultAlgorithms
         /// <param name="parameters">Extra parameters to the algorithm.</param>
         /// <returns>Set of distance calculations, one for each cycle of data.</returns>
         [FaultLocationAlgorithm]
-        private static double[] Eriksson(FaultLocationDataSet faultDataSet, string parameters)
+        public static double[] Eriksson(FaultLocationDataSet faultDataSet, string parameters)
         {
             FaultType viFaultType;
             ComplexNumber z;
@@ -304,6 +304,36 @@ namespace FaultAlgorithms
             .ToArray();
         }
 
+        /// <summary>
+        /// Double-ended algorithm for calculating the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
+        /// </summary>
+        /// <param name="localFaultDataSet">The data set used to find the distance to the fault.</param>
+        /// <param name="remoteFaultCycle">The cycle of data from the remote station used in the double-ended distance algorithm.</param>
+        /// <param name="parameters">Extra parameters to the algorithm.</param>
+        /// <returns>A set of distance calculations, one for each cycle of data in <paramref name="localFaultDataSet"/>.</returns>
+        public static ComplexNumber[] DoubleEnded(FaultLocationDataSet localFaultDataSet, CycleData remoteFaultCycle, string parameters)
+        {
+            FaultType faultType;
+            ComplexNumber vfs;
+            ComplexNumber ifs;
+            ComplexNumber z;
+
+            faultType = localFaultDataSet.FaultType;
+            vfs = GetDoubleEndedFaultVoltage(remoteFaultCycle, faultType);
+            ifs = GetDoubleEndedFaultCurrent(remoteFaultCycle, faultType);
+            z = localFaultDataSet.Z1;
+
+            return localFaultDataSet.Cycles
+                .Select(cycleData => new
+                {
+                    Vns = GetDoubleEndedFaultVoltage(remoteFaultCycle, faultType),
+                    Ins = GetDoubleEndedFaultCurrent(remoteFaultCycle, faultType)
+                })
+                .Select(cycle => (cycle.Vns - vfs + z * ifs) / (z * (cycle.Ins + ifs)))
+                .Select(m => m * localFaultDataSet.LineDistance)
+                .ToArray();
+        }
+
         // ReSharper restore UnusedParameter.Local
         // ReSharper restore UnusedMember.Local
 
@@ -325,7 +355,7 @@ namespace FaultAlgorithms
                 anError = faultDataSet.Cycles.Sum(cycle => cycle.AN.I.Error);
                 bnError = faultDataSet.Cycles.Sum(cycle => cycle.BN.I.Error);
                 cnError = faultDataSet.Cycles.Sum(cycle => cycle.CN.I.Error);
-                minError = Math.Min(Math.Min(anError, bnError), cnError);
+                minError = Common.Min(anError, bnError, cnError);
 
                 if (anError == minError)
                     return FaultType.AN;
@@ -399,6 +429,31 @@ namespace FaultAlgorithms
                 default:
                     throw new ArgumentOutOfRangeException("viFaultType");
             }
+        }
+
+        // Get the voltage used in double-ended fault calculations for this cycle, based on the fault type.
+        private static ComplexNumber GetDoubleEndedFaultVoltage(CycleData cycle, FaultType faultType)
+        {
+            ComplexNumber[] sequenceComponents;
+            sequenceComponents = CycleData.CalculateSequenceComponents(cycle.AN.V, cycle.BN.V, cycle.CN.V);
+
+            if (faultType == FaultType.ABC)
+                return sequenceComponents[1];
+
+            return sequenceComponents[2];
+        }
+
+        // Get teh current to use in fault calculations for this cycle, based on the fault type.
+        private static ComplexNumber GetDoubleEndedFaultCurrent(CycleData cycle, FaultType faultType)
+        {
+            ComplexNumber[] sequenceComponents;
+
+            sequenceComponents = CycleData.CalculateSequenceComponents(cycle.AN.I, cycle.BN.I, cycle.CN.I);
+
+            if (faultType == FaultType.ABC)
+                return sequenceComponents[1];
+
+            return sequenceComponents[2];
         }
 
         // Get the nominal impedance value to use in fault calculations, based on the fault type.

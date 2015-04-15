@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -232,31 +234,13 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            EventClassificationResource.Factory factory;
             CycleDataResource cycleDataResource;
             EventClassificationResource eventClassificationResource;
 
             Log.Info("Executing operation to load event data into the database...");
 
-            factory = new EventClassificationResource.Factory()
-            {
-                DbAdapterContainer = m_dbAdapterContainer,
-                MaxVoltage = m_maxVoltage,
-                MaxCurrent = m_maxCurrent,
-                LowVoltageThreshold = m_lowVoltageThreshold,
-                MaxLowVoltageCurrent = m_maxLowVoltageCurrent,
-                MaxTimeOffset = m_maxTimeOffset,
-                MinTimeOffset = m_minTimeOffset,
-                ResidualCurrentTrigger = m_residualCurrentTrigger,
-                PhaseCurrentTrigger = m_phaseCurrentTrigger,
-                PrefaultTrigger = m_prefaultTrigger,
-                FaultSuppressionTrigger = m_faultSuppressionTrigger,
-                MaxFaultDistanceMultiplier = m_maxFaultDistanceMultiplier,
-                MinFaultDistanceMultiplier = m_minFaultDistanceMultiplier
-            };
-
             cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            eventClassificationResource = meterDataSet.GetResource(factory.Create);
+            eventClassificationResource = meterDataSet.GetResource(() => new EventClassificationResource(m_dbAdapterContainer));
             LoadEvents(meterDataSet, cycleDataResource.DataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
 
             m_meterDataSet = meterDataSet;
@@ -287,7 +271,7 @@ namespace FaultData.DataOperations
 
             // Query database for event IDs and store them in a lookup table by line ID
             dbAdapterContainer.EventAdapter.FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
-            eventLookup = m_eventTable.Where(evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+            eventLookup = Enumerable.Where(m_eventTable, evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
 
             // Create cycle data table
             cycleDataTable = new FaultLocationData.CycleDataDataTable();
@@ -304,6 +288,20 @@ namespace FaultData.DataOperations
 
             // Write cycle data to the database
             bulkLoader.Load(cycleDataTable);
+
+            // Load event snapshots into the database
+            using (SqlCommand command = dbAdapterContainer.Connection.CreateCommand())
+            {
+                command.CommandText = "CreateEventSnapshot";
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@eventID", SqlDbType.Int);
+
+                foreach (MeterData.EventRow evt in eventLookup.Values)
+                {
+                    command.Parameters[0].Value = evt.ID;
+                    command.ExecuteNonQuery();
+                }
+            }
 
             Log.Info(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
         }
@@ -389,9 +387,8 @@ namespace FaultData.DataOperations
 
             dbAdapterContainer.EventTypeAdapter.Fill(eventTypeTable);
 
-            return eventTypeTable
-                .Where(row => Enum.TryParse(row.Name, out eventClassification))
-                .Select(row => Tuple.Create(eventClassification, row.ID))
+            return Enumerable.Select(eventTypeTable
+                    .Where(row => Enum.TryParse(row.Name, out eventClassification)), row => Tuple.Create(eventClassification, row.ID))
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
         }
 

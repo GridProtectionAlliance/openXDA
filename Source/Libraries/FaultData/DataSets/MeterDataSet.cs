@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
+using GSF.Configuration;
 
 namespace FaultData.DataSets
 {
@@ -34,6 +35,7 @@ namespace FaultData.DataSets
         #region [ Members ]
 
         // Fields
+        private string m_connectionString;
         private Dictionary<Type, object> m_resources;
 
         private string m_filePath;
@@ -54,6 +56,18 @@ namespace FaultData.DataSets
         #endregion
 
         #region [ Properties ]
+
+        public string ConnectionString
+        {
+            get
+            {
+                return m_connectionString;
+            }
+            set
+            {
+                m_connectionString = value;
+            }
+        }
 
         public string FilePath
         {
@@ -114,9 +128,13 @@ namespace FaultData.DataSets
 
         public T GetResource<T>(Func<T> resourceFactory) where T : class, IDataResource
         {
-            Type type = typeof(T);
+            Type type;
             object obj;
             T resource;
+
+            ConnectionStringParser connectionStringParser;
+
+            type = typeof(T);
 
             if (m_resources.TryGetValue(type, out obj))
             {
@@ -124,7 +142,11 @@ namespace FaultData.DataSets
             }
             else
             {
+                connectionStringParser = new ConnectionStringParser();
+                connectionStringParser.SerializeUnspecifiedProperties = true;
+
                 resource = resourceFactory();
+                connectionStringParser.ParseConnectionString(m_connectionString, resource);
                 resource.Initialize(this);
                 m_resources.Add(type, resource);
             }

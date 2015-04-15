@@ -293,6 +293,7 @@ namespace FaultData.DataAnalysis
             #region [ Members ]
 
             // Fields
+            private int m_startIndex;
             private string m_algorithm;
             private DataSeries m_series;
 
@@ -309,6 +310,18 @@ namespace FaultData.DataAnalysis
             #endregion
 
             #region [ Properties ]
+
+            public int StartIndex
+            {
+                get
+                {
+                    return m_startIndex;
+                }
+                set
+                {
+                    m_startIndex = value;
+                }
+            }
 
             public string Algorithm
             {
@@ -330,8 +343,18 @@ namespace FaultData.DataAnalysis
             {
                 get
                 {
-                    return m_series[index];
+                    return m_series[index - m_startIndex];
                 }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public bool HasData(int index)
+            {
+                return (index >= m_startIndex) &&
+                       (index < m_startIndex + m_series.DataPoints.Count);
             }
 
             #endregion

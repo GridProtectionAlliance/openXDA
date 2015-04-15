@@ -24,7 +24,6 @@ GO
 --EXEC sp_addrolemember N'db_datawriter', N'openXDAAdmin'
 --GO
 
-
 ----- TABLES -----
 
 CREATE TABLE Setting
@@ -49,6 +48,7 @@ CREATE TABLE DataOperation
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssemblyName VARCHAR(200) NOT NULL,
     TypeName VARCHAR(200) NOT NULL,
+    TransactionOrder INT NOT NULL,
     LoadOrder INT NOT NULL
 )
 GO
@@ -255,13 +255,13 @@ GO
 INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('RCL', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader')
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 0, 1)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2)
+INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 0, 2)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3)
+INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 0, 3)
 GO
 
 INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter')
@@ -302,12 +302,48 @@ CREATE TABLE Event
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_Event_FileGroupID
+ON Event(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_MeterID
+ON Event(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_LineID
+ON Event(LineID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_EventTypeID
+ON Event(EventTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_StartTime
+ON Event(StartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Event_EndTime
+ON Event(EndTime ASC)
+GO
+
+CREATE TABLE EventSnapshot
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    XMLSnapshot XML NOT NULL
+)
+GO
+
 CREATE TABLE CycleData
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     Data VARBINARY(MAX) NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_CycleData_EventID
+ON CycleData(EventID ASC)
 GO
 
 -- -------------- --
@@ -394,8 +430,31 @@ CREATE TABLE FaultSummary
 	Inception DATETIME2 NOT NULL,
 	DurationSeconds FLOAT NOT NULL,
 	DurationCycles FLOAT NOT NULL,
-	FaultType VARCHAR(200) NOT NULL
+	FaultType VARCHAR(200) NOT NULL,
+    IsSelectedAlgorithm INT NOT NULL
 )
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultSummary_EventID
+ON FaultSummary(EventID ASC)
+GO
+
+CREATE TABLE DoubleEndedFaultDistance
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    LocalFaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
+    RemoteFaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
+    Distance FLOAT NOT NULL,
+    Angle FLOAT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DoubleEndedFaultDistance_LocalFaultSummaryID
+ON DoubleEndedFaultDistance(LocalFaultSummaryID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DoubleEndedFaultDistance_RemoteFaultSummaryID
+ON DoubleEndedFaultDistance(RemoteFaultSummaryID ASC)
 GO
 
 INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Simple', 1)
@@ -689,4 +748,146 @@ INSERT INTO AlarmType(Name, Description) VALUES ('Off-normal-168H', 'Value was o
 GO
 
 INSERT INTO AlarmType(Name, Description) VALUES ('Regulatory', 'Value exceeded regulatory limits')
+GO
+
+----- FUNCTIONS -----
+
+CREATE FUNCTION AdjustDateTime2
+(
+	@dateTime2 DATETIME2,
+	@timeTolerance FLOAT
+)
+RETURNS DATETIME2
+BEGIN
+    DECLARE @adjustedDateTime DATETIME2 = DATEADD(SECOND, @timeTolerance, @dateTime2)
+	RETURN DATEADD(NANOSECOND, (@timeTolerance - ROUND(@timeTolerance, 0, 1)) * 1000000000, @adjustedDateTime)
+END
+GO
+
+----- VIEWS -----
+
+CREATE VIEW EventDetail AS
+SELECT
+	Event.ID AS [Event/ID],
+	Event.StartTime AS [Event/StartTime],
+	Event.EndTime AS [Event/EndTime],
+	EventType.Name AS [Event/Type],
+	(
+		SELECT
+			FaultNumber AS [@num],
+			Algorithm,
+			CalculationCycle,
+			Distance,
+			CurrentMagnitude,
+			Inception,
+			DurationSeconds,
+			DurationCycles,
+			FaultType AS [Type]
+		FROM FaultSummary
+		WHERE FaultSummary.EventID = Event.ID
+		ORDER BY FaultNumber
+		FOR XML PATH('Fault'), TYPE
+	) AS [Event/Faults],
+	Meter.AssetKey AS [Meter/AssetKey],
+	Meter.Name AS [Meter/Name],
+	Meter.ShortName AS [Meter/ShortName],
+	Meter.Alias AS [Meter/Alias],
+	Meter.Make AS [Meter/Make],
+	Meter.Model AS [Meter/Model],
+	MeterLocation.AssetKey AS [MeterLocation/AssetKey],
+	MeterLocation.Name AS [MeterLocation/Name],
+	MeterLocation.ShortName AS [MeterLocation/ShortName],
+	MeterLocation.Alias AS [MeterLocation/Alias],
+	SourceImpedance.RSrc AS [MeterLocation/RSrc],
+	SourceImpedance.XSrc AS [MeterLocation/XSrc],
+	Line.AssetKey AS [Line/AssetKey],
+	MeterLine.LineName AS [Line/Name],
+	LineImpedance.R1 AS [Line/R1],
+	LineImpedance.X1 AS [Line/X1],
+	LineImpedance.R0 AS [Line/R0],
+	LineImpedance.X0 AS [Line/X0]
+FROM
+	Event LEFT OUTER JOIN
+	Meter ON Event.MeterID = Meter.ID LEFT OUTER JOIN
+	MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+	Line ON Event.LineID = Line.ID LEFT OUTER JOIN
+    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID LEFT OUTER JOIN
+	MeterLocationLine ON MeterLocationLine.MeterLocationID = MeterLocation.ID AND MeterLocationLine.LineID = Line.ID LEFT OUTER JOIN
+	SourceImpedance ON SourceImpedance.MeterLocationLineID = MeterLocationLine.ID LEFT OUTER JOIN
+	LineImpedance ON LineImpedance.LineID = Line.ID LEFT OUTER JOIN
+	EventType ON Event.EventTypeID = EventType.ID
+GO
+
+CREATE VIEW DoubleEndedFaultSummary AS
+SELECT
+    LocalDistance.ID,
+    FaultSummary.EventID,
+    'DoubleEnded' AS Algorithm,
+    FaultSummary.FaultNumber,
+    FaultSummary.CalculationCycle,
+    (LocalDistance.Distance + (Line.Length - RemoteDistance.Distance)) / 2 AS Distance,
+    ABS(LocalDistance.Distance - (Line.Length - RemoteDistance.Distance)) / 2 AS Confidence,
+    FaultSummary.CurrentMagnitude,
+    FaultSummary.Inception,
+    FaultSummary.DurationSeconds,
+    FaultSummary.DurationCycles,
+    FaultSummary.FaultType,
+    1 AS IsSelectedAlgorithm
+FROM
+    DoubleEndedFaultDistance AS LocalDistance JOIN
+    DoubleEndedFaultDistance AS RemoteDistance ON LocalDistance.LocalFaultSummaryID = RemoteDistance.RemoteFaultSummaryID AND LocalDistance.RemoteFaultSummaryID = RemoteDistance.LocalFaultSummaryID JOIN
+    FaultSummary ON LocalDistance.LocalFaultSummaryID = FaultSummary.ID JOIN
+    Event ON FaultSummary.EventID = Event.ID JOIN
+    Line ON Event.LineID = Line.ID
+WHERE
+    LocalDistance.Distance < RemoteDistance.Distance
+GO
+
+----- PROCEDURES -----
+
+CREATE PROCEDURE CreateEventSnapshot
+    @eventID AS INT
+AS BEGIN
+    INSERT INTO EventSnapshot VALUES
+    (
+        @eventID,
+        (
+            SELECT *
+            FROM EventDetail
+            WHERE [Event/ID] = @eventID
+            FOR XML PATH('EventData'), TYPE
+        )
+    )
+END
+GO
+
+CREATE PROCEDURE GetSystemEvent
+	@startTime DATETIME2,
+	@endTime DATETIME2,
+	@timeTolerance FLOAT
+AS BEGIN
+	DECLARE @minStartTime DATETIME2
+	DECLARE @maxEndTime DATETIME2
+
+	SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+	FROM Event
+	WHERE
+		(dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
+		(@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
+
+	WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
+	BEGIN
+		SET @startTime = @minStartTime
+		SET @endTime = @maxEndTime
+
+		SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+		FROM Event
+		WHERE
+			(dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
+			(@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
+	END
+
+	SELECT * FROM Event
+	WHERE @startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(EndTime, @timeTolerance) <= @endTime
+END
 GO

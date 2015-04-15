@@ -159,6 +159,7 @@ namespace openXDA
             {
                 try
                 {
+                    meterDataSet.ConnectionString = SystemSettings.ToConnectionString();
                     ExecuteDataOperations(meterDataSet);
                     ExecuteDataWriters(meterDataSet);
 
@@ -184,48 +185,54 @@ namespace openXDA
 
             private void ExecuteDataOperations(MeterDataSet meterDataSet)
             {
+                IEnumerable<IEnumerable<DataOperation>> operationGroups;
                 List<IDataOperation> dataOperations = null;
                 ConnectionStringParser connectionStringParser;
-                string systemSettings;
 
                 try
                 {
                     // Load data operations from the database
-                    dataOperations = DbAdapterContainer.SystemInfoAdapter.DataOperations
-                        .OrderBy(dataOperation => dataOperation.LoadOrder)
-                        .ToList()
-                        .Select(dataOperation => LoadType(dataOperation.AssemblyName, dataOperation.TypeName))
-                        .Where(type => (object)type != null)
-                        .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
-                        .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
-                        .Select(Activator.CreateInstance)
-                        .Cast<IDataOperation>()
-                        .ToList();
+                    operationGroups = DbAdapterContainer.SystemInfoAdapter.DataOperations
+                        .GroupBy(dataOperation => dataOperation.TransactionOrder)
+                        .OrderBy(grouping => grouping.Key)
+                        .Cast<IEnumerable<DataOperation>>();
 
-                    systemSettings = SystemSettings.ToConnectionString();
-                    connectionStringParser = new ConnectionStringParser();
-                    connectionStringParser.SerializeUnspecifiedProperties = true;
-
-                    foreach (IDataOperation dataOperation in dataOperations)
+                    foreach (IEnumerable<DataOperation> operationGroup in operationGroups)
                     {
-                        // Provide system settings to the data operation
-                        connectionStringParser.ParseConnectionString(systemSettings, dataOperation);
+                        dataOperations = operationGroup
+                            .OrderBy(dataOperation => dataOperation.LoadOrder)
+                            .Select(dataOperation => LoadType(dataOperation.AssemblyName, dataOperation.TypeName))
+                            .Where(type => (object)type != null)
+                            .Where(type => typeof(IDataOperation).IsAssignableFrom(type))
+                            .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                            .Select(Activator.CreateInstance)
+                            .Cast<IDataOperation>()
+                            .ToList();
 
-                        // Prepare for execution of the data operation
-                        dataOperation.Prepare(DbAdapterContainer);
-                    }
+                        connectionStringParser = new ConnectionStringParser();
+                        connectionStringParser.SerializeUnspecifiedProperties = true;
 
-                    // Execute the data operations
-                    foreach (IDataOperation dataOperation in dataOperations)
-                        dataOperation.Execute(meterDataSet);
-
-                    // Load data from all data operations in a single transaction
-                    using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-                    {
                         foreach (IDataOperation dataOperation in dataOperations)
-                            dataOperation.Load(DbAdapterContainer);
+                        {
+                            // Provide system settings to the data operation
+                            connectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataOperation);
 
-                        transactionScope.Complete();
+                            // Prepare for execution of the data operation
+                            dataOperation.Prepare(DbAdapterContainer);
+                        }
+
+                        // Execute the data operations
+                        foreach (IDataOperation dataOperation in dataOperations)
+                            dataOperation.Execute(meterDataSet);
+
+                        // Load data from all data operations in a single transaction
+                        using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                        {
+                            foreach (IDataOperation dataOperation in dataOperations)
+                                dataOperation.Load(DbAdapterContainer);
+
+                            transactionScope.Complete();
+                        }
                     }
                 }
                 finally
@@ -243,7 +250,6 @@ namespace openXDA
             {
                 List<IDataWriter> dataWriters = null;
                 ConnectionStringParser connectionStringParser;
-                string systemSettings;
 
                 try
                 {
@@ -258,14 +264,13 @@ namespace openXDA
                         .Cast<IDataWriter>()
                         .ToList();
 
-                    systemSettings = SystemSettings.ToConnectionString();
                     connectionStringParser = new ConnectionStringParser();
                     connectionStringParser.SerializeUnspecifiedProperties = true;
 
                     foreach (IDataWriter dataWriter in dataWriters)
                     {
                         // Provide system settings to the data operation
-                        connectionStringParser.ParseConnectionString(systemSettings, dataWriter);
+                        connectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataWriter);
 
                         // Prepare for execution of the data operation
                         dataWriter.WriteResults(DbAdapterContainer, meterDataSet);
@@ -319,7 +324,7 @@ namespace openXDA
 
                     if (faultSummaries.Count > 0)
                     {
-                        OnStatusMessage("Fault found on line {0} at {1} {2}", lineName, faultSummaries.First().Distance, SystemSettings.LengthUnits);
+                        OnStatusMessage("Fault found on line {0} at {1} {2}", lineName, faultSummaries.First(row => row.IsSelectedAlgorithm != 0).Distance, SystemSettings.LengthUnits);
 
                         emailWriter.WriteResults(evt.ID);
                         OnStatusMessage("Summary of results sent by email");

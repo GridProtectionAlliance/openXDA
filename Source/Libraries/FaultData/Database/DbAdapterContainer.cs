@@ -55,6 +55,7 @@ namespace FaultData.Database
         private CycleDataTableAdapter m_cycleDataAdapter;
         private FaultCurveTableAdapter m_faultCurveAdapter;
         private FaultSummaryTableAdapter m_faultSummaryAdapter;
+        private DoubleEndedFaultDistanceTableAdapter m_doubleEndedFaultDistanceAdapter;
 
         // DataQuality
         private DefaultDataQualityRangeLimitTableAdapter m_defaultDataQualityRangeLimitAdapter;
@@ -249,6 +250,20 @@ namespace FaultData.Database
                 }
 
                 return m_faultSummaryAdapter;
+            }
+        }
+
+        public DoubleEndedFaultDistanceTableAdapter DoubleEndedFaultDistanceAdapter
+        {
+            get
+            {
+                if (!m_disposed && (object)m_doubleEndedFaultDistanceAdapter == null)
+                {
+                    m_doubleEndedFaultDistanceAdapter = new DoubleEndedFaultDistanceTableAdapter();
+                    m_doubleEndedFaultDistanceAdapter.Connection = m_connection;
+                }
+
+                return m_doubleEndedFaultDistanceAdapter;
             }
         }
 
