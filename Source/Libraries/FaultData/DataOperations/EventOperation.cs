@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -41,21 +40,6 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
-
-        private double m_maxVoltage;
-        private double m_maxCurrent;
-        private double m_lowVoltageThreshold;
-        private double m_maxLowVoltageCurrent;
-        private double m_maxTimeOffset;
-        private double m_minTimeOffset;
-
-        private double m_residualCurrentTrigger;
-        private double m_phaseCurrentTrigger;
-        private double m_prefaultTrigger;
-        private double m_faultSuppressionTrigger;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
-
         private TimeZoneInfo m_timeZone;
 
         private MeterDataSet m_meterDataSet;
@@ -65,150 +49,6 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
-
-        public double MaxVoltage
-        {
-            get
-            {
-                return m_maxVoltage;
-            }
-            set
-            {
-                m_maxVoltage = value;
-            }
-        }
-
-        public double MaxCurrent
-        {
-            get
-            {
-                return m_maxCurrent;
-            }
-            set
-            {
-                m_maxCurrent = value;
-            }
-        }
-
-        public double LowVoltageThreshold
-        {
-            get
-            {
-                return m_lowVoltageThreshold;
-            }
-            set
-            {
-                m_lowVoltageThreshold = value;
-            }
-        }
-
-        public double MaxLowVoltageCurrent
-        {
-            get
-            {
-                return m_maxLowVoltageCurrent;
-            }
-            set
-            {
-                m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        public double MaxTimeOffset
-        {
-            get
-            {
-                return m_maxTimeOffset;
-            }
-            set
-            {
-                m_maxTimeOffset = value;
-            }
-        }
-
-        public double MinTimeOffset
-        {
-            get
-            {
-                return m_minTimeOffset;
-            }
-            set
-            {
-                m_minTimeOffset = value;
-            }
-        }
-
-        public double ResidualCurrentTrigger
-        {
-            get
-            {
-                return m_residualCurrentTrigger;
-            }
-            set
-            {
-                m_residualCurrentTrigger = value;
-            }
-        }
-
-        public double PhaseCurrentTrigger
-        {
-            get
-            {
-                return m_phaseCurrentTrigger;
-            }
-            set
-            {
-                m_phaseCurrentTrigger = value;
-            }
-        }
-
-        public double PrefaultTrigger
-        {
-            get
-            {
-                return m_prefaultTrigger;
-            }
-            set
-            {
-                m_prefaultTrigger = value;
-            }
-        }
-
-        public double FaultSuppressionTrigger
-        {
-            get
-            {
-                return m_faultSuppressionTrigger;
-            }
-            set
-            {
-                m_faultSuppressionTrigger = value;
-            }
-        }
-
-        public double MaxFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
-
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
 
         public string XDATimeZone
         {
@@ -288,20 +128,6 @@ namespace FaultData.DataOperations
 
             // Write cycle data to the database
             bulkLoader.Load(cycleDataTable);
-
-            // Load event snapshots into the database
-            using (SqlCommand command = dbAdapterContainer.Connection.CreateCommand())
-            {
-                command.CommandText = "CreateEventSnapshot";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@eventID", SqlDbType.Int);
-
-                foreach (MeterData.EventRow evt in eventLookup.Values)
-                {
-                    command.Parameters[0].Value = evt.ID;
-                    command.ExecuteNonQuery();
-                }
-            }
 
             Log.Info(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
         }

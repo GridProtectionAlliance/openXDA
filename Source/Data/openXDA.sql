@@ -330,7 +330,8 @@ CREATE TABLE EventSnapshot
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
-    XMLSnapshot XML NOT NULL
+    EventDetail XML NOT NULL,
+    TimeRecorded DATETIME NOT NULL
 )
 GO
 
@@ -447,7 +448,8 @@ CREATE TABLE DoubleEndedFaultDistance
     LocalFaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
     RemoteFaultSummaryID INT NOT NULL REFERENCES FaultSummary(ID),
     Distance FLOAT NOT NULL,
-    Angle FLOAT NOT NULL
+    Angle FLOAT NOT NULL,
+    IsValid INT NOT NULL
 )
 GO
 
@@ -766,7 +768,74 @@ BEGIN
 END
 GO
 
+CREATE FUNCTION GetSystemEventIDs
+(
+    @startTime DATETIME2,
+    @endTime DATETIME2,
+    @timeTolerance FLOAT
+)
+RETURNS @systemEvent TABLE
+(
+    EventID INT
+)
+AS BEGIN
+	DECLARE @minStartTime DATETIME2
+	DECLARE @maxEndTime DATETIME2
+
+	SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+	FROM Event
+	WHERE
+		(dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
+		(@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
+
+	WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
+	BEGIN
+		SET @startTime = @minStartTime
+		SET @endTime = @maxEndTime
+
+		SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+		FROM Event
+		WHERE
+			(dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
+			(@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
+	END
+
+	INSERT INTO @systemEvent
+    SELECT ID
+    FROM Event
+	WHERE @startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(EndTime, @timeTolerance) <= @endTime
+    
+    RETURN
+END
+GO
+
 ----- VIEWS -----
+
+CREATE VIEW DoubleEndedFaultSummary AS
+SELECT
+    LocalDistance.ID,
+    FaultSummary.EventID,
+    'DoubleEnded' AS Algorithm,
+    FaultSummary.FaultNumber,
+    FaultSummary.CalculationCycle,
+    (LocalDistance.Distance + (Line.Length - RemoteDistance.Distance)) / 2 AS Distance,
+    ABS(LocalDistance.Distance - (Line.Length - RemoteDistance.Distance)) / 2 AS Confidence,
+    FaultSummary.CurrentMagnitude,
+    FaultSummary.Inception,
+    FaultSummary.DurationSeconds,
+    FaultSummary.DurationCycles,
+    FaultSummary.FaultType,
+    1 AS IsSelectedAlgorithm,
+    LocalDistance.IsValid,
+    FaultSummary.IsSuppressed
+FROM
+    DoubleEndedFaultDistance AS LocalDistance JOIN
+    DoubleEndedFaultDistance AS RemoteDistance ON LocalDistance.LocalFaultSummaryID = RemoteDistance.RemoteFaultSummaryID AND LocalDistance.RemoteFaultSummaryID = RemoteDistance.LocalFaultSummaryID JOIN
+    FaultSummary ON LocalDistance.LocalFaultSummaryID = FaultSummary.ID AND FaultSummary.IsSelectedAlgorithm <> 0 JOIN
+    Event ON FaultSummary.EventID = Event.ID JOIN
+    Line ON Event.LineID = Line.ID
+WHERE LocalDistance.Distance < RemoteDistance.Distance
+GO
 
 CREATE VIEW EventDetail AS
 SELECT
@@ -777,16 +846,43 @@ SELECT
 	(
 		SELECT
 			FaultNumber AS [@num],
-			Algorithm,
 			CalculationCycle,
-			Distance,
 			CurrentMagnitude,
 			Inception,
 			DurationSeconds,
 			DurationCycles,
-			FaultType AS [Type]
-		FROM FaultSummary
-		WHERE FaultSummary.EventID = Event.ID
+            IsSuppressed,
+			FaultType AS [Type],
+            (
+                SELECT *
+                FROM
+                (
+                    SELECT
+                        Algorithm,
+                        Distance,
+                        NULL AS Confidence,
+                        Distance AS CalculatedDistance,
+                        NULL AS CalculatedAngle,
+                        IsValid
+                    FROM FaultSummary
+                    WHERE FaultSummary.EventID = SelectedSummary.EventID
+                    UNION
+                    SELECT
+                        'DoubleEnded' AS Algorithm,
+                        DoubleEndedFaultSummary.Distance,
+                        DoubleEndedFaultSummary.Confidence,
+                        DoubleEndedFaultDistance.Distance AS CalculatedDistance,
+                        DoubleEndedFaultDistance.Angle AS CalculatedAngle,
+                        DoubleEndedFaultDistance.IsValid
+                    FROM DoubleEndedFaultDistance LEFT OUTER JOIN DoubleEndedFaultSummary ON DoubleEndedFaultDistance.ID = DoubleEndedFaultSummary.ID
+                    WHERE DoubleEndedFaultDistance.LocalFaultSummaryID = SelectedSummary.ID
+                ) AS FaultSummary
+                FOR XML PATH('Location')
+            ) AS Locations
+		FROM FaultSummary AS SelectedSummary
+		WHERE
+            SelectedSummary.EventID = Event.ID AND
+            SelectedSummary.IsSelectedAlgorithm <> 0
 		ORDER BY FaultNumber
 		FOR XML PATH('Fault'), TYPE
 	) AS [Event/Faults],
@@ -820,46 +916,55 @@ FROM
 	EventType ON Event.EventTypeID = EventType.ID
 GO
 
-CREATE VIEW DoubleEndedFaultSummary AS
-SELECT
-    LocalDistance.ID,
-    FaultSummary.EventID,
-    'DoubleEnded' AS Algorithm,
-    FaultSummary.FaultNumber,
-    FaultSummary.CalculationCycle,
-    (LocalDistance.Distance + (Line.Length - RemoteDistance.Distance)) / 2 AS Distance,
-    ABS(LocalDistance.Distance - (Line.Length - RemoteDistance.Distance)) / 2 AS Confidence,
-    FaultSummary.CurrentMagnitude,
-    FaultSummary.Inception,
-    FaultSummary.DurationSeconds,
-    FaultSummary.DurationCycles,
-    FaultSummary.FaultType,
-    1 AS IsSelectedAlgorithm
+CREATE VIEW LatestEventSnapshot AS
+SELECT EventSnapshot.*
 FROM
-    DoubleEndedFaultDistance AS LocalDistance JOIN
-    DoubleEndedFaultDistance AS RemoteDistance ON LocalDistance.LocalFaultSummaryID = RemoteDistance.RemoteFaultSummaryID AND LocalDistance.RemoteFaultSummaryID = RemoteDistance.LocalFaultSummaryID JOIN
-    FaultSummary ON LocalDistance.LocalFaultSummaryID = FaultSummary.ID JOIN
-    Event ON FaultSummary.EventID = Event.ID JOIN
-    Line ON Event.LineID = Line.ID
-WHERE
-    LocalDistance.Distance < RemoteDistance.Distance
+    EventSnapshot JOIN
+    (
+        SELECT EventID, MAX(TimeRecorded) AS TimeRecorded
+        FROM EventSnapshot
+        GROUP BY EventID
+    ) AS Latest ON EventSnapshot.EventID = Latest.EventID
+WHERE EventSnapshot.TimeRecorded = Latest.TimeRecorded
 GO
 
 ----- PROCEDURES -----
 
-CREATE PROCEDURE CreateEventSnapshot
-    @eventID AS INT
+CREATE PROCEDURE CreateEventSnapshots
+	@startTime DATETIME2,
+	@endTime DATETIME2,
+	@timeTolerance FLOAT
 AS BEGIN
-    INSERT INTO EventSnapshot VALUES
+    DECLARE @now DATETIME = SYSUTCDATETIME()
+    
+    CREATE TABLE #temp
     (
-        @eventID,
+        EventID INT,
+        EventDetail XML
+    )
+    
+    INSERT INTO #temp
+    SELECT
+        EventID,
         (
             SELECT *
             FROM EventDetail
-            WHERE [Event/ID] = @eventID
-            FOR XML PATH('EventData'), TYPE
-        )
-    )
+            WHERE [Event/ID] = EventID
+            FOR XML PATH('EventDetail'), TYPE
+        ) AS EventDetail
+    FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance)
+    
+    INSERT INTO EventSnapshot
+    SELECT
+        #temp.EventID,
+        #temp.EventDetail,
+        @now AS TimeRecorded
+    FROM
+        #temp LEFT OUTER JOIN
+        LatestEventSnapshot ON #temp.EventID = LatestEventSnapshot.EventID
+    WHERE
+        LatestEventSnaphsot.EventDetail IS NULL OR
+        CAST(#temp.EventDetail AS VARBINARY(MAX)) <> CAST(LatestEventSnapshot.EventDetail AS VARBINARY(MAX))
 END
 GO
 
@@ -868,28 +973,20 @@ CREATE PROCEDURE GetSystemEvent
 	@endTime DATETIME2,
 	@timeTolerance FLOAT
 AS BEGIN
-	DECLARE @minStartTime DATETIME2
-	DECLARE @maxEndTime DATETIME2
+	SELECT *
+    FROM Event
+	WHERE ID IN (SELECT * FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance))
+END
+GO
 
-	SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
-	FROM Event
-	WHERE
-		(dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
-		(@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
-
-	WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
-	BEGIN
-		SET @startTime = @minStartTime
-		SET @endTime = @maxEndTime
-
-		SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
-		FROM Event
-		WHERE
-			(dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
-			(@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
-	END
-
-	SELECT * FROM Event
-	WHERE @startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(EndTime, @timeTolerance) <= @endTime
+CREATE PROCEDURE GetSystemEventSnapshot
+	@startTime DATETIME2,
+	@endTime DATETIME2,
+	@timeTolerance FLOAT
+AS BEGIN
+    SELECT EventDetail.query('/EventDetail/*')
+    FROM LatestEventSnapshot
+    WHERE EventID IN (SELECT * FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance))
+    FOR XML PATH('EventDetail'), ROOT('SystemEventDetail'), TYPE
 END
 GO

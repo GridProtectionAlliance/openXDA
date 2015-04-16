@@ -1082,8 +1082,8 @@ namespace FaultData.DataResources
         private bool IsValid(double faultDistance, DataGroup dataGroup)
         {
             double lineLength = dataGroup.Line.Length;
-            double minDistance = m_minFaultDistanceMultiplier * lineLength;
             double maxDistance = m_maxFaultDistanceMultiplier * lineLength;
+            double minDistance = m_minFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 

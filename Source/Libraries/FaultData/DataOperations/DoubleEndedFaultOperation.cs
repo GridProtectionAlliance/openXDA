@@ -182,6 +182,8 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
+        private double m_maxFaultDistanceMultiplier;
+        private double m_minFaultDistanceMultiplier;
         private double m_timeTolerance;
 
         private List<MappingNode> m_processedMappingNodes;
@@ -204,6 +206,30 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
+
+        public double MaxFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_maxFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_maxFaultDistanceMultiplier = value;
+            }
+        }
+
+        public double MinFaultDistanceMultiplier
+        {
+            get
+            {
+                return m_minFaultDistanceMultiplier;
+            }
+            set
+            {
+                m_minFaultDistanceMultiplier = value;
+            }
+        }
 
         public double TimeTolerance
         {
@@ -328,8 +354,8 @@ namespace FaultData.DataOperations
                         ExecuteFaultLocationAlgorithm(lineLength, mapping.Right, mapping.Left);
 
                         // Create rows in the DoubleEndedFaultDistance table
-                        CreateFaultDistanceRow(mapping.Left, mapping.Right);
-                        CreateFaultDistanceRow(mapping.Right, mapping.Left);
+                        CreateFaultDistanceRow(lineLength, mapping.Left, mapping.Right);
+                        CreateFaultDistanceRow(lineLength, mapping.Right, mapping.Left);
 
                         // Add these nodes to the collection of processed mapping nodes
                         m_processedMappingNodes.Add(mapping.Left);
@@ -460,7 +486,7 @@ namespace FaultData.DataOperations
             m_faultCurveTable.AddFaultCurveRow(grouping.Key, "DoubleEnded", faultCurveGroup.ToData());
         }
 
-        private void CreateFaultDistanceRow(MappingNode local, MappingNode remote)
+        private void CreateFaultDistanceRow(double lineLength, MappingNode local, MappingNode remote)
         {
             FaultLocationData.DoubleEndedFaultDistanceRow row;
 
@@ -469,6 +495,7 @@ namespace FaultData.DataOperations
             row.RemoteFaultSummaryID = remote.Fault.ID;
             row.Distance = local.DistanceCurve[local.Fault.CalculationCycle].Value;
             row.Angle = local.AngleCurve[local.Fault.CalculationCycle].Value;
+            row.IsValid = IsValid(row.Distance, lineLength) ? 1 : 0;
 
             m_doubleEndedFaultDistanceTable.AddDoubleEndedFaultDistanceRow(row);
         }
@@ -560,6 +587,13 @@ namespace FaultData.DataOperations
             }
 
             return cycle;
+        }
+
+        private bool IsValid(double faultDistance, double lineLength)
+        {
+            double maxDistance = m_maxFaultDistanceMultiplier * lineLength;
+            double minDistance = m_minFaultDistanceMultiplier * lineLength;
+            return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 
         #endregion
