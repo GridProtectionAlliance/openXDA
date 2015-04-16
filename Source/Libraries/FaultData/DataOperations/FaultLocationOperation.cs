@@ -86,10 +86,6 @@ namespace FaultData.DataOperations
 
                 foreach (Fault fault in Faults)
                 {
-                    // Detemrine if the fault is valid
-                    if (fault.Info.NumberOfValidDistances == 0)
-                        continue;
-
                     // Create a fault segment for the fault itself
                     faultSegment = CreateFaultSegment(fault);
 
@@ -114,7 +110,7 @@ namespace FaultData.DataOperations
                 }
 
                 // Generate fault curves for each algorithm used to analyze the fault
-                if (Faults.Any(fault => fault.Info.NumberOfValidDistances > 0))
+                if (Faults.Any())
                 {
                     for (int i = 0; i < Faults[0].Curves.Count; i++)
                     {
@@ -134,10 +130,10 @@ namespace FaultData.DataOperations
                 {
                     faultSegment = FaultSegmentTable.NewFaultSegmentRow();
                     faultSegment.SegmentTypeID = segmentType.ID;
-                    faultSegment.StartTime = fault.Info.InceptionTime;
-                    faultSegment.EndTime = fault.Info.ClearingTime;
-                    faultSegment.StartSample = fault.Info.StartSample;
-                    faultSegment.EndSample = fault.Info.EndSample;
+                    faultSegment.StartTime = fault.InceptionTime;
+                    faultSegment.EndTime = fault.ClearingTime;
+                    faultSegment.StartSample = fault.StartSample;
+                    faultSegment.EndSample = fault.EndSample;
 
                     return faultSegment;
                 }
@@ -174,23 +170,25 @@ namespace FaultData.DataOperations
                 FaultLocationData.FaultSummaryRow faultSummaryRow;
                 double durationSeconds;
 
-                foreach (Fault.Curve curve in fault.Curves)
+                foreach (Fault.Summary summary in fault.Summaries)
                 {
                     // Calculate the duration of the fault in seconds
-                    durationSeconds = fault.Info.Duration.TotalSeconds;
+                    durationSeconds = fault.Duration.TotalSeconds;
 
                     // Create the fault summary record to be written to the database
                     faultSummaryRow = FaultSummaryTable.NewFaultSummaryRow();
-                    faultSummaryRow.Algorithm = curve.Algorithm;
+                    faultSummaryRow.Algorithm = summary.DistanceAlgorithm;
                     faultSummaryRow.FaultNumber = faultNumber;
-                    faultSummaryRow.CalculationCycle = fault.Info.CalculationCycle;
-                    faultSummaryRow.Distance = curve[fault.Info.CalculationCycle].Value;
-                    faultSummaryRow.CurrentMagnitude = fault.Info.CurrentMagnitude;
-                    faultSummaryRow.Inception = fault.Info.InceptionTime;
+                    faultSummaryRow.CalculationCycle = fault.CalculationCycle;
+                    faultSummaryRow.Distance = summary.Distance;
+                    faultSummaryRow.CurrentMagnitude = fault.CurrentMagnitude;
+                    faultSummaryRow.Inception = fault.InceptionTime;
                     faultSummaryRow.DurationSeconds = durationSeconds;
                     faultSummaryRow.DurationCycles = durationSeconds * Frequency;
-                    faultSummaryRow.FaultType = fault.Info.Type.ToString();
-                    faultSummaryRow.IsSelectedAlgorithm = (fault.Info.DistanceAlgorithm == curve.Algorithm) ? 1 : 0;
+                    faultSummaryRow.FaultType = fault.Type.ToString();
+                    faultSummaryRow.IsSelectedAlgorithm = summary.IsSelectedAlgorithm ? 1 : 0;
+                    faultSummaryRow.IsValid = summary.IsValid ? 1 : 0;
+                    faultSummaryRow.IsSuppressed = fault.IsSuppressed ? 1 : 0;
 
                     yield return faultSummaryRow;
                 }
@@ -211,14 +209,11 @@ namespace FaultData.DataOperations
 
                 foreach (Fault fault in Faults)
                 {
-                    startSample = fault.Info.StartSample;
+                    startSample = fault.StartSample;
                     endSample = startSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
 
-                    if (fault.Info.NumberOfValidDistances == 0)
-                        continue;
-
-                    for (int sample = fault.Info.StartSample; sample <= endSample; sample++)
-                        series[sample].Value = fault.Curves[curveIndex].Series[sample - fault.Info.StartSample].Value;
+                    for (int sample = fault.StartSample; sample <= endSample; sample++)
+                        series[sample].Value = fault.Curves[curveIndex].Series[sample - fault.StartSample].Value;
                 }
 
                 faultCurveRow.Data = Serialize(series);

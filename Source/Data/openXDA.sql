@@ -431,7 +431,9 @@ CREATE TABLE FaultSummary
 	DurationSeconds FLOAT NOT NULL,
 	DurationCycles FLOAT NOT NULL,
 	FaultType VARCHAR(200) NOT NULL,
-    IsSelectedAlgorithm INT NOT NULL
+    IsSelectedAlgorithm INT NOT NULL,
+    IsValid INT NOT NULL,
+    IsSuppressed INT NOT NULL
 )
 GO
 

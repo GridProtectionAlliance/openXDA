@@ -36,8 +36,6 @@ namespace FaultData.Database {
         
         private EventDataTable tableEvent;
         
-        private global::System.Data.DataRelation relationFK__Event__EventType__4CA06362;
-        
         private global::System.Data.SchemaSerializationMode _schemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -316,7 +314,6 @@ namespace FaultData.Database {
                     this.tableEvent.InitVars();
                 }
             }
-            this.relationFK__Event__EventType__4CA06362 = this.Relations["FK__Event__EventType__4CA06362"];
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -339,10 +336,6 @@ namespace FaultData.Database {
             base.Tables.Add(this.tableCycleData);
             this.tableEvent = new EventDataTable();
             base.Tables.Add(this.tableEvent);
-            this.relationFK__Event__EventType__4CA06362 = new global::System.Data.DataRelation("FK__Event__EventType__4CA06362", new global::System.Data.DataColumn[] {
-                        this.tableEventType.IDColumn}, new global::System.Data.DataColumn[] {
-                        this.tableEvent.EventTypeIDColumn}, false);
-            this.Relations.Add(this.relationFK__Event__EventType__4CA06362);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -2337,14 +2330,14 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public EventRow AddEventRow(int FileGroupID, int MeterID, int LineID, EventTypeRow parentEventTypeRowByFK__Event__EventType__4CA06362, string Name, string Alias, string ShortName, System.DateTime StartTime, System.DateTime EndTime, int TimeZoneOffset, double Magnitude, double Duration, string Description, byte[] Data) {
+            public EventRow AddEventRow(int FileGroupID, int MeterID, int LineID, int EventTypeID, string Name, string Alias, string ShortName, System.DateTime StartTime, System.DateTime EndTime, int TimeZoneOffset, double Magnitude, double Duration, string Description, byte[] Data) {
                 EventRow rowEventRow = ((EventRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
                         FileGroupID,
                         MeterID,
                         LineID,
-                        null,
+                        EventTypeID,
                         Name,
                         Alias,
                         ShortName,
@@ -2355,9 +2348,6 @@ namespace FaultData.Database {
                         Duration,
                         Description,
                         Data};
-                if ((parentEventTypeRowByFK__Event__EventType__4CA06362 != null)) {
-                    columnValuesArray[4] = parentEventTypeRowByFK__Event__EventType__4CA06362[0];
-                }
                 rowEventRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowEventRow);
                 return rowEventRow;
@@ -2648,17 +2638,6 @@ namespace FaultData.Database {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public void SetDescriptionNull() {
                 this[this.tableEventType.DescriptionColumn] = global::System.Convert.DBNull;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public EventRow[] GetEventRows() {
-                if ((this.Table.ChildRelations["FK__Event__EventType__4CA06362"] == null)) {
-                    return new EventRow[0];
-                }
-                else {
-                    return ((EventRow[])(base.GetChildRows(this.Table.ChildRelations["FK__Event__EventType__4CA06362"])));
-                }
             }
         }
         
@@ -3188,17 +3167,6 @@ namespace FaultData.Database {
                 }
                 set {
                     this[this.tableEvent.DataColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public EventTypeRow EventTypeRow {
-                get {
-                    return ((EventTypeRow)(this.GetParentRow(this.Table.ParentRelations["FK__Event__EventType__4CA06362"])));
-                }
-                set {
-                    this.SetParentRow(value, this.Table.ParentRelations["FK__Event__EventType__4CA06362"]);
                 }
             }
             

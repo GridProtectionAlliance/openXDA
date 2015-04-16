@@ -314,32 +314,40 @@ namespace FaultData.DataWriters
 
         private XElement GetFaultElement(Fault fault)
         {
-            DateTime startTime = fault.Info.InceptionTime;
-            DateTime endTime = fault.Info.ClearingTime;
-            int startSample = fault.Info.StartSample;
-            int endSample = fault.Info.EndSample;
-            double duration = fault.Info.Duration.TotalSeconds;
+            DateTime startTime = fault.InceptionTime;
+            DateTime endTime = fault.ClearingTime;
+            int startSample = fault.StartSample;
+            int endSample = fault.EndSample;
+            double duration = fault.Duration.TotalSeconds;
 
-            return new XElement("fault",
-                new XElement("type", fault.Info.Type),
-                new XElement("distance", fault.Info.Distance),
-                new XElement("algorithm", fault.Info.DistanceAlgorithm),
-                new XElement("calculationCycle", fault.Info.CalculationCycle),
-                new XElement("faultCurrent", fault.Info.CurrentMagnitude),
-                new XElement("inception",
-                    new XElement("time", startTime.ToString(DateTimeFormat)),
-                    new XElement("sample", startSample)
-                ),
-                new XElement("clearing",
-                    new XElement("time", endTime.ToString(DateTimeFormat)),
-                    new XElement("sample", endSample)
-                ),
-                new XElement("duration",
-                    new XElement("seconds", duration.ToString(DoubleFormat)),
-                    new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))
-                ),
-                GetSegmentElements(fault)
-            );
+            foreach (Fault.Summary summary in fault.Summaries)
+            {
+                if (!summary.IsSelectedAlgorithm)
+                    continue;
+
+                return new XElement("fault",
+                    new XElement("type", fault.Type),
+                    new XElement("distance", summary.Distance),
+                    new XElement("algorithm", summary.DistanceAlgorithm),
+                    new XElement("calculationCycle", fault.CalculationCycle),
+                    new XElement("faultCurrent", fault.CurrentMagnitude),
+                    new XElement("inception",
+                        new XElement("time", startTime.ToString(DateTimeFormat)),
+                        new XElement("sample", startSample)
+                    ),
+                    new XElement("clearing",
+                        new XElement("time", endTime.ToString(DateTimeFormat)),
+                        new XElement("sample", endSample)
+                    ),
+                    new XElement("duration",
+                        new XElement("seconds", duration.ToString(DoubleFormat)),
+                        new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))
+                    ),
+                    GetSegmentElements(fault)
+                );
+            }
+
+            return new XElement("fault");
         }
 
         private List<XElement> GetSegmentElements(Fault fault)

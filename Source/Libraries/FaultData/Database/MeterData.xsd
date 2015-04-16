@@ -547,7 +547,7 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
   <xs:element name="MeterData" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="MeterData" msprop:Generator_UserDSName="MeterData">
     <xs:complexType>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="EventType" msprop:Generator_TableClassName="EventTypeDataTable" msprop:Generator_TableVarName="tableEventType" msprop:Generator_TablePropName="EventType" msprop:Generator_RowDeletingName="EventTypeRowDeleting" msprop:Generator_RowChangingName="EventTypeRowChanging" msprop:Generator_RowEvHandlerName="EventTypeRowChangeEventHandler" msprop:Generator_RowDeletedName="EventTypeRowDeleted" msprop:Generator_UserTableName="EventType" msprop:Generator_RowChangedName="EventTypeRowChanged" msprop:Generator_RowEvArgName="EventTypeRowChangeEvent" msprop:Generator_RowClassName="EventTypeRow">
+        <xs:element name="EventType" msprop:Generator_TableClassName="EventTypeDataTable" msprop:Generator_TableVarName="tableEventType" msprop:Generator_RowChangedName="EventTypeRowChanged" msprop:Generator_TablePropName="EventType" msprop:Generator_RowDeletingName="EventTypeRowDeleting" msprop:Generator_RowChangingName="EventTypeRowChanging" msprop:Generator_RowEvHandlerName="EventTypeRowChangeEventHandler" msprop:Generator_RowDeletedName="EventTypeRowDeleted" msprop:Generator_RowClassName="EventTypeRow" msprop:Generator_UserTableName="EventType" msprop:Generator_RowEvArgName="EventTypeRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -568,7 +568,7 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="ChannelNormal" msprop:Generator_TableClassName="ChannelNormalDataTable" msprop:Generator_TableVarName="tableChannelNormal" msprop:Generator_TablePropName="ChannelNormal" msprop:Generator_RowDeletingName="ChannelNormalRowDeleting" msprop:Generator_RowChangingName="ChannelNormalRowChanging" msprop:Generator_RowEvHandlerName="ChannelNormalRowChangeEventHandler" msprop:Generator_RowDeletedName="ChannelNormalRowDeleted" msprop:Generator_UserTableName="ChannelNormal" msprop:Generator_RowChangedName="ChannelNormalRowChanged" msprop:Generator_RowEvArgName="ChannelNormalRowChangeEvent" msprop:Generator_RowClassName="ChannelNormalRow">
+        <xs:element name="ChannelNormal" msprop:Generator_TableClassName="ChannelNormalDataTable" msprop:Generator_TableVarName="tableChannelNormal" msprop:Generator_RowChangedName="ChannelNormalRowChanged" msprop:Generator_TablePropName="ChannelNormal" msprop:Generator_RowDeletingName="ChannelNormalRowDeleting" msprop:Generator_RowChangingName="ChannelNormalRowChanging" msprop:Generator_RowEvHandlerName="ChannelNormalRowChangeEventHandler" msprop:Generator_RowDeletedName="ChannelNormalRowDeleted" msprop:Generator_RowClassName="ChannelNormalRow" msprop:Generator_UserTableName="ChannelNormal" msprop:Generator_RowEvArgName="ChannelNormalRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -580,7 +580,7 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="HourlyTrendingSummary" msprop:Generator_TableClassName="HourlyTrendingSummaryDataTable" msprop:Generator_TableVarName="tableHourlyTrendingSummary" msprop:Generator_TablePropName="HourlyTrendingSummary" msprop:Generator_RowDeletingName="HourlyTrendingSummaryRowDeleting" msprop:Generator_RowChangingName="HourlyTrendingSummaryRowChanging" msprop:Generator_RowEvHandlerName="HourlyTrendingSummaryRowChangeEventHandler" msprop:Generator_RowDeletedName="HourlyTrendingSummaryRowDeleted" msprop:Generator_UserTableName="HourlyTrendingSummary" msprop:Generator_RowChangedName="HourlyTrendingSummaryRowChanged" msprop:Generator_RowEvArgName="HourlyTrendingSummaryRowChangeEvent" msprop:Generator_RowClassName="HourlyTrendingSummaryRow">
+        <xs:element name="HourlyTrendingSummary" msprop:Generator_TableClassName="HourlyTrendingSummaryDataTable" msprop:Generator_TableVarName="tableHourlyTrendingSummary" msprop:Generator_RowChangedName="HourlyTrendingSummaryRowChanged" msprop:Generator_TablePropName="HourlyTrendingSummary" msprop:Generator_RowDeletingName="HourlyTrendingSummaryRowDeleting" msprop:Generator_RowChangingName="HourlyTrendingSummaryRowChanging" msprop:Generator_RowEvHandlerName="HourlyTrendingSummaryRowChangeEventHandler" msprop:Generator_RowDeletedName="HourlyTrendingSummaryRowDeleted" msprop:Generator_RowClassName="HourlyTrendingSummaryRow" msprop:Generator_UserTableName="HourlyTrendingSummary" msprop:Generator_RowEvArgName="HourlyTrendingSummaryRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -594,7 +594,7 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="DailyTrendingSummary" msprop:Generator_TableClassName="DailyTrendingSummaryDataTable" msprop:Generator_TableVarName="tableDailyTrendingSummary" msprop:Generator_TablePropName="DailyTrendingSummary" msprop:Generator_RowDeletingName="DailyTrendingSummaryRowDeleting" msprop:Generator_RowChangingName="DailyTrendingSummaryRowChanging" msprop:Generator_RowEvHandlerName="DailyTrendingSummaryRowChangeEventHandler" msprop:Generator_RowDeletedName="DailyTrendingSummaryRowDeleted" msprop:Generator_UserTableName="DailyTrendingSummary" msprop:Generator_RowChangedName="DailyTrendingSummaryRowChanged" msprop:Generator_RowEvArgName="DailyTrendingSummaryRowChangeEvent" msprop:Generator_RowClassName="DailyTrendingSummaryRow">
+        <xs:element name="DailyTrendingSummary" msprop:Generator_TableClassName="DailyTrendingSummaryDataTable" msprop:Generator_TableVarName="tableDailyTrendingSummary" msprop:Generator_RowChangedName="DailyTrendingSummaryRowChanged" msprop:Generator_TablePropName="DailyTrendingSummary" msprop:Generator_RowDeletingName="DailyTrendingSummaryRowDeleting" msprop:Generator_RowChangingName="DailyTrendingSummaryRowChanging" msprop:Generator_RowEvHandlerName="DailyTrendingSummaryRowChangeEventHandler" msprop:Generator_RowDeletedName="DailyTrendingSummaryRowDeleted" msprop:Generator_RowClassName="DailyTrendingSummaryRow" msprop:Generator_UserTableName="DailyTrendingSummary" msprop:Generator_RowEvArgName="DailyTrendingSummaryRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -608,7 +608,7 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="CycleData" msprop:Generator_TableClassName="CycleDataDataTable" msprop:Generator_TableVarName="tableCycleData" msprop:Generator_RowChangedName="CycleDataRowChanged" msprop:Generator_TablePropName="CycleData" msprop:Generator_RowDeletingName="CycleDataRowDeleting" msprop:Generator_RowChangingName="CycleDataRowChanging" msprop:Generator_RowEvHandlerName="CycleDataRowChangeEventHandler" msprop:Generator_RowDeletedName="CycleDataRowDeleted" msprop:Generator_RowClassName="CycleDataRow" msprop:Generator_UserTableName="CycleData" msprop:Generator_RowEvArgName="CycleDataRowChangeEvent">
+        <xs:element name="CycleData" msprop:Generator_TableClassName="CycleDataDataTable" msprop:Generator_TableVarName="tableCycleData" msprop:Generator_TablePropName="CycleData" msprop:Generator_RowDeletingName="CycleDataRowDeleting" msprop:Generator_RowChangingName="CycleDataRowChanging" msprop:Generator_RowEvHandlerName="CycleDataRowChangeEventHandler" msprop:Generator_RowDeletedName="CycleDataRowDeleted" msprop:Generator_UserTableName="CycleData" msprop:Generator_RowChangedName="CycleDataRowChanged" msprop:Generator_RowEvArgName="CycleDataRowChangeEvent" msprop:Generator_RowClassName="CycleDataRow">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -617,7 +617,7 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="Event" msprop:Generator_TableClassName="EventDataTable" msprop:Generator_TableVarName="tableEvent" msprop:Generator_TablePropName="Event" msprop:Generator_RowDeletingName="EventRowDeleting" msprop:Generator_RowChangingName="EventRowChanging" msprop:Generator_RowEvHandlerName="EventRowChangeEventHandler" msprop:Generator_RowDeletedName="EventRowDeleted" msprop:Generator_UserTableName="Event" msprop:Generator_RowChangedName="EventRowChanged" msprop:Generator_RowEvArgName="EventRowChangeEvent" msprop:Generator_RowClassName="EventRow">
+        <xs:element name="Event" msprop:Generator_TableClassName="EventDataTable" msprop:Generator_TableVarName="tableEvent" msprop:Generator_RowChangedName="EventRowChanged" msprop:Generator_TablePropName="Event" msprop:Generator_RowDeletingName="EventRowDeleting" msprop:Generator_RowChangingName="EventRowChanging" msprop:Generator_RowEvHandlerName="EventRowChangeEventHandler" msprop:Generator_RowDeletedName="EventRowDeleted" msprop:Generator_RowClassName="EventRow" msprop:Generator_UserTableName="Event" msprop:Generator_RowEvArgName="EventRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
@@ -689,9 +689,4 @@ WHERE MeterID = @meterID AND LineID = @lineID AND FileGroupID = @fileGroupID AND
       <xs:field xpath="mstns:ID" />
     </xs:unique>
   </xs:element>
-  <xs:annotation>
-    <xs:appinfo>
-      <msdata:Relationship name="FK__Event__EventType__4CA06362" msdata:parent="EventType" msdata:child="Event" msdata:parentkey="ID" msdata:childkey="EventTypeID" msprop:Generator_UserChildTable="Event" msprop:Generator_ChildPropName="GetEventRows" msprop:Generator_UserRelationName="FK__Event__EventType__4CA06362" msprop:Generator_ParentPropName="EventTypeRow" msprop:Generator_RelationVarName="relationFK__Event__EventType__4CA06362" msprop:Generator_UserParentTable="EventType" />
-    </xs:appinfo>
-  </xs:annotation>
 </xs:schema>

@@ -64,6 +64,8 @@ namespace openXDA.Configuration
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
 
+        private double m_openBreakerThreshold;
+
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
@@ -450,6 +452,24 @@ namespace openXDA.Configuration
             set
             {
                 m_minFaultDistanceMultiplier = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum RMS current, in amps,
+        /// at which the breaker can be considered open.
+        /// </summary>
+        [Setting]
+        [DefaultValue(50.0)]
+        public double OpenBreakerThreshold
+        {
+            get
+            {
+                return m_openBreakerThreshold;
+            }
+            set
+            {
+                m_openBreakerThreshold = value;
             }
         }
 

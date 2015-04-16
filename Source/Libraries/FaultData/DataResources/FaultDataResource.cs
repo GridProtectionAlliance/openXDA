@@ -144,11 +144,11 @@ namespace FaultData.DataResources
                 {
                     // Don't calculate fault distances for cycles at the end
                     // of a fault because these cycles include non-faulted data
-                    int endSample = fault.Info.EndSample - SamplesPerCycle;
+                    int endSample = fault.EndSample - SamplesPerCycle;
 
                     // Initialize a fault curve for each algorithm
                     fault.Curves.AddRange(FaultLocationAlgorithms
-                        .Select(algorithm => new Fault.Curve(algorithm.Method.Name))
+                        .Select(algorithm => fault.CreateCurve(algorithm.Method.Name))
                         .ToList());
 
                     foreach (Fault.Segment segment in fault.Segments)
@@ -233,6 +233,8 @@ namespace FaultData.DataResources
         private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
+
+        private double m_openBreakerThreshold;
 
         private Dictionary<DataGroup, List<Fault>> m_faultLookup;
 
@@ -399,6 +401,18 @@ namespace FaultData.DataResources
             set
             {
                 m_minFaultDistanceMultiplier = value;
+            }
+        }
+
+        public double OpenBreakerThreshold
+        {
+            get
+            {
+                return m_openBreakerThreshold;
+            }
+            set
+            {
+                m_openBreakerThreshold = value;
             }
         }
 
@@ -578,7 +592,7 @@ namespace FaultData.DataResources
                         icIndex = FindFaultInception(viDataGroup.IC, i);
 
                         currentFault = new Fault();
-                        currentFault.Info.StartSample = Common.Min(iaIndex, ibIndex, icIndex);
+                        currentFault.StartSample = Common.Min(iaIndex, ibIndex, icIndex);
                         faults.Add(currentFault);
                     }
                 }
@@ -590,14 +604,14 @@ namespace FaultData.DataResources
                         ibIndex = FindFaultClearing(viDataGroup.IB, i);
                         icIndex = FindFaultClearing(viDataGroup.IC, i);
 
-                        currentFault.Info.EndSample = Common.Max(iaIndex, ibIndex, icIndex) - 1;
+                        currentFault.EndSample = Common.Max(iaIndex, ibIndex, icIndex) - 1;
                         currentFault = null;
                     }
                 }
             }
 
             if ((object)currentFault != null)
-                currentFault.Info.EndSample = iaRMS.DataPoints.Count - 1;
+                currentFault.EndSample = iaRMS.DataPoints.Count - 1;
 
             return faults;
         }
@@ -733,12 +747,51 @@ namespace FaultData.DataResources
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
             int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
+            int prefaultIndex = Math.Max(0, cycleIndex - samplesPerCycle);
             int endIndex = cycleIndex + samplesPerCycle - 1;
+
+            double largestPrefaultPeak;
+            double largestFaultCyclePeak;
 
             double previousValue;
             double value;
             double nextValue;
 
+            largestPrefaultPeak = 0.0D;
+            largestFaultCyclePeak = 0.0D;
+
+            // Find the largest prefault peak as the absolute
+            // peak of the cycle before the first faulted cycle
+            for (int i = prefaultIndex; i < cycleIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value > largestPrefaultPeak)
+                    largestPrefaultPeak = value;
+            }
+
+            // Find the largest peak of the first faulted cycle
+            for (int i = cycleIndex; i <= endIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value > largestFaultCyclePeak)
+                    largestFaultCyclePeak = value;
+            }
+
+            // Find the first point where the value exceeds a point 25%
+            // of the way from the prefault peak to the fault peak
+            for (int i = cycleIndex; i < endIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value >= (largestPrefaultPeak * 0.75 + largestFaultCyclePeak * 0.25))
+                    endIndex = i;
+            }
+
+            // Starting from the point found in the previous loop and
+            // scanning backwards, find either the first zero crossing
+            // or the first point at which the slope changes drastically
             for (int i = endIndex; i >= cycleIndex; i--)
             {
                 if (i - 1 < 0)
@@ -764,12 +817,53 @@ namespace FaultData.DataResources
         private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
         {
             int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
+            int startIndex = cycleIndex;
+            int endIndex = startIndex + samplesPerCycle - 1;
+            int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveForm.DataPoints.Count - 1);
+
+            double largestPostfaultPeak;
+            double largestFaultCyclePeak;
 
             double previousValue;
             double value;
             double nextValue;
 
-            for (int i = cycleIndex; i < cycleIndex + samplesPerCycle; i++)
+            largestPostfaultPeak = 0.0D;
+            largestFaultCyclePeak = 0.0D;
+
+            // Find the largest postfault peak as the absolute
+            // peak of the cycle after the last faulted cycle
+            for (int i = postfaultIndex; i > endIndex; i--)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value > largestPostfaultPeak)
+                    largestPostfaultPeak = value;
+            }
+
+            // Find the largest peak of the last faulted cycle
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value > largestFaultCyclePeak)
+                    largestFaultCyclePeak = value;
+            }
+
+            // Scanning backwards, find the first point where the value exceeds
+            // a point 25% of the way from the postfault peak to the fault peak
+            for (int i = endIndex; i >= startIndex; i--)
+            {
+                value = Math.Abs(waveForm[i].Value);
+
+                if (value >= (largestPostfaultPeak * 0.75 + largestFaultCyclePeak * 0.25))
+                    startIndex = i;
+            }
+
+            // Starting from the point found in the previous loop,
+            // find either the first zero crossing or the first point
+            // at which the slope changes drastically
+            for (int i = startIndex; i <= endIndex; i++)
             {
                 if (i - 1 < 0)
                     continue;
@@ -788,7 +882,7 @@ namespace FaultData.DataResources
                     return i;
             }
 
-            return cycleIndex;
+            return startIndex;
         }
 
         private void ClassifyFaults(List<Fault> faults, VICycleDataGroup viCycleDataGroup)
@@ -812,7 +906,7 @@ namespace FaultData.DataResources
 
             foreach (Fault fault in faults)
             {
-                for (int i = fault.Info.StartSample; i <= fault.Info.EndSample; i++)
+                for (int i = fault.StartSample; i <= fault.EndSample; i++)
                 {
                     ia = iaRMS.DataPoints[i].Value;
                     ib = ibRMS.DataPoints[i].Value;
@@ -846,8 +940,8 @@ namespace FaultData.DataResources
 
                 if ((object)currentSegment != null)
                 {
-                    currentSegment.EndTime = viCycleDataGroup.IA.RMS[fault.Info.EndSample].Time;
-                    currentSegment.EndSample = fault.Info.EndSample;
+                    currentSegment.EndTime = viCycleDataGroup.IA.RMS[fault.EndSample].Time;
+                    currentSegment.EndSample = fault.EndSample;
                     currentSegment = null;
                 }
             }
@@ -939,42 +1033,49 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = (int)Math.Round(dataGroup.DataSeries[0].SampleRate / Frequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
-            DateTime startTime = viCycleDataGroup.IA.RMS[fault.Info.StartSample].Time;
-            DateTime endTime = viCycleDataGroup.IA.RMS[fault.Info.EndSample].Time;
-            List<Tuple<int, string, double>> distances;
+            DateTime startTime = viCycleDataGroup.IA.RMS[fault.StartSample].Time;
+            DateTime endTime = viCycleDataGroup.IA.RMS[fault.EndSample].Time;
 
-            fault.Info.CalculationCycle = calculationCycle;
-            fault.Info.StartSample = fault.Info.StartSample;
-            fault.Info.EndSample = fault.Info.EndSample;
-            fault.Info.InceptionTime = startTime;
-            fault.Info.ClearingTime = endTime;
-            fault.Info.Duration = endTime - startTime;
+            List<Fault.Summary> validSummaries;
+            Fault.Summary summary;
+
+            fault.CalculationCycle = calculationCycle;
+            fault.InceptionTime = startTime;
+            fault.ClearingTime = endTime;
+            fault.Duration = endTime - startTime;
+            fault.IsSuppressed = !IsBreakerOpen(fault, dataGroup, viCycleDataGroup);
 
             if (fault.Segments.Any())
             {
-                fault.Info.Type = fault.Segments
-                    .Where(segment => segment.StartSample <= fault.Info.CalculationCycle)
-                    .Where(segment => fault.Info.CalculationCycle <= segment.EndSample)
+                fault.Type = fault.Segments
+                    .Where(segment => segment.StartSample <= fault.CalculationCycle)
+                    .Where(segment => fault.CalculationCycle <= segment.EndSample)
                     .Select(segment => segment.FaultType)
                     .FirstOrDefault();
+
+                fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
             }
 
             if (calculationCycle >= 0)
             {
-                distances = fault.Curves
-                    .Select((curve, index) => Tuple.Create(index, curve.Algorithm, curve[calculationCycle].Value))
-                    .Where(tuple => IsValid(tuple.Item3, dataGroup))
-                    .OrderBy(tuple => tuple.Item3)
+                for (int i = 0; i < fault.Curves.Count; i++)
+                {
+                    summary = new Fault.Summary();
+                    summary.DistanceAlgorithmIndex = i;
+                    summary.DistanceAlgorithm = fault.Curves[i].Algorithm;
+                    summary.Distance = fault.Curves[i][calculationCycle].Value;
+                    summary.IsValid = IsValid(summary.Distance, dataGroup);
+
+                    fault.Summaries.Add(summary);
+                }
+
+                validSummaries = fault.Summaries
+                    .Where(s => s.IsValid)
+                    .OrderBy(s => s.Distance)
                     .ToList();
 
-                if (distances.Any())
-                {
-                    fault.Info.DistanceAlgorithmIndex = distances[distances.Count / 2].Item1;
-                    fault.Info.DistanceAlgorithm = distances[distances.Count / 2].Item2;
-                    fault.Info.Distance = distances[distances.Count / 2].Item3;
-                    fault.Info.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Info.Type, calculationCycle);
-                    fault.Info.NumberOfValidDistances = distances.Count;
-                }
+                if (validSummaries.Any())
+                    validSummaries[validSummaries.Count / 2].IsSelectedAlgorithm = true;
             }
         }
 
@@ -984,6 +1085,20 @@ namespace FaultData.DataResources
             double minDistance = m_minFaultDistanceMultiplier * lineLength;
             double maxDistance = m_maxFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
+        }
+
+        private bool IsBreakerOpen(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / Frequency);
+            int end = Math.Min(fault.EndSample + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+
+            double ia = viCycleDataGroup.IA.RMS.ToSubSeries(fault.EndSample, end).DataPoints.Min(dataPoint => dataPoint.Value);
+            double ib = viCycleDataGroup.IB.RMS.ToSubSeries(fault.EndSample, end).DataPoints.Min(dataPoint => dataPoint.Value);
+            double ic = viCycleDataGroup.IC.RMS.ToSubSeries(fault.EndSample, end).DataPoints.Min(dataPoint => dataPoint.Value);
+
+            return (ia <= m_openBreakerThreshold) &&
+                   (ib <= m_openBreakerThreshold) &&
+                   (ic <= m_openBreakerThreshold);
         }
 
         private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
@@ -1002,11 +1117,11 @@ namespace FaultData.DataResources
             if (!fault.Curves.Any())
                 return -1;
 
-            startSample = fault.Info.StartSample + samplesPerCycle;
-            endSample = fault.Info.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+            startSample = fault.StartSample + samplesPerCycle;
+            endSample = fault.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
 
             if (startSample > endSample)
-                startSample = fault.Info.StartSample;
+                startSample = fault.StartSample;
 
             if (startSample > endSample)
                 return -1;

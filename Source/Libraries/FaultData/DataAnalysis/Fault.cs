@@ -33,114 +33,21 @@ namespace FaultData.DataAnalysis
 
         // Nested Types
 
-        public class FaultInfo
+        public class Summary
         {
             #region [ Members ]
 
             // Fields
-            private int m_calculationCycle;
-
-            private FaultType m_type;
-
-            private int m_startSample;
-            private int m_endSample;
-            private DateTime m_inceptionTime;
-            private DateTime m_clearingTime;
-            private TimeSpan m_duration;
-
             private int m_distanceAlgorithmIndex;
             private string m_distanceAlgorithm;
             private double m_distance;
-            private double m_currentMagnitude;
-            private int m_numberOfValidDistances;
+
+            private bool m_isSelectedAlgorithm;
+            private bool m_isValid;
 
             #endregion
 
             #region [ Properties ]
-
-            public FaultType Type
-            {
-                get
-                {
-                    return m_type;
-                }
-                set
-                {
-                    m_type = value;
-                }
-            }
-
-            public int StartSample
-            {
-                get
-                {
-                    return m_startSample;
-                }
-                set
-                {
-                    m_startSample = value;
-                }
-            }
-
-            public int EndSample
-            {
-                get
-                {
-                    return m_endSample;
-                }
-                set
-                {
-                    m_endSample = value;
-                }
-            }
-
-            public DateTime InceptionTime
-            {
-                get
-                {
-                    return m_inceptionTime;
-                }
-                set
-                {
-                    m_inceptionTime = value;
-                }
-            }
-
-            public DateTime ClearingTime
-            {
-                get
-                {
-                    return m_clearingTime;
-                }
-                set
-                {
-                    m_clearingTime = value;
-                }
-            }
-
-            public TimeSpan Duration
-            {
-                get
-                {
-                    return m_duration;
-                }
-                set
-                {
-                    m_duration = value;
-                }
-            }
-
-            public int CalculationCycle
-            {
-                get
-                {
-                    return m_calculationCycle;
-                }
-                set
-                {
-                    m_calculationCycle = value;
-                }
-            }
 
             public int DistanceAlgorithmIndex
             {
@@ -178,27 +85,27 @@ namespace FaultData.DataAnalysis
                 }
             }
 
-            public double CurrentMagnitude
+            public bool IsSelectedAlgorithm
             {
                 get
                 {
-                    return m_currentMagnitude;
+                    return m_isSelectedAlgorithm;
                 }
                 set
                 {
-                    m_currentMagnitude = value;
+                    m_isSelectedAlgorithm = value;
                 }
             }
 
-            public int NumberOfValidDistances
+            public bool IsValid
             {
                 get
                 {
-                    return m_numberOfValidDistances;
+                    return m_isValid;
                 }
                 set
                 {
-                    m_numberOfValidDistances = value;
+                    m_isValid = value;
                 }
             }
 
@@ -301,9 +208,8 @@ namespace FaultData.DataAnalysis
 
             #region [ Constructors ]
 
-            public Curve(string algorithm)
+            public Curve()
             {
-                m_algorithm = algorithm;
                 m_series = new DataSeries();
             }
 
@@ -328,6 +234,10 @@ namespace FaultData.DataAnalysis
                 get
                 {
                     return m_algorithm;
+                }
+                set
+                {
+                    m_algorithm = value;
                 }
             }
 
@@ -361,7 +271,21 @@ namespace FaultData.DataAnalysis
         }
 
         // Fields
-        private FaultInfo m_info;
+        private int m_calculationCycle;
+
+        private FaultType m_type;
+
+        private int m_startSample;
+        private int m_endSample;
+        private DateTime m_inceptionTime;
+        private DateTime m_clearingTime;
+        private TimeSpan m_duration;
+
+        private double m_currentMagnitude;
+
+        private bool m_isSuppressed;
+
+        private List<Summary> m_summaries;
         private List<Segment> m_segments;
         private List<Curve> m_curves;
 
@@ -371,7 +295,7 @@ namespace FaultData.DataAnalysis
 
         public Fault()
         {
-            m_info = new FaultInfo();
+            m_summaries = new List<Summary>();
             m_segments = new List<Segment>();
             m_curves = new List<Curve>();
         }
@@ -380,11 +304,119 @@ namespace FaultData.DataAnalysis
 
         #region [ Properties ]
 
-        public FaultInfo Info
+        public int CalculationCycle
         {
             get
             {
-                return m_info;
+                return m_calculationCycle;
+            }
+            set
+            {
+                m_calculationCycle = value;
+            }
+        }
+
+        public FaultType Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+            }
+        }
+
+        public int StartSample
+        {
+            get
+            {
+                return m_startSample;
+            }
+            set
+            {
+                m_startSample = value;
+            }
+        }
+
+        public int EndSample
+        {
+            get
+            {
+                return m_endSample;
+            }
+            set
+            {
+                m_endSample = value;
+            }
+        }
+
+        public DateTime InceptionTime
+        {
+            get
+            {
+                return m_inceptionTime;
+            }
+            set
+            {
+                m_inceptionTime = value;
+            }
+        }
+
+        public DateTime ClearingTime
+        {
+            get
+            {
+                return m_clearingTime;
+            }
+            set
+            {
+                m_clearingTime = value;
+            }
+        }
+
+        public TimeSpan Duration
+        {
+            get
+            {
+                return m_duration;
+            }
+            set
+            {
+                m_duration = value;
+            }
+        }
+
+        public double CurrentMagnitude
+        {
+            get
+            {
+                return m_currentMagnitude;
+            }
+            set
+            {
+                m_currentMagnitude = value;
+            }
+        }
+
+        public bool IsSuppressed
+        {
+            get
+            {
+                return m_isSuppressed;
+            }
+            set
+            {
+                m_isSuppressed = value;
+            }
+        }
+
+        public List<Summary> Summaries
+        {
+            get
+            {
+                return m_summaries;
             }
         }
 
@@ -402,6 +434,19 @@ namespace FaultData.DataAnalysis
             {
                 return m_curves;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public Curve CreateCurve(string algorithm)
+        {
+            return new Curve()
+            {
+                Algorithm = algorithm,
+                StartIndex = m_startSample
+            };
         }
 
         #endregion

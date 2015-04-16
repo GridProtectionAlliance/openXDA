@@ -81,8 +81,8 @@ namespace FaultData.DataOperations
             public MappingNode(FaultLocationData.FaultSummaryRow fault)
             {
                 Fault = fault;
-                DistanceCurve = new Fault.Curve("DoubleEnded");
-                AngleCurve = new Fault.Curve("DoubleEnded");
+                DistanceCurve = new Fault.Curve();
+                AngleCurve = new Fault.Curve();
 
                 if (!Enum.TryParse(fault.FaultType, out FaultType))
                     FaultType = FaultType.None;
@@ -413,12 +413,17 @@ namespace FaultData.DataOperations
 
         private List<Mapping> GetMappings(IGrouping<int, MeterData.EventRow> lineGrouping)
         {
+            Func<FaultLocationData.FaultSummaryRow, bool> filter = fault =>
+                fault.IsSelectedAlgorithm != 0 &&
+                fault.IsValid != 0 &&
+                fault.IsSuppressed == 0;
+
             List<FaultTimeline> meterGroupings = lineGrouping
                 .GroupBy(evt => evt.MeterID)
                 .Select(meterGrouping => new FaultTimeline()
                 {
                     Meter = m_dbAdapterContainer.MeterInfoAdapter.Meters.SingleOrDefault(meter => meter.ID == meterGrouping.Key),
-                    Faults = meterGrouping.SelectMany(evt => m_dbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID)).Where(fault => fault.IsSelectedAlgorithm != 0).OrderBy(fault => fault.Inception).ToList()
+                    Faults = meterGrouping.SelectMany(evt => m_dbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID)).Where(filter).OrderBy(fault => fault.Inception).ToList()
                 })
                 .Where(meterGrouping => meterGrouping.Faults.Any())
                 .ToList();

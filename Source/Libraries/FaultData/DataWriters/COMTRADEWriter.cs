@@ -457,18 +457,24 @@ namespace FaultData.DataWriters
                     int faultNumber = i + 1;
                     Fault fault = eventDataSet.Faults[i];
 
-                    if (fault.Info.NumberOfValidDistances == 0)
+                    if (fault.IsSuppressed || fault.Summaries.All(summary => !summary.IsValid))
                         continue;
 
-                    DateTime startTime = fault.Info.InceptionTime;
-                    DateTime endTime = fault.Info.ClearingTime;
-                    int startSample = fault.Info.StartSample;
-                    int endSample = fault.Info.EndSample;
-                    double duration = fault.Info.Duration.TotalSeconds;
+                    DateTime startTime = fault.InceptionTime;
+                    DateTime endTime = fault.ClearingTime;
+                    int startSample = fault.StartSample;
+                    int endSample = fault.EndSample;
+                    double duration = fault.Duration.TotalSeconds;
+
+                    double distance = fault.Summaries
+                        .Where(summary => summary.IsSelectedAlgorithm)
+                        .Select(summary => summary.Distance)
+                        .DefaultIfEmpty(double.NaN)
+                        .First();
 
                     writer.WriteLine("Fault {0}:", faultNumber);
-                    writer.WriteLine("[{0}]       Fault distance: {1:0.00} {2}", faultNumber, fault.Info.Distance, LengthUnits);
-                    writer.WriteLine("[{0}] Prominent fault type: {1}", faultNumber, fault.Info.Type);
+                    writer.WriteLine("[{0}]       Fault distance: {1:0.00} {2}", faultNumber, distance, LengthUnits);
+                    writer.WriteLine("[{0}] Prominent fault type: {1}", faultNumber, fault.Type);
                     writer.WriteLine("[{0}]      Fault inception: {1} (sample #{2})", faultNumber, startTime.ToString(DateTimeFormat), startSample);
                     writer.WriteLine("[{0}]       Fault clearing: {1} (sample #{2})", faultNumber, endTime.ToString(DateTimeFormat), endSample);
                     writer.WriteLine("[{0}]       Fault duration: {1:0.0000} seconds ({2:0.00} cycles)", faultNumber, duration, duration * Frequency);
@@ -616,7 +622,7 @@ namespace FaultData.DataWriters
 
                 foreach (Fault fault in faults)
                 {
-                    for (int i = fault.Info.StartSample; fault.Curves[c].HasData(i); i++)
+                    for (int i = fault.StartSample; fault.Curves[c].HasData(i); i++)
                         faultCurve[i].Value = Common.Mid(minDistance, fault.Curves[c][i].Value, maxDistance);
                 }
 
