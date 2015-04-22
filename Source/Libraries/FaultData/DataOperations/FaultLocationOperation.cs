@@ -180,8 +180,11 @@ namespace FaultData.DataOperations
                     faultSummaryRow.Algorithm = summary.DistanceAlgorithm;
                     faultSummaryRow.FaultNumber = faultNumber;
                     faultSummaryRow.CalculationCycle = fault.CalculationCycle;
-                    faultSummaryRow.Distance = summary.Distance;
+                    faultSummaryRow.Distance = ToDbFloat(summary.Distance);
                     faultSummaryRow.CurrentMagnitude = fault.CurrentMagnitude;
+                    faultSummaryRow.CurrentLag = fault.CurrentLag;
+                    faultSummaryRow.PrefaultCurrent = ToDbFloat(fault.PrefaultCurrent);
+                    faultSummaryRow.PostfaultCurrent = ToDbFloat(fault.PostfaultCurrent);
                     faultSummaryRow.Inception = fault.InceptionTime;
                     faultSummaryRow.DurationSeconds = durationSeconds;
                     faultSummaryRow.DurationCycles = durationSeconds * Frequency;
@@ -256,6 +259,16 @@ namespace FaultData.DataOperations
                         FaultSummaryTable.AddFaultSummaryRow(faultSummary.Item2);
                     }
                 }
+            }
+
+            private double ToDbFloat(double value)
+            {
+                const double Invalid = -1.0e308D;
+
+                if (double.IsNaN(value) || double.IsInfinity(value))
+                    return Invalid;
+
+                return value;
             }
 
             private byte[] Serialize(DataSeries series)

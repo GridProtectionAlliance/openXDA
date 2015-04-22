@@ -282,6 +282,9 @@ namespace FaultData.DataAnalysis
         private TimeSpan m_duration;
 
         private double m_currentMagnitude;
+        private double m_currentLag;
+        private double m_prefaultCurrent;
+        private double m_postfaultCurrent;
 
         private bool m_isSuppressed;
 
@@ -397,6 +400,42 @@ namespace FaultData.DataAnalysis
             set
             {
                 m_currentMagnitude = value;
+            }
+        }
+
+        public double CurrentLag
+        {
+            get
+            {
+                return m_currentLag;
+            }
+            set
+            {
+                m_currentLag = value;
+            }
+        }
+
+        public double PrefaultCurrent
+        {
+            get
+            {
+                return m_prefaultCurrent;
+            }
+            set
+            {
+                m_prefaultCurrent = value;
+            }
+        }
+
+        public double PostfaultCurrent
+        {
+            get
+            {
+                return m_postfaultCurrent;
+            }
+            set
+            {
+                m_postfaultCurrent = value;
             }
         }
 

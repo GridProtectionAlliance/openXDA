@@ -30,6 +30,7 @@ using GSF.IO;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
+using log4net;
 
 namespace FaultData.DataReaders
 {
@@ -133,15 +134,22 @@ namespace FaultData.DataReaders
                 meterDataSet.DataSeries[analogChannel.Index] = series;
             }
 
-            while (m_parser.ReadNext())
+            try
             {
-                for (int i = 0; i < schema.AnalogChannels.Length; i++)
+                while (m_parser.ReadNext())
                 {
-                    int seriesIndex = schema.AnalogChannels[i].Index;
-                    string units = schema.AnalogChannels[i].Units.ToUpper();
-                    double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
-                    meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.Values[i] });
+                    for (int i = 0; i < schema.AnalogChannels.Length; i++)
+                    {
+                        int seriesIndex = schema.AnalogChannels[i].Index;
+                        string units = schema.AnalogChannels[i].Units.ToUpper();
+                        double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
+                        meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.Values[i] });
+                    }
                 }
+            }
+            catch (InvalidOperationException ex)
+            {
+                Log.Warn(ex.Message, ex);
             }
 
             return new List<MeterDataSet>() { meterDataSet };
@@ -187,6 +195,13 @@ namespace FaultData.DataReaders
 
             return channel;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(COMTRADEReader));
 
         #endregion
     }

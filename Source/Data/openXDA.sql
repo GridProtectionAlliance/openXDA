@@ -264,10 +264,16 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 0, 3)
 GO
 
+INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 1, 1)
+GO
+
 INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter')
 GO
 
 INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.COMTRADEWriter')
+GO
+
+INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.EmailWriter')
 GO
 
 -- ------ --
@@ -428,6 +434,9 @@ CREATE TABLE FaultSummary
     CalculationCycle INT NOT NULL,
 	Distance FLOAT NOT NULL,
     CurrentMagnitude FLOAT NOT NULL,
+    CurrentLag FLOAT NOT NULL,
+    PrefaultCurrent FLOAT NOT NULL,
+    PostfaultCurrent FLOAT NOT NULL,
 	Inception DATETIME2 NOT NULL,
 	DurationSeconds FLOAT NOT NULL,
 	DurationCycles FLOAT NOT NULL,
@@ -877,7 +886,7 @@ SELECT
                     FROM DoubleEndedFaultDistance LEFT OUTER JOIN DoubleEndedFaultSummary ON DoubleEndedFaultDistance.ID = DoubleEndedFaultSummary.ID
                     WHERE DoubleEndedFaultDistance.LocalFaultSummaryID = SelectedSummary.ID
                 ) AS FaultSummary
-                FOR XML PATH('Location')
+                FOR XML PATH('Location'), TYPE
             ) AS Locations
 		FROM FaultSummary AS SelectedSummary
 		WHERE
@@ -933,17 +942,9 @@ GO
 CREATE PROCEDURE CreateEventSnapshots
 	@startTime DATETIME2,
 	@endTime DATETIME2,
-	@timeTolerance FLOAT
+	@timeTolerance FLOAT,
+    @timeRecorded DATETIME
 AS BEGIN
-    DECLARE @now DATETIME = SYSUTCDATETIME()
-    
-    CREATE TABLE #temp
-    (
-        EventID INT,
-        EventDetail XML
-    )
-    
-    INSERT INTO #temp
     SELECT
         EventID,
         (
@@ -952,18 +953,19 @@ AS BEGIN
             WHERE [Event/ID] = EventID
             FOR XML PATH('EventDetail'), TYPE
         ) AS EventDetail
+    INTO #temp
     FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance)
     
     INSERT INTO EventSnapshot
     SELECT
         #temp.EventID,
         #temp.EventDetail,
-        @now AS TimeRecorded
+        @timeRecorded AS TimeRecorded
     FROM
         #temp LEFT OUTER JOIN
-        LatestEventSnapshot ON #temp.EventID = LatestEventSnapshot.EventID
+        LatestEventSnapshot WITH (XLOCK) ON #temp.EventID = LatestEventSnapshot.EventID
     WHERE
-        LatestEventSnaphsot.EventDetail IS NULL OR
+        LatestEventSnapshot.EventDetail IS NULL OR
         CAST(#temp.EventDetail AS VARBINARY(MAX)) <> CAST(LatestEventSnapshot.EventDetail AS VARBINARY(MAX))
 END
 GO

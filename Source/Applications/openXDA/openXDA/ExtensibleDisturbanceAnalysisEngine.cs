@@ -162,9 +162,6 @@ namespace openXDA
                     meterDataSet.ConnectionString = SystemSettings.ToConnectionString();
                     ExecuteDataOperations(meterDataSet);
                     ExecuteDataWriters(meterDataSet);
-
-                    // Export fault results to results files
-                    WriteEmail(meterDataSet);
                 }
                 catch (Exception ex)
                 {
@@ -283,51 +280,6 @@ namespace openXDA
                         // ReSharper disable once SuspiciousTypeConversion.Global
                         foreach (IDataWriter dataWriter in dataWriters)
                             TryDispose(dataWriter as IDisposable);
-                    }
-                }
-            }
-
-            private void WriteEmail(MeterDataSet meterDataSet)
-            {
-                EmailWriter emailWriter = new EmailWriter(SystemSettings.DbConnectionString);
-
-                int faultEventTypeID;
-                MeterData.EventDataTable events;
-                MeterData.EventTypeDataTable eventTypes;
-
-                emailWriter.SMTPServer = SystemSettings.SMTPServer;
-                emailWriter.FromAddress = SystemSettings.FromAddress;
-                emailWriter.PQDashboardURL = SystemSettings.PQDashboardURL;
-                emailWriter.MaxFaultDistanceMultiplier = SystemSettings.MaxFaultDistanceMultiplier;
-                emailWriter.MinFaultDistanceMultiplier = SystemSettings.MinFaultDistanceMultiplier;
-                emailWriter.LengthUnits = SystemSettings.LengthUnits;
-
-                events = DbAdapterContainer.EventAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);
-                eventTypes = DbAdapterContainer.EventTypeAdapter.GetData();
-
-                faultEventTypeID = eventTypes
-                    .Where(row => row.Name == "Fault")
-                    .Select(row => row.ID)
-                    .DefaultIfEmpty(0)
-                    .Single();
-
-                foreach (MeterData.EventRow evt in events.Where(row => row.EventTypeID == faultEventTypeID))
-                {
-                    Meter meter = DbAdapterContainer.MeterInfoAdapter.Meters.Single(m => m.ID == evt.MeterID);
-                    Line line = DbAdapterContainer.MeterInfoAdapter.Lines.Single(l => l.ID == evt.LineID);
-                    FaultLocationData.FaultSummaryDataTable faultSummaries = DbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID);
-
-                    string lineName = DbAdapterContainer.MeterInfoAdapter.MeterLines
-                        .Where(ml => meter.ID == ml.MeterID && line.ID == ml.LineID)
-                        .Select(ml => ml.LineName)
-                        .FirstOrDefault() ?? line.AssetKey;
-
-                    if (faultSummaries.Count > 0)
-                    {
-                        OnStatusMessage("Fault found on line {0} at {1} {2}", lineName, faultSummaries.First(row => row.IsSelectedAlgorithm != 0).Distance, SystemSettings.LengthUnits);
-
-                        emailWriter.WriteResults(evt.ID);
-                        OnStatusMessage("Summary of results sent by email");
                     }
                 }
             }

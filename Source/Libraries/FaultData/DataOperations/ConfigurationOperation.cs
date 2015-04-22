@@ -134,10 +134,13 @@ namespace FaultData.DataOperations
 
                 foreach (DataSeries dataSeries in meterDataSet.DataSeries)
                 {
-                    timeShift = xdaTimeZone.GetUtcOffset(dataSeries[0].Time) - meterTimeZone.GetUtcOffset(dataSeries[0].Time);
+                    if (dataSeries.DataPoints.Count > 0)
+                    {
+                        timeShift = xdaTimeZone.GetUtcOffset(dataSeries[0].Time) - meterTimeZone.GetUtcOffset(dataSeries[0].Time);
 
-                    foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                        dataPoint.Time += timeShift;
+                        foreach (DataPoint dataPoint in dataSeries.DataPoints)
+                            dataPoint.Time += timeShift;
+                    }
 
                     if ((object)dataSeries.SeriesInfo == null)
                         continue;

@@ -53,13 +53,13 @@ using GSF.Units;
 
 namespace FaultAlgorithms
 {
+    /// <summary>
+    /// Class containing algorithms for determining fault location based on fault data.
+    /// </summary>
     public class FaultLocationAlgorithms
     {
         #region [ Fault Location Methods ]
         
-        // ReSharper disable UnusedMember.Local
-        // ReSharper disable UnusedParameter.Local
-
         /// <summary>
         /// Simple algorithm to calculate the distance to a fault that was found in the <see cref="FaultLocationDataSet"/>.
         /// </summary>
@@ -69,17 +69,15 @@ namespace FaultAlgorithms
         [FaultLocationAlgorithm]
         public static double[] Simple(FaultLocationDataSet faultDataSet, string parameters)
         {
-            FaultType viFaultType;
             ComplexNumber nominalImpedance;
 
-            viFaultType = GetVIFaultType(faultDataSet);
             nominalImpedance = GetNominalImpedance(faultDataSet);
 
             return faultDataSet.Cycles
                 .Select(cycleData => new
                 {
-                    V = GetFaultVoltage(cycleData, viFaultType),
-                    I = GetFaultCurrent(cycleData, viFaultType),
+                    V = GetFaultVoltage(cycleData, faultDataSet.FaultType),
+                    I = GetFaultCurrent(cycleData, faultDataSet.FaultType),
                     Z = nominalImpedance
                 })
                 .Select(cycle => (cycle.V.Magnitude / cycle.I.Magnitude) / cycle.Z.Magnitude)
@@ -96,17 +94,15 @@ namespace FaultAlgorithms
         [FaultLocationAlgorithm]
         public static double[] Reactance(FaultLocationDataSet faultDataSet, string parameters)
         {
-            FaultType viFaultType;
             ComplexNumber nominalImpedance;
 
-            viFaultType = GetVIFaultType(faultDataSet);
             nominalImpedance = GetNominalImpedance(faultDataSet);
 
             return faultDataSet.Cycles
                 .Select(cycleData => new
                 {
-                    V = GetFaultVoltage(cycleData, viFaultType),
-                    I = GetFaultCurrent(cycleData, viFaultType),
+                    V = GetFaultVoltage(cycleData, faultDataSet.FaultType),
+                    I = GetFaultCurrent(cycleData, faultDataSet.FaultType),
                     Z = nominalImpedance
                 })
                 .Select(cycle => (cycle.V / cycle.I).Imaginary / cycle.Z.Imaginary)
@@ -123,19 +119,17 @@ namespace FaultAlgorithms
         [FaultLocationAlgorithm]
         public static double[] Takagi(FaultLocationDataSet faultDataSet, string parameters)
         {
-            FaultType viFaultType;
             ComplexNumber z;
 
             ComplexNumber[] voltages;
             ComplexNumber[] currents;
             ComplexNumber iPre;
 
-            viFaultType = GetVIFaultType(faultDataSet);
             z = GetNominalImpedance(faultDataSet);
 
-            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
-            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
-            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, viFaultType);
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
+            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, faultDataSet.FaultType);
 
             return voltages.Zip(currents, (v, i) =>
             {
@@ -156,18 +150,16 @@ namespace FaultAlgorithms
         [FaultLocationAlgorithm]
         public static double[] ModifiedTakagi(FaultLocationDataSet faultDataSet, string parameters)
         {
-            FaultType viFaultType;
             ComplexNumber z;
 
             ComplexNumber[] voltages;
             ComplexNumber[] currents;
             ComplexNumber[] zeros;
 
-            viFaultType = GetVIFaultType(faultDataSet);
             z = GetNominalImpedance(faultDataSet);
 
-            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
-            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
             zeros = faultDataSet.Cycles.Select(cycle => 3 * CycleData.CalculateSequenceComponents(cycle.AN.I, cycle.BN.I, cycle.CN.I)[0]).ToArray();
 
             return voltages.Zip(currents, (v, i) => new
@@ -198,7 +190,6 @@ namespace FaultAlgorithms
         [FaultLocationAlgorithm]
         public static double[] Novosel(FaultLocationDataSet faultDataSet, string parameters)
         {
-            FaultType viFaultType;
             ComplexNumber z;
 
             ComplexNumber[] voltages;
@@ -208,13 +199,12 @@ namespace FaultAlgorithms
 
             ComplexNumber loadImpedance;
 
-            viFaultType = GetVIFaultType(faultDataSet);
             z = GetNominalImpedance(faultDataSet);
 
-            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
-            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
-            vPre = GetFaultVoltage(faultDataSet.PrefaultCycle, viFaultType);
-            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, viFaultType);
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
+            vPre = GetFaultVoltage(faultDataSet.PrefaultCycle, faultDataSet.FaultType);
+            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, faultDataSet.FaultType);
 
             loadImpedance = (vPre / iPre) - z;
 
@@ -257,7 +247,6 @@ namespace FaultAlgorithms
         [FaultLocationAlgorithm]
         public static double[] Eriksson(FaultLocationDataSet faultDataSet, string parameters)
         {
-            FaultType viFaultType;
             ComplexNumber z;
 
             ComplexNumber[] voltages;
@@ -273,12 +262,11 @@ namespace FaultAlgorithms
             if (IsNaN(sourceImpedance) || IsNaN(remoteImpedance))
                 return null;
 
-            viFaultType = GetVIFaultType(faultDataSet);
             z = GetNominalImpedance(faultDataSet);
 
-            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, viFaultType)).ToArray();
-            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, viFaultType)).ToArray();
-            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, viFaultType);
+            voltages = faultDataSet.Cycles.Select(cycle => GetFaultVoltage(cycle, faultDataSet.FaultType)).ToArray();
+            currents = faultDataSet.Cycles.Select(cycle => GetFaultCurrent(cycle, faultDataSet.FaultType)).ToArray();
+            iPre = GetFaultCurrent(faultDataSet.PrefaultCycle, faultDataSet.FaultType);
 
             return voltages.Zip(currents, (v, i) =>
             {
@@ -326,48 +314,17 @@ namespace FaultAlgorithms
             return localFaultDataSet.Cycles
                 .Select(cycleData => new
                 {
-                    Vns = GetDoubleEndedFaultVoltage(remoteFaultCycle, faultType),
-                    Ins = GetDoubleEndedFaultCurrent(remoteFaultCycle, faultType)
+                    Vns = GetDoubleEndedFaultVoltage(cycleData, faultType),
+                    Ins = GetDoubleEndedFaultCurrent(cycleData, faultType)
                 })
                 .Select(cycle => (cycle.Vns - vfs + z * ifs) / (z * (cycle.Ins + ifs)))
                 .Select(m => m * localFaultDataSet.LineDistance)
                 .ToArray();
         }
 
-        // ReSharper restore UnusedParameter.Local
-        // ReSharper restore UnusedMember.Local
-
         #endregion
 
         #region [ Helper Methods ]
-
-        // Gets the fault type used to determine which voltages and currents to use in fault calculations.
-        // This method changes the ABC fault type to either AN, BN, or CN based on whichever phase is closest to a pure sine wave.
-        private static FaultType GetVIFaultType(FaultLocationDataSet faultDataSet)
-        {
-            double anError;
-            double bnError;
-            double cnError;
-            double minError;
-
-            if (faultDataSet.FaultType == FaultType.ABC)
-            {
-                anError = faultDataSet.Cycles.Sum(cycle => cycle.AN.I.Error);
-                bnError = faultDataSet.Cycles.Sum(cycle => cycle.BN.I.Error);
-                cnError = faultDataSet.Cycles.Sum(cycle => cycle.CN.I.Error);
-                minError = Common.Min(anError, bnError, cnError);
-
-                if (anError == minError)
-                    return FaultType.AN;
-
-                if (bnError == minError)
-                    return FaultType.BN;
-
-                return FaultType.CN;
-            }
-
-            return faultDataSet.FaultType;
-        }
 
         // Get the voltage to use in fault calculations for this cycle, based on the fault type.
         private static ComplexNumber GetFaultVoltage(CycleData cycle, FaultType viFaultType)
@@ -394,6 +351,15 @@ namespace FaultAlgorithms
                 case FaultType.CA:
                 case FaultType.CAG:
                     return cycle.CN.V.Complex - cycle.AN.V.Complex;
+
+                case FaultType.ABC:
+                    if (cycle.AN.I.Error < cycle.BN.I.Error && cycle.AN.I.Error < cycle.CN.I.Error)
+                        return cycle.AN.V.Complex;
+
+                    if (cycle.BN.I.Error < cycle.CN.I.Error)
+                        return cycle.BN.V.Complex;
+
+                    return cycle.CN.V.Complex;
 
                 default:
                     throw new ArgumentOutOfRangeException("viFaultType");
@@ -426,6 +392,15 @@ namespace FaultAlgorithms
                 case FaultType.CAG:
                     return cycle.CN.I.Complex - cycle.AN.I.Complex;
 
+                case FaultType.ABC:
+                    if (cycle.AN.I.Error < cycle.BN.I.Error && cycle.AN.I.Error < cycle.CN.I.Error)
+                        return cycle.AN.I.Complex;
+
+                    if (cycle.BN.I.Error < cycle.CN.I.Error)
+                        return cycle.BN.I.Complex;
+
+                    return cycle.CN.I.Complex;
+
                 default:
                     throw new ArgumentOutOfRangeException("viFaultType");
             }
@@ -435,6 +410,7 @@ namespace FaultAlgorithms
         private static ComplexNumber GetDoubleEndedFaultVoltage(CycleData cycle, FaultType faultType)
         {
             ComplexNumber[] sequenceComponents;
+
             sequenceComponents = CycleData.CalculateSequenceComponents(cycle.AN.V, cycle.BN.V, cycle.CN.V);
 
             if (faultType == FaultType.ABC)

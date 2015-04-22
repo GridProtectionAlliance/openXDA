@@ -49,10 +49,10 @@ namespace FaultData.DataOperations
             public MappingNode Left;
             public MappingNode Right;
 
-            public Mapping(FaultLocationData.FaultSummaryRow left, FaultLocationData.FaultSummaryRow right)
+            public Mapping(Meter leftMeter, FaultLocationData.FaultSummaryRow left, Meter rightMeter, FaultLocationData.FaultSummaryRow right)
             {
-                Left = new MappingNode(left);
-                Right = new MappingNode(right);
+                Left = new MappingNode(leftMeter, left);
+                Right = new MappingNode(rightMeter, right);
             }
         }
 
@@ -65,6 +65,7 @@ namespace FaultData.DataOperations
             public const double Frequency = 60.0D;
 
             // Fields
+            public Meter Meter;
             public FaultLocationData.FaultSummaryRow Fault;
             public VICycleDataGroup CycleDataGroup;
             public Fault.Curve DistanceCurve;
@@ -78,8 +79,9 @@ namespace FaultData.DataOperations
 
             #region [ Constructors ]
 
-            public MappingNode(FaultLocationData.FaultSummaryRow fault)
+            public MappingNode(Meter meter, FaultLocationData.FaultSummaryRow fault)
             {
+                Meter = meter;
                 Fault = fault;
                 DistanceCurve = new Fault.Curve();
                 AngleCurve = new Fault.Curve();
@@ -254,13 +256,11 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource;
-            FaultDataResource faultDataResource;
-
-            List<Tuple<DateTime, DateTime>> eventTimeRanges;
-            MeterData.EventDataTable systemEvent;
+            List<SystemEventResource.SystemEvent> systemEvents;
+            MeterData.EventDataTable systemEventTable;
 
             double lineLength;
+            ComplexNumber nominalImpedance;
             List<Mapping> mappings;
 
             int leftEventID;
@@ -268,18 +268,15 @@ namespace FaultData.DataOperations
             VICycleDataGroup leftCycleDataGroup;
             VICycleDataGroup rightCycleDataGroup;
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(m_dbAdapterContainer));
-
             // Get a time range for querying each system event that contains events in this meter data set
-            eventTimeRanges = GetEventTimeRanges(cycleDataResource.DataGroups.Where(dataGroup => faultDataResource.FaultLookup.ContainsKey(dataGroup)));
+            systemEvents = meterDataSet.GetResource<SystemEventResource>().SystemEvents;
 
-            foreach (Tuple<DateTime, DateTime> timeRange in eventTimeRanges)
+            foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
             {
                 // Get the full collection of events from the database that comprise the system event that overlaps this time range
-                systemEvent = m_dbAdapterContainer.EventAdapter.GetSystemEvent(timeRange.Item1, timeRange.Item2, m_timeTolerance);
+                systemEventTable = m_dbAdapterContainer.EventAdapter.GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
 
-                foreach (IGrouping<int, MeterData.EventRow> lineGrouping in systemEvent.GroupBy(evt => evt.LineID))
+                foreach (IGrouping<int, MeterData.EventRow> lineGrouping in systemEventTable.GroupBy(evt => evt.LineID))
                 {
                     // Make sure this line connects two known meter locations
                     if (m_dbAdapterContainer.MeterInfoAdapter.MeterLocationLines.Count(mll => mll.LineID == lineGrouping.Key) != 2)
@@ -292,6 +289,15 @@ namespace FaultData.DataOperations
                         .FirstOrDefault() ?? double.NaN;
 
                     if (double.IsNaN(lineLength))
+                        continue;
+
+                    // Determine the nominal impedance of the line
+                    nominalImpedance = m_dbAdapterContainer.FaultLocationInfoAdapter.LineImpedances
+                        .Where(lineImpedance => lineImpedance.LineID == lineGrouping.Key)
+                        .Select(lineImpedance => new ComplexNumber(lineImpedance.R1, lineImpedance.X1))
+                        .FirstOrDefault();
+
+                    if (!nominalImpedance.AllAssigned)
                         continue;
 
                     leftEventID = 0;
@@ -350,8 +356,8 @@ namespace FaultData.DataOperations
                         mapping.Right.Initialize(m_dbAdapterContainer, rightCycleDataGroup);
 
                         // Execute the double-ended fault location algorithm
-                        ExecuteFaultLocationAlgorithm(lineLength, mapping.Left, mapping.Right);
-                        ExecuteFaultLocationAlgorithm(lineLength, mapping.Right, mapping.Left);
+                        ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);
+                        ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Right, mapping.Left);
 
                         // Create rows in the DoubleEndedFaultDistance table
                         CreateFaultDistanceRow(lineLength, mapping.Left, mapping.Right);
@@ -396,52 +402,10 @@ namespace FaultData.DataOperations
             }
         }
 
-        private List<Tuple<DateTime, DateTime>> GetEventTimeRanges(IEnumerable<DataGroup> dataGroups)
-        {
-            return dataGroups
-                .OrderBy(dataGroup => dataGroup.StartTime)
-                .Select(dataGroup => new
-                {
-                    StartTime = dataGroup.StartTime.AddSeconds(-m_timeTolerance),
-                    EndTime = dataGroup.EndTime.AddSeconds(m_timeTolerance),
-                })
-                .Aggregate(new List<Tuple<DateTime, DateTime>>(), (list, timeRange) =>
-                {
-                    Tuple<DateTime, DateTime> last = list.Last();
-                    DateTime lastStartTime = last.Item1;
-                    DateTime lastEndTime = last.Item2;
-
-                    DateTime minStartTime;
-                    DateTime maxEndTime;
-
-                    bool overlap;
-
-                    // Determine if last and timeRange overlap
-                    overlap = (lastStartTime <= timeRange.StartTime && timeRange.EndTime <= lastEndTime) ||
-                              (timeRange.StartTime <= lastStartTime && lastStartTime <= timeRange.EndTime);
-
-                    if (!overlap)
-                    {
-                        // Add timeRange as new tuple
-                        list.Add(Tuple.Create(timeRange.StartTime, timeRange.EndTime));
-                    }
-                    else
-                    {
-                        // Merge last and timeRange
-                        minStartTime = Common.Min(lastStartTime, timeRange.StartTime);
-                        maxEndTime = Common.Max(lastEndTime, timeRange.EndTime);
-                        list[list.Count - 1] = Tuple.Create(minStartTime, maxEndTime);
-                    }
-
-                    return list;
-                });
-        }
-
         private List<Mapping> GetMappings(IGrouping<int, MeterData.EventRow> lineGrouping)
         {
             Func<FaultLocationData.FaultSummaryRow, bool> filter = fault =>
                 fault.IsSelectedAlgorithm != 0 &&
-                fault.IsValid != 0 &&
                 fault.IsSuppressed == 0;
 
             List<FaultTimeline> meterGroupings = lineGrouping
@@ -462,7 +426,7 @@ namespace FaultData.DataOperations
                 }))
                 .Where(mapping => mapping.Left.Meter.MeterLocationID < mapping.Right.Meter.MeterLocationID)
                 .Where(mapping => mapping.Left.Faults.Count == mapping.Right.Faults.Count)
-                .SelectMany(mapping => mapping.Left.Faults.Zip(mapping.Right.Faults, (left, right) => new Mapping(left, right)))
+                .SelectMany(mapping => mapping.Left.Faults.Zip(mapping.Right.Faults, (left, right) => new Mapping(mapping.Left.Meter, left, mapping.Right.Meter, right)))
                 .ToList();
         }
 
@@ -500,7 +464,7 @@ namespace FaultData.DataOperations
             m_doubleEndedFaultDistanceTable.AddDoubleEndedFaultDistanceRow(row);
         }
 
-        private void ExecuteFaultLocationAlgorithm(double lineLength, MappingNode local, MappingNode remote)
+        private void ExecuteFaultLocationAlgorithm(double lineLength, ComplexNumber nominalImpedance, MappingNode local, MappingNode remote)
         {
             FaultLocationDataSet faultLocationDataSet;
             CycleData remoteCycle;
@@ -509,6 +473,7 @@ namespace FaultData.DataOperations
             faultLocationDataSet = new FaultLocationDataSet();
             faultLocationDataSet.FaultType = local.FaultType;
             faultLocationDataSet.LineDistance = lineLength;
+            faultLocationDataSet.Z1 = nominalImpedance;
             local.CycleDataGroup.PushDataTo(faultLocationDataSet.Cycles);
 
             remoteCycle = GetCycleAt(remote.CycleDataGroup, remote.Fault.CalculationCycle - remote.StartSample);

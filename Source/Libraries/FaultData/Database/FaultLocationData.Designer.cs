@@ -30,9 +30,9 @@ namespace FaultData.Database {
         
         private FaultSegmentDataTable tableFaultSegment;
         
-        private FaultSummaryDataTable tableFaultSummary;
-        
         private DoubleEndedFaultDistanceDataTable tableDoubleEndedFaultDistance;
+        
+        private FaultSummaryDataTable tableFaultSummary;
         
         private global::System.Data.SchemaSerializationMode _schemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
         
@@ -71,11 +71,11 @@ namespace FaultData.Database {
                 if ((ds.Tables["FaultSegment"] != null)) {
                     base.Tables.Add(new FaultSegmentDataTable(ds.Tables["FaultSegment"]));
                 }
-                if ((ds.Tables["FaultSummary"] != null)) {
-                    base.Tables.Add(new FaultSummaryDataTable(ds.Tables["FaultSummary"]));
-                }
                 if ((ds.Tables["DoubleEndedFaultDistance"] != null)) {
                     base.Tables.Add(new DoubleEndedFaultDistanceDataTable(ds.Tables["DoubleEndedFaultDistance"]));
+                }
+                if ((ds.Tables["FaultSummary"] != null)) {
+                    base.Tables.Add(new FaultSummaryDataTable(ds.Tables["FaultSummary"]));
                 }
                 this.DataSetName = ds.DataSetName;
                 this.Prefix = ds.Prefix;
@@ -129,9 +129,9 @@ namespace FaultData.Database {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Browsable(false)]
         [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
-        public FaultSummaryDataTable FaultSummary {
+        public DoubleEndedFaultDistanceDataTable DoubleEndedFaultDistance {
             get {
-                return this.tableFaultSummary;
+                return this.tableDoubleEndedFaultDistance;
             }
         }
         
@@ -139,9 +139,9 @@ namespace FaultData.Database {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Browsable(false)]
         [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
-        public DoubleEndedFaultDistanceDataTable DoubleEndedFaultDistance {
+        public FaultSummaryDataTable FaultSummary {
             get {
-                return this.tableDoubleEndedFaultDistance;
+                return this.tableFaultSummary;
             }
         }
         
@@ -221,11 +221,11 @@ namespace FaultData.Database {
                 if ((ds.Tables["FaultSegment"] != null)) {
                     base.Tables.Add(new FaultSegmentDataTable(ds.Tables["FaultSegment"]));
                 }
-                if ((ds.Tables["FaultSummary"] != null)) {
-                    base.Tables.Add(new FaultSummaryDataTable(ds.Tables["FaultSummary"]));
-                }
                 if ((ds.Tables["DoubleEndedFaultDistance"] != null)) {
                     base.Tables.Add(new DoubleEndedFaultDistanceDataTable(ds.Tables["DoubleEndedFaultDistance"]));
+                }
+                if ((ds.Tables["FaultSummary"] != null)) {
+                    base.Tables.Add(new FaultSummaryDataTable(ds.Tables["FaultSummary"]));
                 }
                 this.DataSetName = ds.DataSetName;
                 this.Prefix = ds.Prefix;
@@ -278,16 +278,16 @@ namespace FaultData.Database {
                     this.tableFaultSegment.InitVars();
                 }
             }
-            this.tableFaultSummary = ((FaultSummaryDataTable)(base.Tables["FaultSummary"]));
-            if ((initTable == true)) {
-                if ((this.tableFaultSummary != null)) {
-                    this.tableFaultSummary.InitVars();
-                }
-            }
             this.tableDoubleEndedFaultDistance = ((DoubleEndedFaultDistanceDataTable)(base.Tables["DoubleEndedFaultDistance"]));
             if ((initTable == true)) {
                 if ((this.tableDoubleEndedFaultDistance != null)) {
                     this.tableDoubleEndedFaultDistance.InitVars();
+                }
+            }
+            this.tableFaultSummary = ((FaultSummaryDataTable)(base.Tables["FaultSummary"]));
+            if ((initTable == true)) {
+                if ((this.tableFaultSummary != null)) {
+                    this.tableFaultSummary.InitVars();
                 }
             }
         }
@@ -306,10 +306,10 @@ namespace FaultData.Database {
             base.Tables.Add(this.tableFaultCurve);
             this.tableFaultSegment = new FaultSegmentDataTable();
             base.Tables.Add(this.tableFaultSegment);
-            this.tableFaultSummary = new FaultSummaryDataTable();
-            base.Tables.Add(this.tableFaultSummary);
             this.tableDoubleEndedFaultDistance = new DoubleEndedFaultDistanceDataTable();
             base.Tables.Add(this.tableDoubleEndedFaultDistance);
+            this.tableFaultSummary = new FaultSummaryDataTable();
+            base.Tables.Add(this.tableFaultSummary);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -332,13 +332,13 @@ namespace FaultData.Database {
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private bool ShouldSerializeFaultSummary() {
+        private bool ShouldSerializeDoubleEndedFaultDistance() {
             return false;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private bool ShouldSerializeDoubleEndedFaultDistance() {
+        private bool ShouldSerializeFaultSummary() {
             return false;
         }
         
@@ -407,10 +407,10 @@ namespace FaultData.Database {
         public delegate void FaultSegmentRowChangeEventHandler(object sender, FaultSegmentRowChangeEvent e);
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public delegate void FaultSummaryRowChangeEventHandler(object sender, FaultSummaryRowChangeEvent e);
+        public delegate void DoubleEndedFaultDistanceRowChangeEventHandler(object sender, DoubleEndedFaultDistanceRowChangeEvent e);
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public delegate void DoubleEndedFaultDistanceRowChangeEventHandler(object sender, DoubleEndedFaultDistanceRowChangeEvent e);
+        public delegate void FaultSummaryRowChangeEventHandler(object sender, FaultSummaryRowChangeEvent e);
         
         /// <summary>
         ///Represents the strongly named DataTable class.
@@ -1369,465 +1369,6 @@ namespace FaultData.Database {
         ///</summary>
         [global::System.Serializable()]
         [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
-        public partial class FaultSummaryDataTable : global::System.Data.TypedTableBase<FaultSummaryRow> {
-            
-            private global::System.Data.DataColumn columnID;
-            
-            private global::System.Data.DataColumn columnEventID;
-            
-            private global::System.Data.DataColumn columnAlgorithm;
-            
-            private global::System.Data.DataColumn columnFaultNumber;
-            
-            private global::System.Data.DataColumn columnCalculationCycle;
-            
-            private global::System.Data.DataColumn columnDistance;
-            
-            private global::System.Data.DataColumn columnCurrentMagnitude;
-            
-            private global::System.Data.DataColumn columnInception;
-            
-            private global::System.Data.DataColumn columnDurationSeconds;
-            
-            private global::System.Data.DataColumn columnDurationCycles;
-            
-            private global::System.Data.DataColumn columnFaultType;
-            
-            private global::System.Data.DataColumn columnIsSelectedAlgorithm;
-            
-            private global::System.Data.DataColumn columnIsValid;
-            
-            private global::System.Data.DataColumn columnIsSuppressed;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryDataTable() {
-                this.TableName = "FaultSummary";
-                this.BeginInit();
-                this.InitClass();
-                this.EndInit();
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal FaultSummaryDataTable(global::System.Data.DataTable table) {
-                this.TableName = table.TableName;
-                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
-                    this.CaseSensitive = table.CaseSensitive;
-                }
-                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
-                    this.Locale = table.Locale;
-                }
-                if ((table.Namespace != table.DataSet.Namespace)) {
-                    this.Namespace = table.Namespace;
-                }
-                this.Prefix = table.Prefix;
-                this.MinimumCapacity = table.MinimumCapacity;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected FaultSummaryDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
-                    base(info, context) {
-                this.InitVars();
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn IDColumn {
-                get {
-                    return this.columnID;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn EventIDColumn {
-                get {
-                    return this.columnEventID;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn AlgorithmColumn {
-                get {
-                    return this.columnAlgorithm;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn FaultNumberColumn {
-                get {
-                    return this.columnFaultNumber;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn CalculationCycleColumn {
-                get {
-                    return this.columnCalculationCycle;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn DistanceColumn {
-                get {
-                    return this.columnDistance;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn CurrentMagnitudeColumn {
-                get {
-                    return this.columnCurrentMagnitude;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn InceptionColumn {
-                get {
-                    return this.columnInception;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn DurationSecondsColumn {
-                get {
-                    return this.columnDurationSeconds;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn DurationCyclesColumn {
-                get {
-                    return this.columnDurationCycles;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn FaultTypeColumn {
-                get {
-                    return this.columnFaultType;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn IsSelectedAlgorithmColumn {
-                get {
-                    return this.columnIsSelectedAlgorithm;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn IsValidColumn {
-                get {
-                    return this.columnIsValid;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public global::System.Data.DataColumn IsSuppressedColumn {
-                get {
-                    return this.columnIsSuppressed;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            [global::System.ComponentModel.Browsable(false)]
-            public int Count {
-                get {
-                    return this.Rows.Count;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryRow this[int index] {
-                get {
-                    return ((FaultSummaryRow)(this.Rows[index]));
-                }
-            }
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event FaultSummaryRowChangeEventHandler FaultSummaryRowChanging;
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event FaultSummaryRowChangeEventHandler FaultSummaryRowChanged;
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event FaultSummaryRowChangeEventHandler FaultSummaryRowDeleting;
-            
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public event FaultSummaryRowChangeEventHandler FaultSummaryRowDeleted;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void AddFaultSummaryRow(FaultSummaryRow row) {
-                this.Rows.Add(row);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryRow AddFaultSummaryRow(int EventID, string Algorithm, int FaultNumber, int CalculationCycle, double Distance, double CurrentMagnitude, System.DateTime Inception, double DurationSeconds, double DurationCycles, string FaultType, int IsSelectedAlgorithm, int IsValid, int IsSuppressed) {
-                FaultSummaryRow rowFaultSummaryRow = ((FaultSummaryRow)(this.NewRow()));
-                object[] columnValuesArray = new object[] {
-                        null,
-                        EventID,
-                        Algorithm,
-                        FaultNumber,
-                        CalculationCycle,
-                        Distance,
-                        CurrentMagnitude,
-                        Inception,
-                        DurationSeconds,
-                        DurationCycles,
-                        FaultType,
-                        IsSelectedAlgorithm,
-                        IsValid,
-                        IsSuppressed};
-                rowFaultSummaryRow.ItemArray = columnValuesArray;
-                this.Rows.Add(rowFaultSummaryRow);
-                return rowFaultSummaryRow;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryRow FindByID(int ID) {
-                return ((FaultSummaryRow)(this.Rows.Find(new object[] {
-                            ID})));
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public override global::System.Data.DataTable Clone() {
-                FaultSummaryDataTable cln = ((FaultSummaryDataTable)(base.Clone()));
-                cln.InitVars();
-                return cln;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override global::System.Data.DataTable CreateInstance() {
-                return new FaultSummaryDataTable();
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal void InitVars() {
-                this.columnID = base.Columns["ID"];
-                this.columnEventID = base.Columns["EventID"];
-                this.columnAlgorithm = base.Columns["Algorithm"];
-                this.columnFaultNumber = base.Columns["FaultNumber"];
-                this.columnCalculationCycle = base.Columns["CalculationCycle"];
-                this.columnDistance = base.Columns["Distance"];
-                this.columnCurrentMagnitude = base.Columns["CurrentMagnitude"];
-                this.columnInception = base.Columns["Inception"];
-                this.columnDurationSeconds = base.Columns["DurationSeconds"];
-                this.columnDurationCycles = base.Columns["DurationCycles"];
-                this.columnFaultType = base.Columns["FaultType"];
-                this.columnIsSelectedAlgorithm = base.Columns["IsSelectedAlgorithm"];
-                this.columnIsValid = base.Columns["IsValid"];
-                this.columnIsSuppressed = base.Columns["IsSuppressed"];
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            private void InitClass() {
-                this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnID);
-                this.columnEventID = new global::System.Data.DataColumn("EventID", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnEventID);
-                this.columnAlgorithm = new global::System.Data.DataColumn("Algorithm", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnAlgorithm);
-                this.columnFaultNumber = new global::System.Data.DataColumn("FaultNumber", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnFaultNumber);
-                this.columnCalculationCycle = new global::System.Data.DataColumn("CalculationCycle", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnCalculationCycle);
-                this.columnDistance = new global::System.Data.DataColumn("Distance", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnDistance);
-                this.columnCurrentMagnitude = new global::System.Data.DataColumn("CurrentMagnitude", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnCurrentMagnitude);
-                this.columnInception = new global::System.Data.DataColumn("Inception", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnInception);
-                this.columnDurationSeconds = new global::System.Data.DataColumn("DurationSeconds", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnDurationSeconds);
-                this.columnDurationCycles = new global::System.Data.DataColumn("DurationCycles", typeof(double), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnDurationCycles);
-                this.columnFaultType = new global::System.Data.DataColumn("FaultType", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnFaultType);
-                this.columnIsSelectedAlgorithm = new global::System.Data.DataColumn("IsSelectedAlgorithm", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnIsSelectedAlgorithm);
-                this.columnIsValid = new global::System.Data.DataColumn("IsValid", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnIsValid);
-                this.columnIsSuppressed = new global::System.Data.DataColumn("IsSuppressed", typeof(int), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnIsSuppressed);
-                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
-                                this.columnID}, true));
-                this.columnID.AutoIncrement = true;
-                this.columnID.AutoIncrementSeed = -1;
-                this.columnID.AutoIncrementStep = -1;
-                this.columnID.AllowDBNull = false;
-                this.columnID.ReadOnly = true;
-                this.columnID.Unique = true;
-                this.columnEventID.AllowDBNull = false;
-                this.columnAlgorithm.AllowDBNull = false;
-                this.columnAlgorithm.MaxLength = 80;
-                this.columnFaultNumber.AllowDBNull = false;
-                this.columnCalculationCycle.AllowDBNull = false;
-                this.columnDistance.AllowDBNull = false;
-                this.columnCurrentMagnitude.AllowDBNull = false;
-                this.columnInception.AllowDBNull = false;
-                this.columnDurationSeconds.AllowDBNull = false;
-                this.columnDurationCycles.AllowDBNull = false;
-                this.columnFaultType.AllowDBNull = false;
-                this.columnFaultType.MaxLength = 200;
-                this.columnIsSelectedAlgorithm.AllowDBNull = false;
-                this.columnIsValid.AllowDBNull = false;
-                this.columnIsSuppressed.AllowDBNull = false;
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryRow NewFaultSummaryRow() {
-                return ((FaultSummaryRow)(this.NewRow()));
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
-                return new FaultSummaryRow(builder);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override global::System.Type GetRowType() {
-                return typeof(FaultSummaryRow);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowChanged(e);
-                if ((this.FaultSummaryRowChanged != null)) {
-                    this.FaultSummaryRowChanged(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowChanging(e);
-                if ((this.FaultSummaryRowChanging != null)) {
-                    this.FaultSummaryRowChanging(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowDeleted(e);
-                if ((this.FaultSummaryRowDeleted != null)) {
-                    this.FaultSummaryRowDeleted(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
-                base.OnRowDeleting(e);
-                if ((this.FaultSummaryRowDeleting != null)) {
-                    this.FaultSummaryRowDeleting(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public void RemoveFaultSummaryRow(FaultSummaryRow row) {
-                this.Rows.Remove(row);
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
-                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
-                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
-                FaultLocationData ds = new FaultLocationData();
-                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
-                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
-                any1.MinOccurs = new decimal(0);
-                any1.MaxOccurs = decimal.MaxValue;
-                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
-                sequence.Items.Add(any1);
-                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
-                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
-                any2.MinOccurs = new decimal(1);
-                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
-                sequence.Items.Add(any2);
-                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
-                attribute1.Name = "namespace";
-                attribute1.FixedValue = ds.Namespace;
-                type.Attributes.Add(attribute1);
-                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
-                attribute2.Name = "tableTypeName";
-                attribute2.FixedValue = "FaultSummaryDataTable";
-                type.Attributes.Add(attribute2);
-                type.Particle = sequence;
-                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
-                if (xs.Contains(dsSchema.TargetNamespace)) {
-                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
-                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
-                    try {
-                        global::System.Xml.Schema.XmlSchema schema = null;
-                        dsSchema.Write(s1);
-                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
-                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
-                            s2.SetLength(0);
-                            schema.Write(s2);
-                            if ((s1.Length == s2.Length)) {
-                                s1.Position = 0;
-                                s2.Position = 0;
-                                for (; ((s1.Position != s1.Length) 
-                                            && (s1.ReadByte() == s2.ReadByte())); ) {
-                                    ;
-                                }
-                                if ((s1.Position == s1.Length)) {
-                                    return type;
-                                }
-                            }
-                        }
-                    }
-                    finally {
-                        if ((s1 != null)) {
-                            s1.Close();
-                        }
-                        if ((s2 != null)) {
-                            s2.Close();
-                        }
-                    }
-                }
-                xs.Add(dsSchema);
-                return type;
-            }
-        }
-        
-        /// <summary>
-        ///Represents the strongly named DataTable class.
-        ///</summary>
-        [global::System.Serializable()]
-        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
         public partial class DoubleEndedFaultDistanceDataTable : global::System.Data.TypedTableBase<DoubleEndedFaultDistanceRow> {
             
             private global::System.Data.DataColumn columnID;
@@ -2161,6 +1702,526 @@ namespace FaultData.Database {
         }
         
         /// <summary>
+        ///Represents the strongly named DataTable class.
+        ///</summary>
+        [global::System.Serializable()]
+        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
+        public partial class FaultSummaryDataTable : global::System.Data.TypedTableBase<FaultSummaryRow> {
+            
+            private global::System.Data.DataColumn columnID;
+            
+            private global::System.Data.DataColumn columnEventID;
+            
+            private global::System.Data.DataColumn columnAlgorithm;
+            
+            private global::System.Data.DataColumn columnFaultNumber;
+            
+            private global::System.Data.DataColumn columnCalculationCycle;
+            
+            private global::System.Data.DataColumn columnDistance;
+            
+            private global::System.Data.DataColumn columnCurrentMagnitude;
+            
+            private global::System.Data.DataColumn columnCurrentLag;
+            
+            private global::System.Data.DataColumn columnPrefaultCurrent;
+            
+            private global::System.Data.DataColumn columnPostfaultCurrent;
+            
+            private global::System.Data.DataColumn columnInception;
+            
+            private global::System.Data.DataColumn columnDurationSeconds;
+            
+            private global::System.Data.DataColumn columnDurationCycles;
+            
+            private global::System.Data.DataColumn columnFaultType;
+            
+            private global::System.Data.DataColumn columnIsSelectedAlgorithm;
+            
+            private global::System.Data.DataColumn columnIsValid;
+            
+            private global::System.Data.DataColumn columnIsSuppressed;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public FaultSummaryDataTable() {
+                this.TableName = "FaultSummary";
+                this.BeginInit();
+                this.InitClass();
+                this.EndInit();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal FaultSummaryDataTable(global::System.Data.DataTable table) {
+                this.TableName = table.TableName;
+                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
+                    this.CaseSensitive = table.CaseSensitive;
+                }
+                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
+                    this.Locale = table.Locale;
+                }
+                if ((table.Namespace != table.DataSet.Namespace)) {
+                    this.Namespace = table.Namespace;
+                }
+                this.Prefix = table.Prefix;
+                this.MinimumCapacity = table.MinimumCapacity;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected FaultSummaryDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+                    base(info, context) {
+                this.InitVars();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IDColumn {
+                get {
+                    return this.columnID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn EventIDColumn {
+                get {
+                    return this.columnEventID;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn AlgorithmColumn {
+                get {
+                    return this.columnAlgorithm;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn FaultNumberColumn {
+                get {
+                    return this.columnFaultNumber;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn CalculationCycleColumn {
+                get {
+                    return this.columnCalculationCycle;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn DistanceColumn {
+                get {
+                    return this.columnDistance;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn CurrentMagnitudeColumn {
+                get {
+                    return this.columnCurrentMagnitude;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn CurrentLagColumn {
+                get {
+                    return this.columnCurrentLag;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn PrefaultCurrentColumn {
+                get {
+                    return this.columnPrefaultCurrent;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn PostfaultCurrentColumn {
+                get {
+                    return this.columnPostfaultCurrent;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn InceptionColumn {
+                get {
+                    return this.columnInception;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn DurationSecondsColumn {
+                get {
+                    return this.columnDurationSeconds;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn DurationCyclesColumn {
+                get {
+                    return this.columnDurationCycles;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn FaultTypeColumn {
+                get {
+                    return this.columnFaultType;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IsSelectedAlgorithmColumn {
+                get {
+                    return this.columnIsSelectedAlgorithm;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IsValidColumn {
+                get {
+                    return this.columnIsValid;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IsSuppressedColumn {
+                get {
+                    return this.columnIsSuppressed;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            [global::System.ComponentModel.Browsable(false)]
+            public int Count {
+                get {
+                    return this.Rows.Count;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public FaultSummaryRow this[int index] {
+                get {
+                    return ((FaultSummaryRow)(this.Rows[index]));
+                }
+            }
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event FaultSummaryRowChangeEventHandler FaultSummaryRowChanging;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event FaultSummaryRowChangeEventHandler FaultSummaryRowChanged;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event FaultSummaryRowChangeEventHandler FaultSummaryRowDeleting;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public event FaultSummaryRowChangeEventHandler FaultSummaryRowDeleted;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void AddFaultSummaryRow(FaultSummaryRow row) {
+                this.Rows.Add(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public FaultSummaryRow AddFaultSummaryRow(
+                        int EventID, 
+                        string Algorithm, 
+                        int FaultNumber, 
+                        int CalculationCycle, 
+                        double Distance, 
+                        double CurrentMagnitude, 
+                        double CurrentLag, 
+                        double PrefaultCurrent, 
+                        double PostfaultCurrent, 
+                        System.DateTime Inception, 
+                        double DurationSeconds, 
+                        double DurationCycles, 
+                        string FaultType, 
+                        int IsSelectedAlgorithm, 
+                        int IsValid, 
+                        int IsSuppressed) {
+                FaultSummaryRow rowFaultSummaryRow = ((FaultSummaryRow)(this.NewRow()));
+                object[] columnValuesArray = new object[] {
+                        null,
+                        EventID,
+                        Algorithm,
+                        FaultNumber,
+                        CalculationCycle,
+                        Distance,
+                        CurrentMagnitude,
+                        CurrentLag,
+                        PrefaultCurrent,
+                        PostfaultCurrent,
+                        Inception,
+                        DurationSeconds,
+                        DurationCycles,
+                        FaultType,
+                        IsSelectedAlgorithm,
+                        IsValid,
+                        IsSuppressed};
+                rowFaultSummaryRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowFaultSummaryRow);
+                return rowFaultSummaryRow;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public FaultSummaryRow FindByID(int ID) {
+                return ((FaultSummaryRow)(this.Rows.Find(new object[] {
+                            ID})));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public override global::System.Data.DataTable Clone() {
+                FaultSummaryDataTable cln = ((FaultSummaryDataTable)(base.Clone()));
+                cln.InitVars();
+                return cln;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Data.DataTable CreateInstance() {
+                return new FaultSummaryDataTable();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal void InitVars() {
+                this.columnID = base.Columns["ID"];
+                this.columnEventID = base.Columns["EventID"];
+                this.columnAlgorithm = base.Columns["Algorithm"];
+                this.columnFaultNumber = base.Columns["FaultNumber"];
+                this.columnCalculationCycle = base.Columns["CalculationCycle"];
+                this.columnDistance = base.Columns["Distance"];
+                this.columnCurrentMagnitude = base.Columns["CurrentMagnitude"];
+                this.columnCurrentLag = base.Columns["CurrentLag"];
+                this.columnPrefaultCurrent = base.Columns["PrefaultCurrent"];
+                this.columnPostfaultCurrent = base.Columns["PostfaultCurrent"];
+                this.columnInception = base.Columns["Inception"];
+                this.columnDurationSeconds = base.Columns["DurationSeconds"];
+                this.columnDurationCycles = base.Columns["DurationCycles"];
+                this.columnFaultType = base.Columns["FaultType"];
+                this.columnIsSelectedAlgorithm = base.Columns["IsSelectedAlgorithm"];
+                this.columnIsValid = base.Columns["IsValid"];
+                this.columnIsSuppressed = base.Columns["IsSuppressed"];
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            private void InitClass() {
+                this.columnID = new global::System.Data.DataColumn("ID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnID);
+                this.columnEventID = new global::System.Data.DataColumn("EventID", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnEventID);
+                this.columnAlgorithm = new global::System.Data.DataColumn("Algorithm", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnAlgorithm);
+                this.columnFaultNumber = new global::System.Data.DataColumn("FaultNumber", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnFaultNumber);
+                this.columnCalculationCycle = new global::System.Data.DataColumn("CalculationCycle", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnCalculationCycle);
+                this.columnDistance = new global::System.Data.DataColumn("Distance", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnDistance);
+                this.columnCurrentMagnitude = new global::System.Data.DataColumn("CurrentMagnitude", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnCurrentMagnitude);
+                this.columnCurrentLag = new global::System.Data.DataColumn("CurrentLag", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnCurrentLag);
+                this.columnPrefaultCurrent = new global::System.Data.DataColumn("PrefaultCurrent", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnPrefaultCurrent);
+                this.columnPostfaultCurrent = new global::System.Data.DataColumn("PostfaultCurrent", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnPostfaultCurrent);
+                this.columnInception = new global::System.Data.DataColumn("Inception", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnInception);
+                this.columnDurationSeconds = new global::System.Data.DataColumn("DurationSeconds", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnDurationSeconds);
+                this.columnDurationCycles = new global::System.Data.DataColumn("DurationCycles", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnDurationCycles);
+                this.columnFaultType = new global::System.Data.DataColumn("FaultType", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnFaultType);
+                this.columnIsSelectedAlgorithm = new global::System.Data.DataColumn("IsSelectedAlgorithm", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnIsSelectedAlgorithm);
+                this.columnIsValid = new global::System.Data.DataColumn("IsValid", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnIsValid);
+                this.columnIsSuppressed = new global::System.Data.DataColumn("IsSuppressed", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnIsSuppressed);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
+                                this.columnID}, true));
+                this.columnID.AutoIncrement = true;
+                this.columnID.AutoIncrementSeed = -1;
+                this.columnID.AutoIncrementStep = -1;
+                this.columnID.AllowDBNull = false;
+                this.columnID.ReadOnly = true;
+                this.columnID.Unique = true;
+                this.columnEventID.AllowDBNull = false;
+                this.columnAlgorithm.AllowDBNull = false;
+                this.columnAlgorithm.MaxLength = 80;
+                this.columnFaultNumber.AllowDBNull = false;
+                this.columnCalculationCycle.AllowDBNull = false;
+                this.columnDistance.AllowDBNull = false;
+                this.columnCurrentMagnitude.AllowDBNull = false;
+                this.columnCurrentLag.AllowDBNull = false;
+                this.columnPrefaultCurrent.AllowDBNull = false;
+                this.columnPostfaultCurrent.AllowDBNull = false;
+                this.columnInception.AllowDBNull = false;
+                this.columnDurationSeconds.AllowDBNull = false;
+                this.columnDurationCycles.AllowDBNull = false;
+                this.columnFaultType.AllowDBNull = false;
+                this.columnFaultType.MaxLength = 200;
+                this.columnIsSelectedAlgorithm.AllowDBNull = false;
+                this.columnIsValid.AllowDBNull = false;
+                this.columnIsSuppressed.AllowDBNull = false;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public FaultSummaryRow NewFaultSummaryRow() {
+                return ((FaultSummaryRow)(this.NewRow()));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
+                return new FaultSummaryRow(builder);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override global::System.Type GetRowType() {
+                return typeof(FaultSummaryRow);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanged(e);
+                if ((this.FaultSummaryRowChanged != null)) {
+                    this.FaultSummaryRowChanged(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanging(e);
+                if ((this.FaultSummaryRowChanging != null)) {
+                    this.FaultSummaryRowChanging(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleted(e);
+                if ((this.FaultSummaryRowDeleted != null)) {
+                    this.FaultSummaryRowDeleted(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleting(e);
+                if ((this.FaultSummaryRowDeleting != null)) {
+                    this.FaultSummaryRowDeleting(this, new FaultSummaryRowChangeEvent(((FaultSummaryRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void RemoveFaultSummaryRow(FaultSummaryRow row) {
+                this.Rows.Remove(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
+                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
+                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
+                FaultLocationData ds = new FaultLocationData();
+                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
+                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
+                any1.MinOccurs = new decimal(0);
+                any1.MaxOccurs = decimal.MaxValue;
+                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any1);
+                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
+                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
+                any2.MinOccurs = new decimal(1);
+                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any2);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute1.Name = "namespace";
+                attribute1.FixedValue = ds.Namespace;
+                type.Attributes.Add(attribute1);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute2.Name = "tableTypeName";
+                attribute2.FixedValue = "FaultSummaryDataTable";
+                type.Attributes.Add(attribute2);
+                type.Particle = sequence;
+                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
+                if (xs.Contains(dsSchema.TargetNamespace)) {
+                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
+                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
+                    try {
+                        global::System.Xml.Schema.XmlSchema schema = null;
+                        dsSchema.Write(s1);
+                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
+                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
+                            s2.SetLength(0);
+                            schema.Write(s2);
+                            if ((s1.Length == s2.Length)) {
+                                s1.Position = 0;
+                                s2.Position = 0;
+                                for (; ((s1.Position != s1.Length) 
+                                            && (s1.ReadByte() == s2.ReadByte())); ) {
+                                    ;
+                                }
+                                if ((s1.Position == s1.Length)) {
+                                    return type;
+                                }
+                            }
+                        }
+                    }
+                    finally {
+                        if ((s1 != null)) {
+                            s1.Close();
+                        }
+                        if ((s2 != null)) {
+                            s2.Close();
+                        }
+                    }
+                }
+                xs.Add(dsSchema);
+                return type;
+            }
+        }
+        
+        /// <summary>
         ///Represents strongly named DataRow class.
         ///</summary>
         public partial class CycleDataRow : global::System.Data.DataRow {
@@ -2362,6 +2423,87 @@ namespace FaultData.Database {
         /// <summary>
         ///Represents strongly named DataRow class.
         ///</summary>
+        public partial class DoubleEndedFaultDistanceRow : global::System.Data.DataRow {
+            
+            private DoubleEndedFaultDistanceDataTable tableDoubleEndedFaultDistance;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            internal DoubleEndedFaultDistanceRow(global::System.Data.DataRowBuilder rb) : 
+                    base(rb) {
+                this.tableDoubleEndedFaultDistance = ((DoubleEndedFaultDistanceDataTable)(this.Table));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int ID {
+                get {
+                    return ((int)(this[this.tableDoubleEndedFaultDistance.IDColumn]));
+                }
+                set {
+                    this[this.tableDoubleEndedFaultDistance.IDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int LocalFaultSummaryID {
+                get {
+                    return ((int)(this[this.tableDoubleEndedFaultDistance.LocalFaultSummaryIDColumn]));
+                }
+                set {
+                    this[this.tableDoubleEndedFaultDistance.LocalFaultSummaryIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int RemoteFaultSummaryID {
+                get {
+                    return ((int)(this[this.tableDoubleEndedFaultDistance.RemoteFaultSummaryIDColumn]));
+                }
+                set {
+                    this[this.tableDoubleEndedFaultDistance.RemoteFaultSummaryIDColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double Distance {
+                get {
+                    return ((double)(this[this.tableDoubleEndedFaultDistance.DistanceColumn]));
+                }
+                set {
+                    this[this.tableDoubleEndedFaultDistance.DistanceColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double Angle {
+                get {
+                    return ((double)(this[this.tableDoubleEndedFaultDistance.AngleColumn]));
+                }
+                set {
+                    this[this.tableDoubleEndedFaultDistance.AngleColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int IsValid {
+                get {
+                    return ((int)(this[this.tableDoubleEndedFaultDistance.IsValidColumn]));
+                }
+                set {
+                    this[this.tableDoubleEndedFaultDistance.IsValidColumn] = value;
+                }
+            }
+        }
+        
+        /// <summary>
+        ///Represents strongly named DataRow class.
+        ///</summary>
         public partial class FaultSummaryRow : global::System.Data.DataRow {
             
             private FaultSummaryDataTable tableFaultSummary;
@@ -2452,6 +2594,39 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double CurrentLag {
+                get {
+                    return ((double)(this[this.tableFaultSummary.CurrentLagColumn]));
+                }
+                set {
+                    this[this.tableFaultSummary.CurrentLagColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double PrefaultCurrent {
+                get {
+                    return ((double)(this[this.tableFaultSummary.PrefaultCurrentColumn]));
+                }
+                set {
+                    this[this.tableFaultSummary.PrefaultCurrentColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double PostfaultCurrent {
+                get {
+                    return ((double)(this[this.tableFaultSummary.PostfaultCurrentColumn]));
+                }
+                set {
+                    this[this.tableFaultSummary.PostfaultCurrentColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public System.DateTime Inception {
                 get {
                     return ((global::System.DateTime)(this[this.tableFaultSummary.InceptionColumn]));
@@ -2524,87 +2699,6 @@ namespace FaultData.Database {
                 }
                 set {
                     this[this.tableFaultSummary.IsSuppressedColumn] = value;
-                }
-            }
-        }
-        
-        /// <summary>
-        ///Represents strongly named DataRow class.
-        ///</summary>
-        public partial class DoubleEndedFaultDistanceRow : global::System.Data.DataRow {
-            
-            private DoubleEndedFaultDistanceDataTable tableDoubleEndedFaultDistance;
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            internal DoubleEndedFaultDistanceRow(global::System.Data.DataRowBuilder rb) : 
-                    base(rb) {
-                this.tableDoubleEndedFaultDistance = ((DoubleEndedFaultDistanceDataTable)(this.Table));
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int ID {
-                get {
-                    return ((int)(this[this.tableDoubleEndedFaultDistance.IDColumn]));
-                }
-                set {
-                    this[this.tableDoubleEndedFaultDistance.IDColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int LocalFaultSummaryID {
-                get {
-                    return ((int)(this[this.tableDoubleEndedFaultDistance.LocalFaultSummaryIDColumn]));
-                }
-                set {
-                    this[this.tableDoubleEndedFaultDistance.LocalFaultSummaryIDColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int RemoteFaultSummaryID {
-                get {
-                    return ((int)(this[this.tableDoubleEndedFaultDistance.RemoteFaultSummaryIDColumn]));
-                }
-                set {
-                    this[this.tableDoubleEndedFaultDistance.RemoteFaultSummaryIDColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double Distance {
-                get {
-                    return ((double)(this[this.tableDoubleEndedFaultDistance.DistanceColumn]));
-                }
-                set {
-                    this[this.tableDoubleEndedFaultDistance.DistanceColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public double Angle {
-                get {
-                    return ((double)(this[this.tableDoubleEndedFaultDistance.AngleColumn]));
-                }
-                set {
-                    this[this.tableDoubleEndedFaultDistance.AngleColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public int IsValid {
-                get {
-                    return ((int)(this[this.tableDoubleEndedFaultDistance.IsValidColumn]));
-                }
-                set {
-                    this[this.tableDoubleEndedFaultDistance.IsValidColumn] = value;
                 }
             }
         }
@@ -2715,22 +2809,22 @@ namespace FaultData.Database {
         ///Row event argument class
         ///</summary>
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public class FaultSummaryRowChangeEvent : global::System.EventArgs {
+        public class DoubleEndedFaultDistanceRowChangeEvent : global::System.EventArgs {
             
-            private FaultSummaryRow eventRow;
+            private DoubleEndedFaultDistanceRow eventRow;
             
             private global::System.Data.DataRowAction eventAction;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryRowChangeEvent(FaultSummaryRow row, global::System.Data.DataRowAction action) {
+            public DoubleEndedFaultDistanceRowChangeEvent(DoubleEndedFaultDistanceRow row, global::System.Data.DataRowAction action) {
                 this.eventRow = row;
                 this.eventAction = action;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultSummaryRow Row {
+            public DoubleEndedFaultDistanceRow Row {
                 get {
                     return this.eventRow;
                 }
@@ -2749,22 +2843,22 @@ namespace FaultData.Database {
         ///Row event argument class
         ///</summary>
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public class DoubleEndedFaultDistanceRowChangeEvent : global::System.EventArgs {
+        public class FaultSummaryRowChangeEvent : global::System.EventArgs {
             
-            private DoubleEndedFaultDistanceRow eventRow;
+            private FaultSummaryRow eventRow;
             
             private global::System.Data.DataRowAction eventAction;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public DoubleEndedFaultDistanceRowChangeEvent(DoubleEndedFaultDistanceRow row, global::System.Data.DataRowAction action) {
+            public FaultSummaryRowChangeEvent(FaultSummaryRow row, global::System.Data.DataRowAction action) {
                 this.eventRow = row;
                 this.eventAction = action;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public DoubleEndedFaultDistanceRow Row {
+            public FaultSummaryRow Row {
                 get {
                     return this.eventRow;
                 }
@@ -3851,540 +3945,6 @@ SELECT ID, EventID, SegmentTypeID, StartTime, EndTime, StartSample, EndSample FR
     [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
         ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
     [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-    public partial class FaultSummaryTableAdapter : global::System.ComponentModel.Component {
-        
-        private global::System.Data.SqlClient.SqlDataAdapter _adapter;
-        
-        private global::System.Data.SqlClient.SqlConnection _connection;
-        
-        private global::System.Data.SqlClient.SqlTransaction _transaction;
-        
-        private global::System.Data.SqlClient.SqlCommand[] _commandCollection;
-        
-        private bool _clearBeforeFill;
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public FaultSummaryTableAdapter() {
-            this.ClearBeforeFill = true;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        protected internal global::System.Data.SqlClient.SqlDataAdapter Adapter {
-            get {
-                if ((this._adapter == null)) {
-                    this.InitAdapter();
-                }
-                return this._adapter;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public global::System.Data.SqlClient.SqlConnection Connection {
-            get {
-                if ((this._connection == null)) {
-                    this.InitConnection();
-                }
-                return this._connection;
-            }
-            set {
-                this._connection = value;
-                if ((this.Adapter.InsertCommand != null)) {
-                    this.Adapter.InsertCommand.Connection = value;
-                }
-                if ((this.Adapter.DeleteCommand != null)) {
-                    this.Adapter.DeleteCommand.Connection = value;
-                }
-                if ((this.Adapter.UpdateCommand != null)) {
-                    this.Adapter.UpdateCommand.Connection = value;
-                }
-                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
-                    if ((this.CommandCollection[i] != null)) {
-                        ((global::System.Data.SqlClient.SqlCommand)(this.CommandCollection[i])).Connection = value;
-                    }
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        internal global::System.Data.SqlClient.SqlTransaction Transaction {
-            get {
-                return this._transaction;
-            }
-            set {
-                this._transaction = value;
-                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
-                    this.CommandCollection[i].Transaction = this._transaction;
-                }
-                if (((this.Adapter != null) 
-                            && (this.Adapter.DeleteCommand != null))) {
-                    this.Adapter.DeleteCommand.Transaction = this._transaction;
-                }
-                if (((this.Adapter != null) 
-                            && (this.Adapter.InsertCommand != null))) {
-                    this.Adapter.InsertCommand.Transaction = this._transaction;
-                }
-                if (((this.Adapter != null) 
-                            && (this.Adapter.UpdateCommand != null))) {
-                    this.Adapter.UpdateCommand.Transaction = this._transaction;
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        protected global::System.Data.SqlClient.SqlCommand[] CommandCollection {
-            get {
-                if ((this._commandCollection == null)) {
-                    this.InitCommandCollection();
-                }
-                return this._commandCollection;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        public bool ClearBeforeFill {
-            get {
-                return this._clearBeforeFill;
-            }
-            set {
-                this._clearBeforeFill = value;
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private void InitAdapter() {
-            this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
-            global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
-            tableMapping.SourceTable = "Table";
-            tableMapping.DataSetTable = "FaultSummary";
-            tableMapping.ColumnMappings.Add("ID", "ID");
-            tableMapping.ColumnMappings.Add("EventID", "EventID");
-            tableMapping.ColumnMappings.Add("Algorithm", "Algorithm");
-            tableMapping.ColumnMappings.Add("FaultNumber", "FaultNumber");
-            tableMapping.ColumnMappings.Add("CalculationCycle", "CalculationCycle");
-            tableMapping.ColumnMappings.Add("Distance", "Distance");
-            tableMapping.ColumnMappings.Add("CurrentMagnitude", "CurrentMagnitude");
-            tableMapping.ColumnMappings.Add("Inception", "Inception");
-            tableMapping.ColumnMappings.Add("DurationSeconds", "DurationSeconds");
-            tableMapping.ColumnMappings.Add("DurationCycles", "DurationCycles");
-            tableMapping.ColumnMappings.Add("FaultType", "FaultType");
-            tableMapping.ColumnMappings.Add("IsSelectedAlgorithm", "IsSelectedAlgorithm");
-            tableMapping.ColumnMappings.Add("IsValid", "IsValid");
-            tableMapping.ColumnMappings.Add("IsSuppressed", "IsSuppressed");
-            this._adapter.TableMappings.Add(tableMapping);
-            this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
-            this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[FaultSummary] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([FaultNumber] = @Original_FaultNumber) AND ([CalculationCycle] = @Original_CalculationCycle) AND ([Distance] = @Original_Distance) AND ([CurrentMagnitude] = @Original_CurrentMagnitude) AND ([Inception] = @Original_Inception) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType) AND ([IsSelectedAlgorithm] = @Original_IsSelectedAlgorithm) AND ([IsValid] = @Original_IsValid) AND ([IsSuppressed] = @Original_IsSuppressed))";
-            this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
-            this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[FaultSummary] ([EventID], [Algorithm], [FaultNumber], [CalculationCycle], [Distance], [CurrentMagnitude], [Inception], [DurationSeconds], [DurationCycles], [FaultType], [IsSelectedAlgorithm], [IsValid], [IsSuppressed]) VALUES (@EventID, @Algorithm, @FaultNumber, @CalculationCycle, @Distance, @CurrentMagnitude, @Inception, @DurationSeconds, @DurationCycles, @FaultType, @IsSelectedAlgorithm, @IsValid, @IsSuppressed);
-SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed FROM FaultSummary WHERE (ID = SCOPE_IDENTITY())";
-            this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
-            this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[FaultSummary] SET [EventID] = @EventID, [Algorithm] = @Algorithm, [FaultNumber] = @FaultNumber, [CalculationCycle] = @CalculationCycle, [Distance] = @Distance, [CurrentMagnitude] = @CurrentMagnitude, [Inception] = @Inception, [DurationSeconds] = @DurationSeconds, [DurationCycles] = @DurationCycles, [FaultType] = @FaultType, [IsSelectedAlgorithm] = @IsSelectedAlgorithm, [IsValid] = @IsValid, [IsSuppressed] = @IsSuppressed WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([FaultNumber] = @Original_FaultNumber) AND ([CalculationCycle] = @Original_CalculationCycle) AND ([Distance] = @Original_Distance) AND ([CurrentMagnitude] = @Original_CurrentMagnitude) AND ([Inception] = @Original_Inception) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType) AND ([IsSelectedAlgorithm] = @Original_IsSelectedAlgorithm) AND ([IsValid] = @Original_IsValid) AND ([IsSuppressed] = @Original_IsSuppressed));
-SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed FROM FaultSummary WHERE (ID = @ID)";
-            this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private void InitConnection() {
-            this._connection = new global::System.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        private void InitCommandCollection() {
-            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
-            this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
-            this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMa" +
-                "gnitude, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgori" +
-                "thm, IsValid, IsSuppressed FROM dbo.FaultSummary";
-            this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
-            this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = "SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMa" +
-                "gnitude, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgori" +
-                "thm, IsValid, IsSuppressed FROM dbo.FaultSummary WHERE EventID = @eventID";
-            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@eventID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
-        public virtual int Fill(FaultLocationData.FaultSummaryDataTable dataTable) {
-            this.Adapter.SelectCommand = this.CommandCollection[0];
-            if ((this.ClearBeforeFill == true)) {
-                dataTable.Clear();
-            }
-            int returnValue = this.Adapter.Fill(dataTable);
-            return returnValue;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
-        public virtual FaultLocationData.FaultSummaryDataTable GetData() {
-            this.Adapter.SelectCommand = this.CommandCollection[0];
-            FaultLocationData.FaultSummaryDataTable dataTable = new FaultLocationData.FaultSummaryDataTable();
-            this.Adapter.Fill(dataTable);
-            return dataTable;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
-        public virtual int FillBy(FaultLocationData.FaultSummaryDataTable dataTable, int eventID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(eventID));
-            if ((this.ClearBeforeFill == true)) {
-                dataTable.Clear();
-            }
-            int returnValue = this.Adapter.Fill(dataTable);
-            return returnValue;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
-        public virtual FaultLocationData.FaultSummaryDataTable GetDataBy(int eventID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(eventID));
-            FaultLocationData.FaultSummaryDataTable dataTable = new FaultLocationData.FaultSummaryDataTable();
-            this.Adapter.Fill(dataTable);
-            return dataTable;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(FaultLocationData.FaultSummaryDataTable dataTable) {
-            return this.Adapter.Update(dataTable);
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(FaultLocationData dataSet) {
-            return this.Adapter.Update(dataSet, "FaultSummary");
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(global::System.Data.DataRow dataRow) {
-            return this.Adapter.Update(new global::System.Data.DataRow[] {
-                        dataRow});
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int Update(global::System.Data.DataRow[] dataRows) {
-            return this.Adapter.Update(dataRows);
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_EventID, string Original_Algorithm, int Original_FaultNumber, int Original_CalculationCycle, double Original_Distance, double Original_CurrentMagnitude, System.DateTime Original_Inception, double Original_DurationSeconds, double Original_DurationCycles, string Original_FaultType, int Original_IsSelectedAlgorithm, int Original_IsValid, int Original_IsSuppressed) {
-            this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
-            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_EventID));
-            if ((Original_Algorithm == null)) {
-                throw new global::System.ArgumentNullException("Original_Algorithm");
-            }
-            else {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_Algorithm));
-            }
-            this.Adapter.DeleteCommand.Parameters[3].Value = ((int)(Original_FaultNumber));
-            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_CalculationCycle));
-            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_Distance));
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_CurrentMagnitude));
-            this.Adapter.DeleteCommand.Parameters[7].Value = ((System.DateTime)(Original_Inception));
-            this.Adapter.DeleteCommand.Parameters[8].Value = ((double)(Original_DurationSeconds));
-            this.Adapter.DeleteCommand.Parameters[9].Value = ((double)(Original_DurationCycles));
-            if ((Original_FaultType == null)) {
-                throw new global::System.ArgumentNullException("Original_FaultType");
-            }
-            else {
-                this.Adapter.DeleteCommand.Parameters[10].Value = ((string)(Original_FaultType));
-            }
-            this.Adapter.DeleteCommand.Parameters[11].Value = ((int)(Original_IsSelectedAlgorithm));
-            this.Adapter.DeleteCommand.Parameters[12].Value = ((int)(Original_IsValid));
-            this.Adapter.DeleteCommand.Parameters[13].Value = ((int)(Original_IsSuppressed));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
-            if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.DeleteCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.DeleteCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.DeleteCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int EventID, string Algorithm, int FaultNumber, int CalculationCycle, double Distance, double CurrentMagnitude, System.DateTime Inception, double DurationSeconds, double DurationCycles, string FaultType, int IsSelectedAlgorithm, int IsValid, int IsSuppressed) {
-            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(EventID));
-            if ((Algorithm == null)) {
-                throw new global::System.ArgumentNullException("Algorithm");
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[1].Value = ((string)(Algorithm));
-            }
-            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(FaultNumber));
-            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(CalculationCycle));
-            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(Distance));
-            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(CurrentMagnitude));
-            this.Adapter.InsertCommand.Parameters[6].Value = ((System.DateTime)(Inception));
-            this.Adapter.InsertCommand.Parameters[7].Value = ((double)(DurationSeconds));
-            this.Adapter.InsertCommand.Parameters[8].Value = ((double)(DurationCycles));
-            if ((FaultType == null)) {
-                throw new global::System.ArgumentNullException("FaultType");
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[9].Value = ((string)(FaultType));
-            }
-            this.Adapter.InsertCommand.Parameters[10].Value = ((int)(IsSelectedAlgorithm));
-            this.Adapter.InsertCommand.Parameters[11].Value = ((int)(IsValid));
-            this.Adapter.InsertCommand.Parameters[12].Value = ((int)(IsSuppressed));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
-            if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.InsertCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.InsertCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(
-                    int EventID, 
-                    string Algorithm, 
-                    int FaultNumber, 
-                    int CalculationCycle, 
-                    double Distance, 
-                    double CurrentMagnitude, 
-                    System.DateTime Inception, 
-                    double DurationSeconds, 
-                    double DurationCycles, 
-                    string FaultType, 
-                    int IsSelectedAlgorithm, 
-                    int IsValid, 
-                    int IsSuppressed, 
-                    int Original_ID, 
-                    int Original_EventID, 
-                    string Original_Algorithm, 
-                    int Original_FaultNumber, 
-                    int Original_CalculationCycle, 
-                    double Original_Distance, 
-                    double Original_CurrentMagnitude, 
-                    System.DateTime Original_Inception, 
-                    double Original_DurationSeconds, 
-                    double Original_DurationCycles, 
-                    string Original_FaultType, 
-                    int Original_IsSelectedAlgorithm, 
-                    int Original_IsValid, 
-                    int Original_IsSuppressed, 
-                    int ID) {
-            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(EventID));
-            if ((Algorithm == null)) {
-                throw new global::System.ArgumentNullException("Algorithm");
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(Algorithm));
-            }
-            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(FaultNumber));
-            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(CalculationCycle));
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(Distance));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(CurrentMagnitude));
-            this.Adapter.UpdateCommand.Parameters[6].Value = ((System.DateTime)(Inception));
-            this.Adapter.UpdateCommand.Parameters[7].Value = ((double)(DurationSeconds));
-            this.Adapter.UpdateCommand.Parameters[8].Value = ((double)(DurationCycles));
-            if ((FaultType == null)) {
-                throw new global::System.ArgumentNullException("FaultType");
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[9].Value = ((string)(FaultType));
-            }
-            this.Adapter.UpdateCommand.Parameters[10].Value = ((int)(IsSelectedAlgorithm));
-            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(IsValid));
-            this.Adapter.UpdateCommand.Parameters[12].Value = ((int)(IsSuppressed));
-            this.Adapter.UpdateCommand.Parameters[13].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[14].Value = ((int)(Original_EventID));
-            if ((Original_Algorithm == null)) {
-                throw new global::System.ArgumentNullException("Original_Algorithm");
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[15].Value = ((string)(Original_Algorithm));
-            }
-            this.Adapter.UpdateCommand.Parameters[16].Value = ((int)(Original_FaultNumber));
-            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_CalculationCycle));
-            this.Adapter.UpdateCommand.Parameters[18].Value = ((double)(Original_Distance));
-            this.Adapter.UpdateCommand.Parameters[19].Value = ((double)(Original_CurrentMagnitude));
-            this.Adapter.UpdateCommand.Parameters[20].Value = ((System.DateTime)(Original_Inception));
-            this.Adapter.UpdateCommand.Parameters[21].Value = ((double)(Original_DurationSeconds));
-            this.Adapter.UpdateCommand.Parameters[22].Value = ((double)(Original_DurationCycles));
-            if ((Original_FaultType == null)) {
-                throw new global::System.ArgumentNullException("Original_FaultType");
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[23].Value = ((string)(Original_FaultType));
-            }
-            this.Adapter.UpdateCommand.Parameters[24].Value = ((int)(Original_IsSelectedAlgorithm));
-            this.Adapter.UpdateCommand.Parameters[25].Value = ((int)(Original_IsValid));
-            this.Adapter.UpdateCommand.Parameters[26].Value = ((int)(Original_IsSuppressed));
-            this.Adapter.UpdateCommand.Parameters[27].Value = ((int)(ID));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
-            if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.UpdateCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.UpdateCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(
-                    int EventID, 
-                    string Algorithm, 
-                    int FaultNumber, 
-                    int CalculationCycle, 
-                    double Distance, 
-                    double CurrentMagnitude, 
-                    System.DateTime Inception, 
-                    double DurationSeconds, 
-                    double DurationCycles, 
-                    string FaultType, 
-                    int IsSelectedAlgorithm, 
-                    int IsValid, 
-                    int IsSuppressed, 
-                    int Original_ID, 
-                    int Original_EventID, 
-                    string Original_Algorithm, 
-                    int Original_FaultNumber, 
-                    int Original_CalculationCycle, 
-                    double Original_Distance, 
-                    double Original_CurrentMagnitude, 
-                    System.DateTime Original_Inception, 
-                    double Original_DurationSeconds, 
-                    double Original_DurationCycles, 
-                    string Original_FaultType, 
-                    int Original_IsSelectedAlgorithm, 
-                    int Original_IsValid, 
-                    int Original_IsSuppressed) {
-            return this.Update(EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed, Original_ID, Original_EventID, Original_Algorithm, Original_FaultNumber, Original_CalculationCycle, Original_Distance, Original_CurrentMagnitude, Original_Inception, Original_DurationSeconds, Original_DurationCycles, Original_FaultType, Original_IsSelectedAlgorithm, Original_IsValid, Original_IsSuppressed, Original_ID);
-        }
-    }
-    
-    /// <summary>
-    ///Represents the connection and commands used to retrieve and save data.
-    ///</summary>
-    [global::System.ComponentModel.DesignerCategoryAttribute("code")]
-    [global::System.ComponentModel.ToolboxItem(true)]
-    [global::System.ComponentModel.DataObjectAttribute(true)]
-    [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
-        ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
-    [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
     public partial class DoubleEndedFaultDistanceTableAdapter : global::System.ComponentModel.Component {
         
         private global::System.Data.SqlClient.SqlDataAdapter _adapter;
@@ -4745,6 +4305,626 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
     }
     
     /// <summary>
+    ///Represents the connection and commands used to retrieve and save data.
+    ///</summary>
+    [global::System.ComponentModel.DesignerCategoryAttribute("code")]
+    [global::System.ComponentModel.ToolboxItem(true)]
+    [global::System.ComponentModel.DataObjectAttribute(true)]
+    [global::System.ComponentModel.DesignerAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterDesigner, Microsoft.VSDesigner" +
+        ", Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+    [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+    public partial class FaultSummaryTableAdapter : global::System.ComponentModel.Component {
+        
+        private global::System.Data.SqlClient.SqlDataAdapter _adapter;
+        
+        private global::System.Data.SqlClient.SqlConnection _connection;
+        
+        private global::System.Data.SqlClient.SqlTransaction _transaction;
+        
+        private global::System.Data.SqlClient.SqlCommand[] _commandCollection;
+        
+        private bool _clearBeforeFill;
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public FaultSummaryTableAdapter() {
+            this.ClearBeforeFill = true;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        protected internal global::System.Data.SqlClient.SqlDataAdapter Adapter {
+            get {
+                if ((this._adapter == null)) {
+                    this.InitAdapter();
+                }
+                return this._adapter;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public global::System.Data.SqlClient.SqlConnection Connection {
+            get {
+                if ((this._connection == null)) {
+                    this.InitConnection();
+                }
+                return this._connection;
+            }
+            set {
+                this._connection = value;
+                if ((this.Adapter.InsertCommand != null)) {
+                    this.Adapter.InsertCommand.Connection = value;
+                }
+                if ((this.Adapter.DeleteCommand != null)) {
+                    this.Adapter.DeleteCommand.Connection = value;
+                }
+                if ((this.Adapter.UpdateCommand != null)) {
+                    this.Adapter.UpdateCommand.Connection = value;
+                }
+                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
+                    if ((this.CommandCollection[i] != null)) {
+                        ((global::System.Data.SqlClient.SqlCommand)(this.CommandCollection[i])).Connection = value;
+                    }
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        internal global::System.Data.SqlClient.SqlTransaction Transaction {
+            get {
+                return this._transaction;
+            }
+            set {
+                this._transaction = value;
+                for (int i = 0; (i < this.CommandCollection.Length); i = (i + 1)) {
+                    this.CommandCollection[i].Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.DeleteCommand != null))) {
+                    this.Adapter.DeleteCommand.Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.InsertCommand != null))) {
+                    this.Adapter.InsertCommand.Transaction = this._transaction;
+                }
+                if (((this.Adapter != null) 
+                            && (this.Adapter.UpdateCommand != null))) {
+                    this.Adapter.UpdateCommand.Transaction = this._transaction;
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        protected global::System.Data.SqlClient.SqlCommand[] CommandCollection {
+            get {
+                if ((this._commandCollection == null)) {
+                    this.InitCommandCollection();
+                }
+                return this._commandCollection;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        public bool ClearBeforeFill {
+            get {
+                return this._clearBeforeFill;
+            }
+            set {
+                this._clearBeforeFill = value;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitAdapter() {
+            this._adapter = new global::System.Data.SqlClient.SqlDataAdapter();
+            global::System.Data.Common.DataTableMapping tableMapping = new global::System.Data.Common.DataTableMapping();
+            tableMapping.SourceTable = "Table";
+            tableMapping.DataSetTable = "FaultSummary";
+            tableMapping.ColumnMappings.Add("ID", "ID");
+            tableMapping.ColumnMappings.Add("EventID", "EventID");
+            tableMapping.ColumnMappings.Add("Algorithm", "Algorithm");
+            tableMapping.ColumnMappings.Add("FaultNumber", "FaultNumber");
+            tableMapping.ColumnMappings.Add("CalculationCycle", "CalculationCycle");
+            tableMapping.ColumnMappings.Add("Distance", "Distance");
+            tableMapping.ColumnMappings.Add("CurrentMagnitude", "CurrentMagnitude");
+            tableMapping.ColumnMappings.Add("CurrentLag", "CurrentLag");
+            tableMapping.ColumnMappings.Add("PrefaultCurrent", "PrefaultCurrent");
+            tableMapping.ColumnMappings.Add("PostfaultCurrent", "PostfaultCurrent");
+            tableMapping.ColumnMappings.Add("Inception", "Inception");
+            tableMapping.ColumnMappings.Add("DurationSeconds", "DurationSeconds");
+            tableMapping.ColumnMappings.Add("DurationCycles", "DurationCycles");
+            tableMapping.ColumnMappings.Add("FaultType", "FaultType");
+            tableMapping.ColumnMappings.Add("IsSelectedAlgorithm", "IsSelectedAlgorithm");
+            tableMapping.ColumnMappings.Add("IsValid", "IsValid");
+            tableMapping.ColumnMappings.Add("IsSuppressed", "IsSuppressed");
+            this._adapter.TableMappings.Add(tableMapping);
+            this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.DeleteCommand.Connection = this.Connection;
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[FaultSummary] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Algorithm) AND ([FaultNumber] = @Original_FaultNumber) AND ([CalculationCycle] = @Original_CalculationCycle) AND ([Distance] = @Original_Distance) AND ([CurrentMagnitude] = @Original_CurrentMagnitude) AND ([CurrentLag] = @Original_CurrentLag) AND ([PrefaultCurrent] = @Original_PrefaultCurrent) AND ([PostfaultCurrent] = @Original_PostfaultCurrent) AND ([Inception] = @Original_Inception) AND ([DurationSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_DurationCycles) AND ([FaultType] = @Original_FaultType) AND ([IsSelectedAlgorithm] = @Original_IsSelectedAlgorithm) AND ([IsValid] = @Original_IsValid) AND ([IsSuppressed] = @Original_IsSuppressed))";
+            this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CurrentLag", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentLag", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PrefaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PrefaultCurrent", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PostfaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PostfaultCurrent", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.InsertCommand.Connection = this.Connection;
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[FaultSummary] ([EventID], [Algorithm], [FaultNumber], [CalculationCycle], [Distance], [CurrentMagnitude], [CurrentLag], [PrefaultCurrent], [PostfaultCurrent], [Inception], [DurationSeconds], [DurationCycles], [FaultType], [IsSelectedAlgorithm], [IsValid], [IsSuppressed]) VALUES (@EventID, @Algorithm, @FaultNumber, @CalculationCycle, @Distance, @CurrentMagnitude, @CurrentLag, @PrefaultCurrent, @PostfaultCurrent, @Inception, @DurationSeconds, @DurationCycles, @FaultType, @IsSelectedAlgorithm, @IsValid, @IsSuppressed);
+SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, CurrentLag, PrefaultCurrent, PostfaultCurrent, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed FROM FaultSummary WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CurrentLag", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentLag", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PrefaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PrefaultCurrent", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PostfaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PostfaultCurrent", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
+            this._adapter.UpdateCommand.Connection = this.Connection;
+            this._adapter.UpdateCommand.CommandText = "UPDATE [dbo].[FaultSummary] SET [EventID] = @EventID, [Algorithm] = @Algorithm, [" +
+                "FaultNumber] = @FaultNumber, [CalculationCycle] = @CalculationCycle, [Distance] " +
+                "= @Distance, [CurrentMagnitude] = @CurrentMagnitude, [CurrentLag] = @CurrentLag," +
+                " [PrefaultCurrent] = @PrefaultCurrent, [PostfaultCurrent] = @PostfaultCurrent, [" +
+                "Inception] = @Inception, [DurationSeconds] = @DurationSeconds, [DurationCycles] " +
+                "= @DurationCycles, [FaultType] = @FaultType, [IsSelectedAlgorithm] = @IsSelected" +
+                "Algorithm, [IsValid] = @IsValid, [IsSuppressed] = @IsSuppressed WHERE (([ID] = @" +
+                "Original_ID) AND ([EventID] = @Original_EventID) AND ([Algorithm] = @Original_Al" +
+                "gorithm) AND ([FaultNumber] = @Original_FaultNumber) AND ([CalculationCycle] = @" +
+                "Original_CalculationCycle) AND ([Distance] = @Original_Distance) AND ([CurrentMa" +
+                "gnitude] = @Original_CurrentMagnitude) AND ([CurrentLag] = @Original_CurrentLag)" +
+                " AND ([PrefaultCurrent] = @Original_PrefaultCurrent) AND ([PostfaultCurrent] = @" +
+                "Original_PostfaultCurrent) AND ([Inception] = @Original_Inception) AND ([Duratio" +
+                "nSeconds] = @Original_DurationSeconds) AND ([DurationCycles] = @Original_Duratio" +
+                "nCycles) AND ([FaultType] = @Original_FaultType) AND ([IsSelectedAlgorithm] = @O" +
+                "riginal_IsSelectedAlgorithm) AND ([IsValid] = @Original_IsValid) AND ([IsSuppres" +
+                "sed] = @Original_IsSuppressed));\r\nSELECT ID, EventID, Algorithm, FaultNumber, Ca" +
+                "lculationCycle, Distance, CurrentMagnitude, CurrentLag, PrefaultCurrent, Postfau" +
+                "ltCurrent, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgo" +
+                "rithm, IsValid, IsSuppressed FROM FaultSummary WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CurrentLag", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentLag", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PrefaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PrefaultCurrent", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PostfaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PostfaultCurrent", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Algorithm", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Algorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultNumber", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultNumber", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CalculationCycle", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CalculationCycle", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Distance", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Distance", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CurrentMagnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentMagnitude", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CurrentLag", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CurrentLag", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PrefaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PrefaultCurrent", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_PostfaultCurrent", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PostfaultCurrent", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Inception", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Inception", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationSeconds", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationSeconds", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DurationCycles", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DurationCycles", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultType", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultType", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSelectedAlgorithm", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSelectedAlgorithm", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsValid", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsValid", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_IsSuppressed", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "IsSuppressed", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitConnection() {
+            this._connection = new global::System.Data.SqlClient.SqlConnection();
+            this._connection.ConnectionString = global::FaultData.Properties.Settings.Default.openXDAConnectionString;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        private void InitCommandCollection() {
+            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
+            this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[0].Connection = this.Connection;
+            this._commandCollection[0].CommandText = @"SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, CurrentLag, PrefaultCurrent, PostfaultCurrent, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed FROM dbo.FaultSummary";
+            this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[1].Connection = this.Connection;
+            this._commandCollection[1].CommandText = @"SELECT ID, EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, CurrentLag, PrefaultCurrent, PostfaultCurrent, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed FROM dbo.FaultSummary WHERE EventID = @eventID";
+            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@eventID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, true)]
+        public virtual int Fill(FaultLocationData.FaultSummaryDataTable dataTable) {
+            this.Adapter.SelectCommand = this.CommandCollection[0];
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, true)]
+        public virtual FaultLocationData.FaultSummaryDataTable GetData() {
+            this.Adapter.SelectCommand = this.CommandCollection[0];
+            FaultLocationData.FaultSummaryDataTable dataTable = new FaultLocationData.FaultSummaryDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
+        public virtual int FillBy(FaultLocationData.FaultSummaryDataTable dataTable, int eventID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(eventID));
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
+        public virtual FaultLocationData.FaultSummaryDataTable GetDataBy(int eventID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(eventID));
+            FaultLocationData.FaultSummaryDataTable dataTable = new FaultLocationData.FaultSummaryDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(FaultLocationData.FaultSummaryDataTable dataTable) {
+            return this.Adapter.Update(dataTable);
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(FaultLocationData dataSet) {
+            return this.Adapter.Update(dataSet, "FaultSummary");
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(global::System.Data.DataRow dataRow) {
+            return this.Adapter.Update(new global::System.Data.DataRow[] {
+                        dataRow});
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual int Update(global::System.Data.DataRow[] dataRows) {
+            return this.Adapter.Update(dataRows);
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
+        public virtual int Delete(
+                    int Original_ID, 
+                    int Original_EventID, 
+                    string Original_Algorithm, 
+                    int Original_FaultNumber, 
+                    int Original_CalculationCycle, 
+                    double Original_Distance, 
+                    double Original_CurrentMagnitude, 
+                    double Original_CurrentLag, 
+                    double Original_PrefaultCurrent, 
+                    double Original_PostfaultCurrent, 
+                    System.DateTime Original_Inception, 
+                    double Original_DurationSeconds, 
+                    double Original_DurationCycles, 
+                    string Original_FaultType, 
+                    int Original_IsSelectedAlgorithm, 
+                    int Original_IsValid, 
+                    int Original_IsSuppressed) {
+            this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
+            this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_EventID));
+            if ((Original_Algorithm == null)) {
+                throw new global::System.ArgumentNullException("Original_Algorithm");
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_Algorithm));
+            }
+            this.Adapter.DeleteCommand.Parameters[3].Value = ((int)(Original_FaultNumber));
+            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_CalculationCycle));
+            this.Adapter.DeleteCommand.Parameters[5].Value = ((double)(Original_Distance));
+            this.Adapter.DeleteCommand.Parameters[6].Value = ((double)(Original_CurrentMagnitude));
+            this.Adapter.DeleteCommand.Parameters[7].Value = ((double)(Original_CurrentLag));
+            this.Adapter.DeleteCommand.Parameters[8].Value = ((double)(Original_PrefaultCurrent));
+            this.Adapter.DeleteCommand.Parameters[9].Value = ((double)(Original_PostfaultCurrent));
+            this.Adapter.DeleteCommand.Parameters[10].Value = ((System.DateTime)(Original_Inception));
+            this.Adapter.DeleteCommand.Parameters[11].Value = ((double)(Original_DurationSeconds));
+            this.Adapter.DeleteCommand.Parameters[12].Value = ((double)(Original_DurationCycles));
+            if ((Original_FaultType == null)) {
+                throw new global::System.ArgumentNullException("Original_FaultType");
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[13].Value = ((string)(Original_FaultType));
+            }
+            this.Adapter.DeleteCommand.Parameters[14].Value = ((int)(Original_IsSelectedAlgorithm));
+            this.Adapter.DeleteCommand.Parameters[15].Value = ((int)(Original_IsValid));
+            this.Adapter.DeleteCommand.Parameters[16].Value = ((int)(Original_IsSuppressed));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
+            if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.DeleteCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.DeleteCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.DeleteCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
+        public virtual int Insert(
+                    int EventID, 
+                    string Algorithm, 
+                    int FaultNumber, 
+                    int CalculationCycle, 
+                    double Distance, 
+                    double CurrentMagnitude, 
+                    double CurrentLag, 
+                    double PrefaultCurrent, 
+                    double PostfaultCurrent, 
+                    System.DateTime Inception, 
+                    double DurationSeconds, 
+                    double DurationCycles, 
+                    string FaultType, 
+                    int IsSelectedAlgorithm, 
+                    int IsValid, 
+                    int IsSuppressed) {
+            this.Adapter.InsertCommand.Parameters[0].Value = ((int)(EventID));
+            if ((Algorithm == null)) {
+                throw new global::System.ArgumentNullException("Algorithm");
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[1].Value = ((string)(Algorithm));
+            }
+            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(FaultNumber));
+            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(CalculationCycle));
+            this.Adapter.InsertCommand.Parameters[4].Value = ((double)(Distance));
+            this.Adapter.InsertCommand.Parameters[5].Value = ((double)(CurrentMagnitude));
+            this.Adapter.InsertCommand.Parameters[6].Value = ((double)(CurrentLag));
+            this.Adapter.InsertCommand.Parameters[7].Value = ((double)(PrefaultCurrent));
+            this.Adapter.InsertCommand.Parameters[8].Value = ((double)(PostfaultCurrent));
+            this.Adapter.InsertCommand.Parameters[9].Value = ((System.DateTime)(Inception));
+            this.Adapter.InsertCommand.Parameters[10].Value = ((double)(DurationSeconds));
+            this.Adapter.InsertCommand.Parameters[11].Value = ((double)(DurationCycles));
+            if ((FaultType == null)) {
+                throw new global::System.ArgumentNullException("FaultType");
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[12].Value = ((string)(FaultType));
+            }
+            this.Adapter.InsertCommand.Parameters[13].Value = ((int)(IsSelectedAlgorithm));
+            this.Adapter.InsertCommand.Parameters[14].Value = ((int)(IsValid));
+            this.Adapter.InsertCommand.Parameters[15].Value = ((int)(IsSuppressed));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
+            if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.InsertCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.InsertCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
+        public virtual int Update(
+                    int EventID, 
+                    string Algorithm, 
+                    int FaultNumber, 
+                    int CalculationCycle, 
+                    double Distance, 
+                    double CurrentMagnitude, 
+                    double CurrentLag, 
+                    double PrefaultCurrent, 
+                    double PostfaultCurrent, 
+                    System.DateTime Inception, 
+                    double DurationSeconds, 
+                    double DurationCycles, 
+                    string FaultType, 
+                    int IsSelectedAlgorithm, 
+                    int IsValid, 
+                    int IsSuppressed, 
+                    int Original_ID, 
+                    int Original_EventID, 
+                    string Original_Algorithm, 
+                    int Original_FaultNumber, 
+                    int Original_CalculationCycle, 
+                    double Original_Distance, 
+                    double Original_CurrentMagnitude, 
+                    double Original_CurrentLag, 
+                    double Original_PrefaultCurrent, 
+                    double Original_PostfaultCurrent, 
+                    System.DateTime Original_Inception, 
+                    double Original_DurationSeconds, 
+                    double Original_DurationCycles, 
+                    string Original_FaultType, 
+                    int Original_IsSelectedAlgorithm, 
+                    int Original_IsValid, 
+                    int Original_IsSuppressed, 
+                    int ID) {
+            this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(EventID));
+            if ((Algorithm == null)) {
+                throw new global::System.ArgumentNullException("Algorithm");
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(Algorithm));
+            }
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(FaultNumber));
+            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(CalculationCycle));
+            this.Adapter.UpdateCommand.Parameters[4].Value = ((double)(Distance));
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((double)(CurrentMagnitude));
+            this.Adapter.UpdateCommand.Parameters[6].Value = ((double)(CurrentLag));
+            this.Adapter.UpdateCommand.Parameters[7].Value = ((double)(PrefaultCurrent));
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((double)(PostfaultCurrent));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((System.DateTime)(Inception));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((double)(DurationSeconds));
+            this.Adapter.UpdateCommand.Parameters[11].Value = ((double)(DurationCycles));
+            if ((FaultType == null)) {
+                throw new global::System.ArgumentNullException("FaultType");
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(FaultType));
+            }
+            this.Adapter.UpdateCommand.Parameters[13].Value = ((int)(IsSelectedAlgorithm));
+            this.Adapter.UpdateCommand.Parameters[14].Value = ((int)(IsValid));
+            this.Adapter.UpdateCommand.Parameters[15].Value = ((int)(IsSuppressed));
+            this.Adapter.UpdateCommand.Parameters[16].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_EventID));
+            if ((Original_Algorithm == null)) {
+                throw new global::System.ArgumentNullException("Original_Algorithm");
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[18].Value = ((string)(Original_Algorithm));
+            }
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((int)(Original_FaultNumber));
+            this.Adapter.UpdateCommand.Parameters[20].Value = ((int)(Original_CalculationCycle));
+            this.Adapter.UpdateCommand.Parameters[21].Value = ((double)(Original_Distance));
+            this.Adapter.UpdateCommand.Parameters[22].Value = ((double)(Original_CurrentMagnitude));
+            this.Adapter.UpdateCommand.Parameters[23].Value = ((double)(Original_CurrentLag));
+            this.Adapter.UpdateCommand.Parameters[24].Value = ((double)(Original_PrefaultCurrent));
+            this.Adapter.UpdateCommand.Parameters[25].Value = ((double)(Original_PostfaultCurrent));
+            this.Adapter.UpdateCommand.Parameters[26].Value = ((System.DateTime)(Original_Inception));
+            this.Adapter.UpdateCommand.Parameters[27].Value = ((double)(Original_DurationSeconds));
+            this.Adapter.UpdateCommand.Parameters[28].Value = ((double)(Original_DurationCycles));
+            if ((Original_FaultType == null)) {
+                throw new global::System.ArgumentNullException("Original_FaultType");
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[29].Value = ((string)(Original_FaultType));
+            }
+            this.Adapter.UpdateCommand.Parameters[30].Value = ((int)(Original_IsSelectedAlgorithm));
+            this.Adapter.UpdateCommand.Parameters[31].Value = ((int)(Original_IsValid));
+            this.Adapter.UpdateCommand.Parameters[32].Value = ((int)(Original_IsSuppressed));
+            this.Adapter.UpdateCommand.Parameters[33].Value = ((int)(ID));
+            global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
+            if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                this.Adapter.UpdateCommand.Connection.Open();
+            }
+            try {
+                int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
+                return returnValue;
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    this.Adapter.UpdateCommand.Connection.Close();
+                }
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
+        public virtual int Update(
+                    int EventID, 
+                    string Algorithm, 
+                    int FaultNumber, 
+                    int CalculationCycle, 
+                    double Distance, 
+                    double CurrentMagnitude, 
+                    double CurrentLag, 
+                    double PrefaultCurrent, 
+                    double PostfaultCurrent, 
+                    System.DateTime Inception, 
+                    double DurationSeconds, 
+                    double DurationCycles, 
+                    string FaultType, 
+                    int IsSelectedAlgorithm, 
+                    int IsValid, 
+                    int IsSuppressed, 
+                    int Original_ID, 
+                    int Original_EventID, 
+                    string Original_Algorithm, 
+                    int Original_FaultNumber, 
+                    int Original_CalculationCycle, 
+                    double Original_Distance, 
+                    double Original_CurrentMagnitude, 
+                    double Original_CurrentLag, 
+                    double Original_PrefaultCurrent, 
+                    double Original_PostfaultCurrent, 
+                    System.DateTime Original_Inception, 
+                    double Original_DurationSeconds, 
+                    double Original_DurationCycles, 
+                    string Original_FaultType, 
+                    int Original_IsSelectedAlgorithm, 
+                    int Original_IsValid, 
+                    int Original_IsSuppressed) {
+            return this.Update(EventID, Algorithm, FaultNumber, CalculationCycle, Distance, CurrentMagnitude, CurrentLag, PrefaultCurrent, PostfaultCurrent, Inception, DurationSeconds, DurationCycles, FaultType, IsSelectedAlgorithm, IsValid, IsSuppressed, Original_ID, Original_EventID, Original_Algorithm, Original_FaultNumber, Original_CalculationCycle, Original_Distance, Original_CurrentMagnitude, Original_CurrentLag, Original_PrefaultCurrent, Original_PostfaultCurrent, Original_Inception, Original_DurationSeconds, Original_DurationCycles, Original_FaultType, Original_IsSelectedAlgorithm, Original_IsValid, Original_IsSuppressed, Original_ID);
+        }
+    }
+    
+    /// <summary>
     ///TableAdapterManager is used to coordinate TableAdapters in the dataset to enable Hierarchical Update scenarios
     ///</summary>
     [global::System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -4762,9 +4942,9 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
         
         private FaultSegmentTableAdapter _faultSegmentTableAdapter;
         
-        private FaultSummaryTableAdapter _faultSummaryTableAdapter;
-        
         private DoubleEndedFaultDistanceTableAdapter _doubleEndedFaultDistanceTableAdapter;
+        
+        private FaultSummaryTableAdapter _faultSummaryTableAdapter;
         
         private bool _backupDataSetBeforeUpdate;
         
@@ -4828,12 +5008,12 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
         [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
             "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
             "a", "System.Drawing.Design.UITypeEditor")]
-        public FaultSummaryTableAdapter FaultSummaryTableAdapter {
+        public DoubleEndedFaultDistanceTableAdapter DoubleEndedFaultDistanceTableAdapter {
             get {
-                return this._faultSummaryTableAdapter;
+                return this._doubleEndedFaultDistanceTableAdapter;
             }
             set {
-                this._faultSummaryTableAdapter = value;
+                this._doubleEndedFaultDistanceTableAdapter = value;
             }
         }
         
@@ -4842,12 +5022,12 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
         [global::System.ComponentModel.EditorAttribute("Microsoft.VSDesigner.DataSource.Design.TableAdapterManagerPropertyEditor, Microso" +
             "ft.VSDesigner, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3" +
             "a", "System.Drawing.Design.UITypeEditor")]
-        public DoubleEndedFaultDistanceTableAdapter DoubleEndedFaultDistanceTableAdapter {
+        public FaultSummaryTableAdapter FaultSummaryTableAdapter {
             get {
-                return this._doubleEndedFaultDistanceTableAdapter;
+                return this._faultSummaryTableAdapter;
             }
             set {
-                this._doubleEndedFaultDistanceTableAdapter = value;
+                this._faultSummaryTableAdapter = value;
             }
         }
         
@@ -4882,13 +5062,13 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                             && (this._faultSegmentTableAdapter.Connection != null))) {
                     return this._faultSegmentTableAdapter.Connection;
                 }
-                if (((this._faultSummaryTableAdapter != null) 
-                            && (this._faultSummaryTableAdapter.Connection != null))) {
-                    return this._faultSummaryTableAdapter.Connection;
-                }
                 if (((this._doubleEndedFaultDistanceTableAdapter != null) 
                             && (this._doubleEndedFaultDistanceTableAdapter.Connection != null))) {
                     return this._doubleEndedFaultDistanceTableAdapter.Connection;
+                }
+                if (((this._faultSummaryTableAdapter != null) 
+                            && (this._faultSummaryTableAdapter.Connection != null))) {
+                    return this._faultSummaryTableAdapter.Connection;
                 }
                 return null;
             }
@@ -4912,10 +5092,10 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                 if ((this._faultSegmentTableAdapter != null)) {
                     count = (count + 1);
                 }
-                if ((this._faultSummaryTableAdapter != null)) {
+                if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
                     count = (count + 1);
                 }
-                if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
+                if ((this._faultSummaryTableAdapter != null)) {
                     count = (count + 1);
                 }
                 return count;
@@ -4956,21 +5136,21 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                     allChangedRows.AddRange(updatedRows);
                 }
             }
-            if ((this._faultSummaryTableAdapter != null)) {
-                global::System.Data.DataRow[] updatedRows = dataSet.FaultSummary.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
-                updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
-                if (((updatedRows != null) 
-                            && (0 < updatedRows.Length))) {
-                    result = (result + this._faultSummaryTableAdapter.Update(updatedRows));
-                    allChangedRows.AddRange(updatedRows);
-                }
-            }
             if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
                 global::System.Data.DataRow[] updatedRows = dataSet.DoubleEndedFaultDistance.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
                 updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
                 if (((updatedRows != null) 
                             && (0 < updatedRows.Length))) {
                     result = (result + this._doubleEndedFaultDistanceTableAdapter.Update(updatedRows));
+                    allChangedRows.AddRange(updatedRows);
+                }
+            }
+            if ((this._faultSummaryTableAdapter != null)) {
+                global::System.Data.DataRow[] updatedRows = dataSet.FaultSummary.Select(null, null, global::System.Data.DataViewRowState.ModifiedCurrent);
+                updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
+                if (((updatedRows != null) 
+                            && (0 < updatedRows.Length))) {
+                    result = (result + this._faultSummaryTableAdapter.Update(updatedRows));
                     allChangedRows.AddRange(updatedRows);
                 }
             }
@@ -5008,19 +5188,19 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                     allAddedRows.AddRange(addedRows);
                 }
             }
-            if ((this._faultSummaryTableAdapter != null)) {
-                global::System.Data.DataRow[] addedRows = dataSet.FaultSummary.Select(null, null, global::System.Data.DataViewRowState.Added);
-                if (((addedRows != null) 
-                            && (0 < addedRows.Length))) {
-                    result = (result + this._faultSummaryTableAdapter.Update(addedRows));
-                    allAddedRows.AddRange(addedRows);
-                }
-            }
             if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
                 global::System.Data.DataRow[] addedRows = dataSet.DoubleEndedFaultDistance.Select(null, null, global::System.Data.DataViewRowState.Added);
                 if (((addedRows != null) 
                             && (0 < addedRows.Length))) {
                     result = (result + this._doubleEndedFaultDistanceTableAdapter.Update(addedRows));
+                    allAddedRows.AddRange(addedRows);
+                }
+            }
+            if ((this._faultSummaryTableAdapter != null)) {
+                global::System.Data.DataRow[] addedRows = dataSet.FaultSummary.Select(null, null, global::System.Data.DataViewRowState.Added);
+                if (((addedRows != null) 
+                            && (0 < addedRows.Length))) {
+                    result = (result + this._faultSummaryTableAdapter.Update(addedRows));
                     allAddedRows.AddRange(addedRows);
                 }
             }
@@ -5034,19 +5214,19 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private int UpdateDeletedRows(FaultLocationData dataSet, global::System.Collections.Generic.List<global::System.Data.DataRow> allChangedRows) {
             int result = 0;
-            if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
-                global::System.Data.DataRow[] deletedRows = dataSet.DoubleEndedFaultDistance.Select(null, null, global::System.Data.DataViewRowState.Deleted);
-                if (((deletedRows != null) 
-                            && (0 < deletedRows.Length))) {
-                    result = (result + this._doubleEndedFaultDistanceTableAdapter.Update(deletedRows));
-                    allChangedRows.AddRange(deletedRows);
-                }
-            }
             if ((this._faultSummaryTableAdapter != null)) {
                 global::System.Data.DataRow[] deletedRows = dataSet.FaultSummary.Select(null, null, global::System.Data.DataViewRowState.Deleted);
                 if (((deletedRows != null) 
                             && (0 < deletedRows.Length))) {
                     result = (result + this._faultSummaryTableAdapter.Update(deletedRows));
+                    allChangedRows.AddRange(deletedRows);
+                }
+            }
+            if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
+                global::System.Data.DataRow[] deletedRows = dataSet.DoubleEndedFaultDistance.Select(null, null, global::System.Data.DataViewRowState.Deleted);
+                if (((deletedRows != null) 
+                            && (0 < deletedRows.Length))) {
+                    result = (result + this._doubleEndedFaultDistanceTableAdapter.Update(deletedRows));
                     allChangedRows.AddRange(deletedRows);
                 }
             }
@@ -5128,13 +5308,13 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                 throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
                         "tring.");
             }
-            if (((this._faultSummaryTableAdapter != null) 
-                        && (this.MatchTableAdapterConnection(this._faultSummaryTableAdapter.Connection) == false))) {
+            if (((this._doubleEndedFaultDistanceTableAdapter != null) 
+                        && (this.MatchTableAdapterConnection(this._doubleEndedFaultDistanceTableAdapter.Connection) == false))) {
                 throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
                         "tring.");
             }
-            if (((this._doubleEndedFaultDistanceTableAdapter != null) 
-                        && (this.MatchTableAdapterConnection(this._doubleEndedFaultDistanceTableAdapter.Connection) == false))) {
+            if (((this._faultSummaryTableAdapter != null) 
+                        && (this.MatchTableAdapterConnection(this._faultSummaryTableAdapter.Connection) == false))) {
                 throw new global::System.ArgumentException("All TableAdapters managed by a TableAdapterManager must use the same connection s" +
                         "tring.");
             }
@@ -5197,15 +5377,6 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                         adaptersWithAcceptChangesDuringUpdate.Add(this._faultSegmentTableAdapter.Adapter);
                     }
                 }
-                if ((this._faultSummaryTableAdapter != null)) {
-                    revertConnections.Add(this._faultSummaryTableAdapter, this._faultSummaryTableAdapter.Connection);
-                    this._faultSummaryTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
-                    this._faultSummaryTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
-                    if (this._faultSummaryTableAdapter.Adapter.AcceptChangesDuringUpdate) {
-                        this._faultSummaryTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
-                        adaptersWithAcceptChangesDuringUpdate.Add(this._faultSummaryTableAdapter.Adapter);
-                    }
-                }
                 if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
                     revertConnections.Add(this._doubleEndedFaultDistanceTableAdapter, this._doubleEndedFaultDistanceTableAdapter.Connection);
                     this._doubleEndedFaultDistanceTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
@@ -5213,6 +5384,15 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                     if (this._doubleEndedFaultDistanceTableAdapter.Adapter.AcceptChangesDuringUpdate) {
                         this._doubleEndedFaultDistanceTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
                         adaptersWithAcceptChangesDuringUpdate.Add(this._doubleEndedFaultDistanceTableAdapter.Adapter);
+                    }
+                }
+                if ((this._faultSummaryTableAdapter != null)) {
+                    revertConnections.Add(this._faultSummaryTableAdapter, this._faultSummaryTableAdapter.Connection);
+                    this._faultSummaryTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(workConnection));
+                    this._faultSummaryTableAdapter.Transaction = ((global::System.Data.SqlClient.SqlTransaction)(workTransaction));
+                    if (this._faultSummaryTableAdapter.Adapter.AcceptChangesDuringUpdate) {
+                        this._faultSummaryTableAdapter.Adapter.AcceptChangesDuringUpdate = false;
+                        adaptersWithAcceptChangesDuringUpdate.Add(this._faultSummaryTableAdapter.Adapter);
                     }
                 }
                 // 
@@ -5285,13 +5465,13 @@ SELECT ID, LocalFaultSummaryID, RemoteFaultSummaryID, Distance, Angle, IsValid F
                     this._faultSegmentTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._faultSegmentTableAdapter]));
                     this._faultSegmentTableAdapter.Transaction = null;
                 }
-                if ((this._faultSummaryTableAdapter != null)) {
-                    this._faultSummaryTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._faultSummaryTableAdapter]));
-                    this._faultSummaryTableAdapter.Transaction = null;
-                }
                 if ((this._doubleEndedFaultDistanceTableAdapter != null)) {
                     this._doubleEndedFaultDistanceTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._doubleEndedFaultDistanceTableAdapter]));
                     this._doubleEndedFaultDistanceTableAdapter.Transaction = null;
+                }
+                if ((this._faultSummaryTableAdapter != null)) {
+                    this._faultSummaryTableAdapter.Connection = ((global::System.Data.SqlClient.SqlConnection)(revertConnections[this._faultSummaryTableAdapter]));
+                    this._faultSummaryTableAdapter.Transaction = null;
                 }
                 if ((0 < adaptersWithAcceptChangesDuringUpdate.Count)) {
                     global::System.Data.Common.DataAdapter[] adapters = new System.Data.Common.DataAdapter[adaptersWithAcceptChangesDuringUpdate.Count];

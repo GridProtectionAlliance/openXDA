@@ -188,7 +188,6 @@ namespace FaultData.DataResources
                                 }
 
                                 // Add the data points to the current fault curve
-                                fault.Curves[i].StartIndex = segment.StartSample;
                                 fault.Curves[i].Series.DataPoints.AddRange(faultDataPoints);
                             }
                         }
@@ -476,7 +475,7 @@ namespace FaultData.DataResources
                     if (faults.Count == 0)
                         continue;
 
-                    ClassifyFaults(faults, viCycleDataGroup);
+                    ClassifyFaults(faults, dataGroup, viCycleDataGroup);
                 }
                 finally
                 {
@@ -885,7 +884,7 @@ namespace FaultData.DataResources
             return startIndex;
         }
 
-        private void ClassifyFaults(List<Fault> faults, VICycleDataGroup viCycleDataGroup)
+        private void ClassifyFaults(List<Fault> faults, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             Fault.Segment currentSegment = null;
 
@@ -893,9 +892,9 @@ namespace FaultData.DataResources
             DataSeries ibRMS = viCycleDataGroup.IB.RMS;
             DataSeries icRMS = viCycleDataGroup.IC.RMS;
 
-            double iaPre = iaRMS.DataPoints[0].Value;
-            double ibPre = ibRMS.DataPoints[0].Value;
-            double icPre = icRMS.DataPoints[0].Value;
+            double iaPre = iaRMS[0].Value;
+            double ibPre = ibRMS[0].Value;
+            double icPre = icRMS[0].Value;
 
             double ia;
             double ib;
@@ -906,11 +905,11 @@ namespace FaultData.DataResources
 
             foreach (Fault fault in faults)
             {
-                for (int i = fault.StartSample; i <= fault.EndSample; i++)
+                for (int i = fault.StartSample; i <= fault.EndSample && i < iaRMS.DataPoints.Count; i++)
                 {
-                    ia = iaRMS.DataPoints[i].Value;
-                    ib = ibRMS.DataPoints[i].Value;
-                    ic = icRMS.DataPoints[i].Value;
+                    ia = iaRMS[i].Value;
+                    ib = ibRMS[i].Value;
+                    ic = icRMS[i].Value;
 
                     numPhases = GetNumPhases(4.0D, ia, ib, ic);
 
@@ -940,7 +939,7 @@ namespace FaultData.DataResources
 
                 if ((object)currentSegment != null)
                 {
-                    currentSegment.EndTime = viCycleDataGroup.IA.RMS[fault.EndSample].Time;
+                    currentSegment.EndTime = dataGroup[0][fault.EndSample].Time;
                     currentSegment.EndSample = fault.EndSample;
                     currentSegment = null;
                 }
@@ -1031,10 +1030,10 @@ namespace FaultData.DataResources
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = (int)Math.Round(dataGroup.DataSeries[0].SampleRate / Frequency);
+            int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / Frequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
-            DateTime startTime = viCycleDataGroup.IA.RMS[fault.StartSample].Time;
-            DateTime endTime = viCycleDataGroup.IA.RMS[fault.EndSample].Time;
+            DateTime startTime = dataGroup[0][fault.StartSample].Time;
+            DateTime endTime = dataGroup[0][fault.EndSample].Time;
 
             List<Fault.Summary> validSummaries;
             Fault.Summary summary;
@@ -1043,7 +1042,9 @@ namespace FaultData.DataResources
             fault.InceptionTime = startTime;
             fault.ClearingTime = endTime;
             fault.Duration = endTime - startTime;
-            fault.IsSuppressed = !IsBreakerOpen(fault, dataGroup, viCycleDataGroup);
+            fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
+            fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
+            fault.IsSuppressed = fault.PostfaultCurrent > m_openBreakerThreshold;
 
             if (fault.Segments.Any())
             {
@@ -1054,6 +1055,7 @@ namespace FaultData.DataResources
                     .FirstOrDefault();
 
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
+                fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
             }
 
             if (calculationCycle >= 0)
@@ -1069,10 +1071,21 @@ namespace FaultData.DataResources
                     fault.Summaries.Add(summary);
                 }
 
+                if (fault.Summaries.Any(s => !s.IsValid))
+                    fault.IsSuppressed |= fault.CurrentLag < 0;
+
                 validSummaries = fault.Summaries
                     .Where(s => s.IsValid)
                     .OrderBy(s => s.Distance)
                     .ToList();
+
+                if (!validSummaries.Any())
+                {
+                    validSummaries = fault.Summaries
+                        .Where(s => !double.IsNaN(s.Distance))
+                        .OrderBy(s => s.Distance)
+                        .ToList();
+                }
 
                 if (validSummaries.Any())
                     validSummaries[validSummaries.Count / 2].IsSelectedAlgorithm = true;
@@ -1087,18 +1100,30 @@ namespace FaultData.DataResources
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 
-        private bool IsBreakerOpen(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / Frequency);
-            int end = Math.Min(fault.EndSample + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int start = Math.Max(0, fault.StartSample - samplesPerCycle);
+            int end = fault.StartSample;
 
-            double ia = viCycleDataGroup.IA.RMS.ToSubSeries(fault.EndSample, end).DataPoints.Min(dataPoint => dataPoint.Value);
-            double ib = viCycleDataGroup.IB.RMS.ToSubSeries(fault.EndSample, end).DataPoints.Min(dataPoint => dataPoint.Value);
-            double ic = viCycleDataGroup.IC.RMS.ToSubSeries(fault.EndSample, end).DataPoints.Min(dataPoint => dataPoint.Value);
+            double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
+            double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
+            double ic = viCycleDataGroup.IC.RMS.ToSubSeries(start, end).Minimum;
 
-            return (ia <= m_openBreakerThreshold) &&
-                   (ib <= m_openBreakerThreshold) &&
-                   (ic <= m_openBreakerThreshold);
+            return Common.Min(ia, ib, ic);
+        }
+
+        private double GetPostfaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / Frequency);
+            int start = fault.EndSample + 1;
+            int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+
+            double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
+            double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
+            double ic = viCycleDataGroup.IC.RMS.ToSubSeries(start, end).Minimum;
+
+            return Common.Min(ia, ib, ic);
         }
 
         private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
@@ -1202,6 +1227,78 @@ namespace FaultData.DataResources
                     cn = ToComplexNumber(viCycleDataGroup.IC, cycle);
                     an = ToComplexNumber(viCycleDataGroup.IA, cycle);
                     return (cn - an).Magnitude;
+
+                default:
+                    return double.NaN;
+            }
+        }
+
+        private double GetFaultCurrentLag(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
+        {
+            FaultType viFaultType;
+
+            double anError;
+            double bnError;
+            double cnError;
+
+            ComplexNumber van;
+            ComplexNumber vbn;
+            ComplexNumber vcn;
+
+            ComplexNumber ian;
+            ComplexNumber ibn;
+            ComplexNumber icn;
+
+            viFaultType = faultType;
+
+            if (viFaultType == FaultType.ABC)
+            {
+                anError = viCycleDataGroup.IA.Error[cycle].Value;
+                bnError = viCycleDataGroup.IB.Error[cycle].Value;
+                cnError = viCycleDataGroup.IC.Error[cycle].Value;
+
+                if (anError < bnError && anError < cnError)
+                    viFaultType = FaultType.AN;
+                else if (bnError < anError && bnError < cnError)
+                    viFaultType = FaultType.BN;
+                else
+                    viFaultType = FaultType.CN;
+            }
+
+            switch (viFaultType)
+            {
+                case FaultType.AN:
+                    return new Angle(viCycleDataGroup.VA.Phase[cycle].Value - viCycleDataGroup.IA.Phase[cycle].Value).ToRange(-Math.PI, false);
+
+                case FaultType.BN:
+                    return new Angle(viCycleDataGroup.VB.Phase[cycle].Value - viCycleDataGroup.IB.Phase[cycle].Value).ToRange(-Math.PI, false);
+
+                case FaultType.CN:
+                    return new Angle(viCycleDataGroup.VC.Phase[cycle].Value - viCycleDataGroup.IC.Phase[cycle].Value).ToRange(-Math.PI, false);
+
+                case FaultType.AB:
+                case FaultType.ABG:
+                    van = ToComplexNumber(viCycleDataGroup.VA, cycle);
+                    vbn = ToComplexNumber(viCycleDataGroup.VB, cycle);
+                    ian = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    ibn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    return ((van - vbn).Angle - (ian - ibn).Angle).ToRange(-Math.PI, false);
+
+                case FaultType.BC:
+                case FaultType.BCG:
+                    vbn = ToComplexNumber(viCycleDataGroup.VB, cycle);
+                    vcn = ToComplexNumber(viCycleDataGroup.VC, cycle);
+                    ibn = ToComplexNumber(viCycleDataGroup.IB, cycle);
+                    icn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    return ((vbn - vcn).Angle - (ibn - icn).Angle).ToRange(-Math.PI, false);
+
+                case FaultType.CA:
+                case FaultType.CAG:
+                    vcn = ToComplexNumber(viCycleDataGroup.VC, cycle);
+                    van = ToComplexNumber(viCycleDataGroup.VA, cycle);
+                    icn = ToComplexNumber(viCycleDataGroup.IC, cycle);
+                    ian = ToComplexNumber(viCycleDataGroup.IA, cycle);
+                    return ((vcn - van).Angle - (icn - ian).Angle).ToRange(-Math.PI, false);
 
                 default:
                     return double.NaN;

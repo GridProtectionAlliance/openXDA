@@ -136,6 +136,7 @@
     <Compile Include="DataOperations\IDataOperation.cs" />
     <Compile Include="DataResources\FaultDataResource.cs" />
     <Compile Include="DataResources\IDataResource.cs" />
+    <Compile Include="DataResources\SystemEventResource.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
     <Compile Include="DataResources\TrendingGroupsResource.cs" />
