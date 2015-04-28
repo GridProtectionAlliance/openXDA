@@ -88,6 +88,10 @@
       <DependentUpon>DataQuality.xsd</DependentUpon>
     </Compile>
     <Compile Include="Database\DbAdapterContainer.cs" />
+    <Compile Include="Database\FaultLocationData.cs">
+      <DependentUpon>FaultLocationData.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Database\FaultLocationData.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
