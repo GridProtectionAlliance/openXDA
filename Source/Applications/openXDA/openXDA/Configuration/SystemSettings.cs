@@ -41,6 +41,7 @@ namespace openXDA.Configuration
 
         // Fields
         private string m_dbConnectionString;
+        private int m_dbTimeout;
 
         private string m_watchDirectories;
         private string m_resultsPath;
@@ -118,6 +119,24 @@ namespace openXDA.Configuration
             set
             {
                 m_dbConnectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the amount of time each database
+        /// query is given to complete, in seconds.
+        /// </summary>
+        [Setting]
+        [DefaultValue(120)]
+        public int DbTimeout
+        {
+            get
+            {
+                return m_dbTimeout;
+            }
+            set
+            {
+                m_dbTimeout = value;
             }
         }
 

@@ -27,6 +27,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Collections;
@@ -181,8 +182,8 @@ namespace FaultData.DataOperations
                     faultSummaryRow.FaultNumber = faultNumber;
                     faultSummaryRow.CalculationCycle = fault.CalculationCycle;
                     faultSummaryRow.Distance = ToDbFloat(summary.Distance);
-                    faultSummaryRow.CurrentMagnitude = fault.CurrentMagnitude;
-                    faultSummaryRow.CurrentLag = fault.CurrentLag;
+                    faultSummaryRow.CurrentMagnitude = ToDbFloat(fault.CurrentMagnitude);
+                    faultSummaryRow.CurrentLag = ToDbFloat(fault.CurrentLag);
                     faultSummaryRow.PrefaultCurrent = ToDbFloat(fault.PrefaultCurrent);
                     faultSummaryRow.PostfaultCurrent = ToDbFloat(fault.PostfaultCurrent);
                     faultSummaryRow.Inception = fault.InceptionTime;
@@ -230,7 +231,7 @@ namespace FaultData.DataOperations
                 Dictionary<EventKey, MeterData.EventRow> eventLookup;
                 MeterData.EventRow eventRow;
 
-                eventTable = dbAdapterContainer.EventAdapter.GetDataByFileGroup(MeterDataSet.FileGroup.ID);
+                eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(MeterDataSet.FileGroup.ID);
                 eventLookup = eventTable.Where(evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
 
                 foreach (Tuple<EventKey, FaultLocationData.FaultSegmentRow> faultSegment in m_faultSegmentList)
@@ -376,6 +377,9 @@ namespace FaultData.DataOperations
         private void InitializeSegmentTypeLookup(DbAdapterContainer dbAdapterContainer)
         {
             Func<string, SegmentType> segmentTypeFactory;
+            FaultLocationInfoDataContext faultLocationInfo;
+
+            faultLocationInfo = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
 
             segmentTypeFactory = name =>
             {
@@ -385,12 +389,12 @@ namespace FaultData.DataOperations
                     Description = name
                 };
 
-                dbAdapterContainer.FaultLocationInfoAdapter.SegmentTypes.InsertOnSubmit(segmentType);
+                faultLocationInfo.SegmentTypes.InsertOnSubmit(segmentType);
 
                 return segmentType;
             };
 
-            s_segmentTypeLookup = dbAdapterContainer.FaultLocationInfoAdapter.SegmentTypes.ToDictionary(segmentType => segmentType.Name);
+            s_segmentTypeLookup = faultLocationInfo.SegmentTypes.ToDictionary(segmentType => segmentType.Name);
 
             s_segmentTypeLookup.GetOrAdd("Fault", segmentTypeFactory);
             s_segmentTypeLookup.GetOrAdd("AN Fault", segmentTypeFactory);
@@ -404,7 +408,7 @@ namespace FaultData.DataOperations
             s_segmentTypeLookup.GetOrAdd("CAG Fault", segmentTypeFactory);
             s_segmentTypeLookup.GetOrAdd("3-Phase Fault", segmentTypeFactory);
 
-            dbAdapterContainer.FaultLocationInfoAdapter.SubmitChanges();
+            faultLocationInfo.SubmitChanges();
         }
 
         #endregion

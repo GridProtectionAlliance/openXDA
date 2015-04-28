@@ -129,23 +129,30 @@ namespace openXDA
                 {
                     DateTime processingEndTime;
 
-                    ThreadContext.Properties["ID"] = threadID;
-
-                    using (DbAdapterContainer)
+                    try
                     {
-                        OnStatusMessage("Processing meter data from file \"{0}\"...", MeterDataFile);
+                        ThreadContext.Properties["ID"] = threadID;
 
-                        foreach (MeterDataSet meterDataSet in MeterDataSets)
-                            ProcessMeterData(meterDataSet);
+                        using (DbAdapterContainer)
+                        {
+                            OnStatusMessage("Processing meter data from file \"{0}\"...", MeterDataFile);
 
-                        processingEndTime = DateTime.UtcNow;
+                            foreach (MeterDataSet meterDataSet in MeterDataSets)
+                                ProcessMeterData(meterDataSet);
 
-                        foreach (MeterDataSet meterDataSet in MeterDataSets)
-                            meterDataSet.FileGroup.ProcessingEndTime = processingEndTime;
+                            processingEndTime = DateTime.UtcNow;
 
-                        DbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                            foreach (MeterDataSet meterDataSet in MeterDataSets)
+                                meterDataSet.FileGroup.ProcessingEndTime = processingEndTime;
 
-                        OnStatusMessage("Finished processing data from file \"{0}\".", MeterDataFile);
+                            DbAdapterContainer.GetAdapter<FileInfoDataContext>().SubmitChanges();
+
+                            OnStatusMessage("Finished processing data from file \"{0}\".", MeterDataFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        OnHandleException(ex);
                     }
 
                     threadIDs.Add(threadID);
@@ -170,7 +177,7 @@ namespace openXDA
                         OnHandleException(ex);
                         meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
                         meterDataSet.FileGroup.Error = 1;
-                        DbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                        DbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().SubmitChanges();
                     }
                     catch
                     {
@@ -189,7 +196,7 @@ namespace openXDA
                 try
                 {
                     // Load data operations from the database
-                    operationGroups = DbAdapterContainer.SystemInfoAdapter.DataOperations
+                    operationGroups = DbAdapterContainer.GetAdapter<SystemInfoDataContext>().DataOperations
                         .GroupBy(dataOperation => dataOperation.TransactionOrder)
                         .OrderBy(grouping => grouping.Key)
                         .Cast<IEnumerable<DataOperation>>();
@@ -251,7 +258,7 @@ namespace openXDA
                 try
                 {
                     // Load data operations from the database
-                    dataWriters = DbAdapterContainer.SystemInfoAdapter.DataWriters
+                    dataWriters = DbAdapterContainer.GetAdapter<SystemInfoDataContext>().DataWriters
                         .ToList()
                         .Select(dataWriter => LoadType(dataWriter.AssemblyName, dataWriter.TypeName))
                         .Where(type => (object)type != null)
@@ -480,6 +487,10 @@ namespace openXDA
             ConnectionStringParser connectionStringParser;
 
             DbAdapterContainer dbAdapterContainer;
+            FileInfoDataContext fileInfo;
+            MeterInfoDataContext meterInfo;
+            SystemInfoDataContext systemInfo;
+
             SystemSettings systemSettings;
             MeterDataProcessor meterDataProcessor;
 
@@ -488,12 +499,16 @@ namespace openXDA
 
             try
             {
-                dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString);
+                dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString, m_systemSettings.DbTimeout);
+
+                fileInfo = dbAdapterContainer.GetAdapter<FileInfoDataContext>();
+                meterInfo = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+                systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
 
                 // Determine whether the file has already been processed
                 if (fileProcessorEventArgs.AlreadyProcessed)
                 {
-                    if (dbAdapterContainer.FileInfoAdapter.DataFiles.Any(dataFile => dataFile.FilePath == filePath && dataFile.FileGroup.ProcessingEndTime > DateTime.MinValue))
+                    if (fileInfo.DataFiles.Any(dataFile => dataFile.FilePath == filePath && dataFile.FileGroup.ProcessingEndTime > DateTime.MinValue))
                     {
                         OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
                         return;
@@ -504,21 +519,21 @@ namespace openXDA
                 if (string.IsNullOrEmpty(m_systemSettings.FilePattern) || !TryParseFilePath(filePath, out meterKey))
                 {
                     OnStatusMessage("Skipped file \"{0}\" because no meter could not be determined based on the FilePattern system setting.", filePath);
-                    fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                    fileGroup = LoadFileGroup(fileInfo, filePath);
                     fileGroup.ProcessingEndTime = DateTime.UtcNow;
                     fileGroup.Error = 1;
-                    dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                    fileInfo.SubmitChanges();
                     return;
                 }
 
                 // Attempt to find a meter in the database matching the meter name parsed from the file path
-                if (!dbAdapterContainer.MeterInfoAdapter.Meters.Any(m => m.AssetKey == meterKey))
+                if (!meterInfo.Meters.Any(m => m.AssetKey == meterKey))
                 {
                     OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
-                    fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                    fileGroup = LoadFileGroup(fileInfo, filePath);
                     fileGroup.ProcessingEndTime = DateTime.UtcNow;
                     fileGroup.Error = 1;
-                    dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                    fileInfo.SubmitChanges();
                     return;
                 }
 
@@ -526,7 +541,7 @@ namespace openXDA
                 extension = FilePath.GetExtension(filePath).Substring(1);
 
                 // Load type used to parse this file from the database
-                readerType = dbAdapterContainer.SystemInfoAdapter.DataReaders
+                readerType = systemInfo.DataReaders
                     .Where(dataReader => dataReader.FileExtension.Equals(extension))
                     .ToList()
                     .Select(dataReader => LoadType(dataReader.AssemblyName, dataReader.TypeName))
@@ -537,10 +552,10 @@ namespace openXDA
                 if ((object)readerType == null)
                 {
                     OnStatusMessage("Skipped file \"{0}\" because no valid data reader was found for file extension '{1}'.", filePath, extension);
-                    fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                    fileGroup = LoadFileGroup(fileInfo, filePath);
                     fileGroup.ProcessingEndTime = DateTime.UtcNow;
                     fileGroup.Error = 1;
-                    dbAdapterContainer.FileInfoAdapter.SubmitChanges();
+                    fileInfo.SubmitChanges();
                     return;
                 }
 
@@ -549,7 +564,7 @@ namespace openXDA
 
                 using (reader as IDisposable)
                 {
-                    systemSettings = new SystemSettings(LoadSystemSettings(dbAdapterContainer.SystemInfoAdapter));
+                    systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
 
                     connectionStringParser = new ConnectionStringParser();
                     connectionStringParser.SerializeUnspecifiedProperties = true;
@@ -558,7 +573,7 @@ namespace openXDA
                     if (reader.CanParse(filePath, GetMaxFileCreationTime(filePath)))
                     {
                         // Create a file group for this file in the database
-                        fileGroup = LoadFileGroup(dbAdapterContainer.FileInfoAdapter, filePath);
+                        fileGroup = LoadFileGroup(fileInfo, filePath);
 
                         // Create the meter data processor that will be processing this file
                         meterDataProcessor = new MeterDataProcessor();
@@ -601,6 +616,9 @@ namespace openXDA
 
                         if (dataEndTime != default(DateTime))
                             fileGroup.DataEndTime = dataEndTime;
+
+                        // Commit changes to DataStartTime and DataEndTime
+                        fileInfo.SubmitChanges();
 
                         // Process meter data using the meter data processor
                         meterDataProcessor.Process();

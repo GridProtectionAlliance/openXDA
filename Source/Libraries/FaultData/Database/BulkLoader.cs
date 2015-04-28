@@ -34,6 +34,18 @@ namespace FaultData.Database
         // Fields
         private SqlConnection m_connection;
         private string m_mergeTableFormat;
+        private int m_commandTimeout;
+        private int m_loadTimeout;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public BulkLoader()
+        {
+            m_commandTimeout = 30;
+            m_loadTimeout = 0;
+        }
 
         #endregion
 
@@ -63,6 +75,30 @@ namespace FaultData.Database
             }
         }
 
+        public int CommandTimeout
+        {
+            get
+            {
+                return m_commandTimeout;
+            }
+            set
+            {
+                m_commandTimeout = value;
+            }
+        }
+
+        public int LoadTimeout
+        {
+            get
+            {
+                return m_loadTimeout;
+            }
+            set
+            {
+                m_loadTimeout = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -74,8 +110,11 @@ namespace FaultData.Database
             using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_connection))
             using (SqlCommand command = m_connection.CreateCommand())
             {
-                // Set the timeout to infinite
-                bulkCopy.BulkCopyTimeout = 0;
+                // Set the command timeout
+                command.CommandTimeout = m_commandTimeout;
+
+                // Set the bulk load timeout
+                bulkCopy.BulkCopyTimeout = m_loadTimeout;
 
                 // Create the temp table where data will be loaded directly
                 tempTableName = CreateTempTable(table, command);

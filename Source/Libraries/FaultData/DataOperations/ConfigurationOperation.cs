@@ -90,7 +90,7 @@ namespace FaultData.DataOperations
 
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
-            m_meterInfo = dbAdapterContainer.MeterInfoAdapter;
+            m_meterInfo = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
         }
 
         public override void Execute(MeterDataSet meterDataSet)

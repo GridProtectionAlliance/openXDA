@@ -90,6 +90,7 @@ namespace FaultData.DataOperations
 
             bulkLoader = new BulkLoader();
             bulkLoader.Connection = dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
 
             bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                           "USING {1} AS Source " +

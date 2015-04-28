@@ -326,7 +326,7 @@ namespace FaultData.DataWriters
                         DataGroup = dataGroup,
                         VICycleDataGroup = cycleDataResource.VICycleDataGroups[i],
                         Faults = faults,
-                        OutputChannels = dbAdapterContainer.FaultLocationInfoAdapter.OutputChannels.Where(channel => seriesIDs.Contains(channel.SeriesID)).ToList()
+                        OutputChannels = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().OutputChannels.Where(channel => seriesIDs.Contains(channel.SeriesID)).ToList()
                     };
 
                     WriteResults(eventDataSet);

@@ -22,12 +22,14 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data.Linq;
 using System.Data.SqlClient;
-using FaultData.Database.AlarmDataTableAdapters;
-using FaultData.Database.DataQualityTableAdapters;
-using FaultData.Database.FaultLocationDataTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
-using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using GSF.Collections;
 
 namespace FaultData.Database
 {
@@ -36,37 +38,9 @@ namespace FaultData.Database
         #region [ Members ]
 
         // Fields
+        private Dictionary<Type, object> m_adapters;
         private SqlConnection m_connection;
-
-        // Linq-to-SQL
-        private SystemInfoDataContext m_systemInfoAdapter;
-        private FileInfoDataContext m_fileInfoAdapter;
-        private MeterInfoDataContext m_meterInfoAdapter;
-        private FaultLocationInfoDataContext m_faultLocationInfoAdapter;
-
-        // MeterData
-        private EventTypeTableAdapter m_eventTypeAdapter;
-        private EventTableAdapter m_eventAdapter;
-        private HourlyTrendingSummaryTableAdapter m_hourlyTrendingSummaryAdapter;
-        private DailyTrendingSummaryTableAdapter m_dailyTrendingSummaryAdapter;
-        private ChannelNormalTableAdapter m_channelNormalAdapter;
-
-        // FaultLocationData
-        private CycleDataTableAdapter m_cycleDataAdapter;
-        private FaultCurveTableAdapter m_faultCurveAdapter;
-        private FaultSummaryTableAdapter m_faultSummaryAdapter;
-        private DoubleEndedFaultDistanceTableAdapter m_doubleEndedFaultDistanceAdapter;
-
-        // DataQuality
-        private DefaultDataQualityRangeLimitTableAdapter m_defaultDataQualityRangeLimitAdapter;
-        private DataQualityRangeLimitTableAdapter m_dataQualityRangeLimitAdapter;
-
-        // AlarmData
-        private AlarmTypeTableAdapter m_alarmTypeAdapter;
-        private DefaultAlarmRangeLimitTableAdapter m_defaultAlarmRangeLimitAdapter;
-        private AlarmRangeLimitTableAdapter m_alarmRangeLimitAdapter;
-        private HourOfWeekLimitTableAdapter m_hourOfWeekLimitAdapter;
-        private AlarmLogTableAdapter m_alarmLogAdapter;
+        private int m_commandTimeout;
 
         private bool m_disposed;
 
@@ -76,6 +50,7 @@ namespace FaultData.Database
 
         public DbAdapterContainer(string connectionString)
         {
+            m_adapters = new Dictionary<Type, object>();
             m_connection = new SqlConnection(connectionString);
             m_connection.Open();
         }
@@ -83,6 +58,18 @@ namespace FaultData.Database
         public DbAdapterContainer(SqlConnection connection)
         {
             m_connection = connection;
+        }
+
+        public DbAdapterContainer(string connectionString, int commandTimeout)
+            : this(connectionString)
+        {
+            m_commandTimeout = commandTimeout;
+        }
+
+        public DbAdapterContainer(SqlConnection connection, int commandTimeout)
+            : this(connection)
+        {
+            m_commandTimeout = commandTimeout;
         }
 
         #endregion
@@ -97,271 +84,11 @@ namespace FaultData.Database
             }
         }
 
-        public SystemInfoDataContext SystemInfoAdapter
+        public int CommandTimeout
         {
             get
             {
-                if (!m_disposed && (object)m_systemInfoAdapter == null)
-                    m_systemInfoAdapter = new SystemInfoDataContext(m_connection);
-
-                return m_systemInfoAdapter;
-            }
-        }
-
-        public FileInfoDataContext FileInfoAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_fileInfoAdapter == null)
-                    m_fileInfoAdapter = new FileInfoDataContext(m_connection);
-
-                return m_fileInfoAdapter;
-            }
-        }
-
-        public MeterInfoDataContext MeterInfoAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_meterInfoAdapter == null)
-                    m_meterInfoAdapter = new MeterInfoDataContext(m_connection);
-
-                return m_meterInfoAdapter;
-            }
-        }
-
-        public FaultLocationInfoDataContext FaultLocationInfoAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_faultLocationInfoAdapter == null)
-                    m_faultLocationInfoAdapter = new FaultLocationInfoDataContext(m_connection);
-
-                return m_faultLocationInfoAdapter;
-            }
-        }
-
-        public EventTypeTableAdapter EventTypeAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_eventTypeAdapter == null)
-                {
-                    m_eventTypeAdapter = new EventTypeTableAdapter();
-                    m_eventTypeAdapter.Connection = m_connection;
-                }
-
-                return m_eventTypeAdapter;
-            }
-        }
-
-        public EventTableAdapter EventAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_eventAdapter == null)
-                {
-                    m_eventAdapter = new EventTableAdapter();
-                    m_eventAdapter.Connection = m_connection;
-                }
-
-                return m_eventAdapter;
-            }
-        }
-
-        public HourlyTrendingSummaryTableAdapter HourlyTrendingSummaryAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_hourlyTrendingSummaryAdapter == null)
-                {
-                    m_hourlyTrendingSummaryAdapter = new HourlyTrendingSummaryTableAdapter();
-                    m_hourlyTrendingSummaryAdapter.Connection = m_connection;
-                }
-
-                return m_hourlyTrendingSummaryAdapter;
-            }
-        }
-
-        public DailyTrendingSummaryTableAdapter DailyTrendingSummaryAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_dailyTrendingSummaryAdapter == null)
-                {
-                    m_dailyTrendingSummaryAdapter = new DailyTrendingSummaryTableAdapter();
-                    m_dailyTrendingSummaryAdapter.Connection = m_connection;
-                }
-
-                return m_dailyTrendingSummaryAdapter;
-            }
-        }
-
-        public ChannelNormalTableAdapter ChannelNormalAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_channelNormalAdapter == null)
-                {
-                    m_channelNormalAdapter = new ChannelNormalTableAdapter();
-                    m_channelNormalAdapter.Connection = m_connection;
-                }
-
-                return m_channelNormalAdapter;
-            }
-        }
-
-        public CycleDataTableAdapter CycleDataAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_cycleDataAdapter == null)
-                {
-                    m_cycleDataAdapter = new CycleDataTableAdapter();
-                    m_cycleDataAdapter.Connection = m_connection;
-                }
-
-                return m_cycleDataAdapter;
-            }
-        }
-
-        public FaultCurveTableAdapter FaultCurveAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_faultCurveAdapter == null)
-                {
-                    m_faultCurveAdapter = new FaultCurveTableAdapter();
-                    m_faultCurveAdapter.Connection = m_connection;
-                }
-
-                return m_faultCurveAdapter;
-            }
-        }
-
-        public FaultSummaryTableAdapter FaultSummaryAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_faultSummaryAdapter == null)
-                {
-                    m_faultSummaryAdapter = new FaultSummaryTableAdapter();
-                    m_faultSummaryAdapter.Connection = m_connection;
-                }
-
-                return m_faultSummaryAdapter;
-            }
-        }
-
-        public DoubleEndedFaultDistanceTableAdapter DoubleEndedFaultDistanceAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_doubleEndedFaultDistanceAdapter == null)
-                {
-                    m_doubleEndedFaultDistanceAdapter = new DoubleEndedFaultDistanceTableAdapter();
-                    m_doubleEndedFaultDistanceAdapter.Connection = m_connection;
-                }
-
-                return m_doubleEndedFaultDistanceAdapter;
-            }
-        }
-
-        public DefaultDataQualityRangeLimitTableAdapter DefaultDataQualityRangeLimitAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_defaultDataQualityRangeLimitAdapter == null)
-                {
-                    m_defaultDataQualityRangeLimitAdapter = new DefaultDataQualityRangeLimitTableAdapter();
-                    m_defaultDataQualityRangeLimitAdapter.Connection = m_connection;
-                }
-
-                return m_defaultDataQualityRangeLimitAdapter;
-            }
-        }
-
-        public DataQualityRangeLimitTableAdapter DataQualityRangeLimitAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_dataQualityRangeLimitAdapter == null)
-                {
-                    m_dataQualityRangeLimitAdapter = new DataQualityRangeLimitTableAdapter();
-                    m_dataQualityRangeLimitAdapter.Connection = m_connection;
-                }
-
-                return m_dataQualityRangeLimitAdapter;
-            }
-        }
-
-        public AlarmTypeTableAdapter AlarmTypeAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_alarmTypeAdapter == null)
-                {
-                    m_alarmTypeAdapter = new AlarmTypeTableAdapter();
-                    m_alarmTypeAdapter.Connection = m_connection;
-                }
-
-                return m_alarmTypeAdapter;
-            }
-        }
-
-        public DefaultAlarmRangeLimitTableAdapter DefaultAlarmRangeLimitAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_defaultAlarmRangeLimitAdapter == null)
-                {
-                    m_defaultAlarmRangeLimitAdapter = new DefaultAlarmRangeLimitTableAdapter();
-                    m_defaultAlarmRangeLimitAdapter.Connection = m_connection;
-                }
-
-                return m_defaultAlarmRangeLimitAdapter;
-            }
-        }
-
-        public AlarmRangeLimitTableAdapter AlarmRangeLimitAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_alarmRangeLimitAdapter == null)
-                {
-                    m_alarmRangeLimitAdapter = new AlarmRangeLimitTableAdapter();
-                    m_alarmRangeLimitAdapter.Connection = m_connection;
-                }
-
-                return m_alarmRangeLimitAdapter;
-            }
-        }
-
-        public HourOfWeekLimitTableAdapter HourOfWeekLimitAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_hourOfWeekLimitAdapter == null)
-                {
-                    m_hourOfWeekLimitAdapter = new HourOfWeekLimitTableAdapter();
-                    m_hourOfWeekLimitAdapter.Connection = m_connection;
-                }
-
-                return m_hourOfWeekLimitAdapter;
-            }
-        }
-
-        public AlarmLogTableAdapter AlarmLogAdapter
-        {
-            get
-            {
-                if (!m_disposed && (object)m_alarmLogAdapter == null)
-                {
-                    m_alarmLogAdapter = new AlarmLogTableAdapter();
-                    m_alarmLogAdapter.Connection = m_connection;
-                }
-
-                return m_alarmLogAdapter;
+                return m_commandTimeout;
             }
         }
 
@@ -369,32 +96,137 @@ namespace FaultData.Database
 
         #region [ Methods ]
 
+        public T GetAdapter<T>()
+        {
+            return (T)m_adapters.GetOrAdd(typeof(T), type =>
+            {
+                Func<SqlConnection, int, object> factory = AdapterFactories.GetOrAdd(type, type1 =>
+                {
+                    if (typeof(DataContext).IsAssignableFrom(type))
+                        return GetDataContextFactory(type);
+
+                    return GetAdapterFactory<T>(type);
+                });
+
+                return factory(m_connection, m_commandTimeout);
+            });
+        }
+
         public void Dispose()
         {
             if (!m_disposed)
             {
                 Dispose(m_connection);
-                Dispose(m_systemInfoAdapter);
-                Dispose(m_fileInfoAdapter);
-                Dispose(m_meterInfoAdapter);
-                Dispose(m_faultLocationInfoAdapter);
-                Dispose(m_eventTypeAdapter);
-                Dispose(m_eventAdapter);
-                Dispose(m_hourlyTrendingSummaryAdapter);
-                Dispose(m_dailyTrendingSummaryAdapter);
-                Dispose(m_channelNormalAdapter);
-                Dispose(m_cycleDataAdapter);
-                Dispose(m_faultCurveAdapter);
-                Dispose(m_faultSummaryAdapter);
-                Dispose(m_defaultDataQualityRangeLimitAdapter);
-                Dispose(m_dataQualityRangeLimitAdapter);
-                Dispose(m_alarmTypeAdapter);
-                Dispose(m_defaultAlarmRangeLimitAdapter);
-                Dispose(m_alarmRangeLimitAdapter);
-                Dispose(m_hourOfWeekLimitAdapter);
-                Dispose(m_alarmLogAdapter);
+
+                foreach (object adapter in m_adapters.Values)
+                    Dispose(adapter as IDisposable);
+
                 m_disposed = true;
             }
+        }
+
+        private Func<SqlConnection, int, object> GetDataContextFactory(Type type)
+        {
+            ConstructorInfo constructor;
+
+            List<ParameterExpression> parameterExpressions;
+            NewExpression newExpression;
+            LambdaExpression lambdaExpression;
+
+            Func<SqlConnection, object> factory;
+
+            constructor = type.GetConstructor(ConstructorTypes);
+
+            if ((object)constructor == null)
+                throw new InvalidOperationException(string.Format("\"{0}\" is not a valid adapter type", type.FullName));
+
+            parameterExpressions = ConstructorTypes.Select(Expression.Parameter).ToList();
+            newExpression = Expression.New(constructor, parameterExpressions);
+            lambdaExpression = Expression.Lambda(typeof(Func<SqlConnection, object>), newExpression, parameterExpressions);
+
+            factory = (Func<SqlConnection, object>)lambdaExpression.Compile();
+
+            return (connection, commandTimeout) =>
+            {
+                DataContext dataContext = (DataContext)factory(connection);
+                dataContext.CommandTimeout = commandTimeout;
+                return dataContext;
+            };
+        }
+
+        private Func<SqlConnection, int, object> GetAdapterFactory<T>(Type type)
+        {
+            ConstructorInfo constructor;
+
+            PropertyInfo connectionProperty;
+            PropertyInfo adapterProperty;
+            PropertyInfo commandCollectionProperty;
+
+            Func<T, SqlConnection, SqlConnection> connectionSetter;
+            Func<T, SqlDataAdapter> adapterGetter;
+            Func<T, SqlCommand[]> commandCollectionGetter;
+
+            constructor = type.GetConstructor(Type.EmptyTypes);
+
+            if ((object)constructor == null)
+                throw new InvalidOperationException(string.Format("\"{0}\" is not a valid adapter type", type.FullName));
+
+            connectionProperty = type.GetProperty("Connection", PropertyFlags);
+
+            if ((object)connectionProperty == null || connectionProperty.PropertyType != typeof(SqlConnection))
+                throw new InvalidOperationException(string.Format("\"{0}\" is not a valid adapter type", type.FullName));
+
+            adapterProperty = type.GetProperty("Adapter", PropertyFlags);
+
+            if ((object)adapterProperty == null || adapterProperty.PropertyType != typeof(SqlDataAdapter))
+                throw new InvalidOperationException(string.Format("\"{0}\" is not a valid adapter type", type.FullName));
+
+            commandCollectionProperty = type.GetProperty("CommandCollection", PropertyFlags);
+
+            if ((object)commandCollectionProperty == null || commandCollectionProperty.PropertyType != typeof(SqlCommand[]))
+                throw new InvalidOperationException(string.Format("\"{0}\" is not a valid adapter type", type.FullName));
+
+            connectionSetter = (Func<T, SqlConnection, SqlConnection>)CompileSetter(type, connectionProperty);
+            adapterGetter = (Func<T, SqlDataAdapter>)CompileGetter(type, adapterProperty);
+            commandCollectionGetter = (Func<T, SqlCommand[]>)CompileGetter(type, commandCollectionProperty);
+
+            return (connection, commandTimeout) =>
+            {
+                T adapter;
+                SqlDataAdapter dataAdapter;
+                SqlCommand[] commandCollection;
+
+                adapter = (T)Activator.CreateInstance(type);
+
+                connectionSetter(adapter, connection);
+                dataAdapter = adapterGetter(adapter);
+                commandCollection = commandCollectionGetter(adapter);
+
+                foreach (SqlCommand command in commandCollection)
+                    command.CommandTimeout = commandTimeout;
+
+                dataAdapter.InsertCommand.CommandTimeout = commandTimeout;
+                dataAdapter.UpdateCommand.CommandTimeout = commandTimeout;
+                dataAdapter.DeleteCommand.CommandTimeout = commandTimeout;
+
+                return adapter;
+            };
+        }
+
+        private Delegate CompileGetter(Type type, PropertyInfo property)
+        {
+            ParameterExpression instanceParameter = Expression.Parameter(type);
+            MemberExpression propertyExpression = Expression.Property(instanceParameter, property);
+            return Expression.Lambda(propertyExpression, instanceParameter).Compile();
+        }
+
+        private Delegate CompileSetter(Type type, PropertyInfo property)
+        {
+            ParameterExpression instanceParameter = Expression.Parameter(type);
+            ParameterExpression valueParameter = Expression.Parameter(property.PropertyType);
+            MemberExpression propertyExpression = Expression.Property(instanceParameter, property);
+            BinaryExpression assignmentExpression = Expression.Assign(propertyExpression, valueParameter);
+            return Expression.Lambda(assignmentExpression, instanceParameter, valueParameter).Compile();
         }
 
         private void Dispose(IDisposable obj)
@@ -402,6 +234,15 @@ namespace FaultData.Database
             if ((object)obj != null)
                 obj.Dispose();
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private const BindingFlags PropertyFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private static readonly Type[] ConstructorTypes = { typeof(SqlConnection) };
+        private static readonly ConcurrentDictionary<Type, Func<SqlConnection, int, object>> AdapterFactories = new ConcurrentDictionary<Type, Func<SqlConnection, int, object>>();
 
         #endregion
     }

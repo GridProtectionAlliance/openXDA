@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
@@ -105,12 +106,13 @@ namespace FaultData.DataOperations
             // Create the bulk loader for loading data into the database
             bulkLoader = new BulkLoader();
             bulkLoader.Connection = dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
 
             // Write events to the database
             bulkLoader.Load(m_eventTable);
 
             // Query database for event IDs and store them in a lookup table by line ID
-            dbAdapterContainer.EventAdapter.FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
+            dbAdapterContainer.GetAdapter<EventTableAdapter>().FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
             eventLookup = Enumerable.Where(m_eventTable, evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
 
             // Create cycle data table
@@ -201,6 +203,7 @@ namespace FaultData.DataOperations
             BulkLoader bulkLoader = new BulkLoader();
 
             bulkLoader.Connection = dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
 
             bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                           "USING {1} AS Source " +
@@ -211,7 +214,7 @@ namespace FaultData.DataOperations
 
             bulkLoader.Load(eventTypeTable);
 
-            dbAdapterContainer.EventTypeAdapter.Fill(eventTypeTable);
+            dbAdapterContainer.GetAdapter<EventTypeTableAdapter>().Fill(eventTypeTable);
 
             return Enumerable.Select(eventTypeTable
                     .Where(row => Enum.TryParse(row.Name, out eventClassification)), row => Tuple.Create(eventClassification, row.ID))

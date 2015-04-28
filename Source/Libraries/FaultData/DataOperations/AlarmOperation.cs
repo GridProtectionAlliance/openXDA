@@ -52,7 +52,7 @@ namespace FaultData.DataOperations
         {
             m_alarmTypeTable = new AlarmData.AlarmTypeDataTable();
             m_alarmLogTable = new AlarmData.AlarmLogDataTable();
-            dbAdapterContainer.AlarmTypeAdapter.Fill(m_alarmTypeTable);
+            dbAdapterContainer.GetAdapter<AlarmTypeTableAdapter>().Fill(m_alarmTypeTable);
 
             m_dbAdapterContainer = dbAdapterContainer;
         }
@@ -129,7 +129,7 @@ namespace FaultData.DataOperations
 
             trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
 
-            hourlySummaryAdapter = m_dbAdapterContainer.HourlyTrendingSummaryAdapter;
+            hourlySummaryAdapter = m_dbAdapterContainer.GetAdapter<HourlyTrendingSummaryTableAdapter>();
             hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
             rangeLimitTable = new AlarmData.AlarmRangeLimitDataTable();
 
@@ -181,8 +181,8 @@ namespace FaultData.DataOperations
 
             trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
 
-            hourlyLimitAdapter = m_dbAdapterContainer.HourOfWeekLimitAdapter;
-            hourlySummaryAdapter = m_dbAdapterContainer.HourlyTrendingSummaryAdapter;
+            hourlyLimitAdapter = m_dbAdapterContainer.GetAdapter<HourOfWeekLimitTableAdapter>();
+            hourlySummaryAdapter = m_dbAdapterContainer.GetAdapter<HourlyTrendingSummaryTableAdapter>();
             hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
             hourlyLimitTable = new AlarmData.HourOfWeekLimitDataTable();
 
@@ -230,7 +230,7 @@ namespace FaultData.DataOperations
             rangeLimitTable.Clear();
 
             // Fill the range limit table with range limits for the given channel
-            rangeLimitAdapter = m_dbAdapterContainer.AlarmRangeLimitAdapter;
+            rangeLimitAdapter = m_dbAdapterContainer.GetAdapter<AlarmRangeLimitTableAdapter>();
             rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
 
             // If limits exist for the given channel,
@@ -239,7 +239,7 @@ namespace FaultData.DataOperations
                 return;
 
             // Get the default range limits for the measurement type and characteristic of this channel
-            defaultRangeLimitAdapter = m_dbAdapterContainer.DefaultAlarmRangeLimitAdapter;
+            defaultRangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DefaultAlarmRangeLimitTableAdapter>();
             defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
 
             // If there are no default limits for the channel,

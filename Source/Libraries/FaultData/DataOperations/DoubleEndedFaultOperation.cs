@@ -27,9 +27,12 @@ using System.Linq;
 using FaultAlgorithms;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.Database.FaultLocationDataTableAdapters;
+using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
 
 namespace FaultData.DataOperations
 {
@@ -49,10 +52,10 @@ namespace FaultData.DataOperations
             public MappingNode Left;
             public MappingNode Right;
 
-            public Mapping(Meter leftMeter, FaultLocationData.FaultSummaryRow left, Meter rightMeter, FaultLocationData.FaultSummaryRow right)
+            public Mapping(FaultLocationData.FaultSummaryRow left, FaultLocationData.FaultSummaryRow right)
             {
-                Left = new MappingNode(leftMeter, left);
-                Right = new MappingNode(rightMeter, right);
+                Left = new MappingNode(left);
+                Right = new MappingNode(right);
             }
         }
 
@@ -65,7 +68,6 @@ namespace FaultData.DataOperations
             public const double Frequency = 60.0D;
 
             // Fields
-            public Meter Meter;
             public FaultLocationData.FaultSummaryRow Fault;
             public VICycleDataGroup CycleDataGroup;
             public Fault.Curve DistanceCurve;
@@ -79,9 +81,8 @@ namespace FaultData.DataOperations
 
             #region [ Constructors ]
 
-            public MappingNode(Meter meter, FaultLocationData.FaultSummaryRow fault)
+            public MappingNode(FaultLocationData.FaultSummaryRow fault)
             {
-                Meter = meter;
                 Fault = fault;
                 DistanceCurve = new Fault.Curve();
                 AngleCurve = new Fault.Curve();
@@ -98,7 +99,7 @@ namespace FaultData.DataOperations
             {
                 int samplesPerCycle = (int)Math.Round(viCycleDataGroup.VA.RMS.SampleRate / Frequency);
 
-                FaultSegment faultSegment = dbAdapterContainer.FaultLocationInfoAdapter.FaultSegments
+                FaultSegment faultSegment = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().FaultSegments
                     .Where(segment => segment.EventID == Fault.EventID)
                     .Where(segment => segment.StartTime == Fault.Inception)
                     .FirstOrDefault(segment => segment.SegmentType.Name == "Fault");
@@ -256,6 +257,8 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            MeterInfoDataContext meterInfo;
+            DoubleEndedFaultDistanceTableAdapter doubleEndedFaultDistanceAdapter;
             List<SystemEventResource.SystemEvent> systemEvents;
             MeterData.EventDataTable systemEventTable;
 
@@ -268,22 +271,25 @@ namespace FaultData.DataOperations
             VICycleDataGroup leftCycleDataGroup;
             VICycleDataGroup rightCycleDataGroup;
 
+            meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+            doubleEndedFaultDistanceAdapter = m_dbAdapterContainer.GetAdapter<DoubleEndedFaultDistanceTableAdapter>();
+
             // Get a time range for querying each system event that contains events in this meter data set
             systemEvents = meterDataSet.GetResource<SystemEventResource>().SystemEvents;
 
             foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
             {
                 // Get the full collection of events from the database that comprise the system event that overlaps this time range
-                systemEventTable = m_dbAdapterContainer.EventAdapter.GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
+                systemEventTable = m_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
 
                 foreach (IGrouping<int, MeterData.EventRow> lineGrouping in systemEventTable.GroupBy(evt => evt.LineID))
                 {
                     // Make sure this line connects two known meter locations
-                    if (m_dbAdapterContainer.MeterInfoAdapter.MeterLocationLines.Count(mll => mll.LineID == lineGrouping.Key) != 2)
+                    if (meterInfo.MeterLocationLines.Count(mll => mll.LineID == lineGrouping.Key) != 2)
                         continue;
 
                     // Determine the length of the line
-                    lineLength = m_dbAdapterContainer.MeterInfoAdapter.Lines
+                    lineLength = meterInfo.Lines
                         .Where(line => line.ID == lineGrouping.Key)
                         .Select(line => (double?)line.Length)
                         .FirstOrDefault() ?? double.NaN;
@@ -292,7 +298,7 @@ namespace FaultData.DataOperations
                         continue;
 
                     // Determine the nominal impedance of the line
-                    nominalImpedance = m_dbAdapterContainer.FaultLocationInfoAdapter.LineImpedances
+                    nominalImpedance = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().LineImpedances
                         .Where(lineImpedance => lineImpedance.LineID == lineGrouping.Key)
                         .Select(lineImpedance => new ComplexNumber(lineImpedance.R1, lineImpedance.X1))
                         .FirstOrDefault();
@@ -341,10 +347,10 @@ namespace FaultData.DataOperations
                             if (FaultSummaryIDs.Contains(mapping.Right.Fault.ID))
                                 continue;
 
-                            if (m_dbAdapterContainer.DoubleEndedFaultDistanceAdapter.GetCountBy(mapping.Left.Fault.ID) > 0)
+                            if (doubleEndedFaultDistanceAdapter.GetCountBy(mapping.Left.Fault.ID) > 0)
                                 continue;
 
-                            if (m_dbAdapterContainer.DoubleEndedFaultDistanceAdapter.GetCountBy(mapping.Right.Fault.ID) > 0)
+                            if (doubleEndedFaultDistanceAdapter.GetCountBy(mapping.Right.Fault.ID) > 0)
                                 continue;
 
                             FaultSummaryIDs.Add(mapping.Left.Fault.ID);
@@ -379,6 +385,7 @@ namespace FaultData.DataOperations
         {
             BulkLoader loader = new BulkLoader();
             loader.Connection = dbAdapterContainer.Connection;
+            loader.CommandTimeout = dbAdapterContainer.CommandTimeout;
             loader.Load(m_doubleEndedFaultDistanceTable);
             loader.Load(m_faultCurveTable);
         }
@@ -412,8 +419,8 @@ namespace FaultData.DataOperations
                 .GroupBy(evt => evt.MeterID)
                 .Select(meterGrouping => new FaultTimeline()
                 {
-                    Meter = m_dbAdapterContainer.MeterInfoAdapter.Meters.SingleOrDefault(meter => meter.ID == meterGrouping.Key),
-                    Faults = meterGrouping.SelectMany(evt => m_dbAdapterContainer.FaultSummaryAdapter.GetDataBy(evt.ID)).Where(filter).OrderBy(fault => fault.Inception).ToList()
+                    Meter = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>().Meters.SingleOrDefault(meter => meter.ID == meterGrouping.Key),
+                    Faults = meterGrouping.SelectMany(evt => m_dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>().GetDataBy(evt.ID)).Where(filter).OrderBy(fault => fault.Inception).ToList()
                 })
                 .Where(meterGrouping => meterGrouping.Faults.Any())
                 .ToList();
@@ -426,7 +433,7 @@ namespace FaultData.DataOperations
                 }))
                 .Where(mapping => mapping.Left.Meter.MeterLocationID < mapping.Right.Meter.MeterLocationID)
                 .Where(mapping => mapping.Left.Faults.Count == mapping.Right.Faults.Count)
-                .SelectMany(mapping => mapping.Left.Faults.Zip(mapping.Right.Faults, (left, right) => new Mapping(mapping.Left.Meter, left, mapping.Right.Meter, right)))
+                .SelectMany(mapping => mapping.Left.Faults.Zip(mapping.Right.Faults, (left, right) => new Mapping(left, right)))
                 .ToList();
         }
 
@@ -508,7 +515,7 @@ namespace FaultData.DataOperations
             MeterData.CycleDataDataTable cycleDataTable;
             DataGroup dataGroup;
 
-            cycleDataTable = m_dbAdapterContainer.CycleDataAdapter.GetDataBy(eventID);
+            cycleDataTable = m_dbAdapterContainer.GetAdapter<CycleDataTableAdapter>().GetDataBy(eventID);
 
             if (cycleDataTable.Count == 0)
                 return null;

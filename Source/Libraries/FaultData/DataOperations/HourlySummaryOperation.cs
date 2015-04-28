@@ -28,6 +28,7 @@ using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.DataQualityTableAdapters;
+using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
@@ -78,7 +79,9 @@ namespace FaultData.DataOperations
             channelNormalLoader = new BulkLoader();
 
             hourlySummaryLoader.Connection = dbAdapterContainer.Connection;
+            hourlySummaryLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
             channelNormalLoader.Connection = dbAdapterContainer.Connection;
+            channelNormalLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
 
             hourlySummaryLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
                                                    "USING {1} AS Source " +
@@ -217,6 +220,7 @@ namespace FaultData.DataOperations
         private void ProcessChannelNormals(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<DataGroup>> trendingGroups;
+            HourlyTrendingSummaryTableAdapter hourlySummaryAdapter;
             MeterData.HourlyTrendingSummaryDataTable hourlySummaryTable;
 
             Channel channel;
@@ -225,9 +229,10 @@ namespace FaultData.DataOperations
             double meanSquare;
 
             trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+            hourlySummaryAdapter = m_dbAdapterContainer.GetAdapter<HourlyTrendingSummaryTableAdapter>();
             hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
 
-            m_dbAdapterContainer.HourlyTrendingSummaryAdapter.ClearBeforeFill = false;
+            hourlySummaryAdapter.ClearBeforeFill = false;
 
             foreach (KeyValuePair<Channel, List<DataGroup>> channelGroups in trendingGroups)
             {
@@ -236,7 +241,7 @@ namespace FaultData.DataOperations
                 hourlySummaryTable.Clear();
 
                 foreach (DataGroup dataGroup in channelGroups.Value)
-                    m_dbAdapterContainer.HourlyTrendingSummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime.AddHours(-1.0D), dataGroup.EndTime);
+                    hourlySummaryAdapter.FillBy(hourlySummaryTable, channelID, dataGroup.StartTime.AddHours(-1.0D), dataGroup.EndTime);
 
                 for (int i = hourlySummaryTable.Count - 1; i >= 0; i--)
                 {
@@ -266,7 +271,7 @@ namespace FaultData.DataOperations
             rangeLimitTable.Clear();
 
             // Fill the range limit table with range limits for the given channel
-            rangeLimitAdapter = m_dbAdapterContainer.DataQualityRangeLimitAdapter;
+            rangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DataQualityRangeLimitTableAdapter>();
             rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
 
             // If limits exist for the given channel,
@@ -275,7 +280,7 @@ namespace FaultData.DataOperations
                 return;
 
             // Get the default range limits for the measurement type and characteristic of this channel
-            defaultRangeLimitAdapter = m_dbAdapterContainer.DefaultDataQualityRangeLimitAdapter;
+            defaultRangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DefaultDataQualityRangeLimitTableAdapter>();
             defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
 
             // If there are no default limits for the channel,

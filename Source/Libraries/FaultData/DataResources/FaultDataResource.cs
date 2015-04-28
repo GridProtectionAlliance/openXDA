@@ -438,7 +438,7 @@ namespace FaultData.DataResources
 
             stopwatch = new Stopwatch();
             cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.FaultLocationInfoAdapter);
+            faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>());
 
             Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
 
@@ -495,7 +495,7 @@ namespace FaultData.DataResources
                 // and into the fault location data set
                 impedanceExtractor = new ImpedanceExtractor();
                 impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
-                impedanceExtractor.FaultLocationInfo = m_dbAdapterContainer.FaultLocationInfoAdapter;
+                impedanceExtractor.FaultLocationInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
                 impedanceExtractor.Meter = meterDataSet.Meter;
                 impedanceExtractor.Line = dataGroup.Line;
 

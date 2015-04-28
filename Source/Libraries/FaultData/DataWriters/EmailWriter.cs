@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
 using FaultData.Database;
+using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 
@@ -109,7 +110,7 @@ namespace FaultData.DataWriters
             now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, m_timeZone);
 
             foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
-                dbAdapterContainer.EventAdapter.CreateEventSnapshots(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance, now);
+                dbAdapterContainer.GetAdapter<EventTableAdapter>().CreateEventSnapshots(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance, now);
         }
 
         private void SendEmail(List<Recipient> recipients, string subject, string body, params Attachment[] attachments)
