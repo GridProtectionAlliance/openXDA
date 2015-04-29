@@ -143,7 +143,7 @@ namespace FaultData.DataReaders
                         int seriesIndex = schema.AnalogChannels[i].Index;
                         string units = schema.AnalogChannels[i].Units.ToUpper();
                         double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
-                        meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.Values[i] });
+                        meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.PrimaryValues[i] });
                     }
                 }
             }
