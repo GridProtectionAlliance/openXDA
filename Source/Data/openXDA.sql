@@ -963,7 +963,7 @@ AS BEGIN
         @timeRecorded AS TimeRecorded
     FROM
         #temp LEFT OUTER JOIN
-        LatestEventSnapshot WITH (XLOCK) ON #temp.EventID = LatestEventSnapshot.EventID
+        LatestEventSnapshot WITH (PAGLOCK, XLOCK) ON #temp.EventID = LatestEventSnapshot.EventID
     WHERE
         LatestEventSnapshot.EventDetail IS NULL OR
         CAST(#temp.EventDetail AS VARBINARY(MAX)) <> CAST(LatestEventSnapshot.EventDetail AS VARBINARY(MAX))
