@@ -303,6 +303,7 @@ CREATE TABLE Event
     TimeZoneOffset INT NOT NULL,
     Magnitude FLOAT NOT NULL,
     Duration FLOAT NOT NULL,
+    HasImpactedComponents INT NOT NULL,
     Description VARCHAR(MAX) NULL,
     Data VARBINARY(MAX) NOT NULL
 )
@@ -992,3 +993,200 @@ AS BEGIN
     FOR XML PATH('EventDetail'), ROOT('SystemEventDetail'), TYPE
 END
 GO
+
+----- PQInvestigator Integration -----
+
+-- The following commented statements and procedures are used to create a link to the PQInvestigator database.
+-- If the PQI databases are on a separate instance of SQL Server, be sure to associate the appropriate
+-- local login with a remote login that has db_owner privileges on both IndustrialPQ and UserIndustrialPQ.
+
+--EXEC sp_addlinkedserver PQInvestigator, N'', N'SQLNCLI', N'localhost\SQLEXPRESS'
+--GO
+--EXEC sp_addlinkedsrvlogin PQInvestigator, 'FALSE', [LocalLogin], [PQIAdmin], [PQIPassword]
+--GO
+--
+--CREATE PROCEDURE GetPQIFacility
+--    @facilityID INT
+--AS BEGIN
+--    SELECT
+--        Facility.FacilityName,
+--        Facility.FacilityVoltage,
+--        Facility.UtilitySupplyVoltage,
+--        Address.Address1,
+--        Address.Address2,
+--        Address.City,
+--        Address.StateOrProvince,
+--        Address.PostalCode,
+--        Address.Country,
+--        Company.CompanyName,
+--        Company.Industry
+--    FROM
+--        PQInvestigator.UserIndustrialPQ.dbo.Facility JOIN
+--        PQInvestigator.UserIndustrialPQ.dbo.Address ON Facility.AddressID = Address.AddressID JOIN
+--        PQInvestigator.UserIndustrialPQ.dbo.Company ON Address.CompanyID = Company.CompanyID
+--    WHERE
+--        Facility.FacilityID = @facilityID
+--END
+--GO
+--
+--CREATE PROCEDURE GetImpactedComponents
+--    @facilityID INT,
+--    @magnitude FLOAT,
+--    @duration FLOAT
+--AS BEGIN
+--    WITH EPRITolerancePoint AS
+--    (
+--        SELECT
+--            ROW_NUMBER() OVER(PARTITION BY TestCurve.TestCurveID ORDER BY Y, X) AS RowNumber,
+--            ComponentID,
+--            TestCurve.TestCurveID,
+--            Y AS Magnitude,
+--            X AS Duration
+--        FROM
+--            PQInvestigator.IndustrialPQ.dbo.TestCurvePoint JOIN
+--            PQInvestigator.IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
+--    ),
+--    EPRIToleranceSegment AS
+--    (
+--        SELECT
+--            P1.RowNumber,
+--            P1.ComponentID,
+--            P1.TestCurveID,
+--            CASE WHEN @duration < P1.Duration THEN 0
+--                 WHEN @magnitude < P1.Magnitude THEN 1
+--                 WHEN @duration > P2.Duration THEN 0
+--                 WHEN P1.Duration = P2.Duration THEN 0
+--                 WHEN @duration <= (((P2.Magnitude - P1.Magnitude) / (P2.Duration - P1.Duration)) * (@duration - P1.Duration) + P1.Magnitude) THEN 1
+--                 ELSE 0
+--            END AS IsUnder,
+--            CASE WHEN P1.Duration > P2.Duration THEN 1
+--                 ELSE 0
+--            END AS IsBackwards
+--        FROM
+--            EPRITolerancePoint P1 LEFT OUTER JOIN
+--            EPRITolerancePoint P2 ON P1.TestCurveID = P2.TestCurveID AND P1.RowNumber = P2.RowNumber - 1
+--        WHERE
+--            P1.Duration <> P2.Duration
+--    ),
+--    EPRIToleranceCurve AS
+--    (
+--        SELECT
+--            ComponentID,
+--            TestCurveID,
+--            IsUnder
+--        FROM
+--        (
+--            SELECT
+--                ROW_NUMBER() OVER(PARTITION BY TestCurveID ORDER BY RowNumber) AS RowNumber,
+--                ComponentID,
+--                TestCurveID,
+--                1 - IsBackwards AS IsUnder
+--            FROM
+--                EPRIToleranceSegment
+--            WHERE
+--                IsUnder <> 0
+--        ) AS Temp
+--        WHERE
+--            RowNumber = 1
+--    ),
+--    USERTolerancePoint AS
+--    (
+--        SELECT
+--            ROW_NUMBER() OVER(PARTITION BY TestCurve.TestCurveID ORDER BY Y, X) AS RowNumber,
+--            ComponentID,
+--            TestCurve.TestCurveID,
+--            Y AS Magnitude,
+--            X AS Duration
+--        FROM
+--            PQInvestigator.UserIndustrialPQ.dbo.TestCurvePoint JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
+--    ),
+--    USERToleranceSegment AS
+--    (
+--        SELECT
+--            P1.RowNumber,
+--            P1.ComponentID,
+--            P1.TestCurveID,
+--            CASE WHEN @duration < P1.Duration THEN 0
+--                 WHEN @magnitude < P1.Magnitude THEN 1
+--                 WHEN @duration > P2.Duration THEN 0
+--                 WHEN P1.Duration = P2.Duration THEN 0
+--                 WHEN @duration <= (((P2.Magnitude - P1.Magnitude) / (P2.Duration - P1.Duration)) * (@duration - P1.Duration) + P1.Magnitude) THEN 1
+--                 ELSE 0
+--            END AS IsUnder,
+--            CASE WHEN P1.Duration > P2.Duration THEN 1
+--                 ELSE 0
+--            END AS IsBackwards
+--        FROM
+--            USERTolerancePoint P1 LEFT OUTER JOIN
+--            USERTolerancePoint P2 ON P1.TestCurveID = P2.TestCurveID AND P1.RowNumber = P2.RowNumber - 1
+--        WHERE
+--            P1.Duration <> P2.Duration
+--    ),
+--    USERToleranceCurve AS
+--    (
+--        SELECT
+--            ComponentID,
+--            TestCurveID,
+--            IsUnder
+--        FROM
+--        (
+--            SELECT
+--                ROW_NUMBER() OVER(PARTITION BY TestCurveID ORDER BY RowNumber) AS RowNumber,
+--                ComponentID,
+--                TestCurveID,
+--                1 - IsBackwards AS IsUnder
+--            FROM
+--                USERToleranceSegment
+--            WHERE
+--                IsUnder <> 0
+--        ) AS Temp
+--        WHERE
+--            RowNumber = 1
+--    ),
+--    FacilityCurve AS
+--    (
+--        SELECT
+--            CurveID,
+--            CurveDB
+--        FROM
+--            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.AuditSection ON AuditSection.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = AuditSection.AuditSectionID
+--        WHERE
+--            AuditCurve.CurveType = 'TOLERANCE' AND
+--            FacilityAudit.FacilityID = @facilityID
+--    )
+--    SELECT
+--        Component.ComponentModel,
+--        Component.ComponentDescription,
+--        Manufacturer.ManufacturerName,
+--        Series.SeriesName,
+--        ComponentType.ComponentTypeName
+--    FROM
+--        PQInvestigator.IndustrialPQ.dbo.Component JOIN
+--        PQInvestigator.IndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
+--        PQInvestigator.IndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
+--        PQInvestigator.IndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
+--        EPRIToleranceCurve ON EPRIToleranceCurve.ComponentID = Component.ComponentID
+--    WHERE
+--        TestCurveID IN (SELECT CurveID FROM FacilityCurve WHERE CurveDB = 'EPRI') AND
+--        IsUnder <> 0
+--    UNION
+--    SELECT
+--        Component.ComponentModel,
+--        Component.ComponentDescription,
+--        Manufacturer.ManufacturerName,
+--        Series.SeriesName,
+--        ComponentType.ComponentTypeName
+--    FROM
+--        PQInvestigator.UserIndustrialPQ.dbo.Component JOIN
+--        PQInvestigator.UserIndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
+--        PQInvestigator.UserIndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
+--        PQInvestigator.UserIndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
+--        USERToleranceCurve ON USERToleranceCurve.ComponentID = Component.ComponentID
+--    WHERE
+--        TestCurveID IN (SELECT CurveID FROM FacilityCurve WHERE CurveDB = 'USER') AND
+--        IsUnder <> 0
+--END
+--GO

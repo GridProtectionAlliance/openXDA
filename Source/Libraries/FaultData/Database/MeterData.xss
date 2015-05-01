@@ -11,7 +11,7 @@
     <Shape ID="DesignTable:HourlyTrendingSummary" ZOrder="5" X="1356" Y="92" Height="248" Width="300" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="178" />
     <Shape ID="DesignTable:DailyTrendingSummary" ZOrder="4" X="1361" Y="354" Height="248" Width="300" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="178" />
     <Shape ID="DesignTable:CycleData" ZOrder="2" X="1060" Y="240" Height="153" Width="158" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="83" />
-    <Shape ID="DesignTable:Event" ZOrder="1" X="652" Y="179" Height="381" Width="300" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="254" />
+    <Shape ID="DesignTable:Event" ZOrder="1" X="663" Y="147" Height="459" Width="300" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="332" />
   </Shapes>
   <Connectors />
 </DiagramLayout>

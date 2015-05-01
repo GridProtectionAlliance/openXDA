@@ -184,6 +184,7 @@ namespace FaultData.DataOperations
                 eventRow.TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes;
                 eventRow.Magnitude = 0.0D;
                 eventRow.Duration = (dataGroup.EndTime - dataGroup.StartTime).TotalSeconds;
+                eventRow.HasImpactedComponents = 0;
                 m_eventTable.AddEventRow(eventRow);
 
                 m_cycleDataList.Add(Tuple.Create(CreateEventKey(eventRow), viCycleDataGroups[i].ToDataGroup().ToData()));

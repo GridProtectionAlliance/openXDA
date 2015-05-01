@@ -2136,6 +2136,8 @@ namespace FaultData.Database {
             
             private global::System.Data.DataColumn columnDuration;
             
+            private global::System.Data.DataColumn columnHasImpactedComponents;
+            
             private global::System.Data.DataColumn columnDescription;
             
             private global::System.Data.DataColumn columnData;
@@ -2279,6 +2281,14 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn HasImpactedComponentsColumn {
+                get {
+                    return this.columnHasImpactedComponents;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public global::System.Data.DataColumn DescriptionColumn {
                 get {
                     return this.columnDescription;
@@ -2330,7 +2340,7 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public EventRow AddEventRow(int FileGroupID, int MeterID, int LineID, int EventTypeID, string Name, string Alias, string ShortName, System.DateTime StartTime, System.DateTime EndTime, int TimeZoneOffset, double Magnitude, double Duration, string Description, byte[] Data) {
+            public EventRow AddEventRow(int FileGroupID, int MeterID, int LineID, int EventTypeID, string Name, string Alias, string ShortName, System.DateTime StartTime, System.DateTime EndTime, int TimeZoneOffset, double Magnitude, double Duration, int HasImpactedComponents, string Description, byte[] Data) {
                 EventRow rowEventRow = ((EventRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
@@ -2346,6 +2356,7 @@ namespace FaultData.Database {
                         TimeZoneOffset,
                         Magnitude,
                         Duration,
+                        HasImpactedComponents,
                         Description,
                         Data};
                 rowEventRow.ItemArray = columnValuesArray;
@@ -2390,6 +2401,7 @@ namespace FaultData.Database {
                 this.columnTimeZoneOffset = base.Columns["TimeZoneOffset"];
                 this.columnMagnitude = base.Columns["Magnitude"];
                 this.columnDuration = base.Columns["Duration"];
+                this.columnHasImpactedComponents = base.Columns["HasImpactedComponents"];
                 this.columnDescription = base.Columns["Description"];
                 this.columnData = base.Columns["Data"];
             }
@@ -2423,6 +2435,8 @@ namespace FaultData.Database {
                 base.Columns.Add(this.columnMagnitude);
                 this.columnDuration = new global::System.Data.DataColumn("Duration", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnDuration);
+                this.columnHasImpactedComponents = new global::System.Data.DataColumn("HasImpactedComponents", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnHasImpactedComponents);
                 this.columnDescription = new global::System.Data.DataColumn("Description", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnDescription);
                 this.columnData = new global::System.Data.DataColumn("Data", typeof(byte[]), null, global::System.Data.MappingType.Element);
@@ -2448,6 +2462,7 @@ namespace FaultData.Database {
                 this.columnTimeZoneOffset.AllowDBNull = false;
                 this.columnMagnitude.AllowDBNull = false;
                 this.columnDuration.AllowDBNull = false;
+                this.columnHasImpactedComponents.AllowDBNull = false;
                 this.columnDescription.MaxLength = 2147483647;
                 this.columnData.AllowDBNull = false;
             }
@@ -3140,6 +3155,17 @@ namespace FaultData.Database {
                 }
                 set {
                     this[this.tableEvent.DurationColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int HasImpactedComponents {
+                get {
+                    return ((int)(this[this.tableEvent.HasImpactedComponentsColumn]));
+                }
+                set {
+                    this[this.tableEvent.HasImpactedComponentsColumn] = value;
                 }
             }
             
@@ -5391,12 +5417,13 @@ SELECT ID, ChannelID, Date, Minimum, Maximum, Average, ValidCount, InvalidCount 
             tableMapping.ColumnMappings.Add("TimeZoneOffset", "TimeZoneOffset");
             tableMapping.ColumnMappings.Add("Magnitude", "Magnitude");
             tableMapping.ColumnMappings.Add("Duration", "Duration");
+            tableMapping.ColumnMappings.Add("HasImpactedComponents", "HasImpactedComponents");
             tableMapping.ColumnMappings.Add("Description", "Description");
             tableMapping.ColumnMappings.Add("Data", "Data");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[Event] WHERE (([ID] = @Original_ID) AND ([FileGroupID] = @Original_FileGroupID) AND ([MeterID] = @Original_MeterID) AND ([LineID] = @Original_LineID) AND ([EventTypeID] = @Original_EventTypeID) AND ([Name] = @Original_Name) AND ((@IsNull_Alias = 1 AND [Alias] IS NULL) OR ([Alias] = @Original_Alias)) AND ((@IsNull_ShortName = 1 AND [ShortName] IS NULL) OR ([ShortName] = @Original_ShortName)) AND ([StartTime] = @Original_StartTime) AND ([EndTime] = @Original_EndTime) AND ([TimeZoneOffset] = @Original_TimeZoneOffset) AND ([Magnitude] = @Original_Magnitude) AND ([Duration] = @Original_Duration))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[Event] WHERE (([ID] = @Original_ID) AND ([FileGroupID] = @Original_FileGroupID) AND ([MeterID] = @Original_MeterID) AND ([LineID] = @Original_LineID) AND ([EventTypeID] = @Original_EventTypeID) AND ([Name] = @Original_Name) AND ((@IsNull_Alias = 1 AND [Alias] IS NULL) OR ([Alias] = @Original_Alias)) AND ((@IsNull_ShortName = 1 AND [ShortName] IS NULL) OR ([ShortName] = @Original_ShortName)) AND ([StartTime] = @Original_StartTime) AND ([EndTime] = @Original_EndTime) AND ([TimeZoneOffset] = @Original_TimeZoneOffset) AND ([Magnitude] = @Original_Magnitude) AND ([Duration] = @Original_Duration) AND ([HasImpactedComponents] = @Original_HasImpactedComponents))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FileGroupID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -5410,13 +5437,14 @@ SELECT ID, ChannelID, Date, Minimum, Maximum, Average, ValidCount, InvalidCount 
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ShortName", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ShortName", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_StartTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "StartTime", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EndTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EndTime", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_TimeZoneOffset", global::System.Data.SqlDbType.BigInt, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_TimeZoneOffset", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Magnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Magnitude", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Duration", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Duration", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_HasImpactedComponents", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HasImpactedComponents", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[Event] ([FileGroupID], [MeterID], [LineID], [EventTypeID], [Name], [Alias], [ShortName], [StartTime], [EndTime], [TimeZoneOffset], [Magnitude], [Duration], [Description], [Data]) VALUES (@FileGroupID, @MeterID, @LineID, @EventTypeID, @Name, @Alias, @ShortName, @StartTime, @EndTime, @TimeZoneOffset, @Magnitude, @Duration, @Description, @Data);
-SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, TimeZoneOffset, Magnitude, Duration, Description, Data FROM Event WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[Event] ([FileGroupID], [MeterID], [LineID], [EventTypeID], [Name], [Alias], [ShortName], [StartTime], [EndTime], [TimeZoneOffset], [Magnitude], [Duration], [HasImpactedComponents], [Description], [Data]) VALUES (@FileGroupID, @MeterID, @LineID, @EventTypeID, @Name, @Alias, @ShortName, @StartTime, @EndTime, @TimeZoneOffset, @Magnitude, @Duration, @HasImpactedComponents, @Description, @Data);
+SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Description, Data FROM Event WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FileGroupID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MeterID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeterID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -5427,15 +5455,16 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ShortName", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ShortName", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@StartTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "StartTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EndTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EndTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@TimeZoneOffset", global::System.Data.SqlDbType.BigInt, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@TimeZoneOffset", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Magnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Magnitude", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Duration", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Duration", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@HasImpactedComponents", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HasImpactedComponents", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Data", global::System.Data.SqlDbType.VarBinary, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Data", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[Event] SET [FileGroupID] = @FileGroupID, [MeterID] = @MeterID, [LineID] = @LineID, [EventTypeID] = @EventTypeID, [Name] = @Name, [Alias] = @Alias, [ShortName] = @ShortName, [StartTime] = @StartTime, [EndTime] = @EndTime, [TimeZoneOffset] = @TimeZoneOffset, [Magnitude] = @Magnitude, [Duration] = @Duration, [Description] = @Description, [Data] = @Data WHERE (([ID] = @Original_ID) AND ([FileGroupID] = @Original_FileGroupID) AND ([MeterID] = @Original_MeterID) AND ([LineID] = @Original_LineID) AND ([EventTypeID] = @Original_EventTypeID) AND ([Name] = @Original_Name) AND ((@IsNull_Alias = 1 AND [Alias] IS NULL) OR ([Alias] = @Original_Alias)) AND ((@IsNull_ShortName = 1 AND [ShortName] IS NULL) OR ([ShortName] = @Original_ShortName)) AND ([StartTime] = @Original_StartTime) AND ([EndTime] = @Original_EndTime) AND ([TimeZoneOffset] = @Original_TimeZoneOffset) AND ([Magnitude] = @Original_Magnitude) AND ([Duration] = @Original_Duration));
-SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, TimeZoneOffset, Magnitude, Duration, Description, Data FROM Event WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[Event] SET [FileGroupID] = @FileGroupID, [MeterID] = @MeterID, [LineID] = @LineID, [EventTypeID] = @EventTypeID, [Name] = @Name, [Alias] = @Alias, [ShortName] = @ShortName, [StartTime] = @StartTime, [EndTime] = @EndTime, [TimeZoneOffset] = @TimeZoneOffset, [Magnitude] = @Magnitude, [Duration] = @Duration, [HasImpactedComponents] = @HasImpactedComponents, [Description] = @Description, [Data] = @Data WHERE (([ID] = @Original_ID) AND ([FileGroupID] = @Original_FileGroupID) AND ([MeterID] = @Original_MeterID) AND ([LineID] = @Original_LineID) AND ([EventTypeID] = @Original_EventTypeID) AND ([Name] = @Original_Name) AND ((@IsNull_Alias = 1 AND [Alias] IS NULL) OR ([Alias] = @Original_Alias)) AND ((@IsNull_ShortName = 1 AND [ShortName] IS NULL) OR ([ShortName] = @Original_ShortName)) AND ([StartTime] = @Original_StartTime) AND ([EndTime] = @Original_EndTime) AND ([TimeZoneOffset] = @Original_TimeZoneOffset) AND ([Magnitude] = @Original_Magnitude) AND ([Duration] = @Original_Duration) AND ([HasImpactedComponents] = @Original_HasImpactedComponents));
+SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Description, Data FROM Event WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FileGroupID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@MeterID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "MeterID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -5446,9 +5475,10 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ShortName", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ShortName", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@StartTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "StartTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EndTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EndTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@TimeZoneOffset", global::System.Data.SqlDbType.BigInt, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@TimeZoneOffset", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Magnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Magnitude", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Duration", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Duration", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@HasImpactedComponents", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HasImpactedComponents", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Data", global::System.Data.SqlDbType.VarBinary, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Data", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -5463,9 +5493,10 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ShortName", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ShortName", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_StartTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "StartTime", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EndTime", global::System.Data.SqlDbType.DateTime2, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EndTime", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
-            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_TimeZoneOffset", global::System.Data.SqlDbType.BigInt, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_TimeZoneOffset", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "TimeZoneOffset", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Magnitude", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Magnitude", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_Duration", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Duration", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_HasImpactedComponents", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "HasImpactedComponents", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
@@ -5483,8 +5514,8 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
             this._commandCollection[0].CommandText = "SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, Sta" +
-                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, Description, Data FROM dbo" +
-                ".Event";
+                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Des" +
+                "cription, Data FROM dbo.Event";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
@@ -5498,15 +5529,15 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._commandCollection[2] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[2].Connection = this.Connection;
             this._commandCollection[2].CommandText = "SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, Sta" +
-                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, Description, Data FROM dbo" +
-                ".Event WHERE FileGroupID = @fileGroupID";
+                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Des" +
+                "cription, Data FROM dbo.Event WHERE FileGroupID = @fileGroupID";
             this._commandCollection[2].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[2].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@fileGroupID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[3] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[3].Connection = this.Connection;
             this._commandCollection[3].CommandText = "SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, Sta" +
-                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, Description, Data FROM dbo" +
-                ".Event WHERE ID = @id";
+                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Des" +
+                "cription, Data FROM dbo.Event WHERE ID = @id";
             this._commandCollection[3].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[3].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@id", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[4] = new global::System.Data.SqlClient.SqlCommand();
@@ -5521,7 +5552,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._commandCollection[4].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@endTime", global::System.Data.SqlDbType.DateTime2, 8, global::System.Data.ParameterDirection.Input, 0, 0, "EndTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[5] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[5].Connection = this.Connection;
-            this._commandCollection[5].CommandText = @"SELECT dbo.Event.ID, dbo.Event.FileGroupID, dbo.Event.MeterID, dbo.Event.LineID, dbo.Event.EventTypeID, dbo.Event.Name, dbo.Event.Alias, dbo.Event.ShortName, dbo.Event.StartTime, dbo.Event.EndTime, dbo.Event.TimeZoneOffset, dbo.Event.Magnitude, dbo.Event.Duration, dbo.Event.Description, Data FROM dbo.Event JOIN dbo.EventType ON dbo.Event.EventTypeID = dbo.EventType.ID WHERE dbo.EventType.Name = 'Fault' AND ((dbo.Event.StartTime >= @minTime AND dbo.Event.StartTime <= @maxTime) OR (@minTime >= dbo.Event.StartTime AND @minTime <= dbo.Event.EndTime))";
+            this._commandCollection[5].CommandText = @"SELECT dbo.Event.ID, dbo.Event.FileGroupID, dbo.Event.MeterID, dbo.Event.LineID, dbo.Event.EventTypeID, dbo.Event.Name, dbo.Event.Alias, dbo.Event.ShortName, dbo.Event.StartTime, dbo.Event.EndTime, dbo.Event.TimeZoneOffset, dbo.Event.Magnitude, dbo.Event.Duration, dbo.Event.HasImpactedComponents, dbo.Event.Description, Data FROM dbo.Event JOIN dbo.EventType ON dbo.Event.EventTypeID = dbo.EventType.ID WHERE dbo.EventType.Name = 'Fault' AND ((dbo.Event.StartTime >= @minTime AND dbo.Event.StartTime <= @maxTime) OR (@minTime >= dbo.Event.StartTime AND @minTime <= dbo.Event.EndTime))";
             this._commandCollection[5].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[5].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@minTime", global::System.Data.SqlDbType.DateTime2, 8, global::System.Data.ParameterDirection.Input, 0, 0, "StartTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[5].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@maxTime", global::System.Data.SqlDbType.DateTime2, 8, global::System.Data.ParameterDirection.Input, 0, 0, "StartTime", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -5615,26 +5646,20 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
-        public virtual MeterData.EventDataTable GetEventIDBy(int meterID, int lineID, int fileGroupID, System.DateTime startTime, System.DateTime endTime) {
-            this.Adapter.SelectCommand = this.CommandCollection[4];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(meterID));
-            this.Adapter.SelectCommand.Parameters[1].Value = ((int)(lineID));
-            this.Adapter.SelectCommand.Parameters[2].Value = ((int)(fileGroupID));
-            this.Adapter.SelectCommand.Parameters[3].Value = ((System.DateTime)(startTime));
-            this.Adapter.SelectCommand.Parameters[4].Value = ((System.DateTime)(endTime));
-            MeterData.EventDataTable dataTable = new MeterData.EventDataTable();
-            this.Adapter.Fill(dataTable);
-            return dataTable;
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
-        public virtual MeterData.EventDataTable GetFaultsByTimeRange(System.DateTime minTime, System.DateTime maxTime) {
+        public virtual MeterData.EventDataTable GetFaultsByTimeRange(string minTime, string maxTime) {
             this.Adapter.SelectCommand = this.CommandCollection[5];
-            this.Adapter.SelectCommand.Parameters[0].Value = ((System.DateTime)(minTime));
-            this.Adapter.SelectCommand.Parameters[1].Value = ((System.DateTime)(maxTime));
+            if ((minTime == null)) {
+                throw new global::System.ArgumentNullException("minTime");
+            }
+            else {
+                this.Adapter.SelectCommand.Parameters[0].Value = ((string)(minTime));
+            }
+            if ((maxTime == null)) {
+                throw new global::System.ArgumentNullException("maxTime");
+            }
+            else {
+                this.Adapter.SelectCommand.Parameters[1].Value = ((string)(maxTime));
+            }
             MeterData.EventDataTable dataTable = new MeterData.EventDataTable();
             this.Adapter.Fill(dataTable);
             return dataTable;
@@ -5702,7 +5727,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_FileGroupID, int Original_MeterID, int Original_LineID, int Original_EventTypeID, string Original_Name, string Original_Alias, string Original_ShortName, System.DateTime Original_StartTime, System.DateTime Original_EndTime, long Original_TimeZoneOffset, double Original_Magnitude, double Original_Duration) {
+        public virtual int Delete(int Original_ID, int Original_FileGroupID, int Original_MeterID, int Original_LineID, int Original_EventTypeID, string Original_Name, string Original_Alias, string Original_ShortName, System.DateTime Original_StartTime, System.DateTime Original_EndTime, int Original_TimeZoneOffset, double Original_Magnitude, double Original_Duration, int Original_HasImpactedComponents) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
             this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_FileGroupID));
             this.Adapter.DeleteCommand.Parameters[2].Value = ((int)(Original_MeterID));
@@ -5732,9 +5757,10 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             }
             this.Adapter.DeleteCommand.Parameters[10].Value = ((System.DateTime)(Original_StartTime));
             this.Adapter.DeleteCommand.Parameters[11].Value = ((System.DateTime)(Original_EndTime));
-            this.Adapter.DeleteCommand.Parameters[12].Value = ((long)(Original_TimeZoneOffset));
+            this.Adapter.DeleteCommand.Parameters[12].Value = ((int)(Original_TimeZoneOffset));
             this.Adapter.DeleteCommand.Parameters[13].Value = ((double)(Original_Magnitude));
             this.Adapter.DeleteCommand.Parameters[14].Value = ((double)(Original_Duration));
+            this.Adapter.DeleteCommand.Parameters[15].Value = ((int)(Original_HasImpactedComponents));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -5755,7 +5781,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int FileGroupID, int MeterID, int LineID, int EventTypeID, string Name, string Alias, string ShortName, System.DateTime StartTime, System.DateTime EndTime, long TimeZoneOffset, double Magnitude, double Duration, string Description, byte[] Data) {
+        public virtual int Insert(int FileGroupID, int MeterID, int LineID, int EventTypeID, string Name, string Alias, string ShortName, System.DateTime StartTime, System.DateTime EndTime, int TimeZoneOffset, double Magnitude, double Duration, int HasImpactedComponents, string Description, byte[] Data) {
             this.Adapter.InsertCommand.Parameters[0].Value = ((int)(FileGroupID));
             this.Adapter.InsertCommand.Parameters[1].Value = ((int)(MeterID));
             this.Adapter.InsertCommand.Parameters[2].Value = ((int)(LineID));
@@ -5780,20 +5806,21 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             }
             this.Adapter.InsertCommand.Parameters[7].Value = ((System.DateTime)(StartTime));
             this.Adapter.InsertCommand.Parameters[8].Value = ((System.DateTime)(EndTime));
-            this.Adapter.InsertCommand.Parameters[9].Value = ((long)(TimeZoneOffset));
+            this.Adapter.InsertCommand.Parameters[9].Value = ((int)(TimeZoneOffset));
             this.Adapter.InsertCommand.Parameters[10].Value = ((double)(Magnitude));
             this.Adapter.InsertCommand.Parameters[11].Value = ((double)(Duration));
+            this.Adapter.InsertCommand.Parameters[12].Value = ((int)(HasImpactedComponents));
             if ((Description == null)) {
-                this.Adapter.InsertCommand.Parameters[12].Value = global::System.DBNull.Value;
+                this.Adapter.InsertCommand.Parameters[13].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[12].Value = ((string)(Description));
+                this.Adapter.InsertCommand.Parameters[13].Value = ((string)(Description));
             }
             if ((Data == null)) {
                 throw new global::System.ArgumentNullException("Data");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[13].Value = ((byte[])(Data));
+                this.Adapter.InsertCommand.Parameters[14].Value = ((byte[])(Data));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -5825,9 +5852,10 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
                     string ShortName, 
                     System.DateTime StartTime, 
                     System.DateTime EndTime, 
-                    long TimeZoneOffset, 
+                    int TimeZoneOffset, 
                     double Magnitude, 
                     double Duration, 
+                    int HasImpactedComponents, 
                     string Description, 
                     byte[] Data, 
                     int Original_ID, 
@@ -5840,9 +5868,10 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
                     string Original_ShortName, 
                     System.DateTime Original_StartTime, 
                     System.DateTime Original_EndTime, 
-                    long Original_TimeZoneOffset, 
+                    int Original_TimeZoneOffset, 
                     double Original_Magnitude, 
                     double Original_Duration, 
+                    int Original_HasImpactedComponents, 
                     int ID) {
             this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(FileGroupID));
             this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(MeterID));
@@ -5868,54 +5897,56 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             }
             this.Adapter.UpdateCommand.Parameters[7].Value = ((System.DateTime)(StartTime));
             this.Adapter.UpdateCommand.Parameters[8].Value = ((System.DateTime)(EndTime));
-            this.Adapter.UpdateCommand.Parameters[9].Value = ((long)(TimeZoneOffset));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(TimeZoneOffset));
             this.Adapter.UpdateCommand.Parameters[10].Value = ((double)(Magnitude));
             this.Adapter.UpdateCommand.Parameters[11].Value = ((double)(Duration));
+            this.Adapter.UpdateCommand.Parameters[12].Value = ((int)(HasImpactedComponents));
             if ((Description == null)) {
-                this.Adapter.UpdateCommand.Parameters[12].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[13].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(Description));
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((string)(Description));
             }
             if ((Data == null)) {
                 throw new global::System.ArgumentNullException("Data");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[13].Value = ((byte[])(Data));
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((byte[])(Data));
             }
-            this.Adapter.UpdateCommand.Parameters[14].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[15].Value = ((int)(Original_FileGroupID));
-            this.Adapter.UpdateCommand.Parameters[16].Value = ((int)(Original_MeterID));
-            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_LineID));
-            this.Adapter.UpdateCommand.Parameters[18].Value = ((int)(Original_EventTypeID));
+            this.Adapter.UpdateCommand.Parameters[15].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[16].Value = ((int)(Original_FileGroupID));
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_MeterID));
+            this.Adapter.UpdateCommand.Parameters[18].Value = ((int)(Original_LineID));
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((int)(Original_EventTypeID));
             if ((Original_Name == null)) {
                 throw new global::System.ArgumentNullException("Original_Name");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[19].Value = ((string)(Original_Name));
+                this.Adapter.UpdateCommand.Parameters[20].Value = ((string)(Original_Name));
             }
             if ((Original_Alias == null)) {
-                this.Adapter.UpdateCommand.Parameters[20].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[21].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[21].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[22].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[20].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[21].Value = ((string)(Original_Alias));
+                this.Adapter.UpdateCommand.Parameters[21].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[22].Value = ((string)(Original_Alias));
             }
             if ((Original_ShortName == null)) {
-                this.Adapter.UpdateCommand.Parameters[22].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[23].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[23].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[24].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[22].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[23].Value = ((string)(Original_ShortName));
+                this.Adapter.UpdateCommand.Parameters[23].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[24].Value = ((string)(Original_ShortName));
             }
-            this.Adapter.UpdateCommand.Parameters[24].Value = ((System.DateTime)(Original_StartTime));
-            this.Adapter.UpdateCommand.Parameters[25].Value = ((System.DateTime)(Original_EndTime));
-            this.Adapter.UpdateCommand.Parameters[26].Value = ((long)(Original_TimeZoneOffset));
-            this.Adapter.UpdateCommand.Parameters[27].Value = ((double)(Original_Magnitude));
-            this.Adapter.UpdateCommand.Parameters[28].Value = ((double)(Original_Duration));
-            this.Adapter.UpdateCommand.Parameters[29].Value = ((int)(ID));
+            this.Adapter.UpdateCommand.Parameters[25].Value = ((System.DateTime)(Original_StartTime));
+            this.Adapter.UpdateCommand.Parameters[26].Value = ((System.DateTime)(Original_EndTime));
+            this.Adapter.UpdateCommand.Parameters[27].Value = ((int)(Original_TimeZoneOffset));
+            this.Adapter.UpdateCommand.Parameters[28].Value = ((double)(Original_Magnitude));
+            this.Adapter.UpdateCommand.Parameters[29].Value = ((double)(Original_Duration));
+            this.Adapter.UpdateCommand.Parameters[30].Value = ((int)(Original_HasImpactedComponents));
+            this.Adapter.UpdateCommand.Parameters[31].Value = ((int)(ID));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -5946,9 +5977,10 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
                     string ShortName, 
                     System.DateTime StartTime, 
                     System.DateTime EndTime, 
-                    long TimeZoneOffset, 
+                    int TimeZoneOffset, 
                     double Magnitude, 
                     double Duration, 
+                    int HasImpactedComponents, 
                     string Description, 
                     byte[] Data, 
                     int Original_ID, 
@@ -5961,10 +5993,11 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
                     string Original_ShortName, 
                     System.DateTime Original_StartTime, 
                     System.DateTime Original_EndTime, 
-                    long Original_TimeZoneOffset, 
+                    int Original_TimeZoneOffset, 
                     double Original_Magnitude, 
-                    double Original_Duration) {
-            return this.Update(FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, TimeZoneOffset, Magnitude, Duration, Description, Data, Original_ID, Original_FileGroupID, Original_MeterID, Original_LineID, Original_EventTypeID, Original_Name, Original_Alias, Original_ShortName, Original_StartTime, Original_EndTime, Original_TimeZoneOffset, Original_Magnitude, Original_Duration, Original_ID);
+                    double Original_Duration, 
+                    int Original_HasImpactedComponents) {
+            return this.Update(FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, StartTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Description, Data, Original_ID, Original_FileGroupID, Original_MeterID, Original_LineID, Original_EventTypeID, Original_Name, Original_Alias, Original_ShortName, Original_StartTime, Original_EndTime, Original_TimeZoneOffset, Original_Magnitude, Original_Duration, Original_HasImpactedComponents, Original_ID);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -6011,6 +6044,49 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
                 }
             }
             return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        public virtual global::System.Nullable<int> GetEventIDBy(int meterID, int lineID, int fileGroupID, string startTime, string endTime) {
+            global::System.Data.SqlClient.SqlCommand command = this.CommandCollection[4];
+            command.Parameters[0].Value = ((int)(meterID));
+            command.Parameters[1].Value = ((int)(lineID));
+            command.Parameters[2].Value = ((int)(fileGroupID));
+            if ((startTime == null)) {
+                throw new global::System.ArgumentNullException("startTime");
+            }
+            else {
+                command.Parameters[3].Value = ((string)(startTime));
+            }
+            if ((endTime == null)) {
+                throw new global::System.ArgumentNullException("endTime");
+            }
+            else {
+                command.Parameters[4].Value = ((string)(endTime));
+            }
+            global::System.Data.ConnectionState previousConnectionState = command.Connection.State;
+            if (((command.Connection.State & global::System.Data.ConnectionState.Open) 
+                        != global::System.Data.ConnectionState.Open)) {
+                command.Connection.Open();
+            }
+            object returnValue;
+            try {
+                returnValue = command.ExecuteScalar();
+            }
+            finally {
+                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
+                    command.Connection.Close();
+                }
+            }
+            if (((returnValue == null) 
+                        || (returnValue.GetType() == typeof(global::System.DBNull)))) {
+                return new global::System.Nullable<int>();
+            }
+            else {
+                return new global::System.Nullable<int>(((int)(returnValue)));
+            }
         }
     }
     
