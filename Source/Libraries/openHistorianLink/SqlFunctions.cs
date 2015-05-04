@@ -34,23 +34,6 @@ using Microsoft.SqlServer.Server;
 // ReSharper disable once CheckNamespace
 public class SqlFunctions
 {
-    // No need to make this a structure since it will just get boxed when passed to FillRow function anyway...
-    private class SeriesMeasurement
-    {
-        public readonly uint ChannelID;
-        public readonly uint SeriesID;
-        public readonly DateTime Time;
-        public readonly float Value;
-
-        public SeriesMeasurement(SqlProcedures.Measurement measurement)
-        {
-            ChannelID = measurement.ID.HighDoubleWord();
-            SeriesID = measurement.ID.LowDoubleWord();
-            Time = measurement.Time;
-            Value = measurement.Value;
-        }
-    }
-
     /// <summary>
     /// Queries trending data from the openHistorian.
     /// </summary>
@@ -59,7 +42,7 @@ public class SqlFunctions
     /// <param name="startTime">Start time of desired data range.</param>
     /// <param name="stopTime">End time of desired data range.</param>
     /// <param name="channelIDs">Comma separated list of channels ID values; set to <c>null</c>to retrieve values for all channels.</param>
-    /// <param name="seriesCount">Number of series to return for each channel; defaults to 3 for min, max and average.</param>
+    /// <param name="seriesCount">Number of series to return for each channel; defaults to 3 for minimum (0), maximum (1) and average (2).</param>
     /// <returns>
     /// Enumerable trending data results for specified time range and points.
     /// </returns>
@@ -83,8 +66,7 @@ public class SqlFunctions
                     measurementIDs.AppendFormat("{0}{1}", measurementIDs.Length == 0 ? "" : ",", Word.MakeQuadWord(uint.Parse(channels[i]), (uint)j));
         }
 
-        foreach (SqlProcedures.Measurement measurement in SqlProcedures.GetHistorianData(historianServer, instanceName, startTime, stopTime, measurementIDs == null ? SqlString.Null : measurementIDs.ToString()))
-            yield return new SeriesMeasurement(measurement);
+        return SqlProcedures.GetHistorianData(historianServer, instanceName, startTime, stopTime, measurementIDs == null ? SqlString.Null : measurementIDs.ToString());
     }
 
     /// <summary>
@@ -97,14 +79,14 @@ public class SqlFunctions
     /// <param name="value">SeriesMeasurement value</param>
     public static void GetTrendingData_FillRow(object source, out SqlInt32 channelID, out SqlInt32 seriesID, out DateTime time, out SqlSingle value)
     {
-        SeriesMeasurement seriesMeasurement = source as SeriesMeasurement;
+        SqlProcedures.Measurement measurement = source as SqlProcedures.Measurement;
 
-        if ((object)seriesMeasurement == null)
-            throw new InvalidOperationException("FillRow source is not a SeriesMeasurement");
+        if ((object)measurement == null)
+            throw new InvalidOperationException("FillRow source is not a Measurement");
 
-        channelID = (int)seriesMeasurement.ChannelID;
-        seriesID = (int)seriesMeasurement.SeriesID;
-        time = seriesMeasurement.Time;
-        value = seriesMeasurement.Value;
+        channelID = (int)measurement.ID.HighDoubleWord();
+        seriesID = (int)measurement.ID.LowDoubleWord();
+        time = measurement.Time;
+        value = measurement.Value;
     }
 }

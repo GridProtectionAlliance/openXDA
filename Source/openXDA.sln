@@ -94,6 +94,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openHistorian", "openHistorian", "{947C5857-A97F-499E-BC07-4509132EAF52}"
 	ProjectSection(SolutionItems) = preProject
 		Dependencies\openHistorian\crypto.dll = Dependencies\openHistorian\crypto.dll
+		Dependencies\openHistorian\EnableHistorianSqlClr.sql = Dependencies\openHistorian\EnableHistorianSqlClr.sql
 		Dependencies\openHistorian\GSF.SortedTreeStore.dll = Dependencies\openHistorian\GSF.SortedTreeStore.dll
 		Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll = Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll
 		Dependencies\openHistorian\openHistorian.Core.dll = Dependencies\openHistorian\openHistorian.Core.dll

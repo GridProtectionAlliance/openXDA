@@ -12,7 +12,7 @@ CREATE ASSEMBLY [openHistorianXDALink] AUTHORIZATION dbo FROM 'C:\Program Files\
 WITH PERMISSION_SET = UNSAFE
 GO
 
--- Queries trending data from the openHistorian
+-- Queries trending data from the openHistorian, example: "SELECT * FROM GetTrendingData('127.0.0.1', 'PPA', '2015-05-04 00:00:00', '2015-05-04 00:10:00', '1,2,3', default)"
 CREATE FUNCTION GetTrendingData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
 RETURNS TABLE
 (
