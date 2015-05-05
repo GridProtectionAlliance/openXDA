@@ -3,16 +3,16 @@ IF EXISTS (SELECT name FROM sysobjects WHERE name = 'GetTrendingData')
    DROP FUNCTION [GetTrendingData];
 GO
 
-IF EXISTS (SELECT name FROM sys.assemblies WHERE name = 'openHistorianXDALink')
-   DROP ASSEMBLY [openHistorianXDALink];
+IF EXISTS (SELECT name FROM sys.assemblies WHERE name = 'openHistorian.XDALink.SqlClr')
+   DROP ASSEMBLY [openHistorian.XDALink.SqlClr];
 GO
 
 -- TODO: Set proper paths for installed assemblies
-CREATE ASSEMBLY [openHistorianXDALink] AUTHORIZATION dbo FROM 'C:\Program Files\openXDA\openHistorianXDALink.dll'
+CREATE ASSEMBLY [openHistorian.XDALink.SqlClr] AUTHORIZATION dbo FROM 'C:\Program Files\openXDA\openHistorian.XDALink.SqlClr.dll'
 WITH PERMISSION_SET = UNSAFE
 GO
 
--- Queries trending data from the openHistorian, example: "SELECT * FROM GetTrendingData('127.0.0.1', 'PPA', '2015-05-04 00:00:00', '2015-05-04 00:10:00', '1,2,3', default)"
+-- Queries trending data from the openHistorian, example: "SELECT * FROM GetTrendingData('127.0.0.1', 'XDA', '2015-05-04 00:00:00', '2015-05-04 00:10:00', '11,21,31', default)"
 CREATE FUNCTION GetTrendingData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
 RETURNS TABLE
 (
@@ -21,5 +21,5 @@ RETURNS TABLE
    [Time] datetime2,
    [Value] real
 )
-AS EXTERNAL NAME [openHistorianXDALink].SqlFunctions.GetTrendingData;
+AS EXTERNAL NAME [openHistorian.XDALink.SqlClr].XDAFunctions.GetTrendingData;
 GO

@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  SqlFunctions.cs - Gbtc
+//  XDAFunctions.cs - Gbtc
 //
 //  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -32,7 +32,7 @@ using Microsoft.SqlServer.Server;
 /// openXDA SQL functions used to query trending data from openHistorian.
 /// </summary>
 // ReSharper disable once CheckNamespace
-public class SqlFunctions
+public class XDAFunctions
 {
     /// <summary>
     /// Queries trending data from the openHistorian.
@@ -66,7 +66,7 @@ public class SqlFunctions
                     measurementIDs.AppendFormat("{0}{1}", measurementIDs.Length == 0 ? "" : ",", Word.MakeQuadWord(uint.Parse(channels[i]), (uint)j));
         }
 
-        return SqlProcedures.GetHistorianData(historianServer, instanceName, startTime, stopTime, measurementIDs == null ? SqlString.Null : measurementIDs.ToString());
+        return HistorianFunctions.GetHistorianData(historianServer, instanceName, startTime, stopTime, measurementIDs == null ? SqlString.Null : measurementIDs.ToString());
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public class SqlFunctions
     /// <param name="value">SeriesMeasurement value</param>
     public static void GetTrendingData_FillRow(object source, out SqlInt32 channelID, out SqlInt32 seriesID, out DateTime time, out SqlSingle value)
     {
-        SqlProcedures.Measurement measurement = source as SqlProcedures.Measurement;
+        HistorianFunctions.Measurement measurement = source as HistorianFunctions.Measurement;
 
         if ((object)measurement == null)
             throw new InvalidOperationException("FillRow source is not a Measurement");

@@ -102,11 +102,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openHistorian", "openHistor
 		Dependencies\openHistorian\openHistorian.SqlClr.dll = Dependencies\openHistorian\openHistorian.SqlClr.dll
 	EndProjectSection
 EndProject
-Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "openHistorianXDALink", "Libraries\openHistorianLink\openHistorianXDALink.sqlproj", "{0505DEEB-4408-441C-9254-FB22A6610C52}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openHistorian.XDALink.SqlClr", "Libraries\openHistorian.XDALink.SqlClr\openHistorian.XDALink.SqlClr.csproj", "{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openHistorian.XDALink", "Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj", "{7F731255-FA83-4DBF-9E0F-C22AE4845E76}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 19
+		SccNumberOfProjects = 20
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -178,10 +180,14 @@ Global
 		SccProjectTopLevelParentUniqueName17 = openXDA.sln
 		SccProjectName17 = Applications/openXDA/openXDASetup
 		SccLocalPath17 = Applications\\openXDA\\openXDASetup
-		SccProjectUniqueName18 = Libraries\\openHistorianLink\\openHistorianXDALink.sqlproj
+		SccProjectUniqueName18 = Libraries\\openHistorian.XDALink.SqlClr\\openHistorian.XDALink.SqlClr.csproj
 		SccProjectTopLevelParentUniqueName18 = openXDA.sln
-		SccProjectName18 = Libraries/openHistorianLink
-		SccLocalPath18 = Libraries\\openHistorianLink
+		SccProjectName18 = Libraries/openHistorian.XDALink.SqlClr
+		SccLocalPath18 = Libraries\\openHistorian.XDALink.SqlClr
+		SccProjectUniqueName19 = Libraries\\openHistorian.XDALink\\openHistorian.XDALink.csproj
+		SccProjectTopLevelParentUniqueName19 = openXDA.sln
+		SccProjectName19 = Libraries/openHistorian.XDALink
+		SccLocalPath19 = Libraries\\openHistorian.XDALink
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -390,20 +396,26 @@ Global
 		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|Mixed Platforms.Build.0 = Release|x86
 		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|x86.ActiveCfg = Release|x86
 		{36380070-81B6-4D71-A80A-C5AE76B0E357}.Release|x86.Build.0 = Release|x86
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|Mixed Platforms.Deploy.0 = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|Mixed Platforms.Deploy.0 = Release|Any CPU
-		{0505DEEB-4408-441C-9254-FB22A6610C52}.Release|x86.ActiveCfg = Release|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}.Release|x86.ActiveCfg = Release|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -420,7 +432,8 @@ Global
 		{05636D10-CC92-43B1-AF3D-E66CCECFB3CC} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{953A5C0E-31C5-4C36-93E6-A0F2750F199C} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{11AE594D-2B2B-473C-8550-6BF62914C3E2} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
-		{0505DEEB-4408-441C-9254-FB22A6610C52} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{7F731255-FA83-4DBF-9E0F-C22AE4845E76} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{0218BFF0-F4D8-4F24-A0A8-59F330CC9DE3} = {BC5C2A22-31D3-4887-B798-262244564883}
 		{33FAD525-AAE2-4E26-A790-ECC18697CE45} = {BC5C2A22-31D3-4887-B798-262244564883}
 		{8F3E211B-B0C7-49CB-9683-E488E4E6702F} = {BC5C2A22-31D3-4887-B798-262244564883}
