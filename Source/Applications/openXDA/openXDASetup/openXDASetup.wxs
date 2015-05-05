@@ -80,6 +80,11 @@
       <Component Id="Ionic.Zlib">
         <File Id="Ionic.Zlib.dll" Name="Ionic.Zlib.dll" Source="$(var.SolutionDir)\Dependencies\DotNetZip\Ionic.Zlib.dll" />
       </Component>
+      
+      <!-- log4net Dependencies -->
+      <Component Id="log4net">
+        <File Id="log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll" />
+      </Component>
 
       <!-- GSF Dependencies -->
       <Component Id="GSF.COMTRADE">
