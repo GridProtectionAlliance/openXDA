@@ -77,6 +77,9 @@ namespace openXDA.Configuration
 
         private string m_pqDashboardUrl;
 
+        private string m_historianServer;
+        private string m_historianInstanceName;
+
         private List<string> m_watchDirectoryList;
         private List<FileShare> m_fileShareList;
 
@@ -627,6 +630,40 @@ namespace openXDA.Configuration
             set
             {
                 m_pqDashboardUrl = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets historian server, e.g., 127.0.0.1:38402
+        /// </summary>
+        [Setting]
+        [DefaultValue("127.0.0.1")]
+        public string HistorianServer
+        {
+            get
+            {
+                return m_historianServer;
+            }
+            set
+            {
+                m_historianServer = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets historian instance name.
+        /// </summary>
+        [Setting]
+        [DefaultValue("XDA")]
+        public string HistorianInstanceName
+        {
+            get
+            {
+                return m_historianInstanceName;
+            }
+            set
+            {
+                m_historianInstanceName = value;
             }
         }
 
