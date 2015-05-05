@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FaultData.Database;
 
 namespace FaultData.DataAnalysis
 {
@@ -65,29 +66,45 @@ namespace FaultData.DataAnalysis
             if ((object)viSeriesList[IAIndex] == null)
             {
                 missingSeries = viSeriesList[IRIndex];
-                missingSeries.Add(viSeriesList[IBIndex].Negate());
-                missingSeries.Add(viSeriesList[ICIndex].Negate());
+                missingSeries = missingSeries.Add(viSeriesList[IBIndex].Negate());
+                missingSeries = missingSeries.Add(viSeriesList[ICIndex].Negate());
+
+                missingSeries.SeriesInfo = GetSeriesInfo(IAIndex);
+                missingSeries.SeriesInfo.Channel.Line = viSeriesList[IBIndex].SeriesInfo.Channel.Line;
+
                 viSeriesList[IAIndex] = missingSeries;
             }
             else if ((object)viSeriesList[IBIndex] == null)
             {
                 missingSeries = viSeriesList[IRIndex];
-                missingSeries.Add(viSeriesList[IAIndex].Negate());
-                missingSeries.Add(viSeriesList[ICIndex].Negate());
+                missingSeries = missingSeries.Add(viSeriesList[IAIndex].Negate());
+                missingSeries = missingSeries.Add(viSeriesList[ICIndex].Negate());
+
+                missingSeries.SeriesInfo = GetSeriesInfo(IBIndex);
+                missingSeries.SeriesInfo.Channel.Line = viSeriesList[IAIndex].SeriesInfo.Channel.Line;
+
                 viSeriesList[IBIndex] = missingSeries;
             }
             else if ((object)viSeriesList[ICIndex] == null)
             {
                 missingSeries = viSeriesList[IRIndex];
-                missingSeries.Add(viSeriesList[IAIndex].Negate());
-                missingSeries.Add(viSeriesList[IBIndex].Negate());
+                missingSeries = missingSeries.Add(viSeriesList[IAIndex].Negate());
+                missingSeries = missingSeries.Add(viSeriesList[IBIndex].Negate());
+
+                missingSeries.SeriesInfo = GetSeriesInfo(ICIndex);
+                missingSeries.SeriesInfo.Channel.Line = viSeriesList[IAIndex].SeriesInfo.Channel.Line;
+
                 viSeriesList[ICIndex] = missingSeries;
             }
             else if ((object)viSeriesList[IRIndex] == null)
             {
                 missingSeries = viSeriesList[IAIndex];
-                missingSeries.Add(viSeriesList[IBIndex]);
-                missingSeries.Add(viSeriesList[ICIndex]);
+                missingSeries = missingSeries.Add(viSeriesList[IBIndex]);
+                missingSeries = missingSeries.Add(viSeriesList[ICIndex]);
+
+                missingSeries.SeriesInfo = GetSeriesInfo(IRIndex);
+                missingSeries.SeriesInfo.Channel.Line = viSeriesList[IAIndex].SeriesInfo.Channel.Line;
+
                 viSeriesList[IRIndex] = missingSeries;
             }
 
@@ -202,6 +219,45 @@ namespace FaultData.DataAnalysis
             string key = string.Format("{0} {1}", measurementType, phase);
 
             return indexLookup.TryGetValue(key, out index) ? index : -1;
+        }
+
+        private Series GetSeriesInfo(int index)
+        {
+            Dictionary<int, string> measurementTypeLookup = new Dictionary<int, string>()
+            {
+                { VAIndex, "Voltage" },
+                { VBIndex, "Voltage" },
+                { VCIndex, "Voltage" },
+                { IAIndex, "Current" },
+                { IBIndex, "Current" },
+                { ICIndex, "Current" },
+                { IRIndex, "Current" }
+            };
+
+            Dictionary<int, string> phaseLookup = new Dictionary<int, string>()
+            {
+                { VAIndex, "AN" },
+                { VBIndex, "BN" },
+                { VCIndex, "CN" },
+                { IAIndex, "AN" },
+                { IBIndex, "BN" },
+                { ICIndex, "CN" },
+                { IRIndex, "RES" }
+            };
+
+            Series series = new Series();
+
+            series.SeriesType = new SeriesType() { Name = "Instantaneous" };
+
+            series.Channel = new Channel()
+            {
+                MeasurementType = new MeasurementType() { Name = measurementTypeLookup[index] },
+                MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Instantaneous" },
+                Phase = new Phase() { Name = phaseLookup[index] },
+                Name = measurementTypeLookup[index] + " " + phaseLookup[index]
+            };
+
+            return series;
         }
 
         #endregion

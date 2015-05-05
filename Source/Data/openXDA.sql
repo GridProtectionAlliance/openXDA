@@ -1148,16 +1148,25 @@ GO
 --    (
 --        SELECT
 --            CurveID,
---            CurveDB
+--            CurveDB,
+--            SectionTypeName,
+--            Title AS SectionTitle,
+--            Rank AS SectionRank,
+--            Content AS SectionContent
 --        FROM
 --            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
 --            PQInvestigator.UserIndustrialPQ.dbo.AuditSection ON AuditSection.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.SectionType ON AuditSection.SectionTypeID = SectionType.SectionTypeID JOIN
 --            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = AuditSection.AuditSectionID
 --        WHERE
 --            AuditCurve.CurveType = 'TOLERANCE' AND
 --            FacilityAudit.FacilityID = @facilityID
 --    )
 --    SELECT
+--        FacilityCurve.SectionTypeName,
+--        FacilityCurve.SectionTitle,
+--        FacilityCurve.SectionRank,
+--        FacilityCurve.SectionContent,
 --        Component.ComponentModel,
 --        Component.ComponentDescription,
 --        Manufacturer.ManufacturerName,
@@ -1168,12 +1177,17 @@ GO
 --        PQInvestigator.IndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
 --        PQInvestigator.IndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
 --        PQInvestigator.IndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
---        EPRIToleranceCurve ON EPRIToleranceCurve.ComponentID = Component.ComponentID
+--        EPRIToleranceCurve ON EPRIToleranceCurve.ComponentID = Component.ComponentID JOIN
+--        FacilityCurve ON FacilityCurve.CurveID = EPRIToleranceCurve.TestCurveID
 --    WHERE
---        TestCurveID IN (SELECT CurveID FROM FacilityCurve WHERE CurveDB = 'EPRI') AND
+--        CurveDB = 'EPRI' AND
 --        IsUnder <> 0
 --    UNION
 --    SELECT
+--        FacilityCurve.SectionTypeName,
+--        FacilityCurve.SectionTitle,
+--        FacilityCurve.SectionRank,
+--        FacilityCurve.SectionContent,
 --        Component.ComponentModel,
 --        Component.ComponentDescription,
 --        Manufacturer.ManufacturerName,
@@ -1184,9 +1198,10 @@ GO
 --        PQInvestigator.UserIndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
 --        PQInvestigator.UserIndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
 --        PQInvestigator.UserIndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
---        USERToleranceCurve ON USERToleranceCurve.ComponentID = Component.ComponentID
+--        USERToleranceCurve ON USERToleranceCurve.ComponentID = Component.ComponentID JOIN
+--        FacilityCurve ON FacilityCurve.CurveID = USERToleranceCurve.TestCurveID
 --    WHERE
---        TestCurveID IN (SELECT CurveID FROM FacilityCurve WHERE CurveDB = 'USER') AND
+--        CurveDB = 'USER' AND
 --        IsUnder <> 0
 --END
 --GO
