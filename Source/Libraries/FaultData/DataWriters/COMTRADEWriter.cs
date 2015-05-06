@@ -83,21 +83,8 @@ namespace FaultData.DataWriters
 
         // Fields
         private string m_resultsPath;
-
-        private double m_maxVoltage;
-        private double m_maxCurrent;
-        private double m_lowVoltageThreshold;
-        private double m_maxLowVoltageCurrent;
-        private double m_maxTimeOffset;
-        private double m_minTimeOffset;
-
-        private double m_residualCurrentTrigger;
-        private double m_phaseCurrentTrigger;
-        private double m_prefaultTrigger;
-        private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
-
         private string m_lengthUnits;
 
         #endregion
@@ -113,126 +100,6 @@ namespace FaultData.DataWriters
             set
             {
                 m_resultsPath = value;
-            }
-        }
-
-        public double MaxVoltage
-        {
-            get
-            {
-                return m_maxVoltage;
-            }
-            set
-            {
-                m_maxVoltage = value;
-            }
-        }
-
-        public double MaxCurrent
-        {
-            get
-            {
-                return m_maxCurrent;
-            }
-            set
-            {
-                m_maxCurrent = value;
-            }
-        }
-
-        public double LowVoltageThreshold
-        {
-            get
-            {
-                return m_lowVoltageThreshold;
-            }
-            set
-            {
-                m_lowVoltageThreshold = value;
-            }
-        }
-
-        public double MaxLowVoltageCurrent
-        {
-            get
-            {
-                return m_maxLowVoltageCurrent;
-            }
-            set
-            {
-                m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        public double MaxTimeOffset
-        {
-            get
-            {
-                return m_maxTimeOffset;
-            }
-            set
-            {
-                m_maxTimeOffset = value;
-            }
-        }
-
-        public double MinTimeOffset
-        {
-            get
-            {
-                return m_minTimeOffset;
-            }
-            set
-            {
-                m_minTimeOffset = value;
-            }
-        }
-
-        public double ResidualCurrentTrigger
-        {
-            get
-            {
-                return m_residualCurrentTrigger;
-            }
-            set
-            {
-                m_residualCurrentTrigger = value;
-            }
-        }
-
-        public double PhaseCurrentTrigger
-        {
-            get
-            {
-                return m_phaseCurrentTrigger;
-            }
-            set
-            {
-                m_phaseCurrentTrigger = value;
-            }
-        }
-
-        public double PrefaultTrigger
-        {
-            get
-            {
-                return m_prefaultTrigger;
-            }
-            set
-            {
-                m_prefaultTrigger = value;
-            }
-        }
-
-        public double FaultSuppressionTrigger
-        {
-            get
-            {
-                return m_faultSuppressionTrigger;
-            }
-            set
-            {
-                m_faultSuppressionTrigger = value;
             }
         }
 

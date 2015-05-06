@@ -223,8 +223,6 @@ namespace FaultData.DataResources
         private double m_maxCurrent;
         private double m_lowVoltageThreshold;
         private double m_maxLowVoltageCurrent;
-        private double m_maxTimeOffset;
-        private double m_minTimeOffset;
 
         private double m_residualCurrentTrigger;
         private double m_phaseCurrentTrigger;
@@ -304,30 +302,6 @@ namespace FaultData.DataResources
             set
             {
                 m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        public double MaxTimeOffset
-        {
-            get
-            {
-                return m_maxTimeOffset;
-            }
-            set
-            {
-                m_maxTimeOffset = value;
-            }
-        }
-
-        public double MinTimeOffset
-        {
-            get
-            {
-                return m_minTimeOffset;
-            }
-            set
-            {
-                m_minTimeOffset = value;
             }
         }
 
@@ -617,11 +591,6 @@ namespace FaultData.DataResources
 
         private bool IsReasonable(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            // Get the current system time and time thresholds
-            DateTime now = DateTime.Now;
-            DateTime minTime = now.AddHours(-m_minTimeOffset);
-            DateTime maxTime = now.AddHours(m_maxTimeOffset);
-
             // Get the line-to-neutral nominal voltage in volts
             double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
 
@@ -642,22 +611,6 @@ namespace FaultData.DataResources
                 viCycleDataGroup.IC.RMS.Multiply(1.0D / thermalRating),
                 viCycleDataGroup.IR.RMS.Multiply(1.0D / thermalRating)
             };
-
-            // Determine if the time of the record is
-            // too far in the past to be reasonable
-            if (dataGroup.StartTime < minTime)
-            {
-                Log.Debug("Data unreasonable: dataGroup.StartTime < minTime");
-                return false;
-            }
-
-            // Determine if the time of the record is
-            // too far in the future to be reasonable
-            if (dataGroup.StartTime > maxTime)
-            {
-                Log.Debug("Data unreasonable: dataGroup.StartTime > maxTime");
-                return false;
-            }
 
             // Determine if any of the RMS voltages are unreasonably high
             if (voltages.Any(voltage => voltage.DataPoints.Any(dataPoint => dataPoint.Value > m_maxVoltage)))

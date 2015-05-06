@@ -156,7 +156,7 @@ namespace FaultData.DataReaders
             series.Channel = channel;
             series.SeriesType = new SeriesType();
             series.SeriesType.Name = "Instantaneous";
-            series.SourceIndexes = analogChannel.ChannelNumber.ToString();
+            series.SourceIndexes = analogChannel.chanlnum;
 
             return channel;
         }

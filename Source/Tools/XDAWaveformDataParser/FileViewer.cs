@@ -290,7 +290,7 @@ namespace XDAWaveformDataParser
 
                     // Parse EMAX control file into channels
                     m_channels = parser.ControlFile.AnalogChannelSettings.Values
-                        .OrderBy(channel => channel.ChannelNumber)
+                        .OrderBy(channel => Convert.ToInt32(channel.chanlnum))
                         .Select(channel => new ParsedChannel()
                         {
                             Name = channel.title,

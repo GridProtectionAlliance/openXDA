@@ -50,13 +50,14 @@ namespace openXDA.Configuration
         private double m_timeTolerance;
         private string m_defaultMeterTimeZone;
         private string m_xdaTimeZone;
+        private double m_maxTimeOffset;
+        private double m_minTimeOffset;
+        private double m_maxFileCreationTimeOffset;
 
         private double m_maxVoltage;
         private double m_maxCurrent;
         private double m_lowVoltageThreshold;
         private double m_maxLowVoltageCurrent;
-        private double m_maxTimeOffset;
-        private double m_minTimeOffset;
 
         private double m_residualCurrentTrigger;
         private double m_phaseCurrentTrigger;
@@ -262,6 +263,60 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
+        /// Gets or sets the maximum number of hours beyond the current system time
+        /// before the time of the record indicates that the data is unreasonable.
+        /// </summary>
+        [Setting]
+        [DefaultValue(24.0D)]
+        public double MaxTimeOffset
+        {
+            get
+            {
+                return m_maxTimeOffset;
+            }
+            set
+            {
+                m_maxTimeOffset = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of hours prior to the current system time
+        /// before the time of the record indicates that the data is unreasonable.
+        /// </summary>
+        [Setting]
+        [DefaultValue(1440.0D)]
+        public double MinTimeOffset
+        {
+            get
+            {
+                return m_minTimeOffset;
+            }
+            set
+            {
+                m_minTimeOffset = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of hours prior to the current system time
+        /// before the file creation time indicates that the data should not be processed.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.0D)]
+        public double MaxFileCreationTimeOffset
+        {
+            get
+            {
+                return m_maxFileCreationTimeOffset;
+            }
+            set
+            {
+                m_maxFileCreationTimeOffset = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the per-unit threshold at which the
         /// voltage exceeds engineering reasonableness.
         /// </summary>
@@ -330,42 +385,6 @@ namespace openXDA.Configuration
             set
             {
                 m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum number of hours beyond the current system time
-        /// before the time of the record indicates that the data is unreasonable.
-        /// </summary>
-        [Setting]
-        [DefaultValue(24.0D)]
-        public double MaxTimeOffset
-        {
-            get
-            {
-                return m_maxTimeOffset;
-            }
-            set
-            {
-                m_maxTimeOffset = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum number of hours prior to the current system time
-        /// before the time of the record indicates that the data is unreasonable.
-        /// </summary>
-        [Setting]
-        [DefaultValue(1440.0D)]
-        public double MinTimeOffset
-        {
-            get
-            {
-                return m_minTimeOffset;
-            }
-            set
-            {
-                m_minTimeOffset = value;
             }
         }
 

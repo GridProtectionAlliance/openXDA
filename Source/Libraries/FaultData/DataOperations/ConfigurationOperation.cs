@@ -39,38 +39,12 @@ namespace FaultData.DataOperations
 
         // Fields
         private string m_filePattern;
-        private string m_defaultMeterTimeZone;
-        private string m_xdaTimeZone;
 
         private MeterInfoDataContext m_meterInfo;
 
         #endregion
 
         #region [ Properties ]
-
-        public string DefaultMeterTimeZone
-        {
-            get
-            {
-                return m_defaultMeterTimeZone;
-            }
-            set
-            {
-                m_defaultMeterTimeZone = value;
-            }
-        }
-
-        public string XDATimeZone
-        {
-            get
-            {
-                return m_xdaTimeZone;
-            }
-            set
-            {
-                m_xdaTimeZone = value;
-            }
-        }
 
         public string FilePattern
         {
@@ -102,10 +76,6 @@ namespace FaultData.DataOperations
             Dictionary<SeriesKey, Series> seriesLookup;
             Series seriesInfo;
 
-            TimeZoneInfo meterTimeZone;
-            TimeZoneInfo xdaTimeZone;
-            TimeSpan timeShift;
-
             Log.Info("Executing operation to locate meter in database...");
 
             // Try to parse the name of the meter from the file path
@@ -119,13 +89,6 @@ namespace FaultData.DataOperations
             {
                 Log.Info(string.Format("Found meter {0} in database.", meter.Name));
 
-                if (!string.IsNullOrEmpty(meter.TimeZone))
-                    meterTimeZone = TimeZoneInfo.FindSystemTimeZoneById(meter.TimeZone);
-                else
-                    meterTimeZone = TimeZoneInfo.FindSystemTimeZoneById(m_defaultMeterTimeZone);
-
-                xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(m_xdaTimeZone);
-
                 // Match the parsed series with the ones associated with the meter in the database
                 seriesLookup = meter.Channels
                     .SelectMany(channel => channel.Series)
@@ -134,14 +97,6 @@ namespace FaultData.DataOperations
 
                 foreach (DataSeries dataSeries in meterDataSet.DataSeries)
                 {
-                    if (dataSeries.DataPoints.Count > 0)
-                    {
-                        timeShift = xdaTimeZone.GetUtcOffset(dataSeries[0].Time) - meterTimeZone.GetUtcOffset(dataSeries[0].Time);
-
-                        foreach (DataPoint dataPoint in dataSeries.DataPoints)
-                            dataPoint.Time += timeShift;
-                    }
-
                     if ((object)dataSeries.SeriesInfo == null)
                         continue;
 

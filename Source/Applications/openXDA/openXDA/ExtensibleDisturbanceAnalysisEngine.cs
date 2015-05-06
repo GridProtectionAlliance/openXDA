@@ -77,6 +77,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
+using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataOperations;
 using FaultData.DataReaders;
@@ -494,6 +495,9 @@ namespace openXDA
             SystemSettings systemSettings;
             MeterDataProcessor meterDataProcessor;
 
+            TimeZoneInfo xdaTimeZone;
+            double timeDifference;
+
             dbAdapterContainer = null;
             filePath = fileProcessorEventArgs.FullPath;
 
@@ -515,12 +519,25 @@ namespace openXDA
                     }
                 }
 
+                xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(m_systemSettings.XDATimeZone);
+
+                // Validate that the creation time is within the user-defined tolerance
+                if (m_systemSettings.MaxFileCreationTimeOffset > 0.0D && DateTime.UtcNow.Subtract(File.GetCreationTimeUtc(filePath)).TotalHours > m_systemSettings.MaxFileCreationTimeOffset)
+                {
+                    OnStatusMessage("Skipped file \"{0}\" because file creation time '{1}' is too old.", filePath, File.GetCreationTimeUtc(filePath));
+                    fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                    fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
+                    fileGroup.Error = 1;
+                    fileInfo.SubmitChanges();
+                    return;
+                }
+
                 // Try to parse the name of the meter from the file path to determine whether this file can be parsed
                 if (string.IsNullOrEmpty(m_systemSettings.FilePattern) || !TryParseFilePath(filePath, out meterKey))
                 {
                     OnStatusMessage("Skipped file \"{0}\" because no meter could not be determined based on the FilePattern system setting.", filePath);
-                    fileGroup = LoadFileGroup(fileInfo, filePath);
-                    fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                    fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                    fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
                     fileGroup.Error = 1;
                     fileInfo.SubmitChanges();
                     return;
@@ -530,8 +547,8 @@ namespace openXDA
                 if (!meterInfo.Meters.Any(m => m.AssetKey == meterKey))
                 {
                     OnStatusMessage("Skipped file \"{0}\" because no meter configuration was found for meter {1}.", filePath, meterKey);
-                    fileGroup = LoadFileGroup(fileInfo, filePath);
-                    fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                    fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                    fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
                     fileGroup.Error = 1;
                     fileInfo.SubmitChanges();
                     return;
@@ -552,8 +569,8 @@ namespace openXDA
                 if ((object)readerType == null)
                 {
                     OnStatusMessage("Skipped file \"{0}\" because no valid data reader was found for file extension '{1}'.", filePath, extension);
-                    fileGroup = LoadFileGroup(fileInfo, filePath);
-                    fileGroup.ProcessingEndTime = DateTime.UtcNow;
+                    fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                    fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
                     fileGroup.Error = 1;
                     fileInfo.SubmitChanges();
                     return;
@@ -573,7 +590,7 @@ namespace openXDA
                     if (reader.CanParse(filePath, GetMaxFileCreationTime(filePath)))
                     {
                         // Create a file group for this file in the database
-                        fileGroup = LoadFileGroup(fileInfo, filePath);
+                        fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
 
                         // Create the meter data processor that will be processing this file
                         meterDataProcessor = new MeterDataProcessor();
@@ -595,6 +612,7 @@ namespace openXDA
                             meterDataSet.FilePath = filePath;
                             meterDataSet.FileGroup = fileGroup;
                             meterDataSet.Meter.AssetKey = meterKey;
+                            ShiftTime(meterDataSet, xdaTimeZone);
                         }
 
                         dataStartTime = meterDataProcessor.MeterDataSets
@@ -612,13 +630,38 @@ namespace openXDA
                             .Max();
 
                         if (dataStartTime != default(DateTime))
-                            fileGroup.DataStartTime = dataStartTime;
+                            fileGroup.DataStartTime = TimeZoneInfo.ConvertTimeFromUtc(dataStartTime, xdaTimeZone);
 
                         if (dataEndTime != default(DateTime))
-                            fileGroup.DataEndTime = dataEndTime;
+                            fileGroup.DataEndTime = TimeZoneInfo.ConvertTimeFromUtc(dataEndTime, xdaTimeZone);
 
                         // Commit changes to DataStartTime and DataEndTime
                         fileInfo.SubmitChanges();
+
+                        // Determine if the timestamps in the file are reasonable
+                        timeDifference = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone).Subtract(dataStartTime).TotalHours;
+
+                        if (m_systemSettings.MinTimeOffset > 0.0D && timeDifference > m_systemSettings.MinTimeOffset)
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because data start time '{1}' is too old.", filePath, dataStartTime);
+                            fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                            fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
+                            fileGroup.Error = 1;
+                            fileInfo.SubmitChanges();
+                            return;
+                        }
+
+                        timeDifference = dataEndTime.Subtract(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone)).TotalHours;
+
+                        if (m_systemSettings.MaxTimeOffset > 0.0D && timeDifference > m_systemSettings.MaxTimeOffset)
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because data end time '{1}' is too far in the future.", filePath, dataStartTime);
+                            fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                            fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
+                            fileGroup.Error = 1;
+                            fileInfo.SubmitChanges();
+                            return;
+                        }
 
                         // Process meter data using the meter data processor
                         meterDataProcessor.Process();
@@ -696,7 +739,7 @@ namespace openXDA
 
         // Loads a file group containing information about the file on the given
         // file path, as well as the files related to it, into the database.
-        private FileGroup LoadFileGroup(FileInfoDataContext dataContext, string filePath)
+        private FileGroup LoadFileGroup(FileInfoDataContext dataContext, string filePath, TimeZoneInfo xdaTimeZone)
         {
             string directory = FilePath.GetDirectoryName(filePath);
             string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
@@ -706,7 +749,7 @@ namespace openXDA
             DataFile dataFile;
 
             fileGroup = new FileGroup();
-            fileGroup.ProcessingStartTime = DateTime.UtcNow;
+            fileGroup.ProcessingStartTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
 
             foreach (string file in FilePath.GetFileList(Path.Combine(directory, rootFileName + ".*")))
             {
@@ -715,9 +758,9 @@ namespace openXDA
                 dataFile = new DataFile();
                 dataFile.FilePath = file;
                 dataFile.FileSize = fileInfo.Length;
-                dataFile.CreationTime = fileInfo.CreationTimeUtc;
-                dataFile.LastWriteTime = fileInfo.LastWriteTimeUtc;
-                dataFile.LastAccessTime = fileInfo.LastAccessTimeUtc;
+                dataFile.CreationTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.CreationTimeUtc, xdaTimeZone);
+                dataFile.LastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastWriteTimeUtc, xdaTimeZone);
+                dataFile.LastAccessTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastAccessTimeUtc, xdaTimeZone);
                 dataFile.FileGroup = fileGroup;
             }
 
@@ -725,6 +768,25 @@ namespace openXDA
             dataContext.SubmitChanges();
 
             return fileGroup;
+        }
+
+        private void ShiftTime(MeterDataSet meterDataSet, TimeZoneInfo xdaTimeZone)
+        {
+            TimeZoneInfo meterTimeZone;
+
+            if (!string.IsNullOrEmpty(meterDataSet.Meter.TimeZone))
+                meterTimeZone = TimeZoneInfo.FindSystemTimeZoneById(meterDataSet.Meter.TimeZone);
+            else
+                meterTimeZone = TimeZoneInfo.FindSystemTimeZoneById(m_systemSettings.DefaultMeterTimeZone);
+
+            foreach (DataSeries dataSeries in meterDataSet.DataSeries)
+            {
+                foreach (DataPoint dataPoint in dataSeries.DataPoints)
+                {
+                    dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time, meterTimeZone);
+                    dataPoint.Time = TimeZoneInfo.ConvertTimeFromUtc(dataPoint.Time, xdaTimeZone);
+                }
+            }
         }
 
         private Type LoadType(string assemblyName, string typeName)
