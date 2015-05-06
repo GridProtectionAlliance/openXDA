@@ -221,16 +221,9 @@ namespace FaultData.DataResources
 
         private double m_maxVoltage;
         private double m_maxCurrent;
-        private double m_lowVoltageThreshold;
-        private double m_maxLowVoltageCurrent;
-
-        private double m_residualCurrentTrigger;
-        private double m_phaseCurrentTrigger;
         private double m_prefaultTrigger;
-        private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
-
         private double m_openBreakerThreshold;
 
         private Dictionary<DataGroup, List<Fault>> m_faultLookup;
@@ -281,54 +274,6 @@ namespace FaultData.DataResources
             }
         }
 
-        public double LowVoltageThreshold
-        {
-            get
-            {
-                return m_lowVoltageThreshold;
-            }
-            set
-            {
-                m_lowVoltageThreshold = value;
-            }
-        }
-
-        public double MaxLowVoltageCurrent
-        {
-            get
-            {
-                return m_maxLowVoltageCurrent;
-            }
-            set
-            {
-                m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        public double ResidualCurrentTrigger
-        {
-            get
-            {
-                return m_residualCurrentTrigger;
-            }
-            set
-            {
-                m_residualCurrentTrigger = value;
-            }
-        }
-
-        public double PhaseCurrentTrigger
-        {
-            get
-            {
-                return m_phaseCurrentTrigger;
-            }
-            set
-            {
-                m_phaseCurrentTrigger = value;
-            }
-        }
-
         public double PrefaultTrigger
         {
             get
@@ -338,18 +283,6 @@ namespace FaultData.DataResources
             set
             {
                 m_prefaultTrigger = value;
-            }
-        }
-
-        public double FaultSuppressionTrigger
-        {
-            get
-            {
-                return m_faultSuppressionTrigger;
-            }
-            set
-            {
-                m_faultSuppressionTrigger = value;
             }
         }
 
@@ -444,7 +377,7 @@ namespace FaultData.DataResources
                 {
                     stopwatch.Restart();
 
-                    faults = DetectFaults(dataGroup, viDataGroup, viCycleDataGroup);
+                    faults = DetectFaults(viDataGroup, viCycleDataGroup);
 
                     if (faults.Count == 0)
                         continue;
@@ -519,44 +452,18 @@ namespace FaultData.DataResources
             return Delegate.CreateDelegate(typeof(T), method) as T;
         }
 
-        private List<Fault> DetectFaults(DataGroup dataGroup, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
+        private List<Fault> DetectFaults(VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
         {
             List<Fault> faults = new List<Fault>();
             Fault currentFault = null;
-
-            double thermalRating = dataGroup.Line.ThermalRating;
-            double inverseThermalRating = 1.0D / thermalRating;
-
-            DataSeries iaRMS = viCycleDataGroup.IA.RMS.Multiply(inverseThermalRating);
-            DataSeries ibRMS = viCycleDataGroup.IB.RMS.Multiply(inverseThermalRating);
-            DataSeries icRMS = viCycleDataGroup.IC.RMS.Multiply(inverseThermalRating);
-            DataSeries irRMS = viCycleDataGroup.IR.RMS.Multiply(inverseThermalRating);
-
-            double ia;
-            double ib;
-            double ic;
-            double ir;
 
             int iaIndex;
             int ibIndex;
             int icIndex;
 
-            bool obvious;
-            bool apparent;
-            bool suppressed;
-
-            for (int i = 0; i < iaRMS.DataPoints.Count; i++)
+            for (int i = 0; i < viCycleDataGroup.VA.RMS.DataPoints.Count; i++)
             {
-                ia = iaRMS.DataPoints[i].Value;
-                ib = ibRMS.DataPoints[i].Value;
-                ic = icRMS.DataPoints[i].Value;
-                ir = irRMS.DataPoints[i].Value;
-
-                obvious = IsFaultObvious(ia, ib, ic, ir);
-                apparent = !obvious && IsFaultApparent(viCycleDataGroup, i);
-                suppressed = apparent && IsFaultSuppressed(ia, ib, ic);
-
-                if (obvious || (apparent && !suppressed))
+                if (IsFaultApparent(viCycleDataGroup, i))
                 {
                     if ((object)currentFault == null)
                     {
@@ -584,7 +491,7 @@ namespace FaultData.DataResources
             }
 
             if ((object)currentFault != null)
-                currentFault.EndSample = iaRMS.DataPoints.Count - 1;
+                currentFault.EndSample = viCycleDataGroup.VA.RMS.DataPoints.Count - 1;
 
             return faults;
         }
@@ -593,9 +500,6 @@ namespace FaultData.DataResources
         {
             // Get the line-to-neutral nominal voltage in volts
             double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
-
-            // Get the thermal rating in amps
-            double thermalRating = dataGroup.Line.ThermalRating;
 
             DataSeries[] voltages =
             {
@@ -606,10 +510,10 @@ namespace FaultData.DataResources
 
             DataSeries[] currents =
             {
-                viCycleDataGroup.IA.RMS.Multiply(1.0D / thermalRating),
-                viCycleDataGroup.IB.RMS.Multiply(1.0D / thermalRating),
-                viCycleDataGroup.IC.RMS.Multiply(1.0D / thermalRating),
-                viCycleDataGroup.IR.RMS.Multiply(1.0D / thermalRating)
+                viCycleDataGroup.IA.RMS,
+                viCycleDataGroup.IB.RMS,
+                viCycleDataGroup.IC.RMS,
+                viCycleDataGroup.IR.RMS
             };
 
             // Determine if any of the RMS voltages are unreasonably high
@@ -626,38 +530,7 @@ namespace FaultData.DataResources
                 return false;
             }
 
-            // Determine if any of the cycles suggest that the
-            // voltage was too low to be able to serve the current
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < voltages[i].DataPoints.Count; j++)
-                {
-                    if (voltages[i][j].Value < m_lowVoltageThreshold && currents[i][j].Value > m_maxLowVoltageCurrent)
-                    {
-                        Log.Debug("Data unreasonable: voltage too low to serve current");
-                        return false;
-                    }
-                }
-            }
-
             return true;
-        }
-
-        private bool IsFaultObvious(double ia, double ib, double ic, double ir)
-        {
-            if (ir > m_residualCurrentTrigger)
-                return true;
-
-            if (ia > m_phaseCurrentTrigger)
-                return true;
-
-            if (ib > m_phaseCurrentTrigger)
-                return true;
-
-            if (ic > m_phaseCurrentTrigger)
-                return true;
-
-            return false;
         }
 
         private bool IsFaultApparent(VICycleDataGroup viCycleDataGroup, int index)
@@ -680,20 +553,6 @@ namespace FaultData.DataResources
                 return true;
 
             return false;
-        }
-
-        private bool IsFaultSuppressed(double ia, double ib, double ic)
-        {
-            if (ia > m_faultSuppressionTrigger)
-                return false;
-
-            if (ib > m_faultSuppressionTrigger)
-                return false;
-
-            if (ic > m_faultSuppressionTrigger)
-                return false;
-
-            return true;
         }
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)

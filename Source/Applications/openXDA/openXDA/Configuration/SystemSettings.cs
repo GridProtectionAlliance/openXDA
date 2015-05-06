@@ -56,13 +56,7 @@ namespace openXDA.Configuration
 
         private double m_maxVoltage;
         private double m_maxCurrent;
-        private double m_lowVoltageThreshold;
-        private double m_maxLowVoltageCurrent;
-
-        private double m_residualCurrentTrigger;
-        private double m_phaseCurrentTrigger;
         private double m_prefaultTrigger;
-        private double m_faultSuppressionTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
 
@@ -335,11 +329,11 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the per-unit threshold at which the
+        /// Gets or sets the threshold, in amps, at which the
         /// current exceeds engineering reasonableness.
         /// </summary>
         [Setting]
-        [DefaultValue(8.0D)]
+        [DefaultValue(1000000.0D)]
         public double MaxCurrent
         {
             get
@@ -349,78 +343,6 @@ namespace openXDA.Configuration
             set
             {
                 m_maxCurrent = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the per-unit threshold at which the
-        /// voltage is classified as a low voltage.
-        /// </summary>
-        [Setting]
-        [DefaultValue(0.5D)]
-        public double LowVoltageThreshold
-        {
-            get
-            {
-                return m_lowVoltageThreshold;
-            }
-            set
-            {
-                m_lowVoltageThreshold = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the per-unit threshold at which the current
-        /// exceeds engineering reasonableness when the voltage is low.
-        /// </summary>
-        [Setting]
-        [DefaultValue(1.0D)]
-        public double MaxLowVoltageCurrent
-        {
-            get
-            {
-                return m_maxLowVoltageCurrent;
-            }
-            set
-            {
-                m_maxLowVoltageCurrent = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the per-unit threshold at which the
-        /// residual current indicates faulted conditions.
-        /// </summary>
-        [Setting]
-        [DefaultValue(0.5D)]
-        public double ResidualCurrentTrigger
-        {
-            get
-            {
-                return m_residualCurrentTrigger;
-            }
-            set
-            {
-                m_residualCurrentTrigger = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the per-unit threshold at which the
-        /// phase currents indicate faulted conditions.
-        /// </summary>
-        [Setting]
-        [DefaultValue(4.0D)]
-        public double PhaseCurrentTrigger
-        {
-            get
-            {
-                return m_phaseCurrentTrigger;
-            }
-            set
-            {
-                m_phaseCurrentTrigger = value;
             }
         }
 
@@ -439,24 +361,6 @@ namespace openXDA.Configuration
             set
             {
                 m_prefaultTrigger = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the per-unit threshold under which the current indicates
-        /// non-faulted conditions even if the current exceeds the prefault trigger.
-        /// </summary>
-        [Setting]
-        [DefaultValue(1.5D)]
-        public double FaultSuppressionTrigger
-        {
-            get
-            {
-                return m_faultSuppressionTrigger;
-            }
-            set
-            {
-                m_faultSuppressionTrigger = value;
             }
         }
 
