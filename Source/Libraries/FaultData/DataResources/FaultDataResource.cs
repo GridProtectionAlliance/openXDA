@@ -455,46 +455,31 @@ namespace FaultData.DataResources
 
         private List<Fault> DetectFaults(VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
         {
+            List<Fault> iaFaults = DetectFaults(viDataGroup.IA, viCycleDataGroup.IA.RMS);
+            List<Fault> ibFaults = DetectFaults(viDataGroup.IB, viCycleDataGroup.IB.RMS);
+            List<Fault> icFaults = DetectFaults(viDataGroup.IC, viCycleDataGroup.IC.RMS);
+
+            return Merge(iaFaults, ibFaults, icFaults);
+        }
+
+        private List<Fault> DetectFaults(DataSeries waveForm, DataSeries rms)
+        {
             List<Fault> faults = new List<Fault>();
             Fault currentFault = null;
 
-            int iaIndex;
-            int ibIndex;
-            int icIndex;
+            bool[] faultApparent = rms.DataPoints
+                .Select(dataPoint => dataPoint.Value / rms[0].Value)
+                .Select(ratio => ratio > m_prefaultTrigger)
+                .ToArray();
 
-            for (int i = 0; i < viCycleDataGroup.VA.RMS.DataPoints.Count; i++)
+            for (int i = 0; i < rms.DataPoints.Count; i++)
             {
-                if (IsFaultApparent(viCycleDataGroup, i))
+                if (faultApparent[i])
                 {
                     if ((object)currentFault == null)
                     {
-                        iaIndex = viCycleDataGroup.IA.RMS.DataPoints
-                            .Select((dataPoint, index) => index)
-                            .Skip(i)
-                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IA.RMS, dataPoint))
-                            .DefaultIfEmpty(viCycleDataGroup.IA.RMS.DataPoints.Count)
-                            .First();
-
-                        ibIndex = viCycleDataGroup.IB.RMS.DataPoints
-                            .Select((dataPoint, index) => index)
-                            .Skip(i)
-                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IB.RMS, dataPoint))
-                            .DefaultIfEmpty(viCycleDataGroup.IB.RMS.DataPoints.Count)
-                            .First();
-
-                        icIndex = viCycleDataGroup.IC.RMS.DataPoints
-                            .Select((dataPoint, index) => index)
-                            .Skip(i)
-                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IC.RMS, dataPoint))
-                            .DefaultIfEmpty(viCycleDataGroup.IC.RMS.DataPoints.Count)
-                            .First();
-
-                        iaIndex = FindFaultInception(viDataGroup.IA, iaIndex);
-                        ibIndex = FindFaultInception(viDataGroup.IB, ibIndex);
-                        icIndex = FindFaultInception(viDataGroup.IC, icIndex);
-
                         currentFault = new Fault();
-                        currentFault.StartSample = Common.Min(iaIndex, ibIndex, icIndex);
+                        currentFault.StartSample = FindFaultInception(waveForm, i);
                         faults.Add(currentFault);
                     }
                 }
@@ -502,39 +487,49 @@ namespace FaultData.DataResources
                 {
                     if ((object)currentFault != null)
                     {
-                        iaIndex = viCycleDataGroup.IA.RMS.DataPoints
-                            .Select((dataPoint, index) => index)
-                            .Take(i)
-                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IA.RMS, dataPoint))
-                            .DefaultIfEmpty(0)
-                            .Last();
-
-                        ibIndex = viCycleDataGroup.IB.RMS.DataPoints
-                            .Select((dataPoint, index) => index)
-                            .Take(i)
-                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IB.RMS, dataPoint))
-                            .DefaultIfEmpty(0)
-                            .Last();
-
-                        icIndex = viCycleDataGroup.IC.RMS.DataPoints
-                            .Select((dataPoint, index) => index)
-                            .Take(i)
-                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IC.RMS, dataPoint))
-                            .DefaultIfEmpty(0)
-                            .Last();
-
-                        iaIndex = FindFaultClearing(viDataGroup.IA, iaIndex);
-                        ibIndex = FindFaultClearing(viDataGroup.IB, ibIndex);
-                        icIndex = FindFaultClearing(viDataGroup.IC, icIndex);
-
-                        currentFault.EndSample = Common.Max(iaIndex, ibIndex, icIndex) - 1;
+                        currentFault.EndSample = FindFaultClearing(waveForm, i);
                         currentFault = null;
                     }
                 }
             }
 
             if ((object)currentFault != null)
-                currentFault.EndSample = viCycleDataGroup.VA.RMS.DataPoints.Count - 1;
+                currentFault.EndSample = rms.DataPoints.Count - 1;
+
+            return faults;
+        }
+
+        private List<Fault> Merge(params List<Fault>[] faultLists)
+        {
+            IEnumerable<Fault> allFaults = faultLists
+                .SelectMany(list => list)
+                .OrderBy(fault => fault.StartSample);
+
+            List<Fault> faults = new List<Fault>();
+            Fault currentFault = null;
+            bool overlaps;
+
+            foreach (Fault fault in allFaults)
+            {
+                overlaps = ((object)currentFault != null) &&
+                           currentFault.StartSample <= fault.StartSample &&
+                           currentFault.EndSample <= fault.EndSample;
+
+                if (overlaps)
+                {
+                    currentFault.EndSample = Math.Max(currentFault.EndSample, fault.EndSample);
+                }
+                else
+                {
+                    currentFault = new Fault()
+                    {
+                        StartSample = fault.StartSample,
+                        EndSample = fault.EndSample
+                    };
+
+                    faults.Add(currentFault);
+                }
+            }
 
             return faults;
         }
@@ -574,20 +569,6 @@ namespace FaultData.DataResources
             }
 
             return true;
-        }
-
-        private bool IsFaultApparent(DataSeries rms, int index)
-        {
-            double iPre = rms[0].Value;
-            double i = rms[index].Value;
-            return ((i / iPre) > m_prefaultTrigger);
-        }
-
-        private bool IsFaultApparent(VICycleDataGroup viCycleDataGroup, int index)
-        {
-            return IsFaultApparent(viCycleDataGroup.IA.RMS, index) ||
-                   IsFaultApparent(viCycleDataGroup.IB.RMS, index) ||
-                   IsFaultApparent(viCycleDataGroup.IC.RMS, index);
         }
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
@@ -663,7 +644,7 @@ namespace FaultData.DataResources
         private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
         {
             int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / Frequency);
-            int startIndex = cycleIndex;
+            int startIndex = cycleIndex - 1;
             int endIndex = startIndex + samplesPerCycle - 1;
             int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveForm.DataPoints.Count - 1);
 
