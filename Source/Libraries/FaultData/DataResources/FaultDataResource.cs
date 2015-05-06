@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using FaultAlgorithms;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -467,9 +468,30 @@ namespace FaultData.DataResources
                 {
                     if ((object)currentFault == null)
                     {
-                        iaIndex = FindFaultInception(viDataGroup.IA, i);
-                        ibIndex = FindFaultInception(viDataGroup.IB, i);
-                        icIndex = FindFaultInception(viDataGroup.IC, i);
+                        iaIndex = viCycleDataGroup.IA.RMS.DataPoints
+                            .Select((dataPoint, index) => index)
+                            .Skip(i)
+                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IA.RMS, dataPoint))
+                            .DefaultIfEmpty(viCycleDataGroup.IA.RMS.DataPoints.Count)
+                            .First();
+
+                        ibIndex = viCycleDataGroup.IB.RMS.DataPoints
+                            .Select((dataPoint, index) => index)
+                            .Skip(i)
+                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IB.RMS, dataPoint))
+                            .DefaultIfEmpty(viCycleDataGroup.IB.RMS.DataPoints.Count)
+                            .First();
+
+                        icIndex = viCycleDataGroup.IC.RMS.DataPoints
+                            .Select((dataPoint, index) => index)
+                            .Skip(i)
+                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IC.RMS, dataPoint))
+                            .DefaultIfEmpty(viCycleDataGroup.IC.RMS.DataPoints.Count)
+                            .First();
+
+                        iaIndex = FindFaultInception(viDataGroup.IA, iaIndex);
+                        ibIndex = FindFaultInception(viDataGroup.IB, ibIndex);
+                        icIndex = FindFaultInception(viDataGroup.IC, icIndex);
 
                         currentFault = new Fault();
                         currentFault.StartSample = Common.Min(iaIndex, ibIndex, icIndex);
@@ -480,9 +502,30 @@ namespace FaultData.DataResources
                 {
                     if ((object)currentFault != null)
                     {
-                        iaIndex = FindFaultClearing(viDataGroup.IA, i);
-                        ibIndex = FindFaultClearing(viDataGroup.IB, i);
-                        icIndex = FindFaultClearing(viDataGroup.IC, i);
+                        iaIndex = viCycleDataGroup.IA.RMS.DataPoints
+                            .Select((dataPoint, index) => index)
+                            .Take(i)
+                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IA.RMS, dataPoint))
+                            .DefaultIfEmpty(0)
+                            .Last();
+
+                        ibIndex = viCycleDataGroup.IB.RMS.DataPoints
+                            .Select((dataPoint, index) => index)
+                            .Take(i)
+                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IB.RMS, dataPoint))
+                            .DefaultIfEmpty(0)
+                            .Last();
+
+                        icIndex = viCycleDataGroup.IC.RMS.DataPoints
+                            .Select((dataPoint, index) => index)
+                            .Take(i)
+                            .Where(dataPoint => IsFaultApparent(viCycleDataGroup.IC.RMS, dataPoint))
+                            .DefaultIfEmpty(0)
+                            .Last();
+
+                        iaIndex = FindFaultClearing(viDataGroup.IA, iaIndex);
+                        ibIndex = FindFaultClearing(viDataGroup.IB, ibIndex);
+                        icIndex = FindFaultClearing(viDataGroup.IC, icIndex);
 
                         currentFault.EndSample = Common.Max(iaIndex, ibIndex, icIndex) - 1;
                         currentFault = null;
@@ -533,26 +576,18 @@ namespace FaultData.DataResources
             return true;
         }
 
+        private bool IsFaultApparent(DataSeries rms, int index)
+        {
+            double iPre = rms[0].Value;
+            double i = rms[index].Value;
+            return ((i / iPre) > m_prefaultTrigger);
+        }
+
         private bool IsFaultApparent(VICycleDataGroup viCycleDataGroup, int index)
         {
-            double iaPre = viCycleDataGroup.IA.RMS[0].Value;
-            double ibPre = viCycleDataGroup.IB.RMS[0].Value;
-            double icPre = viCycleDataGroup.IC.RMS[0].Value;
-
-            double ia = viCycleDataGroup.IA.RMS[index].Value;
-            double ib = viCycleDataGroup.IB.RMS[index].Value;
-            double ic = viCycleDataGroup.IC.RMS[index].Value;
-
-            if ((ia / iaPre) > m_prefaultTrigger)
-                return true;
-
-            if ((ib / ibPre) > m_prefaultTrigger)
-                return true;
-
-            if ((ic / icPre) > m_prefaultTrigger)
-                return true;
-
-            return false;
+            return IsFaultApparent(viCycleDataGroup.IA.RMS, index) ||
+                   IsFaultApparent(viCycleDataGroup.IB.RMS, index) ||
+                   IsFaultApparent(viCycleDataGroup.IC.RMS, index);
         }
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
