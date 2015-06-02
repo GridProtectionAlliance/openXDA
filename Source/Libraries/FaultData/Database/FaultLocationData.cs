@@ -5,7 +5,8 @@
     }
 }
 
-namespace FaultData.FaultLocationDataTableAdapters {
+namespace FaultData.Database.FaultLocationDataTableAdapters
+{
     
     
     public partial class FaultSummaryTableAdapter {
