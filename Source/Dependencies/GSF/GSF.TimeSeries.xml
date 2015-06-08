@@ -6019,9 +6019,14 @@
             Executes the reporting process to generate the report.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetArguments(System.DateTime)">
+        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetArguments">
             <summary>
             Gets the command line arguments for the reporting process.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetArguments(System.DateTime)">
+            <summary>
+            Gets the command line arguments for the reporting process for a given report date.
             </summary>
         </member>
         <member name="M:GSF.TimeSeries.CompletenessReportingProcess.IsReportFileName(System.String)">
@@ -6089,6 +6094,26 @@
             <summary>
             Gets or sets the minimum lifetime of a report
             since the last time it was accessed, in days.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.EnableReportEmail">
+            <summary>
+            Gets or sets flag to enable e-mailing of reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.SmtpServer">
+            <summary>
+            Gets or sets SMTP server to use when e-mailing reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.FromAddress">
+            <summary>
+            Gets or sets the "from" address to use when e-mailing reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.ToAddresses">
+            <summary>
+            Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
             </summary>
         </member>
         <member name="T:GSF.TimeSeries.ServiceClientBase">
@@ -7524,6 +7549,11 @@
             Gets or sets the security mode of the <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/>'s command channel.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataPublisher.UseZeroMQChannel">
+            <summary>
+            Gets or sets flag that determines if ZeroMQ should be used for command channel communications.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataPublisher.EncryptPayload">
             <summary>
             Gets or sets flag that determines whether data sent over the data channel should be encrypted.
@@ -7913,6 +7943,17 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">Value cannot be zero or a negative number.</exception>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataGapRecoverer.LoggingPath">
+            <summary>
+            Gets or sets logging path to be used to be runtime and outage logs of the subscriber which are required for
+            automated data recovery.
+            </summary>
+            <remarks>
+            Leave value blank for default path, i.e., installation folder. Can be a fully qualified path or a path that
+            is relative to the installation folder, e.g., a value of "ConfigurationCache" might resolve to
+            "C:\Program Files\MyTimeSeriespPp\ConfigurationCache\".
+            </remarks>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataGapRecoverer.FilterExpression">
             <summary>
             Gets or sets the filter expression used to define which measurements are being requested for data recovery during an <see cref="T:GSF.IO.Outage"/>.
@@ -7996,6 +8037,11 @@
         <member name="F:GSF.TimeSeries.Transport.DataSubscriber.DefaultUseTransactionForMetadata">
             <summary>
             Defines the default value for the <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.UseTransactionForMetadata"/> property.
+            </summary>
+        </member>
+        <member name="F:GSF.TimeSeries.Transport.DataSubscriber.DefaultLoggingPath">
+            <summary>
+            Default value for <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.LoggingPath"/>.
             </summary>
         </member>
         <member name="M:GSF.TimeSeries.Transport.DataSubscriber.#ctor">
@@ -8407,6 +8453,13 @@
             Disposes of any previously defined local concentrator.
             </summary>
         </member>
+        <member name="M:GSF.TimeSeries.Transport.DataSubscriber.GetLoggingPath(System.String)">
+            <summary>
+            Gets file path for any defined logging path.
+            </summary>
+            <param name="filePath">Path to acquire within logging path.</param>
+            <returns>File path within any defined logging path.</returns>
+        </member>
         <member name="E:GSF.TimeSeries.Transport.DataSubscriber.ConnectionEstablished">
             <summary>
             Occurs when client connection to the data publication server is established.
@@ -8466,6 +8519,22 @@
             <summary>
             Gets or sets flag that determines if <see cref="T:GSF.TimeSeries.Transport.DataPublisher"/> requires subscribers to authenticate before making data requests.
             </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.UseZeroMQChannel">
+            <summary>
+            Gets or sets flag that determines if ZeroMQ should be used for command channel communications.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.LoggingPath">
+            <summary>
+            Gets or sets logging path to be used to be runtime and outage logs of the subscriber which are required for
+            automated data recovery.
+            </summary>
+            <remarks>
+            Leave value blank for default path, i.e., installation folder. Can be a fully qualified path or a path that
+            is relative to the installation folder, e.g., a value of "ConfigurationCache" might resolve to
+            "C:\Program Files\MyTimeSeriespPp\ConfigurationCache\".
+            </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.AutoConnect">
             <summary>

@@ -71,6 +71,7 @@ namespace openXDA.Configuration
         private string m_fromAddress;
 
         private string m_pqDashboardUrl;
+        private string m_structureQueryUrl;
 
         private string m_historianServer;
         private string m_historianInstanceName;
@@ -553,6 +554,24 @@ namespace openXDA.Configuration
             set
             {
                 m_pqDashboardUrl = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the URL of the web request to
+        /// find the nearest structure to fault location.
+        /// </summary>
+        [Setting]
+        [DefaultValue("http://localhost:6132/WebForm1.aspx?Station={0}&Line={1}&Mileage={2}")]
+        public string StructureQueryURL
+        {
+            get
+            {
+                return m_structureQueryUrl;
+            }
+            set
+            {
+                m_structureQueryUrl = value;
             }
         }
 

@@ -66,6 +66,9 @@ namespace FaultData.Database
     partial void InsertMeter(Meter instance);
     partial void UpdateMeter(Meter instance);
     partial void DeleteMeter(Meter instance);
+    partial void InsertStructure(Structure instance);
+    partial void UpdateStructure(Structure instance);
+    partial void DeleteStructure(Structure instance);
     #endregion
 		
 		public MeterInfoDataContext() : 
@@ -191,6 +194,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<Meter>();
+			}
+		}
+		
+		public System.Data.Linq.Table<Structure> Structures
+		{
+			get
+			{
+				return this.GetTable<Structure>();
 			}
 		}
 	}
@@ -2175,6 +2186,8 @@ namespace FaultData.Database
 		
 		private EntitySet<MeterLine> _MeterLines;
 		
+		private EntitySet<Structure> _Structures;
+		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -2198,6 +2211,7 @@ namespace FaultData.Database
 			this._MeterLocationLines = new EntitySet<MeterLocationLine>(new Action<MeterLocationLine>(this.attach_MeterLocationLines), new Action<MeterLocationLine>(this.detach_MeterLocationLines));
 			this._Channels = new EntitySet<Channel>(new Action<Channel>(this.attach_Channels), new Action<Channel>(this.detach_Channels));
 			this._MeterLines = new EntitySet<MeterLine>(new Action<MeterLine>(this.attach_MeterLines), new Action<MeterLine>(this.detach_MeterLines));
+			this._Structures = new EntitySet<Structure>(new Action<Structure>(this.attach_Structures), new Action<Structure>(this.detach_Structures));
 			OnCreated();
 		}
 		
@@ -2360,6 +2374,19 @@ namespace FaultData.Database
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Line_Structure", Storage="_Structures", ThisKey="ID", OtherKey="LineID")]
+		public EntitySet<Structure> Structures
+		{
+			get
+			{
+				return this._Structures;
+			}
+			set
+			{
+				this._Structures.Assign(value);
+			}
+		}
+		
 		public event PropertyChangingEventHandler PropertyChanging;
 		
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -2411,6 +2438,18 @@ namespace FaultData.Database
 		}
 		
 		private void detach_MeterLines(MeterLine entity)
+		{
+			this.SendPropertyChanging();
+			entity.Line = null;
+		}
+		
+		private void attach_Structures(Structure entity)
+		{
+			this.SendPropertyChanging();
+			entity.Line = this;
+		}
+		
+		private void detach_Structures(Structure entity)
 		{
 			this.SendPropertyChanging();
 			entity.Line = null;
@@ -3033,6 +3072,205 @@ namespace FaultData.Database
 		{
 			this.SendPropertyChanging();
 			entity.Meter = null;
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.Structure")]
+	public partial class Structure : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private string _AssetKey;
+		
+		private int _LineID;
+		
+		private double _Latitude;
+		
+		private double _Longitude;
+		
+		private EntityRef<Line> _Line;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnAssetKeyChanging(string value);
+    partial void OnAssetKeyChanged();
+    partial void OnLineIDChanging(int value);
+    partial void OnLineIDChanged();
+    partial void OnLatitudeChanging(double value);
+    partial void OnLatitudeChanged();
+    partial void OnLongitudeChanging(double value);
+    partial void OnLongitudeChanged();
+    #endregion
+		
+		public Structure()
+		{
+			this._Line = default(EntityRef<Line>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_AssetKey", DbType="VarChar(50) NOT NULL", CanBeNull=false)]
+		public string AssetKey
+		{
+			get
+			{
+				return this._AssetKey;
+			}
+			set
+			{
+				if ((this._AssetKey != value))
+				{
+					this.OnAssetKeyChanging(value);
+					this.SendPropertyChanging();
+					this._AssetKey = value;
+					this.SendPropertyChanged("AssetKey");
+					this.OnAssetKeyChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int NOT NULL")]
+		public int LineID
+		{
+			get
+			{
+				return this._LineID;
+			}
+			set
+			{
+				if ((this._LineID != value))
+				{
+					if (this._Line.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnLineIDChanging(value);
+					this.SendPropertyChanging();
+					this._LineID = value;
+					this.SendPropertyChanged("LineID");
+					this.OnLineIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Latitude", DbType="Float NOT NULL")]
+		public double Latitude
+		{
+			get
+			{
+				return this._Latitude;
+			}
+			set
+			{
+				if ((this._Latitude != value))
+				{
+					this.OnLatitudeChanging(value);
+					this.SendPropertyChanging();
+					this._Latitude = value;
+					this.SendPropertyChanged("Latitude");
+					this.OnLatitudeChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Longitude", DbType="Float NOT NULL")]
+		public double Longitude
+		{
+			get
+			{
+				return this._Longitude;
+			}
+			set
+			{
+				if ((this._Longitude != value))
+				{
+					this.OnLongitudeChanging(value);
+					this.SendPropertyChanging();
+					this._Longitude = value;
+					this.SendPropertyChanged("Longitude");
+					this.OnLongitudeChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Line_Structure", Storage="_Line", ThisKey="LineID", OtherKey="ID", IsForeignKey=true)]
+		public Line Line
+		{
+			get
+			{
+				return this._Line.Entity;
+			}
+			set
+			{
+				Line previousValue = this._Line.Entity;
+				if (((previousValue != value) 
+							|| (this._Line.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._Line.Entity = null;
+						previousValue.Structures.Remove(this);
+					}
+					this._Line.Entity = value;
+					if ((value != null))
+					{
+						value.Structures.Add(this);
+						this._LineID = value.ID;
+					}
+					else
+					{
+						this._LineID = default(int);
+					}
+					this.SendPropertyChanged("Line");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
 		}
 	}
 }

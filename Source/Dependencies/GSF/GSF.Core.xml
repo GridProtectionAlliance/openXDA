@@ -7086,6 +7086,27 @@
             <param name="others">Other dictionaries to merge with source dictionary.</param>
             <returns>A merged collection of all unique dictionary elements, all <paramref name="others"/> merged left to the source.</returns>
         </member>
+        <member name="M:GSF.Collections.CollectionExtensions.GetOrDefault``2(System.Collections.Generic.IDictionary{``0,``1},``0)">
+            <summary>
+            Attempts to get the value for the given key and returns the default value instead if the key does not exist in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+            </summary>
+            <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+            <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+            <param name="dictionary">The dictionary to check for the given key.</param>
+            <param name="key">The key to be checked for the existence of a value.</param>
+            <returns>The value of the key in the dictionary or the default value if no such value exists.</returns>
+        </member>
+        <member name="M:GSF.Collections.CollectionExtensions.GetOrDefault``2(System.Collections.Generic.IDictionary{``0,``1},``0,System.Func{``0,``1})">
+            <summary>
+            Attempts to get the value for the given key and returns the default value instead if the key does not exist in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+            </summary>
+            <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+            <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+            <param name="dictionary">The dictionary to check for the given key.</param>
+            <param name="key">The key to be checked for the existence of a value.</param>
+            <param name="defaultValueFactory">The function used to generate the default value if no value exists for the given key.</param>
+            <returns>The value of the key in the dictionary or the default value if no such value exists.</returns>
+        </member>
         <member name="M:GSF.Collections.CollectionExtensions.GetOrAdd``2(System.Collections.Generic.IDictionary{``0,``1},``0,System.Func{``0,``1})">
             <summary>
             Adds a key/value pair to the <see cref="T:System.Collections.Generic.IDictionary`2"/> if the key does not already exist.
@@ -7302,6 +7323,16 @@
             <param name="source">An enumeration that is compared against.</param>
             <param name="comparer">A comparer object.</param>
             <returns>Returns a generic type.</returns>
+        </member>
+        <member name="M:GSF.Collections.CollectionExtensions.DistinctBy``2(System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1})">
+            <summary>
+            Returns only the elements whose keys are distinct.
+            </summary>
+            <typeparam name="TSource">The type of the source objects in the collection.</typeparam>
+            <typeparam name="TKey">The type of the keys to be compared.</typeparam>
+            <param name="source">The collection of source objects.</param>
+            <param name="keySelector">The function used to access the keys of the source objects.</param>
+            <returns>The elements from <paramref name="source"/> whose keys are distinct.</returns>
         </member>
         <member name="M:GSF.Collections.CollectionExtensions.ToDelimitedString``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>Converts an enumeration to a string, using the default delimiter ("|") that can later be
@@ -9596,8 +9627,8 @@
             Determines if the code base is currently running under Mono.
             </summary>
             <remarks>
-            This property can be used to make a run-time determination if Windows or Mono based .NET is being used. However, it is highly
-            recommended to use the MONO compiler directive be used wherever possible instead of determining this at run-time.
+            This property can be used to make a run-time determination if Windows or Mono based .NET is being used. However, it is
+            highly recommended to use the MONO compiler directive wherever possible instead of determining this at run-time.
             </remarks>
         </member>
         <member name="M:GSF.Common.IIf``1(System.Boolean,``0,``0)">
@@ -9625,7 +9656,7 @@
             <para>
             The Array.CreateInstance provides better performance and more direct CLR access for array creation (not to
             mention less confusion on the matter of array lengths) in VB.NET, however the returned System.Array is not
-            typed properly. This function properly casts the return array based on the the type specification helping
+            typed properly. This function properly casts the return array based on the type specification helping
             when Option Strict is enabled.
             </para>
             </remarks>
@@ -9795,11 +9826,11 @@
             <returns>Result is the maximum value of type <see cref="T:System.Type"/> in the <paramref name="itemList"/>.</returns>
         </member>
         <member name="M:GSF.Common.Mid``1(``0,``0,``0)">
-            <summary>Returns the largest item from a list of parameters.</summary>
+            <summary>Returns the value that is neither the largest nor the smallest.</summary>
             <typeparam name="T"><see cref="T:System.Type"/> of the objects passed to and returned from this method.</typeparam>
-            <param name="obj1">A variable number of parameters of the specified type .</param>
-            <param name="obj2">A variable number of parameters of the specified type .</param>
-            <param name="obj3">A variable number of parameters of the specified type .</param>
+            <param name="value1">Value 1.</param>
+            <param name="value2">Value 2.</param>
+            <param name="value3">Value 3.</param>
             <returns>Result is the value that is neither the largest nor the smallest.</returns>
         </member>
         <member name="P:GSF.Common.SystemTimer">
@@ -12395,6 +12426,24 @@
             <param name="connectionString">Database specific ADO connection string.</param>
             <param name="dataProviderString">Key/value pairs that define which ADO assembly and types to load.</param>
         </member>
+        <member name="M:GSF.Data.AdoDataConnection.#ctor(System.String,System.Type,System.Type)">
+            <summary>
+            Creates and opens a new <see cref="T:GSF.Data.AdoDataConnection"/> from specified <paramref name="connectionString"/>,
+            <paramref name="connectionType"/>, and <paramref name="adapterType"/>.
+            </summary>
+            <param name="connectionString">Database specific ADO connection string.</param>
+            <param name="connectionType">The ADO type used to establish the database connection.</param>
+            <param name="adapterType">The ADO type used to load data into <see cref="T:System.Data.DataTable"/>s.</param>
+        </member>
+        <member name="M:GSF.Data.AdoDataConnection.#ctor(System.Data.IDbConnection,System.Type,System.Boolean)">
+            <summary>
+            Creates a new <see cref="T:GSF.Data.AdoDataConnection"/> from specified <paramref name="connection"/>
+            and <paramref name="adapterType"/>.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="adapterType">The ADO type used to load data into <see cref="T:System.Data.DataTable"/>s.</param>
+            <param name="disposeConnection">True if the database connection should be closed when the <see cref="T:GSF.Data.AdoDataConnection"/> is disposed; false otherwise.</param>
+        </member>
         <member name="M:GSF.Data.AdoDataConnection.Finalize">
             <summary>
             Releases the unmanaged resources before the <see cref="T:GSF.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
@@ -12595,6 +12644,14 @@
             <summary>
             Forces a reload of cached configuration connection settings.
             </summary>
+        </member>
+        <member name="M:GSF.Data.AdoDataConnection.ToDataProviderString(System.Type,System.Type)">
+            <summary>
+            Generates a data provider string for the given connection type and adapter type.
+            </summary>
+            <param name="connectionType">The type used to establish a connection to the database.</param>
+            <param name="adapterType">The type used to load data from the database into a data table.</param>
+            <returns></returns>
         </member>
         <member name="P:GSF.Data.AdoDataConnection.Connection">
             <summary>
@@ -21067,9 +21124,22 @@
             <summary>
             Gets a valid file name by replacing invalid file name characters with <paramref name="replaceWithCharacter"/>.
             </summary>
-            <param name="filePath">File path to validate.</param>
+            <param name="fileName">File name to validate.</param>
             <param name="replaceWithCharacter">Character to replace invalid file name characters with. Set to '\0' to remove invalid file name characters.</param>
             <returns>A valid file name with no invalid file name characters.</returns>
+            <remarks>
+            This function expects a file name, not a file name with a path. To properly get a valid file path, where all directory
+            names and the file name are validated, use the <see cref="M:GSF.IO.FilePath.GetValidFilePath(System.String,System.Char)"/>. Calling the <see cref="M:GSF.IO.FilePath.GetValidFileName(System.String,System.Char)"/>
+            function will a full path will yield all directory separators replaced with the <paramref name="replaceWithCharacter"/>.
+            </remarks>
+        </member>
+        <member name="M:GSF.IO.FilePath.GetValidFilePath(System.String,System.Char)">
+            <summary>
+            Gets a valid file path by replacing invalid file or directory name characters with <paramref name="replaceWithCharacter"/>.
+            </summary>
+            <param name="filePath">File path to validate.</param>
+            <param name="replaceWithCharacter">Character to replace invalid file or directory name characters with. Set to '\0' to remove invalid file or directory name characters.</param>
+            <returns>A valid file path with no invalid file or directory name characters.</returns>
         </member>
         <member name="M:GSF.IO.FilePath.GetFileName(System.String)">
             <summary>
@@ -21121,6 +21191,13 @@
             </summary>
             <param name="filePath">The file path from which the directory information is to be obtained.</param>
             <returns>Directory information.</returns>
+            <remarks>
+            This differs from <see cref="M:System.IO.Path.GetDirectoryName(System.String)"/> in that it will see if last name in path is
+            a directory and, if it exists, will properly treat that part of path as a directory. The .NET path
+            function always assumes last entry is a file name if path is not suffixed with a slash. For example:
+                Path.GetDirectoryName(@"C:\Music") will return "C:\", however, 
+            FilePath.GetDirectoryName(@"C:\Music") will return "C:\Music\", so long as Music directory exists.
+            </remarks>
         </member>
         <member name="M:GSF.IO.FilePath.GetLastDirectoryName(System.String)">
             <summary>
@@ -21184,7 +21261,7 @@
             <summary>
             Returns a file name, for display purposes, of the specified length using "..." to indicate a longer name.
             </summary>
-            <param name="fileName">The file path to be trimmed.</param>
+            <param name="filePath">The file path to be trimmed.</param>
             <param name="length">The maximum length of the trimmed file path.</param>
             <returns>Trimmed file path.</returns>
             <remarks>
@@ -27525,6 +27602,15 @@
             <param name="rule">Rule formated in UNIX crontab syntax.</param>
             <param name="description">Description of defined schedule.</param>
         </member>
+        <member name="M:GSF.Scheduling.Schedule.#ctor(System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:GSF.Scheduling.Schedule"/> class.
+            </summary>
+            <param name="name">Name of the schedule.</param>
+            <param name="rule">Rule formated in UNIX crontab syntax.</param>
+            <param name="description">Description of defined schedule.</param>
+            <param name="useLocalTime">Flag that determines whether to use local time for schedule.</param>
+        </member>
         <member name="M:GSF.Scheduling.Schedule.IsDue">
             <summary>
             Checks whether the <see cref="T:GSF.Scheduling.Schedule"/> is due at the present system time.
@@ -27570,6 +27656,11 @@
             Gets or sets a description of the <see cref="T:GSF.Scheduling.Schedule"/>.
             </summary>
             <remarks>A default description is created automatically when the <see cref="P:GSF.Scheduling.Schedule.Rule"/> is set.</remarks>
+        </member>
+        <member name="P:GSF.Scheduling.Schedule.UseLocalTime">
+            <summary>
+            Gets or sets a flag that determines whether the scheduler uses local time or UTC time for scheduling.
+            </summary>
         </member>
         <member name="P:GSF.Scheduling.Schedule.MinutePart">
             <summary>

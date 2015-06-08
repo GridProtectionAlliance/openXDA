@@ -106,6 +106,7 @@
       <Association Name="Line_MeterLocationLine" Member="MeterLocationLines" ThisKey="ID" OtherKey="LineID" Type="MeterLocationLine" />
       <Association Name="Line_Channel" Member="Channels" ThisKey="ID" OtherKey="LineID" Type="Channel" />
       <Association Name="Line_MeterLine" Member="MeterLines" ThisKey="ID" OtherKey="LineID" Type="MeterLine" />
+      <Association Name="Line_Structure" Member="Structures" ThisKey="ID" OtherKey="LineID" Type="Structure" />
     </Type>
   </Table>
   <Table Name="dbo.MeterLine" Member="MeterLines">
@@ -134,6 +135,16 @@
       <Association Name="Meter_Channel" Member="Channels" ThisKey="ID" OtherKey="MeterID" Type="Channel" />
       <Association Name="Meter_MeterLine" Member="MeterLines" ThisKey="ID" OtherKey="MeterID" Type="MeterLine" />
       <Association Name="MeterLocation_Meter" Member="MeterLocation" ThisKey="MeterLocationID" OtherKey="ID" Type="MeterLocation" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Structure" Member="Structures">
+    <Type Name="Structure">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="AssetKey" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="LineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Latitude" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="Longitude" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Association Name="Line_Structure" Member="Line" ThisKey="LineID" OtherKey="ID" Type="Line" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>
