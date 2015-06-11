@@ -512,8 +512,7 @@ namespace FaultData.DataResources
             foreach (Fault fault in allFaults)
             {
                 overlaps = ((object)currentFault != null) &&
-                           currentFault.StartSample <= fault.StartSample &&
-                           currentFault.EndSample <= fault.EndSample;
+                           fault.StartSample <= currentFault.EndSample;
 
                 if (overlaps)
                 {

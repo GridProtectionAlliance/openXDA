@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using GSF;
 using GSF.Configuration;
 
@@ -69,6 +70,7 @@ namespace openXDA.Configuration
 
         private string m_smtpServer;
         private string m_fromAddress;
+        private string m_emailTemplate;
 
         private string m_pqDashboardUrl;
         private string m_structureQueryUrl;
@@ -541,6 +543,23 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
+        /// Gets or sets the template used for sending emails to email recipients.
+        /// </summary>
+        [Setting]
+        [DefaultValue(null)]
+        public string EmailTemplate
+        {
+            get
+            {
+                return m_emailTemplate;
+            }
+            set
+            {
+                m_emailTemplate = value ?? GetDefaultEmailTemplate();
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the URL of the PQ Dashboard.
         /// </summary>
         [Setting]
@@ -641,6 +660,29 @@ namespace openXDA.Configuration
             ConnectionStringParser<SettingAttribute> parser = new ConnectionStringParser<SettingAttribute>();
             parser.ExplicitlySpecifyDefaults = true;
             return parser.ComposeConnectionString(this);
+        }
+
+        private string GetDefaultEmailTemplate()
+        {
+            IEnumerable<Assembly> assemblies = Assembly.GetExecutingAssembly().GetReferencedAssemblies()
+                .Where(name => name.FullName.Contains("FaultData"))
+                .Select(Assembly.Load);
+
+            foreach (Assembly assembly in assemblies)
+            {
+                using (Stream resource = assembly.GetManifestResourceStream("FaultData.DataWriters.EmailTemplate.html"))
+                {
+                    if ((object)resource != null)
+                    {
+                        using (StreamReader reader = new StreamReader(resource))
+                        {
+                            return reader.ReadToEnd();
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         #endregion

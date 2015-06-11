@@ -527,7 +527,6 @@ namespace openXDA
                     OnStatusMessage("Skipped file \"{0}\" because file creation time '{1}' is too old.", filePath, File.GetCreationTimeUtc(filePath));
                     fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
                     fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
-                    fileGroup.Error = 1;
                     fileInfo.SubmitChanges();
                     return;
                 }
@@ -535,7 +534,7 @@ namespace openXDA
                 // Try to parse the name of the meter from the file path to determine whether this file can be parsed
                 if (string.IsNullOrEmpty(m_systemSettings.FilePattern) || !TryParseFilePath(filePath, out meterKey))
                 {
-                    OnStatusMessage("Skipped file \"{0}\" because no meter could not be determined based on the FilePattern system setting.", filePath);
+                    OnStatusMessage("Skipped file \"{0}\" because meter could not be determined based on the FilePattern system setting.", filePath);
                     fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
                     fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
                     fileGroup.Error = 1;
@@ -646,7 +645,6 @@ namespace openXDA
                             OnStatusMessage("Skipped file \"{0}\" because data start time '{1}' is too old.", filePath, dataStartTime);
                             fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
                             fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
-                            fileGroup.Error = 1;
                             fileInfo.SubmitChanges();
                             return;
                         }
@@ -658,7 +656,6 @@ namespace openXDA
                             OnStatusMessage("Skipped file \"{0}\" because data end time '{1}' is too far in the future.", filePath, dataStartTime);
                             fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
                             fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
-                            fileGroup.Error = 1;
                             fileInfo.SubmitChanges();
                             return;
                         }

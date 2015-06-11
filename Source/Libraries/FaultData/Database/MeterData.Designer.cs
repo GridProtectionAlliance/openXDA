@@ -5519,27 +5519,23 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = "dbo.CreateEventSnapshots";
-            this._commandCollection[1].CommandType = global::System.Data.CommandType.StoredProcedure;
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@RETURN_VALUE", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.ReturnValue, 10, 0, null, global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@startTime", global::System.Data.SqlDbType.DateTime2, 8, global::System.Data.ParameterDirection.Input, 27, 7, null, global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@endTime", global::System.Data.SqlDbType.DateTime2, 8, global::System.Data.ParameterDirection.Input, 27, 7, null, global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@timeTolerance", global::System.Data.SqlDbType.Float, 8, global::System.Data.ParameterDirection.Input, 53, 0, null, global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@timeRecorded", global::System.Data.SqlDbType.DateTime, 8, global::System.Data.ParameterDirection.Input, 23, 3, null, global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._commandCollection[1].CommandText = "SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, Sta" +
+                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Des" +
+                "cription, Data FROM dbo.Event WHERE FileGroupID = @fileGroupID";
+            this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@fileGroupID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[2] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[2].Connection = this.Connection;
             this._commandCollection[2].CommandText = "SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, Sta" +
                 "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Des" +
-                "cription, Data FROM dbo.Event WHERE FileGroupID = @fileGroupID";
+                "cription, Data FROM dbo.Event WHERE ID = @id";
             this._commandCollection[2].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[2].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@fileGroupID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._commandCollection[2].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@id", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[3] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[3].Connection = this.Connection;
-            this._commandCollection[3].CommandText = "SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, Sta" +
-                "rtTime, EndTime, TimeZoneOffset, Magnitude, Duration, HasImpactedComponents, Des" +
-                "cription, Data FROM dbo.Event WHERE ID = @id";
+            this._commandCollection[3].CommandText = "SELECT EventDetail FROM EventDetail WHERE EventID = @eventID";
             this._commandCollection[3].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[3].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@id", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._commandCollection[3].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@eventID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[4] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[4].Connection = this.Connection;
             this._commandCollection[4].CommandText = "SELECT ID\r\nFROM Event\r\nWHERE MeterID = @meterID AND LineID = @lineID AND FileGrou" +
@@ -5595,7 +5591,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
         public virtual int FillByFileGroup(MeterData.EventDataTable dataTable, int fileGroupID) {
-            this.Adapter.SelectCommand = this.CommandCollection[2];
+            this.Adapter.SelectCommand = this.CommandCollection[1];
             this.Adapter.SelectCommand.Parameters[0].Value = ((int)(fileGroupID));
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -5609,7 +5605,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
         public virtual MeterData.EventDataTable GetDataByFileGroup(int fileGroupID) {
-            this.Adapter.SelectCommand = this.CommandCollection[2];
+            this.Adapter.SelectCommand = this.CommandCollection[1];
             this.Adapter.SelectCommand.Parameters[0].Value = ((int)(fileGroupID));
             MeterData.EventDataTable dataTable = new MeterData.EventDataTable();
             this.Adapter.Fill(dataTable);
@@ -5621,7 +5617,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
         public virtual int FillByID(MeterData.EventDataTable dataTable, int id) {
-            this.Adapter.SelectCommand = this.CommandCollection[3];
+            this.Adapter.SelectCommand = this.CommandCollection[2];
             this.Adapter.SelectCommand.Parameters[0].Value = ((int)(id));
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -5635,7 +5631,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
         public virtual MeterData.EventDataTable GetDataByID(int id) {
-            this.Adapter.SelectCommand = this.CommandCollection[3];
+            this.Adapter.SelectCommand = this.CommandCollection[2];
             this.Adapter.SelectCommand.Parameters[0].Value = ((int)(id));
             MeterData.EventDataTable dataTable = new MeterData.EventDataTable();
             this.Adapter.Fill(dataTable);
@@ -6003,47 +5999,30 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, Name, Alias, ShortName, St
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        public virtual int CreateEventSnapshots(global::System.Nullable<global::System.DateTime> startTime, global::System.Nullable<global::System.DateTime> endTime, global::System.Nullable<double> timeTolerance, global::System.Nullable<global::System.DateTime> timeRecorded) {
-            global::System.Data.SqlClient.SqlCommand command = this.CommandCollection[1];
-            if ((startTime.HasValue == true)) {
-                command.Parameters[1].Value = ((System.DateTime)(startTime.Value));
-            }
-            else {
-                command.Parameters[1].Value = global::System.DBNull.Value;
-            }
-            if ((endTime.HasValue == true)) {
-                command.Parameters[2].Value = ((System.DateTime)(endTime.Value));
-            }
-            else {
-                command.Parameters[2].Value = global::System.DBNull.Value;
-            }
-            if ((timeTolerance.HasValue == true)) {
-                command.Parameters[3].Value = ((double)(timeTolerance.Value));
-            }
-            else {
-                command.Parameters[3].Value = global::System.DBNull.Value;
-            }
-            if ((timeRecorded.HasValue == true)) {
-                command.Parameters[4].Value = ((System.DateTime)(timeRecorded.Value));
-            }
-            else {
-                command.Parameters[4].Value = global::System.DBNull.Value;
-            }
+        public virtual string GetEventDetail(int eventID) {
+            global::System.Data.SqlClient.SqlCommand command = this.CommandCollection[3];
+            command.Parameters[0].Value = ((int)(eventID));
             global::System.Data.ConnectionState previousConnectionState = command.Connection.State;
             if (((command.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
                 command.Connection.Open();
             }
-            int returnValue;
+            object returnValue;
             try {
-                returnValue = command.ExecuteNonQuery();
+                returnValue = command.ExecuteScalar();
             }
             finally {
                 if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
                     command.Connection.Close();
                 }
             }
-            return returnValue;
+            if (((returnValue == null) 
+                        || (returnValue.GetType() == typeof(global::System.DBNull)))) {
+                return null;
+            }
+            else {
+                return ((string)(returnValue));
+            }
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
