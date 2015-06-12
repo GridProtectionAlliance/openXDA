@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
@@ -35,6 +34,7 @@ using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataSets;
+using GSF.Collections;
 
 namespace FaultData.DataWriters
 {
@@ -46,17 +46,29 @@ namespace FaultData.DataWriters
         #region [ Members ]
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
+        private string m_dbConnectionString;
         private string m_smtpServer;
         private string m_fromAddress;
         private string m_emailTemplate;
         private double m_timeTolerance;
-        private TimeZoneInfo m_timeZone;
+        private double m_waitPeriod;
+        private string m_xdaTimeZone;
 
         #endregion
 
         #region [ Properties ]
+
+        public string DbConnectionString
+        {
+            get
+            {
+                return m_dbConnectionString;
+            }
+            set
+            {
+                m_dbConnectionString = value;
+            }
+        }
 
         public string SMTPServer
         {
@@ -106,26 +118,27 @@ namespace FaultData.DataWriters
             }
         }
 
+        public double WaitPeriod
+        {
+            get
+            {
+                return m_waitPeriod;
+            }
+            set
+            {
+                m_waitPeriod = value;
+            }
+        }
+
         public string XDATimeZone
         {
             get
             {
-                return m_timeZone.Id;
+                return m_xdaTimeZone;
             }
             set
             {
-                m_timeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
-            }
-        }
-
-        private int FaultEventTypeID
-        {
-            get
-            {
-                if (s_faultEventTypeID == null)
-                    Interlocked.Exchange(ref s_faultEventTypeID, GetFaultEventTypeID());
-
-                return (int)s_faultEventTypeID;
+                m_xdaTimeZone = value;
             }
         }
 
@@ -135,27 +148,121 @@ namespace FaultData.DataWriters
 
         public void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
         {
-            m_dbAdapterContainer = dbAdapterContainer;
+            Initialize(this);
 
-            //foreach (FaultLocationData.FaultSummaryRow faultSummary in dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
-            //{
-            //    if ((faultSummary.IsSelectedAlgorithm != 0) && (faultSummary.IsSuppressed == 0))
-            //        GenerateEmail(faultSummary.EventID);
-            //}
+            foreach (FaultLocationData.FaultSummaryRow faultSummary in dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
+            {
+                if (faultSummary.IsSelectedAlgorithm != 0 && faultSummary.IsSuppressed == 0)
+                {
+                    if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultSummary.EventID) == 0)
+                        QueueEventID(faultSummary.EventID);
+                }
+            }
         }
 
-        private void GenerateEmail(int eventID)
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly HashSet<int> QueuedEventIDs;
+        private static readonly ProcessQueue<Action> ProcessQueue;
+
+        private static bool s_initialized;
+        private static string s_smtpServer;
+        private static string s_fromAddress;
+        private static string s_emailTemplate;
+        private static double s_timeTolerance;
+        private static TimeSpan s_waitPeriod;
+        private static TimeZoneInfo s_timeZone;
+        private static DbAdapterContainer s_dbAdapterContainer;
+
+        // Static Constructor
+        static EmailWriter()
+        {
+            QueuedEventIDs = new HashSet<int>();
+            ProcessQueue = ProcessQueue<Action>.CreateRealTimeQueue(action => action());
+            ProcessQueue.Start();
+        }
+
+        // Static Methods
+        private static void Initialize(EmailWriter writer)
+        {
+            if (s_initialized)
+                return;
+
+            ProcessQueue.Add(() =>
+            {
+                if (!s_initialized)
+                {
+                    s_timeTolerance = writer.TimeTolerance;
+                    s_smtpServer = writer.SMTPServer;
+                    s_fromAddress = writer.FromAddress;
+                    s_emailTemplate = writer.EmailTemplate;
+                    s_waitPeriod = TimeSpan.FromSeconds(writer.WaitPeriod);
+                    s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
+                    s_dbAdapterContainer = new DbAdapterContainer(writer.DbConnectionString);
+                    s_initialized = true;
+                }
+            });
+        }
+
+        private static void QueueEventID(int eventID)
+        {
+            ProcessQueue.Add(() =>
+            {
+                ManualResetEvent waitHandle;
+                WaitOrTimerCallback callback;
+
+                waitHandle = new ManualResetEvent(false);
+
+                callback = (state, timedOut) =>
+                {
+                    waitHandle.Dispose();
+                    DequeueEventID(eventID);
+                };
+
+                QueuedEventIDs.Add(eventID);
+
+                ThreadPool.RegisterWaitForSingleObject(waitHandle, callback, null, s_waitPeriod, true);
+            });
+        }
+
+        private static void DequeueEventID(int eventID)
+        {
+            ProcessQueue.Add(() =>
+            {
+                MeterData.EventRow eventRow;
+                MeterData.EventDataTable systemEvent;
+
+                QueuedEventIDs.Remove(eventID);
+
+                eventRow = s_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByID(eventID)[0];
+                systemEvent = s_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance);
+
+                if (systemEvent.Any(evt => evt.LineID == eventRow.LineID && QueuedEventIDs.Contains(evt.ID)))
+                    return;
+
+                if (s_dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(eventID) == 0)
+                    GenerateEmail(eventID);
+            });
+        }
+
+        private static void GenerateEmail(int eventID)
         {
             string eventDetail;
-            XslCompiledTransform transform;
 
+            XslCompiledTransform transform;
             XDocument htmlDocument;
             List<XElement> formatParents;
+
+            List<Recipient> recipients;
+            string subject;
             string html;
 
-            eventDetail = m_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetEventDetail(eventID);
+            eventDetail = s_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetEventDetail(eventID);
 
-            using (StringReader templateReader = new StringReader(m_emailTemplate))
+            using (StringReader templateReader = new StringReader(s_emailTemplate))
             using (StringReader dataReader = new StringReader(eventDetail))
             using (XmlReader xmlTemplateReader = XmlReader.Create(templateReader))
             using (XmlReader xmlDataReader = XmlReader.Create(dataReader))
@@ -176,16 +283,19 @@ namespace FaultData.DataWriters
             foreach (XElement parent in formatParents)
                 parent.ReplaceNodes(parent.Nodes().Select(Format));
 
+            recipients = s_dbAdapterContainer.GetAdapter<SystemInfoDataContext>().Recipients.ToList();
+            subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
             html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
 
-            SendEmail(m_dbAdapterContainer.GetAdapter<SystemInfoDataContext>().Recipients.ToList(), "Fault email test", html);
+            SendEmail(recipients, subject, html);
+            LoadEmail(eventID, recipients, subject, html);
         }
 
-        private void SendEmail(List<Recipient> recipients, string subject, string body, params Attachment[] attachments)
+        private static void SendEmail(List<Recipient> recipients, string subject, string body, params Attachment[] attachments)
         {
             const int DefaultSMTPPort = 25;
 
-            string[] smtpServerParts = m_smtpServer.Split(':');
+            string[] smtpServerParts = s_smtpServer.Split(':');
             string host = smtpServerParts[0];
             int port;
 
@@ -195,7 +305,7 @@ namespace FaultData.DataWriters
             using (SmtpClient smtpClient = new SmtpClient(host, port))
             using (MailMessage emailMessage = new MailMessage())
             {
-                emailMessage.From = new MailAddress(m_fromAddress);
+                emailMessage.From = new MailAddress(s_fromAddress);
                 emailMessage.Subject = subject;
                 emailMessage.Body = body;
                 emailMessage.IsBodyHtml = true;
@@ -213,7 +323,37 @@ namespace FaultData.DataWriters
             }
         }
 
-        private object Format(XNode node)
+        private static void LoadEmail(int eventID, List<Recipient> recipients, string subject, string body)
+        {
+            EventTableAdapter eventAdapter = s_dbAdapterContainer.GetAdapter<EventTableAdapter>();
+            MeterData.EventRow eventRow = eventAdapter.GetDataByID(eventID)[0];
+            MeterData.EventDataTable systemEvent = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance);
+
+            FaultEmailTableAdapter faultEmailAdapter = s_dbAdapterContainer.GetAdapter<FaultEmailTableAdapter>();
+            FaultLocationData.FaultEmailDataTable faultEmailTable = new FaultLocationData.FaultEmailDataTable();
+            FaultLocationData.EventFaultEmailDataTable eventFaultEmailTable = new FaultLocationData.EventFaultEmailDataTable();
+
+            DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, s_timeZone);
+            string toLine = string.Join("; ", recipients.Select(recipient => recipient.Email));
+
+            BulkLoader bulkLoader;
+
+            faultEmailTable.AddFaultEmailRow(now, toLine, subject, body);
+            faultEmailAdapter.Update(faultEmailTable);
+
+            foreach (MeterData.EventRow evt in systemEvent)
+            {
+                if (eventRow.LineID == evt.LineID)
+                    eventFaultEmailTable.AddEventFaultEmailRow(evt.ID, faultEmailTable[0].ID);
+            }
+
+            bulkLoader = new BulkLoader();
+            bulkLoader.Connection = s_dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = s_dbAdapterContainer.CommandTimeout;
+            bulkLoader.Load(eventFaultEmailTable);
+        }
+
+        private static object Format(XNode node)
         {
             XElement element;
             IFormattable formattable;
@@ -238,30 +378,6 @@ namespace FaultData.DataWriters
 
             return node;
         }
-
-        private int GetFaultEventTypeID()
-        {
-            MeterData.EventTypeDataTable eventTypeTable;
-
-            eventTypeTable = m_dbAdapterContainer.GetAdapter<EventTypeTableAdapter>().GetData();
-
-            return Enumerable.Select(eventTypeTable
-                    .Where(eventType => eventType.Name == "Fault"), eventType => eventType.ID)
-                .FirstOrDefault();
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static object s_faultEventTypeID;
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
 
         #endregion
     }

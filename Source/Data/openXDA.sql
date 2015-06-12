@@ -480,6 +480,24 @@ CREATE NONCLUSTERED INDEX IX_DoubleEndedFaultDistance_RemoteFaultSummaryID
 ON DoubleEndedFaultDistance(RemoteFaultSummaryID ASC)
 GO
 
+CREATE TABLE FaultEmail
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    TimeSent DATETIME NOT NULL,
+    ToLine VARCHAR(MAX) NOT NULL,
+    Subject VARCHAR(500) NOT NULL,
+    Message VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE EventFaultEmail
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    FaultEmailID INT NOT NULL REFERENCES FaultEmail(ID)
+)
+GO
+
 INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Simple', 1)
 GO
 

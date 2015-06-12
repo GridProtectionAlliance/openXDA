@@ -48,6 +48,7 @@ namespace openXDA.Configuration
         private string m_resultsPath;
         private string m_filePattern;
 
+        private double m_waitPeriod;
         private double m_timeTolerance;
         private string m_defaultMeterTimeZone;
         private string m_xdaTimeZone;
@@ -238,6 +239,25 @@ namespace openXDA.Configuration
                     m_xdaTimeZone = TimeZoneInfo.Local.Id;
                 else
                     m_xdaTimeZone = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the amount of time, in seconds,
+        /// between the time a file is received and the time
+        /// an email should be sent out by the system.
+        /// </summary>
+        [Setting]
+        [DefaultValue(10.0D)]
+        public double WaitPeriod
+        {
+            get
+            {
+                return m_waitPeriod;
+            }
+            set
+            {
+                m_waitPeriod = value;
             }
         }
 
