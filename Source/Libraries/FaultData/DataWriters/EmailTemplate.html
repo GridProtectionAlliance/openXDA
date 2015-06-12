@@ -60,7 +60,7 @@
                         </p>
                         
                         <p>
-                            Double-ended distance: <span style="font-weight: bold"><format type="System.Double" spec="0.000"><xsl:value-of select="SummaryData/DoubleEndedDistance" /></format> miles</span>
+                            Double-ended distance: <span style="font-weight: bold"><format type="System.Double" spec="0.000"><xsl:value-of select="SummaryData/DoubleEndedDistance" /></format> miles</span> from <xsl:value-of select="$deDistance[1]/../StationName" />
                         </p>
                     </xsl:when>
                     <xsl:otherwise>
