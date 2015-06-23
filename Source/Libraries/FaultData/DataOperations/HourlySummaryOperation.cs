@@ -83,7 +83,7 @@ namespace FaultData.DataOperations
             channelNormalLoader.Connection = dbAdapterContainer.Connection;
             channelNormalLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
 
-            hourlySummaryLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
+            hourlySummaryLoader.MergeTableFormat = "MERGE INTO {0} WITH (TABLOCK) AS Target " +
                                                    "USING {1} AS Source " +
                                                    "ON Source.ChannelID = Target.ChannelID AND Source.Time = Target.Time " +
                                                    "WHEN MATCHED THEN " +

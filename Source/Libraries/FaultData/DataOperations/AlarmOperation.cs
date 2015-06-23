@@ -67,17 +67,16 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
+            BulkLoader bulkLoader = new BulkLoader();
+
             if (m_alarmLogTable.Count == 0)
                 return;
 
             Log.Info("Loading alarm data into the database...");
 
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
-            {
-                bulkCopy.BulkCopyTimeout = 0;
-                bulkCopy.DestinationTableName = m_alarmLogTable.TableName;
-                bulkCopy.WriteToServer(m_alarmLogTable);
-            }
+            bulkLoader.Connection = m_dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = m_dbAdapterContainer.CommandTimeout;
+            bulkLoader.Load(m_alarmLogTable);
 
             Log.Info(string.Format("Loaded {0} alarm log records into the database...", m_alarmLogTable.Count));
         }
@@ -225,6 +224,7 @@ namespace FaultData.DataOperations
             AlarmRangeLimitTableAdapter rangeLimitAdapter;
             DefaultAlarmRangeLimitTableAdapter defaultRangeLimitAdapter;
             AlarmData.DefaultAlarmRangeLimitDataTable defaultRangeLimitTable;
+            AlarmData.AlarmRangeLimitRow alarmRangeLimitRow;
 
             // Clear existing rows from the range limit table
             rangeLimitTable.Clear();
@@ -258,7 +258,24 @@ namespace FaultData.DataOperations
                 if (rangeLimitTable.Count == 0)
                 {
                     foreach (AlarmData.DefaultAlarmRangeLimitRow row in defaultRangeLimitTable)
-                        rangeLimitTable.AddAlarmRangeLimitRow(channel.ID, row.AlarmTypeID, row.Severity, row.High, row.Low, row.RangeInclusive, row.PerUnit, 1);
+                    {
+                        alarmRangeLimitRow = rangeLimitTable.NewAlarmRangeLimitRow();
+
+                        alarmRangeLimitRow.ChannelID = channel.ID;
+                        alarmRangeLimitRow.AlarmTypeID = row.AlarmTypeID;
+                        alarmRangeLimitRow.Severity = row.Severity;
+                        alarmRangeLimitRow.RangeInclusive = row.RangeInclusive;
+                        alarmRangeLimitRow.PerUnit = row.PerUnit;
+                        alarmRangeLimitRow.Enabled = 1;
+
+                        if (!row.IsHighNull())
+                            alarmRangeLimitRow.High = row.High;
+
+                        if (!row.IsLowNull())
+                            alarmRangeLimitRow.Low = row.Low;
+
+                        rangeLimitTable.AddAlarmRangeLimitRow(alarmRangeLimitRow);
+                    }
 
                     using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
                     {

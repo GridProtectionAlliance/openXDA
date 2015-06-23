@@ -148,6 +148,7 @@
     <Compile Include="DataReaders\EMAXReader.cs" />
     <Compile Include="DataReaders\IDataReader.cs" />
     <Compile Include="DataReaders\PQDIFReader.cs" />
+    <Compile Include="DataWriters\ChartGenerator.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\CSVWriter.cs" />
     <Compile Include="DataWriters\EmailWriter.cs" />

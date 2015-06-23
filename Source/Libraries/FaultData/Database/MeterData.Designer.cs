@@ -4303,8 +4303,8 @@ SELECT ID, ChannelID, Time, Minimum, Maximum, Average, ValidCount, InvalidCount 
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
             this._commandCollection[1].CommandText = "SELECT ID, ChannelID, Time, Minimum, Maximum, Average, ValidCount, InvalidCount F" +
-                "ROM dbo.HourlyTrendingSummary WHERE ChannelID = @channelID AND Time > @startTime" +
-                " AND Time <= @endTime";
+                "ROM dbo.HourlyTrendingSummary WITH (TABLOCK) WHERE ChannelID = @channelID AND Ti" +
+                "me > @startTime AND Time <= @endTime";
             this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@channelID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ChannelID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@startTime", global::System.Data.SqlDbType.DateTime, 8, global::System.Data.ParameterDirection.Input, 0, 0, "Time", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));

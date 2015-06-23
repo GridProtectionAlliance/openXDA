@@ -128,6 +128,7 @@ namespace openXDA
 
                 processThread = new Thread(() =>
                 {
+                    TimeZoneInfo xdaTimeZone;
                     DateTime processingEndTime;
 
                     try
@@ -141,7 +142,8 @@ namespace openXDA
                             foreach (MeterDataSet meterDataSet in MeterDataSets)
                                 ProcessMeterData(meterDataSet);
 
-                            processingEndTime = DateTime.UtcNow;
+                            xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(SystemSettings.XDATimeZone);
+                            processingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
 
                             foreach (MeterDataSet meterDataSet in MeterDataSets)
                                 meterDataSet.FileGroup.ProcessingEndTime = processingEndTime;
@@ -176,9 +178,8 @@ namespace openXDA
                     try
                     {
                         OnHandleException(ex);
-                        meterDataSet.FileGroup.ProcessingEndTime = DateTime.UtcNow;
                         meterDataSet.FileGroup.Error = 1;
-                        DbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().SubmitChanges();
+                        DbAdapterContainer.GetAdapter<FileInfoDataContext>().SubmitChanges();
                     }
                     catch
                     {

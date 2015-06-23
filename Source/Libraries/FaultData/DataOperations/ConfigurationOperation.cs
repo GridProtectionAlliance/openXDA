@@ -23,12 +23,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Linq;
 using System.Linq;
 using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
+using GSF.Collections;
 using log4net;
+using ChannelKey = System.Tuple<int, string, string, string, string>;
 using SeriesKey = System.Tuple<int, string, string, string, string, string>;
 
 namespace FaultData.DataOperations
@@ -73,6 +76,7 @@ namespace FaultData.DataOperations
             MeterFileGroup meterFileGroup;
             string meterKey;
 
+            List<Series> seriesList;
             Dictionary<SeriesKey, Series> seriesLookup;
             Series seriesInfo;
 
@@ -89,28 +93,29 @@ namespace FaultData.DataOperations
             {
                 Log.Info(string.Format("Found meter {0} in database.", meter.Name));
 
+                // Get the list of series associated with the meter in the database
+                seriesList = m_meterInfo.Series
+                    .Where(series => series.Channel.MeterID == meter.ID)
+                    .ToList();
+
                 // Match the parsed series with the ones associated with the meter in the database
-                seriesLookup = meter.Channels
-                    .SelectMany(channel => channel.Series)
+                seriesLookup = seriesList
                     .Where(series => string.IsNullOrEmpty(series.SourceIndexes))
-                    .ToDictionary(GetKey);
+                    .ToDictionary(GetSeriesKey);
 
                 foreach (DataSeries dataSeries in meterDataSet.DataSeries)
                 {
                     if ((object)dataSeries.SeriesInfo == null)
                         continue;
 
-                    if (seriesLookup.TryGetValue(GetKey(dataSeries.SeriesInfo), out seriesInfo))
+                    if (seriesLookup.TryGetValue(GetSeriesKey(dataSeries.SeriesInfo), out seriesInfo))
                         dataSeries.SeriesInfo = seriesInfo;
                 }
 
                 // Create data series for series which
                 // are combinations of the parsed series
-                foreach (Series series in meter.Channels.SelectMany(channel => channel.Series))
-                {
-                    if (!string.IsNullOrEmpty(series.SourceIndexes))
-                        AddCalculatedDataSeries(meterDataSet, series);
-                }
+                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                    AddCalculatedDataSeries(meterDataSet, series);
 
                 // There may be some placeholder DataSeries objects with no data so that indexes
                 // would be correct for calculating data series--now that we are finished
@@ -134,17 +139,22 @@ namespace FaultData.DataOperations
                 throw new InvalidOperationException("Cannot process meter - configuration does not exist");
             }
 
-            // Remove data series that were not defined in the configuration
-            // since configuration information cannot be added for it
-            RemoveUndefinedDataSeries(meterDataSet);
+            if (meterDataSet.FilePath.EndsWith(".pqd", StringComparison.OrdinalIgnoreCase))
+            {
+                // Add channels that are not already defined in the
+                // configuration by assuming the meter monitors only one line
+                AddUndefinedChannels(meterDataSet);
+            }
+            else
+            {
+                // Remove data series that were not defined in the configuration
+                // since configuration information cannot be added for it
+                RemoveUndefinedDataSeries(meterDataSet);
+            }
 
             meterFileGroup = new MeterFileGroup();
             meterFileGroup.Meter = meterDataSet.Meter;
             meterFileGroup.FileGroupID = meterDataSet.FileGroup.ID;
-
-            // Submit changes to the meter configuration so
-            // that they may be entered into the database
-            m_meterInfo.SubmitChanges();
         }
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
@@ -190,6 +200,80 @@ namespace FaultData.DataOperations
                 meterDataSet.DataSeries.Add(dataSeries);
         }
 
+        private void AddUndefinedChannels(MeterDataSet meterDataSet)
+        {
+            Lazy<Dictionary<SeriesKey, Series>> seriesLookup;
+            Lazy<Dictionary<ChannelKey, Channel>> channelLookup;
+            Lazy<Dictionary<string, MeasurementType>> measurementTypeLookup;
+            Lazy<Dictionary<string, MeasurementCharacteristic>> measurementCharacteristicLookup;
+            Lazy<Dictionary<string, SeriesType>> seriesTypeLookup;
+            Lazy<Dictionary<string, Phase>> phaseLookup;
+
+            List<DataSeries> undefinedDataSeries;
+
+            Line line;
+
+            undefinedDataSeries = meterDataSet.DataSeries
+                .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Line == null)
+                .ToList();
+
+            if (undefinedDataSeries.Count <= 0)
+                return;
+
+            seriesLookup = new Lazy<Dictionary<SeriesKey, Series>>(() => m_meterInfo.Series.Where(series => series.Channel.MeterID == meterDataSet.Meter.ID).Where(series => series.SourceIndexes == "").ToDictionary(GetSeriesKey));
+            channelLookup = new Lazy<Dictionary<ChannelKey, Channel>>(() => m_meterInfo.Channels.Where(channel => channel.MeterID == meterDataSet.Meter.ID).ToDictionary(GetChannelKey));
+            measurementTypeLookup = new Lazy<Dictionary<string, MeasurementType>>(() => m_meterInfo.MeasurementTypes.ToDictionary(type => type.Name));
+            measurementCharacteristicLookup = new Lazy<Dictionary<string, MeasurementCharacteristic>>(() => m_meterInfo.MeasurementCharacteristics.ToDictionary(type => type.Name));
+            seriesTypeLookup = new Lazy<Dictionary<string, SeriesType>>(() => m_meterInfo.SeriesTypes.ToDictionary(type => type.Name));
+            phaseLookup = new Lazy<Dictionary<string, Phase>>(() => m_meterInfo.Phases.ToDictionary(type => type.Name));
+
+            line = meterDataSet.Meter.MeterLines
+                .Select(meterLine => meterLine.Line)
+                .Single();
+
+            lock (AddUndefinedChannelsLock)
+            {
+                for (int i = 0; i < undefinedDataSeries.Count; i++)
+                {
+                    DataSeries dataSeries = undefinedDataSeries[i];
+
+                    // Search for an existing series info object
+                    dataSeries.SeriesInfo = seriesLookup.Value.GetOrAdd(GetSeriesKey(dataSeries.SeriesInfo), key => dataSeries.SeriesInfo);
+
+                    // If an existing series info object was found,
+                    // we don't need to do anything else for this data series
+                    if ((object)dataSeries.SeriesInfo.Channel.Line != null)
+                        continue;
+
+                    // Search for an existing series type object
+                    dataSeries.SeriesInfo.SeriesType = seriesTypeLookup.Value.GetOrAdd(dataSeries.SeriesInfo.SeriesType.Name, name => dataSeries.SeriesInfo.SeriesType);
+
+                    // Search for an existing channel object
+                    dataSeries.SeriesInfo.Channel = channelLookup.Value.GetOrAdd(GetChannelKey(dataSeries.SeriesInfo.Channel), key => dataSeries.SeriesInfo.Channel);
+
+                    // If an existing channel object was found,
+                    // we don't need to do anything else for this data series
+                    if ((object)dataSeries.SeriesInfo.Channel.Line != null)
+                        continue;
+
+                    // Search for an existing measurement type object
+                    dataSeries.SeriesInfo.Channel.MeasurementType = measurementTypeLookup.Value.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementType.Name, name => dataSeries.SeriesInfo.Channel.MeasurementType);
+
+                    // Search for an existing measurement characteristic object
+                    dataSeries.SeriesInfo.Channel.MeasurementCharacteristic = measurementCharacteristicLookup.Value.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name, name => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic);
+
+                    // Search for an existing phase object
+                    dataSeries.SeriesInfo.Channel.Phase = phaseLookup.Value.GetOrAdd(dataSeries.SeriesInfo.Channel.Phase.Name, name => dataSeries.SeriesInfo.Channel.Phase);
+
+                    // Set the meter and line of the new channel
+                    dataSeries.SeriesInfo.Channel.Meter = meterDataSet.Meter;
+                    dataSeries.SeriesInfo.Channel.Line = line;
+                }
+
+                m_meterInfo.SubmitChanges();
+            }
+        }
+
         private void RemoveUndefinedDataSeries(MeterDataSet meterDataSet)
         {
             for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
@@ -199,7 +283,17 @@ namespace FaultData.DataOperations
             }
         }
 
-        private SeriesKey GetKey(Series series)
+        private ChannelKey GetChannelKey(Channel channel)
+        {
+            return Tuple.Create(
+                channel.HarmonicGroup,
+                channel.Name,
+                channel.MeasurementType.Name,
+                channel.MeasurementCharacteristic.Name,
+                channel.Phase.Name);
+        }
+
+        private SeriesKey GetSeriesKey(Series series)
         {
             Channel channel = series.Channel;
 
@@ -217,6 +311,7 @@ namespace FaultData.DataOperations
         #region [ Static ]
 
         // Static Fields
+        private static readonly object AddUndefinedChannelsLock = new object();
         private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationOperation));
 
         #endregion
