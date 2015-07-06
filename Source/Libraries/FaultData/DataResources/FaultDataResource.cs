@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Windows.Forms;
 using FaultAlgorithms;
 using FaultData.DataAnalysis;
 using FaultData.Database;

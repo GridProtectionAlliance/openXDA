@@ -102,7 +102,7 @@ namespace FaultData.DataResources
             DataSeries vb;
             DataSeries vc;
 
-            if (faults.Any(fault => !fault.IsSuppressed && fault.Summaries.Any(summary => summary.IsValid)))
+            if (faults.Any(fault => !fault.IsSuppressed))
                 return EventClassification.Fault;
 
             // Get the line-to-neutral nominal voltage in volts
