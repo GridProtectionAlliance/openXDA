@@ -60,7 +60,7 @@ namespace FaultData.DataResources
 
             dataGroups = new List<DataGroup>();
 
-            foreach (IGrouping<Line, DataSeries> lineGroup in meterDataSet.DataSeries.GroupBy(GetLine))
+            foreach (IGrouping<Line, DataSeries> lineGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetLine))
             {
                 foreach (IGrouping<DateTime, DataSeries> startTimeGroup in lineGroup.GroupBy(dataSeries => dataSeries.DataPoints[0].Time))
                 {

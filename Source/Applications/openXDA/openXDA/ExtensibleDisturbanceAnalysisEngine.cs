@@ -77,6 +77,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
+using FaultData;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataOperations;
@@ -414,6 +415,9 @@ namespace openXDA
                     OnProcessException(fileShare.AuthenticationException);
             }
 
+            // Reload configuration at startup
+            ReloadConfiguration();
+
             // Make sure watch directories exist
             foreach (string path in m_systemSettings.WatchDirectoryList)
                 TryCreateDirectory(path);
@@ -434,6 +438,47 @@ namespace openXDA
 
                 foreach (string path in m_systemSettings.WatchDirectoryList)
                     m_fileProcessor.AddTrackedDirectory(path);
+            }
+        }
+
+        /// <summary>
+        /// Reloads system configuration from configuration sources.
+        /// </summary>
+        public void ReloadConfiguration()
+        {
+            SystemInfoDataContext systemInfo;
+
+            List<Type> types;
+            IConfigurationLoader configurationLoader;
+
+            using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString))
+            {
+                systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
+
+                types = systemInfo.ConfigurationLoaders
+                    .OrderBy(configLoader => configLoader.LoadOrder)
+                    .AsEnumerable()
+                    .Select(configLoader => LoadType(configLoader.AssemblyName, configLoader.TypeName))
+                    .Where(type => (object)type != null)
+                    .Where(type => typeof(IConfigurationLoader).IsAssignableFrom(type))
+                    .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
+                    .ToList();
+
+                foreach (Type type in types)
+                {
+                    try
+                    {
+                        OnStatusMessage("[{0}] Loading configuration...", type.Name);
+                        configurationLoader = (IConfigurationLoader)Activator.CreateInstance(type);
+                        configurationLoader.UpdateConfiguration(dbAdapterContainer);
+                        OnStatusMessage("[{0}] Done loading configuration.", type.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        string message = string.Format("[{0}] Unable to update configuration due to exception: {1}", type.Name, ex.Message);
+                        OnProcessException(new InvalidOperationException(message, ex));
+                    }
+                }
             }
         }
 

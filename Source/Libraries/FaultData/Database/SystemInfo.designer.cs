@@ -45,6 +45,9 @@ namespace FaultData.Database
     partial void InsertDataOperation(DataOperation instance);
     partial void UpdateDataOperation(DataOperation instance);
     partial void DeleteDataOperation(DataOperation instance);
+    partial void InsertConfigurationLoader(ConfigurationLoader instance);
+    partial void UpdateConfigurationLoader(ConfigurationLoader instance);
+    partial void DeleteConfigurationLoader(ConfigurationLoader instance);
     #endregion
 		
 		public SystemInfoDataContext() : 
@@ -114,6 +117,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<DataOperation>();
+			}
+		}
+		
+		public System.Data.Linq.Table<ConfigurationLoader> ConfigurationLoaders
+		{
+			get
+			{
+				return this.GetTable<ConfigurationLoader>();
 			}
 		}
 	}
@@ -719,6 +730,140 @@ namespace FaultData.Database
 					this._TransactionOrder = value;
 					this.SendPropertyChanged("TransactionOrder");
 					this.OnTransactionOrderChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LoadOrder", DbType="Int NOT NULL")]
+		public int LoadOrder
+		{
+			get
+			{
+				return this._LoadOrder;
+			}
+			set
+			{
+				if ((this._LoadOrder != value))
+				{
+					this.OnLoadOrderChanging(value);
+					this.SendPropertyChanging();
+					this._LoadOrder = value;
+					this.SendPropertyChanged("LoadOrder");
+					this.OnLoadOrderChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.ConfigurationLoader")]
+	public partial class ConfigurationLoader : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private string _AssemblyName;
+		
+		private string _TypeName;
+		
+		private int _LoadOrder;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnAssemblyNameChanging(string value);
+    partial void OnAssemblyNameChanged();
+    partial void OnTypeNameChanging(string value);
+    partial void OnTypeNameChanged();
+    partial void OnLoadOrderChanging(int value);
+    partial void OnLoadOrderChanged();
+    #endregion
+		
+		public ConfigurationLoader()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_AssemblyName", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string AssemblyName
+		{
+			get
+			{
+				return this._AssemblyName;
+			}
+			set
+			{
+				if ((this._AssemblyName != value))
+				{
+					this.OnAssemblyNameChanging(value);
+					this.SendPropertyChanging();
+					this._AssemblyName = value;
+					this.SendPropertyChanged("AssemblyName");
+					this.OnAssemblyNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TypeName", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string TypeName
+		{
+			get
+			{
+				return this._TypeName;
+			}
+			set
+			{
+				if ((this._TypeName != value))
+				{
+					this.OnTypeNameChanging(value);
+					this.SendPropertyChanging();
+					this._TypeName = value;
+					this.SendPropertyChanged("TypeName");
+					this.OnTypeNameChanged();
 				}
 			}
 		}

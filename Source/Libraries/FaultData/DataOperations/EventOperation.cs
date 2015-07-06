@@ -218,7 +218,7 @@ namespace FaultData.DataOperations
             dbAdapterContainer.GetAdapter<EventTypeTableAdapter>().Fill(eventTypeTable);
 
             return Enumerable.Select(eventTypeTable
-                    .Where(row => Enum.TryParse(row.Name, out eventClassification)), row => Tuple.Create(eventClassification, row.ID))
+                .Where(row => Enum.TryParse(row.Name, out eventClassification)), row => Tuple.Create(eventClassification, row.ID))
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
         }
 

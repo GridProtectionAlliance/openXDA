@@ -130,6 +130,30 @@ namespace FaultData.DataAnalysis
         }
 
         /// <summary>
+        /// Gets the sample rate, in samples per second,
+        /// of the data series in this data group.
+        /// </summary>
+        public double SamplesPerSecond
+        {
+            get
+            {
+                return m_samples / (m_endTime - m_startTime).TotalSeconds;
+            }
+        }
+
+        /// <summary>
+        /// Gets the sample rate, in samples per hour,
+        /// of the data series in this data group.
+        /// </summary>
+        public double SamplesPerHour
+        {
+            get
+            {
+                return m_samples / (m_endTime - m_startTime).TotalHours;
+            }
+        }
+
+        /// <summary>
         /// Gets the channels contained in this data group.
         /// </summary>
         public IReadOnlyList<DataSeries> DataSeries

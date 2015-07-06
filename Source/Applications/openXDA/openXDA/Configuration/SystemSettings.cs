@@ -63,6 +63,7 @@ namespace openXDA.Configuration
         private double m_minFaultDistanceMultiplier;
 
         private double m_openBreakerThreshold;
+        private double m_lateBreakerThreshold;
 
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
@@ -428,7 +429,7 @@ namespace openXDA.Configuration
         /// at which the breaker can be considered open.
         /// </summary>
         [Setting]
-        [DefaultValue(50.0)]
+        [DefaultValue(50.0D)]
         public double OpenBreakerThreshold
         {
             get
@@ -438,6 +439,24 @@ namespace openXDA.Configuration
             set
             {
                 m_openBreakerThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of cycles that a breaker
+        /// operation's timing can exceed the configured breaker speed.
+        /// </summary>
+        [Setting]
+        [DefaultValue(1.0D)]
+        public double LateBreakerThreshold
+        {
+            get
+            {
+                return m_lateBreakerThreshold;
+            }
+            set
+            {
+                m_lateBreakerThreshold = value;
             }
         }
 

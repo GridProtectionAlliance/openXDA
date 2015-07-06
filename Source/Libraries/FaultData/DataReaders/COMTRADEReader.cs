@@ -134,6 +134,21 @@ namespace FaultData.DataReaders
                 meterDataSet.DataSeries[analogChannel.Index] = series;
             }
 
+            foreach (DigitalChannel digitalChannel in schema.DigitalChannels)
+            {
+                channel = ParseSeries(digitalChannel);
+
+                series = new DataSeries();
+                series.SeriesInfo = channel.Series[0];
+
+                meterDataSet.Meter.Channels.Add(channel);
+
+                while (meterDataSet.Digitals.Count <= digitalChannel.Index)
+                    meterDataSet.Digitals.Add(new DataSeries());
+
+                meterDataSet.Digitals[digitalChannel.Index] = series;
+            }
+
             try
             {
                 while (m_parser.ReadNext())
@@ -144,6 +159,13 @@ namespace FaultData.DataReaders
                         string units = schema.AnalogChannels[i].Units.ToUpper();
                         double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
                         meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.PrimaryValues[i] });
+                    }
+
+                    for (int i = 0; i < schema.DigitalChannels.Length; i++)
+                    {
+                        int valuesIndex = schema.TotalAnalogChannels + i;
+                        int seriesIndex = schema.DigitalChannels[i].Index;
+                        meterDataSet.Digitals[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = m_parser.Values[valuesIndex] });
                     }
                 }
             }
@@ -190,8 +212,30 @@ namespace FaultData.DataReaders
 
             series.Channel = channel;
             series.SeriesType = new SeriesType();
-            series.SeriesType.Name = "Instantaneous";
+            series.SeriesType.Name = "Values";
             series.SourceIndexes = analogChannel.Index.ToString();
+
+            return channel;
+        }
+
+        private Channel ParseSeries(DigitalChannel digitalChannel)
+        {
+            Channel channel = new Channel();
+            Series series = new Series();
+
+            channel.Name = digitalChannel.ChannelName;
+            channel.HarmonicGroup = 0;
+            channel.MeasurementType = new MeasurementType();
+            channel.MeasurementType.Name = "Digital";
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
+            channel.MeasurementCharacteristic.Name = "Unknown";
+            channel.Phase = new Phase();
+            channel.Phase.Name = !string.IsNullOrEmpty(digitalChannel.PhaseID) ? digitalChannel.PhaseID : "Unknown";
+
+            series.Channel = channel;
+            series.SeriesType = new SeriesType();
+            series.SeriesType.Name = "Values";
+            series.SourceIndexes = digitalChannel.Index.ToString();
 
             return channel;
         }

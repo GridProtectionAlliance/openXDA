@@ -153,7 +153,8 @@ namespace openXDA
 
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Sends a message to all service monitors", ReloadSystemSettingsRequestHandler));
+            m_serviceHelper.AddScheduledProcess(ReloadConfigurationHandler, "ReloadConfiguration", "0 0 * * *");
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
 
             // Set up adapter loader to load service monitors
@@ -197,6 +198,11 @@ namespace openXDA
                     HandleException(ex);
                 }
             }
+        }
+
+        private void ReloadConfigurationHandler(string s, object[] args)
+        {
+            m_extensibleDisturbanceAnalysisEngine.ReloadConfiguration();
         }
 
         // Reloads system settings from the database

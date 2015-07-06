@@ -42,6 +42,7 @@ namespace FaultData.DataSets
         private FileGroup m_fileGroup;
         private Meter m_meter;
         private List<DataSeries> m_dataSeries;
+        private List<DataSeries> m_digitals;
 
         #endregion
 
@@ -51,6 +52,7 @@ namespace FaultData.DataSets
         {
             m_resources = new Dictionary<Type, object>();
             m_dataSeries = new List<DataSeries>();
+            m_digitals = new List<DataSeries>();
         }
 
         #endregion
@@ -114,6 +116,18 @@ namespace FaultData.DataSets
             set
             {
                 m_dataSeries = value;
+            }
+        }
+
+        public List<DataSeries> Digitals
+        {
+            get
+            {
+                return m_digitals;
+            }
+            set
+            {
+                m_digitals = value;
             }
         }
 

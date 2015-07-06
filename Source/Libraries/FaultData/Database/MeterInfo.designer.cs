@@ -69,6 +69,9 @@ namespace FaultData.Database
     partial void InsertStructure(Structure instance);
     partial void UpdateStructure(Structure instance);
     partial void DeleteStructure(Structure instance);
+    partial void InsertBreakerChannel(BreakerChannel instance);
+    partial void UpdateBreakerChannel(BreakerChannel instance);
+    partial void DeleteBreakerChannel(BreakerChannel instance);
     #endregion
 		
 		public MeterInfoDataContext() : 
@@ -202,6 +205,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<Structure>();
+			}
+		}
+		
+		public System.Data.Linq.Table<BreakerChannel> BreakerChannels
+		{
+			get
+			{
+				return this.GetTable<BreakerChannel>();
 			}
 		}
 	}
@@ -1495,6 +1506,8 @@ namespace FaultData.Database
 		
 		private EntitySet<Series> _Series;
 		
+		private EntitySet<BreakerChannel> _BreakerChannels;
+		
 		private EntityRef<MeasurementType> _MeasurementType;
 		
 		private EntityRef<Phase> _Phase;
@@ -1536,6 +1549,7 @@ namespace FaultData.Database
 		public Channel()
 		{
 			this._Series = new EntitySet<Series>(new Action<Series>(this.attach_Series), new Action<Series>(this.detach_Series));
+			this._BreakerChannels = new EntitySet<BreakerChannel>(new Action<BreakerChannel>(this.attach_BreakerChannels), new Action<BreakerChannel>(this.detach_BreakerChannels));
 			this._MeasurementType = default(EntityRef<MeasurementType>);
 			this._Phase = default(EntityRef<Phase>);
 			this._MeasurementCharacteristic = default(EntityRef<MeasurementCharacteristic>);
@@ -1797,6 +1811,19 @@ namespace FaultData.Database
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Channel_BreakerChannel", Storage="_BreakerChannels", ThisKey="ID", OtherKey="ChannelID")]
+		public EntitySet<BreakerChannel> BreakerChannels
+		{
+			get
+			{
+				return this._BreakerChannels;
+			}
+			set
+			{
+				this._BreakerChannels.Assign(value);
+			}
+		}
+		
 		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeasurementType_Channel", Storage="_MeasurementType", ThisKey="MeasurementTypeID", OtherKey="ID", IsForeignKey=true)]
 		public MeasurementType MeasurementType
 		{
@@ -1994,6 +2021,18 @@ namespace FaultData.Database
 		}
 		
 		private void detach_Series(Series entity)
+		{
+			this.SendPropertyChanging();
+			entity.Channel = null;
+		}
+		
+		private void attach_BreakerChannels(BreakerChannel entity)
+		{
+			this.SendPropertyChanging();
+			entity.Channel = this;
+		}
+		
+		private void detach_BreakerChannels(BreakerChannel entity)
 		{
 			this.SendPropertyChanging();
 			entity.Channel = null;
@@ -3249,6 +3288,157 @@ namespace FaultData.Database
 						this._LineID = default(int);
 					}
 					this.SendPropertyChanged("Line");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.BreakerChannel")]
+	public partial class BreakerChannel : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _ChannelID;
+		
+		private string _BreakerNumber;
+		
+		private EntityRef<Channel> _Channel;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnChannelIDChanging(int value);
+    partial void OnChannelIDChanged();
+    partial void OnBreakerNumberChanging(string value);
+    partial void OnBreakerNumberChanged();
+    #endregion
+		
+		public BreakerChannel()
+		{
+			this._Channel = default(EntityRef<Channel>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ChannelID", DbType="Int NOT NULL")]
+		public int ChannelID
+		{
+			get
+			{
+				return this._ChannelID;
+			}
+			set
+			{
+				if ((this._ChannelID != value))
+				{
+					if (this._Channel.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnChannelIDChanging(value);
+					this.SendPropertyChanging();
+					this._ChannelID = value;
+					this.SendPropertyChanged("ChannelID");
+					this.OnChannelIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_BreakerNumber", DbType="VarChar(120) NOT NULL", CanBeNull=false)]
+		public string BreakerNumber
+		{
+			get
+			{
+				return this._BreakerNumber;
+			}
+			set
+			{
+				if ((this._BreakerNumber != value))
+				{
+					this.OnBreakerNumberChanging(value);
+					this.SendPropertyChanging();
+					this._BreakerNumber = value;
+					this.SendPropertyChanged("BreakerNumber");
+					this.OnBreakerNumberChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Channel_BreakerChannel", Storage="_Channel", ThisKey="ChannelID", OtherKey="ID", IsForeignKey=true)]
+		public Channel Channel
+		{
+			get
+			{
+				return this._Channel.Entity;
+			}
+			set
+			{
+				Channel previousValue = this._Channel.Entity;
+				if (((previousValue != value) 
+							|| (this._Channel.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._Channel.Entity = null;
+						previousValue.BreakerChannels.Remove(this);
+					}
+					this._Channel.Entity = value;
+					if ((value != null))
+					{
+						value.BreakerChannels.Add(this);
+						this._ChannelID = value.ID;
+					}
+					else
+					{
+						this._ChannelID = default(int);
+					}
+					this.SendPropertyChanged("Channel");
 				}
 			}
 		}

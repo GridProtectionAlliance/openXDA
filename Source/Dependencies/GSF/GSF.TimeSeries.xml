@@ -1734,6 +1734,263 @@
             Runs the console host.
             </summary>
         </member>
+        <member name="T:GSF.TimeSeries.Reports.CorrectnessReportingProcess">
+            <summary>
+            Represents the process that generates correctness reports for the time-series service.
+            </summary>
+        </member>
+        <member name="T:GSF.TimeSeries.Reports.ReportingProcessBase">
+            <summary>
+            Represents the base functionality for reporting processes.
+            </summary>
+        </member>
+        <member name="T:GSF.TimeSeries.Reports.IReportingProcess">
+            <summary>
+            Defines an interface for reporting processes.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.GetReportsList">
+            <summary>
+            Returns the list of reports that are available from the report location.
+            </summary>
+            <returns>The list of generated reports.</returns>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.GetPendingReportsList">
+            <summary>
+            Returns the list of reports which are in the queue but are yet to be generated.
+            </summary>
+            <returns>The list of pending reports.</returns>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.GenerateReport(System.DateTime,System.Boolean)">
+            <summary>
+            Queues up a report to be generated on a separate thread.
+            </summary>
+            <param name="reportDate">The date of the report to be generated.</param>
+            <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.CleanReportLocation">
+            <summary>
+            Deletes reports from the <see cref="P:GSF.TimeSeries.Reports.IReportingProcess.ReportLocation"/> that have been idle for the length of the <see cref="P:GSF.TimeSeries.Reports.IReportingProcess.IdleReportLifetime"/>.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.GetArguments">
+            <summary>
+            Gets the command line arguments for the reporting process.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.GetArguments(System.DateTime,System.Boolean)">
+            <summary>
+            Gets the command line arguments for the reporting process for a given report date.
+            </summary>
+            <param name="reportDate">The date of the report to be generated.</param>
+            <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.IReportingProcess.SetArguments(GSF.Console.Arguments)">
+            <summary>
+            Applies any received command line arguments for the reporting process.
+            </summary>
+            <param name="args">Received command line arguments.</param>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.ReportType">
+            <summary>
+            Gets report type (i.e., name) for this reporting process.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.ArchiveFilePath">
+            <summary>
+            Gets or sets the path to the archive file to which the statistics required for reporting are archived.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.ReportLocation">
+            <summary>
+            Gets or sets the directory to which reports will be written.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.Title">
+            <summary>
+            Gets or sets the title to be displayed on reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.Company">
+            <summary>
+            Gets or sets the name of the company to be displayed on reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.IdleReportLifetime">
+            <summary>
+            Gets or sets the minimum lifetime of a report
+            since the last time it was accessed, in days.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.EnableReportEmail">
+            <summary>
+            Gets or sets flag to enable e-mailing of reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.SmtpServer">
+            <summary>
+            Gets or sets SMTP server to use when e-mailing reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.FromAddress">
+            <summary>
+            Gets or sets the "from" address to use when e-mailing reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.IReportingProcess.ToAddresses">
+            <summary>
+            Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.#ctor(System.String)">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.TimeSeries.Reports.ReportingProcessBase"/> class.
+            </summary>
+            <param name="reportType">Report type - passed into StatHistorianReportGenerator.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.GetReportsList">
+            <summary>
+            Returns the list of reports that are available from the report location.
+            </summary>
+            <returns>The list of generated reports.</returns>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.GetPendingReportsList">
+            <summary>
+            Returns the list of reports which are in the queue but are yet to be generated.
+            </summary>
+            <returns>The list of pending reports.</returns>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.GenerateReport(System.DateTime,System.Boolean)">
+            <summary>
+            Queues up a report to be generated on a separate thread.
+            </summary>
+            <param name="reportDate">The date of the report to be generated.</param>
+            <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.CleanReportLocation">
+            <summary>
+            Deletes reports from the <see cref="P:GSF.TimeSeries.Reports.ReportingProcessBase.ReportLocation"/> that have
+            been idle for the length of the <see cref="P:GSF.TimeSeries.Reports.ReportingProcessBase.IdleReportLifetime"/>.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.LoadSettings">
+            <summary>
+            Loads saved settings from the config file.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.SaveSettings">
+            <summary>
+            Saves settings to the config file.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.Execute">
+            <summary>
+            Executes the reporting process to generate the report.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.GetArguments">
+            <summary>
+            Gets the command line arguments for the reporting process.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.GetArguments(System.DateTime,System.Boolean)">
+            <summary>
+            Gets the command line arguments for the reporting process for a given report date.
+            </summary>
+            <param name="reportDate">The date of the report to be generated.</param>
+            <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.SetArguments(GSF.Console.Arguments)">
+            <summary>
+            Applies any received command line arguments for the reporting process.
+            </summary>
+            <param name="args">Received command line arguments.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.IsReportFileName(System.String)">
+            <summary>
+            Determines whether the given path is a path to a report, based on the file name.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessBase.GetProcessOwner(System.Int32)">
+            <summary>
+            Determines who is the owner of the given process.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.PersistSettings">
+            <summary>
+            Determines whether the object settings are to be persisted to the config file.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.ReportType">
+            <summary>
+            Gets report type, i.e., basically the report name associated with this reporting process.
+            </summary>
+            <remarks>
+            This value is passed to StatHistorianReportGenerator as "reportType" parameter.
+            </remarks>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.SettingsCategory">
+            <summary>
+            Gets or sets the category name under which the object settings are persisted in the config file.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.ArchiveFilePath">
+            <summary>
+            Gets or sets the path to the archive file to which
+            the statistics required for reporting are archived.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.ReportLocation">
+            <summary>
+            Gets or sets the directory to which reports will be written.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.Title">
+            <summary>
+            Gets or sets the title to be displayed on reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.Company">
+            <summary>
+            Gets or sets the name of the company to be displayed on reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.IdleReportLifetime">
+            <summary>
+            Gets or sets the minimum lifetime of a report
+            since the last time it was accessed, in days.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.EnableReportEmail">
+            <summary>
+            Gets or sets flag to enable e-mailing of reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.SmtpServer">
+            <summary>
+            Gets or sets SMTP server to use when e-mailing reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.FromAddress">
+            <summary>
+            Gets or sets the "from" address to use when e-mailing reports.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.ToAddresses">
+            <summary>
+            Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessBase.Status">
+            <summary>
+            Gets the current status details about reporting process.
+            </summary>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.CorrectnessReportingProcess.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:GSF.TimeSeries.Reports.CorrectnessReportingProcess"/> class.
+            </summary>
+        </member>
         <member name="T:GSF.TimeSeries.Frame">
             <summary>
             Implementation of a basic <see cref="T:GSF.TimeSeries.IFrame"/>.
@@ -5970,150 +6227,109 @@
             Gets or sets function used to handle exceptions.
             </summary>
         </member>
-        <member name="T:GSF.TimeSeries.CompletenessReportingProcess">
+        <member name="T:GSF.TimeSeries.Reports.CompletenessReportingProcess">
             <summary>
-            Represents the process that generates reports for the time-series service.
+            Represents the process that generates completeness reports for the time-series service.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.#ctor">
+        <member name="M:GSF.TimeSeries.Reports.CompletenessReportingProcess.#ctor">
             <summary>
-            Creates a new instance of the <see cref="T:GSF.TimeSeries.CompletenessReportingProcess"/> class.
+            Creates a new instance of the <see cref="T:GSF.TimeSeries.Reports.CompletenessReportingProcess"/> class.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetReportsList">
-            <summary>
-            Returns the list of reports that are available from the report location.
-            </summary>
-            <returns>The list of generated reports.</returns>
-        </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetPendingReportsList">
-            <summary>
-            Returns the list of reports which are in the queue but are yet to be generated.
-            </summary>
-            <returns>The list of pending reports.</returns>
-        </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GenerateReport(System.DateTime)">
-            <summary>
-            Queues up a report to be generated on a separate thread.
-            </summary>
-            <param name="reportDate">The date of the report to be generated.</param>
-        </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.CleanReportLocation">
-            <summary>
-            Deletes reports from the <see cref="P:GSF.TimeSeries.CompletenessReportingProcess.ReportLocation"/> that have
-            been idle for the length of the <see cref="P:GSF.TimeSeries.CompletenessReportingProcess.IdleReportLifetime"/>.
-            </summary>
-        </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.LoadSettings">
+        <member name="M:GSF.TimeSeries.Reports.CompletenessReportingProcess.LoadSettings">
             <summary>
             Loads saved settings from the config file.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.SaveSettings">
+        <member name="M:GSF.TimeSeries.Reports.CompletenessReportingProcess.SaveSettings">
             <summary>
             Saves settings to the config file.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.Execute">
-            <summary>
-            Executes the reporting process to generate the report.
-            </summary>
-        </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetArguments">
+        <member name="M:GSF.TimeSeries.Reports.CompletenessReportingProcess.GetArguments">
             <summary>
             Gets the command line arguments for the reporting process.
             </summary>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetArguments(System.DateTime)">
+        <member name="M:GSF.TimeSeries.Reports.CompletenessReportingProcess.SetArguments(GSF.Console.Arguments)">
             <summary>
-            Gets the command line arguments for the reporting process for a given report date.
+            Applies any received command line arguments for the reporting process.
             </summary>
+            <param name="args">Received command line arguments.</param>
         </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.IsReportFileName(System.String)">
-            <summary>
-            Determines whether the given path is a path to a report, based on the file name.
-            </summary>
-        </member>
-        <member name="M:GSF.TimeSeries.CompletenessReportingProcess.GetProcessOwner(System.Int32)">
-            <summary>
-            Determines who is the owner of the given process.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.PersistSettings">
-            <summary>
-            Determines whether the object settings are to be persisted to the config file.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.SettingsCategory">
-            <summary>
-            Gets or sets the category name under which the object settings are persisted in the config file.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.ArchiveFilePath">
-            <summary>
-            Gets or sets the path to the archive file to which
-            the statistics required for reporting are archived.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.ReportLocation">
-            <summary>
-            Gets or sets the directory to which reports will be written.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.Title">
-            <summary>
-            Gets or sets the title to be displayed on reports.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.Company">
-            <summary>
-            Gets or sets the name of the company to be displayed on reports.
-            </summary>
-        </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.Level4Threshold">
+        <member name="P:GSF.TimeSeries.Reports.CompletenessReportingProcess.Level4Threshold">
             <summary>
             Gets or sets the minimum percentage of measurements received from devices in level 4.
             </summary>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.Level3Threshold">
+        <member name="P:GSF.TimeSeries.Reports.CompletenessReportingProcess.Level3Threshold">
             <summary>
             Gets or sets the minimum percentage of measurements received from devices in level 3.
             </summary>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.Level4Alias">
+        <member name="P:GSF.TimeSeries.Reports.CompletenessReportingProcess.Level4Alias">
             <summary>
             Gets or sets the alias for the level 4 category.
             </summary>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.Level3Alias">
+        <member name="P:GSF.TimeSeries.Reports.CompletenessReportingProcess.Level3Alias">
             <summary>
             Gets or sets the alias for the level 3 category.
             </summary>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.IdleReportLifetime">
+        <member name="P:GSF.TimeSeries.Reports.CompletenessReportingProcess.Status">
             <summary>
-            Gets or sets the minimum lifetime of a report
-            since the last time it was accessed, in days.
+            Gets the current status details about reporting process.
             </summary>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.EnableReportEmail">
+        <member name="T:GSF.TimeSeries.Reports.ReportingProcessCollection">
             <summary>
-            Gets or sets flag to enable e-mailing of reports.
+            Represents a collection of <see cref="T:GSF.TimeSeries.Reports.IReportingProcess"/> items.
             </summary>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.SmtpServer">
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessCollection.FindReportType(System.String)">
             <summary>
-            Gets or sets SMTP server to use when e-mailing reports.
+            Finds the <see cref="T:GSF.TimeSeries.Reports.IReportingProcess"/> for the specified <paramref name="reportType"/> name.
             </summary>
+            <param name="reportType">Name of the report type to find.</param>
+            <returns>
+            The <see cref="T:GSF.TimeSeries.Reports.IReportingProcess"/> for the specified <paramref name="reportType"/> name, if found;
+            otherwise, <c>null</c> if not found.
+            </returns>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.FromAddress">
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessCollection.InsertItem(System.Int32,GSF.TimeSeries.Reports.IReportingProcess)">
             <summary>
-            Gets or sets the "from" address to use when e-mailing reports.
+            Inserts an element into the <see cref="T:System.Collections.ObjectModel.Collection`1"/> at the specified index.
             </summary>
+            <param name="index">The zero-based index at which <paramref name="item"/> should be inserted.</param>
+            <param name="item">The object to insert. The value can be null for reference types.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="index"/> is less than zero. -or-
+            <paramref name="index"/> is greater than <see cref="P:System.Collections.ObjectModel.Collection`1.Count"/>.
+            </exception>
         </member>
-        <member name="P:GSF.TimeSeries.CompletenessReportingProcess.ToAddresses">
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessCollection.SetItem(System.Int32,GSF.TimeSeries.Reports.IReportingProcess)">
             <summary>
-            Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
+            Replaces the element at the specified index.
+            </summary>
+            <param name="index">The zero-based index of the element to replace.</param>
+            <param name="item">The new value for the element at the specified index. The value can be null for reference types.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="index"/> is less than zero. -or-
+            <paramref name="index"/> is greater than <see cref="P:System.Collections.ObjectModel.Collection`1.Count"/>.
+            </exception>
+        </member>
+        <member name="M:GSF.TimeSeries.Reports.ReportingProcessCollection.LoadImplementations(System.Action{System.Exception})">
+            <summary>
+            Loads available <see cref="T:GSF.TimeSeries.Reports.IReportingProcess"/> implementations.
+            </summary>
+            <param name="exceptionHandler">Exception handler, if any, to call when type creation fails; otherwise, if <c>null</c> any exceptions will be thrown.</param>
+            <returns>New collection of <see cref="T:GSF.TimeSeries.Reports.IReportingProcess"/> implementations.</returns>
+        </member>
+        <member name="P:GSF.TimeSeries.Reports.ReportingProcessCollection.Status">
+            <summary>
+            Gets the descriptive status of this <see cref="T:GSF.TimeSeries.Adapters.AdapterCollectionBase`1"/>.
             </summary>
         </member>
         <member name="T:GSF.TimeSeries.ServiceClientBase">
@@ -9171,7 +9387,7 @@
         </member>
         <member name="M:GSF.TimeSeries.ServiceHostBase.AuthenticateRequestHandler(GSF.ServiceProcess.ClientRequestInfo)">
             <summary>
-            Attempts to authenticate or reauthenticate to network shares.
+            Attempts to authenticate or re-authenticate to network shares.
             </summary>
             <param name="requestInfo"><see cref="T:GSF.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
         </member>
@@ -9209,7 +9425,7 @@
         </member>
         <member name="M:GSF.TimeSeries.ServiceHostBase.DisplayResponseMessage(GSF.ServiceProcess.ClientRequestInfo,System.String,System.Object[])">
             <summary>
-            Displays a response message to client requestor.
+            Displays a response message to client requester.
             </summary>
             <param name="requestInfo"><see cref="T:GSF.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
             <param name="status">Formatted status message to send to client.</param>

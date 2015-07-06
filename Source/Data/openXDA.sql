@@ -34,6 +34,15 @@ CREATE TABLE Setting
 )
 GO
 
+CREATE TABLE ConfigurationLoader
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    AssemblyName VARCHAR(200) NOT NULL,
+    TypeName VARCHAR(200) NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
 CREATE TABLE DataReader
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -161,7 +170,7 @@ GO
 CREATE TABLE MeasurementType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
+    Name VARCHAR(200) NOT NULL UNIQUE,
     Description VARCHAR(MAX) NULL
 )
 GO
@@ -169,7 +178,7 @@ GO
 CREATE TABLE MeasurementCharacteristic
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
+    Name VARCHAR(200) NOT NULL UNIQUE,
     Description VARCHAR(MAX) NULL,
     Display BIT NOT NULL DEFAULT 0
 )
@@ -178,7 +187,7 @@ GO
 CREATE TABLE Phase
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
+    Name VARCHAR(200) NOT NULL UNIQUE,
     Description VARCHAR(MAX) NULL
 )
 GO
@@ -222,7 +231,7 @@ GO
 CREATE TABLE SeriesType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
+    Name VARCHAR(200) NOT NULL UNIQUE,
     Description VARCHAR(MAX) NULL
 )
 GO
@@ -233,6 +242,14 @@ CREATE TABLE Series
     ChannelID INT NOT NULL REFERENCES Channel(ID),
     SeriesTypeID INT NOT NULL REFERENCES SeriesType(ID),
     SourceIndexes VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE BreakerChannel
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    BreakerNumber VARCHAR(120) NOT NULL
 )
 GO
 
@@ -353,6 +370,44 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_CycleData_EventID
 ON CycleData(EventID ASC)
+GO
+
+CREATE TABLE BreakerOperationType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE BreakerOperation
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    PhaseID INT NOT NULL REFERENCES Phase(ID),
+    BreakerOperationTypeID INT NOT NULL REFERENCES BreakerOperationType(ID),
+    BreakerNumber VARCHAR(120) NOT NULL,
+    TripCoilEnergized DATETIME2 NOT NULL,
+    StatusBitSet DATETIME2 NOT NULL,
+    APhaseCleared DATETIME2 NOT NULL,
+    BPhaseCleared DATETIME2 NOT NULL,
+    CPhaseCleared DATETIME2 NOT NULL,
+    BreakerTiming FLOAT NOT NULL,
+    APhaseBreakerTiming FLOAT NOT NULL,
+    BPhaseBreakerTiming FLOAT NOT NULL,
+    CPhaseBreakerTiming FLOAT NOT NULL,
+    BreakerSpeed FLOAT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_BreakerOperation_EventID
+ON BreakerOperation(EventID ASC)
+GO
+
+INSERT INTO BreakerOperationType(Name, Description) VALUES('Normal', 'Breaker operated normally')
+GO
+
+INSERT INTO BreakerOperationType(Name, Description) VALUES('Late', 'Breaker operated slowly')
 GO
 
 -- -------------- --
@@ -952,9 +1007,10 @@ SELECT
 							Algorithm,
 							SingleEndedDistance,
 							DoubleEndedDistance,
-							EventID,
 							EventStartTime,
-							EventEndTime
+							EventEndTime,
+							EventID,
+							FaultSummaryID AS FaultID
 						FROM SummaryData
 						WHERE FaultSummaryID IN
 						(
