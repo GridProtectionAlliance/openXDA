@@ -905,28 +905,24 @@ GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
 SELECT
-    LocalDistance.ID,
+    DoubleEndedFaultDistance.ID,
     FaultSummary.EventID,
     'DoubleEnded' AS Algorithm,
     FaultSummary.FaultNumber,
     FaultSummary.CalculationCycle,
-    (LocalDistance.Distance + (Line.Length - RemoteDistance.Distance)) / 2 AS Distance,
-    ABS(LocalDistance.Distance - (Line.Length - RemoteDistance.Distance)) / 2 AS Confidence,
+    DoubleEndedFaultDistance.Distance,
+    DoubleEndedFaultDistance.Angle,
     FaultSummary.CurrentMagnitude,
     FaultSummary.Inception,
     FaultSummary.DurationSeconds,
     FaultSummary.DurationCycles,
     FaultSummary.FaultType,
     1 AS IsSelectedAlgorithm,
-    LocalDistance.IsValid,
+    DoubleEndedFaultDistance.IsValid,
     FaultSummary.IsSuppressed
 FROM
-    DoubleEndedFaultDistance AS LocalDistance JOIN
-    DoubleEndedFaultDistance AS RemoteDistance ON LocalDistance.LocalFaultSummaryID = RemoteDistance.RemoteFaultSummaryID AND LocalDistance.RemoteFaultSummaryID = RemoteDistance.LocalFaultSummaryID JOIN
-    FaultSummary ON LocalDistance.LocalFaultSummaryID = FaultSummary.ID AND FaultSummary.IsSelectedAlgorithm <> 0 JOIN
-    Event ON FaultSummary.EventID = Event.ID JOIN
-    Line ON Event.LineID = Line.ID
-WHERE LocalDistance.Distance < RemoteDistance.Distance
+    DoubleEndedFaultDistance JOIN
+    FaultSummary ON DoubleEndedFaultDistance.LocalFaultSummaryID = FaultSummary.ID AND FaultSummary.IsSelectedAlgorithm <> 0
 GO
 
 CREATE VIEW EventDetail AS
