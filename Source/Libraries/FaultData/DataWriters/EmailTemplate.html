@@ -49,6 +49,24 @@
                             <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a href="http://pqdashboard/">click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
+                    
+                    <tr>
+                        <td>&amp;nbsp;</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Line:</td>
+                        <td>
+                            <xsl:choose>
+                                <xsl:when test="count($deDistance) &gt; 0">
+                                    <xsl:value-of select="$deDistance[1]/../LineName" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="/EventDetail/Line/LineName" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </td>
+                    </tr>
                 </table>
 
                 <xsl:choose>
@@ -143,7 +161,7 @@
                     (LLL,LLLG,LL,LLG)
                 </th>
                 <td>
-                    <pre><format type="System.Double" spec="0.####"><xsl:value-of select="number(/EventDetail/Line/Z1)" /></format>&amp;ang;<format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/A1" /></format>&amp;deg;<br /><format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/R1" /></format>+j<format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/X1" /></format></pre>
+                    <pre><format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/Z1" /></format>&amp;ang;<format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/A1" /></format>&amp;deg;<br /><format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/R1" /></format>+j<format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/X1" /></format></pre>
                 </td>
                 <td>
                     <pre><format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/Z1 div /EventDetail/Line/Length" /></format>&amp;ang;<format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/A1" /></format>&amp;deg;<br /><format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/R1 div /EventDetail/Line/Length" /></format>+j<format type="System.Double" spec="0.####"><xsl:value-of select="/EventDetail/Line/Z1 div /EventDetail/Line/Length" /></format></pre>
