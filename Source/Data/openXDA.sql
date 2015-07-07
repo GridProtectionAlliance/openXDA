@@ -410,6 +410,9 @@ GO
 INSERT INTO BreakerOperationType(Name, Description) VALUES('Late', 'Breaker operated slowly')
 GO
 
+INSERT INTO BreakerOperationType(Name, Description) VALUES('Indeterminate', 'Breaker operation type could not be determined')
+GO
+
 -- -------------- --
 -- Fault Location --
 -- -------------- --
