@@ -916,6 +916,10 @@ namespace FaultData.DataResources
                 if (validSummaries.Any())
                     validSummaries[validSummaries.Count / 2].IsSelectedAlgorithm = true;
             }
+            else
+            {
+                fault.IsSuppressed = true;
+            }
         }
 
         private bool IsValid(double faultDistance, DataGroup dataGroup)

@@ -119,6 +119,11 @@ namespace FaultData.Database
                 // Create the temp table where data will be loaded directly
                 tempTableName = CreateTempTable(table, command);
 
+                // Create mappings for the column names in case the order of
+                // columns in the database differs from the in-memory data table
+                foreach (DataColumn column in table.Columns)
+                    bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+
                 // Bulk load the data to the temp table
                 bulkCopy.DestinationTableName = tempTableName;
                 bulkCopy.WriteToServer(table);

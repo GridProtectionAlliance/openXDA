@@ -185,7 +185,6 @@ namespace FaultData.DataWriters
         private static readonly HashSet<int> QueuedEventIDs;
         private static readonly ProcessQueue<Action> ProcessQueue;
 
-        private static bool s_initialized;
         private static string s_smtpServer;
         private static string s_fromAddress;
         private static string s_emailTemplate;
@@ -208,12 +207,18 @@ namespace FaultData.DataWriters
         // Static Methods
         private static void Initialize(EmailWriter writer)
         {
-            if (s_initialized)
-                return;
+            bool configurationChanged =
+                s_timeTolerance != writer.TimeTolerance ||
+                s_smtpServer != writer.SMTPServer ||
+                s_fromAddress != writer.FromAddress ||
+                s_emailTemplate != writer.EmailTemplate ||
+                s_waitPeriod != TimeSpan.FromSeconds(writer.WaitPeriod) ||
+                s_timeZone.Id != writer.XDATimeZone;
 
-            ProcessQueue.Add(() =>
+
+            if (configurationChanged)
             {
-                if (!s_initialized)
+                ProcessQueue.Add(() =>
                 {
                     s_timeTolerance = writer.TimeTolerance;
                     s_smtpServer = writer.SMTPServer;
@@ -221,14 +226,24 @@ namespace FaultData.DataWriters
                     s_emailTemplate = writer.EmailTemplate;
                     s_waitPeriod = TimeSpan.FromSeconds(writer.WaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
-                    s_dbAdapterContainer = new DbAdapterContainer(writer.DbConnectionString);
-                    s_initialized = true;
-                }
-            });
+                });
+            }
+
+            if ((object)s_dbAdapterContainer == null)
+            {
+                ProcessQueue.Add(() =>
+                {
+                    if ((object)s_dbAdapterContainer == null)
+                        s_dbAdapterContainer = new DbAdapterContainer(writer.DbConnectionString);
+                });
+            }
         }
 
         private static void QueueEventID(int eventID)
         {
+            if (string.IsNullOrEmpty(s_smtpServer))
+                return;
+
             ProcessQueue.Add(() =>
             {
                 ManualResetEvent waitHandle;
