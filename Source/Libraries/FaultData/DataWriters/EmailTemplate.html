@@ -62,7 +62,7 @@
                                     <xsl:value-of select="$deDistance[1]/../LineName" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
                                 </xsl:when>
                                 <xsl:otherwise>
-                                    <xsl:value-of select="/EventDetail/Line/LineName" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
+                                    <xsl:value-of select="/EventDetail/Line/Name" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
                                 </xsl:otherwise>
                             </xsl:choose>
                         </td>
