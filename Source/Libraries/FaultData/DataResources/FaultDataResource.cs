@@ -870,7 +870,7 @@ namespace FaultData.DataResources
             fault.Duration = endTime - startTime;
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
-            fault.IsSuppressed = fault.PostfaultCurrent > m_openBreakerThreshold;
+            fault.IsSuppressed = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup) > m_openBreakerThreshold;
 
             if (fault.Segments.Any())
             {
@@ -952,6 +952,19 @@ namespace FaultData.DataResources
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
             double ic = viCycleDataGroup.IC.RMS.ToSubSeries(start, end).Minimum;
+
+            return Common.Min(ia, ib, ic);
+        }
+
+        private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / Frequency);
+            int start = fault.EndSample + 1;
+            int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+
+            double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
+            double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
+            double ic = viCycleDataGroup.IC.Peak.ToSubSeries(start, end).Minimum;
 
             return Common.Min(ia, ib, ic);
         }

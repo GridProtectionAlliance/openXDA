@@ -429,7 +429,7 @@ namespace openXDA.Configuration
         /// at which the breaker can be considered open.
         /// </summary>
         [Setting]
-        [DefaultValue(50.0D)]
+        [DefaultValue(20.0D)]
         public double OpenBreakerThreshold
         {
             get
