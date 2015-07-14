@@ -985,6 +985,7 @@ SummaryData AS
 		SelectedSummary.Algorithm,
 		SelectedSummary.Distance AS SingleEndedDistance,
 		DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
+        DoubleEndedFaultSummary.Angle AS DoubleEndedAngle,
 		SelectedSummary.EventID,
 		Event.StartTime AS EventStartTime,
 		Event.EndTime AS EventEndTime
@@ -1033,6 +1034,7 @@ SELECT
 							Algorithm,
 							SingleEndedDistance,
 							DoubleEndedDistance,
+                            DoubleEndedAngle,
 							EventStartTime,
 							EventEndTime,
 							EventID,
