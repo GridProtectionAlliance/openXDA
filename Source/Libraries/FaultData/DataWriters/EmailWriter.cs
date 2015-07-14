@@ -53,7 +53,6 @@ namespace FaultData.DataWriters
         private string m_dbConnectionString;
         private string m_smtpServer;
         private string m_fromAddress;
-        private string m_emailTemplate;
         private double m_timeTolerance;
         private double m_waitPeriod;
         private string m_xdaTimeZone;
@@ -96,18 +95,6 @@ namespace FaultData.DataWriters
             set
             {
                 m_fromAddress = value;
-            }
-        }
-
-        public string EmailTemplate
-        {
-            get
-            {
-                return m_emailTemplate;
-            }
-            set
-            {
-                m_emailTemplate = value;
             }
         }
 
