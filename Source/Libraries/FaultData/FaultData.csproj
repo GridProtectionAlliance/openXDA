@@ -98,6 +98,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FaultLocationData.xsd</DependentUpon>
     </Compile>
+    <Compile Include="Database\FaultLocationInfo.cs">
+      <DependentUpon>FaultLocationInfo.dbml</DependentUpon>
+    </Compile>
     <Compile Include="Database\FaultLocationInfo.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

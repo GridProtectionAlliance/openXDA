@@ -46,53 +46,28 @@
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">DFRs:</xsl:if></td>
-                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a href="http://pqdashboard/">click for waveform</a>)</td>
+                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a href="http://nadal/GTCDashboard/openSeeStack.aspx?eventid=227783"><xsl:attribute name="href">http://nadal/GTCDashboard/openSeeStack.aspx?eventid=<xsl:value-of select="EventID" /></xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
                     
                     <tr>
                         <td>&amp;nbsp;</td>
+                        <td>&amp;nbsp;</td>
                     </tr>
                     
                     <tr>
                         <td>Line:</td>
-                        <td>
-                            <xsl:choose>
-                                <xsl:when test="count($deDistance) &gt; 0">
-                                    <xsl:value-of select="$deDistance[1]/../LineName" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
-                                </xsl:when>
-                                <xsl:otherwise>
-                                    <xsl:value-of select="/EventDetail/Line/Name" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)
-                                </xsl:otherwise>
-                            </xsl:choose>
-                        </td>
+                        <td><xsl:value-of select="/EventDetail/Line/Name" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)</td>
                     </tr>
                 </table>
-
-                <xsl:choose>
-                    <xsl:when test="count($deDistance) &gt; 0">
-                        <p>
-                            The double-ended fault distance is from <xsl:value-of select="$deDistance[1]/../StationName" /> with the event times shown below as recorded by the meter at <xsl:value-of select="$deDistance[1]/../StationName" />.
-                            The <xsl:value-of select="$deDistance[1]/../LineName" /> line (<xsl:value-of select="/EventDetail/Line/AssetKey" />) has a length of <format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles.
-                            The time tolerance used to assume that both meters detected the same fault(s) is <format type="System.Double" spec="0.000"><xsl:value-of select="/EventDetail/Settings/TimeTolerance" /></format> seconds.
-                        </p>
-                        
-                        <p>
-                            Double-ended distance: <span style="font-weight: bold"><format type="System.Double" spec="0.000"><xsl:value-of select="SummaryData/DoubleEndedDistance" /></format> miles</span> from <xsl:value-of select="$deDistance[1]/../StationName" />
-                        </p>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <p>
-                            The <xsl:value-of select="/EventDetail/Line/Name" /> line (<xsl:value-of select="/EventDetail/Line/AssetKey" />) has a length of <format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles.
-                        </p>
-                    </xsl:otherwise>
-                </xsl:choose>
+                
+                <br />
                 
                 <table class="left">
                     <tr>
                         <td style="border: 0"></td>
                         <xsl:for-each select="SummaryData">
-                            <td style="text-align: center">Meter <xsl:value-of select="MeterKey" /></td>
+                            <td style="text-align: center"><xsl:value-of select="StationName" /> - <xsl:value-of select="MeterKey" /></td>
                         </xsl:for-each>
                     </tr>
                     <tr>
@@ -131,6 +106,28 @@
                             <td><format type="System.Double" spec="0.000"><xsl:value-of select="SingleEndedDistance" /></format> miles</td>
                         </xsl:for-each>
                     </tr>
+                    <xsl:if test="count($deDistance) &gt; 0">
+                        <tr>
+                            <td style="border: 0; text-align: right">Double-ended Distance:</td>
+                            <xsl:for-each select="SummaryData">
+                                <td>
+                                    <xsl:if test="DoubleEndedDistance">
+                                        <format type="System.Double" spec="0.000"><xsl:value-of select="DoubleEndedDistance" /></format> miles
+                                    </xsl:if>
+                                </td>
+                            </xsl:for-each>
+                        </tr>
+                        <tr>
+                            <td style="border: 0; text-align: right">Double-ended Angle:</td>
+                            <xsl:for-each select="SummaryData">
+                                <td>
+                                    <xsl:if test="DoubleEndedDistance">
+                                        <format type="System.Double" spec="0.000"><xsl:value-of select="DoubleEndedAngle" /></format>&amp;deg;
+                                    </xsl:if>
+                                </td>
+                            </xsl:for-each>
+                        </tr>
+                    </xsl:if>
                     <tr>
                         <td style="border: 0; text-align: right">openXDA Event ID:</td>
                         <xsl:for-each select="SummaryData">

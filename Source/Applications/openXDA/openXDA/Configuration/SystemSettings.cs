@@ -582,23 +582,6 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the template used for sending emails to email recipients.
-        /// </summary>
-        [Setting]
-        [DefaultValue(null)]
-        public string EmailTemplate
-        {
-            get
-            {
-                return m_emailTemplate;
-            }
-            set
-            {
-                m_emailTemplate = value ?? GetDefaultEmailTemplate();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the URL of the PQ Dashboard.
         /// </summary>
         [Setting]

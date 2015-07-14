@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?><Database Name="MeterDB" Class="FaultLocationInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="openXDA" Class="FaultLocationInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
   <Connection Mode="AppSettings" ConnectionString="Data Source=localhost\SQLEXPRESS;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.SegmentType" Member="SegmentTypes">
     <Type Name="SegmentType">
@@ -53,6 +53,21 @@
       <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="MethodName" Type="System.String" DbType="VarChar(80) NOT NULL" CanBeNull="false" />
       <Column Name="ExecutionOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultEmailTemplate" Member="FaultEmailTemplates">
+    <Type Name="FaultEmailTemplate">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Template" Type="System.String" DbType="VarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Association Name="FaultEmailTemplate_FaultEmailTemplateRecipient" Member="FaultEmailTemplateRecipients" ThisKey="ID" OtherKey="FaultEmailTemplateID" Type="FaultEmailTemplateRecipient" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultEmailTemplateRecipient" Member="FaultEmailTemplateRecipients">
+    <Type Name="FaultEmailTemplateRecipient">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="RecipientID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="FaultEmailTemplateID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="FaultEmailTemplate_FaultEmailTemplateRecipient" Member="FaultEmailTemplate" ThisKey="FaultEmailTemplateID" OtherKey="ID" Type="FaultEmailTemplate" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

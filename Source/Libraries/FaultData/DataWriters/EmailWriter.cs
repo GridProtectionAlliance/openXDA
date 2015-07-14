@@ -187,7 +187,6 @@ namespace FaultData.DataWriters
 
         private static string s_smtpServer;
         private static string s_fromAddress;
-        private static string s_emailTemplate;
         private static double s_timeTolerance;
         private static TimeSpan s_waitPeriod;
         private static TimeZoneInfo s_timeZone;
@@ -211,7 +210,6 @@ namespace FaultData.DataWriters
                 s_timeTolerance != writer.TimeTolerance ||
                 s_smtpServer != writer.SMTPServer ||
                 s_fromAddress != writer.FromAddress ||
-                s_emailTemplate != writer.EmailTemplate ||
                 s_waitPeriod != TimeSpan.FromSeconds(writer.WaitPeriod) ||
                 s_timeZone.Id != writer.XDATimeZone;
 
@@ -223,7 +221,6 @@ namespace FaultData.DataWriters
                     s_timeTolerance = writer.TimeTolerance;
                     s_smtpServer = writer.SMTPServer;
                     s_fromAddress = writer.FromAddress;
-                    s_emailTemplate = writer.EmailTemplate;
                     s_waitPeriod = TimeSpan.FromSeconds(writer.WaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
                 });
@@ -285,6 +282,8 @@ namespace FaultData.DataWriters
 
         private static void GenerateEmail(int eventID)
         {
+            SystemInfoDataContext systemInfo;
+            FaultLocationInfoDataContext faultInfo;
             Dictionary<int, ChartGenerator> generators;
 
             string eventDetail;
@@ -299,81 +298,90 @@ namespace FaultData.DataWriters
             string subject;
             string html;
 
+            systemInfo = s_dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
+            faultInfo = s_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
             eventDetail = s_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetEventDetail(eventID);
 
-            using (StringReader templateReader = new StringReader(s_emailTemplate))
-            using (StringReader dataReader = new StringReader(eventDetail))
-            using (XmlReader xmlTemplateReader = XmlReader.Create(templateReader))
-            using (XmlReader xmlDataReader = XmlReader.Create(dataReader))
-            using (StringWriter transformWriter = new StringWriter())
+            foreach (FaultEmailTemplate template in faultInfo.FaultEmailTemplates)
             {
-                transform = new XslCompiledTransform();
-                transform.Load(xmlTemplateReader);
-                transform.Transform(xmlDataReader, null, transformWriter);
-                htmlDocument = XDocument.Parse(transformWriter.ToString(), LoadOptions.PreserveWhitespace);
-            }
+                recipients = template.GetRecipients(systemInfo.Recipients);
 
-            formatParents = htmlDocument
-                .Descendants("format")
-                .Select(element => element.Parent)
-                .Distinct()
-                .ToList();
+                if (recipients.Count == 0)
+                    continue;
 
-            foreach (XElement parent in formatParents)
-                parent.ReplaceNodes(parent.Nodes().Select(Format));
-
-            chartElements = htmlDocument
-                .Descendants("chart")
-                .ToList();
-
-            for (int i = 0; i < chartElements.Count; i++)
-                chartElements[i].SetAttributeValue("cid", string.Format("chart{0:00}.png", i));
-
-            chartParents = chartElements
-                .Select(element => element.Parent)
-                .Distinct()
-                .ToList();
-
-            generators = new Dictionary<int, ChartGenerator>();
-
-            foreach (XElement parent in chartParents)
-                parent.ReplaceNodes(parent.Nodes().Select(ToImageElement));
-
-            recipients = s_dbAdapterContainer.GetAdapter<SystemInfoDataContext>().Recipients.ToList();
-            subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
-            html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
-            attachments = null;
-
-            try
-            {
-                attachments = chartElements
-                    .Select(element =>
-                    {
-                        int chartEvent = Convert.ToInt32((string)element.Attribute("eventID"));
-                        ChartGenerator generator = generators.GetOrAdd(chartEvent, id => new ChartGenerator(s_dbAdapterContainer, id));
-
-                        Stream image;
-                        Attachment attachment;
-
-                        using (Chart chart = GenerateChart(generator, element))
-                        {
-                            image = ConvertToImage(chart, ChartImageFormat.Png);
-                            attachment = new Attachment(image, (string)element.Attribute("cid"));
-                            attachment.ContentId = attachment.Name;
-                            return attachment;
-                        }
-                    })
-                    .ToArray();
-
-                SendEmail(recipients, subject, html, attachments);
-                LoadEmail(eventID, recipients, subject, html);
-            }
-            finally
-            {
-                if ((object)attachments != null)
+                using (StringReader templateReader = new StringReader(template.Template))
+                using (StringReader dataReader = new StringReader(eventDetail))
+                using (XmlReader xmlTemplateReader = XmlReader.Create(templateReader))
+                using (XmlReader xmlDataReader = XmlReader.Create(dataReader))
+                using (StringWriter transformWriter = new StringWriter())
                 {
-                    foreach (Attachment attachment in attachments)
-                        attachment.Dispose();
+                    transform = new XslCompiledTransform();
+                    transform.Load(xmlTemplateReader);
+                    transform.Transform(xmlDataReader, null, transformWriter);
+                    htmlDocument = XDocument.Parse(transformWriter.ToString(), LoadOptions.PreserveWhitespace);
+                }
+
+                formatParents = htmlDocument
+                    .Descendants("format")
+                    .Select(element => element.Parent)
+                    .Distinct()
+                    .ToList();
+
+                foreach (XElement parent in formatParents)
+                    parent.ReplaceNodes(parent.Nodes().Select(Format));
+
+                chartElements = htmlDocument
+                    .Descendants("chart")
+                    .ToList();
+
+                for (int i = 0; i < chartElements.Count; i++)
+                    chartElements[i].SetAttributeValue("cid", string.Format("chart{0:00}.png", i));
+
+                chartParents = chartElements
+                    .Select(element => element.Parent)
+                    .Distinct()
+                    .ToList();
+
+                generators = new Dictionary<int, ChartGenerator>();
+
+                foreach (XElement parent in chartParents)
+                    parent.ReplaceNodes(parent.Nodes().Select(ToImageElement));
+
+                subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
+                html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
+                attachments = null;
+
+                try
+                {
+                    attachments = chartElements
+                        .Select(element =>
+                        {
+                            int chartEvent = Convert.ToInt32((string)element.Attribute("eventID"));
+                            ChartGenerator generator = generators.GetOrAdd(chartEvent, id => new ChartGenerator(s_dbAdapterContainer, id));
+
+                            Stream image;
+                            Attachment attachment;
+
+                            using (Chart chart = GenerateChart(generator, element))
+                            {
+                                image = ConvertToImage(chart, ChartImageFormat.Png);
+                                attachment = new Attachment(image, (string)element.Attribute("cid"));
+                                attachment.ContentId = attachment.Name;
+                                return attachment;
+                            }
+                        })
+                        .ToArray();
+
+                    SendEmail(recipients, subject, html, attachments);
+                    LoadEmail(eventID, recipients, subject, html);
+                }
+                finally
+                {
+                    if ((object)attachments != null)
+                    {
+                        foreach (Attachment attachment in attachments)
+                            attachment.Dispose();
+                    }
                 }
             }
         }

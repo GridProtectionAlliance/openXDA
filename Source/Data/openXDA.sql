@@ -93,6 +93,10 @@ CREATE TABLE DataFile
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_DataFile_FileGroupID
+ON DataFile(FileGroupID ASC)
+GO
+
 CREATE TABLE MeterLocation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -536,6 +540,29 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_DoubleEndedFaultDistance_RemoteFaultSummaryID
 ON DoubleEndedFaultDistance(RemoteFaultSummaryID ASC)
+GO
+
+CREATE TABLE FaultEmailTemplate
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Template VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE FaultEmailTemplateRecipient
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    RecipientID INT NOT NULL REFERENCES Recipient(ID),
+    FaultEmailTemplateID INT NOT NULL REFERENCES FaultEmailTemplate(ID)
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultEmailTemplateRecipient_RecipientID
+ON FaultEmailTemplateRecipient(RecipientID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultEmailTemplateRecipient_FaultEmailTemplateID
+ON FaultEmailTemplateRecipient(FaultEmailTemplateID ASC)
 GO
 
 CREATE TABLE FaultEmail
