@@ -36,6 +36,7 @@ using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataSets;
+using GSF;
 using GSF.Collections;
 using log4net;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
@@ -230,20 +231,26 @@ namespace FaultData.DataWriters
 
             ProcessQueue.Add(() =>
             {
+                EventArgs<RegisteredWaitHandle> args;
                 ManualResetEvent waitHandle;
                 WaitOrTimerCallback callback;
 
+                args = new EventArgs<RegisteredWaitHandle>(null);
                 waitHandle = new ManualResetEvent(false);
 
                 callback = (state, timedOut) =>
                 {
-                    waitHandle.Dispose();
                     DequeueEventID(eventID);
+
+                    if ((object)args.Argument != null)
+                        args.Argument.Unregister(null);
+
+                    waitHandle.Dispose();
                 };
 
                 QueuedEventIDs.Add(eventID);
 
-                ThreadPool.RegisterWaitForSingleObject(waitHandle, callback, null, s_waitPeriod, true);
+                args.Argument = ThreadPool.RegisterWaitForSingleObject(waitHandle, callback, null, s_waitPeriod, true);
             });
         }
 
