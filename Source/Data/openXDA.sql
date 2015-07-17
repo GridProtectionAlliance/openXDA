@@ -885,8 +885,28 @@ CREATE FUNCTION AdjustDateTime2
 )
 RETURNS DATETIME2
 BEGIN
-    DECLARE @adjustedDateTime DATETIME2 = DATEADD(SECOND, @timeTolerance, @dateTime2)
-	RETURN DATEADD(NANOSECOND, (@timeTolerance - ROUND(@timeTolerance, 0, 1)) * 1000000000, @adjustedDateTime)
+	DECLARE @adjustSecond INT = @timeTolerance
+	DECLARE @adjustNanosecond INT = (@timeTolerance - ROUND(@timeTolerance, 0, 1)) * 1000000000
+	
+	DECLARE @adjustedDateTime DATETIME2
+	DECLARE @dateTimeLimit DATETIME2
+	DECLARE @adjustedDateTimeLimit DATETIME2
+
+	SELECT @dateTimeLimit =
+		CASE WHEN @timeTolerance < 0.0 THEN '0001-01-01'
+			 ELSE '9999-12-31 23:59:59.9999999'
+		END
+		
+	SET @adjustedDateTimeLimit = DATEADD(SECOND, -@adjustSecond, @dateTimeLimit)
+	SET @adjustedDateTimeLimit = DATEADD(NANOSECOND, -@adjustNanosecond, @dateTimeLimit)
+
+	SELECT @adjustedDateTime =
+		CASE WHEN @timeTolerance < 0.0 AND @dateTime2 <= @adjustedDateTimeLimit THEN @dateTimeLimit
+			 WHEN @timeTolerance > 0.0 AND @dateTime2 >= @adjustedDateTimeLimit THEN @dateTimeLimit
+			 ELSE DATEADD(NANOSECOND, @adjustNanosecond, DATEADD(SECOND, @adjustSecond, @dateTime2))
+		END
+
+	RETURN @adjustedDateTime
 END
 GO
 
