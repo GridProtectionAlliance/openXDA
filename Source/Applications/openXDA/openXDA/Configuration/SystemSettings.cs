@@ -53,6 +53,7 @@ namespace openXDA.Configuration
         private string m_xdaTimeZone;
         private double m_maxTimeOffset;
         private double m_minTimeOffset;
+        private double m_maxFileDuration;
         private double m_maxFileCreationTimeOffset;
 
         private double m_maxVoltage;
@@ -67,6 +68,7 @@ namespace openXDA.Configuration
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
+        private int m_fileWatcherBufferSize;
         private string m_fileShares;
 
         private string m_smtpServer;
@@ -315,6 +317,24 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
+        /// Gets or sets the maximum duration, in seconds,
+        /// of the files processed by openXDA.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.0D)]
+        public double MaxFileDuration
+        {
+            get
+            {
+                return m_maxFileDuration;
+            }
+            set
+            {
+                m_maxFileDuration = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the maximum number of hours prior to the current system time
         /// before the file creation time indicates that the data should not be processed.
         /// </summary>
@@ -515,6 +535,25 @@ namespace openXDA.Configuration
 
                 if (m_processingThreadCount <= 0)
                     m_processingThreadCount = Environment.ProcessorCount;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the
+        /// <see cref="FileSystemWatcher"/>s' internal buffers.
+        /// </summary>
+        /// <seealso cref="FileSystemWatcher.InternalBufferSize"/>
+        [Setting]
+        [DefaultValue(8192)]
+        public int FileWatcherBufferSize
+        {
+            get
+            {
+                return m_fileWatcherBufferSize;
+            }
+            set
+            {
+                m_fileWatcherBufferSize = value;
             }
         }
 

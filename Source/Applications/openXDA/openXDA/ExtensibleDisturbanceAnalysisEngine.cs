@@ -432,6 +432,7 @@ namespace openXDA
             if ((object)m_fileProcessor == null)
             {
                 m_fileProcessor = new FileProcessor(FileProcessorID);
+                m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.Filter = string.Join(Path.PathSeparator.ToString(), validExtensions);
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
@@ -682,6 +683,18 @@ namespace openXDA
 
                         // Commit changes to DataStartTime and DataEndTime
                         fileInfo.SubmitChanges();
+
+                        // Determine if the duration of the file is reasonable
+                        timeDifference = fileGroup.DataEndTime.Subtract(fileGroup.DataStartTime).TotalSeconds;
+
+                        if (m_systemSettings.MaxFileDuration > 0.0D && timeDifference > m_systemSettings.MaxFileDuration)
+                        {
+                            OnStatusMessage("Skipped file \"{0}\" because duration of the file ({1:0.##} seconds) is too long.", filePath, timeDifference);
+                            fileGroup = LoadFileGroup(fileInfo, filePath, xdaTimeZone);
+                            fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
+                            fileInfo.SubmitChanges();
+                            return;
+                        }
 
                         // Determine if the timestamps in the file are reasonable
                         timeDifference = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone).Subtract(dataStartTime).TotalHours;
