@@ -296,7 +296,7 @@ namespace FaultData.DataWriters
             faultInfo = s_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
             eventDetail = s_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetEventDetail(eventID);
 
-            foreach (FaultEmailTemplate template in faultInfo.FaultEmailTemplates)
+            foreach (FaultEmailTemplate template in faultInfo.FaultEmailTemplates.ToList())
             {
                 recipients = template.GetRecipients(systemInfo.Recipients);
 
