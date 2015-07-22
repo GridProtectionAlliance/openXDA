@@ -157,7 +157,7 @@ namespace FaultData.DataWriters
 
             foreach (FaultLocationData.FaultSummaryRow faultSummary in dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
             {
-                if (faultSummary.IsSelectedAlgorithm != 0 && faultSummary.IsSuppressed == 0)
+                if (faultSummary.IsSelectedAlgorithm != 0 && faultSummary.IsValid != 0 && faultSummary.IsSuppressed == 0)
                 {
                     if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultSummary.EventID) == 0)
                         QueueEventID(faultSummary.EventID);
