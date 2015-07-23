@@ -86,6 +86,7 @@ CREATE TABLE DataFile
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
     FilePath VARCHAR(MAX) NOT NULL,
+    FilePathHash INT NOT NULL,
     FileSize BIGINT NOT NULL,
     CreationTime DATETIME NOT NULL,
     LastWriteTime DATETIME NOT NULL,
@@ -95,6 +96,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_DataFile_FileGroupID
 ON DataFile(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
+ON DataFile(FilePathHash ASC)
 GO
 
 CREATE TABLE MeterLocation

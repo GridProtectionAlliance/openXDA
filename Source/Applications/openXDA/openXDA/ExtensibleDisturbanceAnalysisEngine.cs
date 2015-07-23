@@ -559,7 +559,7 @@ namespace openXDA
                 // Determine whether the file has already been processed
                 if (fileProcessorEventArgs.AlreadyProcessed)
                 {
-                    if (fileInfo.DataFiles.Any(dataFile => dataFile.FilePath == filePath && dataFile.FileGroup.ProcessingEndTime > DateTime.MinValue))
+                    if (fileInfo.DataFiles.Any(dataFile => dataFile.FilePathHash == filePath.GetHashCode() && dataFile.FilePath == filePath && dataFile.FileGroup.ProcessingEndTime > DateTime.MinValue))
                     {
                         OnStatusMessage("Skipped file \"{0}\" because it has already been processed.", filePath);
                         return;
@@ -813,6 +813,7 @@ namespace openXDA
 
                 dataFile = new DataFile();
                 dataFile.FilePath = file;
+                dataFile.FilePathHash = file.GetHashCode();
                 dataFile.FileSize = fileInfo.Length;
                 dataFile.CreationTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.CreationTimeUtc, xdaTimeZone);
                 dataFile.LastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastWriteTimeUtc, xdaTimeZone);
