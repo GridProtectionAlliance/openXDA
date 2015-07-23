@@ -407,8 +407,9 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the multiplier applied to the line length to determine
-        /// the maximum value allowed for fault distance in the COMTRADE export.
+        /// Gets or sets the multiplier applied to the line
+        /// length to determine the maximum value allowed for
+        /// fault distance before the results are considered invalid.
         /// </summary>
         [Setting]
         [DefaultValue(1.05D)]
@@ -425,8 +426,9 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the multiplier applied to the line length to determine
-        /// the minimum value allowed for fault distance in the COMTRADE export.
+        /// Gets or sets the multiplier applied to the line
+        /// length to determine the minimum value allowed for
+        /// fault distance before the results are considered invalid.
         /// </summary>
         [Setting]
         [DefaultValue(-0.05D)]
