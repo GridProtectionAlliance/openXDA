@@ -46,7 +46,7 @@
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">DFRs:</xsl:if></td>
-                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a href="http://nadal/GTCDashboard/openSeeStack.aspx?eventid=227783"><xsl:attribute name="href">http://nadal/GTCDashboard/openSeeStack.aspx?eventid=<xsl:value-of select="EventID" /></xsl:attribute>click for waveform</a>)</td>
+                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/openSeeStack.aspx?eventid=<xsl:value-of select="EventID" /></xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
                     
