@@ -71,6 +71,7 @@ namespace FaultData.DataWriters
         {
             public string ResultsPath;
             public MeterDataSet MeterDataSet;
+            public TimeSpan TimeZoneOffset;
             public DataGroup DataGroup;
             public VICycleDataGroup VICycleDataGroup;
             public List<Fault> Faults;
@@ -86,6 +87,9 @@ namespace FaultData.DataWriters
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private string m_lengthUnits;
+
+        private string m_defaultMeterTimeZone;
+        private TimeZoneInfo m_xdaTimeZone;
 
         #endregion
 
@@ -150,6 +154,30 @@ namespace FaultData.DataWriters
             }
         }
 
+        public string DefaultMeterTimeZone
+        {
+            get
+            {
+                return m_defaultMeterTimeZone;
+            }
+            set
+            {
+                m_defaultMeterTimeZone = value;
+            }
+        }
+
+        public string XDATimeZone
+        {
+            get
+            {
+                return m_xdaTimeZone.Id;
+            }
+            set
+            {
+                m_xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -190,6 +218,7 @@ namespace FaultData.DataWriters
                     {
                         ResultsPath = Path.Combine(m_resultsPath, fileName),
                         MeterDataSet = meterDataSet,
+                        TimeZoneOffset = GetTimeZoneOffset(meterDataSet.Meter.TimeZone, dataGroup.StartTime),
                         DataGroup = dataGroup,
                         VICycleDataGroup = cycleDataResource.VICycleDataGroups[i],
                         Faults = faults,
@@ -276,7 +305,7 @@ namespace FaultData.DataWriters
             // If the original file is available, use data from the original file
             // in order to update the data to be written to the results files
             if ((object)originalFileParser != null)
-                FixCOMTRADEData(comtradeData, originalFileParser);
+                FixCOMTRADEData(comtradeData, originalFileParser, eventDataSet.TimeZoneOffset);
 
             // Write data to the header file
             WriteHeaderFile(eventDataSet, headerFilePath);
@@ -600,7 +629,7 @@ namespace FaultData.DataWriters
             return digitalChannelData;
         }
 
-        private void FixCOMTRADEData(COMTRADEData comtradeData, Parser parser)
+        private void FixCOMTRADEData(COMTRADEData comtradeData, Parser parser, TimeSpan timeZoneOffset)
         {
             // Function to convert a digital channel from the COMTRADE files to COMTRADEChannelData
             Func<DigitalChannel, int, COMTRADEChannelData> toChannelData = (digitalChannel, index) =>
@@ -640,7 +669,7 @@ namespace FaultData.DataWriters
                 {
                     channelData.Data.DataPoints.Add(new DataPoint()
                     {
-                        Time = parser.Timestamp,
+                        Time = parser.Timestamp + timeZoneOffset,
                         Value = parser.Values[analogChannels + channelData.OriginalChannelIndex]
                     });
                 }
@@ -745,6 +774,18 @@ namespace FaultData.DataWriters
                 units = string.Empty;
 
             return units;
+        }
+
+        private TimeSpan GetTimeZoneOffset(string meterTimeZoneID, DateTime startTime)
+        {
+            TimeZoneInfo meterTimeZone;
+
+            if (string.IsNullOrEmpty(meterTimeZoneID))
+                meterTimeZoneID = m_defaultMeterTimeZone;
+
+            meterTimeZone = TimeZoneInfo.FindSystemTimeZoneById(meterTimeZoneID);
+
+            return m_xdaTimeZone.GetUtcOffset(startTime) - meterTimeZone.GetUtcOffset(startTime);
         }
 
         #endregion
