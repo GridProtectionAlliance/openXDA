@@ -72,6 +72,7 @@ using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 using GSF;
 using GSF.Console;
 using GSF.IO;
@@ -90,6 +91,8 @@ namespace openXDA
         // Fields
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
+        private Thread m_startEngineThread;
+        private bool m_serviceStopping;
 
         #endregion
 
@@ -117,6 +120,10 @@ namespace openXDA
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
+            const int RetryDelay = 1000;
+            const int SleepTime = 200;
+            const int LoopCount = RetryDelay / SleepTime;
+
             ServiceHelperAppender serviceHelperAppender;
             RollingFileAppender fileAppender;
 
@@ -164,21 +171,66 @@ namespace openXDA
             m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
             m_serviceMonitors.Initialize();
 
-            // Set up fault location engine
+            // Set up the analysis engine
             m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
-            m_extensibleDisturbanceAnalysisEngine.Start();
+
+            // Set up separate thread to start the engine
+            m_startEngineThread = new Thread(() =>
+            {
+                while (!TryStartEngine())
+                {
+                    for (int i = 0; i < LoopCount; i++)
+                    {
+                        if (m_serviceStopping)
+                            return;
+
+                        Thread.Sleep(SleepTime);
+                    }
+                }
+            });
+
+            m_startEngineThread.Start();
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
         {
+            // If the start engine thread is still
+            // running, wait for it to stop
+            m_serviceStopping = true;
+            m_startEngineThread.Join();
+
             // Dispose of adapter loader for service monitors
             m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
             m_serviceMonitors.AdapterUnloaded -= ServiceMonitors_AdapterUnloaded;
             m_serviceMonitors.Dispose();
 
-            // Dispose of fault location engine
+            // Dispose of the analysis engine
             m_extensibleDisturbanceAnalysisEngine.Stop();
             m_extensibleDisturbanceAnalysisEngine.Dispose();
+        }
+
+        // Attempts to start the engine and logs startup errors.
+        private bool TryStartEngine()
+        {
+            try
+            {
+                // Start the analysis engine
+                m_extensibleDisturbanceAnalysisEngine.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the analysis engine
+                m_extensibleDisturbanceAnalysisEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start XDA engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
         }
 
         private void ServiceHeartbeatHandler(string s, object[] args)

@@ -436,10 +436,10 @@ namespace openXDA
                 m_fileProcessor.Filter = string.Join(Path.PathSeparator.ToString(), validExtensions);
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
-
-                foreach (string path in m_systemSettings.WatchDirectoryList)
-                    m_fileProcessor.AddTrackedDirectory(path);
             }
+
+            foreach (string path in m_systemSettings.WatchDirectoryList)
+                m_fileProcessor.AddTrackedDirectory(path);
         }
 
         /// <summary>
@@ -499,7 +499,8 @@ namespace openXDA
         /// </summary>
         public void Stop()
         {
-            m_fileProcessor.ClearTrackedDirectories();
+            if ((object)m_fileProcessor != null)
+                m_fileProcessor.ClearTrackedDirectories();
         }
 
         /// <summary>
