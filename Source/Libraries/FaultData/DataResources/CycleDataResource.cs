@@ -34,11 +34,8 @@ namespace FaultData.DataResources
     {
         #region [ Members ]
 
-        // Constants
-        // TODO: Hardcoded frequency
-        public const double Frequency = 60.0D;
-
         // Fields
+        private double m_systemFrequency;
         private List<DataGroup> m_dataGroups;
         private List<VIDataGroup> m_viDataGroups;
         private List<VICycleDataGroup> m_viCycleDataGroups;
@@ -46,6 +43,18 @@ namespace FaultData.DataResources
         #endregion
 
         #region [ Properties ]
+
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
 
         public List<DataGroup> DataGroups
         {
@@ -95,7 +104,7 @@ namespace FaultData.DataResources
             stopwatch.Start();
 
             m_viCycleDataGroups = m_viDataGroups
-                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, Frequency))
+                .Select(viDataGroup => Transform.ToVICycleDataGroup(viDataGroup, m_systemFrequency))
                 .ToList();
 
             Log.Debug(string.Format("Cycle data calculated in {0}.", stopwatch.Elapsed));

@@ -58,15 +58,18 @@ namespace FaultData.DataOperations
             private List<Tuple<EventKey, FaultLocationData.FaultCurveRow>> m_faultCurveList;
             private List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>> m_faultSummaryList;
 
+            private double m_systemFrequency;
+
             #endregion
 
             #region [ Constructors ]
 
-            public FaultSummarizer()
+            public FaultSummarizer(double systemFrequency)
             {
                 m_faultSegmentList = new List<Tuple<EventKey, FaultLocationData.FaultSegmentRow>>();
                 m_faultCurveList = new List<Tuple<EventKey, FaultLocationData.FaultCurveRow>>();
                 m_faultSummaryList = new List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>>();
+                m_systemFrequency = systemFrequency;
             }
 
             #endregion
@@ -188,7 +191,7 @@ namespace FaultData.DataOperations
                     faultSummaryRow.PostfaultCurrent = ToDbFloat(fault.PostfaultCurrent);
                     faultSummaryRow.Inception = fault.InceptionTime;
                     faultSummaryRow.DurationSeconds = durationSeconds;
-                    faultSummaryRow.DurationCycles = durationSeconds * Frequency;
+                    faultSummaryRow.DurationCycles = durationSeconds * m_systemFrequency;
                     faultSummaryRow.FaultType = fault.Type.ToString();
                     faultSummaryRow.IsSelectedAlgorithm = summary.IsSelectedAlgorithm ? 1 : 0;
                     faultSummaryRow.IsValid = summary.IsValid ? 1 : 0;
@@ -287,13 +290,26 @@ namespace FaultData.DataOperations
             #endregion
         }
 
-        // Constants
-        // TODO: Hardcoded frequency
-        private const double Frequency = 60.0D;
-
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
         private FaultSummarizer m_faultSummarizer;
+        private double m_systemFrequency;
+
+        #endregion
+
+        #region [ Properties ]
+
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
 
         #endregion
 
@@ -321,7 +337,7 @@ namespace FaultData.DataOperations
 
             Log.Info("Executing operation to load fault location data into the database...");
 
-            m_faultSummarizer = new FaultSummarizer();
+            m_faultSummarizer = new FaultSummarizer(m_systemFrequency);
             m_faultSummarizer.MeterDataSet = meterDataSet;
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)

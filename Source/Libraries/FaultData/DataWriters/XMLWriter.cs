@@ -50,14 +50,12 @@ namespace FaultData.DataWriters
         #region [ Members ]
 
         // Constants
-        // TODO: Hardcoded frequency
-        private const double Frequency = 60.0D;
-
         const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
         const string DoubleFormat = "0.####";
 
         // Fields
         private string m_resultsPath;
+        private double m_systemFrequency;
 
         #endregion
 
@@ -72,6 +70,18 @@ namespace FaultData.DataWriters
             set
             {
                 m_resultsPath = value;
+            }
+        }
+
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
             }
         }
 
@@ -183,7 +193,7 @@ namespace FaultData.DataWriters
                     ),
                     new XElement("duration",
                         new XElement("seconds", duration.ToString(DoubleFormat)),
-                        new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))
+                        new XElement("cycles", (duration * m_systemFrequency).ToString(DoubleFormat))
                     ),
                     GetSegmentElements(fault)
                 );
@@ -213,7 +223,7 @@ namespace FaultData.DataWriters
                     new XElement("index", segment.EndSample)),
                 new XElement("duration",
                     new XElement("seconds", duration.ToString(DoubleFormat)),
-                    new XElement("cycles", (duration * Frequency).ToString(DoubleFormat))));
+                    new XElement("cycles", (duration * m_systemFrequency).ToString(DoubleFormat))));
         }
 
         private static List<XElement> GetPathElements(FileGroup fileGroup)

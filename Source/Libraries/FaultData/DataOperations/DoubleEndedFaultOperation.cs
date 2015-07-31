@@ -63,10 +63,6 @@ namespace FaultData.DataOperations
         {
             #region [ Members ]
 
-            // Constants
-            // TODO: Hardcoded frequency
-            public const double Frequency = 60.0D;
-
             // Fields
             public FaultLocationData.FaultSummaryRow Fault;
             public VICycleDataGroup CycleDataGroup;
@@ -95,9 +91,9 @@ namespace FaultData.DataOperations
 
             #region [ Methods ]
 
-            public void Initialize(DbAdapterContainer dbAdapterContainer, VICycleDataGroup viCycleDataGroup)
+            public void Initialize(DbAdapterContainer dbAdapterContainer, VICycleDataGroup viCycleDataGroup, double systemFrequency)
             {
-                int samplesPerCycle = (int)Math.Round(viCycleDataGroup.VA.RMS.SampleRate / Frequency);
+                int samplesPerCycle = (int)Math.Round(viCycleDataGroup.VA.RMS.SampleRate / systemFrequency);
 
                 FaultSegment faultSegment = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().FaultSegments
                     .Where(segment => segment.EventID == Fault.EventID)
@@ -185,6 +181,7 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
+        private double m_systemFrequency;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private double m_timeTolerance;
@@ -209,6 +206,18 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
+
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
 
         public double MaxFaultDistanceMultiplier
         {
@@ -358,8 +367,8 @@ namespace FaultData.DataOperations
                         }
 
                         // Initialize the mappings with additional data needed for double-ended fault location
-                        mapping.Left.Initialize(m_dbAdapterContainer, leftCycleDataGroup);
-                        mapping.Right.Initialize(m_dbAdapterContainer, rightCycleDataGroup);
+                        mapping.Left.Initialize(m_dbAdapterContainer, leftCycleDataGroup, m_systemFrequency);
+                        mapping.Right.Initialize(m_dbAdapterContainer, rightCycleDataGroup, m_systemFrequency);
 
                         // Execute the double-ended fault location algorithm
                         ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);

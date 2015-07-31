@@ -78,12 +78,9 @@ namespace FaultData.DataWriters
             public List<OutputChannel> OutputChannels;
         }
 
-        // Constants
-        // TODO: Hardcoded frequency
-        private const double Frequency = 60.0D;
-
         // Fields
         private string m_resultsPath;
+        private double m_systemFrequency;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private string m_lengthUnits;
@@ -104,6 +101,18 @@ namespace FaultData.DataWriters
             set
             {
                 m_resultsPath = value;
+            }
+        }
+
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
             }
         }
 
@@ -373,7 +382,7 @@ namespace FaultData.DataWriters
                     writer.WriteLine("[{0}] Prominent fault type: {1}", faultNumber, fault.Type);
                     writer.WriteLine("[{0}]      Fault inception: {1} (sample #{2})", faultNumber, startTime.ToString(DateTimeFormat), startSample);
                     writer.WriteLine("[{0}]       Fault clearing: {1} (sample #{2})", faultNumber, endTime.ToString(DateTimeFormat), endSample);
-                    writer.WriteLine("[{0}]       Fault duration: {1:0.0000} seconds ({2:0.00} cycles)", faultNumber, duration, duration * Frequency);
+                    writer.WriteLine("[{0}]       Fault duration: {1:0.0000} seconds ({2:0.00} cycles)", faultNumber, duration, duration * m_systemFrequency);
                     writer.WriteLine();
                 }
             }

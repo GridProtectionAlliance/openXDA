@@ -56,6 +56,7 @@ namespace openXDA.Configuration
         private double m_maxFileDuration;
         private double m_maxFileCreationTimeOffset;
 
+        private double m_systemFrequency;
         private double m_maxVoltage;
         private double m_maxCurrent;
         private double m_prefaultTrigger;
@@ -349,6 +350,23 @@ namespace openXDA.Configuration
             set
             {
                 m_maxFileCreationTimeOffset = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the system frequency.
+        /// </summary>
+        [Setting]
+        [DefaultValue(60.0D)]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
             }
         }
 

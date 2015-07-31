@@ -133,21 +133,24 @@ namespace FaultData.DataOperations
             private CycleDataGroup m_cycleDataGroup;
             private XValue m_timeCleared;
             private double m_timing;
+            private double m_systemFrequency;
 
             #endregion
 
             #region [ Constructors ]
 
-            public PhaseTiming(DataSeries waveform, CycleDataGroup cycleDataGroup, BreakerTiming breakerTiming, double openBreakerThreshold)
+            public PhaseTiming(DataSeries waveform, CycleDataGroup cycleDataGroup, BreakerTiming breakerTiming, double systemFrequency, double openBreakerThreshold)
             {
                 m_waveform = waveform;
                 m_cycleDataGroup = cycleDataGroup;
                 m_timeCleared = FindBreakerOpen(breakerTiming.TimeEnergized.Index, openBreakerThreshold);
 
                 if ((object)m_timeCleared != null)
-                    m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * Frequency;
+                    m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
                 else
                     m_timing = double.NaN;
+
+                m_systemFrequency = systemFrequency;
             }
 
             #endregion
@@ -202,7 +205,7 @@ namespace FaultData.DataOperations
 
             private int FindIndexCleared(DataSeries waveform, int cycleIndex)
             {
-                int samplesPerCycle = (int)Math.Round(waveform.SampleRate / Frequency);
+                int samplesPerCycle = (int)Math.Round(waveform.SampleRate / m_systemFrequency);
                 int startIndex = cycleIndex - 1;
                 int endIndex = startIndex + samplesPerCycle - 1;
                 int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveform.DataPoints.Count - 1);
@@ -291,11 +294,8 @@ namespace FaultData.DataOperations
             }
         }
 
-        // Constants
-        // TODO: Hardcoded frequency
-        private const double Frequency = 60.0D;
-
         // Fields
+        private double m_systemFrequency;
         private double m_openBreakerThreshold;
         private double m_lateBreakerThreshold;
 
@@ -313,6 +313,18 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Properties ]
+
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
 
         public double OpenBreakerThreshold
         {
@@ -431,9 +443,9 @@ namespace FaultData.DataOperations
                 {
                     BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, breakerSpeed);
 
-                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_openBreakerThreshold);
-                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_openBreakerThreshold);
-                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_openBreakerThreshold);
+                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_systemFrequency, m_openBreakerThreshold);
+                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_openBreakerThreshold);
+                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_systemFrequency, m_openBreakerThreshold);
 
                     MeterData.BreakerOperationRow breakerOperationRow = GetBreakerOperationRow(breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
 
