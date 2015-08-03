@@ -558,9 +558,19 @@
             Indicates that an alarm is very important.
             </summary>
         </member>
+        <member name="F:GSF.TimeSeries.AlarmSeverity.Unreasonable">
+            <summary>
+            Indicates an alarm for a value that is unreasonable.
+            </summary>
+        </member>
         <member name="F:GSF.TimeSeries.AlarmSeverity.Critical">
             <summary>
             Indicates than an alarm signifies a dangerous situation.
+            </summary>
+        </member>
+        <member name="F:GSF.TimeSeries.AlarmSeverity.Latched">
+            <summary>
+            Indicates an alarm for a value that is latched, i.e., flat-lined.
             </summary>
         </member>
         <member name="F:GSF.TimeSeries.AlarmSeverity.Error">
@@ -6371,10 +6381,17 @@
         </member>
         <member name="M:GSF.TimeSeries.ServiceClientBase.ClientHelper_AuthenticationSuccess(System.Object,System.EventArgs)">
             <summary>
-            Client helper service update reception handler.
+            Client helper authentication success reception handler.
             </summary>
             <param name="sender">Sending object.</param>
-            <param name="e">Event argument containing update type and associated message data.</param>
+            <param name="e">Event argument.</param>
+        </member>
+        <member name="M:GSF.TimeSeries.ServiceClientBase.ClientHelper_AuthenticationFailure(System.Object,System.ComponentModel.CancelEventArgs)">
+            <summary>
+            Client helper authentication failure reception handler.
+            </summary>
+            <param name="sender">Sending object.</param>
+            <param name="e">Event argument.</param>
         </member>
         <member name="M:GSF.TimeSeries.ServiceClientBase.ClientHelper_ReceivedServiceUpdate(System.Object,GSF.EventArgs{GSF.UpdateType,System.String})">
             <summary>
@@ -7692,17 +7709,6 @@
             <summary>
             Sends response back to specified client with attached data.
             </summary>
-            <param name="clientID">ID of client to send response.</param>
-            <param name="response">Server response.</param>
-            <param name="command">In response to command.</param>
-            <param name="data">Data to return to client; null if none.</param>
-            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        </member>
-        <member name="M:GSF.TimeSeries.Transport.DataPublisher.SendClientResponse(GSF.IO.BlockAllocatedMemoryStream,System.Guid,GSF.TimeSeries.Transport.ServerResponse,GSF.TimeSeries.Transport.ServerCommand,System.Byte[])">
-            <summary>
-            Sends response back to specified client with attached data using specified working buffer.
-            </summary>
-            <param name="workingBuffer">Working buffer to use to assemble response, or <c>null</c> to have one created for you.</param>
             <param name="clientID">ID of client to send response.</param>
             <param name="response">Server response.</param>
             <param name="command">In response to command.</param>
