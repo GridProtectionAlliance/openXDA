@@ -150,6 +150,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CategorizedSetting.cs" />
     <Compile Include="Configuration\FileShare.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>

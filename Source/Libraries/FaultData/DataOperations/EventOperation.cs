@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using FaultData.DataAnalysis;
@@ -51,6 +52,7 @@ namespace FaultData.DataOperations
 
         #region [ Properties ]
 
+        [Setting]
         public string XDATimeZone
         {
             get

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
@@ -61,6 +62,7 @@ namespace FaultData.DataResources
 
         #region [ Properties ]
 
+        [Setting]
         public double TimeTolerance
         {
             get

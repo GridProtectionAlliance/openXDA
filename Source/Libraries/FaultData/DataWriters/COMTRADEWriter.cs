@@ -23,15 +23,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
 using FaultAlgorithms;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.COMTRADE;
 using GSF.IO;
 
@@ -81,17 +85,25 @@ namespace FaultData.DataWriters
         // Fields
         private string m_resultsPath;
         private double m_systemFrequency;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
         private string m_lengthUnits;
-
         private string m_defaultMeterTimeZone;
         private TimeZoneInfo m_xdaTimeZone;
+        private FaultLocationSettings m_faultLocationSettings;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public COMTRADEWriter()
+        {
+            m_faultLocationSettings = new FaultLocationSettings();
+        }
 
         #endregion
 
         #region [ Properties ]
 
+        [Setting]
         public string ResultsPath
         {
             get
@@ -104,6 +116,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public double SystemFrequency
         {
             get
@@ -117,40 +130,9 @@ namespace FaultData.DataWriters
         }
 
         /// <summary>
-        /// Gets or sets the multiplier used to determine the
-        /// maximum valid fault distance based on the line length.
-        /// </summary>
-        public double MaxFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the multiplier used to determine the
-        /// minimum valid fault distance based on the line length.
-        /// </summary>
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the unit of measure for length used by the fault location system.
         /// </summary>
+        [Setting]
         public string LengthUnits
         {
             get
@@ -163,6 +145,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public string DefaultMeterTimeZone
         {
             get
@@ -175,6 +158,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public string XDATimeZone
         {
             get
@@ -184,6 +168,16 @@ namespace FaultData.DataWriters
             set
             {
                 m_xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
+            }
+        }
+
+        [Category]
+        [SettingName("FaultLocation")]
+        public FaultLocationSettings FaultLocationSettings
+        {
+            get
+            {
+                return m_faultLocationSettings;
             }
         }
 
@@ -516,8 +510,8 @@ namespace FaultData.DataWriters
             string algorithm;
             DataSeries faultCurve;
 
-            maxDistance = dataGroup.Line.Length * m_maxFaultDistanceMultiplier;
-            minDistance = dataGroup.Line.Length * m_minFaultDistanceMultiplier;
+            maxDistance = dataGroup.Line.Length * m_faultLocationSettings.MaxFaultDistanceMultiplier;
+            minDistance = dataGroup.Line.Length * m_faultLocationSettings.MinFaultDistanceMultiplier;
             faultCurves = new List<Tuple<string, DataSeries>>();
 
             for (int c = 0; c < faults[0].Curves.Count; c++)

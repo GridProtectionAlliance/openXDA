@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
@@ -299,6 +300,7 @@ namespace FaultData.DataOperations
 
         #region [ Properties ]
 
+        [Setting]
         public double SystemFrequency
         {
             get

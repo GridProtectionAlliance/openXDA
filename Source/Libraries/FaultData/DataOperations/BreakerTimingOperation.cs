@@ -23,13 +23,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.Data;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
@@ -296,8 +300,7 @@ namespace FaultData.DataOperations
 
         // Fields
         private double m_systemFrequency;
-        private double m_openBreakerThreshold;
-        private double m_lateBreakerThreshold;
+        private BreakerSettings m_breakerSettings;
 
         private DbAdapterContainer m_dbAdapterContainer;
         private MeterDataSet m_meterDataSet;
@@ -310,10 +313,16 @@ namespace FaultData.DataOperations
 
         #region [ Constructors ]
 
+        public BreakerTimingOperation()
+        {
+            m_breakerSettings = new BreakerSettings();
+        }
+
         #endregion
 
         #region [ Properties ]
 
+        [Setting]
         public double SystemFrequency
         {
             get
@@ -326,27 +335,13 @@ namespace FaultData.DataOperations
             }
         }
 
-        public double OpenBreakerThreshold
+        [Category]
+        [SettingName("Breakers")]
+        public BreakerSettings BreakerSettings
         {
             get
             {
-                return m_openBreakerThreshold;
-            }
-            set
-            {
-                m_openBreakerThreshold = value;
-            }
-        }
-
-        public double LateBreakerThreshold
-        {
-            get
-            {
-                return m_lateBreakerThreshold;
-            }
-            set
-            {
-                m_lateBreakerThreshold = value;
+                return m_breakerSettings;
             }
         }
 
@@ -443,9 +438,9 @@ namespace FaultData.DataOperations
                 {
                     BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, breakerSpeed);
 
-                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_systemFrequency, m_openBreakerThreshold);
-                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_openBreakerThreshold);
-                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_systemFrequency, m_openBreakerThreshold);
+                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
+                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
+                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
 
                     MeterData.BreakerOperationRow breakerOperationRow = GetBreakerOperationRow(breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
 
@@ -562,7 +557,7 @@ namespace FaultData.DataOperations
 
             diff = breakerTiming - breakerSpeed;
 
-            if (diff >= m_lateBreakerThreshold)
+            if (diff >= m_breakerSettings.LateBreakerThreshold)
                 return BreakerOperationType.Late;
 
             return BreakerOperationType.Normal;

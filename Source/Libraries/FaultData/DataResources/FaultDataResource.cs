@@ -23,14 +23,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using FaultAlgorithms;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.Units;
 using log4net;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
@@ -218,10 +222,8 @@ namespace FaultData.DataResources
         private double m_systemFrequency;
         private double m_maxVoltage;
         private double m_maxCurrent;
-        private double m_prefaultTrigger;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
-        private double m_openBreakerThreshold;
+        private FaultLocationSettings m_faultLocationSettings;
+        private BreakerSettings m_breakerSettings;
 
         private Dictionary<DataGroup, List<Fault>> m_faultLookup;
 
@@ -232,6 +234,8 @@ namespace FaultData.DataResources
         public FaultDataResource(DbAdapterContainer dbAdapterContainer)
         {
             m_dbAdapterContainer = dbAdapterContainer;
+            m_faultLocationSettings = new FaultLocationSettings();
+            m_breakerSettings = new BreakerSettings();
             m_faultLookup = new Dictionary<DataGroup, List<Fault>>();
         }
 
@@ -247,6 +251,7 @@ namespace FaultData.DataResources
             }
         }
 
+        [Setting]
         public double SystemFrequency
         {
             get
@@ -259,6 +264,7 @@ namespace FaultData.DataResources
             }
         }
 
+        [Setting]
         public double MaxVoltage
         {
             get
@@ -271,6 +277,7 @@ namespace FaultData.DataResources
             }
         }
 
+        [Setting]
         public double MaxCurrent
         {
             get
@@ -283,51 +290,23 @@ namespace FaultData.DataResources
             }
         }
 
-        public double PrefaultTrigger
+        [Category]
+        [SettingName("FaultLocation")]
+        public FaultLocationSettings FaultLocationSettings
         {
             get
             {
-                return m_prefaultTrigger;
-            }
-            set
-            {
-                m_prefaultTrigger = value;
+                return m_faultLocationSettings;
             }
         }
 
-        public double MaxFaultDistanceMultiplier
+        [Category]
+        [SettingName("Breakers")]
+        public BreakerSettings BreakerSettings
         {
             get
             {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
-
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
-
-        public double OpenBreakerThreshold
-        {
-            get
-            {
-                return m_openBreakerThreshold;
-            }
-            set
-            {
-                m_openBreakerThreshold = value;
+                return m_breakerSettings;
             }
         }
 
@@ -477,7 +456,7 @@ namespace FaultData.DataResources
 
             bool[] faultApparent = rms.DataPoints
                 .Select(dataPoint => dataPoint.Value / rms[0].Value)
-                .Select(ratio => ratio > m_prefaultTrigger)
+                .Select(ratio => ratio > m_faultLocationSettings.PrefaultTrigger)
                 .ToArray();
 
             for (int i = 0; i < rms.DataPoints.Count; i++)
@@ -879,7 +858,7 @@ namespace FaultData.DataResources
             fault.Duration = endTime - startTime;
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
-            fault.IsSuppressed = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup) > m_openBreakerThreshold;
+            fault.IsSuppressed = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup) > m_breakerSettings.OpenBreakerThreshold;
 
             if (fault.Segments.Any())
             {
@@ -934,8 +913,8 @@ namespace FaultData.DataResources
         private bool IsValid(double faultDistance, DataGroup dataGroup)
         {
             double lineLength = dataGroup.Line.Length;
-            double maxDistance = m_maxFaultDistanceMultiplier * lineLength;
-            double minDistance = m_minFaultDistanceMultiplier * lineLength;
+            double maxDistance = m_faultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
+            double minDistance = m_faultLocationSettings.MinFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 

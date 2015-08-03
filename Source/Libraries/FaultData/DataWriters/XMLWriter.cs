@@ -30,6 +30,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -61,6 +62,7 @@ namespace FaultData.DataWriters
 
         #region [ Properties ]
 
+        [Setting]
         public string ResultsPath
         {
             get
@@ -73,6 +75,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public double SystemFrequency
         {
             get

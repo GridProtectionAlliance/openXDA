@@ -50,6 +50,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HistorianSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TrendingDataSummaryOperation.cs" />
   </ItemGroup>

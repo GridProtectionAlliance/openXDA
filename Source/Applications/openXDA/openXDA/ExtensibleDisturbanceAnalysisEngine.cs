@@ -71,6 +71,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -78,13 +80,13 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
 using FaultData;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataOperations;
 using FaultData.DataReaders;
 using FaultData.DataSets;
 using FaultData.DataWriters;
-using GSF;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
@@ -110,7 +112,7 @@ namespace openXDA
 
             // Fields
             public string MeterDataFile;
-            public SystemSettings SystemSettings;
+            public string ConnectionString;
             public DbAdapterContainer DbAdapterContainer;
             public List<MeterDataSet> MeterDataSets;
 
@@ -131,6 +133,7 @@ namespace openXDA
                 {
                     TimeZoneInfo xdaTimeZone;
                     DateTime processingEndTime;
+                    SystemSettings systemSettings;
 
                     try
                     {
@@ -143,7 +146,8 @@ namespace openXDA
                             foreach (MeterDataSet meterDataSet in MeterDataSets)
                                 ProcessMeterData(meterDataSet);
 
-                            xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(SystemSettings.XDATimeZone);
+                            systemSettings = new SystemSettings(ConnectionString);
+                            xdaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(systemSettings.XDATimeZone);
                             processingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
 
                             foreach (MeterDataSet meterDataSet in MeterDataSets)
@@ -170,7 +174,7 @@ namespace openXDA
             {
                 try
                 {
-                    meterDataSet.ConnectionString = SystemSettings.ToConnectionString();
+                    meterDataSet.ConnectionString = ConnectionString;
                     ExecuteDataOperations(meterDataSet);
                     ExecuteDataWriters(meterDataSet);
                 }
@@ -194,7 +198,6 @@ namespace openXDA
             {
                 IEnumerable<IEnumerable<DataOperation>> operationGroups;
                 List<IDataOperation> dataOperations = null;
-                ConnectionStringParser connectionStringParser;
 
                 try
                 {
@@ -216,13 +219,10 @@ namespace openXDA
                             .Cast<IDataOperation>()
                             .ToList();
 
-                        connectionStringParser = new ConnectionStringParser();
-                        connectionStringParser.SerializeUnspecifiedProperties = true;
-
                         foreach (IDataOperation dataOperation in dataOperations)
                         {
                             // Provide system settings to the data operation
-                            connectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataOperation);
+                            ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataOperation);
 
                             // Prepare for execution of the data operation
                             dataOperation.Prepare(DbAdapterContainer);
@@ -256,7 +256,6 @@ namespace openXDA
             private void ExecuteDataWriters(MeterDataSet meterDataSet)
             {
                 List<IDataWriter> dataWriters = null;
-                ConnectionStringParser connectionStringParser;
 
                 try
                 {
@@ -271,13 +270,10 @@ namespace openXDA
                         .Cast<IDataWriter>()
                         .ToList();
 
-                    connectionStringParser = new ConnectionStringParser();
-                    connectionStringParser.SerializeUnspecifiedProperties = true;
-
                     foreach (IDataWriter dataWriter in dataWriters)
                     {
                         // Provide system settings to the data operation
-                        connectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataWriter);
+                        ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataWriter);
 
                         // Prepare for execution of the data operation
                         dataWriter.WriteResults(DbAdapterContainer, meterDataSet);
@@ -373,6 +369,7 @@ namespace openXDA
         private static readonly Guid FileProcessorID = new Guid("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D");
 
         // Fields
+        private string m_dbConnectionString;
         private SystemSettings m_systemSettings;
         private FileProcessor m_fileProcessor;
 
@@ -387,32 +384,18 @@ namespace openXDA
         /// </summary>
         public void Start()
         {
-            ConfigurationFile configFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection category = configFile.Settings["systemSettings"];
-            string connectionString;
-
             IEnumerable<string> validExtensions;
 
-            // Retrieve the connection string from the config file
-            category.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
-            connectionString = category["ConnectionString"].Value;
-
             // Get system settings from the database
-            using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(connectionString))
-            {
-                m_systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
+            ReloadSystemSettings();
 
+            // Get the list of file extensions to be processed by openXDA
+            using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(m_dbConnectionString))
+            {
                 validExtensions = systemInfo.DataReaders
                     .Select(reader => reader.FileExtension)
                     .Select(extension => string.Format("*.{0}", extension))
                     .ToList();
-            }
-
-            // Attempt to authenticate to configured file shares
-            foreach (FileShare fileShare in m_systemSettings.FileShareList)
-            {
-                if (!fileShare.TryAuthenticate())
-                    OnProcessException(fileShare.AuthenticationException);
             }
 
             // Reload configuration at startup
@@ -448,9 +431,19 @@ namespace openXDA
         public void ReloadConfiguration()
         {
             SystemInfoDataContext systemInfo;
-
             List<Type> types;
+            string connectionString;
+
             IConfigurationLoader configurationLoader;
+
+            // If system settings is null,
+            // attempt to reload system settings
+            if ((object)m_systemSettings == null)
+                ReloadSystemSettings();
+
+            // If system settings is still null, give up
+            if ((object)m_systemSettings == null)
+                return;
 
             using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(m_systemSettings.DbConnectionString))
             {
@@ -465,13 +458,23 @@ namespace openXDA
                     .Where(type => (object)type.GetConstructor(Type.EmptyTypes) != null)
                     .ToList();
 
+                connectionString = LoadSystemSettings(systemInfo);
+
                 foreach (Type type in types)
                 {
                     try
                     {
                         OnStatusMessage("[{0}] Loading configuration...", type.Name);
+
+                        // Create an instance of the configuration loader
                         configurationLoader = (IConfigurationLoader)Activator.CreateInstance(type);
+
+                        // Use the connection string parser to load system settings into the configuration loader
+                        ConnectionStringParser.ParseConnectionString(connectionString, configurationLoader);
+
+                        // Update configuration by calling the configuration loader's UpdateConfiguration method
                         configurationLoader.UpdateConfiguration(dbAdapterContainer);
+
                         OnStatusMessage("[{0}] Done loading configuration.", type.Name);
                     }
                     catch (Exception ex)
@@ -488,9 +491,28 @@ namespace openXDA
         /// </summary>
         public void ReloadSystemSettings()
         {
+            ConfigurationFile configurationFile;
+            CategorizedSettingsElementCollection category;
+
+            // Reload the configuration file
+            configurationFile = ConfigurationFile.Current;
+            configurationFile.Reload();
+
+            // Retrieve the connection string from the config file
+            category = configurationFile.Settings["systemSettings"];
+            category.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
+            m_dbConnectionString = category["ConnectionString"].Value;
+
             using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(m_systemSettings.DbConnectionString))
             {
                 m_systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
+            }
+
+            // Attempt to authenticate to configured file shares
+            foreach (FileShare fileShare in m_systemSettings.FileShareList)
+            {
+                if (!fileShare.TryAuthenticate())
+                    OnProcessException(fileShare.AuthenticationException);
             }
         }
 
@@ -531,16 +553,14 @@ namespace openXDA
             string meterKey;
             string extension;
             Type readerType;
-
             IDataReader reader;
-            ConnectionStringParser connectionStringParser;
 
             DbAdapterContainer dbAdapterContainer;
             FileInfoDataContext fileInfo;
             MeterInfoDataContext meterInfo;
             SystemInfoDataContext systemInfo;
 
-            SystemSettings systemSettings;
+            string connectionString;
             MeterDataProcessor meterDataProcessor;
 
             TimeZoneInfo xdaTimeZone;
@@ -628,11 +648,8 @@ namespace openXDA
 
                 using (reader as IDisposable)
                 {
-                    systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
-
-                    connectionStringParser = new ConnectionStringParser();
-                    connectionStringParser.SerializeUnspecifiedProperties = true;
-                    connectionStringParser.ParseConnectionString(systemSettings.ToConnectionString(), reader);
+                    connectionString = LoadSystemSettings(systemInfo);
+                    ConnectionStringParser.ParseConnectionString(connectionString, reader);
 
                     if (reader.CanParse(filePath, GetMaxFileCreationTime(filePath)))
                     {
@@ -643,7 +660,7 @@ namespace openXDA
                         meterDataProcessor = new MeterDataProcessor();
 
                         // Initialize properties of the meter data processor
-                        meterDataProcessor.SystemSettings = systemSettings;
+                        meterDataProcessor.ConnectionString = connectionString;
                         meterDataProcessor.MeterDataFile = filePath;
                         meterDataProcessor.DbAdapterContainer = dbAdapterContainer;
 
@@ -755,43 +772,17 @@ namespace openXDA
 
         private string LoadSystemSettings(SystemInfoDataContext systemInfo)
         {
-            Dictionary<string, string> settingsDictionary;
-            string dbConnectionString;
-            string fileShares;
-
-            // Retrieve the connection string from the active database connection
-            dbConnectionString = systemInfo.Connection.ConnectionString;
-
             // Convert the Setting table to a dictionary
-            settingsDictionary = systemInfo.Settings
-                .Where(setting => setting.Name.IndexOf('.') < 0)
+            Dictionary<string, string> settings = systemInfo.Settings
                 .ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.OrdinalIgnoreCase);
 
             // Add the database connection string if there is not
             // already one explicitly specified in the Setting table
-            if (!settingsDictionary.ContainsKey("dbConnectionString"))
-                settingsDictionary["dbConnectionString"] = dbConnectionString;
-
-            // Convert settings prefixed with "FileShare." to a nested connection string
-            if (!settingsDictionary.ContainsKey("fileShares"))
-            {
-                fileShares = systemInfo.Settings.ToList()
-                    .Where(setting => setting.Name.StartsWith("FileShare.", StringComparison.OrdinalIgnoreCase))
-                    .Select(setting => Tuple.Create(setting.Name.Split('.'), setting.Value))
-                    .Where(tuple => tuple.Item1.Length == 3)
-                    .GroupBy(tuple => tuple.Item1[1])
-                    .Select(grouping => grouping.ToDictionary(tuple => tuple.Item1[2], tuple => tuple.Item2))
-                    .Select(dict => dict.JoinKeyValuePairs().Trim(' ', ';'))
-                    .Select((shareSettings, index) => Tuple.Create(index, shareSettings))
-                    .ToDictionary(tuple => tuple.Item1.ToString(), tuple => tuple.Item2)
-                    .JoinKeyValuePairs();
-
-                if (!string.IsNullOrEmpty(fileShares))
-                    settingsDictionary["fileShares"] = fileShares;
-            }
+            if (!settings.ContainsKey("dbConnectionString"))
+                settings.Add("dbConnectionString", m_dbConnectionString);
 
             // Convert dictionary to a connection string and return it
-            return settingsDictionary.JoinKeyValuePairs();
+            return SystemSettings.ToConnectionString(settings);
         }
 
         // Loads a file group containing information about the file on the given
@@ -974,6 +965,7 @@ namespace openXDA
         #region [ Static ]
 
         // Static Fields
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
         private static readonly ILog Log = LogManager.GetLogger(typeof(ExtensibleDisturbanceAnalysisEngine));
 
         #endregion

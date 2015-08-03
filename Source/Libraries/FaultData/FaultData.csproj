@@ -66,6 +66,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\BreakerSettings.cs" />
+    <Compile Include="Configuration\EmailSettings.cs" />
+    <Compile Include="Configuration\FaultLocationSettings.cs" />
     <Compile Include="DataAnalysis\CycleDataGroup.cs" />
     <Compile Include="DataAnalysis\DataGroup.cs" />
     <Compile Include="DataAnalysis\DataPoint.cs" />
@@ -160,7 +163,7 @@
     <Compile Include="DataWriters\IDataWriter.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
-    <Compile Include="IConfigurationLoader.cs" />
+    <Compile Include="Configuration\IConfigurationLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

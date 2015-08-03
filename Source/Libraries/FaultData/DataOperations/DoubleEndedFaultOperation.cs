@@ -23,8 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using FaultAlgorithms;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
@@ -32,6 +35,7 @@ using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
 
 namespace FaultData.DataOperations
@@ -181,10 +185,10 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
-        private double m_systemFrequency;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
+
         private double m_timeTolerance;
+        private double m_systemFrequency;
+        private FaultLocationSettings m_faultLocationSettings;
 
         private List<MappingNode> m_processedMappingNodes;
         private FaultLocationData.FaultCurveDataTable m_faultCurveTable;
@@ -198,6 +202,7 @@ namespace FaultData.DataOperations
 
         public DoubleEndedFaultOperation()
         {
+            m_faultLocationSettings = new FaultLocationSettings();
             m_processedMappingNodes = new List<MappingNode>();
             m_faultCurveTable = new FaultLocationData.FaultCurveDataTable();
             m_doubleEndedFaultDistanceTable = new FaultLocationData.DoubleEndedFaultDistanceDataTable();
@@ -207,6 +212,20 @@ namespace FaultData.DataOperations
 
         #region [ Properties ]
 
+        [Setting]
+        public double TimeTolerance
+        {
+            get
+            {
+                return m_timeTolerance;
+            }
+            set
+            {
+                m_timeTolerance = value;
+            }
+        }
+
+        [Setting]
         public double SystemFrequency
         {
             get
@@ -219,39 +238,13 @@ namespace FaultData.DataOperations
             }
         }
 
-        public double MaxFaultDistanceMultiplier
+        [Category]
+        [SettingName("FaultLocation")]
+        public FaultLocationSettings FaultLocationSettings
         {
             get
             {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
-
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
-
-        public double TimeTolerance
-        {
-            get
-            {
-                return m_timeTolerance;
-            }
-            set
-            {
-                m_timeTolerance = value;
+                return m_faultLocationSettings;
             }
         }
 
@@ -572,8 +565,8 @@ namespace FaultData.DataOperations
 
         private bool IsValid(double faultDistance, double lineLength)
         {
-            double maxDistance = m_maxFaultDistanceMultiplier * lineLength;
-            double minDistance = m_minFaultDistanceMultiplier * lineLength;
+            double maxDistance = m_faultLocationSettings.MaxFaultDistanceMultiplier * lineLength;
+            double minDistance = m_faultLocationSettings.MinFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
 

@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -32,12 +34,14 @@ using System.Windows.Forms.DataVisualization.Charting;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Xsl;
+using FaultData.Configuration;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataSets;
 using GSF;
 using GSF.Collections;
+using GSF.Configuration;
 using log4net;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
@@ -52,17 +56,26 @@ namespace FaultData.DataWriters
 
         // Fields
         private string m_dbConnectionString;
-        private string m_smtpServer;
-        private string m_fromAddress;
         private double m_timeTolerance;
         private double m_waitPeriod;
         private string m_xdaTimeZone;
         private string m_lengthUnits;
+        private EmailSettings m_emailSettings;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public EmailWriter()
+        {
+            m_emailSettings = new EmailSettings();
+        }
 
         #endregion
 
         #region [ Properties ]
 
+        [Setting]
         public string DbConnectionString
         {
             get
@@ -75,30 +88,7 @@ namespace FaultData.DataWriters
             }
         }
 
-        public string SMTPServer
-        {
-            get
-            {
-                return m_smtpServer;
-            }
-            set
-            {
-                m_smtpServer = value;
-            }
-        }
-
-        public string FromAddress
-        {
-            get
-            {
-                return m_fromAddress;
-            }
-            set
-            {
-                m_fromAddress = value;
-            }
-        }
-
+        [Setting]
         public double TimeTolerance
         {
             get
@@ -111,6 +101,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public double WaitPeriod
         {
             get
@@ -123,6 +114,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public string XDATimeZone
         {
             get
@@ -135,6 +127,7 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Setting]
         public string LengthUnits
         {
             get
@@ -144,6 +137,16 @@ namespace FaultData.DataWriters
             set
             {
                 m_lengthUnits = value;
+            }
+        }
+
+        [Category]
+        [SettingName("Email")]
+        public EmailSettings EmailSettings
+        {
+            get
+            {
+                return m_emailSettings;
             }
         }
 
@@ -196,8 +199,8 @@ namespace FaultData.DataWriters
         {
             bool configurationChanged =
                 s_timeTolerance != writer.TimeTolerance ||
-                s_smtpServer != writer.SMTPServer ||
-                s_fromAddress != writer.FromAddress ||
+                s_smtpServer != writer.EmailSettings.SMTPServer ||
+                s_fromAddress != writer.EmailSettings.FromAddress ||
                 s_waitPeriod != TimeSpan.FromSeconds(writer.WaitPeriod) ||
                 s_timeZone.Id != writer.XDATimeZone;
 
@@ -207,8 +210,8 @@ namespace FaultData.DataWriters
                 ProcessQueue.Add(() =>
                 {
                     s_timeTolerance = writer.TimeTolerance;
-                    s_smtpServer = writer.SMTPServer;
-                    s_fromAddress = writer.FromAddress;
+                    s_smtpServer = writer.EmailSettings.SMTPServer;
+                    s_fromAddress = writer.EmailSettings.FromAddress;
                     s_waitPeriod = TimeSpan.FromSeconds(writer.WaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
                 });

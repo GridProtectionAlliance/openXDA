@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using GSF.COMTRADE;
@@ -48,6 +49,7 @@ namespace FaultData.DataReaders
 
         #region [ Properties ]
 
+        [Setting]
         public double COMTRADEMinWaitTime
         {
             get

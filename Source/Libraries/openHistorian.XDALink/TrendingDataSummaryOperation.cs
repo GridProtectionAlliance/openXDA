@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using FaultData.Database;
@@ -30,6 +30,7 @@ using FaultData.DataOperations;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.Snap.Services;
 using log4net;
 using openHistorian.Net;
@@ -55,17 +56,8 @@ namespace openHistorian.XDALink
     {
         #region [ Members ]
 
-        // Constants
-
-        /// <summary>
-        /// Default historian server port number.
-        /// </summary>
-        public const int DefaultHistorianPort = 38402;
-
         // Fields
-        private string m_hostName;
-        private int m_port;
-        private string m_instanceName;
+        private HistorianSettings m_historianSettings;
 
         #endregion
 
@@ -76,49 +68,20 @@ namespace openHistorian.XDALink
         /// </summary>
         public TrendingDataSummaryOperation()
         {
-            m_hostName = "127.0.0.1";
-            m_port = DefaultHistorianPort;
-            m_instanceName = "XDA";
+            m_historianSettings = new HistorianSettings();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets or sets historian server, e.g., 127.0.0.1:38402
-        /// </summary>
-        public string HistorianServer
+        [Category]
+        [SettingName("Historian")]
+        public HistorianSettings HistorianSettings
         {
             get
             {
-                return string.Format("{0}:{1}", m_hostName.ToNonNullNorEmptyString("127.0.0.1"), m_port);
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "historian server null or empty");
-
-                string[] parts = value.Split(':');
-                m_hostName = parts[0];                
-
-                if (parts.Length < 2 || !int.TryParse(parts[1], out m_port))
-                    m_port = DefaultHistorianPort;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets historian instance name.
-        /// </summary>
-        public string HistorianInstanceName
-        {
-            get
-            {
-                return m_instanceName;
-            }
-            set
-            {
-                m_instanceName = value;
+                return m_historianSettings;
             }
         }
 
@@ -140,8 +103,8 @@ namespace openHistorian.XDALink
         {
             Log.Info("Executing operation to load trending summary data into the openHistorian...");
 
-            using (HistorianClient client = new HistorianClient(m_hostName, m_port))
-            using (ClientDatabaseBase<HistorianKey, HistorianValue> database = client.GetDatabase<HistorianKey, HistorianValue>(m_instanceName))
+            using (HistorianClient client = new HistorianClient(m_historianSettings.HostName, m_historianSettings.Port))
+            using (ClientDatabaseBase<HistorianKey, HistorianValue> database = client.GetDatabase<HistorianKey, HistorianValue>(m_historianSettings.InstanceName))
             using (HistorianInputQueue queue = new HistorianInputQueue(() => database))
             {
                 Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = dataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;

@@ -23,7 +23,7 @@
 
 using FaultData.Database;
 
-namespace FaultData
+namespace FaultData.Configuration
 {
     /// <summary>
     /// Interface for objects that load configuration automatically on a timer.

@@ -59,27 +59,12 @@ namespace openXDA.Configuration
         private double m_systemFrequency;
         private double m_maxVoltage;
         private double m_maxCurrent;
-        private double m_prefaultTrigger;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
-
-        private double m_openBreakerThreshold;
-        private double m_lateBreakerThreshold;
 
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
         private int m_fileWatcherBufferSize;
         private string m_fileShares;
-
-        private string m_smtpServer;
-        private string m_fromAddress;
-
-        private string m_pqDashboardUrl;
-        private string m_structureQueryUrl;
-
-        private string m_historianServer;
-        private string m_historianInstanceName;
 
         private List<string> m_watchDirectoryList;
         private List<FileShare> m_fileShareList;
@@ -407,98 +392,6 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the threshold at which the ratio between RMS
-        /// current and prefault RMS current indicates faulted conditions.
-        /// </summary>
-        [Setting]
-        [DefaultValue(5.0D)]
-        public double PrefaultTrigger
-        {
-            get
-            {
-                return m_prefaultTrigger;
-            }
-            set
-            {
-                m_prefaultTrigger = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the multiplier applied to the line
-        /// length to determine the maximum value allowed for
-        /// fault distance before the results are considered invalid.
-        /// </summary>
-        [Setting]
-        [DefaultValue(1.05D)]
-        public double MaxFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the multiplier applied to the line
-        /// length to determine the minimum value allowed for
-        /// fault distance before the results are considered invalid.
-        /// </summary>
-        [Setting]
-        [DefaultValue(-0.05D)]
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum RMS current, in amps,
-        /// at which the breaker can be considered open.
-        /// </summary>
-        [Setting]
-        [DefaultValue(20.0D)]
-        public double OpenBreakerThreshold
-        {
-            get
-            {
-                return m_openBreakerThreshold;
-            }
-            set
-            {
-                m_openBreakerThreshold = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum number of cycles that a breaker
-        /// operation's timing can exceed the configured breaker speed.
-        /// </summary>
-        [Setting]
-        [DefaultValue(1.0D)]
-        public double LateBreakerThreshold
-        {
-            get
-            {
-                return m_lateBreakerThreshold;
-            }
-            set
-            {
-                m_lateBreakerThreshold = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the units of measure to use
         /// for lengths (line length and fault distance).
         /// </summary>
@@ -604,110 +497,6 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the hostname or IP address of the SMTP server to
-        /// use for sending automated email notifications when faults occur.
-        /// </summary>
-        [Setting]
-        [DefaultValue("")]
-        public string SMTPServer
-        {
-            get
-            {
-                return m_smtpServer;
-            }
-            set
-            {
-                m_smtpServer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the email address used when sending automated email notifications.
-        /// </summary>
-        [Setting]
-        [DefaultValue("openXDA@gridprotectionalliance.org")]
-        public string FromAddress
-        {
-            get
-            {
-                return m_fromAddress;
-            }
-            set
-            {
-                m_fromAddress = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the URL of the PQ Dashboard.
-        /// </summary>
-        [Setting]
-        [DefaultValue("http://pqdashboard/")]
-        public string PQDashboardURL
-        {
-            get
-            {
-                return m_pqDashboardUrl;
-            }
-            set
-            {
-                m_pqDashboardUrl = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the URL of the web request to
-        /// find the nearest structure to fault location.
-        /// </summary>
-        [Setting]
-        [DefaultValue("http://localhost:6132/WebForm1.aspx?Station={0}&Line={1}&Mileage={2}")]
-        public string StructureQueryURL
-        {
-            get
-            {
-                return m_structureQueryUrl;
-            }
-            set
-            {
-                m_structureQueryUrl = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets historian server, e.g., 127.0.0.1:38402
-        /// </summary>
-        [Setting]
-        [DefaultValue("127.0.0.1")]
-        public string HistorianServer
-        {
-            get
-            {
-                return m_historianServer;
-            }
-            set
-            {
-                m_historianServer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets historian instance name.
-        /// </summary>
-        [Setting]
-        [DefaultValue("XDA")]
-        public string HistorianInstanceName
-        {
-            get
-            {
-                return m_historianInstanceName;
-            }
-            set
-            {
-                m_historianInstanceName = value;
-            }
-        }
-
-        /// <summary>
         /// Gets a list of directories to be watched
         /// for files containing fault records.
         /// </summary>
@@ -739,6 +528,52 @@ namespace openXDA.Configuration
             ConnectionStringParser<SettingAttribute> parser = new ConnectionStringParser<SettingAttribute>();
             parser.ExplicitlySpecifyDefaults = true;
             return parser.ComposeConnectionString(this);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly SystemSettings DefaultSystemSettings = new SystemSettings(string.Empty);
+        private static readonly string DefaultConnectionString = DefaultSystemSettings.ToConnectionString();
+
+        // Static Methods
+        public static string ToConnectionString(Dictionary<string, string> settings)
+        {
+            List<CategorizedSetting> categorizedSettings = settings
+                .Select(kvp => new CategorizedSetting(kvp.Key, kvp.Value))
+                .ToList();
+
+            string categorizedConnectionString = ToConnectionString(categorizedSettings, 0);
+
+            return Merge(categorizedConnectionString, DefaultConnectionString);
+        }
+
+        private static string ToConnectionString(List<CategorizedSetting> settings, int level)
+        {
+            IEnumerable<string> connectionStrings;
+
+            if (settings.Count == 1)
+                return settings[0].Value;
+
+            connectionStrings = settings
+                .Where(setting => level < setting.Categories.Count)
+                .GroupBy(setting => setting.Categories[level])
+                .Select(grouping => string.Format("{0}={{{1}}}", grouping.Key, ToConnectionString(grouping.ToList(), level + 1)));
+
+            return string.Join(";", connectionStrings);
+        }
+
+        private static string Merge(string primaryConnectionString, string connectionString)
+        {
+            Dictionary<string, string> primarySettings = primaryConnectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+            foreach (KeyValuePair<string, string> kvp in primarySettings)
+                settings[kvp.Key] = kvp.Value;
+
+            return settings.JoinKeyValuePairs();
         }
 
         #endregion
