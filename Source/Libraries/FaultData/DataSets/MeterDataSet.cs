@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
@@ -146,8 +148,6 @@ namespace FaultData.DataSets
             object obj;
             T resource;
 
-            ConnectionStringParser connectionStringParser;
-
             type = typeof(T);
 
             if (m_resources.TryGetValue(type, out obj))
@@ -156,17 +156,21 @@ namespace FaultData.DataSets
             }
             else
             {
-                connectionStringParser = new ConnectionStringParser();
-                connectionStringParser.SerializeUnspecifiedProperties = true;
-
                 resource = resourceFactory();
-                connectionStringParser.ParseConnectionString(m_connectionString, resource);
+                ConnectionStringParser.ParseConnectionString(m_connectionString, resource);
                 resource.Initialize(this);
                 m_resources.Add(type, resource);
             }
 
             return resource;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
 
         #endregion
     }

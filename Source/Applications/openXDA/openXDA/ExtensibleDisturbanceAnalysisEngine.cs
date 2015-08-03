@@ -503,7 +503,7 @@ namespace openXDA
             category.Add("ConnectionString", "Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI", "Defines the connection to the openXDA database.");
             m_dbConnectionString = category["ConnectionString"].Value;
 
-            using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(m_systemSettings.DbConnectionString))
+            using (SystemInfoDataContext systemInfo = new SystemInfoDataContext(m_dbConnectionString))
             {
                 m_systemSettings = new SystemSettings(LoadSystemSettings(systemInfo));
             }

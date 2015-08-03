@@ -486,13 +486,10 @@ namespace openXDA.Configuration
             {
                 m_fileShares = value;
 
-                if ((object)value != null)
-                {
-                    m_fileShareList = value.ParseKeyValuePairs()
-                        .Select(kvp => kvp.Value)
-                        .Select(fileShareString => new FileShare(fileShareString))
-                        .ToList();
-                }
+                m_fileShareList = value.ToNonNullString().ParseKeyValuePairs()
+                    .Select(kvp => kvp.Value)
+                    .Select(fileShareString => new FileShare(fileShareString))
+                    .ToList();
             }
         }
 
@@ -555,7 +552,12 @@ namespace openXDA.Configuration
             IEnumerable<string> connectionStrings;
 
             if (settings.Count == 1)
+            {
+                if (level < settings[0].Categories.Count)
+                    return string.Format("{0}={{{1}}}", settings[0].Categories[level], ToConnectionString(settings, level + 1));
+
                 return settings[0].Value;
+            }
 
             connectionStrings = settings
                 .Where(setting => level < setting.Categories.Count)
