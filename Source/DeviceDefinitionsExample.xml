@@ -1,145 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openFLE>
     <!-- The analytics section defines what fault location algorithms are used by the system.
-    All of the following fault location algorithms are available. Multiple algorithms can be
-    used, in which case a fault curve will be generated for each one. -->
-	<analytics>
-		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Simple" />
-		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Reactance" />
-		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Takagi" />
-		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.ModifiedTakagi" />
-		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.NovoselEtAl" />
-	</analytics>
+    All of the following fault location algorithms are available and will be used to calculate
+    fault distances and generate fault distance curves. Any algorithms that are not desired should
+    be removed or commented out. -->
+    <analytics>
+        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Simple" />
+        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Reactance" />
+        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Takagi" />
+        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.ModifiedTakagi" />
+        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.NovoselEtAl" />
+    </analytics>
     
     <!-- Each device is modelled using one of these device tags. By default, the openXDA service
     is configured to match the id of the device to the folder in which that device's fault records
     are located. As a general rule, you can use the name of the folder that contains the COMTRADE
     or PQDIF files created by this device as the id of the device. -->
-	<device id="0001">
-		<attributes>
+    <device id="0001">
+        <attributes>
             <!-- Non-critical: Make and model of the device. -->
-			<make>GPA</make>
-			<model>EXAMPLE</model>
+            <make>GPA</make>
+            <model>EXAMPLE</model>
             
             <!-- Non-critical: Unique identifier and name for the station where the device is located. -->
-			<stationID>Station1</stationID>
-			<stationName>Station1</stationName>
-		</attributes>
-		<lines>
+            <stationID>Station1</stationID>
+            <stationName>Station1</stationName>
+        </attributes>
+        <lines>
             <!-- If there is a device at Station3 monitoring this line from
-            the other end, the same id should be used when modelling that device. -->
-			<line id="01">
+            the other end, the same line id should be used when modelling that device. -->
+            <line id="01">
                 <!-- Non-critical: Human readable name for the line. -->
-				<name>Station1-Station3</name>
+                <name>Station1-Station3</name>
                 
                 <!-- Non-critical: Nominal voltage in kV. -->
-				<voltage>161</voltage>
+                <voltage>161</voltage>
                 
-                <!-- This value is used as the "thermal rating" in openXDA, and is used in
-                combination with a "rated current multiplier" to determine the maximum current
+                <!-- This optional value is used as the "thermal rating" in openXDA, and can be used
+                in combination with a "rated current multiplier" to determine the maximum current
                 threshold used to detect faults (if RMS current exceeds
-                thermalRating * ratedCurrentMultiplier, then a fault occurred). -->
-				<rating50F>400</rating50F>
+                thermalRating * ratedCurrentMultiplier, then a fault occurred). This value 
+                is specified in amps.  By default this calculation is not enabled.-->
+                <rating50F>400</rating50F>
                 
-                <!-- The length of the line must be correct to obtain accurate results. -->
-				<length>14.39000</length>
+                <!-- The length of the line must be correct to obtain accurate results. This value can be 
+                specified in miles or kilometers.  The value of the label to be used in displays and reports is 
+                specified by the LengthUnits configuration option located in the Setting table, as 
+                described in the Service Configuration section of the Setup and Configuration document.-->
+                <length>14.39000</length>
                 
-                <!-- Non-critical: Unique identifier and name for the station at the other end of the line. -->
-				<endStationID>Station3</endStationID>
-				<endStationName>Station3</endStationName>
+                <!-- Non-critical: Unique identifier and name for the station at the other end of 
+                the line. -->
+                <endStationID>Station3</endStationID>
+                <endStationName>Station3</endStationName>
                 
                 <!-- Nominal impedance of the line:
                 R1 = Positive sequence resistance
                 R0 = Zero sequence resistance
                 X1 = Positive sequence reactance
                 X2 = Zero sequence reactance -->
-				<impedances>
-					<R1>3.27560</R1>
-					<R0>8.79830</R0>
-					<X1>11.42600</X1>
-					<X0>36.52600</X0>
-				</impedances>
+                <impedances>
+                    <R1>3.27560</R1>
+                    <R0>8.79830</R0>
+                    <X1>11.42600</X1>
+                    <X0>36.52600</X0>
+                </impedances>
                 
-                <!-- Channel definitions are only required for COMTRADE format event files and are ignored for
-                PQDIF format event files. Channels are signed integer lists separated by commas. The entries in
-                the list specify the physical channel or channels on the recording device where the respective
-                voltage and current measurements were recorded. Often the list will contain only a single entry,
-                but in cases where more than one physical channel is required to represent a phase quantity, the
-                recorded values from all channels are combined to obtain the phase quantity. -->
-				<channels>
+                <!-- Channel definitions are only required for COMTRADE format event files.
+                If no COMTRADE files files are being used as input, the entire <channels> section
+                should be removed.  Channels are signed integer lists separated by commas. The
+                entries in the list specify the physical channel or channels on the recording device
+                where the respective voltage and current measurements were recorded. Often the list
+                will contain only a single entry, but in cases where more than one physical channel
+                is required to represent a phase quantity, the recorded values from all specified 
+                channels in the list are combined to derive the phase quantity.
+                See the entry for <IC> below. -->
+                <channels>
                     <!-- The following six channels are required for fault analysis.
                     Other channels can be optionally defined, but are not required. -->
-					<VA>1</VA>
-					<VB>2</VB>
-					<VC>3</VC>
-					<IA>4</IA>
-					<IB>5</IB>
-					<IC>-4,-5,6</IC>
+                    <VA>1</VA>
+                    <VB>2</VB>
+                    <VC>3</VC>
+                    <IA>4</IA>
+                    <IB>5</IB>
+                    <IC>-4,-5,6</IC>
                     
-                    <!-- Non-critical: The residual current channel is defined as an
-                    example for how one might define IC as a combination of channels. -->
+                    <!-- Non-critical: The residual current channel is typically not required.  It is
+                    defined in this example to show how it could be used in combination with other
+                    channeles to derive IC (see above). -->
                     <IR>6</IR>
-				</channels>
-			</line>
+                </channels>
+            </line>
             
             <!-- If a device is monitoring multiple lines,
             additional lines definitions may be added here. -->
             <line id="02">
                 <name>Station1-Station4</name>
-				<voltage>161</voltage>
-				<rating50F>400</rating50F>
-				<length>21.152</length>
-				<endStationID>Station4</endStationID>
-				<endStationName>Station4</endStationName>
-				<impedances>
-					<R1>3.1805</R1>
-					<R0>15.21303</R0>
-					<X1>16.67497</X1>
-					<X0>52.45370</X0>
-				</impedances>
-				<channels>
-					<VA>1</VA>
-					<VB>2</VB>
-					<VC>3</VC>
-					<IA>7</IA>
-					<IB>8</IB>
-					<IC>9</IC>
-				</channels>
+                <voltage>161</voltage>
+                <rating50F>400</rating50F>
+                <length>21.152</length>
+                <endStationID>Station4</endStationID>
+                <endStationName>Station4</endStationName>
+                <impedances>
+                    <R1>3.1805</R1>
+                    <R0>15.21303</R0>
+                    <X1>16.67497</X1>
+                    <X0>52.45370</X0>
+                </impedances>
+                <channels>
+                    <VA>1</VA>
+                    <VB>2</VB>
+                    <VC>3</VC>
+                    <IA>7</IA>
+                    <IB>8</IB>
+                    <IC>9</IC>
+                </channels>
             </line>
-		</lines>
-	</device>
+        </lines>
+    </device>
     
     <!-- Additional devices may be defined here. -->
-	<device id="0002">
-		<attributes>
-			<make>GPA</make>
-			<model>EXAMPLE</model>
-			<stationID>Station2</stationID>
-			<stationName>Station2</stationName>
-		</attributes>
-		<lines>
-			<line id="03">
-				<name>Station2-Station3</name>
-				<voltage>161</voltage>
-				<rating50F>400</rating50F>
-				<length>28.61200</length>
-				<endStationID>Station3</endStationID>
-				<endStationName>Station3</endStationName>
-				<impedances>
-					<R1>12.58500</R1>
-					<R0>20.72400</R0>
-					<X1>26.27700</X1>
-					<X0>83.58900</X0>
-				</impedances>
-				<channels>
-					<VA>33</VA>
-					<VB>36</VB>
-					<VC>40</VC>
-					<IA>2</IA>
-					<IB>4</IB>
-					<IC>6</IC>
-				</channels>
-			</line>
-		</lines>
-	</device>
+    <device id="0002">
+        <attributes>
+            <make>GPA</make>
+            <model>EXAMPLE</model>
+            <stationID>Station2</stationID>
+            <stationName>Station2</stationName>
+        </attributes>
+        <lines>
+            <line id="03">
+                <name>Station2-Station3</name>
+                <voltage>161</voltage>
+                <rating50F>400</rating50F>
+                <length>28.61200</length>
+                <endStationID>Station3</endStationID>
+                <endStationName>Station3</endStationName>
+                <impedances>
+                    <R1>12.58500</R1>
+                    <R0>20.72400</R0>
+                    <X1>26.27700</X1>
+                    <X0>83.58900</X0>
+                </impedances>
+                <channels>
+                    <VA>33</VA>
+                    <VB>36</VB>
+                    <VC>40</VC>
+                    <IA>2</IA>
+                    <IB>4</IB>
+                    <IC>6</IC>
+                </channels>
+            </line>
+        </lines>
+    </device>
 </openFLE>
