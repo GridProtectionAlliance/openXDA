@@ -28,7 +28,9 @@ using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Mail;
+using System.Security;
 using System.Threading;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Xml;
@@ -178,6 +180,9 @@ namespace FaultData.DataWriters
 
         private static string s_smtpServer;
         private static string s_fromAddress;
+        private static string s_username;
+        private static SecureString s_password;
+        private static bool s_enableSSL;
         private static double s_timeTolerance;
         private static TimeSpan s_waitPeriod;
         private static TimeZoneInfo s_timeZone;
@@ -201,6 +206,9 @@ namespace FaultData.DataWriters
                 s_timeTolerance != writer.TimeTolerance ||
                 s_smtpServer != writer.EmailSettings.SMTPServer ||
                 s_fromAddress != writer.EmailSettings.FromAddress ||
+                s_username != writer.EmailSettings.Username ||
+                s_password != writer.EmailSettings.SecurePassword ||
+                s_enableSSL != writer.EmailSettings.EnableSSL ||
                 s_waitPeriod != TimeSpan.FromSeconds(writer.WaitPeriod) ||
                 s_timeZone.Id != writer.XDATimeZone;
 
@@ -212,6 +220,9 @@ namespace FaultData.DataWriters
                     s_timeTolerance = writer.TimeTolerance;
                     s_smtpServer = writer.EmailSettings.SMTPServer;
                     s_fromAddress = writer.EmailSettings.FromAddress;
+                    s_username = writer.EmailSettings.Username;
+                    s_password = writer.EmailSettings.SecurePassword;
+                    s_enableSSL = writer.EmailSettings.EnableSSL;
                     s_waitPeriod = TimeSpan.FromSeconds(writer.WaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
                 });
@@ -397,6 +408,11 @@ namespace FaultData.DataWriters
             using (SmtpClient smtpClient = new SmtpClient(host, port))
             using (MailMessage emailMessage = new MailMessage())
             {
+                if ((object)s_username != null && (object)s_password != null)
+                    smtpClient.Credentials = new NetworkCredential(s_username, s_password);
+
+                smtpClient.EnableSsl = s_enableSSL;
+
                 emailMessage.From = new MailAddress(s_fromAddress);
                 emailMessage.Subject = subject;
                 emailMessage.Body = body;

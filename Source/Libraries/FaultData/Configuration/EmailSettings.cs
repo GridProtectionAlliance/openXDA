@@ -23,6 +23,8 @@
 
 using System.ComponentModel;
 using System.Configuration;
+using System.Security;
+using GSF;
 
 namespace FaultData.Configuration
 {
@@ -33,6 +35,9 @@ namespace FaultData.Configuration
         // Fields
         private string m_smtpServer;
         private string m_fromAddress;
+        private string m_username;
+        private SecureString m_password;
+        private bool m_enableSSL;
 
         #endregion
 
@@ -70,6 +75,69 @@ namespace FaultData.Configuration
             set
             {
                 m_fromAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the username used to authenticate to the SMTP server.
+        /// </summary>
+        [Setting]
+        [DefaultValue(null)]
+        public string Username
+        {
+            get
+            {
+                return m_username;
+            }
+            set
+            {
+                m_username = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password used to authenticate to the SMTP server.
+        /// </summary>
+        [Setting]
+        [DefaultValue(null)]
+        public string Password
+        {
+            get
+            {
+                return m_password.ToUnsecureString();
+            }
+            set
+            {
+                m_password = value.ToSecureString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether to enable
+        /// SSL when establishing communications with the SMTP server.
+        /// </summary>
+        [Setting]
+        [DefaultValue(false)]
+        public bool EnableSSL
+        {
+            get
+            {
+                return m_enableSSL;
+            }
+            set
+            {
+                m_enableSSL = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the password as a <see cref="SecureString"/>.
+        /// </summary>
+        public SecureString SecurePassword
+        {
+            get
+            {
+                return m_password;
             }
         }
 
