@@ -268,29 +268,42 @@ namespace FaultData.DataOperations
                 // Search for an existing series info object
                 dataSeries.SeriesInfo = seriesLookup.GetOrAdd(GetSeriesKey(dataSeries.SeriesInfo), seriesKey =>
                 {
+                    Series clonedSeries = dataSeries.SeriesInfo.Clone();
+
                     // Search for an existing series type object to associate with the new series
-                    dataSeries.SeriesInfo.SeriesType = seriesTypeLookup.GetOrAdd(dataSeries.SeriesInfo.SeriesType.Name, name => dataSeries.SeriesInfo.SeriesType);
+                    SeriesType seriesType = seriesTypeLookup.GetOrAdd(dataSeries.SeriesInfo.SeriesType.Name, name => dataSeries.SeriesInfo.SeriesType.Clone());
 
                     // Search for an existing channel object to associate with the new series
-                    dataSeries.SeriesInfo.Channel = channelLookup.GetOrAdd(GetChannelKey(dataSeries.SeriesInfo.Channel), channelKey =>
+                    Channel channel = channelLookup.GetOrAdd(GetChannelKey(dataSeries.SeriesInfo.Channel), channelKey =>
                     {
+                        Channel clonedChannel = dataSeries.SeriesInfo.Channel.Clone();
+
                         // Search for an existing measurement type object to associate with the new channel
-                        dataSeries.SeriesInfo.Channel.MeasurementType = measurementTypeLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementType.Name, name => dataSeries.SeriesInfo.Channel.MeasurementType);
+                        MeasurementType measurementType = measurementTypeLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementType.Name, name => dataSeries.SeriesInfo.Channel.MeasurementType.Clone());
 
                         // Search for an existing measurement characteristic object to associate with the new channel
-                        dataSeries.SeriesInfo.Channel.MeasurementCharacteristic = measurementCharacteristicLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name, name => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic);
+                        MeasurementCharacteristic measurementCharacteristic = measurementCharacteristicLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name, name => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Clone());
 
                         // Search for an existing phase object to associate with the new channel
-                        dataSeries.SeriesInfo.Channel.Phase = phaseLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.Phase.Name, name => dataSeries.SeriesInfo.Channel.Phase);
+                        Phase phase = phaseLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.Phase.Name, name => dataSeries.SeriesInfo.Channel.Phase.Clone());
 
-                        // Set the meter and line of the new channel
-                        dataSeries.SeriesInfo.Channel.Meter = meterDataSet.Meter;
-                        dataSeries.SeriesInfo.Channel.Line = line;
+                        // Assign the foreign keys of the channel
+                        // to reference the objects from the lookup
+                        clonedChannel.Meter = meterDataSet.Meter;
+                        clonedChannel.Line = line;
+                        clonedChannel.MeasurementType = measurementType;
+                        clonedChannel.MeasurementCharacteristic = measurementCharacteristic;
+                        clonedChannel.Phase = phase;
 
-                        return dataSeries.SeriesInfo.Channel;
+                        return clonedChannel;
                     });
 
-                    return dataSeries.SeriesInfo;
+                    // Assign the foreign keys of the series
+                    // to reference the objects from the lookup
+                    clonedSeries.SeriesType = seriesType;
+                    clonedSeries.Channel = channel;
+
+                    return clonedSeries;
                 });
             }
         }

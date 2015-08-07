@@ -9,7 +9,7 @@
         <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Reactance" />
         <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Takagi" />
         <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.ModifiedTakagi" />
-        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.NovoselEtAl" />
+        <faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Novosel" />
     </analytics>
     
     <!-- Each device is modelled using one of these device tags. By default, the openXDA service
