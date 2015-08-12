@@ -384,7 +384,7 @@ namespace FaultData.DataWriters
 
         private Schema WriteSchemaFile(COMTRADEData comtradeData, string schemaFilePath)
         {
-            Schema schema = Writer.CreateSchema(new List<ChannelMetadata>(), comtradeData.StationName, comtradeData.DeviceID, comtradeData.DataStartTime, comtradeData.SampleCount, samplingRate: comtradeData.SamplingRate, includeFracSecDefinition: false);
+            Schema schema = Writer.CreateSchema(new List<ChannelMetadata>(), comtradeData.StationName, comtradeData.DeviceID, comtradeData.DataStartTime, comtradeData.SampleCount, samplingRate: comtradeData.SamplingRate, includeFracSecDefinition: false, nominalFrequency: m_systemFrequency);
             List<AnalogChannel> analogChannels = new List<AnalogChannel>();
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
             int i = 1;
@@ -398,6 +398,8 @@ namespace FaultData.DataWriters
                 analogChannel.Name = channelData.Name;
                 analogChannel.Multiplier = (channelData.Data.Maximum - channelData.Data.Minimum) / (2 * short.MaxValue);
                 analogChannel.Adder = channelData.Data.Minimum + analogChannel.Multiplier * short.MaxValue;
+                analogChannel.MinValue = -short.MaxValue;
+                analogChannel.MaxValue = short.MaxValue;
                 analogChannel.Units = channelData.Units;
 
                 if ((object)channelData.OriginalAnalogChannel != null)
@@ -405,11 +407,7 @@ namespace FaultData.DataWriters
                     analogChannel.PhaseID = channelData.OriginalAnalogChannel.PhaseID;
                     analogChannel.CircuitComponent = channelData.OriginalAnalogChannel.CircuitComponent;
                     analogChannel.Units = channelData.OriginalAnalogChannel.Units;
-                    analogChannel.Multiplier = channelData.OriginalAnalogChannel.Multiplier;
-                    analogChannel.Adder = channelData.OriginalAnalogChannel.Adder;
                     analogChannel.Skew = channelData.OriginalAnalogChannel.Skew;
-                    analogChannel.MinValue = channelData.OriginalAnalogChannel.MinValue;
-                    analogChannel.MaxValue = channelData.OriginalAnalogChannel.MaxValue;
                     analogChannel.PrimaryRatio = channelData.OriginalAnalogChannel.PrimaryRatio;
                     analogChannel.SecondaryRatio = channelData.OriginalAnalogChannel.SecondaryRatio;
                     analogChannel.ScalingIdentifier = channelData.OriginalAnalogChannel.ScalingIdentifier;
