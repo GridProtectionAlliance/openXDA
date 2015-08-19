@@ -147,10 +147,13 @@
       <SourcesToArchive Include="$(LocalFolder)\Source\**\*.*" Exclude="$(LocalFolder)\Source\**\obj\**\*.*"/>
     
       <!--List of binaries to archive.-->
-      <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
-
-      <!--List of installs to archive.-->
-      <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
+      <Copy SourceFiles="$(LocalFolder)\Source\Data\openXDA.sql" DestinationFolder="$(BuildOutputFolder)\Applications\openXDA\"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.dll"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.sql"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe.config"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Tools\**\*.exe"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Tools\**\*.dll"/>
 
       <!--Destinations of archive files (*.zip).-->
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>
