@@ -6213,7 +6213,7 @@
             <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> is outside the range of valid indexes for the associated array -or-
             <paramref name="sourceCount"/> or <paramref name="otherCount"/> is less than 0 -or- 
             <paramref name="sourceOffset"/> or <paramref name="otherOffset"/>, 
-            and <paramref name="sourceCount"/> or <paramref name="otherCount"/> do not specify a valid section in the the associated array.
+            and <paramref name="sourceCount"/> or <paramref name="otherCount"/> do not specify a valid section in the associated array.
             </exception>
             <remarks>
             <para>
@@ -6348,6 +6348,12 @@
             <summary>Returns comparison results of two binary arrays.</summary>
             <param name="source">Source array.</param>
             <param name="other">Other array to compare to <paramref name="source"/> array.</param>
+            <remarks>
+            Note that if both arrays are <c>null</c> the arrays will be considered equal.
+            If one array is <c>null</c> and the other array is not <c>null</c>, the non-null array will be considered larger.
+            If the array lengths are not equal, the array with the larger length will be considered larger.
+            If the array lengths are equal, the arrays will be compared based on content.
+            </remarks>
             <returns>
             <para>
             A signed integer that indicates the relative comparison of <paramref name="source"/> array and <paramref name="other"/> array.
@@ -6383,6 +6389,10 @@
             <param name="other">Other array to compare to <paramref name="source"/> array.</param>
             <param name="otherOffset">Offset into <paramref name="other"/> array to begin compare.</param>
             <param name="count">Number of bytes to compare in both arrays.</param>
+            <remarks>
+            Note that if both arrays are <c>null</c> the arrays will be considered equal.
+            If one array is <c>null</c> and the other array is not <c>null</c>, the non-null array will be considered larger.
+            </remarks>
             <returns>
             <para>
             A signed integer that indicates the relative comparison of <paramref name="source"/> array and <paramref name="other"/> array.
@@ -6411,7 +6421,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">
             <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> is outside the range of valid indexes for the associated array -or-
             <paramref name="count"/> is less than 0 -or- 
-            <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> and <paramref name="count"/> do not specify a valid section in the the associated array.
+            <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> and <paramref name="count"/> do not specify a valid section in the associated array.
             </exception>
         </member>
         <member name="M:GSF.ArrayExtensions.Combine(System.Byte[],System.Byte[],System.Byte[])">
@@ -24458,6 +24468,60 @@
             <param name="attachments">A comma-separated or semicolon-seperated list of file names to be attached to the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
             <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
         </member>
+        <member name="M:GSF.Net.Smtp.Mail.Send(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.String,System.String)">
+            <summary>
+            Sends a secure <see cref="T:GSF.Net.Smtp.Mail"/> message.
+            </summary>
+            <param name="from">The e-mail address of the <see cref="T:GSF.Net.Smtp.Mail"/> message sender.</param>
+            <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="T:GSF.Net.Smtp.Mail"/> message recipients.</param>
+            <param name="subject">The subject of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="body">The body of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="isBodyHtml">true if the <see cref="T:GSF.Net.Smtp.Mail"/> message body is to be formated as HTML; otherwise false.</param>
+            <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+            <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+        </member>
+        <member name="M:GSF.Net.Smtp.Mail.Send(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.String,System.Security.SecureString)">
+            <summary>
+            Sends a secure <see cref="T:GSF.Net.Smtp.Mail"/> message.
+            </summary>
+            <param name="from">The e-mail address of the <see cref="T:GSF.Net.Smtp.Mail"/> message sender.</param>
+            <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="T:GSF.Net.Smtp.Mail"/> message recipients.</param>
+            <param name="subject">The subject of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="body">The body of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="isBodyHtml">true if the <see cref="T:GSF.Net.Smtp.Mail"/> message body is to be formated as HTML; otherwise false.</param>
+            <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+            <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+        </member>
+        <member name="M:GSF.Net.Smtp.Mail.Send(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Sends a secure <see cref="T:GSF.Net.Smtp.Mail"/> message.
+            </summary>
+            <param name="from">The e-mail address of the <see cref="T:GSF.Net.Smtp.Mail"/> message sender.</param>
+            <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="T:GSF.Net.Smtp.Mail"/> message recipients.</param>
+            <param name="subject">The subject of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="body">The body of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="isBodyHtml">true if the <see cref="T:GSF.Net.Smtp.Mail"/> message body is to be formated as HTML; otherwise false.</param>
+            <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+            <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+            <param name="enableSSL">The flag that determines whether to use SSL when communicating with the SMTP server.</param>
+        </member>
+        <member name="M:GSF.Net.Smtp.Mail.Send(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.String,System.Security.SecureString,System.Boolean)">
+            <summary>
+            Sends a secure <see cref="T:GSF.Net.Smtp.Mail"/> message.
+            </summary>
+            <param name="from">The e-mail address of the <see cref="T:GSF.Net.Smtp.Mail"/> message sender.</param>
+            <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="T:GSF.Net.Smtp.Mail"/> message recipients.</param>
+            <param name="subject">The subject of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="body">The body of the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="isBodyHtml">true if the <see cref="T:GSF.Net.Smtp.Mail"/> message body is to be formated as HTML; otherwise false.</param>
+            <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="T:GSF.Net.Smtp.Mail"/> message.</param>
+            <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+            <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+            <param name="enableSSL">The flag that determines whether to use SSL when communicating with the SMTP server.</param>
+        </member>
         <member name="P:GSF.Net.Smtp.Mail.From">
             <summary>
             Gets or sets the e-mail address of the <see cref="T:GSF.Net.Smtp.Mail"/> message sender.
@@ -24504,6 +24568,27 @@
         <member name="P:GSF.Net.Smtp.Mail.IsBodyHtml">
             <summary>
             Gets or sets a boolean value that indicating whether the <see cref="T:GSF.Net.Smtp.Mail"/> message <see cref="P:GSF.Net.Smtp.Mail.Body"/> is to be formatted as HTML.
+            </summary>
+        </member>
+        <member name="P:GSF.Net.Smtp.Mail.Username">
+            <summary>
+            Gets or sets the username used to authenticate to the SMTP server.
+            </summary>
+        </member>
+        <member name="P:GSF.Net.Smtp.Mail.Password">
+            <summary>
+            Gets or sets the password used to authenticate to the SMTP server.
+            </summary>
+        </member>
+        <member name="P:GSF.Net.Smtp.Mail.SecurePassword">
+            <summary>
+            Gets or sets the password used to authenticate to the SMTP server.
+            </summary>
+        </member>
+        <member name="P:GSF.Net.Smtp.Mail.EnableSSL">
+            <summary>
+            Gets or sets the flag that determines whether
+            to use SSL when communicating with the SMTP server.
             </summary>
         </member>
         <member name="P:GSF.Net.Smtp.Mail.Client">
