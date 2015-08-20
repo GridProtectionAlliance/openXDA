@@ -23,6 +23,8 @@
 
 @ECHO OFF
 
+SETLOCAL
+
 SET pwd="%CD%"
 SET gwd="%LOCALAPPDATA%\Temp\openXDA"
 SET git="%PROGRAMFILES(X86)%\Git\cmd\git.exe"
