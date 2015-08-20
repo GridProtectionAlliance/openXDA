@@ -31,6 +31,8 @@ SET git="%PROGRAMFILES(X86)%\Git\cmd\git.exe"
 SET remote="git@github.com:GridProtectionAlliance/openXDA.git"
 SET source="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Libraries\*.*"
 SET target="Source\Dependencies\GSF"
+SET sourcemasterbuild="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Build Scripts\MasterBuild.buildproj"
+SET targetmasterbuild="Build\Scripts"
 
 ECHO.
 ECHO Entering working directory...
@@ -45,10 +47,11 @@ ECHO Getting latest version...
 ECHO.
 ECHO Updating dependencies...
 XCOPY %source% %target% /E /U /Y
+XCOPY %sourcemasterbuild% %targetmasterbuild% /E /Y
 
 ECHO.
 ECHO Committing updates to local repository...
-%git% add %target%
+%git% add .
 %git% commit -m "Updated GSF dependencies."
 
 ECHO.
