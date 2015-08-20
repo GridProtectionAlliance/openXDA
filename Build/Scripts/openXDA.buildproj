@@ -141,13 +141,21 @@
       <HelpOutputFolder>$(BuildOutputFolder)\..\..\Help\</HelpOutputFolder>
       <HelpDeployFolder>$(BuildDeployFolder)\..\Help\</HelpDeployFolder>
     </PropertyGroup>
+    
+    <ItemGroup>
+      <!--Include the SQL database file in the binaries archive.-->
+      <BinariesToArchive Include="$(LocalFolder)\Source\Data\openXDA.sql"/>
+    </ItemGroup>
+    
+    <!--Move the SQL database file to the build output folder.-->
+    <Copy SourceFiles="@(BinariesToArchive)" DestinationFolder="$(BuildOutputFolder)\Applications\openXDA\"/>
       
     <ItemGroup>
       <!--List of source code files to archive.-->
       <SourcesToArchive Include="$(LocalFolder)\Source\**\*.*" Exclude="$(LocalFolder)\Source\**\obj\**\*.*"/>
     
       <!--List of binaries to archive.-->
-      <Copy SourceFiles="$(LocalFolder)\Source\Data\openXDA.sql" DestinationFolder="$(BuildOutputFolder)\Applications\openXDA\"/>
+      <BinariesToArchive Remove="@(BinariesToArchive)"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.dll"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.sql"/>
