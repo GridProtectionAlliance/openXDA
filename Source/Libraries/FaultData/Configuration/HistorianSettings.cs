@@ -26,7 +26,7 @@ using System.ComponentModel;
 using System.Configuration;
 using GSF;
 
-namespace openHistorian.XDALink
+namespace FaultData.Configuration
 {
     public class HistorianSettings
     {

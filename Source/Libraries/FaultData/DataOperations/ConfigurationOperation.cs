@@ -153,6 +153,7 @@ namespace FaultData.DataOperations
                 // Add channels that are not already defined in the
                 // configuration by assuming the meter monitors only one line
                 AddUndefinedChannels(meterDataSet);
+                FixUpdatedChannelInfo(meterDataSet);
             }
             else
             {
@@ -294,6 +295,7 @@ namespace FaultData.DataOperations
                         clonedChannel.MeasurementType = measurementType;
                         clonedChannel.MeasurementCharacteristic = measurementCharacteristic;
                         clonedChannel.Phase = phase;
+                        clonedChannel.Enabled = 1;
 
                         return clonedChannel;
                     });
@@ -306,6 +308,22 @@ namespace FaultData.DataOperations
                     return clonedSeries;
                 });
             }
+        }
+
+        private void FixUpdatedChannelInfo(MeterDataSet meterDataSet)
+        {
+            HashSet<int> channelLookup = new HashSet<int>(meterDataSet.DataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel.ID));
+
+            foreach (DataSeries dataSeries in meterDataSet.DataSeries)
+            {
+                if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
+                    dataSeries.SeriesInfo.Channel.SamplesPerHour = (int)Math.Round((dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D));
+            }
+
+            foreach (Channel channel in meterDataSet.Meter.Channels)
+                channel.Enabled = channelLookup.Contains(channel.ID) ? 1 : 0;
+
+            m_meterInfo.SubmitChanges();
         }
 
         private void RemoveUndefinedDataSeries(MeterDataSet meterDataSet)

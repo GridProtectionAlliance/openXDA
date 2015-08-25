@@ -74,10 +74,11 @@
       <Column Name="MeasurementCharacteristicID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="PhaseID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
-      <Column Name="SamplesPerHour" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SamplesPerHour" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
       <Column Name="PerUnitValue" Type="System.Double" DbType="Float" CanBeNull="true" />
       <Column Name="HarmonicGroup" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Description" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Column Name="Enabled" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Association Name="Channel_Series" Member="Series" ThisKey="ID" OtherKey="ChannelID" Type="Series" />
       <Association Name="Channel_BreakerChannel" Member="BreakerChannels" ThisKey="ID" OtherKey="ChannelID" Type="BreakerChannel" />
       <Association Name="MeasurementType_Channel" Member="MeasurementType" ThisKey="MeasurementTypeID" OtherKey="ID" Type="MeasurementType" IsForeignKey="true" />

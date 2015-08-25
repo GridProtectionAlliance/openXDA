@@ -210,10 +210,11 @@ CREATE TABLE Channel
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
     PhaseID INT NOT NULL REFERENCES Phase(ID),
     Name VARCHAR(200) NOT NULL,
-    SamplesPerHour INT NOT NULL,
+    SamplesPerHour FLOAT NOT NULL,
     PerUnitValue FLOAT NULL,
     HarmonicGroup INT NOT NULL,
-    Description VARCHAR(MAX) NULL
+    Description VARCHAR(MAX) NULL,
+    Enabled INT NOT NULL DEFAULT 1
 )
 GO
 
@@ -738,6 +739,58 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_DataQualityRangeLimit_ChannelID
 ON DataQualityRangeLimit(ChannelID ASC)
+GO
+
+CREATE TABLE MeterDataQualitySummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    Date DATE NOT NULL,
+    ExpectedPoints INT NOT NULL,
+    GoodPoints INT NOT NULL,
+    LatchedPoints INT NOT NULL,
+    UnreasonablePoints INT NOT NULL,
+    NoncongruentPoints INT NOT NULL,
+    DuplicatePoints INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterDataQualitySummary_MeterID
+ON MeterDataQualitySummary(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterDataQualitySummary_Date
+ON MeterDataQualitySummary(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterDataQualitySummary_MeterID_Date
+ON MeterDataQualitySummary(MeterID ASC, Date ASC)
+GO
+
+CREATE TABLE ChannelDataQualitySummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    Date DATE NOT NULL,
+    ExpectedPoints INT NOT NULL,
+    GoodPoints INT NOT NULL,
+    LatchedPoints INT NOT NULL,
+    UnreasonablePoints INT NOT NULL,
+    NoncongruentPoints INT NOT NULL,
+    DuplicatePoints INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelDataQualitySummary_ChannelID
+ON ChannelDataQualitySummary(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelDataQualitySummary_Date
+ON ChannelDataQualitySummary(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelDataQualitySummary_ChannelID_Date
+ON ChannelDataQualitySummary(ChannelID ASC, Date ASC)
 GO
 
 -- ------ --

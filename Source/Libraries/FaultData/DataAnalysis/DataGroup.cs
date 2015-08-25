@@ -137,7 +137,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_samples / (m_endTime - m_startTime).TotalSeconds;
+                return (m_samples - 1) / (m_endTime - m_startTime).TotalSeconds;
             }
         }
 
@@ -149,7 +149,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_samples / (m_endTime - m_startTime).TotalHours;
+                return (m_samples - 1) / (m_endTime - m_startTime).TotalHours;
             }
         }
 

@@ -157,7 +157,7 @@ namespace FaultData.DataOperations
                 // Update alarm log for each excursion
                 foreach (MeterData.HourlyTrendingSummaryRow hourlySummary in hourlySummaryTable)
                 {
-                    foreach (AlarmData.AlarmRangeLimitRow rangeLimit in Enumerable.Where(rangeLimitTable, row => row.Enabled != 0))
+                    foreach (AlarmData.AlarmRangeLimitRow rangeLimit in rangeLimitTable.Where(row => row.Enabled != 0))
                         CheckAlarm(channel, hourlySummary, rangeLimit);
                 }
             }

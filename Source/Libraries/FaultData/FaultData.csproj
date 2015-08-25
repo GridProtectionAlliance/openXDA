@@ -69,6 +69,7 @@
     <Compile Include="Configuration\BreakerSettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
     <Compile Include="Configuration\FaultLocationSettings.cs" />
+    <Compile Include="Configuration\HistorianSettings.cs" />
     <Compile Include="DataAnalysis\CycleDataGroup.cs" />
     <Compile Include="DataAnalysis\DataGroup.cs" />
     <Compile Include="DataAnalysis\DataPoint.cs" />
@@ -86,6 +87,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Database\DataContextLookup.cs" />
+    <Compile Include="Database\DataQuality.cs">
+      <DependentUpon>DataQuality.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Database\DataQuality.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -137,7 +142,9 @@
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
     <Compile Include="DataOperations\DataOperationBase.cs" />
+    <Compile Include="DataOperations\DataQualityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
+    <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
     <Compile Include="DataResources\DataGroupsResource.cs" />
@@ -264,6 +271,10 @@
     <ProjectReference Include="..\FaultAlgorithms\FaultAlgorithms.csproj">
       <Project>{24eb0e7b-9f79-4e3a-94fb-87bd4d06a400}</Project>
       <Name>FaultAlgorithms</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\openHistorian.XDALink\openHistorian.XDALink.csproj">
+      <Project>{7F731255-FA83-4DBF-9E0F-C22AE4845E76}</Project>
+      <Name>openHistorian.XDALink</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -24,34 +24,16 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
+using FaultData.Configuration;
 using FaultData.Database;
-using FaultData.DataOperations;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF;
 using GSF.Configuration;
-using GSF.Snap.Services;
 using log4net;
-using openHistorian.Net;
-using openHistorian.Queues;
-using openHistorian.Snap;
+using openHistorian.XDALink;
 
-namespace openHistorian.XDALink
+namespace FaultData.DataOperations
 {
-    /// <summary>
-    /// Series ID values.
-    /// </summary>
-    public enum SeriesID
-    {
-        Minimum = 0,
-        Maximum = 1,
-        Average = 2
-    }
-
-    /// <summary>
-    /// Data operation to load trending data into the openHistorian.
-    /// </summary>
     public class TrendingDataSummaryOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
@@ -86,7 +68,7 @@ namespace openHistorian.XDALink
         }
 
         #endregion
-        
+
         #region [ Methods ]
 
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
@@ -99,48 +81,39 @@ namespace openHistorian.XDALink
             // Not doing anything with database
         }
 
-        public override void Execute(MeterDataSet dataSet)
+        public override void Execute(MeterDataSet meterDataSet)
         {
             Log.Info("Executing operation to load trending summary data into the openHistorian...");
 
-            using (HistorianClient client = new HistorianClient(m_historianSettings.HostName, m_historianSettings.Port))
-            using (ClientDatabaseBase<HistorianKey, HistorianValue> database = client.GetDatabase<HistorianKey, HistorianValue>(m_historianSettings.InstanceName))
-            using (HistorianInputQueue queue = new HistorianInputQueue(() => database))
+            using (Historian historian = new Historian(m_historianSettings.Server, m_historianSettings.InstanceName))
             {
-                Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = dataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-                HistorianKey key = new HistorianKey();
-                HistorianValue value = new HistorianValue();
+                Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
 
                 foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
                 {
                     // Reduce data set to valid summaries
                     IEnumerable<TrendingDataSummaryResource.TrendingDataSummary> validSummaries = channelSummaries.Value.Where(summary => summary.IsValid);
-                    uint channelID = (uint)channelSummaries.Key.ID;
+                    int channelID = channelSummaries.Key.ID;
 
                     foreach (TrendingDataSummaryResource.TrendingDataSummary summary in validSummaries)
                     {
-                        key.TimestampAsDate = summary.Time;
-
                         // Write minimum series value
-                        key.PointID = Word.MakeQuadWord(channelID, (uint)SeriesID.Minimum);
-                        value.AsSingle = (float)summary.Minimum;
-                        queue.Enqueue(key, value);
+                        if (!summary.IsDuplicate)
+                            historian.Write(channelID, SeriesID.Minimum, summary.Time, summary.Minimum);
 
                         // Write maximum series value
-                        key.PointID = Word.MakeQuadWord(channelID, (uint)SeriesID.Maximum);
-                        value.AsSingle = (float)summary.Maximum;
-                        queue.Enqueue(key, value);
+                        if (!summary.IsDuplicate)
+                            historian.Write(channelID, SeriesID.Maximum, summary.Time, summary.Maximum);
 
                         // Write average series value
-                        key.PointID = Word.MakeQuadWord(channelID, (uint)SeriesID.Average);
-                        value.AsSingle = (float)summary.Average;
-                        queue.Enqueue(key, value);
+                        if (!summary.IsDuplicate)
+                            historian.Write(channelID, SeriesID.Average, summary.Time, summary.Average);
                     }
                 }
 
-                // Wait for queue to be processed
-                while (queue.Size > 0)
-                    Thread.Sleep(1000);
+                // Wait for queue
+                // to be processed
+                historian.Flush();
             }
         }
 
