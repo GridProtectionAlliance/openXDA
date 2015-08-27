@@ -162,6 +162,8 @@
     <Compile Include="FaultValidator.cs" />
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
+    <Compile Include="MeterDataProcessor.cs" />
+    <Compile Include="MeterDataScheduler.cs" />
     <Compile Include="ServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>

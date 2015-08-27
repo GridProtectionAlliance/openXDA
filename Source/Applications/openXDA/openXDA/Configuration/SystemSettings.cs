@@ -66,6 +66,8 @@ namespace openXDA.Configuration
         private int m_fileWatcherBufferSize;
         private string m_fileShares;
 
+        private TimeZoneInfo m_defaultMeterTimeZoneInfo;
+        private TimeZoneInfo m_xdaTimeZoneInfo;
         private List<string> m_watchDirectoryList;
         private List<FileShare> m_fileShareList;
 
@@ -490,6 +492,36 @@ namespace openXDA.Configuration
                     .Select(kvp => kvp.Value)
                     .Select(fileShareString => new FileShare(fileShareString))
                     .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="TimeZoneInfo"/> for the time zone
+        /// used by meters in the system unless configured otherwise.
+        /// </summary>
+        public TimeZoneInfo DefaultMeterTimeZoneInfo
+        {
+            get
+            {
+                if ((object)m_defaultMeterTimeZoneInfo == null)
+                    m_defaultMeterTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(m_defaultMeterTimeZone);
+
+                return m_defaultMeterTimeZoneInfo;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="TimeZoneInfo"/> for the
+        /// time zone used by openXDA to store data.
+        /// </summary>
+        public TimeZoneInfo XDATimeZoneInfo
+        {
+            get
+            {
+                if ((object)m_xdaTimeZoneInfo == null)
+                    m_xdaTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(m_xdaTimeZone);
+
+                return m_xdaTimeZoneInfo;
             }
         }
 
