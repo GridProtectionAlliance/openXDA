@@ -36,7 +36,6 @@ using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
-using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
 
 namespace FaultData.DataOperations
 {
@@ -514,16 +513,16 @@ namespace FaultData.DataOperations
 
         private VICycleDataGroup GetCycleData(int eventID)
         {
-            MeterData.CycleDataDataTable cycleDataTable;
+            MeterData.EventDataDataTable eventDataTable;
             DataGroup dataGroup;
 
-            cycleDataTable = m_dbAdapterContainer.GetAdapter<CycleDataTableAdapter>().GetDataBy(eventID);
+            eventDataTable = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>().GetDataBy(eventID);
 
-            if (cycleDataTable.Count == 0)
+            if (eventDataTable.Count == 0)
                 return null;
 
             dataGroup = new DataGroup();
-            dataGroup.FromData(cycleDataTable[0].Data);
+            dataGroup.FromData(eventDataTable[0].FrequencyDomainData);
 
             return new VICycleDataGroup(dataGroup);
         }

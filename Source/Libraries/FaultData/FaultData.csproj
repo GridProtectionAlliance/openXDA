@@ -74,6 +74,8 @@
     <Compile Include="DataAnalysis\DataGroup.cs" />
     <Compile Include="DataAnalysis\DataPoint.cs" />
     <Compile Include="DataAnalysis\DataSeries.cs" />
+    <Compile Include="DataAnalysis\Disturbance.cs" />
+    <Compile Include="DataAnalysis\VoltageDisturbanceAnalyzer.cs" />
     <Compile Include="DataAnalysis\Fault.cs" />
     <Compile Include="DataAnalysis\Transform.cs" />
     <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
@@ -155,6 +157,9 @@
     <Compile Include="DataOperations\IDataOperation.cs" />
     <Compile Include="DataResources\FaultDataResource.cs" />
     <Compile Include="DataResources\IDataResource.cs" />
+    <Compile Include="DataResources\InterruptionDataResource.cs" />
+    <Compile Include="DataResources\SagDataResource.cs" />
+    <Compile Include="DataResources\SwellDataResource.cs" />
     <Compile Include="DataResources\SystemEventResource.cs" />
     <Compile Include="DataSets\IDataSet.cs" />
     <Compile Include="DataResources\TrendingDataSummaryResource.cs" />
@@ -165,7 +170,6 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
-    <Compile Include="DataWriters\CSVWriter.cs" />
     <Compile Include="DataWriters\EmailWriter.cs" />
     <Compile Include="DataWriters\IDataWriter.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
@@ -228,8 +232,8 @@
     </None>
     <None Include="Database\MeterData.xsd">
       <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>MeterData.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>MeterData.Designer.cs</LastGenOutput>
     </None>
     <None Include="Database\MeterData.xss">
       <DependentUpon>MeterData.xsd</DependentUpon>

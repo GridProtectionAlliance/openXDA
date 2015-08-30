@@ -26,6 +26,8 @@ namespace FaultData.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost\\SQLEXPRESS; Initial Catalog=openXDA; Integrated Security=SS" +
+            "PI")]
         public string openXDAConnectionString {
             get {
                 return ((string)(this["openXDAConnectionString"]));

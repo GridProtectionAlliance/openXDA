@@ -32,7 +32,8 @@ using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
-using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
+using EventKey = System.Tuple<int, int, System.DateTime, System.DateTime, int>;
+using WaveformKey = System.Tuple<int, int>;
 
 namespace FaultData.DataOperations
 {
@@ -40,17 +41,40 @@ namespace FaultData.DataOperations
     {
         #region [ Members ]
 
+        // Constants
+        // TODO: Hardcoded frequency
+        private const double Frequency = 60.0D;
+
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
+        private double m_systemFrequency;
         private TimeZoneInfo m_timeZone;
 
         private MeterDataSet m_meterDataSet;
         private MeterData.EventDataTable m_eventTable;
-        private List<Tuple<EventKey, byte[]>> m_cycleDataList;
+        private MeterData.EventDataDataTable m_eventDataTable;
+        private MeterData.DisturbanceDataTable m_disturbanceTable;
+        private List<Tuple<WaveformKey, MeterData.EventRow>> m_eventList;
+        private List<Tuple<EventKey, MeterData.DisturbanceRow>> m_disturbanceList;
+
+        private DataContextLookup<string, Phase> m_phaseLookup;
 
         #endregion
 
         #region [ Properties ]
+
+        [Setting]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
 
         [Setting]
         public string XDATimeZone
@@ -85,6 +109,7 @@ namespace FaultData.DataOperations
             cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             eventClassificationResource = meterDataSet.GetResource(() => new EventClassificationResource(m_dbAdapterContainer));
             LoadEvents(meterDataSet, cycleDataResource.DataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
+            LoadDisturbances(meterDataSet, cycleDataResource.DataGroups);
 
             m_meterDataSet = meterDataSet;
         }
@@ -93,14 +118,14 @@ namespace FaultData.DataOperations
         {
             BulkLoader bulkLoader;
 
+            EventTableAdapter eventAdapter;
+            EventDataTableAdapter eventDataAdapter;
             Dictionary<EventKey, MeterData.EventRow> eventLookup;
+            Dictionary<WaveformKey, MeterData.EventDataRow> eventDataLookup;
+
             MeterData.EventRow eventRow;
 
-            FaultLocationData.CycleDataDataTable cycleDataTable;
-            EventKey eventKey;
-            byte[] cycleData;
-
-            if (m_eventTable.Count == 0 && m_cycleDataList.Count == 0)
+            if (m_eventDataTable.Count == 0)
                 return;
 
             Log.Info("Loading event data into the database...");
@@ -110,28 +135,41 @@ namespace FaultData.DataOperations
             bulkLoader.Connection = dbAdapterContainer.Connection;
             bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
 
+            // Write event data to the database
+            bulkLoader.Load(m_eventDataTable);
+
+            // Query database for event data IDs and store them in a lookup table by waveform key
+            eventDataAdapter = dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
+            eventDataAdapter.FillByFileGroup(m_eventDataTable, m_meterDataSet.FileGroup.ID);
+            eventDataLookup = m_eventDataTable.ToDictionary(CreateWaveformKey);
+
+            // Update the event rows with the IDs from the event data table
+            foreach (Tuple<WaveformKey, MeterData.EventRow> tuple in m_eventList)
+            {
+                tuple.Item2.EventDataID = eventDataLookup[tuple.Item1].ID;
+                m_eventTable.AddEventRow(tuple.Item2);
+            }
+
             // Write events to the database
             bulkLoader.Load(m_eventTable);
 
-            // Query database for event IDs and store them in a lookup table by line ID
-            dbAdapterContainer.GetAdapter<EventTableAdapter>().FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
-            eventLookup = Enumerable.Where(m_eventTable, evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+            // Query database for events and store them in a lookup table by event key
+            eventAdapter = dbAdapterContainer.GetAdapter<EventTableAdapter>();
+            eventAdapter.FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
+            eventLookup = m_eventTable.ToDictionary(CreateEventKey);
 
-            // Create cycle data table
-            cycleDataTable = new FaultLocationData.CycleDataDataTable();
-
-            // Create rows for cycle data in the cycle data table
-            foreach (Tuple<EventKey, byte[]> tuple in m_cycleDataList)
+            // Update the disturbance rows with the IDs from the event table
+            foreach (Tuple<EventKey, MeterData.DisturbanceRow> tuple in m_disturbanceList)
             {
-                eventKey = tuple.Item1;
-                cycleData = tuple.Item2;
-
-                if (eventLookup.TryGetValue(eventKey, out eventRow))
-                    cycleDataTable.AddCycleDataRow(eventRow.ID, cycleData);
+                if (eventLookup.TryGetValue(tuple.Item1, out eventRow))
+                {
+                    tuple.Item2.EventID = eventRow.ID;
+                    m_disturbanceTable.AddDisturbanceRow(tuple.Item2);
+                }
             }
 
-            // Write cycle data to the database
-            bulkLoader.Load(cycleDataTable);
+            // Write disturbances to the database
+            bulkLoader.Load(m_disturbanceTable);
 
             Log.Info(string.Format("Loaded {0} events into the database.", m_eventTable.Count));
         }
@@ -155,9 +193,11 @@ namespace FaultData.DataOperations
             int eventTypeID;
 
             MeterData.EventRow eventRow;
+            MeterData.EventDataRow eventDataRow;
 
             m_eventTable = new MeterData.EventDataTable();
-            m_cycleDataList = new List<Tuple<EventKey, byte[]>>();
+            m_eventDataTable = new MeterData.EventDataDataTable();
+            m_eventList = new List<Tuple<WaveformKey, MeterData.EventRow>>();
 
             for (int i = 0; i < dataGroups.Count; i++)
             {
@@ -180,19 +220,90 @@ namespace FaultData.DataOperations
                 eventRow.LineID = dataGroup.Line.ID;
                 eventRow.EventTypeID = eventTypeID;
                 eventRow.Name = string.Empty;
-                eventRow.Data = dataGroup.ToData();
                 eventRow.StartTime = dataGroup.StartTime;
                 eventRow.EndTime = dataGroup.EndTime;
+                eventRow.Samples = dataGroup.Samples;
                 eventRow.TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes;
-                eventRow.Magnitude = 0.0D;
-                eventRow.Duration = (dataGroup.EndTime - dataGroup.StartTime).TotalSeconds;
-                eventRow.HasImpactedComponents = 0;
-                m_eventTable.AddEventRow(eventRow);
+                eventRow.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
+                eventRow.SamplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / Frequency);
 
-                m_cycleDataList.Add(Tuple.Create(CreateEventKey(eventRow), viCycleDataGroups[i].ToDataGroup().ToData()));
+                eventDataRow = m_eventDataTable.NewEventDataRow();
+                eventDataRow.FileGroupID = meterDataSet.FileGroup.ID;
+                eventDataRow.RuntimeID = i;
+                eventDataRow.TimeDomainData = dataGroup.ToData();
+                eventDataRow.FrequencyDomainData = viCycleDataGroups[i].ToDataGroup().ToData();
+                eventDataRow.MarkedForDeletion = 0;
+
+                m_eventDataTable.AddEventDataRow(eventDataRow);
+                m_eventList.Add(Tuple.Create(CreateWaveformKey(eventDataRow), eventRow));
             }
 
             Log.Info(string.Format("Finished processing {0} events.", m_eventTable.Count));
+        }
+
+        private void LoadDisturbances(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
+        {
+            SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
+            SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
+            InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+
+            EventKey eventKey;
+            List<Disturbance> disturbances;
+
+            m_disturbanceTable = new MeterData.DisturbanceDataTable();
+            m_disturbanceList = new List<Tuple<EventKey, MeterData.DisturbanceRow>>();
+
+            foreach (DataGroup dataGroup in dataGroups)
+            {
+                if (dataGroup.Classification == DataClassification.Trend || dataGroup.Classification == DataClassification.Unknown)
+                    continue;
+
+                eventKey = CreateEventKey(meterDataSet.FileGroup, dataGroup);
+
+                if (sagDataResource.Sags.TryGetValue(dataGroup, out disturbances))
+                {
+                    foreach (Disturbance sag in disturbances)
+                        AddDisturbanceRow(eventKey, dataGroup, sag);
+                }
+
+                if (swellDataResource.Swells.TryGetValue(dataGroup, out disturbances))
+                {
+                    foreach (Disturbance swell in disturbances)
+                        AddDisturbanceRow(eventKey, dataGroup, swell);
+                }
+
+                if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out disturbances))
+                {
+                    foreach (Disturbance interruption in disturbances)
+                        AddDisturbanceRow(eventKey, dataGroup, interruption);
+                }
+            }
+        }
+
+        private void AddDisturbanceRow(EventKey eventKey, DataGroup dataGroup, Disturbance disturbance)
+        {
+            MeterData.DisturbanceRow row = m_disturbanceTable.NewDisturbanceRow();
+
+            row.EventTypeID = s_eventTypeLookup[disturbance.EventType];
+            row.PhaseID = GetPhaseID(disturbance.Phase);
+            row.Magnitude = disturbance.Magnitude;
+            row.PerUnitMagnitude = disturbance.GetPerUnitMagnitude(dataGroup.Line.VoltageKV * 1000.0D);
+            row.StartTime = disturbance.StartTime;
+            row.EndTime = disturbance.EndTime;
+            row.DurationSeconds = disturbance.DurationSeconds;
+            row.DurationCycles = disturbance.GetDurationCycles(m_systemFrequency);
+            row.StartIndex = disturbance.StartIndex;
+            row.EndIndex = disturbance.EndIndex;
+
+            m_disturbanceList.Add(Tuple.Create(eventKey, row));
+        }
+
+        private int GetPhaseID(GSF.PQDIF.Logical.Phase phase)
+        {
+            if ((object)m_phaseLookup == null)
+                m_phaseLookup = new DataContextLookup<string, Phase>(m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>(), ph => ph.Name);
+
+            return m_phaseLookup.GetOrAdd(phase.ToString(), name => new Phase() { Name = name, Description = name }).ID;
         }
 
         private Dictionary<EventClassification, int> GetEventTypeLookup(DbAdapterContainer dbAdapterContainer)
@@ -224,9 +335,19 @@ namespace FaultData.DataOperations
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
         }
 
-        private EventKey CreateEventKey(MeterData.EventRow evt)
+        private EventKey CreateEventKey(FileGroup fileGroup, DataGroup dataGroup)
         {
-            return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
+            return Tuple.Create(fileGroup.ID, dataGroup.Line.ID, dataGroup.StartTime, dataGroup.EndTime, dataGroup.Samples);
+        }
+
+        private EventKey CreateEventKey(MeterData.EventRow eventRow)
+        {
+            return Tuple.Create(eventRow.FileGroupID, eventRow.LineID, eventRow.StartTime, eventRow.EndTime, eventRow.Samples);
+        }
+
+        private WaveformKey CreateWaveformKey(MeterData.EventDataRow eventDataRow)
+        {
+            return Tuple.Create(eventDataRow.FileGroupID, eventDataRow.RuntimeID);
         }
 
         #endregion

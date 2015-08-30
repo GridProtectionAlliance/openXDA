@@ -30,7 +30,6 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
-using CycleDataTableAdapter = FaultData.Database.MeterDataTableAdapters.CycleDataTableAdapter;
 using DataPoint = FaultData.DataAnalysis.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
@@ -210,19 +209,25 @@ namespace FaultData.DataWriters
         {
             MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
             EventTableAdapter eventAdapter = m_dbAdapterContainer.GetAdapter<EventTableAdapter>();
+            EventDataTableAdapter eventDataAdapter = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
+
             MeterData.EventRow eventRow = eventAdapter.GetDataByID(m_eventID)[0];
+            MeterData.EventDataRow eventDataRow = eventDataAdapter.GetDataBy(m_eventID)[0];
+
             Meter meter = meterInfo.Meters.Single(m => m.ID == eventRow.MeterID);
+
             DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(meter, eventRow.Data);
+            dataGroup.FromData(meter, eventDataRow.TimeDomainData);
             return new VIDataGroup(dataGroup);
         }
 
         private VICycleDataGroup GetVICycleDataGroup()
         {
-            CycleDataTableAdapter cycleDataAdapter = m_dbAdapterContainer.GetAdapter<CycleDataTableAdapter>();
-            MeterData.CycleDataRow cycleDataRow = cycleDataAdapter.GetDataBy(m_eventID)[0];
+            EventDataTableAdapter eventDataAdapter = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
+            MeterData.EventDataRow eventDataRow = eventDataAdapter.GetDataBy(m_eventID)[0];
+
             DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(cycleDataRow.Data);
+            dataGroup.FromData(eventDataRow.FrequencyDomainData);
             return new VICycleDataGroup(dataGroup);
         }
 
