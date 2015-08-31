@@ -291,7 +291,7 @@ namespace openXDA.Configuration
         /// before the time of the record indicates that the data is unreasonable.
         /// </summary>
         [Setting]
-        [DefaultValue(1440.0D)]
+        [DefaultValue(8760.0D)]
         public double MinTimeOffset
         {
             get
