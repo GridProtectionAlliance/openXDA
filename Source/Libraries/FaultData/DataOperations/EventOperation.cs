@@ -287,7 +287,7 @@ namespace FaultData.DataOperations
             row.EventTypeID = s_eventTypeLookup[disturbance.EventType];
             row.PhaseID = GetPhaseID(disturbance.Phase);
             row.Magnitude = disturbance.Magnitude;
-            row.PerUnitMagnitude = disturbance.GetPerUnitMagnitude(dataGroup.Line.VoltageKV * 1000.0D);
+            row.PerUnitMagnitude = ToDbFloat(disturbance.GetPerUnitMagnitude(dataGroup.Line.VoltageKV * 1000.0D));
             row.StartTime = disturbance.StartTime;
             row.EndTime = disturbance.EndTime;
             row.DurationSeconds = disturbance.DurationSeconds;
@@ -348,6 +348,16 @@ namespace FaultData.DataOperations
         private WaveformKey CreateWaveformKey(MeterData.EventDataRow eventDataRow)
         {
             return Tuple.Create(eventDataRow.FileGroupID, eventDataRow.RuntimeID);
+        }
+
+        private double ToDbFloat(double value)
+        {
+            const double Invalid = -1.0e308D;
+
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                return Invalid;
+
+            return value;
         }
 
         #endregion
