@@ -23,11 +23,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
-using FaultData.Database.DataQualityTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -41,7 +39,6 @@ namespace FaultData.DataOperations
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
-        private DataQuality.DataQualityRangeLimitDataTable m_rangeLimitTable;
         private MeterData.HourlyTrendingSummaryDataTable m_hourlySummaryTable;
         private MeterData.ChannelNormalDataTable m_channelNormalTable;
 
@@ -52,7 +49,6 @@ namespace FaultData.DataOperations
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_dbAdapterContainer = dbAdapterContainer;
-            m_rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
             m_hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
             m_channelNormalTable = new MeterData.ChannelNormalDataTable();
         }
@@ -60,7 +56,6 @@ namespace FaultData.DataOperations
         public override void Execute(MeterDataSet meterDataSet)
         {
             Log.Info("Executing operation to load hourly summary data into the database...");
-            ProcessDataQualityRangeLimits(meterDataSet);
             ProcessHourlySummaries(meterDataSet);
             ProcessChannelNormals(meterDataSet);
         }
@@ -114,77 +109,6 @@ namespace FaultData.DataOperations
             channelNormalLoader.Load(m_channelNormalTable);
 
             Log.Info(string.Format("Loaded {0} hourly summary records into the database.", m_hourlySummaryTable.Count));
-        }
-
-        private void ProcessDataQualityRangeLimits(MeterDataSet meterDataSet)
-        {
-            DataQuality.DataQualityRangeLimitDataTable rangeLimitTable;
-
-            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries;
-            Channel channel;
-
-            TrendingDataSummaryResource.TrendingDataSummary previousSummary = null;
-
-            double perUnitValue;
-            double lowLimit;
-            double highLimit;
-            bool minValid;
-            bool maxValid;
-
-            trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
-
-            foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> keyValuePair in trendingDataSummaries)
-            {
-                channel = keyValuePair.Key;
-                perUnitValue = channel.PerUnitValue ?? 1.0D;
-                InitializeRangeLimitTable(rangeLimitTable, channel);
-
-                foreach (TrendingDataSummaryResource.TrendingDataSummary trendingDataSummary in keyValuePair.Value)
-                {
-                    if ((object)previousSummary != null && trendingDataSummary.Minimum == previousSummary.Minimum && trendingDataSummary.Average == previousSummary.Average && trendingDataSummary.Maximum == previousSummary.Maximum)
-                        trendingDataSummary.Latched = true;
-
-                    if (trendingDataSummary.Average < trendingDataSummary.Minimum || trendingDataSummary.Average > trendingDataSummary.Maximum)
-                        trendingDataSummary.NonCongruent = true;
-
-                    foreach (DataQuality.DataQualityRangeLimitRow row in rangeLimitTable.Where(row => row.Enabled != 0))
-                    {
-                        highLimit = 0.0D;
-                        lowLimit = 0.0D;
-                        maxValid = true;
-                        minValid = true;
-
-                        if (!row.IsHighNull())
-                        {
-                            highLimit = Convert.ToBoolean(row.PerUnit) ? row.High * perUnitValue : row.High;
-                            maxValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Maximum < highLimit);
-                        }
-
-                        if (!row.IsLowNull())
-                        {
-                            lowLimit = Convert.ToBoolean(row.PerUnit) ? row.Low * perUnitValue : row.Low;
-                            minValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Minimum > lowLimit);
-                        }
-
-                        if (!minValid || !maxValid)
-                        {
-                            trendingDataSummary.Unreasonable = true;
-                            trendingDataSummary.HighLimit = highLimit;
-                            trendingDataSummary.LowLimit = lowLimit;
-
-                            if (!maxValid)
-                                trendingDataSummary.UnreasonableValue = trendingDataSummary.Maximum;
-                            else
-                                trendingDataSummary.UnreasonableValue = trendingDataSummary.Minimum;
-
-                            break;
-                        }
-                    }
-
-                    previousSummary = trendingDataSummary;
-                }
-            }
         }
 
         private void ProcessHourlySummaries(MeterDataSet meterDataSet)
@@ -261,56 +185,6 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void InitializeRangeLimitTable(DataQuality.DataQualityRangeLimitDataTable rangeLimitTable, Channel channel)
-        {
-            DataQualityRangeLimitTableAdapter rangeLimitAdapter;
-            DefaultDataQualityRangeLimitTableAdapter defaultRangeLimitAdapter;
-            DataQuality.DefaultDataQualityRangeLimitDataTable defaultRangeLimitTable;
-
-            // Clear existing rows from the range limit table
-            rangeLimitTable.Clear();
-
-            // Fill the range limit table with range limits for the given channel
-            rangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DataQualityRangeLimitTableAdapter>();
-            rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
-
-            // If limits exist for the given channel,
-            // range limit table has been successfully initialized
-            if (rangeLimitTable.Count != 0)
-                return;
-
-            // Get the default range limits for the measurement type and characteristic of this channel
-            defaultRangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DefaultDataQualityRangeLimitTableAdapter>();
-            defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
-
-            // If there are no default limits for the channel,
-            // then the range limit table has been successfully initialized
-            if (defaultRangeLimitTable.Count == 0)
-                return;
-
-            lock (RangeLimitLock)
-            {
-                // Fill the range limit table one more time inside the lock to
-                // ensure that no other threads have written limits for this channel
-                rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
-
-                // If there are still no limits defined for this channel,
-                // update the table to include this channel's default limits
-                if (rangeLimitTable.Count == 0)
-                {
-                    foreach (DataQuality.DefaultDataQualityRangeLimitRow row in defaultRangeLimitTable)
-                        rangeLimitTable.AddDataQualityRangeLimitRow(channel.ID, row.High, row.Low, row.RangeInclusive, row.PerUnit, 1);
-
-                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
-                    {
-                        bulkCopy.BulkCopyTimeout = 0;
-                        bulkCopy.DestinationTableName = m_rangeLimitTable.TableName;
-                        bulkCopy.WriteToServer(rangeLimitTable);
-                    }
-                }
-            }
-        }
-
         private DateTime GetHour(DateTime time)
         {
             return new DateTime(time.Year, time.Month, time.Day, time.Hour, 0, 0);
@@ -332,7 +206,6 @@ namespace FaultData.DataOperations
         #region [ Static ]
 
         // Static Fields
-        private static readonly object RangeLimitLock = new object();
         private static readonly ILog Log = LogManager.GetLogger(typeof(HourlySummaryOperation));
 
         #endregion
