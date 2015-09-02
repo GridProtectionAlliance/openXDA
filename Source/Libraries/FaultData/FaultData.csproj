@@ -121,6 +121,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FileInfo.dbml</DependentUpon>
     </Compile>
+    <Compile Include="Database\MeterData.cs">
+      <DependentUpon>MeterData.xsd</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Database\MeterData.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.Database;
+using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
@@ -36,7 +37,7 @@ namespace FaultData.DataOperations
         #region [ Members ]
 
         // Fields
-        private MeterData.DailyTrendingSummaryDataTable m_dailySummaryTable;
+        private DbAdapterContainer m_dbAdapterContainer;
 
         #endregion
 
@@ -44,72 +45,53 @@ namespace FaultData.DataOperations
 
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
-            m_dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
+            m_dbAdapterContainer = dbAdapterContainer;
         }
 
         public override void Execute(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            MeterData.DailyTrendingSummaryRow row;
-
             List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries;
+            IEnumerable<IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary>> dailySummaryGroups;
+
+            DailyTrendingSummaryTableAdapter dailySummaryAdapter;
+            MeterData.DailyTrendingSummaryDataTable dailySummaryTable;
+            MeterData.DailyTrendingSummaryRow row;
 
             Log.Info("Executing operation to load daily summary data into the database...");
 
+            dailySummaryAdapter = m_dbAdapterContainer.GetAdapter<DailyTrendingSummaryTableAdapter>();
+            dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
+
             foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
             {
-                foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> dailySummary in channelSummaries.Value.GroupBy(summary => GetDate(summary.Time)))
-                {
-                    validSummaries = dailySummary.Where(summary => summary.IsValid).ToList();
+                dailySummaryGroups = channelSummaries.Value
+                    .Where(summary => !summary.IsDuplicate)
+                    .GroupBy(summary => GetDate(summary.Time));
 
-                    row = m_dailySummaryTable.NewDailyTrendingSummaryRow();
+                foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> dailySummaryGroup in dailySummaryGroups)
+                {
+                    validSummaries = dailySummaryGroup.Where(summary => summary.IsValid).ToList();
+
+                    row = dailySummaryTable.NewDailyTrendingSummaryRow();
 
                     row.BeginEdit();
                     row.ChannelID = channelSummaries.Key.ID;
-                    row.Date = dailySummary.Key;
+                    row.Date = dailySummaryGroup.Key;
                     row.Minimum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Min();
                     row.Maximum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Max();
                     row.Average = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Average();
                     row.ValidCount = validSummaries.Count;
-                    row.InvalidCount = dailySummary.Count() - validSummaries.Count;
+                    row.InvalidCount = dailySummaryGroup.Count() - validSummaries.Count;
                     row.EndEdit();
 
-                    m_dailySummaryTable.AddDailyTrendingSummaryRow(row);
+                    dailySummaryAdapter.Upsert(row);
                 }
             }
         }
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
-            BulkLoader bulkLoader;
-
-            if (m_dailySummaryTable.Count == 0)
-                return;
-
-            Log.Info("Executing operation to load daily summary data into the database...");
-
-            bulkLoader = new BulkLoader();
-            bulkLoader.Connection = dbAdapterContainer.Connection;
-            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
-
-            bulkLoader.MergeTableFormat = "MERGE INTO {0} WITH (TABLOCK) AS Target " +
-                                          "USING {1} AS Source " +
-                                          "ON Source.ChannelID = Target.ChannelID AND Source.Date = Target.Date " +
-                                          "WHEN MATCHED THEN " +
-                                          "    UPDATE SET " +
-                                          "        Maximum = CASE WHEN Target.ValidCount = 0 OR Source.Maximum > Target.Maximum THEN Source.Maximum ELSE Target.Maximum END, " +
-                                          "        Minimum = CASE WHEN Target.ValidCount = 0 OR Source.Minimum < Target.Minimum THEN Source.Minimum ELSE Target.Minimum END, " +
-                                          "        Average = CASE WHEN Target.ValidCount = 0 THEN Source.Average ELSE Target.Average * (CAST(Target.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) + Source.Average * (CAST(Source.ValidCount AS FLOAT) / (Target.ValidCount + Source.ValidCount)) END, " +
-                                          "        ValidCount = Source.ValidCount + Target.ValidCount, " +
-                                          "        InvalidCount = Source.InvalidCount + Target.InvalidCount " +
-                                          "WHEN NOT MATCHED THEN " +
-                                          "    INSERT (ChannelID, Date, Maximum, Minimum, Average, ValidCount, InvalidCount) " +
-                                          "    VALUES (Source.ChannelID, Source.Date, Source.Maximum, Source.Minimum, Source.Average, Source.ValidCount, Source.InvalidCount);";
-            
-            // Bulk insert new rows
-            bulkLoader.Load(m_dailySummaryTable);
-
-            Log.Info(string.Format("Loaded {0} daily summary records into the database.", m_dailySummaryTable.Count));
         }
 
         private DateTime GetDate(DateTime time)
