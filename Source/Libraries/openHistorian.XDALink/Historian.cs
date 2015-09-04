@@ -61,6 +61,7 @@ namespace openHistorian.XDALink
         private HistorianClient m_client;
         private ClientDatabaseBase<HistorianKey, HistorianValue> m_database;
         private Lazy<HistorianInputQueue> m_queue;
+        private List<WeakReference<TreeStream<HistorianKey, HistorianValue>>> m_treeStreams;
 
         private bool m_disposed;
 
@@ -87,6 +88,7 @@ namespace openHistorian.XDALink
 
             m_database = m_client.GetDatabase<HistorianKey, HistorianValue>(database);
             m_queue = new Lazy<HistorianInputQueue>(() => new HistorianInputQueue(() => m_database));
+            m_treeStreams = new List<WeakReference<TreeStream<HistorianKey, HistorianValue>>>();
         }
 
         #endregion
@@ -127,10 +129,18 @@ namespace openHistorian.XDALink
 
         public void Dispose()
         {
+            TreeStream<HistorianKey, HistorianValue> stream;
+
             if (!m_disposed)
             {
                 try
                 {
+                    foreach (WeakReference<TreeStream<HistorianKey, HistorianValue>> reference in m_treeStreams)
+                    {
+                        if (reference.TryGetTarget(out stream))
+                            stream.Dispose();
+                    }
+
                     if (m_queue.IsValueCreated)
                     {
                         Flush(10);
@@ -158,17 +168,20 @@ namespace openHistorian.XDALink
                 pointFilter = PointIdMatchFilter.CreateFromList<HistorianKey, HistorianValue>(measurementIDs);
 
             // Start stream reader for the provided time window and selected points
-            TreeStream<HistorianKey, HistorianValue> stream = m_database.Read(SortedTreeEngineReaderOptions.Default, timeFilter, pointFilter);
-
-            while (stream.Read(key, value))
+            using (TreeStream<HistorianKey, HistorianValue> stream = m_database.Read(SortedTreeEngineReaderOptions.Default, timeFilter, pointFilter))
             {
-                yield return new TrendingDataPoint()
+                m_treeStreams.Add(new WeakReference<TreeStream<HistorianKey, HistorianValue>>(stream));
+
+                while (stream.Read(key, value))
                 {
-                    ChannelID = (int)key.PointID.HighDoubleWord(),
-                    SeriesID = (SeriesID)(int)key.PointID.LowDoubleWord(),
-                    Timestamp = key.TimestampAsDate,
-                    Value = value.AsSingle
-                };
+                    yield return new TrendingDataPoint()
+                    {
+                        ChannelID = (int)key.PointID.HighDoubleWord(),
+                        SeriesID = (SeriesID)(int)key.PointID.LowDoubleWord(),
+                        Timestamp = key.TimestampAsDate,
+                        Value = value.AsSingle
+                    };
+                }
             }
         }
 
