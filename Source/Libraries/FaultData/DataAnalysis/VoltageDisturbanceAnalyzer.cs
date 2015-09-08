@@ -28,7 +28,6 @@ using System.Linq;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
-using GSF.Collections;
 using GSF.PQDIF.Logical;
 
 namespace FaultData.DataAnalysis
@@ -36,6 +35,9 @@ namespace FaultData.DataAnalysis
     public class VoltageDisturbanceAnalyzer
     {
         #region [ Members ]
+
+        // Constants
+        private const double Sqrt3 = 1.7320508075688772935274463415059D;
 
         // Fields
         private double m_systemFrequency;
@@ -117,7 +119,7 @@ namespace FaultData.DataAnalysis
 
         private void DetectDisturbances(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D;
+            double nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Sqrt3;
             double nominalVoltageReciprocal = 1.0D / nominalVoltage;
             DataSeries vAll = GetVAllSeries(viCycleDataGroup);
 
