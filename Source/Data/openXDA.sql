@@ -1091,6 +1091,7 @@ RETURNS INT
 AS BEGIN
     RETURN 0
 END
+GO
 
 CREATE FUNCTION EventHasImpactedComponents
 (
@@ -1115,6 +1116,7 @@ AS BEGIN
         
     RETURN @hasImpactedComponents
 END
+GO
 
 ----- VIEWS -----
 
