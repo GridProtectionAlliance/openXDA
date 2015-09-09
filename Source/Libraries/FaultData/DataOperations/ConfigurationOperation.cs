@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
+using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
 using ChannelKey = System.Tuple<int, string, string, string, string>;
@@ -73,11 +74,11 @@ namespace FaultData.DataOperations
         public override void Execute(MeterDataSet meterDataSet)
         {
             Meter meter;
-            MeterFileGroup meterFileGroup;
             string meterKey;
 
             List<Series> seriesList;
             Dictionary<SeriesKey, Series> seriesLookup;
+            DataSeries dataSeries;
             Series seriesInfo;
 
             Log.Info("Executing operation to locate meter in database...");
@@ -103,13 +104,13 @@ namespace FaultData.DataOperations
                     .Where(series => string.IsNullOrEmpty(series.SourceIndexes))
                     .ToDictionary(GetSeriesKey);
 
-                foreach (DataSeries dataSeries in meterDataSet.DataSeries)
+                foreach (DataSeries series in meterDataSet.DataSeries)
                 {
-                    if ((object)dataSeries.SeriesInfo == null)
+                    if ((object)series.SeriesInfo == null)
                         continue;
 
-                    if (seriesLookup.TryGetValue(GetSeriesKey(dataSeries.SeriesInfo), out seriesInfo))
-                        dataSeries.SeriesInfo = seriesInfo;
+                    if (seriesLookup.TryGetValue(GetSeriesKey(series.SeriesInfo), out seriesInfo))
+                        series.SeriesInfo = seriesInfo;
                 }
 
                 // Create data series for series which
@@ -162,9 +163,17 @@ namespace FaultData.DataOperations
                 RemoveUndefinedDataSeries(meterDataSet);
             }
 
-            meterFileGroup = new MeterFileGroup();
-            meterFileGroup.Meter = meterDataSet.Meter;
-            meterFileGroup.FileGroupID = meterDataSet.FileGroup.ID;
+            foreach (DataGroup dataGroup in meterDataSet.GetResource<DataGroupsResource>().DataGroups)
+            {
+                if (dataGroup.Classification != DataClassification.Event)
+                    continue;
+
+                // Add missing current series based on IR = IA + IB + IC
+                dataSeries = VIDataGroup.AddMissingCurrentSeries(m_meterInfo, meterDataSet.Meter, dataGroup);
+
+                if ((object)dataSeries != null)
+                    meterDataSet.DataSeries.Add(dataSeries);
+            }
         }
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
@@ -341,7 +350,15 @@ namespace FaultData.DataOperations
             }
         }
 
-        private ChannelKey GetChannelKey(Channel channel)
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationOperation));
+
+        // Static Methods
+        private static ChannelKey GetChannelKey(Channel channel)
         {
             return Tuple.Create(
                 channel.HarmonicGroup,
@@ -351,7 +368,7 @@ namespace FaultData.DataOperations
                 channel.Phase.Name);
         }
 
-        private SeriesKey GetSeriesKey(Series series)
+        private static SeriesKey GetSeriesKey(Series series)
         {
             Channel channel = series.Channel;
 
@@ -363,13 +380,6 @@ namespace FaultData.DataOperations
                 channel.Phase.Name,
                 series.SeriesType.Name);
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationOperation));
 
         #endregion
     }
