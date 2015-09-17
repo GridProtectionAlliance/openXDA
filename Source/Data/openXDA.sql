@@ -1002,10 +1002,10 @@ GO
 INSERT INTO AlarmType(Name, Description) VALUES ('Unreasonable', 'Value outside of reasonable limits')
 GO
 
-INSERT INTO AlarmType(Name, Description) VALUES ('Off-normal-168H', 'Value was outside of normal range for a given hour of the week')
+INSERT INTO AlarmType(Name, Description) VALUES ('OffNormal', 'Value was outside of normal range for a given hour of the week')
 GO
 
-INSERT INTO AlarmType(Name, Description) VALUES ('Regulatory', 'Value exceeded regulatory limits')
+INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
 GO
 
 ----- FUNCTIONS -----
