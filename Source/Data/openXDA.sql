@@ -1334,12 +1334,11 @@ CREATE PROCEDURE GetImpactedComponents
     @duration FLOAT
 AS BEGIN
     SELECT
-        NULL AS SectionTypeName,
+        NULL AS Facility,
+        NULL AS Area,
         NULL AS SectionTitle,
         NULL AS SectionRank,
-        NULL AS SectionContent,
         NULL AS ComponentModel,
-        NULL AS ComponentDescription,
         NULL AS ManufacturerName,
         NULL AS SeriesName,
         NULL AS ComponentTypeName
@@ -1357,12 +1356,11 @@ AS BEGIN
 
     CREATE TABLE #temp
     (
-        SectionTypeName VARCHAR(16),
+        Facility VARCHAR(64),
+        Area VARCHAR(256),
         SectionTitle VARCHAR(256),
         SectionRank INT,
-        SectionContent VARCHAR(4096),
         ComponentModel VARCHAR(64),
-        ComponentDescription VARCHAR(2048),
         ManufacturerName VARCHAR(64),
         SeriesName VARCHAR(64),
         ComponentTypeName VARCHAR(32)
@@ -1728,26 +1726,27 @@ GO
 --        SELECT
 --            CurveID,
 --            CurveDB,
---            SectionTypeName,
---            Title AS SectionTitle,
---            Rank AS SectionRank,
---            Content AS SectionContent
+--            Facility.FacilityName AS Facility,
+--            Area.Title AS Area,
+--            Equipment.Title AS SectionTitle,
+--            Equipment.Rank AS SectionRank
 --        FROM
 --            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditSection ON AuditSection.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.SectionType ON AuditSection.SectionTypeID = SectionType.SectionTypeID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = AuditSection.AuditSectionID
+--            PQInvestigator.UserIndustrialPQ.dbo.Facility ON FacilityAudit.FacilityID = Facility.FacilityID JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.AuditSection Equipment ON Equipment.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.AuditSectionTree ON AuditSectionTree.AuditSectionChildID = Equipment.AuditSectionID JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.AuditSection Area ON AuditSectionTree.AuditSectionParentID = Area.AuditSectionID JOIN
+--            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = Equipment.AuditSectionID
 --        WHERE
 --            AuditCurve.CurveType = 'TOLERANCE' AND
 --            FacilityAudit.FacilityID = @facilityID
 --    )
 --    SELECT
---        FacilityCurve.SectionTypeName,
+--        FacilityCurve.Facility,
+--        FacilityCurve.Area,
 --        FacilityCurve.SectionTitle,
 --        FacilityCurve.SectionRank,
---        FacilityCurve.SectionContent,
 --        Component.ComponentModel,
---        Component.ComponentDescription,
 --        Manufacturer.ManufacturerName,
 --        Series.SeriesName,
 --        ComponentType.ComponentTypeName
@@ -1763,12 +1762,11 @@ GO
 --        IsUnder <> 0
 --    UNION
 --    SELECT
---        FacilityCurve.SectionTypeName,
+--        FacilityCurve.Facility,
+--        FacilityCurve.Area,
 --        FacilityCurve.SectionTitle,
 --        FacilityCurve.SectionRank,
---        FacilityCurve.SectionContent,
 --        Component.ComponentModel,
---        Component.ComponentDescription,
 --        Manufacturer.ManufacturerName,
 --        Series.SeriesName,
 --        ComponentType.ComponentTypeName
