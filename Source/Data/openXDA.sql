@@ -300,6 +300,9 @@ GO
 INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('RCL', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader')
 GO
 
+INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('PQD', 'FaultData.dll', 'FaultData.DataReaders.PQDIFReader')
+GO
+
 INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 0, 1)
 GO
 
