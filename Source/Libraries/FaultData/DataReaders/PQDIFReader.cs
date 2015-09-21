@@ -275,19 +275,17 @@ namespace FaultData.DataReaders
             series.SourceIndexes = string.Empty;
 
             // Populate measurement type properties
-            if (quantityMeasured != QuantityMeasured.None)
-                channel.MeasurementType.Name = quantityMeasured.ToString();
+            channel.MeasurementType.Name = quantityMeasured.ToString();
 
             // Populate characteristic properties
-            channel.MeasurementCharacteristic.Name = QuantityCharacteristic.ToName(seriesDefinition.QuantityCharacteristicID);
+            channel.MeasurementCharacteristic.Name = QuantityCharacteristic.ToName(seriesDefinition.QuantityCharacteristicID) ?? seriesDefinition.QuantityCharacteristicID.ToString();
             channel.MeasurementCharacteristic.Description = QuantityCharacteristic.ToString(seriesDefinition.QuantityCharacteristicID);
 
             // Popuplate phase properties
-            if (phase != Phase.None)
-                channel.Phase.Name = phase.ToString();
+            channel.Phase.Name = phase.ToString();
 
             // Populate series type properties
-            series.SeriesType.Name = SeriesValueType.ToString(seriesDefinition.ValueTypeID) ?? seriesDefinition.ValueTypeName;
+            series.SeriesType.Name = SeriesValueType.ToString(seriesDefinition.ValueTypeID) ?? seriesDefinition.ValueTypeName ?? seriesDefinition.ValueTypeID.ToString();
             series.SeriesType.Description = seriesDefinition.ValueTypeName;
 
             return channel;
