@@ -23,11 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Linq;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using GSF.Configuration;
 using GSF.PQDIF.Logical;
 
 namespace FaultData.DataAnalysis
@@ -104,6 +106,8 @@ namespace FaultData.DataAnalysis
             DataGroup dataGroup;
             VICycleDataGroup viCycleDataGroup;
             CycleDataResource cycleDataResource;
+
+            ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, this);
 
             m_disturbances = new Dictionary<DataGroup, List<Disturbance>>();
 
@@ -216,6 +220,13 @@ namespace FaultData.DataAnalysis
 
             return disturbance;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
 
         #endregion
     }

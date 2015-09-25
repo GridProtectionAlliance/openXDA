@@ -42,8 +42,7 @@ namespace FaultData.DataOperations
         #region [ Members ]
 
         // Constants
-        // TODO: Hardcoded frequency
-        private const double Frequency = 60.0D;
+        private const double Sqrt3 = 1.7320508075688772935274463415059D;
 
         // Fields
         private DbAdapterContainer m_dbAdapterContainer;
@@ -225,7 +224,7 @@ namespace FaultData.DataOperations
                 eventRow.Samples = dataGroup.Samples;
                 eventRow.TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes;
                 eventRow.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
-                eventRow.SamplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / Frequency);
+                eventRow.SamplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / m_systemFrequency);
 
                 eventDataRow = m_eventDataTable.NewEventDataRow();
                 eventDataRow.FileGroupID = meterDataSet.FileGroup.ID;
@@ -287,7 +286,7 @@ namespace FaultData.DataOperations
             row.EventTypeID = s_eventTypeLookup[disturbance.EventType];
             row.PhaseID = GetPhaseID(disturbance.Phase);
             row.Magnitude = disturbance.Magnitude;
-            row.PerUnitMagnitude = ToDbFloat(disturbance.GetPerUnitMagnitude(dataGroup.Line.VoltageKV * 1000.0D));
+            row.PerUnitMagnitude = ToDbFloat(disturbance.GetPerUnitMagnitude(dataGroup.Line.VoltageKV * 1000.0D / Sqrt3));
             row.StartTime = disturbance.StartTime;
             row.EndTime = disturbance.EndTime;
             row.DurationSeconds = disturbance.DurationSeconds;
