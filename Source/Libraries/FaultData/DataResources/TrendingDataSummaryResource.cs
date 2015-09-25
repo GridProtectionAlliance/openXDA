@@ -268,7 +268,8 @@ namespace FaultData.DataResources
 
                         summary.IsDuplicate = SeriesIDs.Any(seriesID => existingTrendingPoints.Contains(Tuple.Create(trendingGroup.Key.ID, seriesID, summary.Time)));
 
-                        summaries.Add(summary);
+                        if (!double.IsNaN(summary.Minimum) && !double.IsNaN(summary.Maximum) && !double.IsNaN(summary.Average))
+                            summaries.Add(summary);
                     }
                 }
             }
