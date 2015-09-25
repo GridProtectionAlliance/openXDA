@@ -58,7 +58,7 @@ namespace FaultData.DataOperations
         public override void Execute(MeterDataSet meterDataSet)
         {
             Log.Info("Executing operation to load alarm data into the database...");
-            LoadDataQualityAlarmLogs(meterDataSet);
+            //LoadDataQualityAlarmLogs(meterDataSet);
             LoadRangeLimits(meterDataSet);
             LoadHourOfWeekLimits(meterDataSet);
         }
