@@ -61,7 +61,7 @@ namespace openHistorian.XDALink
         private HistorianClient m_client;
         private ClientDatabaseBase<HistorianKey, HistorianValue> m_database;
         private Lazy<HistorianInputQueue> m_queue;
-        private List<WeakReference<TreeStream<HistorianKey, HistorianValue>>> m_treeStreams;
+        private List<TreeStream<HistorianKey, HistorianValue>> m_treeStreams;
 
         private bool m_disposed;
 
@@ -88,7 +88,7 @@ namespace openHistorian.XDALink
 
             m_database = m_client.GetDatabase<HistorianKey, HistorianValue>(database);
             m_queue = new Lazy<HistorianInputQueue>(() => new HistorianInputQueue(() => m_database));
-            m_treeStreams = new List<WeakReference<TreeStream<HistorianKey, HistorianValue>>>();
+            m_treeStreams = new List<TreeStream<HistorianKey, HistorianValue>>();
         }
 
         #endregion
@@ -129,17 +129,12 @@ namespace openHistorian.XDALink
 
         public void Dispose()
         {
-            TreeStream<HistorianKey, HistorianValue> stream;
-
             if (!m_disposed)
             {
                 try
                 {
-                    foreach (WeakReference<TreeStream<HistorianKey, HistorianValue>> reference in m_treeStreams)
-                    {
-                        if (reference.TryGetTarget(out stream))
-                            stream.Dispose();
-                    }
+                    foreach (TreeStream<HistorianKey, HistorianValue> stream in m_treeStreams)
+                        stream.Dispose();
 
                     if (m_queue.IsValueCreated)
                     {
@@ -170,7 +165,7 @@ namespace openHistorian.XDALink
             // Start stream reader for the provided time window and selected points
             using (TreeStream<HistorianKey, HistorianValue> stream = m_database.Read(SortedTreeEngineReaderOptions.Default, timeFilter, pointFilter))
             {
-                m_treeStreams.Add(new WeakReference<TreeStream<HistorianKey, HistorianValue>>(stream));
+                m_treeStreams.Add(stream);
 
                 while (stream.Read(key, value))
                 {
