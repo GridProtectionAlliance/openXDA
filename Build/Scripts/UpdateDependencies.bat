@@ -50,7 +50,7 @@ ECHO Getting latest version...
 ECHO.
 ECHO Updating to latest version...
 %git% reset --hard
-%git% clean -f -d
+%git% clean -f -d -x
 %git% pull
 
 ECHO.
