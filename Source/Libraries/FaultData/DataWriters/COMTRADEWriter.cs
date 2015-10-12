@@ -396,8 +396,6 @@ namespace FaultData.DataWriters
 
                 analogChannel.Index = i;
                 analogChannel.Name = channelData.Name;
-                analogChannel.Multiplier = (channelData.Data.Maximum - channelData.Data.Minimum) / (2 * short.MaxValue);
-                analogChannel.Adder = channelData.Data.Minimum + analogChannel.Multiplier * short.MaxValue;
                 analogChannel.MinValue = -short.MaxValue;
                 analogChannel.MaxValue = short.MaxValue;
                 analogChannel.Units = channelData.Units;
@@ -415,6 +413,9 @@ namespace FaultData.DataWriters
                     if (analogChannel.Units.ToUpper().Contains("KA") || analogChannel.Units.ToUpper().Contains("KV"))
                         channelData.Data = channelData.Data.Multiply(0.001);
                 }
+
+                analogChannel.Multiplier = (channelData.Data.Maximum - channelData.Data.Minimum) / (2 * short.MaxValue);
+                analogChannel.Adder = (channelData.Data.Maximum + channelData.Data.Minimum) / 2.0D;
 
                 analogChannels.Add(analogChannel);
 
