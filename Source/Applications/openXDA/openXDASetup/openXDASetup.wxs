@@ -5,18 +5,70 @@
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 		<MediaTemplate EmbedCab="yes" />
+    
+    <PropertyRef Id="NETFRAMEWORK45"/>
+    <Condition Message='This setup requires Microsoft .NET Framework 4.5 or greater - this will need to be installed before installation can continue.'>
+      <![CDATA[Installed OR NETFRAMEWORK45]]>
+    </Condition>
 
-		<Feature Id="ProductFeature" Title="openXDA" Level="1" ConfigurableDirectory="INSTALLFOLDER">
-			<ComponentGroupRef Id="ProductComponents" />
+		<Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" Description="All components of the openXDA installation.">
+      <!-- openXDA Database-->
+      <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
+        <ComponentGroupRef Id="DatabaseComponents" />
+      </Feature>
+      
+      <!-- openXDA Service -->
+      <Feature Id="ServiceFeature" Title="openXDA Service" Description="Installs the openXDA Windows service to perform data analytics.">
+        <ComponentGroupRef Id="ServiceComponents" />
+      </Feature>
+
+      <!-- openXDA Console -->
+      <Feature Id="ConsoleFeature" Title="openXDA Remote Console" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
+        <ComponentGroupRef Id="ConsoleComponents" />
+      </Feature>
 		</Feature>
 
-    <!-- User Interface -->
-    <UIRef Id="WixUI_InstallDir" />
-    <UIRef Id="WixUI_ErrorProgressText" />
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UI>
+      <!-- User Interface -->
+      <UIRef Id="WixUI_FeatureTree" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+      <DialogRef Id="DatabaseConnectionDialog" />
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg"><![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="DatabaseConnectionDialog">(NOT Installed OR WixUI_InstallMode = "Change") AND <![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg">(NOT Installed OR WixUI_InstallMode = "Change") AND <![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
+    </UI>
+    
+    <Icon Id="openXDA.ico.exe" SourceFile="$(var.openXDA.TargetPath)" />
+    <Icon Id="openXDAConsole.ico.exe" SourceFile="$(var.openXDAConsole.TargetPath)" />
+    
+    <Property Id="SERVICENAME" Value="$(var.openXDA.TargetName)" />
+    <Property Id="SERVERNAME" Value="localhost" />
+    <Property Id="WINDOWSAUTH" Value="1" />
+    <Property Id="DATAPROVIDERSTRING" Value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};; ConnectionType=System.Data.SqlClient.SqlConnection;; AdapterType=System.Data.SqlClient.SqlDataAdapter" />
+    <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
+    <SetProperty Id="SCRIPTPATH" Value="[INSTALLFOLDER]\openXDA.sql" After="LaunchConditions" Sequence="execute" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\INSTALL_LICENSE.rtf" />
+    
+    <!-- Add/Remove Programs Icon -->
+    <Property Id="ARPPRODUCTICON" Value="openXDA.ico.exe" />
+    
+    <!-- Custom Actions -->
+    <Binary Id="InstallerActions" SourceFile="$(var.SolutionDir)\Dependencies\GSF\GSF.InstallerActions.CA.dll" />
+    <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
+    <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
+    <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="DatabaseScriptAction.SetProperty" Property="DatabaseScriptAction" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[CONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[SCRIPTPATH]" />
+    <CustomAction Id="DatabaseScriptAction" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+
+    <InstallExecuteSequence>
+      <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
+      <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
+      <Custom Action="DatabaseScriptAction.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DatabaseScriptAction" After="DatabaseScriptAction.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+    </InstallExecuteSequence>
 	</Product>
 
 	<Fragment>
@@ -25,18 +77,18 @@
         <Directory Id="ProgramFiles64Folder">
           <!-- C:\Program Files\openXDA -->
           <Directory Id="INSTALLFOLDER" Name="openXDA">
-            <Directory Id="DROPFOLDER" Name="Drop" />
-            <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
+            <Directory Id="RESULTSFOLDER" Name="Results" />
+            <Directory Id="WATCHFOLDER" Name="Watch" />
           </Directory>
         </Directory>
       <?else ?>
         <Directory Id="ProgramFilesFolder">
           <!-- C:\Program Files (x86)\openXDA -->
           <Directory Id="INSTALLFOLDER" Name="openXDA">
-            <Directory Id="DROPFOLDER" Name="Drop" />
-            <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
+            <Directory Id="RESULTSFOLDER" Name="Results" />
+            <Directory Id="WATCHFOLDER" Name="Watch" />
           </Directory>
         </Directory>
       <?endif ?>
@@ -48,15 +100,21 @@
 	</Fragment>
 
 	<Fragment>
-		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <!-- Applications -->
-			<Component Id="openXDA">
+    <ComponentGroup Id="DatabaseComponents" Directory="INSTALLFOLDER">
+      <!-- Database Script -->
+      <Component Id="DBScript">
+        <File Id="openXDA.sql" Name="openXDA.sql" Source="$(var.SolutionDir)\Data\openXDA.sql" />
+      </Component>
+    </ComponentGroup>
+    
+    <ComponentGroup Id="ServiceComponents" Directory="INSTALLFOLDER">
+      <ComponentGroupRef Id="LibraryComponents" />
+      
+      <!-- Service Applications -->
+      <Component Id="openXDA">
         <File Id="openXDA.exe" Name="$(var.openXDA.TargetFileName)" Source="$(var.openXDA.TargetPath)" />
         <ServiceInstall Id="openXDAService" Name="openXDA" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
         <ServiceControl Id="openXDAServiceControl" Name="openXDA" Stop="both" Remove="uninstall" />
-			</Component>
-      <Component Id="openXDAConsole">
-        <File Id="openXDAConsole.exe" Name="$(var.openXDAConsole.TargetFileName)" Source="$(var.openXDAConsole.TargetPath)" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
         <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
@@ -64,11 +122,36 @@
       <Component Id="openXDAConfig">
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
       </Component>
+
+      <!-- Cleanup -->
+      <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
+        <CreateFolder />
+        <RemoveFolder Id="RemoveDebugFolder" Directory="DEBUGFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveResultsFolder" Directory="RESULTSFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveWatchFolder" Directory="WATCHFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="ConsoleComponents" Directory="INSTALLFOLDER">
+      <ComponentRef Id="GSF.Communication" />
+      <ComponentRef Id="GSF.Core" />
+      <ComponentRef Id="GSF.Security" />
+      <ComponentRef Id="GSF.ServiceProcess" />
+      
+      <!-- Remote Console Applications -->
+      <Component Id="openXDAConsole">
+        <File Id="openXDAConsole.exe" Name="$(var.openXDAConsole.TargetFileName)" Source="$(var.openXDAConsole.TargetPath)" />
+        <Shortcut Id="openXDAConsoleStartMenuShortcut" Name="openXDA Console" Icon="openXDAConsole.ico.exe" Description="Console application to monitor the openXDA service." WorkingDirectory="INSTALLFOLDER" Directory="ApplicationProgramsFolder" Advertise="yes" />
+      </Component>
       <Component Id="openXDAConsoleConfig">
         <File Id="openXDAConsole.exe.config" Name="$(var.openXDAConsole.TargetFileName).config" Source="$(var.openXDAConsole.TargetPath).config" />
       </Component>
+    </ComponentGroup>
 
-      <!-- Libraries -->
+    <ComponentGroup Id="LibraryComponents" Directory="INSTALLFOLDER">
+      <!-- XDA Libraries -->
       <Component Id="FaultAlgorithms">
         <File Id="FaultAlgorithms.dll" Name="$(var.FaultAlgorithms.TargetFileName)" Source="$(var.FaultAlgorithms.TargetPath)" />
       </Component>
@@ -117,21 +200,85 @@
       <Component Id="GSF.TimeSeries">
         <File Id="GSF.TimeSeries.dll" Name="GSF.TimeSeries.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.TimeSeries.dll" />
       </Component>
-      
-      <!-- Additional Files -->
-      <Component Id="DBScript">
-        <File Id="openXDA.sql" Name="openXDA.sql" Source="$(var.SolutionDir)\Data\openXDA.sql" />
-      </Component>
-      
-      <!-- Cleanup -->
-      <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
-        <CreateFolder />
-        <RemoveFolder Id="RemoveDropFolder" Directory="DROPFOLDER" On="uninstall" />
-        <RemoveFolder Id="RemoveResultsFolder" Directory="RESULTSFOLDER" On="uninstall" />
-        <RemoveFolder Id="RemoveDebugFolder" Directory="DEBUGFOLDER" On="uninstall" />
-        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
-        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
-      </Component>
 		</ComponentGroup>
 	</Fragment>
+
+  <!-- Custom Dialogs -->
+  <Fragment>
+    <UI>
+      <!-- Database Connection Dialog -->
+      <Dialog Id="DatabaseConnectionDialog" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Database Connection</Text>
+        </Control>
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Configure your database connection.</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="ServerNameLabel" Type="Text" X="95" Y="53" Width="100" Height="13" TabSkip="no" Text="&amp;Server name:" />
+        <Control Id="ServerNameEdit" Type="Edit" X="95" Y="65" Width="170" Height="18" Property="SERVERNAME" Text="{80}" />
+        <Control Id="DatabaseNameLabel" Type="Text" X="95" Y="88" Width="100" Height="13" TabSkip="no" Text="&amp;Database name:" />
+        <Control Id="DatabaseNameEdit" Type="Edit" X="95" Y="100" Width="170" Height="18" Property="DATABASENAME" Text="{80}" />
+        <Control Id="WindowsAuthenticationCheckBox" Type="CheckBox" X="85" Y="125" Width="200" Height="17" Property="WINDOWSAUTH" CheckBoxValue="1" Text="Use Windows Authentication" />
+        <Control Id="UsernameLabel" Type="Text" X="95" Y="143" Width="100" Height="13" TabSkip="no" Text="&amp;Username:">
+          <Condition Action="enable">NOT WINDOWSAUTH</Condition>
+          <Condition Action="disable">WINDOWSAUTH</Condition>
+        </Control>
+        <Control Id="UsernameEdit" Type="Edit" X="95" Y="155" Width="170" Height="18" Property="DBUSERNAME" Text="{80}">
+          <Condition Action="enable">NOT WINDOWSAUTH</Condition>
+          <Condition Action="disable">WINDOWSAUTH</Condition>
+        </Control>
+        <Control Id="PasswordLabel" Type="Text" X="95" Y="178" Width="100" Height="13" TabSkip="no" Text="&amp;Password:">
+          <Condition Action="enable">NOT WINDOWSAUTH</Condition>
+          <Condition Action="disable">WINDOWSAUTH</Condition>
+        </Control>
+        <Control Id="PasswordEdit" Type="Edit" X="95" Y="190" Width="170" Height="18" Property="DBPASSWORD" Text="{80}" Password="yes">
+          <Condition Action="enable">NOT WINDOWSAUTH</Condition>
+          <Condition Action="disable">WINDOWSAUTH</Condition>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <!-- Set up the authentication part of the connection string based on user input. -->
+          <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI"><![CDATA[WINDOWSAUTH = 1]]></Publish>
+          <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]"><![CDATA[WINDOWSAUTH <> 1]]></Publish>
+          
+          <!-- Determine whether we can connect to the database server. -->
+          <Publish Property="CONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
+          <Publish Event="DoAction" Value="TestDatabaseConnectionAction">1</Publish>
+          <Publish Property="DBSERVERCONNECTS">NOT DATABASECONNECTED</Publish>
+          <Publish Property="DBSERVERCONNECTS" Value="1">DATABASECONNECTED</Publish>
+          <Publish Property="ERRORMESSAGE" Value="Unable to connect to the database. Please verify the connection configuration and try again.">NOT DBSERVERCONNECTS</Publish>
+          <Publish Event="SpawnDialog" Value="ModalErrorDialog">NOT DBSERVERCONNECTS</Publish>
+          
+          <!-- Determine whether the database already exists on the server. -->
+          <Publish Property="CONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">DBSERVERCONNECTS</Publish>
+          <Publish Event="DoAction" Value="TestDatabaseConnectionAction">DBSERVERCONNECTS</Publish>
+          <Publish Property="DBEXISTS">NOT DATABASECONNECTED</Publish>
+          <Publish Property="DBEXISTS" Value="1">DATABASECONNECTED</Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] already exists on the server. Enter a different database name or drop the existing database, then try again."><![CDATA[&DatabaseFeature=3]]> AND DBSERVERCONNECTS AND DBEXISTS</Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again."><![CDATA[NOT(&DatabaseFeature=3)]]> AND DBSERVERCONNECTS AND NOT DBEXISTS</Publish>
+          <Publish Event="SpawnDialog" Value="ModalErrorDialog">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND NOT DBEXISTS))</Publish>
+
+          <!-- Move to the next dialog if the validation checks out. -->
+          <Publish Property="CONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND NOT DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND DBEXISTS))</Publish>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND NOT DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND DBEXISTS))</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+
+      <!-- Modal dialog to display error messages. -->
+      <Dialog Id="ModalErrorDialog" Width="220" Height="100" Title="Database Connection Error">
+        <Control Id="ErrorMessageLabel" Type="Text" X="30" Y="15" Width="160" Height="40" TabSkip="no" Text="[ERRORMESSAGE]" />
+        <Control Id="OKButton" Type="PushButton" X="82" Y="70" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;OK">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+      </Dialog>
+    </UI>
+  </Fragment>
 </Wix>
