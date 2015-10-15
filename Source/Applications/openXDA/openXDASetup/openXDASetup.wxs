@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 	<Product Id="{F305D8A2-34EC-447C-A007-F0C526FB5137}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
@@ -60,7 +60,7 @@
     <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="DatabaseScriptAction.SetProperty" Property="DatabaseScriptAction" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[CONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[SCRIPTPATH]" />
+    <CustomAction Id="DatabaseScriptAction.SetProperty" Property="DatabaseScriptAction" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[SCRIPTPATH]" />
     <CustomAction Id="DatabaseScriptAction" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <InstallExecuteSequence>
@@ -121,6 +121,7 @@
       </Component>
       <Component Id="openXDAConfig">
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
+        <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[DBCONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
       </Component>
 
       <!-- Cleanup -->
@@ -246,8 +247,12 @@
           <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI"><![CDATA[WINDOWSAUTH = 1]]></Publish>
           <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]"><![CDATA[WINDOWSAUTH <> 1]]></Publish>
           
+          <!-- Set up connection strings for connecting to server and database. -->
+          <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
+          <Publish Property="DBCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">1</Publish>
+          
           <!-- Determine whether we can connect to the database server. -->
-          <Publish Property="CONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
+          <Publish Property="CONNECTIONSTRING" Value="[SERVERCONNECTIONSTRING]">1</Publish>
           <Publish Event="DoAction" Value="TestDatabaseConnectionAction">1</Publish>
           <Publish Property="DBSERVERCONNECTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBSERVERCONNECTS" Value="1">DATABASECONNECTED</Publish>
@@ -255,7 +260,7 @@
           <Publish Event="SpawnDialog" Value="ModalErrorDialog">NOT DBSERVERCONNECTS</Publish>
           
           <!-- Determine whether the database already exists on the server. -->
-          <Publish Property="CONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">DBSERVERCONNECTS</Publish>
+          <Publish Property="CONNECTIONSTRING" Value="[DBCONNECTIONSTRING]">DBSERVERCONNECTS</Publish>
           <Publish Event="DoAction" Value="TestDatabaseConnectionAction">DBSERVERCONNECTS</Publish>
           <Publish Property="DBEXISTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBEXISTS" Value="1">DATABASECONNECTED</Publish>
@@ -264,7 +269,6 @@
           <Publish Event="SpawnDialog" Value="ModalErrorDialog">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND NOT DBEXISTS))</Publish>
 
           <!-- Move to the next dialog if the validation checks out. -->
-          <Publish Property="CONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND NOT DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND DBEXISTS))</Publish>
           <Publish Event="NewDialog" Value="VerifyReadyDlg">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND NOT DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND DBEXISTS))</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
