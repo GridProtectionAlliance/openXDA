@@ -114,7 +114,7 @@
       <Component Id="openXDA">
         <File Id="openXDA.exe" Name="$(var.openXDA.TargetFileName)" Source="$(var.openXDA.TargetPath)" />
         <ServiceInstall Id="openXDAService" Name="openXDA" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
-        <ServiceControl Id="openXDAServiceControl" Name="openXDA" Stop="both" Remove="uninstall" />
+        <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
         <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
