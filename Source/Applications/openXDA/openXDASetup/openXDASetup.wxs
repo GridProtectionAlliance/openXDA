@@ -244,8 +244,8 @@
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <!-- Set up the authentication part of the connection string based on user input. -->
-          <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI"><![CDATA[WINDOWSAUTH = 1]]></Publish>
-          <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]"><![CDATA[WINDOWSAUTH <> 1]]></Publish>
+          <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI">WINDOWSAUTH</Publish>
+          <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]">NOT WINDOWSAUTH</Publish>
           
           <!-- Set up connection strings for connecting to server and database. -->
           <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
