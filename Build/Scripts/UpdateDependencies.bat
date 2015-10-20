@@ -29,8 +29,12 @@ SET pwd="%CD%"
 SET gwd="%LOCALAPPDATA%\Temp\openXDA"
 SET git="%PROGRAMFILES(X86)%\Git\cmd\git.exe"
 SET remote="git@github.com:GridProtectionAlliance/openXDA.git"
-SET source="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Libraries\*.*"
-SET target="Source\Dependencies\GSF"
+SET source1="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Libraries\*.*"
+SET target1="Source\Dependencies\GSF"
+SET source2="\\GPAWEB\NightlyBuilds\openHistorian\Beta\Library\openHistorian.TimeSeries\*.*"
+SET target2="Source\Dependencies\openHistorian"
+SET source3="\\GPAWEB\NightlyBuilds\openHistorian\Beta\Library\openHistorian.SqlClr\*.*"
+SET target3="Source\Dependencies\openHistorian"
 SET sourcemasterbuild="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Build Scripts\MasterBuild.buildproj"
 SET targetmasterbuild="Build\Scripts"
 
@@ -55,7 +59,9 @@ ECHO Updating to latest version...
 
 ECHO.
 ECHO Updating dependencies...
-XCOPY %source% %target% /E /U /Y
+XCOPY %source1% %target1% /E /U /Y
+XCOPY %source2% %target2% /E /U /Y
+XCOPY %source3% %target3% /E /U /Y
 XCOPY %sourcemasterbuild% %targetmasterbuild% /Y
 
 ECHO.
