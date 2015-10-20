@@ -1207,7 +1207,7 @@ WITH TrendingDataPoint AS
 		Time,
 		Value
 	FROM
-		GetTrendingData('127.0.0.1:38405', 'XDA', @EventDate, DATEADD(NANOSECOND, -100, DATEADD(minute, 5, @EventDate)), @ChannelList, default) AS TrendingData JOIN
+		GetTrendingData('127.0.0.1', 'XDA', @EventDate, DATEADD(NANOSECOND, -100, DATEADD(minute, 5, @EventDate)), @ChannelList, default) AS TrendingData JOIN
 		(
 			SELECT 0 AS ID, 'Minimum' AS SeriesType UNION
 			SELECT 1 AS ID, 'Maximum' AS SeriesType UNION
@@ -2509,8 +2509,7 @@ WITH TrendingDataPoint AS
 		Time,
 		Value
 	FROM
-		GetTrendingData('127.0.0.1:38405', 'XDA', @EventDate, DATEADD(NANOSECOND, -100, DATEADD(DAY, 1, @EventDate)), @ChannelID, default) AS TrendingData JOIN
-		--GetTrendingData('127.0.0.1', 'XDA', @EventDate, DATEADD(NANOSECOND, -100, DATEADD(month, 1, @EventDate)), @ChannelID, default) AS TrendingData JOIN
+		GetTrendingData('127.0.0.1', 'XDA', @EventDate, DATEADD(NANOSECOND, -100, DATEADD(DAY, 1, @EventDate)), @ChannelID, default) AS TrendingData JOIN
 		(
 			SELECT 0 AS ID, 'Minimum' AS SeriesType UNION
 			SELECT 1 AS ID, 'Maximum' AS SeriesType UNION
