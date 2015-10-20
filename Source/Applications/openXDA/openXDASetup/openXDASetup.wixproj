@@ -54,6 +54,22 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openHistorian.XDALink.SqlClr\openHistorian.XDALink.SqlClr.csproj">
+      <Name>openHistorian.XDALink.SqlClr</Name>
+      <Project>{c6c6e49b-4e72-4c3d-90ab-66152e7fefbf}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj">
+      <Name>openHistorian.XDALink</Name>
+      <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj">
       <Name>DeviceDefinitionsMigrator</Name>
       <Project>{94e98b70-2f52-45a2-a805-3d6b62547149}</Project>
