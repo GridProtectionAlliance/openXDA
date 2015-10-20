@@ -140,8 +140,8 @@
     </PropertyGroup>
     
     <ItemGroup>
-      <!--Include the SQL database file in the binaries archive.-->
-      <BinariesToArchive Include="$(LocalFolder)\Source\Data\openXDA.sql"/>
+      <!--Include the SQL database files in the binaries archive.-->
+      <BinariesToArchive Include="$(LocalFolder)\Source\Data\*.sql"/>
     </ItemGroup>
     
     <!--Move the SQL database file to the build output folder.-->
