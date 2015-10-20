@@ -47,7 +47,8 @@
     <Property Id="WINDOWSAUTH" Value="1" />
     <Property Id="DATAPROVIDERSTRING" Value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};; ConnectionType=System.Data.SqlClient.SqlConnection;; AdapterType=System.Data.SqlClient.SqlDataAdapter" />
     <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
-    <SetProperty Id="SCRIPTPATH" Value="[INSTALLFOLDER]\openXDA.sql" After="LaunchConditions" Sequence="execute" />
+    <SetProperty Id="DBSCRIPTPATH" Value="[INSTALLFOLDER]\openXDA.sql" After="LaunchConditions" Sequence="execute" />
+    <SetProperty Id="DASHSCRIPTPATH" Value="[INSTALLFOLDER]\DashSprocs.sql" After="LaunchConditions" Sequence="execute" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\INSTALL_LICENSE.rtf" />
@@ -57,17 +58,24 @@
     
     <!-- Custom Actions -->
     <Binary Id="InstallerActions" SourceFile="$(var.SolutionDir)\Dependencies\GSF\GSF.InstallerActions.CA.dll" />
-    <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="DatabaseScriptAction.SetProperty" Property="DatabaseScriptAction" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[SCRIPTPATH]" />
-    <CustomAction Id="DatabaseScriptAction" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    
+    <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
+    <CustomAction Id="DatabaseQueryAction.SetProperty" Property="DatabaseQueryAction" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[DBQUERY]" />
+    <CustomAction Id="DatabaseQueryAction" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="DatabaseScriptAction.SetProperty1" Property="DatabaseScriptAction1" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[DBSCRIPTPATH]" />
+    <CustomAction Id="DatabaseScriptAction1" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="DatabaseScriptAction.SetProperty2" Property="DatabaseScriptAction2" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[DASHSCRIPTPATH]" />
+    <CustomAction Id="DatabaseScriptAction2" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <InstallExecuteSequence>
       <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction" After="DatabaseScriptAction.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DatabaseScriptAction.SetProperty1" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DatabaseScriptAction1" After="DatabaseScriptAction.SetProperty1">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DatabaseScriptAction.SetProperty2" After="DatabaseScriptAction1">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DatabaseScriptAction2" After="DatabaseScriptAction.SetProperty2">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
     </InstallExecuteSequence>
 	</Product>
 
@@ -101,9 +109,12 @@
 
 	<Fragment>
     <ComponentGroup Id="DatabaseComponents" Directory="INSTALLFOLDER">
-      <!-- Database Script -->
+      <!-- Database Scripts -->
       <Component Id="DBScript">
         <File Id="openXDA.sql" Name="openXDA.sql" Source="$(var.SolutionDir)\Data\openXDA.sql" />
+      </Component>
+      <Component Id="DashScript">
+        <File Id="DashSprocs.sql" Name="DashSprocs.sql" Source="$(var.SolutionDir)\Data\DashSprocs.sql" />
       </Component>
     </ComponentGroup>
     
@@ -243,6 +254,9 @@
           <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <!-- Set up the query to create the database. -->
+          <Publish Property="DBQUERY" Value="CREATE DATABASE [\[][DATABASENAME][\]]">1</Publish>
+          
           <!-- Set up the authentication part of the connection string based on user input. -->
           <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI">WINDOWSAUTH</Publish>
           <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]">NOT WINDOWSAUTH</Publish>

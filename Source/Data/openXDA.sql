@@ -1,18 +1,19 @@
-USE [master]
-GO
+-- The following commented statements are used to create a database
+-- from scratch and create a new user with access to the database.
+-- 
+--  * To change the database name, replace all [openXDA] with the desired database name.
+--  * To change the username, replace all NewUser with the desired username.
+--  * To change the password, replace all MyPassword with the desired password.
 
-CREATE DATABASE [openXDA]
-GO
-
--- The following commented statements are used to create a user with access to openXDA.
--- Be sure to change the username and password.
--- Replace-all from NewUser to the desired username is the recommended method of changing the username.
-
+--USE [master]
+--GO
+--CREATE DATABASE [openXDA]
+--GO
 --IF  NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = N'NewUser')
 --CREATE LOGIN [NewUser] WITH PASSWORD=N'MyPassword', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
 --GO
-USE [openXDA]
-GO
+--USE [openXDA]
+--GO
 --CREATE USER [NewUser] FOR LOGIN [NewUser]
 --GO
 --CREATE ROLE [openXDARole] AUTHORIZATION [dbo]
@@ -271,20 +272,44 @@ CREATE TABLE BreakerChannel
 )
 GO
 
+CREATE TABLE [Group]
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	GroupName NVARCHAR(100) NOT NULL,
+	Active BIT NOT NULL
+)
+GO
+
+CREATE TABLE GroupMeter
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	GroupID INT NOT NULL,
+	MeterID INT NOT NULL
+)
+GO
+
+CREATE TABLE [User]
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name NVARCHAR(100) NOT NULL,
+	Active BIT NOT NULL,
+)
+GO
+
+CREATE TABLE UserGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	UserID INT NOT NULL,
+	GroupID INT NOT NULL
+)
+GO
+
 CREATE TABLE Recipient
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL,
     Email VARCHAR(200) NOT NULL
-)
-GO
-
-CREATE TABLE MeterRecipient
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    MeterID INT NOT NULL REFERENCES Meter(ID),
-    RecipientID INT NOT NULL REFERENCES Recipient(ID)
 )
 GO
 
@@ -1009,6 +1034,19 @@ INSERT INTO AlarmType(Name, Description) VALUES ('OffNormal', 'Value was outside
 GO
 
 INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
+GO
+
+-- ------------ --
+-- PQ Dashboard --
+-- ------------ --
+
+CREATE TABLE DashSettings
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name NVARCHAR(500) NOT NULL,
+	Value NVARCHAR(500) NOT NULL,
+	Enabled BIT NOT NULL
+)
 GO
 
 ----- FUNCTIONS -----
