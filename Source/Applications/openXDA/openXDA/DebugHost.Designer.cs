@@ -121,6 +121,7 @@ namespace openXDA
             // m_serviceHost
             // 
             this.m_serviceHost.ExitCode = 0;
+            this.m_serviceHost.ServiceName = "openXDA";
             // 
             // m_notifyIcon
             // 
@@ -137,24 +138,24 @@ namespace openXDA
             this.m_exitToolStripMenuItem});
             this.m_contextMenuStrip.Name = "contextMenuStrip";
             this.m_contextMenuStrip.ShowImageMargin = false;
-            this.m_contextMenuStrip.Size = new System.Drawing.Size(128, 76);
+            this.m_contextMenuStrip.Size = new System.Drawing.Size(85, 54);
             // 
-            // showToolStripMenuItem
+            // m_showToolStripMenuItem
             // 
-            this.m_showToolStripMenuItem.Name = "showToolStripMenuItem";
-            this.m_showToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
+            this.m_showToolStripMenuItem.Name = "m_showToolStripMenuItem";
+            this.m_showToolStripMenuItem.Size = new System.Drawing.Size(84, 22);
             this.m_showToolStripMenuItem.Text = "Show";
             this.m_showToolStripMenuItem.Click += new System.EventHandler(this.ShowToolStripMenuItem_Click);
             // 
-            // toolStripSeparator1
+            // m_toolStripSeparator1
             // 
-            this.m_toolStripSeparator1.Name = "toolStripSeparator1";
-            this.m_toolStripSeparator1.Size = new System.Drawing.Size(124, 6);
+            this.m_toolStripSeparator1.Name = "m_toolStripSeparator1";
+            this.m_toolStripSeparator1.Size = new System.Drawing.Size(81, 6);
             // 
-            // exitToolStripMenuItem
+            // m_exitToolStripMenuItem
             // 
-            this.m_exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.m_exitToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
+            this.m_exitToolStripMenuItem.Name = "m_exitToolStripMenuItem";
+            this.m_exitToolStripMenuItem.Size = new System.Drawing.Size(84, 22);
             this.m_exitToolStripMenuItem.Text = "Exit {0}";
             this.m_exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -172,8 +173,8 @@ namespace openXDA
             this.Padding = new System.Windows.Forms.Padding(10);
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "{0} (Debug Mode)";
-            this.Load += new System.EventHandler(this.DebugHost_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DebugHost_FormClosing);
+            this.Load += new System.EventHandler(this.DebugHost_Load);
             this.Resize += new System.EventHandler(this.DebugHost_Resize);
             this.m_contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
