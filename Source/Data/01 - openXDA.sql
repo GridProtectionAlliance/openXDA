@@ -1171,6 +1171,16 @@ AS BEGIN
 END
 GO
 
+CREATE FUNCTION HasICFResult
+(
+    @eventID INT
+)
+RETURNS INT
+AS BEGIN
+    RETURN 0
+END
+GO
+
 ----- VIEWS -----
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -1448,6 +1458,14 @@ AS BEGIN
     SELECT DISTINCT * FROM #temp
 
     DROP TABLE #temp
+END
+GO
+
+CREATE PROCEDURE GetICFResult
+    @eventID INT
+AS BEGIN
+    SELECT NULL AS Name, NULL AS Value
+    WHERE 1 IS NULL
 END
 GO
 

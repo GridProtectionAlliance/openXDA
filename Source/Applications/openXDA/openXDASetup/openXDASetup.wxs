@@ -60,51 +60,59 @@
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
     
     <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
-    <CustomAction Id="DatabaseQueryAction.SetProperty1" Property="DatabaseQueryAction1" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBQUERY]" />
-    <CustomAction Id="DatabaseQueryAction1" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="DatabaseQueryAction.SetProperty2" Property="DatabaseQueryAction2" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBQUERY]" />
-    <CustomAction Id="DatabaseQueryAction2" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="CreateDatabase.SetProperty" Property="CreateDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBQUERY]" />
+    <CustomAction Id="CreateDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="AlterDatabase.SetProperty" Property="AlterDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBQUERY]" />
+    <CustomAction Id="AlterDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="CreateDBUser.SetProperty" Property="CreateDBUser" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBUSERQUERY]" />
+    <CustomAction Id="CreateDBUser" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="GrantDBPermissions.SetProperty" Property="GrantDBPermissions" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[DBPERMISSIONSQUERY]" />
+    <CustomAction Id="GrantDBPermissions" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     
-    <CustomAction Id="DatabaseQueryAction.SetProperty3" Property="DatabaseQueryAction3" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]GSF.SortedTreeStore.SqlClr[\]] AUTHORIZATION dbo FROM '[#GSF.SortedTreeStore.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
-    <CustomAction Id="DatabaseQueryAction3" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="DatabaseQueryAction.SetProperty4" Property="DatabaseQueryAction4" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.Core.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.Core.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
-    <CustomAction Id="DatabaseQueryAction4" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="DatabaseQueryAction.SetProperty5" Property="DatabaseQueryAction5" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
-    <CustomAction Id="DatabaseQueryAction5" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="DatabaseQueryAction.SetProperty6" Property="DatabaseQueryAction6" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.XDALink.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.XDALink.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
-    <CustomAction Id="DatabaseQueryAction6" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="GSF.SortedTreeStore.SqlClr.SetProperty" Property="GSF.SortedTreeStore.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]GSF.SortedTreeStore.SqlClr[\]] AUTHORIZATION dbo FROM '[#GSF.SortedTreeStore.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="GSF.SortedTreeStore.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="openHistorian.Core.SqlClr.SetProperty" Property="openHistorian.Core.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.Core.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.Core.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="openHistorian.Core.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="openHistorian.SqlClr.SetProperty" Property="openHistorian.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="openHistorian.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="openHistorian.XDALink.SqlClr.SetProperty" Property="openHistorian.XDALink.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.XDALink.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.XDALink.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="openHistorian.XDALink.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     
-    <CustomAction Id="DatabaseScriptAction.SetProperty1" Property="DatabaseScriptAction1" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#openXDA.sql]" />
-    <CustomAction Id="DatabaseScriptAction1" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="DatabaseScriptAction.SetProperty2" Property="DatabaseScriptAction2" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DashSprocs.sql]" />
-    <CustomAction Id="DatabaseScriptAction2" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="DatabaseScriptAction.SetProperty3" Property="DatabaseScriptAction3" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#EnableHistorianSqlClr.sql]" />
-    <CustomAction Id="DatabaseScriptAction3" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="openXDA.sql.SetProperty" Property="openXDA.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#openXDA.sql]" />
+    <CustomAction Id="openXDA.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="DashSprocs.sql.SetProperty" Property="DashSprocs.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DashSprocs.sql]" />
+    <CustomAction Id="DashSprocs.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="EnableHistorianSqlClr.sql.SetProperty" Property="EnableHistorianSqlClr.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#EnableHistorianSqlClr.sql]" />
+    <CustomAction Id="EnableHistorianSqlClr.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <InstallExecuteSequence>
       <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
       
-      <Custom Action="DatabaseQueryAction.SetProperty1" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction1" After="DatabaseQueryAction.SetProperty1">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction.SetProperty2" After="DatabaseQueryAction1">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction2" After="DatabaseQueryAction.SetProperty2">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDatabase.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBUser.SetProperty" After="AlterDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
 
-      <Custom Action="DatabaseQueryAction.SetProperty3" After="DatabaseQueryAction2">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction3" After="DatabaseQueryAction.SetProperty3">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction.SetProperty4" After="DatabaseQueryAction3">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction4" After="DatabaseQueryAction.SetProperty4">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction.SetProperty5" After="DatabaseQueryAction4">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction5" After="DatabaseQueryAction.SetProperty5">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction.SetProperty6" After="DatabaseQueryAction5">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseQueryAction6" After="DatabaseQueryAction.SetProperty6">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       
-      <Custom Action="DatabaseScriptAction.SetProperty1" After="DatabaseQueryAction2">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction1" After="DatabaseScriptAction.SetProperty1">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction.SetProperty2" After="DatabaseScriptAction1">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction2" After="DatabaseScriptAction.SetProperty2">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction.SetProperty3" After="DatabaseScriptAction2">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DatabaseScriptAction3" After="DatabaseScriptAction.SetProperty3">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openXDA.sql.SetProperty" After="openHistorian.XDALink.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
     </InstallExecuteSequence>
 	</Product>
 
@@ -306,9 +314,13 @@
           <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
-          <!-- Set up the query to create the database. -->
+          <!-- Set up the queries to create the database. -->
+          <Publish Property="DBLOGIN" Value="NT AUTHORITY\SYSTEM">WINDOWSAUTH</Publish>
+          <Publish Property="DBLOGIN" Value="[DBUSERNAME]">NOT WINDOWSAUTH</Publish>
           <Publish Property="CREATEDBQUERY" Value="CREATE DATABASE [\[][DATABASENAME][\]]">1</Publish>
           <Publish Property="ALTERDBQUERY" Value="ALTER DATABASE [\[][DATABASENAME][\]] SET TRUSTWORTHY ON">1</Publish>
+          <Publish Property="CREATEDBUSERQUERY" Value="CREATE USER [\[][DBLOGIN][\]] FOR LOGIN [\[][DBLOGIN][\]]">1</Publish>
+          <Publish Property="DBPERMISSIONSQUERY" Value="EXEC sp_addrolemember N'db_owner', N'[DBLOGIN]'">1</Publish>
           
           <!-- Set up the authentication part of the connection string based on user input. -->
           <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI">WINDOWSAUTH</Publish>
@@ -331,8 +343,8 @@
           <Publish Event="DoAction" Value="TestDatabaseConnectionAction">DBSERVERCONNECTS</Publish>
           <Publish Property="DBEXISTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBEXISTS" Value="1">DATABASECONNECTED</Publish>
-          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] already exists on the server. Enter a different database name or drop the existing database, then try again."><![CDATA[&DatabaseFeature=3]]> AND DBSERVERCONNECTS AND DBEXISTS</Publish>
-          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again."><![CDATA[NOT(&DatabaseFeature=3)]]> AND DBSERVERCONNECTS AND NOT DBEXISTS</Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] already exists on the server. Enter a different database name or drop the existing database, then try again. If you do not wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[&DatabaseFeature=3]]> AND DBSERVERCONNECTS AND DBEXISTS</Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again. If you wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[NOT(&DatabaseFeature=3)]]> AND DBSERVERCONNECTS AND NOT DBEXISTS</Publish>
           <Publish Event="SpawnDialog" Value="ModalErrorDialog">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND NOT DBEXISTS))</Publish>
 
           <!-- Move to the next dialog if the validation checks out. -->
@@ -344,8 +356,8 @@
       </Dialog>
 
       <!-- Modal dialog to display error messages. -->
-      <Dialog Id="ModalErrorDialog" Width="220" Height="100" Title="Database Connection Error">
-        <Control Id="ErrorMessageLabel" Type="Text" X="30" Y="15" Width="160" Height="40" TabSkip="no" Text="[ERRORMESSAGE]" />
+      <Dialog Id="ModalErrorDialog" Width="250" Height="100" Title="Database Connection Error">
+        <Control Id="ErrorMessageLabel" Type="Text" X="10" Y="10" Width="230" Height="50" TabSkip="no" Text="[ERRORMESSAGE]" />
         <Control Id="OKButton" Type="PushButton" X="82" Y="70" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;OK">
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
