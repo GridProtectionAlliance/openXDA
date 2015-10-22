@@ -145,6 +145,7 @@
 	</Fragment>
 
 	<Fragment>
+    <!-- Database Components -->
     <ComponentGroup Id="DatabaseComponents" Directory="INSTALLFOLDER">
       <!-- Database Scripts -->
       <Component Id="DBScript">
@@ -158,26 +159,14 @@
       </Component>
 
       <!-- openHistorian Dependencies -->
-      <Component Id="crypto">
-        <File Id="crypto.dll" Name="crypto.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\crypto.dll" />
-      </Component>
-      <Component Id="GSF.SortedTreeStore.SqlClr">
-        <File Id="GSF.SortedTreeStore.SqlClr.dll" Name="GSF.SortedTreeStore.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll" />
-      </Component>
-      <Component Id="openHistorian.Core.SqlClr">
-        <File Id="openHistorian.Core.SqlClr.dll" Name="openHistorian.Core.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll" />
-      </Component>
-      <Component Id="openHistorian.SqlClr">
-        <File Id="openHistorian.SqlClr.dll" Name="openHistorian.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll" />
-      </Component>
-      <Component Id="openHistorian.XDALink.SqlClr">
-        <File Id="openHistorian.XDALink.SqlClr.dll" Name="$(var.openHistorian.XDALink.SqlClr.TargetFileName)" Source="$(var.openHistorian.XDALink.SqlClr.TargetPath)" />
-      </Component>
+      <ComponentRef Id="GSF.SortedTreeStore.SqlClr" />
+      <ComponentRef Id="openHistorian.Core.SqlClr" />
+      <ComponentRef Id="openHistorian.SqlClr" />
+      <ComponentRef Id="openHistorian.XDALink.SqlClr" />
     </ComponentGroup>
     
+    <!-- Service Components -->
     <ComponentGroup Id="ServiceComponents" Directory="INSTALLFOLDER">
-      <ComponentGroupRef Id="LibraryComponents" />
-      
       <!-- Service Applications -->
       <Component Id="openXDA">
         <File Id="openXDA.exe" Name="$(var.openXDA.TargetFileName)" Source="$(var.openXDA.TargetPath)" />
@@ -191,6 +180,34 @@
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
         <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[DBCONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
       </Component>
+      
+      <!-- XDA Libraries -->
+      <ComponentRef Id="FaultAlgorithms" />
+      <ComponentRef Id="FaultData" />
+      <ComponentRef Id="openHistorian.XDALink" />
+
+      <!-- DotNetZip Dependencies -->
+      <ComponentRef Id="Ionic.Zlib" />
+
+      <!-- log4net Dependencies -->
+      <ComponentRef Id="log4net" />
+
+      <!-- GSF Dependencies -->
+      <ComponentRef Id="Antlr3.Runtime" />
+      <ComponentRef Id="ExpressionEvaluator" />
+      <ComponentRef Id="GSF.COMTRADE" />
+      <ComponentRef Id="GSF.Communication" />
+      <ComponentRef Id="GSF.Core" />
+      <ComponentRef Id="GSF.PhasorProtocols" />
+      <ComponentRef Id="GSF.PQDIF" />
+      <ComponentRef Id="GSF.Security" />
+      <ComponentRef Id="GSF.ServiceProcess" />
+      <ComponentRef Id="GSF.TimeSeries" />
+
+      <!-- openHistorian Dependencies -->
+      <ComponentRef Id="crypto" />
+      <ComponentRef Id="GSF.SortedTreeStore" />
+      <ComponentRef Id="openHistorian.Core" />
 
       <!-- Cleanup -->
       <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
@@ -203,12 +220,8 @@
       </Component>
     </ComponentGroup>
 
+    <!-- Console Components -->
     <ComponentGroup Id="ConsoleComponents" Directory="INSTALLFOLDER">
-      <ComponentRef Id="GSF.Communication" />
-      <ComponentRef Id="GSF.Core" />
-      <ComponentRef Id="GSF.Security" />
-      <ComponentRef Id="GSF.ServiceProcess" />
-      
       <!-- Remote Console Applications -->
       <Component Id="openXDAConsole">
         <File Id="openXDAConsole.exe" Name="$(var.openXDAConsole.TargetFileName)" Source="$(var.openXDAConsole.TargetPath)" />
@@ -217,8 +230,15 @@
       <Component Id="openXDAConsoleConfig">
         <File Id="openXDAConsole.exe.config" Name="$(var.openXDAConsole.TargetFileName).config" Source="$(var.openXDAConsole.TargetPath).config" />
       </Component>
+
+      <!-- GSF Dependencies -->
+      <ComponentRef Id="GSF.Communication" />
+      <ComponentRef Id="GSF.Core" />
+      <ComponentRef Id="GSF.Security" />
+      <ComponentRef Id="GSF.ServiceProcess" />
     </ComponentGroup>
 
+    <!-- Library Components -->
     <ComponentGroup Id="LibraryComponents" Directory="INSTALLFOLDER">
       <!-- XDA Libraries -->
       <Component Id="FaultAlgorithms">
@@ -271,6 +291,29 @@
       </Component>
       <Component Id="GSF.TimeSeries">
         <File Id="GSF.TimeSeries.dll" Name="GSF.TimeSeries.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.TimeSeries.dll" />
+      </Component>
+
+      <!-- openHistorian Dependencies -->
+      <Component Id="crypto">
+        <File Id="crypto.dll" Name="crypto.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\crypto.dll" />
+      </Component>
+      <Component Id="GSF.SortedTreeStore">
+        <File Id="GSF.SortedTreeStore.dll" Name="GSF.SortedTreeStore.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.dll" />
+      </Component>
+      <Component Id="openHistorian.Core">
+        <File Id="openHistorian.Core.dll" Name="openHistorian.Core.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.dll" />
+      </Component>
+      <Component Id="GSF.SortedTreeStore.SqlClr">
+        <File Id="GSF.SortedTreeStore.SqlClr.dll" Name="GSF.SortedTreeStore.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll" />
+      </Component>
+      <Component Id="openHistorian.Core.SqlClr">
+        <File Id="openHistorian.Core.SqlClr.dll" Name="openHistorian.Core.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll" />
+      </Component>
+      <Component Id="openHistorian.SqlClr">
+        <File Id="openHistorian.SqlClr.dll" Name="openHistorian.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll" />
+      </Component>
+      <Component Id="openHistorian.XDALink.SqlClr">
+        <File Id="openHistorian.XDALink.SqlClr.dll" Name="$(var.openHistorian.XDALink.SqlClr.TargetFileName)" Source="$(var.openHistorian.XDALink.SqlClr.TargetPath)" />
       </Component>
 		</ComponentGroup>
 	</Fragment>
