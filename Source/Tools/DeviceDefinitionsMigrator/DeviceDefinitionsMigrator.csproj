@@ -75,6 +75,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="ldconfig.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ldconfig.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\FaultData\FaultData.csproj">
@@ -83,6 +89,18 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>SET XDAPATH=$(TargetDir)\..\..\Applications\openXDA\
+IF EXIST "%25XDAPATH%25" (
+    XCOPY "$(TargetPath)" "%25XDAPATH%25" /Y
+    XCOPY "$(TargetDir)\.\ldconfig.ps1" "%25XDAPATH%25" /Y
+    XCOPY "$(TargetDir)\.\ldconfig.bat" "%25XDAPATH%25" /Y
+)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

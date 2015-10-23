@@ -173,12 +173,18 @@
         <ServiceInstall Id="openXDAService" Name="openXDA" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
         <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
       </Component>
-      <Component Id="DeviceDefinitionsMigrator">
-        <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
-      </Component>
       <Component Id="openXDAConfig">
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
         <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[DBCONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
+      </Component>
+      <Component Id="DeviceDefinitionsMigrator">
+        <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
+      </Component>
+      <Component Id="ldconfig.bat">
+        <File Id="ldconfig.bat" Name="ldconfig.bat" Source="$(var.DeviceDefinitionsMigrator.ProjectDir)\ldconfig.bat" />
+      </Component>
+      <Component Id="ldconfig.ps1">
+        <File Id="ldconfig.ps1" Name="ldconfig.ps1" Source="$(var.DeviceDefinitionsMigrator.ProjectDir)\ldconfig.ps1" />
       </Component>
       
       <!-- XDA Libraries -->

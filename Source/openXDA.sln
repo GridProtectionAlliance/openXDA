@@ -63,6 +63,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultData", "Libraries\FaultData\FaultData.csproj", "{11AE594D-2B2B-473C-8550-6BF62914C3E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceDefinitionsMigrator", "Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj", "{94E98B70-2F52-45A2-A805-3D6B62547149}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21} = {0C461E89-2430-4E47-B5C4-97FCA86E0E21}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openXDA", "openXDA", "{DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}"
 EndProject
