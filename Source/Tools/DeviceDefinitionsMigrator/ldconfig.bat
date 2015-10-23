@@ -1,1 +1,1 @@
-powershell -ExecutionPolicy ByPass ldconfig.ps1
+powershell -ExecutionPolicy ByPass -File ldconfig.ps1
