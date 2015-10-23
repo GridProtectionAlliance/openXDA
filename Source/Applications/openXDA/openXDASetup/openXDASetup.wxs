@@ -11,19 +11,19 @@
       <![CDATA[Installed OR NETFRAMEWORK45]]>
     </Condition>
 
-		<Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" Description="All components of the openXDA installation.">
+		<Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
       <!-- openXDA Database-->
       <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
         <ComponentGroupRef Id="DatabaseComponents" />
       </Feature>
       
       <!-- openXDA Service -->
-      <Feature Id="ServiceFeature" Title="openXDA Service" Description="Installs the openXDA Windows service to perform data analytics.">
+      <Feature Id="ServiceFeature" Title="openXDA Service" AllowAdvertise="no" Description="Installs the openXDA Windows service to perform data analytics.">
         <ComponentGroupRef Id="ServiceComponents" />
       </Feature>
 
       <!-- openXDA Console -->
-      <Feature Id="ConsoleFeature" Title="openXDA Remote Console" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
+      <Feature Id="ConsoleFeature" Title="openXDA Remote Console" AllowAdvertise="no" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
         <ComponentGroupRef Id="ConsoleComponents" />
       </Feature>
 		</Feature>
@@ -84,6 +84,8 @@
     <CustomAction Id="DashSprocs.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="EnableHistorianSqlClr.sql.SetProperty" Property="EnableHistorianSqlClr.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#EnableHistorianSqlClr.sql]" />
     <CustomAction Id="EnableHistorianSqlClr.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="DefaultTrendingAlarms.sql.SetProperty" Property="DefaultTrendingAlarms.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultTrendingAlarms.sql]" />
+    <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <InstallExecuteSequence>
       <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
@@ -113,6 +115,8 @@
       <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="EnableHistorianSqlClr.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
     </InstallExecuteSequence>
 	</Product>
 
@@ -156,6 +160,9 @@
       </Component>
       <Component Id="EnableHistorianSqlClr">
         <File Id="EnableHistorianSqlClr.sql" Name="EnableHistorianSqlClr.sql" Source="$(var.SolutionDir)\Data\03 - EnableHistorianSqlClr.sql" />
+      </Component>
+      <Component Id="DefaultTrendingAlarms">
+        <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\04 - DefaultTrendingAlarms.sql" />
       </Component>
 
       <!-- openHistorian Dependencies -->
