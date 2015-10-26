@@ -35,8 +35,8 @@
       <DialogRef Id="DatabaseConnectionDialog" />
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg"><![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
-      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="DatabaseConnectionDialog">(NOT Installed OR WixUI_InstallMode = "Change") AND <![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
-      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg">(NOT Installed OR WixUI_InstallMode = "Change") AND <![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="DatabaseConnectionDialog">NOT Installed AND <![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg">NOT Installed AND <![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
     </UI>
     
     <Icon Id="openXDA.ico.exe" SourceFile="$(var.openXDA.TargetPath)" />
@@ -51,8 +51,10 @@
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\INSTALL_LICENSE.rtf" />
     
-    <!-- Add/Remove Programs Icon -->
+    <!-- Add/Remove Programs Properties -->
     <Property Id="ARPPRODUCTICON" Value="openXDA.ico.exe" />
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    <Property Id="ARPNOMODIFY" Value="yes" Secure="yes" />
     
     <!-- Custom Actions -->
     <Binary Id="InstallerActions" SourceFile="$(var.SolutionDir)\Dependencies\GSF\GSF.InstallerActions.CA.dll" />
