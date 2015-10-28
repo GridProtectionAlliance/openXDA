@@ -69,9 +69,9 @@
     <CustomAction Id="CreateDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="AlterDatabase.SetProperty" Property="AlterDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBQUERY]" />
     <CustomAction Id="AlterDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="CreateDBLogin.SetProperty" Property="CreateDBLogin" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[CONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBLOGINQUERY]" />
+    <CustomAction Id="CreateDBLogin.SetProperty" Property="CreateDBLogin" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBLOGINQUERY]" />
     <CustomAction Id="CreateDBLogin" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="AlterDBLogin.SetProperty" Property="AlterDBLogin" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[CONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBLOGINQUERY]" />
+    <CustomAction Id="AlterDBLogin.SetProperty" Property="AlterDBLogin" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBLOGINQUERY]" />
     <CustomAction Id="AlterDBLogin" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="CreateDBUser.SetProperty" Property="CreateDBUser" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBUSERQUERY]" />
     <CustomAction Id="CreateDBUser" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
@@ -392,7 +392,7 @@
           <Publish Property="ALTERDBQUERY" Value="ALTER DATABASE [\[][DATABASENAME][\]] SET TRUSTWORTHY ON">1</Publish>
           <Publish Property="CREATEDBLOGINQUERY" Value="IF NOT EXISTS (SELECT * FROM master.dbo.syslogins WHERE loginname = '[XDASERVICELOGIN]') CREATE LOGIN [\[][XDASERVICELOGIN][\]] WITH PASSWORD = '[XDASERVICEPASSWORD]', CHECK_EXPIRATION = OFF, CHECK_POLICY = OFF">1</Publish>
           <Publish Property="ALTERDBLOGINQUERY" Value="ALTER LOGIN [\[][XDASERVICELOGIN][\]] WITH PASSWORD = '[XDASERVICEPASSWORD]'">1</Publish>
-          <Publish Property="CREATEDBUSERQUERY" Value="CREATE USER [\[][XDASERVICELOGIN][\]] FOR LOGIN [\[]XDAService[\]]">1</Publish>
+          <Publish Property="CREATEDBUSERQUERY" Value="CREATE USER [\[][XDASERVICELOGIN][\]] FOR LOGIN [\[][XDASERVICELOGIN][\]]">1</Publish>
           <Publish Property="DBPERMISSIONSQUERY" Value="EXEC sp_addrolemember N'db_owner', N'[XDASERVICELOGIN]'">1</Publish>
           
           <!-- Set up the authentication part of the connection string based on user input. -->
