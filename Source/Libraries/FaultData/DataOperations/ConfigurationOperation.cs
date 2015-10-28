@@ -40,6 +40,9 @@ namespace FaultData.DataOperations
     {
         #region [ Members ]
 
+        // Constants
+        private const double Sqrt3 = 1.7320508075688772935274463415059D;
+
         // Fields
         private string m_filePattern;
 
@@ -306,6 +309,20 @@ namespace FaultData.DataOperations
                         clonedChannel.Phase = phase;
                         clonedChannel.Enabled = 1;
 
+                        // If the per-unit value was not specified in the input file,
+                        // we can obtain the per-unit value from the line configuration
+                        // if the channel happens to be an instantaneous or RMS voltage
+                        if (!clonedChannel.PerUnitValue.HasValue)
+                        {
+                            if (IsVoltage(clonedChannel))
+                            {
+                                if (IsLineToNeutral(clonedChannel))
+                                    clonedChannel.PerUnitValue = (line.VoltageKV * 1000.0D) / Sqrt3;
+                                else if (IsLineToLine(clonedChannel))
+                                    clonedChannel.PerUnitValue = line.VoltageKV * 1000.0D;
+                            }
+                        }
+
                         return clonedChannel;
                     });
 
@@ -379,6 +396,29 @@ namespace FaultData.DataOperations
                 channel.MeasurementCharacteristic.Name,
                 channel.Phase.Name,
                 series.SeriesType.Name);
+        }
+
+        private static bool IsVoltage(Channel channel)
+        {
+            return channel.MeasurementType.Name == "Voltage" &&
+                   (channel.MeasurementCharacteristic.Name == "Instantaneous" ||
+                    channel.MeasurementCharacteristic.Name == "RMS");
+        }
+
+        private static bool IsLineToNeutral(Channel channel)
+        {
+            return channel.Phase.Name == "AN" ||
+                   channel.Phase.Name == "BN" ||
+                   channel.Phase.Name == "CN" ||
+                   channel.Phase.Name == "RES" ||
+                   channel.Phase.Name == "NG";
+        }
+
+        private static bool IsLineToLine(Channel channel)
+        {
+            return channel.Phase.Name == "AB" ||
+                   channel.Phase.Name == "BC" ||
+                   channel.Phase.Name == "CA";
         }
 
         #endregion

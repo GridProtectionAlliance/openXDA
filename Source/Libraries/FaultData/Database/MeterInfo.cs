@@ -53,6 +53,7 @@ namespace FaultData.Database
                 Name = Name,
                 HarmonicGroup = HarmonicGroup,
                 SamplesPerHour = SamplesPerHour,
+                PerUnitValue = PerUnitValue,
                 Description = Description
             };
         }

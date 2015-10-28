@@ -269,6 +269,9 @@ namespace FaultData.DataReaders
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
             channel.Phase = new Database.Phase();
 
+            if (seriesInstance.Definition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
+                channel.PerUnitValue = seriesInstance.Definition.SeriesNominalQuantity;
+
             // Populate series properties
             series.SeriesType = new SeriesType();
             series.Channel = channel;
