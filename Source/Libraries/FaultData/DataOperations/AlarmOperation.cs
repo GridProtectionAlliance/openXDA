@@ -269,7 +269,7 @@ namespace FaultData.DataOperations
             if (!rangeLimit.IsLowNull())
             {
                 lowLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.Low * perUnitValue : rangeLimit.Low;
-                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (summary.Average < lowLimit);
+                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (summary.Average > lowLimit);
             }
 
             if (!lowValid || !highValid)
