@@ -58,14 +58,21 @@
     
     <!-- Custom Actions -->
     <Binary Id="InstallerActions" SourceFile="$(var.SolutionDir)\Dependencies\GSF\GSF.InstallerActions.CA.dll" />
+    
+    <CustomAction Id="PasswordGenerationAction" BinaryKey="InstallerActions" DllEntry="PasswordGenerationAction" Execute="immediate" />
+    <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
+    
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
     
-    <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
     <CustomAction Id="CreateDatabase.SetProperty" Property="CreateDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBQUERY]" />
     <CustomAction Id="CreateDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="AlterDatabase.SetProperty" Property="AlterDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBQUERY]" />
     <CustomAction Id="AlterDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="CreateDBLogin.SetProperty" Property="CreateDBLogin" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[CONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBLOGINQUERY]" />
+    <CustomAction Id="CreateDBLogin" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="AlterDBLogin.SetProperty" Property="AlterDBLogin" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[CONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[ALTERDBLOGINQUERY]" />
+    <CustomAction Id="AlterDBLogin" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="CreateDBUser.SetProperty" Property="CreateDBUser" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBUSERQUERY]" />
     <CustomAction Id="CreateDBUser" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="GrantDBPermissions.SetProperty" Property="GrantDBPermissions" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[DBPERMISSIONSQUERY]" />
@@ -97,10 +104,14 @@
       <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBUser.SetProperty" After="AlterDatabase">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBLogin.SetProperty" After="AlterDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBLogin" After="CreateDBLogin.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="AlterDBLogin.SetProperty" After="CreateDBLogin">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="AlterDBLogin" After="AlterDBLogin.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBUser.SetProperty" After="AlterDBLogin">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
 
       <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
@@ -184,7 +195,7 @@
       </Component>
       <Component Id="openXDAConfig">
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
-        <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[DBCONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
+        <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[XDACONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
         <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
@@ -373,12 +384,16 @@
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <!-- Set up the queries to create the database. -->
-          <Publish Property="DBLOGIN" Value="NT AUTHORITY\SYSTEM">WINDOWSAUTH</Publish>
-          <Publish Property="DBLOGIN" Value="[DBUSERNAME]">NOT WINDOWSAUTH</Publish>
+          <Publish Property="GENPASSWORDLENGTH" Value="20">1</Publish>
+          <Publish Event="DoAction" Value="PasswordGenerationAction">NOT XDASERVICEPASSWORD</Publish>
+          <Publish Property="XDASERVICELOGIN" Value="XDAService">1</Publish>
+          <Publish Property="XDASERVICEPASSWORD" Value="[GENERATEDPASSWORD]">NOT XDASERVICEPASSWORD</Publish>
           <Publish Property="CREATEDBQUERY" Value="CREATE DATABASE [\[][DATABASENAME][\]]">1</Publish>
           <Publish Property="ALTERDBQUERY" Value="ALTER DATABASE [\[][DATABASENAME][\]] SET TRUSTWORTHY ON">1</Publish>
-          <Publish Property="CREATEDBUSERQUERY" Value="CREATE USER [\[][DBLOGIN][\]] FOR LOGIN [\[][DBLOGIN][\]]">1</Publish>
-          <Publish Property="DBPERMISSIONSQUERY" Value="EXEC sp_addrolemember N'db_owner', N'[DBLOGIN]'">1</Publish>
+          <Publish Property="CREATEDBLOGINQUERY" Value="IF NOT EXISTS (SELECT * FROM master.dbo.syslogins WHERE loginname = '[XDASERVICELOGIN]') CREATE LOGIN [\[][XDASERVICELOGIN][\]] WITH PASSWORD = '[XDASERVICEPASSWORD]', CHECK_EXPIRATION = OFF, CHECK_POLICY = OFF">1</Publish>
+          <Publish Property="ALTERDBLOGINQUERY" Value="ALTER LOGIN [\[][XDASERVICELOGIN][\]] WITH PASSWORD = '[XDASERVICEPASSWORD]'">1</Publish>
+          <Publish Property="CREATEDBUSERQUERY" Value="CREATE USER [\[][XDASERVICELOGIN][\]] FOR LOGIN [\[]XDAService[\]]">1</Publish>
+          <Publish Property="DBPERMISSIONSQUERY" Value="EXEC sp_addrolemember N'db_owner', N'[XDASERVICELOGIN]'">1</Publish>
           
           <!-- Set up the authentication part of the connection string based on user input. -->
           <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI">WINDOWSAUTH</Publish>
@@ -387,6 +402,7 @@
           <!-- Set up connection strings for connecting to server and database. -->
           <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
           <Publish Property="DBCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">1</Publish>
+          <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];Initial Catalog=[DATABASENAME];User Id=[XDASERVICELOGIN];Password=[XDASERVICEPASSWORD]">1</Publish>
           
           <!-- Determine whether we can connect to the database server. -->
           <Publish Property="CONNECTIONSTRING" Value="[SERVERCONNECTIONSTRING]">1</Publish>
