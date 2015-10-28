@@ -97,10 +97,10 @@
       <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBUser.SetProperty" After="AlterDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBUser.SetProperty" After="AlterDatabase">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty">NOT REMOVE AND WINDOWSAUTH AND <![CDATA[&DatabaseFeature=3]]></Custom>
 
       <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>

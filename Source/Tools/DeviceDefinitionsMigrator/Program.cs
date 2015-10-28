@@ -561,11 +561,15 @@ namespace DeviceDefinitionsMigrator
         private static void LoadMeterLocationAttributes(MeterLocation meterLocation, XElement deviceAttributes)
         {
             string meterLocationName = (string)deviceAttributes.Element("stationName");
+            string latitude = (string)deviceAttributes.Element("stationLatitude");
+            string longitude = (string)deviceAttributes.Element("stationLongitude");
 
             if (meterLocation.Name != meterLocationName)
             {
                 meterLocation.Name = meterLocationName;
                 meterLocation.ShortName = new string(meterLocationName.Take(50).ToArray());
+                meterLocation.Latitude = Convert.ToDouble(latitude ?? "0.0");
+                meterLocation.Longitude = Convert.ToDouble(longitude ?? "0.0");
             }
         }
 
