@@ -1061,6 +1061,27 @@ CREATE TABLE DashSettings
 )
 GO
 
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsTrending', 1)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsFaults', 1)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsBreakers', 0)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsCompleteness', 1)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsCorrectness', 1)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('MapLayer', 'http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Census_USA/MapServer', 0)
+GO
+
 ----- FUNCTIONS -----
 
 CREATE FUNCTION AdjustDateTime2

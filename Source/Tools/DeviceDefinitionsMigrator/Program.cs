@@ -568,19 +568,31 @@ namespace DeviceDefinitionsMigrator
             {
                 meterLocation.Name = meterLocationName;
                 meterLocation.ShortName = new string(meterLocationName.Take(50).ToArray());
-                meterLocation.Latitude = Convert.ToDouble(latitude ?? "0.0");
-                meterLocation.Longitude = Convert.ToDouble(longitude ?? "0.0");
+
+                if ((object)latitude != null)
+                    meterLocation.Latitude = Convert.ToDouble(latitude);
+
+                if ((object)longitude != null)
+                    meterLocation.Longitude = Convert.ToDouble(longitude);
             }
         }
 
         private static void LoadRemoteMeterLocationAttributes(MeterLocation meterLocation, XElement lineElement)
         {
             string meterLocationName = (string)lineElement.Element("endStationName");
+            string latitude = (string)lineElement.Element("endStationLatitude");
+            string longitude = (string)lineElement.Element("endStationLongitude");
 
             if (meterLocation.Name != meterLocationName)
             {
                 meterLocation.Name = meterLocationName;
                 meterLocation.ShortName = new string(meterLocationName.Take(50).ToArray());
+
+                if ((object)latitude != null)
+                    meterLocation.Latitude = Convert.ToDouble(latitude);
+
+                if ((object)longitude != null)
+                    meterLocation.Longitude = Convert.ToDouble(longitude);
             }
         }
 
