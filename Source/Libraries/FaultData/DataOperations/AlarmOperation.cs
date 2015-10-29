@@ -262,14 +262,14 @@ namespace FaultData.DataOperations
 
             if (!rangeLimit.IsHighNull())
             {
-                highLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.High * perUnitValue : rangeLimit.High;
-                highValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (summary.Average < highLimit);
+                highLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? (rangeLimit.High * perUnitValue) : rangeLimit.High;
+                highValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (summary.Average <= highLimit);
             }
 
             if (!rangeLimit.IsLowNull())
             {
-                lowLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? rangeLimit.Low * perUnitValue : rangeLimit.Low;
-                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (summary.Average > lowLimit);
+                lowLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? (rangeLimit.Low * perUnitValue) : rangeLimit.Low;
+                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (summary.Average >= lowLimit);
             }
 
             if (!lowValid || !highValid)
@@ -279,7 +279,7 @@ namespace FaultData.DataOperations
                 logRow.AlarmTypeID = rangeLimit.AlarmTypeID;
                 logRow.Time = summary.Time;
                 logRow.Severity = rangeLimit.Severity;
-                logRow.Value = summary.Average;
+                logRow.Value = Convert.ToBoolean(rangeLimit.PerUnit) ? (summary.Average / perUnitValue) : summary.Average;
 
                 if (!rangeLimit.IsHighNull())
                     logRow.LimitHigh = highLimit;

@@ -146,7 +146,7 @@ WHERE MType.Name = 'Voltage' AND MChar.Name = 'Instantaneous'
 GO
 
 INSERT INTO DefaultDataQualityRangeLimit(MeasurementTypeID, MeasurementCharacteristicID, High, Low, RangeInclusive, PerUnit)
-SELECT MType.ID, MChar.ID, 1.4, 0, 0, 0
+SELECT MType.ID, MChar.ID, 1.4, 0, 0, 1
 FROM MeasurementType MType CROSS JOIN MeasurementCharacteristic MChar
 WHERE MType.Name = 'Voltage' AND MChar.Name = 'RMS'
 GO
@@ -368,13 +368,13 @@ WHERE MType.Name = 'Voltage' AND MChar.Name = 'Frequency'
 GO
 
 INSERT INTO DefaultAlarmRangeLimit(MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit)
-SELECT MType.ID, MChar.ID, 5, 900, 1.1, 0.9, 0, 0
+SELECT MType.ID, MChar.ID, 5, 900, 1.1, 0.9, 0, 1
 FROM MeasurementType MType CROSS JOIN MeasurementCharacteristic MChar
 WHERE MType.Name = 'Voltage' AND MChar.Name = 'Instantaneous'
 GO
 
 INSERT INTO DefaultAlarmRangeLimit(MeasurementTypeID, MeasurementCharacteristicID, AlarmTypeID, Severity, High, Low, RangeInclusive, PerUnit)
-SELECT MType.ID, MChar.ID, 5, 900, 1.1, 0.9, 0, 0
+SELECT MType.ID, MChar.ID, 5, 900, 1.1, 0.9, 0, 1
 FROM MeasurementType MType CROSS JOIN MeasurementCharacteristic MChar
 WHERE MType.Name = 'Voltage' AND MChar.Name = 'RMS'
 GO
