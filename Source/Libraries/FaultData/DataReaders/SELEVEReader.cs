@@ -115,7 +115,10 @@ namespace FaultData.DataReaders
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
-                    meterDataSet.DataSeries.Add(series);
+                    if (channel.MeasurementType.Name == "Voltage")
+                        meterDataSet.DataSeries.Add(series.Multiply(1000.0));
+                    else
+                        meterDataSet.DataSeries.Add(series);
                 }
             }
 
