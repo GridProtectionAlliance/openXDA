@@ -35,6 +35,9 @@ using log4net;
 
 namespace FaultData.DataReaders
 {
+    /// <summary>
+    /// Reads a COMTRADE file to produce a <see cref="MeterDataSet"/>.
+    /// </summary>
     public class COMTRADEReader : IDataReader, IDisposable
     {
         #region [ Members ]

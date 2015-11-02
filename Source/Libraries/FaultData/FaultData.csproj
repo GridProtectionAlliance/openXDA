@@ -47,6 +47,9 @@
     <Reference Include="GSF.PQDIF">
       <HintPath>..\..\Dependencies\GSF\GSF.PQDIF.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.SELEventParser">
+      <HintPath>..\..\Dependencies\GSF\GSF.SELEventParser.dll</HintPath>
+    </Reference>
     <Reference Include="Ionic.Zlib">
       <HintPath>..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
     </Reference>
@@ -91,7 +94,6 @@
     <Compile Include="Database\DataContextLookup.cs" />
     <Compile Include="Database\DataQuality.cs">
       <DependentUpon>DataQuality.xsd</DependentUpon>
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Database\DataQuality.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -101,7 +103,6 @@
     <Compile Include="Database\DbAdapterContainer.cs" />
     <Compile Include="Database\FaultLocationData.cs">
       <DependentUpon>FaultLocationData.xsd</DependentUpon>
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Database\FaultLocationData.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -123,7 +124,6 @@
     </Compile>
     <Compile Include="Database\MeterData.cs">
       <DependentUpon>MeterData.xsd</DependentUpon>
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Database\MeterData.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -151,6 +151,7 @@
     <Compile Include="DataOperations\DataQualityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
+    <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
     <Compile Include="DataResources\DataGroupsResource.cs" />

@@ -568,13 +568,13 @@ namespace DeviceDefinitionsMigrator
             {
                 meterLocation.Name = meterLocationName;
                 meterLocation.ShortName = new string(meterLocationName.Take(50).ToArray());
-
-                if ((object)latitude != null)
-                    meterLocation.Latitude = Convert.ToDouble(latitude);
-
-                if ((object)longitude != null)
-                    meterLocation.Longitude = Convert.ToDouble(longitude);
             }
+
+            if ((object)latitude != null)
+                meterLocation.Latitude = Convert.ToDouble(latitude);
+
+            if ((object)longitude != null)
+                meterLocation.Longitude = Convert.ToDouble(longitude);
         }
 
         private static void LoadRemoteMeterLocationAttributes(MeterLocation meterLocation, XElement lineElement)
@@ -587,13 +587,13 @@ namespace DeviceDefinitionsMigrator
             {
                 meterLocation.Name = meterLocationName;
                 meterLocation.ShortName = new string(meterLocationName.Take(50).ToArray());
-
-                if ((object)latitude != null)
-                    meterLocation.Latitude = Convert.ToDouble(latitude);
-
-                if ((object)longitude != null)
-                    meterLocation.Longitude = Convert.ToDouble(longitude);
             }
+
+            if ((object)latitude != null)
+                meterLocation.Latitude = Convert.ToDouble(latitude);
+
+            if ((object)longitude != null)
+                meterLocation.Longitude = Convert.ToDouble(longitude);
         }
 
         private static void LoadLineAttributes(Line line, XElement lineElement)
