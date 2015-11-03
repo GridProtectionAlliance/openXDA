@@ -317,6 +317,7 @@ namespace FaultData.DataOperations
             DataQualityRangeLimitTableAdapter rangeLimitAdapter;
             DefaultDataQualityRangeLimitTableAdapter defaultRangeLimitAdapter;
             DataQuality.DefaultDataQualityRangeLimitDataTable defaultRangeLimitTable;
+            DataQuality.DataQualityRangeLimitRow rangeLimitRow;
 
             // Clear existing rows from the range limit table
             rangeLimitTable.Clear();
@@ -350,7 +351,21 @@ namespace FaultData.DataOperations
                 if (rangeLimitTable.Count == 0)
                 {
                     foreach (DataQuality.DefaultDataQualityRangeLimitRow row in defaultRangeLimitTable)
-                        rangeLimitTable.AddDataQualityRangeLimitRow(channel.ID, row.High, row.Low, row.RangeInclusive, row.PerUnit, 1);
+                    {
+                        rangeLimitRow = rangeLimitTable.NewDataQualityRangeLimitRow();
+                        rangeLimitRow.ChannelID = channel.ID;
+                        rangeLimitRow.RangeInclusive = row.RangeInclusive;
+                        rangeLimitRow.PerUnit = row.PerUnit;
+                        rangeLimitRow.Enabled = 1;
+
+                        if (!row.IsHighNull())
+                            rangeLimitRow.High = row.High;
+
+                        if (!row.IsLowNull())
+                            rangeLimitRow.Low = row.Low;
+
+                        rangeLimitTable.AddDataQualityRangeLimitRow(rangeLimitRow);
+                    }
 
                     using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
                     {
