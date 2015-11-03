@@ -115,7 +115,7 @@ namespace FaultData.DataReaders
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
-                    if (channel.MeasurementType.Name == "Voltage")
+                    if (new string[] { "VA", "VB", "VC" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
                         meterDataSet.DataSeries.Add(series.Multiply(1000.0));
                     else
                         meterDataSet.DataSeries.Add(series);
