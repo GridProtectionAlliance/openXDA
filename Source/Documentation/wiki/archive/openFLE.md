@@ -4,15 +4,15 @@
 <body>
 <!--HtmlToGmd.Body-->
 <div id="NavigationMenu">
-<h1><a href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/openXDA.md">
-<img src="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/openXDA_Logo.png" alt="openXDA" /></a></h1>
+<h1><a href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/wiki/openXDA.md">
+<img src="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/wiki/openXDA_Logo.png" alt="openXDA" /></a></h1>
 <hr />
 <table style="width: 100%; border-collapse: collapse; border: 0px solid gray;">
 <tr>
 <td style="width: 25%; text-align:center;"><b><a href="http://www.gridprotectionalliance.com">Grid Protection Alliance</a></b></td>
-<td style="width: 25%; text-align:center;"><b><a href="https://github.com/ajstadlin/openXDA">openXDA Project on GitHub</a></b></td>
-<td style="width: 25%; text-align:center;"><b><a href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/openXDA.md">openXDA Wiki</a></b></td>
-<td style="width: 25%; text-align:center;"><b><a href="https://github.com/ajstadlin/openXDA/tree/wikiedits.aj/Source/Documentation">openXDA Documentation</a></b></td>
+<td style="width: 25%; text-align:center;"><b><a href="https://github.com/GridProtectionAlliance/openXDA">openXDA Project on GitHub</a></b></td>
+<td style="width: 25%; text-align:center;"><b><a href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/wiki/openXDA.md">openXDA Wiki</a></b></td>
+<td style="width: 25%; text-align:center;"><b><a href="https://github.com/GridProtectionAlliance/openXDA/tree/master/Source/Documentation">openXDA Documentation</a></b></td>
 </tr>
 </table>
 </div>
@@ -25,7 +25,7 @@
 <a href="https://github.com/GridProtectionAlliance/openXDA">openXDA</a>.</em></strong></span></p>
 <p><span style="font-size:10pt">openFLE is an extensible platform for processing event files from disturbance monitoring equipment such as digital fault recorders (DFRs) and power quality monitors.&nbsp; Based on the waveform data in these files and on user-provided
  transmission line parameters, openFLE determines the fault type and calculates the line-distance to the fault. &nbsp;For more information. &nbsp;See
-<a title="openFLE Overview" href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/archive/openFLE_Overview_Landscape.pdf">
+<a title="openFLE Overview" href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/wiki/archive/openFLE_Overview_Landscape.pdf">
 openFLE overview</a>.</span></p>
 <p>This version of openFLE is an extension of work conducted in 2012 for the Electric Power Research Institute (EPRI).&nbsp;&nbsp;As noted above, additional work to further extend openFLE so that it can be implemented easily within multiple utiliity environments
  is being maintained at <a href="https://github.com/GridProtectionAlliance/openXDA">openXDA</a></p>
@@ -34,7 +34,7 @@ openFLE overview</a>.</span></p>
 </div>
 <hr />
 <div class="footer">
-Last edited <span class="smartDate" title="3/7/2014 6:05:58 PM" LocalTimeTicks="1394244358">Mar 7, 2014 at 6:05 PM</span> by <a id="wikiEditByLink" href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/contributors/felmendorf.md">felmendorf</a>, version 28<br />
+Last edited Mar 7, 2014 at 6:05 PM by <a href="https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/wiki/contributors/felmendorf.md">felmendorf</a>, version 28<br />
 <!--HtmlToGmd.Migration-->Migrated from <a href="http://openfle.codeplex.com/">CodePlex</a> Nov 9, 2015 by <a href="https://github.com/ajstadlin">ajstadlin</a><!--/HtmlToGmd.Migration-->
 </div>
 <!--HtmlToGmd.Foot-->
