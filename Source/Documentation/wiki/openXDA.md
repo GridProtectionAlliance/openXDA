@@ -25,7 +25,7 @@
  COMTRADE and PQDIF formatted records, and&nbsp;demonstrations have been&nbsp;conducted using&nbsp;Schweitzer Engineering Laboratories (SEL) .eve files.&nbsp;openXDA can be used as a data integration layer and can facilitate the development of automated analytic
  systems.&nbsp; openXDA has been deployed in a number of major US utilities to perform automated fault distance calculations&nbsp;based on disturbance waveform&nbsp;data combined with&nbsp;line parameters. openXDA determines the fault presence and&nbsp;fault
  type, and uses 6 different single ended fault distance calculation methods to determine the line-distance to the fault.&nbsp; Current projects are extending the openXDA by adding double ended fault distance calculations and algorithms to determine breaker
- operation timing.&nbsp; For more information see: <a title="The BIG Picture - Open Source Software (OSS) for Disturbance Analytic Systems" href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/archive/2014-georgia-tech-fda-pres-asda-using-oss-37239423.md" target="_blank">
+ operation timing.&nbsp; For more information see: <a title="The BIG Picture - Open Source Software (OSS) for Disturbance Analytic Systems" href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/archive/2014georgiatechfdapresasdausingoss-140722085705-phpapp02.pdf" target="_blank">
 The BIG Picture - Open Source Software (OSS) for Disturbance Analytic Systems</a>&nbsp;and
 <a href="https://github.com/ajstadlin/openXDA/blob/wikiedits.aj/Source/Documentation/wiki/archive/openFLE_Overview_Landscape.pdf">
 openFLE overview</a>.</p>
