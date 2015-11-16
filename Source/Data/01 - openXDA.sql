@@ -274,33 +274,33 @@ GO
 
 CREATE TABLE [Group]
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	GroupName NVARCHAR(100) NOT NULL,
-	Active BIT NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    GroupName NVARCHAR(100) NOT NULL,
+    Active BIT NOT NULL
 )
 GO
 
 CREATE TABLE GroupMeter
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	GroupID INT NOT NULL,
-	MeterID INT NOT NULL
+    GroupID INT NOT NULL REFERENCES [Group](ID),
+    MeterID INT NOT NULL REFERENCES Meter(ID)
 )
 GO
 
 CREATE TABLE [User]
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name NVARCHAR(100) NOT NULL,
-	Active BIT NOT NULL,
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Active BIT NOT NULL,
 )
 GO
 
 CREATE TABLE UserGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	UserID INT NOT NULL,
-	GroupID INT NOT NULL
+    UserID INT NOT NULL REFERENCES [User](ID),
+    GroupID INT NOT NULL REFERENCES [Group](ID)
 )
 GO
 
@@ -669,20 +669,25 @@ CREATE TABLE FaultEmailTemplate
 )
 GO
 
-CREATE TABLE FaultEmailTemplateRecipient
+CREATE TABLE FaultEmailRecipient
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     RecipientID INT NOT NULL REFERENCES Recipient(ID),
-    FaultEmailTemplateID INT NOT NULL REFERENCES FaultEmailTemplate(ID)
+    FaultEmailTemplateID INT NOT NULL REFERENCES FaultEmailTemplate(ID),
+    MeterGroupID INT NOT NULL REFERENCES [Group](ID)
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_FaultEmailTemplateRecipient_RecipientID
-ON FaultEmailTemplateRecipient(RecipientID ASC)
+CREATE NONCLUSTERED INDEX IX_FaultEmailRecipient_RecipientID
+ON FaultEmailRecipient(RecipientID ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_FaultEmailTemplateRecipient_FaultEmailTemplateID
-ON FaultEmailTemplateRecipient(FaultEmailTemplateID ASC)
+CREATE NONCLUSTERED INDEX IX_FaultEmailRecipient_FaultEmailTemplateID
+ON FaultEmailRecipient(FaultEmailTemplateID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultEmailRecipient_MeterGroupID
+ON FaultEmailRecipient(MeterGroupID ASC)
 GO
 
 CREATE TABLE FaultEmail
@@ -1054,10 +1059,10 @@ GO
 
 CREATE TABLE DashSettings
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name NVARCHAR(500) NOT NULL,
-	Value NVARCHAR(500) NOT NULL,
-	Enabled BIT NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name NVARCHAR(500) NOT NULL,
+    Value NVARCHAR(500) NOT NULL,
+    Enabled BIT NOT NULL
 )
 GO
 

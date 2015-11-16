@@ -51,17 +51,17 @@
         <elementListCompartment Id="3769c984-2b8c-4eae-ba93-9162eb709b05" absoluteBounds="9.64, 3.085, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <classShape Id="171fc1d1-de56-4cc4-8138-3607b70888cf" absoluteBounds="9.625, 5, 2, 1.3862939453125003">
-      <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultEmailTemplateRecipient" />
+    <classShape Id="af09b21c-8ac0-44f7-b0fa-0196495bada1" absoluteBounds="9.625, 4.75, 2, 1.5785953776041666">
+      <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultEmailRecipient" />
       <nestedChildShapes>
-        <elementListCompartment Id="5383cd07-e6b7-432a-96cc-9ce96bf7ade7" absoluteBounds="9.64, 5.46, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+        <elementListCompartment Id="de5df09f-fc07-4847-babe-3ffedd830b22" absoluteBounds="9.64, 5.21, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <associationConnector edgePoints="[(10.625 : 3.81899251302083); (10.625 : 5)]" fixedFrom="Algorithm" fixedTo="Algorithm">
-      <AssociationMoniker Name="/FaultLocationInfoDataContext/FaultEmailTemplate/FaultEmailTemplate_FaultEmailTemplateRecipient" />
+    <associationConnector edgePoints="[(10.625 : 3.81899251302083); (10.625 : 4.75)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/FaultLocationInfoDataContext/FaultEmailTemplate/FaultEmailTemplate_FaultEmailRecipient" />
       <nodes>
         <classShapeMoniker Id="a8a15eb2-f570-497f-af05-91d41c773bcf" />
-        <classShapeMoniker Id="171fc1d1-de56-4cc4-8138-3607b70888cf" />
+        <classShapeMoniker Id="af09b21c-8ac0-44f7-b0fa-0196495bada1" />
       </nodes>
     </associationConnector>
   </nestedChildShapes>

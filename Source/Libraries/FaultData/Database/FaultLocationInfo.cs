@@ -6,10 +6,11 @@ namespace FaultData.Database
 {
     partial class FaultEmailTemplate
     {
-        public List<Recipient> GetRecipients(Table<Recipient> recipientTable)
+        public List<Recipient> GetRecipients(Table<Recipient> recipientTable, List<int> meterGroups)
         {
-            List<int> recipientIDs = FaultEmailTemplateRecipients
-                .Select(faultEmailTemplateRecipient => faultEmailTemplateRecipient.RecipientID)
+            List<int> recipientIDs = FaultEmailRecipients
+                .Where(faultEmailRecipient => meterGroups.Contains(faultEmailRecipient.MeterGroupID))
+                .Select(faultEmailRecipient => faultEmailRecipient.RecipientID)
                 .ToList();
 
             return recipientTable

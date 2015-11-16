@@ -291,28 +291,57 @@ namespace FaultData.DataWriters
         private static void GenerateEmail(int eventID)
         {
             SystemInfoDataContext systemInfo;
+            MeterInfoDataContext meterInfo;
             FaultLocationInfoDataContext faultInfo;
-            Dictionary<int, ChartGenerator> generators;
+            EventTableAdapter eventAdapter;
+            EventTypeTableAdapter eventTypeAdapter;
 
+            int faultTypeID;
             string eventDetail;
+            MeterData.EventRow eventRow;
+            List<int> faultedMeters;
+            List<int> meterGroups;
+            List<Recipient> recipients;
+
+            Dictionary<int, ChartGenerator> generators;
             XslCompiledTransform transform;
             XDocument htmlDocument;
             List<XElement> formatParents;
             List<XElement> chartElements;
             List<XElement> chartParents;
 
-            List<Recipient> recipients;
             Attachment[] attachments;
             string subject;
             string html;
 
             systemInfo = s_dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
+            meterInfo = s_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
             faultInfo = s_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
-            eventDetail = s_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetEventDetail(eventID);
+            eventAdapter = s_dbAdapterContainer.GetAdapter<EventTableAdapter>();
+            eventTypeAdapter = s_dbAdapterContainer.GetAdapter<EventTypeTableAdapter>();
+
+            faultTypeID = eventTypeAdapter.GetData()
+                .Where(eventType => eventType.Name == "Fault")
+                .Select(eventType => eventType.ID)
+                .FirstOrDefault();
+
+            eventDetail = eventAdapter.GetEventDetail(eventID);
+            eventRow = eventAdapter.GetDataByID(eventID)[0];
+
+            faultedMeters = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance)
+                .Where(evt => evt.LineID == eventRow.LineID)
+                .Where(evt => evt.EventTypeID == faultTypeID)
+                .Select(evt => evt.MeterID)
+                .ToList();
+
+            meterGroups = meterInfo.GroupMeters
+                .Where(groupMeter => faultedMeters.Contains(groupMeter.MeterID))
+                .Select(groupMeter => groupMeter.GroupID)
+                .ToList();
 
             foreach (FaultEmailTemplate template in faultInfo.FaultEmailTemplates.ToList())
             {
-                recipients = template.GetRecipients(systemInfo.Recipients);
+                recipients = template.GetRecipients(systemInfo.Recipients, meterGroups);
 
                 if (recipients.Count == 0)
                     continue;

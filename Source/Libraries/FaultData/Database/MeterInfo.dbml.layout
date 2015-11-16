@@ -39,10 +39,10 @@
         <classShapeMoniker Id="c22fd208-c6ec-47a5-8ec0-7b515c7dcc90" />
       </nodes>
     </associationConnector>
-    <classShape Id="d182c870-6336-40f4-89ca-e415a8a6475f" absoluteBounds="13.5, 4.875, 2, 1.3862939453125">
+    <classShape Id="d182c870-6336-40f4-89ca-e415a8a6475f" absoluteBounds="13.5, 3.5, 2, 1.3862939453125">
       <DataClassMoniker Name="/MeterInfoDataContext/MeterFileGroup" />
       <nestedChildShapes>
-        <elementListCompartment Id="9fc48ae8-47db-44af-9a0d-477f8775e43d" absoluteBounds="13.515, 5.335, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+        <elementListCompartment Id="9fc48ae8-47db-44af-9a0d-477f8775e43d" absoluteBounds="13.515, 3.96, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
     <classShape Id="00acceaa-aaed-4023-ac7d-2a53be981096" absoluteBounds="8, 10.375, 2, 1.5785953776041666">
@@ -64,21 +64,21 @@
         <elementListCompartment Id="b71d687f-7ba5-4d22-9185-ad913129145c" absoluteBounds="8.015, 7.335, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <associationConnector edgePoints="[(9 : 9.9920068359375); (9 : 10.375)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(9 : 9.9920068359375); (9 : 10.375)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/MeterInfoDataContext/Channel/Channel_Series" />
       <nodes>
         <classShapeMoniker Id="64c54649-a016-404e-9a29-f1b37d3d7a10" />
         <classShapeMoniker Id="00acceaa-aaed-4023-ac7d-2a53be981096" />
       </nodes>
     </associationConnector>
-    <associationConnector edgePoints="[(7.25 : 7.50564697265625); (8 : 7.50564697265625)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(7.25 : 7.50564697265625); (8 : 7.50564697265625)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/MeterInfoDataContext/MeasurementType/MeasurementType_Channel" />
       <nodes>
         <classShapeMoniker Id="ca9db9ff-a4ab-4466-90dc-b19371e04e54" />
         <classShapeMoniker Id="64c54649-a016-404e-9a29-f1b37d3d7a10" />
       </nodes>
     </associationConnector>
-    <associationConnector edgePoints="[(10.875 : 7.56814697265625); (10 : 7.56814697265625)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(10.875 : 7.56814697265625); (10 : 7.56814697265625)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/MeterInfoDataContext/Phase/Phase_Channel" />
       <nodes>
         <classShapeMoniker Id="b4ba95c7-f3bf-4349-b1d8-82da3e2aca9a" />
@@ -91,7 +91,7 @@
         <elementListCompartment Id="0e4ab87f-32be-41d7-b130-e07153707aed" absoluteBounds="5.265, 8.835, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <associationConnector edgePoints="[(7.25 : 9.16429768880208); (8 : 9.16429768880208)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(7.25 : 9.16429768880208); (8 : 9.16429768880208)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/MeterInfoDataContext/MeasurementCharacteristic/MeasurementCharacteristic_Channel" />
       <nodes>
         <classShapeMoniker Id="6fd7c4d5-e489-4f76-abd1-cc5918562004" />
@@ -137,14 +137,14 @@
         <elementListCompartment Id="947ca9f4-5c56-4596-a089-fb15bd9c1464" absoluteBounds="10.765, 4.21, 1.9700000000000002, 2.1724039713541665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <associationConnector edgePoints="[(12.75 : 5.56814697265625); (13.5 : 5.56814697265625)]" fixedFrom="NotFixed" fixedTo="NotFixed">
+    <associationConnector edgePoints="[(12.75 : 4.31814697265625); (13.5 : 4.31814697265625)]" fixedFrom="Algorithm" fixedTo="Algorithm">
       <AssociationMoniker Name="/MeterInfoDataContext/Meter/Meter_MeterFileGroup" />
       <nodes>
         <classShapeMoniker Id="90f8d03b-00da-44dd-ad92-c2f82f6a8ed1" />
         <classShapeMoniker Id="d182c870-6336-40f4-89ca-e415a8a6475f" />
       </nodes>
     </associationConnector>
-    <associationConnector edgePoints="[(10.75 : 5.71800017447917); (9.47626769156501 : 5.71800017447917); (9.47626769156501 : 6.875)]" fixedFrom="Algorithm" fixedTo="Caller">
+    <associationConnector edgePoints="[(10.75 : 5.71800017447917); (9.47626769156501 : 5.71800017447917); (9.47626769156501 : 6.875)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/MeterInfoDataContext/Meter/Meter_Channel" />
       <nodes>
         <classShapeMoniker Id="90f8d03b-00da-44dd-ad92-c2f82f6a8ed1" />
@@ -184,11 +184,24 @@
         <elementListCompartment Id="057d4829-6b9e-4d39-98ab-07c7a03fba1c" absoluteBounds="10.89, 8.96, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <associationConnector edgePoints="[(10 : 9.19314697265625); (10.875 : 9.19314697265625)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(10 : 9.19314697265625); (10.875 : 9.19314697265625)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/MeterInfoDataContext/Channel/Channel_BreakerChannel" />
       <nodes>
         <classShapeMoniker Id="64c54649-a016-404e-9a29-f1b37d3d7a10" />
         <classShapeMoniker Id="cbdb11fd-eb0e-489e-99cf-6a57ad460380" />
+      </nodes>
+    </associationConnector>
+    <classShape Id="1d092f59-6a82-44a6-b0e3-07cfe84c4f9f" absoluteBounds="13.5, 5.25, 2, 1.3862939453125">
+      <DataClassMoniker Name="/MeterInfoDataContext/GroupMeter" />
+      <nestedChildShapes>
+        <elementListCompartment Id="f2d9eca9-6511-45f7-a25e-d241a1030a2b" absoluteBounds="13.515, 5.71, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <associationConnector edgePoints="[(12.75 : 5.86620198567708); (13.5 : 5.86620198567708)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/MeterInfoDataContext/Meter/Meter_GroupMeter" />
+      <nodes>
+        <classShapeMoniker Id="90f8d03b-00da-44dd-ad92-c2f82f6a8ed1" />
+        <classShapeMoniker Id="1d092f59-6a82-44a6-b0e3-07cfe84c4f9f" />
       </nodes>
     </associationConnector>
   </nestedChildShapes>

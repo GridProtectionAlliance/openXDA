@@ -59,15 +59,16 @@
     <Type Name="FaultEmailTemplate">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="Template" Type="System.String" DbType="VarChar(MAX) NOT NULL" CanBeNull="false" />
-      <Association Name="FaultEmailTemplate_FaultEmailTemplateRecipient" Member="FaultEmailTemplateRecipients" ThisKey="ID" OtherKey="FaultEmailTemplateID" Type="FaultEmailTemplateRecipient" />
+      <Association Name="FaultEmailTemplate_FaultEmailRecipient" Member="FaultEmailRecipients" ThisKey="ID" OtherKey="FaultEmailTemplateID" Type="FaultEmailRecipient" />
     </Type>
   </Table>
-  <Table Name="dbo.FaultEmailTemplateRecipient" Member="FaultEmailTemplateRecipients">
-    <Type Name="FaultEmailTemplateRecipient">
+  <Table Name="dbo.FaultEmailRecipient" Member="FaultEmailRecipients">
+    <Type Name="FaultEmailRecipient">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="RecipientID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="FaultEmailTemplateID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Association Name="FaultEmailTemplate_FaultEmailTemplateRecipient" Member="FaultEmailTemplate" ThisKey="FaultEmailTemplateID" OtherKey="ID" Type="FaultEmailTemplate" IsForeignKey="true" />
+      <Column Name="MeterGroupID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="FaultEmailTemplate_FaultEmailRecipient" Member="FaultEmailTemplate" ThisKey="FaultEmailTemplateID" OtherKey="ID" Type="FaultEmailTemplate" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

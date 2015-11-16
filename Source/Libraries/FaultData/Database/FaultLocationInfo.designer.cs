@@ -51,9 +51,9 @@ namespace FaultData.Database
     partial void InsertFaultEmailTemplate(FaultEmailTemplate instance);
     partial void UpdateFaultEmailTemplate(FaultEmailTemplate instance);
     partial void DeleteFaultEmailTemplate(FaultEmailTemplate instance);
-    partial void InsertFaultEmailTemplateRecipient(FaultEmailTemplateRecipient instance);
-    partial void UpdateFaultEmailTemplateRecipient(FaultEmailTemplateRecipient instance);
-    partial void DeleteFaultEmailTemplateRecipient(FaultEmailTemplateRecipient instance);
+    partial void InsertFaultEmailRecipient(FaultEmailRecipient instance);
+    partial void UpdateFaultEmailRecipient(FaultEmailRecipient instance);
+    partial void DeleteFaultEmailRecipient(FaultEmailRecipient instance);
     #endregion
 		
 		public FaultLocationInfoDataContext() : 
@@ -142,11 +142,11 @@ namespace FaultData.Database
 			}
 		}
 		
-		public System.Data.Linq.Table<FaultEmailTemplateRecipient> FaultEmailTemplateRecipients
+		public System.Data.Linq.Table<FaultEmailRecipient> FaultEmailRecipients
 		{
 			get
 			{
-				return this.GetTable<FaultEmailTemplateRecipient>();
+				return this.GetTable<FaultEmailRecipient>();
 			}
 		}
 	}
@@ -1154,7 +1154,7 @@ namespace FaultData.Database
 		
 		private string _Template;
 		
-		private EntitySet<FaultEmailTemplateRecipient> _FaultEmailTemplateRecipients;
+		private EntitySet<FaultEmailRecipient> _FaultEmailRecipients;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -1168,7 +1168,7 @@ namespace FaultData.Database
 		
 		public FaultEmailTemplate()
 		{
-			this._FaultEmailTemplateRecipients = new EntitySet<FaultEmailTemplateRecipient>(new Action<FaultEmailTemplateRecipient>(this.attach_FaultEmailTemplateRecipients), new Action<FaultEmailTemplateRecipient>(this.detach_FaultEmailTemplateRecipients));
+			this._FaultEmailRecipients = new EntitySet<FaultEmailRecipient>(new Action<FaultEmailRecipient>(this.attach_FaultEmailRecipients), new Action<FaultEmailRecipient>(this.detach_FaultEmailRecipients));
 			OnCreated();
 		}
 		
@@ -1212,16 +1212,16 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="FaultEmailTemplate_FaultEmailTemplateRecipient", Storage="_FaultEmailTemplateRecipients", ThisKey="ID", OtherKey="FaultEmailTemplateID")]
-		public EntitySet<FaultEmailTemplateRecipient> FaultEmailTemplateRecipients
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="FaultEmailTemplate_FaultEmailRecipient", Storage="_FaultEmailRecipients", ThisKey="ID", OtherKey="FaultEmailTemplateID")]
+		public EntitySet<FaultEmailRecipient> FaultEmailRecipients
 		{
 			get
 			{
-				return this._FaultEmailTemplateRecipients;
+				return this._FaultEmailRecipients;
 			}
 			set
 			{
-				this._FaultEmailTemplateRecipients.Assign(value);
+				this._FaultEmailRecipients.Assign(value);
 			}
 		}
 		
@@ -1245,21 +1245,21 @@ namespace FaultData.Database
 			}
 		}
 		
-		private void attach_FaultEmailTemplateRecipients(FaultEmailTemplateRecipient entity)
+		private void attach_FaultEmailRecipients(FaultEmailRecipient entity)
 		{
 			this.SendPropertyChanging();
 			entity.FaultEmailTemplate = this;
 		}
 		
-		private void detach_FaultEmailTemplateRecipients(FaultEmailTemplateRecipient entity)
+		private void detach_FaultEmailRecipients(FaultEmailRecipient entity)
 		{
 			this.SendPropertyChanging();
 			entity.FaultEmailTemplate = null;
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.FaultEmailTemplateRecipient")]
-	public partial class FaultEmailTemplateRecipient : INotifyPropertyChanging, INotifyPropertyChanged
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.FaultEmailRecipient")]
+	public partial class FaultEmailRecipient : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
@@ -1269,6 +1269,8 @@ namespace FaultData.Database
 		private int _RecipientID;
 		
 		private int _FaultEmailTemplateID;
+		
+		private int _MeterGroupID;
 		
 		private EntityRef<FaultEmailTemplate> _FaultEmailTemplate;
 		
@@ -1282,9 +1284,11 @@ namespace FaultData.Database
     partial void OnRecipientIDChanged();
     partial void OnFaultEmailTemplateIDChanging(int value);
     partial void OnFaultEmailTemplateIDChanged();
+    partial void OnMeterGroupIDChanging(int value);
+    partial void OnMeterGroupIDChanged();
     #endregion
 		
-		public FaultEmailTemplateRecipient()
+		public FaultEmailRecipient()
 		{
 			this._FaultEmailTemplate = default(EntityRef<FaultEmailTemplate>);
 			OnCreated();
@@ -1354,7 +1358,27 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="FaultEmailTemplate_FaultEmailTemplateRecipient", Storage="_FaultEmailTemplate", ThisKey="FaultEmailTemplateID", OtherKey="ID", IsForeignKey=true)]
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterGroupID", DbType="Int NOT NULL")]
+		public int MeterGroupID
+		{
+			get
+			{
+				return this._MeterGroupID;
+			}
+			set
+			{
+				if ((this._MeterGroupID != value))
+				{
+					this.OnMeterGroupIDChanging(value);
+					this.SendPropertyChanging();
+					this._MeterGroupID = value;
+					this.SendPropertyChanged("MeterGroupID");
+					this.OnMeterGroupIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="FaultEmailTemplate_FaultEmailRecipient", Storage="_FaultEmailTemplate", ThisKey="FaultEmailTemplateID", OtherKey="ID", IsForeignKey=true)]
 		public FaultEmailTemplate FaultEmailTemplate
 		{
 			get
@@ -1371,12 +1395,12 @@ namespace FaultData.Database
 					if ((previousValue != null))
 					{
 						this._FaultEmailTemplate.Entity = null;
-						previousValue.FaultEmailTemplateRecipients.Remove(this);
+						previousValue.FaultEmailRecipients.Remove(this);
 					}
 					this._FaultEmailTemplate.Entity = value;
 					if ((value != null))
 					{
-						value.FaultEmailTemplateRecipients.Add(this);
+						value.FaultEmailRecipients.Add(this);
 						this._FaultEmailTemplateID = value.ID;
 					}
 					else

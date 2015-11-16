@@ -72,6 +72,9 @@ namespace FaultData.Database
     partial void InsertBreakerChannel(BreakerChannel instance);
     partial void UpdateBreakerChannel(BreakerChannel instance);
     partial void DeleteBreakerChannel(BreakerChannel instance);
+    partial void InsertGroupMeter(GroupMeter instance);
+    partial void UpdateGroupMeter(GroupMeter instance);
+    partial void DeleteGroupMeter(GroupMeter instance);
     #endregion
 		
 		public MeterInfoDataContext() : 
@@ -213,6 +216,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<BreakerChannel>();
+			}
+		}
+		
+		public System.Data.Linq.Table<GroupMeter> GroupMeters
+		{
+			get
+			{
+				return this.GetTable<GroupMeter>();
 			}
 		}
 	}
@@ -2767,6 +2778,8 @@ namespace FaultData.Database
 		
 		private EntitySet<MeterLine> _MeterLines;
 		
+		private EntitySet<GroupMeter> _GroupMeters;
+		
 		private EntityRef<MeterLocation> _MeterLocation;
 		
     #region Extensibility Method Definitions
@@ -2800,6 +2813,7 @@ namespace FaultData.Database
 			this._MeterFileGroups = new EntitySet<MeterFileGroup>(new Action<MeterFileGroup>(this.attach_MeterFileGroups), new Action<MeterFileGroup>(this.detach_MeterFileGroups));
 			this._Channels = new EntitySet<Channel>(new Action<Channel>(this.attach_Channels), new Action<Channel>(this.detach_Channels));
 			this._MeterLines = new EntitySet<MeterLine>(new Action<MeterLine>(this.attach_MeterLines), new Action<MeterLine>(this.detach_MeterLines));
+			this._GroupMeters = new EntitySet<GroupMeter>(new Action<GroupMeter>(this.attach_GroupMeters), new Action<GroupMeter>(this.detach_GroupMeters));
 			this._MeterLocation = default(EntityRef<MeterLocation>);
 			OnCreated();
 		}
@@ -3047,6 +3061,19 @@ namespace FaultData.Database
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_GroupMeter", Storage="_GroupMeters", ThisKey="ID", OtherKey="MeterID")]
+		public EntitySet<GroupMeter> GroupMeters
+		{
+			get
+			{
+				return this._GroupMeters;
+			}
+			set
+			{
+				this._GroupMeters.Assign(value);
+			}
+		}
+		
 		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="MeterLocation_Meter", Storage="_MeterLocation", ThisKey="MeterLocationID", OtherKey="ID", IsForeignKey=true)]
 		public MeterLocation MeterLocation
 		{
@@ -3132,6 +3159,18 @@ namespace FaultData.Database
 		}
 		
 		private void detach_MeterLines(MeterLine entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = null;
+		}
+		
+		private void attach_GroupMeters(GroupMeter entity)
+		{
+			this.SendPropertyChanging();
+			entity.Meter = this;
+		}
+		
+		private void detach_GroupMeters(GroupMeter entity)
 		{
 			this.SendPropertyChanging();
 			entity.Meter = null;
@@ -3463,6 +3502,157 @@ namespace FaultData.Database
 						this._ChannelID = default(int);
 					}
 					this.SendPropertyChanged("Channel");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.GroupMeter")]
+	public partial class GroupMeter : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _GroupID;
+		
+		private int _MeterID;
+		
+		private EntityRef<Meter> _Meter;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnGroupIDChanging(int value);
+    partial void OnGroupIDChanged();
+    partial void OnMeterIDChanging(int value);
+    partial void OnMeterIDChanged();
+    #endregion
+		
+		public GroupMeter()
+		{
+			this._Meter = default(EntityRef<Meter>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_GroupID", DbType="Int NOT NULL")]
+		public int GroupID
+		{
+			get
+			{
+				return this._GroupID;
+			}
+			set
+			{
+				if ((this._GroupID != value))
+				{
+					this.OnGroupIDChanging(value);
+					this.SendPropertyChanging();
+					this._GroupID = value;
+					this.SendPropertyChanged("GroupID");
+					this.OnGroupIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterID", DbType="Int NOT NULL")]
+		public int MeterID
+		{
+			get
+			{
+				return this._MeterID;
+			}
+			set
+			{
+				if ((this._MeterID != value))
+				{
+					if (this._Meter.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnMeterIDChanging(value);
+					this.SendPropertyChanging();
+					this._MeterID = value;
+					this.SendPropertyChanged("MeterID");
+					this.OnMeterIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Meter_GroupMeter", Storage="_Meter", ThisKey="MeterID", OtherKey="ID", IsForeignKey=true)]
+		public Meter Meter
+		{
+			get
+			{
+				return this._Meter.Entity;
+			}
+			set
+			{
+				Meter previousValue = this._Meter.Entity;
+				if (((previousValue != value) 
+							|| (this._Meter.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._Meter.Entity = null;
+						previousValue.GroupMeters.Remove(this);
+					}
+					this._Meter.Entity = value;
+					if ((value != null))
+					{
+						value.GroupMeters.Add(this);
+						this._MeterID = value.ID;
+					}
+					else
+					{
+						this._MeterID = default(int);
+					}
+					this.SendPropertyChanged("Meter");
 				}
 			}
 		}
