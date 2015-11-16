@@ -1,7 +1,9 @@
-﻿namespace FaultData.Database {
-    
-    
-    public partial class FaultLocationData {
+﻿namespace FaultData.Database
+{
+
+
+    public partial class FaultLocationData
+    {
     }
 }
 
