@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EmailWriter.cs - Gbtc
+//  FaultEmailWriter.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -52,7 +52,7 @@ namespace FaultData.DataWriters
     /// <summary>
     /// Writes the results of fault analysis to an email.
     /// </summary>
-    public class EmailWriter : IDataWriter
+    public class FaultEmailWriter : IDataWriter
     {
         #region [ Members ]
 
@@ -68,7 +68,7 @@ namespace FaultData.DataWriters
 
         #region [ Constructors ]
 
-        public EmailWriter()
+        public FaultEmailWriter()
         {
             m_emailSettings = new EmailSettings();
         }
@@ -188,10 +188,10 @@ namespace FaultData.DataWriters
         private static TimeZoneInfo s_timeZone;
         private static DbAdapterContainer s_dbAdapterContainer;
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(EmailWriter));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(FaultEmailWriter));
 
         // Static Constructor
-        static EmailWriter()
+        static FaultEmailWriter()
         {
             QueuedEventIDs = new HashSet<int>();
             ProcessQueue = ProcessQueue<Action>.CreateRealTimeQueue(action => action());
@@ -200,7 +200,7 @@ namespace FaultData.DataWriters
         }
 
         // Static Methods
-        private static void Initialize(EmailWriter writer)
+        private static void Initialize(FaultEmailWriter writer)
         {
             bool configurationChanged =
                 s_timeTolerance != writer.TimeTolerance ||
