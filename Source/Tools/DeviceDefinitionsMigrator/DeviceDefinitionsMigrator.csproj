@@ -76,6 +76,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="DeviceDefinitionsGenerator.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="ldconfig.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -100,6 +103,7 @@ IF EXIST "%25XDAPATH%25" (
     XCOPY "$(TargetPath)" "%25XDAPATH%25" /Y
     XCOPY "$(TargetDir)\.\ldconfig.ps1" "%25XDAPATH%25" /Y
     XCOPY "$(TargetDir)\.\ldconfig.bat" "%25XDAPATH%25" /Y
+    XCOPY "$(TargetDir)\.\DeviceDefinitionsGenerator.sql" "%25XDAPATH%25" /Y
 )</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
