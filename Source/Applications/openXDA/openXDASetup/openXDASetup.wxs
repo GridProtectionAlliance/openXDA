@@ -398,11 +398,14 @@
           <!-- Set up the authentication part of the connection string based on user input. -->
           <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI">WINDOWSAUTH</Publish>
           <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]">NOT WINDOWSAUTH</Publish>
+          <Publish Property="XDAAUTHSTRING" Value="Integrated Security=SSPI"><![CDATA[NOT(&DatabaseFeature=3)]]> AND WINDOWSAUTH</Publish>
+          <Publish Property="XDAAUTHSTRING" Value="User Id=[DBUSERNAME];Password=[DBPASSWORD]"><![CDATA[NOT(&DatabaseFeature=3)]]> AND NOT WINDOWSAUTH</Publish>
+          <Publish Property="XDAAUTHSTRING" Value="User Id=[XDASERVICELOGIN];Password=[XDASERVICEPASSWORD]"><![CDATA[&DatabaseFeature=3]]></Publish>
           
           <!-- Set up connection strings for connecting to server and database. -->
           <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
           <Publish Property="DBCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">1</Publish>
-          <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];Initial Catalog=[DATABASENAME];User Id=[XDASERVICELOGIN];Password=[XDASERVICEPASSWORD]">1</Publish>
+          <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];Initial Catalog=[DATABASENAME];[XDAAUTHSTRING]">1</Publish>
           
           <!-- Determine whether we can connect to the database server. -->
           <Publish Property="CONNECTIONSTRING" Value="[SERVERCONNECTIONSTRING]">1</Publish>
