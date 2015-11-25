@@ -106,6 +106,33 @@ namespace DeviceDefinitionsMigrator
             }
         }
 
+        private class TupleIgnoreCase : IEqualityComparer<Tuple<string, string>>
+        {
+            public bool Equals(Tuple<string, string> x, Tuple<string, string> y)
+            {
+                return StringComparer.OrdinalIgnoreCase.Equals(x.Item1, y.Item1) &&
+                       StringComparer.OrdinalIgnoreCase.Equals(x.Item2, y.Item2);
+            }
+
+            public int GetHashCode(Tuple<string, string> obj)
+            {
+                int hash = 17;
+                hash = hash * 31 + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Item1);
+                hash = hash * 31 + StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Item2);
+                return hash;
+            }
+
+            public static TupleIgnoreCase Default
+            {
+                get
+                {
+                    return s_default;
+                }
+            }
+
+            private static readonly TupleIgnoreCase s_default = new TupleIgnoreCase();
+        }
+
         static void Main(string[] args)
         {
             if (args.Length != 2)
@@ -182,7 +209,7 @@ namespace DeviceDefinitionsMigrator
                     .Where(channel => channel.LineID == line.ID)
                     .SelectMany(channel => channel.Series)
                     .Join(m_faultLocationInfo.OutputChannels, series => series.ID, outputChannel => outputChannel.SeriesID, Tuple.Create)
-                    .ToDictionary(tuple => tuple.Item2.ChannelKey);
+                    .ToDictionary(tuple => tuple.Item2.ChannelKey, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<string, Meter> GetMeterLookup(List<XElement> deviceElements, MeterInfoDataContext meterInfo)
@@ -195,7 +222,7 @@ namespace DeviceDefinitionsMigrator
 
                 return meterInfo.Meters
                     .Where(meter => deviceIDs.Contains(meter.AssetKey))
-                    .ToDictionary(meter => meter.AssetKey);
+                    .ToDictionary(meter => meter.AssetKey, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<string, Line> GetLineLookup(List<XElement> lineElements, MeterInfoDataContext meterInfo)
@@ -208,7 +235,7 @@ namespace DeviceDefinitionsMigrator
 
                 return meterInfo.Lines
                     .Where(line => lineIDs.Contains(line.AssetKey))
-                    .ToDictionary(line => line.AssetKey);
+                    .ToDictionary(line => line.AssetKey, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<string, MeterLocation> GetMeterLocationLookup(List<XElement> deviceElements, List<XElement> lineElements, MeterInfoDataContext meterInfo)
@@ -222,7 +249,7 @@ namespace DeviceDefinitionsMigrator
 
                 return meterInfo.MeterLocations
                     .Where(meterLocation => meterLocationIDs.Contains(meterLocation.AssetKey))
-                    .ToDictionary(meterLocation => meterLocation.AssetKey);
+                    .ToDictionary(meterLocation => meterLocation.AssetKey, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<Tuple<string, string>, MeterLine> GetMeterLineLookup(IEnumerable<Meter> meters, IEnumerable<Line> lines, MeterInfoDataContext meterInfo)
@@ -238,7 +265,7 @@ namespace DeviceDefinitionsMigrator
                 return meterInfo.MeterLines
                     .Where(meterLine => meterIDs.Contains(meterLine.MeterID))
                     .Where(meterLine => lineIDs.Contains(meterLine.LineID))
-                    .ToDictionary(meterLine => Tuple.Create(meterLine.Meter.AssetKey, meterLine.Line.AssetKey));
+                    .ToDictionary(meterLine => Tuple.Create(meterLine.Meter.AssetKey, meterLine.Line.AssetKey), TupleIgnoreCase.Default);
             }
 
             private Dictionary<Tuple<string, string>, MeterLocationLine> GetMeterLocationLineLookup(IEnumerable<MeterLocation> meterLocations, IEnumerable<Line> lines, MeterInfoDataContext meterInfo)
@@ -254,27 +281,27 @@ namespace DeviceDefinitionsMigrator
                 return meterInfo.MeterLocationLines
                     .Where(meterLocationLine => meterLocationIDs.Contains(meterLocationLine.MeterLocationID))
                     .Where(meterLocationLine => lineIDs.Contains(meterLocationLine.LineID))
-                    .ToDictionary(meterLocationLine => Tuple.Create(meterLocationLine.MeterLocation.AssetKey, meterLocationLine.Line.AssetKey));
+                    .ToDictionary(meterLocationLine => Tuple.Create(meterLocationLine.MeterLocation.AssetKey, meterLocationLine.Line.AssetKey), TupleIgnoreCase.Default);
             }
 
             private Dictionary<string, MeasurementType> GetMeasurementTypeLookup(MeterInfoDataContext meterInfo)
             {
-                return meterInfo.MeasurementTypes.ToDictionary(measurementType => measurementType.Name);
+                return meterInfo.MeasurementTypes.ToDictionary(measurementType => measurementType.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<string, MeasurementCharacteristic> GetMeasurementCharacteristicLookup(MeterInfoDataContext meterInfo)
             {
-                return meterInfo.MeasurementCharacteristics.ToDictionary(measurementCharacteristic => measurementCharacteristic.Name);
+                return meterInfo.MeasurementCharacteristics.ToDictionary(measurementCharacteristic => measurementCharacteristic.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<string, Phase> GetPhaseLookup(MeterInfoDataContext meterInfo)
             {
-                return meterInfo.Phases.ToDictionary(phase => phase.Name);
+                return meterInfo.Phases.ToDictionary(phase => phase.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<string, SeriesType> GetSeriesTypeLookup(MeterInfoDataContext meterInfo)
             {
-                return meterInfo.SeriesTypes.ToDictionary(seriesType => seriesType.Name);
+                return meterInfo.SeriesTypes.ToDictionary(seriesType => seriesType.Name, StringComparer.OrdinalIgnoreCase);
             }
 
             private Dictionary<Line, LineImpedance> GetLineImpedanceLookup(IEnumerable<Line> lines, FaultLocationInfoDataContext faultLocationInfo)
