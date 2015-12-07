@@ -31,8 +31,8 @@ using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
-using ChannelKey = System.Tuple<int, string, string, string, string>;
-using SeriesKey = System.Tuple<int, string, string, string, string, string>;
+using ChannelKey = System.Tuple<int, int, string, string, string, string>;
+using SeriesKey = System.Tuple<int, int, string, string, string, string, string>;
 
 namespace FaultData.DataOperations
 {
@@ -262,6 +262,9 @@ namespace FaultData.DataOperations
                 .Select(meterLine => meterLine.Line)
                 .Single();
 
+            foreach (DataSeries series in undefinedDataSeries)
+                series.SeriesInfo.Channel.LineID = line.ID;
+
             seriesLookup = new DataContextLookup<SeriesKey, Series>(m_meterInfo, GetSeriesKey)
                 .WithFilterExpression(series => series.Channel.MeterID == meterDataSet.Meter.ID)
                 .WithFilterExpression(series => series.SourceIndexes == "");
@@ -378,6 +381,7 @@ namespace FaultData.DataOperations
         private static ChannelKey GetChannelKey(Channel channel)
         {
             return Tuple.Create(
+                channel.LineID,
                 channel.HarmonicGroup,
                 channel.Name,
                 channel.MeasurementType.Name,
@@ -390,6 +394,7 @@ namespace FaultData.DataOperations
             Channel channel = series.Channel;
 
             return Tuple.Create(
+                channel.LineID,
                 channel.HarmonicGroup,
                 channel.Name,
                 channel.MeasurementType.Name,

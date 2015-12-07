@@ -25,8 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.Database;
-using ChannelKey = System.Tuple<int, string, string, string, string>;
-using SeriesKey = System.Tuple<int, string, string, string, string, string>;
+using ChannelKey = System.Tuple<int, int, string, string, string, string>;
+using SeriesKey = System.Tuple<int, int, string, string, string, string, string>;
 
 namespace FaultData.DataAnalysis
 {
@@ -235,6 +235,7 @@ namespace FaultData.DataAnalysis
                 { IRIndex, "RES" }
             };
 
+            int lineID;
             string measurementTypeName;
             string measurementCharacteristicName;
             string phaseName;
@@ -251,6 +252,7 @@ namespace FaultData.DataAnalysis
             SeriesKey seriesKey;
             ChannelKey channelKey;
 
+            lineID = dataGroup.Line.ID;
             measurementTypeName = measurementTypeNameLookup[index];
             measurementCharacteristicName = "Instantaneous";
             phaseName = phaseNameLookup[index];
@@ -270,8 +272,8 @@ namespace FaultData.DataAnalysis
             phaseLookup = new DataContextLookup<string, Phase>(meterInfo, phase => phase.Name);
             seriesTypeLookup = new DataContextLookup<string, SeriesType>(meterInfo, seriesType => seriesType.Name);
 
-            seriesKey = Tuple.Create(0, channelName, measurementTypeName, measurementCharacteristicName, phaseName, seriesTypeName);
-            channelKey = Tuple.Create(0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
+            seriesKey = Tuple.Create(lineID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName, seriesTypeName);
+            channelKey = Tuple.Create(lineID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
 
             return seriesLookup.GetOrAdd(seriesKey, key =>
             {
@@ -341,6 +343,7 @@ namespace FaultData.DataAnalysis
         private static ChannelKey GetChannelKey(Channel channel)
         {
             return Tuple.Create(
+                channel.LineID,
                 channel.HarmonicGroup,
                 channel.Name,
                 channel.MeasurementType.Name,
@@ -353,6 +356,7 @@ namespace FaultData.DataAnalysis
             Channel channel = series.Channel;
 
             return Tuple.Create(
+                channel.LineID,
                 channel.HarmonicGroup,
                 channel.Name,
                 channel.MeasurementType.Name,
