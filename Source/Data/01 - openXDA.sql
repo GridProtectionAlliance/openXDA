@@ -47,9 +47,10 @@ GO
 CREATE TABLE DataReader
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FileExtension VARCHAR(10) NOT NULL,
+    FilePattern VARCHAR(500) NOT NULL,
     AssemblyName VARCHAR(200) NOT NULL,
-    TypeName VARCHAR(200) NOT NULL
+    TypeName VARCHAR(200) NOT NULL,
+	LoadOrder INT NOT NULL
 )
 GO
 
@@ -58,7 +59,6 @@ CREATE TABLE DataOperation
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssemblyName VARCHAR(200) NOT NULL,
     TypeName VARCHAR(200) NOT NULL,
-    TransactionOrder INT NOT NULL,
     LoadOrder INT NOT NULL
 )
 GO
@@ -67,7 +67,8 @@ CREATE TABLE DataWriter
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     AssemblyName VARCHAR(200) NOT NULL,
-    TypeName VARCHAR(200) NOT NULL
+    TypeName VARCHAR(200) NOT NULL,
+    LoadOrder INT NOT NULL
 )
 GO
 
@@ -313,52 +314,52 @@ CREATE TABLE Recipient
 )
 GO
 
-INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('DAT', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader')
+INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
 
-INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('D00', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader')
+INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.d00', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
 GO
 
-INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('RCD', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader')
+INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.rcd', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader', 1)
 GO
 
-INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('RCL', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader')
+INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.rcl', 'FaultData.dll', 'FaultData.DataReaders.EMAXReader', 1)
 GO
 
-INSERT INTO DataReader(FileExtension, AssemblyName, TypeName) VALUES('PQD', 'FaultData.dll', 'FaultData.DataReaders.PQDIFReader')
+INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.pqd', 'FaultData.dll', 'FaultData.DataReaders.PQDIFReader', 1)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.ConfigurationOperation', 1)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 4, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 4)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 5, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 5)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 6, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 6)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 7, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 7)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, TransactionOrder, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 8, 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 8)
 GO
 
-INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter')
+INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter', 1)
 GO
 
-INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.COMTRADEWriter')
+INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.COMTRADEWriter', 1)
 GO
 
-INSERT INTO DataWriter(AssemblyName, TypeName) VALUES('FaultData.dll', 'FaultData.DataWriters.FaultEmailWriter')
+INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.FaultEmailWriter', 1)
 GO
 
 -- ------ --

@@ -69,7 +69,7 @@ namespace FaultData.DataReaders
             return true;
         }
 
-        public List<MeterDataSet> Parse(string filePath)
+        public MeterDataSet Parse(string filePath)
         {
             MeterDataSet meterDataSet;
 
@@ -117,7 +117,7 @@ namespace FaultData.DataReaders
                 }
             }
 
-            return new List<MeterDataSet>() { meterDataSet };
+            return meterDataSet;
         }
 
         public void Dispose()

@@ -22,9 +22,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Threading;
 using GSF;
 using GSF.ServiceProcess;
-using log4net;
 using log4net.Appender;
 using log4net.Core;
 
@@ -91,7 +91,7 @@ namespace openXDA.Logging
                 return;
 
             // Determine the thread ID from the thread's context
-            threadID = ThreadContext.Properties["ID"] ?? "0";
+            threadID = Thread.CurrentThread.ManagedThreadId;
 
             // Get the message and exception object
             renderedMessage = loggingEvent.RenderedMessage;

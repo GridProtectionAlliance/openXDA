@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-	<Product Id="{F305D8A2-34EC-447C-A007-F0C526FB5137}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+  <Product Id="{F305D8A2-34EC-447C-A007-F0C526FB5137}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-		<MediaTemplate EmbedCab="yes" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
 
     <PropertyRef Id="WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED"/>
     <Condition Message='This setup requires Microsoft .NET Framework 4.6 or greater - this will need to be installed before installation can continue.'>
       <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED]]>
     </Condition>
 
-		<Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
+    <Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
       <!-- openXDA Database-->
       <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
         <ComponentGroupRef Id="DatabaseComponents" />
@@ -26,7 +26,7 @@
       <Feature Id="ConsoleFeature" Title="openXDA Remote Console" AllowAdvertise="no" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
         <ComponentGroupRef Id="ConsoleComponents" />
       </Feature>
-		</Feature>
+    </Feature>
 
     <UI>
       <!-- User Interface -->
@@ -131,10 +131,10 @@
       <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="EnableHistorianSqlClr.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
     </InstallExecuteSequence>
-	</Product>
+  </Product>
 
-	<Fragment>
-		<Directory Id="TARGETDIR" Name="SourceDir">
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
       <?if $(var.Platform) = x64 ?>
         <Directory Id="ProgramFiles64Folder">
           <!-- C:\Program Files\openXDA -->
@@ -158,10 +158,10 @@
       <Directory Id="ProgramMenuFolder">
         <Directory Id="ApplicationProgramsFolder" Name="openXDA" />
       </Directory>
-		</Directory>
-	</Fragment>
+    </Directory>
+  </Fragment>
 
-	<Fragment>
+  <Fragment>
     <!-- Database Components -->
     <ComponentGroup Id="DatabaseComponents" Directory="INSTALLFOLDER">
       <!-- Database Scripts -->
@@ -229,6 +229,7 @@
       <ComponentRef Id="GSF.Security" />
       <ComponentRef Id="GSF.ServiceProcess" />
       <ComponentRef Id="GSF.TimeSeries" />
+      <ComponentRef Id="TagDefinitions" />
 
       <!-- openHistorian Dependencies -->
       <ComponentRef Id="crypto" />
@@ -318,6 +319,9 @@
       <Component Id="GSF.TimeSeries">
         <File Id="GSF.TimeSeries.dll" Name="GSF.TimeSeries.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.TimeSeries.dll" />
       </Component>
+      <Component Id="TagDefinitions">
+        <File Id="TagDefinitions.xml" Name="TagDefinitions.xml" Source="$(var.SolutionDir)\Dependencies\GSF\TagDefinitions.xml" />
+      </Component>
 
       <!-- openHistorian Dependencies -->
       <Component Id="crypto">
@@ -341,8 +345,8 @@
       <Component Id="openHistorian.XDALink.SqlClr">
         <File Id="openHistorian.XDALink.SqlClr.dll" Name="$(var.openHistorian.XDALink.SqlClr.TargetFileName)" Source="$(var.openHistorian.XDALink.SqlClr.TargetPath)" />
       </Component>
-		</ComponentGroup>
-	</Fragment>
+    </ComponentGroup>
+  </Fragment>
 
   <!-- Custom Dialogs -->
   <Fragment>

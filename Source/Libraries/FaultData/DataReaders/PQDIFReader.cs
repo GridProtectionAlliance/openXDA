@@ -70,7 +70,7 @@ namespace FaultData.DataReaders
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
         /// <returns>List of meter data sets, one per meter.</returns>
-        public List<MeterDataSet> Parse(string filePath)
+        public MeterDataSet Parse(string filePath)
         {
             List<MeterDataSet> meterDataSets = new List<MeterDataSet>();
 
@@ -128,7 +128,7 @@ namespace FaultData.DataReaders
                 }
             }
 
-            return meterDataSets;
+            return meterDataSet;
         }
 
         public void Dispose()
@@ -156,10 +156,8 @@ namespace FaultData.DataReaders
 
         // Static Methods
 
-        public static List<MeterDataSet> ParseFile(string filePath)
+        public static MeterDataSet ParseFile(string filePath)
         {
-            List<MeterDataSet> meterDataSets = new List<MeterDataSet>();
-
             DataSourceRecord dataSource = null;
             ObservationRecord observation;
 
@@ -182,18 +180,10 @@ namespace FaultData.DataReaders
                     if ((object)observation.DataSource == null)
                         continue;
 
-                    if (!ReferenceEquals(dataSource, observation.DataSource))
-                    {
-                        dataSource = observation.DataSource;
-                        meterDataSet = new MeterDataSet();
-                        meter = ParseDataSource(dataSource);
-
-                        meterDataSet.Meter = meter;
-                        meterDataSets.Add(meterDataSet);
-                    }
-
                     if ((object)meter == null)
-                        continue;
+                        meter = ParseDataSource(observation.DataSource);
+                    else if (!AreEquivalent(dataSource, observation.DataSource))
+                        throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
 
                     channelInstances = observation.ChannelInstances
                         .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
@@ -219,7 +209,17 @@ namespace FaultData.DataReaders
                 }
             }
 
-            return meterDataSets;
+            return meterDataSet;
+        }
+
+        private static bool AreEquivalent(DataSourceRecord dataSource1, DataSourceRecord dataSource2)
+        {
+            if (ReferenceEquals(dataSource1, dataSource2))
+                return true;
+
+            return dataSource1.DataSourceName == dataSource2.DataSourceName &&
+                   dataSource1.VendorID == dataSource2.VendorID &&
+                   dataSource1.EquipmentID == dataSource2.EquipmentID;
         }
 
         private static Meter ParseDataSource(DataSourceRecord dataSource)

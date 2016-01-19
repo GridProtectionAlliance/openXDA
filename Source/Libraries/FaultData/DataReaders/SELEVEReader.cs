@@ -71,7 +71,7 @@ namespace FaultData.DataReaders
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
         /// <returns>List of meter data sets, one per meter.</returns>
-        public List<MeterDataSet> Parse(string filePath)
+        public MeterDataSet Parse(string filePath)
         {
             MeterDataSet meterDataSet;
 
@@ -84,7 +84,7 @@ namespace FaultData.DataReaders
                 m_eventFile = EventFile.Parse(filePath);
 
             if (!m_eventFile.EventReports.Any())
-                return new List<MeterDataSet>();
+                return null;
 
             meterDataSet = new MeterDataSet();
 
@@ -122,7 +122,7 @@ namespace FaultData.DataReaders
                 }
             }
 
-            return new List<MeterDataSet>() { meterDataSet };
+            return meterDataSet;
         }
 
         private Channel MakeParsedChannel(EventReport report, int channelIndex)

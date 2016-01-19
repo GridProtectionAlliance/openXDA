@@ -1,18 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="openXDA" Class="SystemInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=localhost\SQLEXPRESS;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=localhost;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.Setting" Member="Settings">
     <Type Name="Setting">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="Value" Type="System.String" DbType="VarChar(MAX) NOT NULL" CanBeNull="false" />
-    </Type>
-  </Table>
-  <Table Name="dbo.DataReader" Member="DataReaders">
-    <Type Name="DataReader">
-      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="FileExtension" Type="System.String" DbType="VarChar(10) NOT NULL" CanBeNull="false" />
-      <Column Name="AssemblyName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
-      <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
   <Table Name="dbo.Recipient" Member="Recipients">
@@ -23,11 +15,21 @@
       <Column Name="Email" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
-  <Table Name="dbo.DataWriter" Member="DataWriters">
-    <Type Name="DataWriter">
+  <Table Name="dbo.ConfigurationLoader" Member="ConfigurationLoaders">
+    <Type Name="ConfigurationLoader">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="AssemblyName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DataReader" Member="DataReaders">
+    <Type Name="DataReader">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="FilePattern" Type="System.String" DbType="VarChar(500) NOT NULL" CanBeNull="false" />
+      <Column Name="AssemblyName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
   <Table Name="dbo.DataOperation" Member="DataOperations">
@@ -35,12 +37,11 @@
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="AssemblyName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
-      <Column Name="TransactionOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
-  <Table Name="dbo.ConfigurationLoader" Member="ConfigurationLoaders">
-    <Type Name="ConfigurationLoader">
+  <Table Name="dbo.DataWriter" Member="DataWriters">
+    <Type Name="DataWriter">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="AssemblyName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
       <Column Name="TypeName" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />

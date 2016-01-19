@@ -151,6 +151,7 @@
   <ItemGroup>
     <Compile Include="Configuration\CategorizedSetting.cs" />
     <Compile Include="Configuration\FileShare.cs" />
+    <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -158,11 +159,8 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
-    <Compile Include="FaultValidator.cs" />
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
-    <Compile Include="MeterDataProcessor.cs" />
-    <Compile Include="MeterDataScheduler.cs" />
     <Compile Include="ServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>

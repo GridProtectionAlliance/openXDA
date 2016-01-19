@@ -1,8 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace FaultData.Database
 {
+    partial class Meter
+    {
+        public TimeZoneInfo GetTimeZoneInfo(TimeZoneInfo defaultTimeZone)
+        {
+            if (!string.IsNullOrEmpty(TimeZone))
+                return TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
+
+            return defaultTimeZone;
+        }
+    }
+
     partial class MeasurementType
     {
         public MeasurementType Clone()

@@ -103,7 +103,7 @@ namespace FaultData.DataReaders
             return true;
         }
 
-        public List<MeterDataSet> Parse(string filePath)
+        public MeterDataSet Parse(string filePath)
         {
             MeterDataSet meterDataSet;
             Schema schema;
@@ -179,7 +179,7 @@ namespace FaultData.DataReaders
                 Log.Warn(ex.Message, ex);
             }
 
-            return new List<MeterDataSet>() { meterDataSet };
+            return meterDataSet;
         }
 
         public void Dispose()

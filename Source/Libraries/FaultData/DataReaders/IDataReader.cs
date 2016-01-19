@@ -41,7 +41,7 @@ namespace FaultData.DataReaders
         /// Parses the file into a meter data set per meter contained in the file.
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
-        /// <returns>List of meter data sets, one per meter.</returns>
-        List<MeterDataSet> Parse(string filePath);
+        /// <returns>The data set containing data parsed from the file.</returns>
+        MeterDataSet Parse(string filePath);
     }
 }
