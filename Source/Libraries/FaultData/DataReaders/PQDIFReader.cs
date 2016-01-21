@@ -72,8 +72,6 @@ namespace FaultData.DataReaders
         /// <returns>List of meter data sets, one per meter.</returns>
         public MeterDataSet Parse(string filePath)
         {
-            List<MeterDataSet> meterDataSets = new List<MeterDataSet>();
-
             DataSourceRecord dataSource = null;
             ObservationRecord observation;
 
@@ -92,15 +90,10 @@ namespace FaultData.DataReaders
                 if ((object)observation.DataSource == null)
                     continue;
 
-                if (!ReferenceEquals(dataSource, observation.DataSource))
-                {
-                    dataSource = observation.DataSource;
-                    meterDataSet = new MeterDataSet();
-                    meter = ParseDataSource(dataSource);
-
-                    meterDataSet.Meter = meter;
-                    meterDataSets.Add(meterDataSet);
-                }
+                if ((object)meter == null)
+                    meter = ParseDataSource(observation.DataSource);
+                else if (!AreEquivalent(dataSource, observation.DataSource))
+                    throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
 
                 if ((object)meter == null)
                     continue;
