@@ -42,6 +42,34 @@ namespace FaultData.DataReaders
 
         // Fields
         private EventFile m_eventFile;
+        private MeterDataSet m_meterDataSet;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="SELEVEReader"/> class.
+        /// </summary>
+        public SELEVEReader()
+        {
+            m_meterDataSet = new MeterDataSet();
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the data set produced by the Parse method of the data reader.
+        /// </summary>
+        public MeterDataSet MeterDataSet
+        {
+            get
+            {
+                return m_meterDataSet;
+            }
+        }
 
         #endregion
 
@@ -71,10 +99,8 @@ namespace FaultData.DataReaders
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
         /// <returns>List of meter data sets, one per meter.</returns>
-        public MeterDataSet Parse(string filePath)
+        public void Parse(string filePath)
         {
-            MeterDataSet meterDataSet;
-
             Channel channel;
             DataSeries series;
             List<DateTime> timeSamples;
@@ -84,20 +110,18 @@ namespace FaultData.DataReaders
                 m_eventFile = EventFile.Parse(filePath);
 
             if (!m_eventFile.EventReports.Any())
-                return null;
+                return;
 
-            meterDataSet = new MeterDataSet();
+            m_meterDataSet.Meter = new Meter();
+            m_meterDataSet.Meter.AssetKey = m_eventFile.EventReports[0].Header.RelayID;
+            m_meterDataSet.Meter.Name = m_eventFile.EventReports[0].Header.RelayID;
+            m_meterDataSet.Meter.ShortName = new string(m_eventFile.EventReports[0].Header.RelayID.ToNonNullString().Take(50).ToArray());
 
-            meterDataSet.Meter = new Meter();
-            meterDataSet.Meter.AssetKey = m_eventFile.EventReports[0].Header.RelayID;
-            meterDataSet.Meter.Name = m_eventFile.EventReports[0].Header.RelayID;
-            meterDataSet.Meter.ShortName = new string(m_eventFile.EventReports[0].Header.RelayID.ToNonNullString().Take(50).ToArray());
-
-            meterDataSet.Meter.MeterLocation = new MeterLocation();
-            meterDataSet.Meter.MeterLocation.AssetKey = m_eventFile.EventReports[0].Header.StationID;
-            meterDataSet.Meter.MeterLocation.Name = m_eventFile.EventReports[0].Header.StationID;
-            meterDataSet.Meter.MeterLocation.ShortName = new string(m_eventFile.EventReports[0].Header.StationID.ToNonNullString().Take(50).ToArray());
-            meterDataSet.Meter.MeterLocation.Description = m_eventFile.EventReports[0].Header.StationID;
+            m_meterDataSet.Meter.MeterLocation = new MeterLocation();
+            m_meterDataSet.Meter.MeterLocation.AssetKey = m_eventFile.EventReports[0].Header.StationID;
+            m_meterDataSet.Meter.MeterLocation.Name = m_eventFile.EventReports[0].Header.StationID;
+            m_meterDataSet.Meter.MeterLocation.ShortName = new string(m_eventFile.EventReports[0].Header.StationID.ToNonNullString().Take(50).ToArray());
+            m_meterDataSet.Meter.MeterLocation.Description = m_eventFile.EventReports[0].Header.StationID;
 
             foreach (EventReport report in m_eventFile.EventReports)
             {
@@ -116,13 +140,11 @@ namespace FaultData.DataReaders
                         .ToList();
 
                     if (new string[] { "VA", "VB", "VC" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
-                        meterDataSet.DataSeries.Add(series.Multiply(1000.0));
+                        m_meterDataSet.DataSeries.Add(series.Multiply(1000.0));
                     else
-                        meterDataSet.DataSeries.Add(series);
+                        m_meterDataSet.DataSeries.Add(series);
                 }
             }
-
-            return meterDataSet;
         }
 
         private Channel MakeParsedChannel(EventReport report, int channelIndex)

@@ -39,7 +39,35 @@ namespace FaultData.DataReaders
 
         // Fields
         private CorrectiveParser m_parser;
+        private MeterDataSet m_meterDataSet;
         private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="EMAXReader"/> class.
+        /// </summary>
+        public EMAXReader()
+        {
+            m_meterDataSet = new MeterDataSet();
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the data set produced by the Parse method of the data reader.
+        /// </summary>
+        public MeterDataSet MeterDataSet
+        {
+            get
+            {
+                return m_meterDataSet;
+            }
+        }
 
         #endregion
 
@@ -69,10 +97,8 @@ namespace FaultData.DataReaders
             return true;
         }
 
-        public MeterDataSet Parse(string filePath)
+        public void Parse(string filePath)
         {
-            MeterDataSet meterDataSet;
-
             ControlFile controlFile;
             string identityString;
             string deviceName;
@@ -80,16 +106,14 @@ namespace FaultData.DataReaders
             Channel channel;
             DataSeries series;
 
-            meterDataSet = new MeterDataSet();
-
             controlFile = m_parser.ControlFile;
             identityString = controlFile.IdentityString.value;
             deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
 
-            meterDataSet.Meter = new Meter();
-            meterDataSet.Meter.AssetKey = deviceName;
-            meterDataSet.Meter.Name = deviceName;
-            meterDataSet.Meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
+            m_meterDataSet.Meter = new Meter();
+            m_meterDataSet.Meter.AssetKey = deviceName;
+            m_meterDataSet.Meter.Name = deviceName;
+            m_meterDataSet.Meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
 
             foreach (ANLG_CHNL_NEW analogChannel in controlFile.AnalogChannelSettings.Values)
             {
@@ -98,12 +122,12 @@ namespace FaultData.DataReaders
                 series = new DataSeries();
                 series.SeriesInfo = channel.Series[0];
 
-                meterDataSet.Meter.Channels.Add(channel);
+                m_meterDataSet.Meter.Channels.Add(channel);
 
-                while (meterDataSet.DataSeries.Count <= analogChannel.ChannelNumber)
-                    meterDataSet.DataSeries.Add(new DataSeries());
+                while (m_meterDataSet.DataSeries.Count <= analogChannel.ChannelNumber)
+                    m_meterDataSet.DataSeries.Add(new DataSeries());
 
-                meterDataSet.DataSeries[analogChannel.ChannelNumber] = series;
+                m_meterDataSet.DataSeries[analogChannel.ChannelNumber] = series;
             }
 
             while (m_parser.ReadNext())
@@ -112,12 +136,10 @@ namespace FaultData.DataReaders
 
                 foreach (int channelNumber in controlFile.AnalogChannelSettings.Keys.OrderBy(key => key))
                 {
-                    meterDataSet.DataSeries[channelNumber].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
+                    m_meterDataSet.DataSeries[channelNumber].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
                     i++;
                 }
             }
-
-            return meterDataSet;
         }
 
         public void Dispose()

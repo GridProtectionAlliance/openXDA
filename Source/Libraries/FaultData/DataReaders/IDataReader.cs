@@ -22,13 +22,26 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using FaultData.DataSets;
 
 namespace FaultData.DataReaders
 {
     public interface IDataReader
     {
+        /// <summary>
+        /// Gets the data set produced by the Parse method of the data reader.
+        /// </summary>
+        /// <remarks>
+        /// For data reader implementations that return a data set,
+        /// the return value should not be null at any time during the
+        /// lifecycle of the data reader. For implementations that do
+        /// not return a data set, this should always return null.
+        /// </remarks>
+        MeterDataSet MeterDataSet
+        {
+            get;
+        }
+
         /// <summary>
         /// Determines whether the file can be parsed at this time.
         /// </summary>
@@ -42,6 +55,6 @@ namespace FaultData.DataReaders
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
         /// <returns>The data set containing data parsed from the file.</returns>
-        MeterDataSet Parse(string filePath);
+        void Parse(string filePath);
     }
 }

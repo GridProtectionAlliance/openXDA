@@ -36,7 +36,7 @@ using log4net;
 namespace FaultData.DataReaders
 {
     /// <summary>
-    /// Reads a COMTRADE file to produce a <see cref="MeterDataSet"/>.
+    /// Reads a COMTRADE file to produce a <see cref="DataSets.MeterDataSet"/>.
     /// </summary>
     public class COMTRADEReader : IDataReader, IDisposable
     {
@@ -45,8 +45,21 @@ namespace FaultData.DataReaders
         // Fields
         private TimeSpan m_minWaitTime;
         private Parser m_parser;
+        private MeterDataSet m_meterDataSet;
 
         private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="COMTRADEReader"/> class.
+        /// </summary>
+        public COMTRADEReader()
+        {
+            m_meterDataSet = new MeterDataSet();
+        }
 
         #endregion
 
@@ -65,17 +78,26 @@ namespace FaultData.DataReaders
             }
         }
 
+        /// <summary>
+        /// Gets the data set produced by the Parse method of the data reader.
+        /// </summary>
+        public MeterDataSet MeterDataSet
+        {
+            get
+            {
+                return m_meterDataSet;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
 
         public bool CanParse(string filePath, DateTime fileCreationTime)
         {
-            string directory = FilePath.GetDirectoryName(filePath);
-            string rootFileName = FilePath.GetFileNameWithoutExtension(filePath);
-            string schemaFileName = Path.Combine(directory, rootFileName + ".cfg");
+            string schemaFileName = Path.ChangeExtension(filePath, "cfg");
             string extension = FilePath.GetExtension(filePath);
-            string[] fileList = FilePath.GetFileList(rootFileName + ".*");
+            string[] fileList = FilePath.GetFileList(Path.ChangeExtension(filePath, "*"));
             bool multipleDataFiles = !extension.Equals(".dat", StringComparison.OrdinalIgnoreCase);
 
             if (!File.Exists(schemaFileName))
@@ -103,26 +125,24 @@ namespace FaultData.DataReaders
             return true;
         }
 
-        public MeterDataSet Parse(string filePath)
+        public void Parse(string filePath)
         {
-            MeterDataSet meterDataSet;
             Schema schema;
             Channel channel;
             DataSeries series;
 
-            meterDataSet = new MeterDataSet();
             schema = m_parser.Schema;
 
-            meterDataSet.Meter = new Meter();
-            meterDataSet.Meter.AssetKey = schema.DeviceID;
-            meterDataSet.Meter.Name = schema.DeviceID;
-            meterDataSet.Meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
+            m_meterDataSet.Meter = new Meter();
+            m_meterDataSet.Meter.AssetKey = schema.DeviceID;
+            m_meterDataSet.Meter.Name = schema.DeviceID;
+            m_meterDataSet.Meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
 
-            meterDataSet.Meter.MeterLocation = new MeterLocation();
-            meterDataSet.Meter.MeterLocation.AssetKey = schema.StationName;
-            meterDataSet.Meter.MeterLocation.Name = schema.StationName;
-            meterDataSet.Meter.MeterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
-            meterDataSet.Meter.MeterLocation.Description = schema.StationName;
+            m_meterDataSet.Meter.MeterLocation = new MeterLocation();
+            m_meterDataSet.Meter.MeterLocation.AssetKey = schema.StationName;
+            m_meterDataSet.Meter.MeterLocation.Name = schema.StationName;
+            m_meterDataSet.Meter.MeterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
+            m_meterDataSet.Meter.MeterLocation.Description = schema.StationName;
 
             foreach (AnalogChannel analogChannel in schema.AnalogChannels)
             {
@@ -131,12 +151,12 @@ namespace FaultData.DataReaders
                 series = new DataSeries();
                 series.SeriesInfo = channel.Series[0];
 
-                meterDataSet.Meter.Channels.Add(channel);
+                m_meterDataSet.Meter.Channels.Add(channel);
 
-                while (meterDataSet.DataSeries.Count <= analogChannel.Index)
-                    meterDataSet.DataSeries.Add(new DataSeries());
+                while (m_meterDataSet.DataSeries.Count <= analogChannel.Index)
+                    m_meterDataSet.DataSeries.Add(new DataSeries());
 
-                meterDataSet.DataSeries[analogChannel.Index] = series;
+                m_meterDataSet.DataSeries[analogChannel.Index] = series;
             }
 
             foreach (DigitalChannel digitalChannel in schema.DigitalChannels)
@@ -146,12 +166,12 @@ namespace FaultData.DataReaders
                 series = new DataSeries();
                 series.SeriesInfo = channel.Series[0];
 
-                meterDataSet.Meter.Channels.Add(channel);
+                m_meterDataSet.Meter.Channels.Add(channel);
 
-                while (meterDataSet.Digitals.Count <= digitalChannel.Index)
-                    meterDataSet.Digitals.Add(new DataSeries());
+                while (m_meterDataSet.Digitals.Count <= digitalChannel.Index)
+                    m_meterDataSet.Digitals.Add(new DataSeries());
 
-                meterDataSet.Digitals[digitalChannel.Index] = series;
+                m_meterDataSet.Digitals[digitalChannel.Index] = series;
             }
 
             try
@@ -163,14 +183,14 @@ namespace FaultData.DataReaders
                         int seriesIndex = schema.AnalogChannels[i].Index;
                         string units = schema.AnalogChannels[i].Units.ToUpper();
                         double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
-                        meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.PrimaryValues[i] });
+                        m_meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.PrimaryValues[i] });
                     }
 
                     for (int i = 0; i < schema.DigitalChannels.Length; i++)
                     {
                         int valuesIndex = schema.TotalAnalogChannels + i;
                         int seriesIndex = schema.DigitalChannels[i].Index;
-                        meterDataSet.Digitals[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = m_parser.Values[valuesIndex] });
+                        m_meterDataSet.Digitals[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = m_parser.Values[valuesIndex] });
                     }
                 }
             }
@@ -178,8 +198,6 @@ namespace FaultData.DataReaders
             {
                 Log.Warn(ex.Message, ex);
             }
-
-            return meterDataSet;
         }
 
         public void Dispose()

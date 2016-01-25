@@ -39,7 +39,35 @@ namespace FaultData.DataReaders
 
         // Fields
         private LogicalParser m_parser;
+        private MeterDataSet m_meterDataSet;
         private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="PQDIFReader"/> class.
+        /// </summary>
+        public PQDIFReader()
+        {
+            m_meterDataSet = new MeterDataSet();
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the data set produced by the Parse method of the data reader.
+        /// </summary>
+        public MeterDataSet MeterDataSet
+        {
+            get
+            {
+                return m_meterDataSet;
+            }
+        }
 
         #endregion
 
@@ -70,15 +98,13 @@ namespace FaultData.DataReaders
         /// </summary>
         /// <param name="filePath">The path to the file to be parsed.</param>
         /// <returns>List of meter data sets, one per meter.</returns>
-        public MeterDataSet Parse(string filePath)
+        public void Parse(string filePath)
         {
             DataSourceRecord dataSource = null;
             ObservationRecord observation;
-
-            MeterDataSet meterDataSet = null;
-            Meter meter = null;
-
             IEnumerable<ChannelInstance> channelInstances;
+
+            Meter meter = null;
             Channel channel;
             DataSeries dataSeries;
             DateTime[] timeData;
@@ -90,13 +116,15 @@ namespace FaultData.DataReaders
                 if ((object)observation.DataSource == null)
                     continue;
 
-                if ((object)meter == null)
-                    meter = ParseDataSource(observation.DataSource);
-                else if (!AreEquivalent(dataSource, observation.DataSource))
-                    throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
+                if ((object)dataSource == null)
+                {
+                    dataSource = observation.DataSource;
+                    meter = ParseDataSource(dataSource);
+                    m_meterDataSet.Meter = meter;
+                }
 
-                if ((object)meter == null)
-                    continue;
+                if (!AreEquivalent(dataSource, observation.DataSource))
+                    throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
 
                 channelInstances = observation.ChannelInstances
                     .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
@@ -116,12 +144,10 @@ namespace FaultData.DataReaders
                         dataSeries.SeriesInfo = channel.Series[0];
 
                         meter.Channels.Add(channel);
-                        meterDataSet.DataSeries.Add(dataSeries);
+                        m_meterDataSet.DataSeries.Add(dataSeries);
                     }
                 }
             }
-
-            return meterDataSet;
         }
 
         public void Dispose()
@@ -149,66 +175,16 @@ namespace FaultData.DataReaders
 
         // Static Methods
 
-        public static MeterDataSet ParseFile(string filePath)
-        {
-            DataSourceRecord dataSource = null;
-            ObservationRecord observation;
-
-            MeterDataSet meterDataSet = null;
-            Meter meter = null;
-
-            IEnumerable<ChannelInstance> channelInstances;
-            Channel channel;
-            DataSeries dataSeries;
-            DateTime[] timeData;
-
-            using (LogicalParser parser = new LogicalParser(filePath))
-            {
-                parser.Open();
-
-                while (parser.HasNextObservationRecord())
-                {
-                    observation = parser.NextObservationRecord();
-
-                    if ((object)observation.DataSource == null)
-                        continue;
-
-                    if ((object)meter == null)
-                        meter = ParseDataSource(observation.DataSource);
-                    else if (!AreEquivalent(dataSource, observation.DataSource))
-                        throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
-
-                    channelInstances = observation.ChannelInstances
-                        .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
-                        .Where(channelInstance => channelInstance.SeriesInstances.Any())
-                        .Where(channelInstance => channelInstance.SeriesInstances[0].Definition.ValueTypeID == SeriesValueType.Time);
-
-                    foreach (ChannelInstance channelInstance in channelInstances)
-                    {
-                        timeData = ParseTimeData(channelInstance);
-
-                        foreach (SeriesInstance seriesInstance in channelInstance.SeriesInstances.Skip(1))
-                        {
-                            channel = ParseSeries(seriesInstance);
-
-                            dataSeries = new DataSeries();
-                            dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d }).ToList();
-                            dataSeries.SeriesInfo = channel.Series[0];
-
-                            meter.Channels.Add(channel);
-                            meterDataSet.DataSeries.Add(dataSeries);
-                        }
-                    }
-                }
-            }
-
-            return meterDataSet;
-        }
-
         private static bool AreEquivalent(DataSourceRecord dataSource1, DataSourceRecord dataSource2)
         {
             if (ReferenceEquals(dataSource1, dataSource2))
                 return true;
+
+            if ((object)dataSource1 == null)
+                return false;
+
+            if ((object)dataSource2 == null)
+                return false;
 
             return dataSource1.DataSourceName == dataSource2.DataSourceName &&
                    dataSource1.VendorID == dataSource2.VendorID &&

@@ -242,9 +242,11 @@ namespace openXDA
         private string m_dbConnectionString;
         private SystemSettings m_systemSettings;
         private FileProcessor m_fileProcessor;
+        private Dictionary<string, FileWrapper> m_fileWrapperLookup;
+
         private LogicalThreadScheduler m_meterDataScheduler;
         private Dictionary<string, LogicalThread> m_meterDataThreadLookup;
-        private Dictionary<string, FileWrapper> m_fileWrapperLookup;
+        private LogicalThread m_noMeterThread;
 
         #endregion
 
@@ -550,12 +552,6 @@ namespace openXDA
             // Validate that the creation time is within the user-defined tolerance
             ValidateFileCreationTime(filePath, systemSettings.MaxFileCreationTimeOffset);
 
-            // Parse the file path to determine the key used to identify the meter that produced this file
-            meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
-
-            // Determine whether the database contains configuration information for the meter that produced this file
-            ValidateMeterKey(filePath, meterKey, dbAdapterContainer.GetAdapter<MeterInfoDataContext>());
-
             // Get the data reader that will be used to parse the file
             systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
 
@@ -577,6 +573,15 @@ namespace openXDA
 
             try
             {
+                meterKey = null;
+
+                // Determine whether the database contains configuration information for the meter that produced this file
+                if ((object)dataReaderWrapper.DataObject.MeterDataSet != null)
+                {
+                    meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
+                    ValidateMeterKey(filePath, meterKey, dbAdapterContainer.GetAdapter<MeterInfoDataContext>());
+                }
+
                 // Apply connection string settings to the data reader
                 ConnectionStringParser.ParseConnectionString(connectionString, dataReaderWrapper.DataObject);
 
@@ -614,7 +619,15 @@ namespace openXDA
                     fileGroup = fileWrapper.GetFileGroup(dbAdapterContainer.GetAdapter<FileInfoDataContext>(), systemSettings.XDATimeZoneInfo);
 
                     // Parse the file to turn it into a meter data set
-                    meterDataSet = dataReaderWrapper.DataObject.Parse(filePath);
+                    OnStatusMessage($"Parsing data from file \"{filePath}\"...");
+                    dataReaderWrapper.DataObject.Parse(filePath);
+                    OnStatusMessage($"Finished parsing data from file \"{filePath}\".");
+                    meterDataSet = dataReaderWrapper.DataObject.MeterDataSet;
+
+                    // If the data reader does not return a data set,
+                    // there is nothing left to do
+                    if ((object)meterDataSet == null)
+                        return;
 
                     // Data reader has finally outlived its usefulness
                     dataReaderWrapper.Dispose();
@@ -818,6 +831,9 @@ namespace openXDA
         // the meter identified by the given asset key.
         private LogicalThread GetThread(string meterKey)
         {
+            if ((object)meterKey == null)
+                return m_noMeterThread ?? (m_noMeterThread = m_meterDataScheduler.CreateThread());
+
             return m_meterDataThreadLookup.GetOrAdd(meterKey, key =>
             {
                 LogicalThread newThread = m_meterDataScheduler.CreateThread();
