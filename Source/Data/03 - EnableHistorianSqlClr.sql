@@ -34,7 +34,7 @@ AS EXTERNAL NAME [openHistorian.SqlClr].HistorianFunctions.MakeQuadWord;
 GO
 
 -- Queries trending data from the openHistorian, example: "SELECT * FROM GetTrendingData('127.0.0.1', 'XDA', '2015-05-04 00:00:00', '2015-05-04 00:10:00', '11,21,31', default)"
-CREATE FUNCTION GetTrendingData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
+CREATE FUNCTION ExternalGetTrendingData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
 RETURNS TABLE
 (
    [ChannelID] int,
@@ -43,4 +43,33 @@ RETURNS TABLE
    [Value] real
 )
 AS EXTERNAL NAME [openHistorian.XDALink.SqlClr].XDAFunctions.GetTrendingData;
+GO
+
+CREATE FUNCTION GetTrendingData(@startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
+RETURNS @trendingData TABLE
+(
+   [ChannelID] int,
+   [SeriesID] int,
+   [Time] datetime2,
+   [Value] real
+)
+AS
+BEGIN
+	DECLARE @server VARCHAR(MAX)
+	DECLARE @instanceName VARCHAR(MAX)
+
+	SELECT
+		@server = COALESCE(Server.Value, '127.0.0.1'),
+		@instanceName = COALESCE(InstanceName.Value, 'XDA')
+	FROM
+		(SELECT NULL) AS Dummy(dummy) LEFT OUTER JOIN
+		Setting Server ON Server.Name = 'Historian.Server' LEFT OUTER JOIN
+		Setting InstanceName ON InstanceName.Name = 'Historian.InstanceName'
+
+	INSERT INTO @trendingData
+	SELECT *
+	FROM ExternalGetTrendingData(@server, @instanceName, @startTime, @stopTime, @channelIDs, @seriesCount)
+
+	RETURN
+END
 GO
