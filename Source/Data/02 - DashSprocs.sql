@@ -62,7 +62,7 @@ CREATE PROCEDURE [dbo].[selectBreakersForMeterIDByDateRange]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -129,7 +129,7 @@ CREATE PROCEDURE [dbo].[selectBreakersForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -188,7 +188,7 @@ CREATE PROCEDURE [dbo].[selectCompletenessForMeterIDByDateRange]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 
 AS
@@ -320,7 +320,7 @@ CREATE PROCEDURE [dbo].[selectCompletenessForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -404,7 +404,7 @@ CREATE PROCEDURE [dbo].[selectCorrectnessForMeterIDByDateRange]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 
 AS
@@ -524,7 +524,7 @@ CREATE PROCEDURE [dbo].[selectCorrectnessForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -790,7 +790,7 @@ CREATE PROCEDURE [dbo].[selectEventsForMeterIDByDateRange]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 
 AS
@@ -853,7 +853,7 @@ CREATE PROCEDURE [dbo].[selectEventsForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -996,7 +996,7 @@ CREATE PROCEDURE [dbo].[selectFaultsForMeterIDByDateRange]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -1087,7 +1087,7 @@ CREATE PROCEDURE [dbo].[selectFaultsForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 
 AS
@@ -1166,7 +1166,7 @@ GO
 CREATE PROCEDURE [dbo].[selectHeatmapMeterLocationsTrending]
 	-- Add the parameters for the stored procedure here
 	@EventDate DateTime2,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -1897,7 +1897,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesBreakersDetailsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDate as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -1953,7 +1953,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesCompletenessDetailsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDate as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2114,7 +2114,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesCorrectnessDetailsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDate as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2245,7 +2245,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesEventsDetailsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDate as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2323,7 +2323,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesEventsDetailsByDateRange]
 	@EventDateFrom as DateTime,
 	@EventDateTo as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2367,7 +2367,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesFaultsDetailsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDate as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2456,7 +2456,7 @@ GO
 CREATE PROCEDURE [dbo].[selectSitesTrendingDetailsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDate as DateTime,
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2785,7 +2785,7 @@ CREATE PROCEDURE [dbo].[selectTrendingForMeterIDByDateRange]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
 BEGIN
@@ -2849,7 +2849,7 @@ CREATE PROCEDURE [dbo].[selectTrendingForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
-	@MeterID as nvarchar(4000),
+	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 
 AS
@@ -2932,7 +2932,7 @@ GO
 
 CREATE FUNCTION [dbo].[String_To_Int_Table]
 (
-         @list NVARCHAR(1024)
+         @list NVARCHAR(MAX)
        , @delimiter NCHAR(1) = ',' --Defaults to CSV
 )
 RETURNS
