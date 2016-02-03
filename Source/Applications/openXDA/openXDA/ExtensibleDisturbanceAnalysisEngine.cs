@@ -305,6 +305,9 @@ namespace openXDA
             {
                 m_fileProcessor = new FileProcessor(FileProcessorID);
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
+                m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
+                m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
+                m_fileProcessor.MaxFragmentation = m_systemSettings.FileWatcherMaxFragmentation;
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
 
@@ -411,6 +414,9 @@ namespace openXDA
             if ((object)m_fileProcessor != null)
             {
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
+                m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
+                m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
+                m_fileProcessor.MaxFragmentation = m_systemSettings.FileWatcherMaxFragmentation;
 
                 UpdateFileProcessorFilter(m_systemSettings);
 

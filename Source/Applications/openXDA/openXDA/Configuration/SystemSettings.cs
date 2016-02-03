@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using GSF;
 using GSF.Configuration;
+using GSF.IO;
 
 namespace openXDA.Configuration
 {
@@ -63,6 +64,9 @@ namespace openXDA.Configuration
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
+        private FileEnumerationStrategy m_fileWatcherEnumerationStrategy;
+        private int m_fileWatcherMaxFragmentation;
+        private int m_fileWatcherInternalThreadCount;
         private int m_fileWatcherBufferSize;
         private string m_fileShares;
 
@@ -450,6 +454,65 @@ namespace openXDA.Configuration
 
                 if (m_processingThreadCount <= 0)
                     m_processingThreadCount = Environment.ProcessorCount;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the strategy used for enumeration of files in the file watcher.
+        /// </summary>
+        [Setting]
+        [DefaultValue(FileProcessor.DefaultEnumerationStrategy)]
+        public FileEnumerationStrategy FileWatcherEnumerationStrategy
+        {
+            get
+            {
+                return m_fileWatcherEnumerationStrategy;
+            }
+            set
+            {
+                m_fileWatcherEnumerationStrategy = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum amount of fragmentation allowed before
+        /// compacting the list of processed files in the file watcher.
+        /// </summary>
+        [Setting]
+        [DefaultValue(FileProcessor.DefaultMaxFragmentation)]
+        public int FileWatcherMaxFragmentation
+        {
+            get
+            {
+                return m_fileWatcherMaxFragmentation;
+            }
+            set
+            {
+                m_fileWatcherMaxFragmentation = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of threads used
+        /// internally to the file processor.
+        /// </summary>
+        /// <remarks>
+        /// Values less than or equal to zero will be set to the number of logical processors.
+        /// </remarks>
+        [Setting]
+        [DefaultValue(0)]
+        public int FileWatcherInternalThreadCount
+        {
+            get
+            {
+                return m_fileWatcherInternalThreadCount;
+            }
+            set
+            {
+                m_fileWatcherInternalThreadCount = value;
+
+                if (m_fileWatcherInternalThreadCount <= 0)
+                    m_fileWatcherInternalThreadCount = Environment.ProcessorCount;
             }
         }
 
