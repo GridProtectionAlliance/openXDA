@@ -68,7 +68,9 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GSF;
 using GSF.Console;
 using GSF.Reflection;
@@ -110,10 +112,11 @@ namespace openXDAConsole
 
         #region [ Methods ]
 
-        public void Start(string[] args)
+        public void Start()
         {
             string userInput = null;
-            Arguments arguments = new Arguments(string.Join(" ", args));
+            string[] args = Arguments.ToArgs(Environment.CommandLine);
+            Arguments arguments = new Arguments(string.Join(" ", args.Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))));
 
             if (arguments.Exists("server"))
             {
@@ -123,6 +126,12 @@ namespace openXDAConsole
                 if (arguments.Exists("server"))
                     m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
             }
+
+            // Set the status message filter from command line args before connecting to the service
+            m_clientHelper.StatusMessageFilter = Enumerable.Range(0, args.Length)
+                .Where(index => args[index].StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))
+                .Select(index => Regex.Replace(args[index], "^--filter=", "", RegexOptions.IgnoreCase))
+                .FirstOrDefault() ?? ClientHelper.DefaultStatusMessageFilter;
 
             // Connect to service and send commands. 
             m_clientHelper.Connect();

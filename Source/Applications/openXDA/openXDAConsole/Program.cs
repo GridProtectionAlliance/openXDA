@@ -80,7 +80,7 @@ namespace openXDAConsole
 
             // Start the client component.
             m_serviceClient = new ServiceClient();
-            m_serviceClient.Start(args);
+            m_serviceClient.Start();
             m_serviceClient.Dispose();
         }
 
