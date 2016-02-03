@@ -2241,7 +2241,6 @@ GO
 -- Description:	<Description, Selects Events for a set of sites by Date>
 -- selectSitesEventsDetailsByDate '07/19/2014', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,','jwalker'
 -- selectSitesEventsDetailsByDate '07/19/2014', '0','jwalker'
-
 -- =============================================
 CREATE PROCEDURE [dbo].[selectSitesEventsDetailsByDate]
 	-- Add the parameters for the stored procedure here
@@ -2313,6 +2312,49 @@ BEGIN
 	DEALLOCATE site_cursor;
 
 	select * from @composite
+END
+GO
+
+-- =============================================
+-- Author:		<Author, Jeff Walker>
+-- Create date: <Create Date, Jun 23, 2014>
+-- Description:	<Description, Selects Events for a set of sites by Date Range>
+-- =============================================
+CREATE PROCEDURE [dbo].[selectSitesEventsDetailsByDateRange]
+	@EventDateFrom as DateTime,
+	@EventDateTo as DateTime,
+	@MeterID as nvarchar(4000),
+	@username as nvarchar(4000)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	declare  @MeterIDs TABLE (ID int);
+
+	INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+
+	SELECT 
+
+	CAST(CAST([dbo].[Event].[StartTime] AS datetime2(7))as varchar(26)) as starttime,
+	--CAST(Coalesce(CAST([FaultSummary].[Inception] AS datetime2(7)), CAST([Event].[StartTime] AS datetime2(7))) as varchar(26)) as inceptiontime,
+	CAST(CAST([dbo].[Event].[EndTime] AS datetime2(7))as varchar(26)) as endtime,
+
+		[dbo].[Event].[ID] as eventid,
+		[dbo].[Meter].[ID] as meterid, 
+		[dbo].[Meter].[Name] as thesite,
+		[dbo].[EventType].[Name] as thename 
+		
+		FROM [dbo].[Event]
+		--left outer join [dbo].[FaultSummary] on [dbo].[Event].[ID] = [dbo].[FaultSummary].[EventID] 
+		inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID]	
+		inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[Event].[MeterID]
+
+		where [MeterID] in (Select * from @MeterIDs)
+		
+		and CAST([StartTime] as Date) between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)
+
+		order by [StartTime]
+
 END
 GO
 
