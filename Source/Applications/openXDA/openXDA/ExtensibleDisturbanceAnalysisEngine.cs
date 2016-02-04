@@ -75,7 +75,6 @@ using System.ComponentModel;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -84,7 +83,6 @@ using System.Transactions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.Database;
-using FaultData.DataReaders;
 using FaultData.DataSets;
 using GSF.Annotations;
 using GSF.Collections;
@@ -243,15 +241,32 @@ namespace openXDA
         // Fields
         private string m_dbConnectionString;
         private SystemSettings m_systemSettings;
+
         private FileProcessor m_fileProcessor;
         private Dictionary<string, FileWrapper> m_fileWrapperLookup;
+        private ConcurrentDictionary<string, string> m_activeFiles;
 
         private LogicalThreadScheduler m_meterDataScheduler;
         private Dictionary<string, LogicalThread> m_meterDataThreadLookup;
         private LogicalThread m_noMeterThread;
 
+        private ManualResetEvent m_queuedFileWaitHandle;
         private int m_queuedFileCount;
-        private ConcurrentDictionary<string, string> m_activeFiles;
+
+        private bool m_stopped;
+        private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="ExtensibleDisturbanceAnalysisEngine"/> class.
+        /// </summary>
+        public ExtensibleDisturbanceAnalysisEngine()
+        {
+            m_queuedFileWaitHandle = new ManualResetEvent(false);
+        }
 
         #endregion
 
@@ -270,15 +285,15 @@ namespace openXDA
 
                 statusBuilder.AppendLine("Meter Data Status:");
                 statusBuilder.AppendLine(new string('=', 50));
-                statusBuilder.AppendLine($"         XDA Time Zone: {systemSettings.XDATimeZone}");
-                statusBuilder.AppendLine($"      System frequency: {systemSettings.SystemFrequency} Hz");
-                statusBuilder.AppendLine($"      Database Timeout: {systemSettings.DbTimeout} seconds");
-                statusBuilder.AppendLine($"  Max thread pool size: {systemSettings.ProcessingThreadCount}");
-                statusBuilder.AppendLine($"       Max Time Offset: {systemSettings.MaxTimeOffset} hours");
-                statusBuilder.AppendLine($"       Min Time Offset: {systemSettings.MinTimeOffset} hours");
-                statusBuilder.AppendLine($"     Max File Duration: {systemSettings.MaxFileDuration} seconds");
-                statusBuilder.AppendLine($"  File Creation Offset: {systemSettings.MaxFileCreationTimeOffset} hours");
-                statusBuilder.AppendLine($"     Queued file count: {Interlocked.CompareExchange(ref m_queuedFileCount, 0, 0)}");
+                statusBuilder.AppendLine($"          XDA Time Zone: {systemSettings.XDATimeZone}");
+                statusBuilder.AppendLine($"       System frequency: {systemSettings.SystemFrequency} Hz");
+                statusBuilder.AppendLine($"       Database Timeout: {systemSettings.DbTimeout} seconds");
+                statusBuilder.AppendLine($"   Max thread pool size: {systemSettings.ProcessingThreadCount}");
+                statusBuilder.AppendLine($"        Max Time Offset: {systemSettings.MaxTimeOffset} hours");
+                statusBuilder.AppendLine($"        Min Time Offset: {systemSettings.MinTimeOffset} hours");
+                statusBuilder.AppendLine($"      Max File Duration: {systemSettings.MaxFileDuration} seconds");
+                statusBuilder.AppendLine($"   File Creation Offset: {systemSettings.MaxFileCreationTimeOffset} hours");
+                statusBuilder.AppendLine($"      Queued file count: {Interlocked.CompareExchange(ref m_queuedFileCount, 0, 0)} / {systemSettings.MaxQueuedFileCount}");
                 statusBuilder.AppendLine();
 
                 activeFiles = m_activeFiles.ToArray();
@@ -692,8 +707,25 @@ namespace openXDA
         /// </summary>
         public void Stop()
         {
-            if ((object)m_fileProcessor != null)
-                m_fileProcessor.ClearTrackedDirectories();
+            try
+            {
+                if ((object)m_fileProcessor != null)
+                    m_fileProcessor.ClearTrackedDirectories();
+            }
+            finally
+            {
+                m_stopped = true;
+
+                try
+                {
+                    m_queuedFileWaitHandle.Set();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore object disposed exceptions
+                    // that can occur due to race conditions
+                }
+            }
         }
 
         /// <summary>
@@ -702,13 +734,32 @@ namespace openXDA
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            // Stop file monitor timer
-            if ((object)m_fileProcessor != null)
+            if (m_disposed)
+                return;
+
+            try
             {
-                m_fileProcessor.Processing -= FileProcessor_Processing;
-                m_fileProcessor.Error -= FileProcessor_Error;
-                m_fileProcessor.Dispose();
-                m_fileProcessor = null;
+                Stop();
+
+                if ((object)m_queuedFileWaitHandle != null)
+                {
+                    m_queuedFileWaitHandle.Set();
+                    m_queuedFileWaitHandle.Dispose();
+                    m_queuedFileWaitHandle = null;
+                }
+
+                // Stop file monitor timer
+                if ((object)m_fileProcessor != null)
+                {
+                    m_fileProcessor.Processing -= FileProcessor_Processing;
+                    m_fileProcessor.Error -= FileProcessor_Error;
+                    m_fileProcessor.Dispose();
+                    m_fileProcessor = null;
+                }
+            }
+            finally
+            {
+                m_disposed = true;
             }
         }
 
@@ -746,6 +797,9 @@ namespace openXDA
         // directories. This handler validates the file and processes it if able.
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
+            if (m_disposed)
+                return;
+
             try
             {
                 string filePath;
@@ -831,6 +885,8 @@ namespace openXDA
             DataReaderWrapper dataReaderWrapper;
             FileWrapper fileWrapper;
 
+            int queuedFileCount;
+
             filePath = fileProcessorArgs.FullPath;
             fileInfo = dbAdapterContainer.GetAdapter<FileInfoDataContext>();
 
@@ -893,7 +949,21 @@ namespace openXDA
                 GetThread(meterKey).Push(() => ParseFile(connectionString, systemSettings, filePath, meterKey, dataReaderWrapper, fileWrapper));
 
                 // Keep track of the number of operations in thread queues
-                Interlocked.Increment(ref m_queuedFileCount);
+                queuedFileCount = Interlocked.Increment(ref m_queuedFileCount);
+
+                while (!m_stopped && !m_disposed && queuedFileCount >= systemSettings.MaxQueuedFileCount)
+                {
+                    try
+                    {
+                        m_queuedFileWaitHandle.Reset();
+                        m_queuedFileWaitHandle.WaitOne();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Ignore object disposed exceptions
+                        // that can occur due to race conditions
+                    }
+                }
             }
             catch
             {
@@ -909,9 +979,26 @@ namespace openXDA
         {
             FileGroup fileGroup = null;
             MeterDataSet meterDataSet;
+            int queuedFileCount;
 
             // Keep track of the number of operations in thread queues
-            Interlocked.Decrement(ref m_queuedFileCount);
+            queuedFileCount = Interlocked.Decrement(ref m_queuedFileCount);
+
+            if (m_stopped || m_disposed)
+            {
+                dataReaderWrapper.Dispose();
+                return;
+            }
+
+            try
+            {
+                m_queuedFileWaitHandle.Set();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore object disposed exceptions
+                // that can occur due to race conditions
+            }
 
             using (dataReaderWrapper)
             using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))

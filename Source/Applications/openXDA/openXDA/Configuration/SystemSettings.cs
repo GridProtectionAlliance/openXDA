@@ -458,6 +458,32 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
+        /// Gets or sets the number of files that can be queued
+        /// on meter data processing threads before the system
+        /// starts blocking the file processing thread.
+        /// </summary>
+        /// <remarks>
+        /// Values less than or equal to zero will be set
+        /// to the five times the number of logical processors.
+        /// </remarks>
+        [Setting]
+        [DefaultValue(10)]
+        public int MaxQueuedFileCount
+        {
+            get
+            {
+                return m_maxQueuedFileCount;
+            }
+            set
+            {
+                m_maxQueuedFileCount = value;
+
+                if (m_maxQueuedFileCount <= 0)
+                    m_maxQueuedFileCount = 1;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the strategy used for enumeration of files in the file watcher.
         /// </summary>
         [Setting]
@@ -629,6 +655,7 @@ namespace openXDA.Configuration
         // Static Fields
         private static readonly SystemSettings DefaultSystemSettings = new SystemSettings(string.Empty);
         private static readonly string DefaultConnectionString = DefaultSystemSettings.ToConnectionString();
+        private int m_maxQueuedFileCount;
 
         // Static Methods
         public static string ToConnectionString(Dictionary<string, string> settings)
