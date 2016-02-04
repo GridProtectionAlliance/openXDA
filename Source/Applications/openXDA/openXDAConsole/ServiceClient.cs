@@ -83,6 +83,7 @@ namespace openXDAConsole
         #region [ Members ]
 
         // Fields
+        private bool m_suppressNextUpdate;
         private bool m_telnetActive;
         private ConsoleColor m_originalBgColor;
         private ConsoleColor m_originalFgColor;
@@ -102,6 +103,7 @@ namespace openXDAConsole
 
             // Register event handlers.
             m_clientHelper.AuthenticationFailure += ClientHelper_AuthenticationFailure;
+            m_clientHelper.ProcessStateChanged += ClientHelper_ProcessStateChanged;
             m_clientHelper.ReceivedServiceUpdate += ClientHelper_ReceivedServiceUpdate;
             m_clientHelper.ReceivedServiceResponse += ClientHelper_ReceivedServiceResponse;
             m_clientHelper.TelnetSessionEstablished += ClientHelper_TelnetSessionEstablished;
@@ -231,8 +233,18 @@ namespace openXDAConsole
             Console.WriteLine();
         }
 
+        private void ClientHelper_ProcessStateChanged(object sender, EventArgs<ObjectState<ServiceProcessState>> e)
+        {
+            m_suppressNextUpdate = true;
+        }
+
         private void ClientHelper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
+            bool suppressThisUpdate;
+
+            suppressThisUpdate = m_suppressNextUpdate;
+            m_suppressNextUpdate = false;
+
             // Output status updates from the service to the console window.
             switch (e.Argument1)
             {
@@ -240,6 +252,9 @@ namespace openXDAConsole
                     Console.ForegroundColor = ConsoleColor.Red;
                     break;
                 case UpdateType.Information:
+                    if (suppressThisUpdate)
+                        return;
+
                     Console.ForegroundColor = m_originalFgColor;
                     break;
                 case UpdateType.Warning:

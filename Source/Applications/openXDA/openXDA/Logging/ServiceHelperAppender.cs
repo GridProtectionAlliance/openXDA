@@ -25,6 +25,7 @@ using System;
 using System.Threading;
 using GSF;
 using GSF.ServiceProcess;
+using log4net;
 using log4net.Appender;
 using log4net.Core;
 
@@ -71,6 +72,7 @@ namespace openXDA.Logging
         public void DoAppend(LoggingEvent loggingEvent)
         {
             object threadID;
+            object meterKey;
             string renderedMessage;
             Exception ex;
             UpdateType updateType;
@@ -92,6 +94,7 @@ namespace openXDA.Logging
 
             // Determine the thread ID from the thread's context
             threadID = Thread.CurrentThread.ManagedThreadId;
+            meterKey = ThreadContext.Properties["Meter"];
 
             // Get the message and exception object
             renderedMessage = loggingEvent.RenderedMessage;
@@ -114,10 +117,12 @@ namespace openXDA.Logging
             }
 
             // Send the message to clients via the service helper
-            if (!string.IsNullOrEmpty(renderedMessage))
+            if (string.IsNullOrEmpty(renderedMessage))
+                m_serviceHelper.UpdateStatusAppendLine(updateType, "");
+            else if (meterKey == null)
                 m_serviceHelper.UpdateStatusAppendLine(updateType, "[{0}] {1}", threadID, renderedMessage);
             else
-                m_serviceHelper.UpdateStatusAppendLine(updateType, "");
+                m_serviceHelper.UpdateStatusAppendLine(updateType, "[{0}] {{{1}}} {2}", threadID, meterKey, renderedMessage);
         }
 
         public void Close()

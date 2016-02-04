@@ -162,6 +162,8 @@ namespace openXDA
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.AddScheduledProcess(ReloadConfigurationHandler, "ReloadConfiguration", "0 0 * * *");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
 
             // Set up adapter loader to load service monitors
@@ -257,13 +259,38 @@ namespace openXDA
             m_extensibleDisturbanceAnalysisEngine.ReloadConfiguration();
         }
 
-        // Reloads system settings from the database
+        // Reloads system settings from the database.
         private void ReloadSystemSettingsRequestHandler(ClientRequestInfo requestInfo)
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
+            SendResponse(requestInfo, true);
         }
 
-        // Send a message to the service monitors on request
+        // Displays status information about the XDA engine.
+        private void EngineStatusHandler(ClientRequestInfo requestInfo)
+        {
+            if (m_extensibleDisturbanceAnalysisEngine != null)
+                DisplayResponseMessage(requestInfo, "{0}", m_extensibleDisturbanceAnalysisEngine.Status);
+            else
+                SendResponseWithAttachment(requestInfo, false, null, "Engine is not ready.");
+        }
+
+        // Modifies the behavior of the file processor at runtime.
+        private void TweakFileProcessorHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(new string[] { "-?" });
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
+            string message = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(args);
+            DisplayResponseMessage(requestInfo, message);
+        }
+
+        // Send a message to the service monitors on request.
         private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)
         {
             Arguments arguments = requestInfo.Request.Arguments;
@@ -422,7 +449,7 @@ namespace openXDA
         {
             try
             {
-                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, string.Format("{0}\r\n\r\n", status), args);
+                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, string.Format("{0}{1}{1}", status, Environment.NewLine), args);
             }
             catch (Exception ex)
             {

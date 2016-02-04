@@ -69,6 +69,7 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -76,6 +77,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
@@ -248,6 +250,88 @@ namespace openXDA
         private Dictionary<string, LogicalThread> m_meterDataThreadLookup;
         private LogicalThread m_noMeterThread;
 
+        private int m_queuedFileCount;
+        private ConcurrentDictionary<string, string> m_activeFiles;
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the current status of the XDA engine.
+        /// </summary>
+        public string Status
+        {
+            get
+            {
+                SystemSettings systemSettings = m_systemSettings;
+                StringBuilder statusBuilder = new StringBuilder();
+                KeyValuePair<string, string>[] activeFiles;
+
+                statusBuilder.AppendLine("Meter Data Status:");
+                statusBuilder.AppendLine(new string('=', 50));
+                statusBuilder.AppendLine($"         XDA Time Zone: {systemSettings.XDATimeZone}");
+                statusBuilder.AppendLine($"      System frequency: {systemSettings.SystemFrequency} Hz");
+                statusBuilder.AppendLine($"      Database Timeout: {systemSettings.DbTimeout} seconds");
+                statusBuilder.AppendLine($"  Max thread pool size: {systemSettings.ProcessingThreadCount}");
+                statusBuilder.AppendLine($"       Max Time Offset: {systemSettings.MaxTimeOffset} hours");
+                statusBuilder.AppendLine($"       Min Time Offset: {systemSettings.MinTimeOffset} hours");
+                statusBuilder.AppendLine($"     Max File Duration: {systemSettings.MaxFileDuration} seconds");
+                statusBuilder.AppendLine($"  File Creation Offset: {systemSettings.MaxFileCreationTimeOffset} hours");
+                statusBuilder.AppendLine($"     Queued file count: {Interlocked.CompareExchange(ref m_queuedFileCount, 0, 0)}");
+                statusBuilder.AppendLine();
+
+                activeFiles = m_activeFiles.ToArray();
+
+                if (activeFiles.Any())
+                {
+                    statusBuilder.AppendLine("  Active Threads:");
+
+                    foreach (KeyValuePair<string, string> kvp in m_activeFiles.ToArray())
+                        statusBuilder.AppendLine($"    [{kvp.Key}] {kvp.Value}");
+
+                    statusBuilder.AppendLine();
+                }
+
+                if (systemSettings.FileShareList.Any())
+                {
+                    statusBuilder.AppendLine("  File shares:");
+                    
+                    foreach (FileShare fileShare in systemSettings.FileShareList)
+                    {
+                        if ((object)fileShare.AuthenticationException == null)
+                            statusBuilder.AppendLine($"    {fileShare.Name}");
+                        else
+                            statusBuilder.AppendLine($"    {fileShare.Name} [Exception: {fileShare.AuthenticationException.Message}]");
+                    }
+
+                    statusBuilder.AppendLine();
+                }
+
+                statusBuilder.AppendLine("File Processor Status:");
+                statusBuilder.AppendLine(new string('=', 50));
+                statusBuilder.AppendLine($"                 Filter: {m_fileProcessor.Filter}");
+                statusBuilder.AppendLine($"   Internal buffer size: {m_fileProcessor.InternalBufferSize}");
+                statusBuilder.AppendLine($"   Max thread pool size: {m_fileProcessor.MaxThreadCount}");
+                statusBuilder.AppendLine($"      Max fragmentation: {m_fileProcessor.MaxFragmentation}");
+                statusBuilder.AppendLine($"   Enumeration strategy: {m_fileProcessor.EnumerationStrategy}");
+                statusBuilder.AppendLine($"    Enumeration threads: {m_fileProcessor.EnumerationThreads}");
+                statusBuilder.AppendLine($"        Processed files: {m_fileProcessor.ProcessedFileCount}");
+                statusBuilder.AppendLine($"          Skipped files: {m_fileProcessor.SkippedFileCount}");
+                statusBuilder.AppendLine($"         Requeued files: {m_fileProcessor.RequeuedFileCount}");
+                statusBuilder.AppendLine($"      Last Compact Time: {m_fileProcessor.LastCompactTime}");
+                statusBuilder.AppendLine($"  Last Compact Duration: {m_fileProcessor.LastCompactDuration}");
+                statusBuilder.AppendLine();
+
+                statusBuilder.AppendLine("  Watch directories:");
+
+                foreach (string path in m_fileProcessor.TrackedDirectories)
+                    statusBuilder.AppendLine($"    {path}");
+
+                return statusBuilder.ToString().TrimEnd();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -284,6 +368,10 @@ namespace openXDA
             if ((object)m_fileWrapperLookup == null)
                 m_fileWrapperLookup = new Dictionary<string, FileWrapper>();
 
+            // Create the lookup table used to track which files are being processed
+            if ((object)m_activeFiles == null)
+                m_activeFiles = new ConcurrentDictionary<string, string>();
+
             // Create the scheduler used to schedule when to process meter data
             if ((object)m_meterDataScheduler == null)
             {
@@ -308,6 +396,7 @@ namespace openXDA
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
                 m_fileProcessor.MaxFragmentation = m_systemSettings.FileWatcherMaxFragmentation;
+                m_fileProcessor.FilterMethod = PrevalidateFile;
                 m_fileProcessor.Processing += FileProcessor_Processing;
                 m_fileProcessor.Error += FileProcessor_Error;
 
@@ -432,6 +521,173 @@ namespace openXDA
         }
 
         /// <summary>
+        /// Tweaks the behavior of the file processor at runtime.
+        /// </summary>
+        /// <param name="args">The arguments supplied to the command to tweak the settings.</param>
+        /// <returns>A message describing the change that was made.</returns>
+        public string TweakFileProcessor(string[] args)
+        {
+            if (args.Length == 0 || args[0] == "-?")
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Modifies the behavior of the file processor at runtime.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       TweakFileProcessor { -Enumerate |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            -StopEnumeration |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            -Add <WatchDirectory> |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            -Remove <WatchDirectory> |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            -ListProperties |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            -Set <Property> <Value> }");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("       TweakFileProcessor -?");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Enumerate".PadRight(20));
+                helpMessage.Append("Initiates enumeration of the watch directories");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Add".PadRight(20));
+                helpMessage.Append("Stops enumeration of the watch directories");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Add".PadRight(20));
+                helpMessage.Append("Adds a directory to the list of watch directories");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Remove".PadRight(20));
+                helpMessage.Append("Removes a directory from the list of watch directories");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -ListProperties".PadRight(20));
+                helpMessage.Append("Lists properties that can be tweaked by this command");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Set".PadRight(20));
+                helpMessage.Append("Tweaks a property of the file processor");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+
+                return helpMessage.ToString();
+            }
+
+            if (args[0].Equals("-Enumerate", StringComparison.OrdinalIgnoreCase))
+            {
+                m_fileProcessor.EnumerateWatchDirectories();
+                return "Started enumeration of the watch directories.";
+            }
+
+            if (args[0].Equals("-StopEnumeration", StringComparison.OrdinalIgnoreCase))
+            {
+                m_fileProcessor.StopEnumeration();
+                return "Stopped enumeration of the watch directories.";
+            }
+
+            if (args[0].Equals("-Add", StringComparison.OrdinalIgnoreCase))
+            {
+                if (args.Length < 2)
+                    throw new FormatException("Malformed expression - Missing argument to 'TweakFileProcessor -Add <WatchDirectory>' command. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                m_fileProcessor.AddTrackedDirectory(args[1]);
+
+                return $"Added directory '{args[1]}' to the file processor watch directories.";
+            }
+
+            if (args[0].Equals("-Remove", StringComparison.OrdinalIgnoreCase))
+            {
+                if (args.Length < 2)
+                    throw new FormatException("Malformed expression - Missing argument to 'TweakFileProcessor -Remove <WatchDirectory>' command. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                m_fileProcessor.RemoveTrackedDirectory(args[1]);
+
+                return $"Removed directory '{args[1]}' from the file processor watch directories.";
+            }
+
+            if (args[0].Equals("-ListProperties", StringComparison.OrdinalIgnoreCase))
+            {
+                StringBuilder propertyListBuilder = new StringBuilder();
+
+                propertyListBuilder.AppendLine("File processor properties:");
+                propertyListBuilder.AppendLine("  Filter");
+                propertyListBuilder.AppendLine("  InternalBufferSize");
+                propertyListBuilder.AppendLine("  MaxThreadCount");
+                propertyListBuilder.AppendLine("  MaxFragmentation");
+                propertyListBuilder.AppendLine("  EnumerationStrategy");
+
+                return propertyListBuilder.ToString().TrimEnd();
+            }
+
+            if (args[0].Equals("-Set", StringComparison.OrdinalIgnoreCase))
+            {
+                string oldValue;
+
+                if (args.Length < 3)
+                    throw new FormatException("Malformed expression - Missing argument to 'TweakFileProcessor -Set <Property> <Value>' command. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                if (args[1].Equals("Filter", StringComparison.OrdinalIgnoreCase))
+                {
+                    oldValue = m_fileProcessor.Filter;
+                    m_fileProcessor.Filter = args[2];
+                }
+                else if (args[1].Equals("InternalBufferSize", StringComparison.OrdinalIgnoreCase))
+                {
+                    int internalBufferSize;
+
+                    if (!int.TryParse(args[2], out internalBufferSize))
+                        throw new FormatException($"Malformed expression - Value for property 'InternalBufferSize' must be an integer. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                    oldValue = m_fileProcessor.InternalBufferSize.ToString();
+                    m_fileProcessor.InternalBufferSize = internalBufferSize;
+                }
+                else if (args[1].Equals("MaxThreadCount", StringComparison.OrdinalIgnoreCase))
+                {
+                    int maxThreadCount;
+
+                    if (!int.TryParse(args[2], out maxThreadCount))
+                        throw new FormatException($"Malformed expression - Value for property 'MaxThreadCount' must be an integer. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                    oldValue = m_fileProcessor.MaxThreadCount.ToString();
+                    m_fileProcessor.MaxThreadCount = maxThreadCount;
+                }
+                else if (args[1].Equals("MaxFragmentation", StringComparison.OrdinalIgnoreCase))
+                {
+                    int maxFragmentation;
+
+                    if (!int.TryParse(args[2], out maxFragmentation))
+                        throw new FormatException($"Malformed expression - Value for property 'MaxFragmentation' must be an integer. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                    oldValue = m_fileProcessor.MaxFragmentation.ToString();
+                    m_fileProcessor.MaxFragmentation = maxFragmentation;
+                }
+                else if (args[1].Equals("EnumerationStrategy", StringComparison.OrdinalIgnoreCase))
+                {
+                    FileEnumerationStrategy enumerationStrategy;
+
+                    if (!Enum.TryParse(args[2], out enumerationStrategy))
+                        throw new FormatException($"Malformed expression - Unrecognized enumeration strategy '{args[2]}'. Type 'TweakFileProcessor -?' to get help with this command.");
+
+                    oldValue = m_fileProcessor.EnumerationStrategy.ToString();
+                    m_fileProcessor.EnumerationStrategy = enumerationStrategy;
+                }
+                else
+                {
+                    throw new FormatException($"Malformed expression - Unrecognized file processor property '{args[1]}'. Type 'TweakFileProcessor -?' to get help with this command.");
+                }
+
+                return $"Updated property '{args[1]}' from '{oldValue}' to '{args[2]}'.";
+            }
+
+            throw new FormatException($"Malformed expression - Unrecognized option '{args[1]}' supplied to the 'TweakFileProcessor' command. Type 'TweakFileProcessor -?' to get help with this command.");
+        }
+
+        /// <summary>
         /// Stops the fault location engine.
         /// </summary>
         public void Stop()
@@ -456,15 +712,56 @@ namespace openXDA
             }
         }
 
+        // Validates the file before invoking the file processing handler.
+        // Improves file processor performance by executing the filter in
+        // parallel and also by bypassing the set of processed files.
+        private bool PrevalidateFile(string filePath)
+        {
+            try
+            {
+                string meterKey;
+                string connectionString;
+                SystemSettings systemSettings;
+
+                connectionString = LoadSystemSettings();
+                systemSettings = new SystemSettings(connectionString);
+                ValidateFileCreationTime(filePath, systemSettings.MaxFileCreationTimeOffset);
+
+                using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
+                {
+                    meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
+                    ValidateMeterKey(filePath, meterKey, dbAdapterContainer.GetAdapter<MeterInfoDataContext>());
+                }
+
+                return true;
+            }
+            catch (FileSkippedException ex)
+            {
+                Log.Warn(ex.Message);
+                return false;
+            }
+        }
+
         // Called when the file processor has picked up a file in one of the watch
         // directories. This handler validates the file and processes it if able.
         private void FileProcessor_Processing(object sender, FileProcessorEventArgs fileProcessorEventArgs)
         {
             try
             {
-                string filePath = fileProcessorEventArgs.FullPath;
-                string connectionString = LoadSystemSettings();
-                SystemSettings systemSettings = new SystemSettings(connectionString);
+                string filePath;
+                string connectionString;
+                SystemSettings systemSettings;
+
+                filePath = fileProcessorEventArgs.FullPath;
+
+                if (!FilePath.TryGetReadLockExclusive(filePath))
+                {
+                    fileProcessorEventArgs.Requeue = true;
+                    return;
+                }
+
+                connectionString = LoadSystemSettings();
+                systemSettings = new SystemSettings(connectionString);
 
                 using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
                 {
@@ -555,9 +852,6 @@ namespace openXDA
                 }
             }
 
-            // Validate that the creation time is within the user-defined tolerance
-            ValidateFileCreationTime(filePath, systemSettings.MaxFileCreationTimeOffset);
-
             // Get the data reader that will be used to parse the file
             systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
 
@@ -583,10 +877,7 @@ namespace openXDA
 
                 // Determine whether the database contains configuration information for the meter that produced this file
                 if ((object)dataReaderWrapper.DataObject.MeterDataSet != null)
-                {
                     meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
-                    ValidateMeterKey(filePath, meterKey, dbAdapterContainer.GetAdapter<MeterInfoDataContext>());
-                }
 
                 // Apply connection string settings to the data reader
                 ConnectionStringParser.ParseConnectionString(connectionString, dataReaderWrapper.DataObject);
@@ -600,6 +891,9 @@ namespace openXDA
 
                 // Get the thread used to process this data
                 GetThread(meterKey).Push(() => ParseFile(connectionString, systemSettings, filePath, meterKey, dataReaderWrapper, fileWrapper));
+
+                // Keep track of the number of operations in thread queues
+                Interlocked.Increment(ref m_queuedFileCount);
             }
             catch
             {
@@ -616,11 +910,20 @@ namespace openXDA
             FileGroup fileGroup = null;
             MeterDataSet meterDataSet;
 
+            // Keep track of the number of operations in thread queues
+            Interlocked.Decrement(ref m_queuedFileCount);
+
             using (dataReaderWrapper)
             using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
             {
                 try
                 {
+                    // Keep track of the meters and files currently being processed
+                    if ((object)meterKey != null)
+                        m_activeFiles[meterKey] = filePath;
+
+                    ThreadContext.Properties["Meter"] = meterKey;
+
                     // Create the file group
                     fileGroup = fileWrapper.GetFileGroup(dbAdapterContainer.GetAdapter<FileInfoDataContext>(), systemSettings.XDATimeZoneInfo);
 
@@ -694,6 +997,12 @@ namespace openXDA
                             OnProcessException(new Exception(message, ex));
                         }
                     }
+
+                    // Keep track of the meters and files currently being processed
+                    if ((object)meterKey != null)
+                        m_activeFiles.TryRemove(meterKey, out filePath);
+
+                    ThreadContext.Properties.Remove("Meter");
                 }
             }
         }
