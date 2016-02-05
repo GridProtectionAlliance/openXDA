@@ -250,23 +250,10 @@ namespace openXDA
         private Dictionary<string, LogicalThread> m_meterDataThreadLookup;
         private LogicalThread m_noMeterThread;
 
-        private ManualResetEvent m_queuedFileWaitHandle;
         private int m_queuedFileCount;
 
         private bool m_stopped;
         private bool m_disposed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="ExtensibleDisturbanceAnalysisEngine"/> class.
-        /// </summary>
-        public ExtensibleDisturbanceAnalysisEngine()
-        {
-            m_queuedFileWaitHandle = new ManualResetEvent(false);
-        }
 
         #endregion
 
@@ -715,16 +702,6 @@ namespace openXDA
             finally
             {
                 m_stopped = true;
-
-                try
-                {
-                    m_queuedFileWaitHandle.Set();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Ignore object disposed exceptions
-                    // that can occur due to race conditions
-                }
             }
         }
 
@@ -740,13 +717,6 @@ namespace openXDA
             try
             {
                 Stop();
-
-                if ((object)m_queuedFileWaitHandle != null)
-                {
-                    m_queuedFileWaitHandle.Set();
-                    m_queuedFileWaitHandle.Dispose();
-                    m_queuedFileWaitHandle = null;
-                }
 
                 // Stop file monitor timer
                 if ((object)m_fileProcessor != null)
@@ -951,19 +921,8 @@ namespace openXDA
                 // Keep track of the number of operations in thread queues
                 queuedFileCount = Interlocked.Increment(ref m_queuedFileCount);
 
-                while (!m_stopped && !m_disposed && queuedFileCount >= systemSettings.MaxQueuedFileCount)
-                {
-                    try
-                    {
-                        m_queuedFileWaitHandle.Reset();
-                        m_queuedFileWaitHandle.WaitOne();
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // Ignore object disposed exceptions
-                        // that can occur due to race conditions
-                    }
-                }
+                while (!m_stopped && !m_disposed && m_queuedFileCount >= systemSettings.MaxQueuedFileCount)
+                    Thread.Sleep(1000);
             }
             catch
             {
@@ -988,16 +947,6 @@ namespace openXDA
             {
                 dataReaderWrapper.Dispose();
                 return;
-            }
-
-            try
-            {
-                m_queuedFileWaitHandle.Set();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Ignore object disposed exceptions
-                // that can occur due to race conditions
             }
 
             using (dataReaderWrapper)
