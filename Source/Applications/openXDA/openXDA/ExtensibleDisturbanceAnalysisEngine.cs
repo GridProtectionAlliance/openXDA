@@ -913,7 +913,11 @@ namespace openXDA
 
                 // Determine whether the dataReader can parse the file
                 if (!dataReaderWrapper.DataObject.CanParse(filePath, fileWrapper.GetMaxFileCreationTime()))
+                {
                     fileProcessorArgs.Requeue = true;
+                    dataReaderWrapper.Dispose();
+                    return;
+                }
 
                 // Get the thread used to process this data
                 GetThread(meterKey).Push(() => ParseFile(connectionString, systemSettings, filePath, meterKey, dataReaderWrapper, fileWrapper));
