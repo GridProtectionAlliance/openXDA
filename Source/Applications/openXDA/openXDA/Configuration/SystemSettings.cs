@@ -463,8 +463,7 @@ namespace openXDA.Configuration
         /// starts blocking the file processing thread.
         /// </summary>
         /// <remarks>
-        /// Values less than or equal to zero will be set
-        /// to the five times the number of logical processors.
+        /// Values less than or equal to zero will be set to one.
         /// </remarks>
         [Setting]
         [DefaultValue(10)]
