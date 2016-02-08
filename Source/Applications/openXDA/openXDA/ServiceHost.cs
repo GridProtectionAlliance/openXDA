@@ -270,7 +270,7 @@ namespace openXDA
         private void EngineStatusHandler(ClientRequestInfo requestInfo)
         {
             if (m_extensibleDisturbanceAnalysisEngine != null)
-                DisplayResponseMessage(requestInfo, "{0}", m_extensibleDisturbanceAnalysisEngine.Status);
+                DisplayResponseMessage(requestInfo, m_extensibleDisturbanceAnalysisEngine.Status);
             else
                 SendResponseWithAttachment(requestInfo, false, null, "Engine is not ready.");
         }
@@ -437,6 +437,16 @@ namespace openXDA
                 string message = string.Format("Failed to send client response due to an exception: {0}", ex.Message);
                 HandleException(new InvalidOperationException(message, ex));
             }
+        }
+
+        /// <summary>
+        /// Displays a response message to client requestor.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="status">Formatted status message to send to client.</param>
+        protected virtual void DisplayResponseMessage(ClientRequestInfo requestInfo, string status)
+        {
+            DisplayResponseMessage(requestInfo, "{0}", status);
         }
 
         /// <summary>
