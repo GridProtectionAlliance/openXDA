@@ -51,7 +51,7 @@ public class XDAFunctions
         FillRowMethodName = "GetTrendingData_FillRow",
         TableDefinition = "[ChannelID] int, [SeriesID] int, [Time] datetime2, [Value] real")
     ]
-    public static IEnumerable GetTrendingData(SqlString historianServer, SqlString instanceName, DateTime startTime, DateTime stopTime, SqlString channelIDs, SqlInt32 seriesCount)
+    public static IEnumerable GetTrendingData(SqlString historianServer, SqlString instanceName, DateTime startTime, DateTime stopTime, [SqlFacet(MaxSize = -1)] SqlString channelIDs, SqlInt32 seriesCount)
     {
         StringBuilder measurementIDs = null;
 

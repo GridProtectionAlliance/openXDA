@@ -5,7 +5,7 @@ RECONFIGURE
 GO
 
 -- Queries measurement data from the openHistorian
-CREATE FUNCTION GetHistorianData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @measurementIDs nvarchar(4000) = null)
+CREATE FUNCTION GetHistorianData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @measurementIDs nvarchar(MAX) = null)
 RETURNS TABLE
 (
    [ID] bigint,
@@ -34,7 +34,7 @@ AS EXTERNAL NAME [openHistorian.SqlClr].HistorianFunctions.MakeQuadWord;
 GO
 
 -- Queries trending data from the openHistorian, example: "SELECT * FROM GetTrendingData('127.0.0.1', 'XDA', '2015-05-04 00:00:00', '2015-05-04 00:10:00', '11,21,31', default)"
-CREATE FUNCTION ExternalGetTrendingData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
+CREATE FUNCTION ExternalGetTrendingData(@historianServer nvarchar(256), @instanceName nvarchar(256), @startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(MAX) = null, @seriesCount int = 3)
 RETURNS TABLE
 (
    [ChannelID] int,
@@ -45,7 +45,7 @@ RETURNS TABLE
 AS EXTERNAL NAME [openHistorian.XDALink.SqlClr].XDAFunctions.GetTrendingData;
 GO
 
-CREATE FUNCTION GetTrendingData(@startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(4000) = null, @seriesCount int = 3)
+CREATE FUNCTION GetTrendingData(@startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(MAX) = null, @seriesCount int = 3)
 RETURNS @trendingData TABLE
 (
    [ChannelID] int,
