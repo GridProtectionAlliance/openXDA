@@ -106,6 +106,8 @@ namespace FaultData.DataReaders
             Channel channel;
             DataSeries series;
 
+            List<ANLG_CHNL_NEW> analogChannels;
+
             controlFile = m_parser.ControlFile;
             identityString = controlFile.IdentityString.value;
             deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
@@ -115,30 +117,28 @@ namespace FaultData.DataReaders
             m_meterDataSet.Meter.Name = deviceName;
             m_meterDataSet.Meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
 
-            foreach (ANLG_CHNL_NEW analogChannel in controlFile.AnalogChannelSettings.Values)
+            analogChannels = controlFile.AnalogChannelSettings
+                .OrderBy(kvp => kvp.Key)
+                .Select(kvp => kvp.Value)
+                .ToList();
+
+            // Add an empty data series for 1-based indexing
+            m_meterDataSet.DataSeries.Add(new DataSeries());
+
+            foreach (ANLG_CHNL_NEW analogChannel in analogChannels)
             {
                 channel = ParseSeries(analogChannel);
-
+                channel.Series.Single().SourceIndexes = m_meterDataSet.DataSeries.Count.ToString();
                 series = new DataSeries();
                 series.SeriesInfo = channel.Series[0];
-
                 m_meterDataSet.Meter.Channels.Add(channel);
-
-                while (m_meterDataSet.DataSeries.Count <= analogChannel.ChannelNumber)
-                    m_meterDataSet.DataSeries.Add(new DataSeries());
-
-                m_meterDataSet.DataSeries[analogChannel.ChannelNumber] = series;
+                m_meterDataSet.DataSeries.Add(series);
             }
 
             while (m_parser.ReadNext())
             {
-                int i = 0;
-
-                foreach (int channelNumber in controlFile.AnalogChannelSettings.Keys.OrderBy(key => key))
-                {
-                    m_meterDataSet.DataSeries[channelNumber].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
-                    i++;
-                }
+                for (int i = 0; i < analogChannels.Count; i++)
+                    m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
             }
         }
 
