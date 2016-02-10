@@ -45,6 +45,7 @@ namespace XDAWaveformDataParser
         // Nested Types
         private class ParsedChannel
         {
+            public int Index;
             public string Name;
             public List<DateTime> TimeValues; 
             public IList<object> XValues;
@@ -119,6 +120,7 @@ namespace XDAWaveformDataParser
                     m_channels = parser.Schema.AnalogChannels
                         .Select(channel => new ParsedChannel()
                         {
+                            Index = channel.Index,
                             Name = ((object)channel.ChannelName != null) ? string.Format("{0} ({1})", channel.StationName, channel.ChannelName) : channel.StationName,
                             TimeValues = new List<DateTime>(),
                             XValues = new List<object>(),
@@ -146,7 +148,7 @@ namespace XDAWaveformDataParser
 
                 // Populate the list box with channel names
                 ChannelListBox.Items.AddRange(m_channels
-                    .Select((channel, index) => string.Format("[{0}] {1}", index, channel.Name))
+                    .Select(channel => string.Format("[{0}] {1}", channel.Index, channel.Name))
                     .Cast<object>()
                     .ToArray());
 
@@ -290,14 +292,16 @@ namespace XDAWaveformDataParser
 
                     // Parse EMAX control file into channels
                     m_channels = parser.ControlFile.AnalogChannelSettings.Values
-                        .OrderBy(channel => Convert.ToInt32(channel.chanlnum))
                         .Select(channel => new ParsedChannel()
                         {
+                            Index = Convert.ToInt32(channel.chanlnum),
                             Name = channel.title,
                             TimeValues = new List<DateTime>(),
                             XValues = new List<object>(),
                             YValues = new List<object>()
-                        }).ToList();
+                        })
+                        .OrderBy(channel => channel.Index)
+                        .ToList();
 
                     // Read values from EMAX data file
                     while (parser.ReadNext())
@@ -326,7 +330,7 @@ namespace XDAWaveformDataParser
 
                 // Populate the list box with channel names
                 ChannelListBox.Items.AddRange(m_channels
-                    .Select((channel, index) => string.Format("[{0}] {1}", index, channel.Name))
+                    .Select(channel => string.Format("[{0}] {1}", channel.Index, channel.Name))
                     .Cast<object>()
                     .ToArray());
 
