@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataResources;
@@ -77,18 +76,12 @@ namespace FaultData.DataOperations
         public override void Execute(MeterDataSet meterDataSet)
         {
             Meter meter;
-            string meterKey;
-
             List<Series> seriesList;
             Dictionary<SeriesKey, Series> seriesLookup;
             DataSeries dataSeries;
             Series seriesInfo;
 
             Log.Info("Executing operation to locate meter in database...");
-
-            // Try to parse the name of the meter from the file path
-            if (!string.IsNullOrEmpty(FilePattern) && TryParseFilePath(meterDataSet.FilePath, out meterKey))
-                meterDataSet.Meter.AssetKey = meterKey;
 
             // Search the database for a meter definition that matches the parsed meter
             meter = m_meterInfo.Meters.SingleOrDefault(m => m.AssetKey == meterDataSet.Meter.AssetKey);
@@ -181,26 +174,6 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
-        }
-
-        private bool TryParseFilePath(string fileName, out string meterKey)
-        {
-            Match match = Regex.Match(fileName, FilePattern);
-            Group meterKeyGroup;
-
-            if (match.Success)
-            {
-                meterKeyGroup = match.Groups["AssetKey"];
-
-                if ((object)meterKeyGroup != null)
-                {
-                    meterKey = meterKeyGroup.Value;
-                    return true;
-                }
-            }
-
-            meterKey = null;
-            return false;
         }
 
         private void AddCalculatedDataSeries(MeterDataSet meterDataSet, Series series)

@@ -1286,7 +1286,7 @@ namespace openXDA
         // Uses regular expressions to read the meter's asset key from the file path.
         private static string GetMeterKey(string filePath, string filePattern)
         {
-            Match match = Regex.Match(filePath, filePattern);
+            Match match = Regex.Match(filePath, filePattern, RegexOptions.IgnoreCase);
             Group meterKeyGroup;
 
             if (!match.Success)
