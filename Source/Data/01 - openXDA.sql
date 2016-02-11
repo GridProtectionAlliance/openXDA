@@ -9,6 +9,11 @@
 --GO
 --CREATE DATABASE [openXDA]
 --GO
+--USE [openXDA]
+--GO
+
+--USE [master]
+--GO
 --IF  NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = N'NewUser')
 --CREATE LOGIN [NewUser] WITH PASSWORD=N'MyPassword', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
 --GO
