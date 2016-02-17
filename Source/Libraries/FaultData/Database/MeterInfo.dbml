@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="openXDA" Class="MeterInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=localhost\SQLEXPRESS;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=localhost;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.MeterLocation" Member="MeterLocations">
     <Type Name="MeterLocation">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -109,6 +109,7 @@
       <Association Name="Line_Channel" Member="Channels" ThisKey="ID" OtherKey="LineID" Type="Channel" />
       <Association Name="Line_MeterLine" Member="MeterLines" ThisKey="ID" OtherKey="LineID" Type="MeterLine" />
       <Association Name="Line_Structure" Member="Structures" ThisKey="ID" OtherKey="LineID" Type="Structure" />
+      <Association Name="Line_FaultDetectionLogic" Member="FaultDetectionLogics" ThisKey="ID" OtherKey="LineID" Type="FaultDetectionLogic" />
     </Type>
   </Table>
   <Table Name="dbo.MeterLine" Member="MeterLines">
@@ -164,6 +165,14 @@
       <Column Name="GroupID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="MeterID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Association Name="Meter_GroupMeter" Member="Meter" ThisKey="MeterID" OtherKey="ID" Type="Meter" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultDetectionLogic" Member="FaultDetectionLogics">
+    <Type Name="FaultDetectionLogic">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="LineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Expression" Type="System.String" DbType="VarChar(500) NOT NULL" CanBeNull="false" />
+      <Association Name="Line_FaultDetectionLogic" Member="Line" ThisKey="LineID" OtherKey="ID" Type="Line" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

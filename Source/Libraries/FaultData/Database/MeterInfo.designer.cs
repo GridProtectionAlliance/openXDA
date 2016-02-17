@@ -75,6 +75,9 @@ namespace FaultData.Database
     partial void InsertGroupMeter(GroupMeter instance);
     partial void UpdateGroupMeter(GroupMeter instance);
     partial void DeleteGroupMeter(GroupMeter instance);
+    partial void InsertFaultDetectionLogic(FaultDetectionLogic instance);
+    partial void UpdateFaultDetectionLogic(FaultDetectionLogic instance);
+    partial void DeleteFaultDetectionLogic(FaultDetectionLogic instance);
     #endregion
 		
 		public MeterInfoDataContext() : 
@@ -224,6 +227,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<GroupMeter>();
+			}
+		}
+		
+		public System.Data.Linq.Table<FaultDetectionLogic> FaultDetectionLogics
+		{
+			get
+			{
+				return this.GetTable<FaultDetectionLogic>();
 			}
 		}
 	}
@@ -2262,6 +2273,8 @@ namespace FaultData.Database
 		
 		private EntitySet<Structure> _Structures;
 		
+		private EntitySet<FaultDetectionLogic> _FaultDetectionLogics;
+		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -2286,6 +2299,7 @@ namespace FaultData.Database
 			this._Channels = new EntitySet<Channel>(new Action<Channel>(this.attach_Channels), new Action<Channel>(this.detach_Channels));
 			this._MeterLines = new EntitySet<MeterLine>(new Action<MeterLine>(this.attach_MeterLines), new Action<MeterLine>(this.detach_MeterLines));
 			this._Structures = new EntitySet<Structure>(new Action<Structure>(this.attach_Structures), new Action<Structure>(this.detach_Structures));
+			this._FaultDetectionLogics = new EntitySet<FaultDetectionLogic>(new Action<FaultDetectionLogic>(this.attach_FaultDetectionLogics), new Action<FaultDetectionLogic>(this.detach_FaultDetectionLogics));
 			OnCreated();
 		}
 		
@@ -2461,6 +2475,19 @@ namespace FaultData.Database
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Line_FaultDetectionLogic", Storage="_FaultDetectionLogics", ThisKey="ID", OtherKey="LineID")]
+		public EntitySet<FaultDetectionLogic> FaultDetectionLogics
+		{
+			get
+			{
+				return this._FaultDetectionLogics;
+			}
+			set
+			{
+				this._FaultDetectionLogics.Assign(value);
+			}
+		}
+		
 		public event PropertyChangingEventHandler PropertyChanging;
 		
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -2524,6 +2551,18 @@ namespace FaultData.Database
 		}
 		
 		private void detach_Structures(Structure entity)
+		{
+			this.SendPropertyChanging();
+			entity.Line = null;
+		}
+		
+		private void attach_FaultDetectionLogics(FaultDetectionLogic entity)
+		{
+			this.SendPropertyChanging();
+			entity.Line = this;
+		}
+		
+		private void detach_FaultDetectionLogics(FaultDetectionLogic entity)
 		{
 			this.SendPropertyChanging();
 			entity.Line = null;
@@ -3653,6 +3692,157 @@ namespace FaultData.Database
 						this._MeterID = default(int);
 					}
 					this.SendPropertyChanged("Meter");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.FaultDetectionLogic")]
+	public partial class FaultDetectionLogic : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _LineID;
+		
+		private string _Expression;
+		
+		private EntityRef<Line> _Line;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnLineIDChanging(int value);
+    partial void OnLineIDChanged();
+    partial void OnExpressionChanging(string value);
+    partial void OnExpressionChanged();
+    #endregion
+		
+		public FaultDetectionLogic()
+		{
+			this._Line = default(EntityRef<Line>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int NOT NULL")]
+		public int LineID
+		{
+			get
+			{
+				return this._LineID;
+			}
+			set
+			{
+				if ((this._LineID != value))
+				{
+					if (this._Line.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnLineIDChanging(value);
+					this.SendPropertyChanging();
+					this._LineID = value;
+					this.SendPropertyChanged("LineID");
+					this.OnLineIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Expression", DbType="VarChar(500) NOT NULL", CanBeNull=false)]
+		public string Expression
+		{
+			get
+			{
+				return this._Expression;
+			}
+			set
+			{
+				if ((this._Expression != value))
+				{
+					this.OnExpressionChanging(value);
+					this.SendPropertyChanging();
+					this._Expression = value;
+					this.SendPropertyChanged("Expression");
+					this.OnExpressionChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Line_FaultDetectionLogic", Storage="_Line", ThisKey="LineID", OtherKey="ID", IsForeignKey=true)]
+		public Line Line
+		{
+			get
+			{
+				return this._Line.Entity;
+			}
+			set
+			{
+				Line previousValue = this._Line.Entity;
+				if (((previousValue != value) 
+							|| (this._Line.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._Line.Entity = null;
+						previousValue.FaultDetectionLogics.Remove(this);
+					}
+					this._Line.Entity = value;
+					if ((value != null))
+					{
+						value.FaultDetectionLogics.Add(this);
+						this._LineID = value.ID;
+					}
+					else
+					{
+						this._LineID = default(int);
+					}
+					this.SendPropertyChanged("Line");
 				}
 			}
 		}
