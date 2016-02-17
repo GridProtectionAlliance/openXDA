@@ -74,7 +74,7 @@
   <Table Name="dbo.FaultDetectionLogic" Member="FaultDetectionLogics">
     <Type Name="FaultDetectionLogic">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="LineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="MeterLineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Expression" Type="System.String" DbType="VarChar(500) NOT NULL" CanBeNull="false" />
     </Type>
   </Table>

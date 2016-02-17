@@ -64,10 +64,10 @@
         <classShapeMoniker Id="af09b21c-8ac0-44f7-b0fa-0196495bada1" />
       </nodes>
     </associationConnector>
-    <classShape Id="898d8d82-06b7-4f22-a4bd-470f9339a037" absoluteBounds="4.25, 1.125, 2, 1.3862939453125">
+    <classShape Id="35f9f048-19d4-4969-b031-8c269dec5c7b" absoluteBounds="4.25, 1.125, 2, 1.3862939453125">
       <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultDetectionLogic" />
       <nestedChildShapes>
-        <elementListCompartment Id="ac0d3d4a-3710-43c0-860d-c8da430a69e7" absoluteBounds="4.2650000000000006, 1.585, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+        <elementListCompartment Id="c59d1cf5-447a-49fa-83cb-04cb62765af1" absoluteBounds="4.265, 1.585, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
   </nestedChildShapes>

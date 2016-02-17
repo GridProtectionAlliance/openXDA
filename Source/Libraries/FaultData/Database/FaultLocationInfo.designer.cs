@@ -1452,7 +1452,7 @@ namespace FaultData.Database
 		
 		private int _ID;
 		
-		private int _LineID;
+		private int _MeterLineID;
 		
 		private string _Expression;
 		
@@ -1462,8 +1462,8 @@ namespace FaultData.Database
     partial void OnCreated();
     partial void OnIDChanging(int value);
     partial void OnIDChanged();
-    partial void OnLineIDChanging(int value);
-    partial void OnLineIDChanged();
+    partial void OnMeterLineIDChanging(int value);
+    partial void OnMeterLineIDChanged();
     partial void OnExpressionChanging(string value);
     partial void OnExpressionChanged();
     #endregion
@@ -1493,22 +1493,22 @@ namespace FaultData.Database
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int NOT NULL")]
-		public int LineID
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MeterLineID", DbType="Int NOT NULL")]
+		public int MeterLineID
 		{
 			get
 			{
-				return this._LineID;
+				return this._MeterLineID;
 			}
 			set
 			{
-				if ((this._LineID != value))
+				if ((this._MeterLineID != value))
 				{
-					this.OnLineIDChanging(value);
+					this.OnMeterLineIDChanging(value);
 					this.SendPropertyChanging();
-					this._LineID = value;
-					this.SendPropertyChanged("LineID");
-					this.OnLineIDChanged();
+					this._MeterLineID = value;
+					this.SendPropertyChanged("MeterLineID");
+					this.OnMeterLineIDChanged();
 				}
 			}
 		}
