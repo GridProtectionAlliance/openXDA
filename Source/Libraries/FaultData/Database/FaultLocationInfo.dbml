@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="openXDA" Class="FaultLocationInfoDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=localhost\SQLEXPRESS;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=localhost;Initial Catalog=openXDA;Integrated Security=True" SettingsObjectName="FaultData.Properties.Settings" SettingsPropertyName="openXDAConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.SegmentType" Member="SegmentTypes">
     <Type Name="SegmentType">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -69,6 +69,13 @@
       <Column Name="FaultEmailTemplateID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="MeterGroupID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Association Name="FaultEmailTemplate_FaultEmailRecipient" Member="FaultEmailTemplate" ThisKey="FaultEmailTemplateID" OtherKey="ID" Type="FaultEmailTemplate" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FaultDetectionLogic" Member="FaultDetectionLogics">
+    <Type Name="FaultDetectionLogic">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="LineID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Expression" Type="System.String" DbType="VarChar(500) NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
 </Database>

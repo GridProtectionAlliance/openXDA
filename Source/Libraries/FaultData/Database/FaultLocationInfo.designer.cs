@@ -54,6 +54,9 @@ namespace FaultData.Database
     partial void InsertFaultEmailRecipient(FaultEmailRecipient instance);
     partial void UpdateFaultEmailRecipient(FaultEmailRecipient instance);
     partial void DeleteFaultEmailRecipient(FaultEmailRecipient instance);
+    partial void InsertFaultDetectionLogic(FaultDetectionLogic instance);
+    partial void UpdateFaultDetectionLogic(FaultDetectionLogic instance);
+    partial void DeleteFaultDetectionLogic(FaultDetectionLogic instance);
     #endregion
 		
 		public FaultLocationInfoDataContext() : 
@@ -147,6 +150,14 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<FaultEmailRecipient>();
+			}
+		}
+		
+		public System.Data.Linq.Table<FaultDetectionLogic> FaultDetectionLogics
+		{
+			get
+			{
+				return this.GetTable<FaultDetectionLogic>();
 			}
 		}
 	}
@@ -1408,6 +1419,116 @@ namespace FaultData.Database
 						this._FaultEmailTemplateID = default(int);
 					}
 					this.SendPropertyChanged("FaultEmailTemplate");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.FaultDetectionLogic")]
+	public partial class FaultDetectionLogic : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _LineID;
+		
+		private string _Expression;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnLineIDChanging(int value);
+    partial void OnLineIDChanged();
+    partial void OnExpressionChanging(string value);
+    partial void OnExpressionChanged();
+    #endregion
+		
+		public FaultDetectionLogic()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LineID", DbType="Int NOT NULL")]
+		public int LineID
+		{
+			get
+			{
+				return this._LineID;
+			}
+			set
+			{
+				if ((this._LineID != value))
+				{
+					this.OnLineIDChanging(value);
+					this.SendPropertyChanging();
+					this._LineID = value;
+					this.SendPropertyChanged("LineID");
+					this.OnLineIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Expression", DbType="VarChar(500) NOT NULL", CanBeNull=false)]
+		public string Expression
+		{
+			get
+			{
+				return this._Expression;
+			}
+			set
+			{
+				if ((this._Expression != value))
+				{
+					this.OnExpressionChanging(value);
+					this.SendPropertyChanging();
+					this._Expression = value;
+					this.SendPropertyChanged("Expression");
+					this.OnExpressionChanged();
 				}
 			}
 		}
