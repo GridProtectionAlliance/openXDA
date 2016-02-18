@@ -47,14 +47,16 @@ namespace FaultData.DataOperations
             #region [ Members ]
 
             // Fields
-            public FaultLocationData.FaultSegmentDataTable FaultSegmentTable = new FaultLocationData.FaultSegmentDataTable();
-            public FaultLocationData.FaultCurveDataTable FaultCurveTable = new FaultLocationData.FaultCurveDataTable();
-            public FaultLocationData.FaultSummaryDataTable FaultSummaryTable = new FaultLocationData.FaultSummaryDataTable();
+            public readonly FaultLocationData.FaultGroupDataTable FaultGroupTable;
+            public readonly FaultLocationData.FaultSegmentDataTable FaultSegmentTable;
+            public readonly FaultLocationData.FaultCurveDataTable FaultCurveTable;
+            public readonly FaultLocationData.FaultSummaryDataTable FaultSummaryTable;
 
             public MeterDataSet MeterDataSet;
             public DataGroup DataGroup;
-            public List<Fault> Faults;
+            public FaultGroup FaultGroup;
 
+            private List<Tuple<EventKey, FaultLocationData.FaultGroupRow>> m_faultGroupList;
             private List<Tuple<EventKey, FaultLocationData.FaultSegmentRow>> m_faultSegmentList;
             private List<Tuple<EventKey, FaultLocationData.FaultCurveRow>> m_faultCurveList;
             private List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>> m_faultSummaryList;
@@ -67,9 +69,16 @@ namespace FaultData.DataOperations
 
             public FaultSummarizer(double systemFrequency)
             {
+                FaultGroupTable = new FaultLocationData.FaultGroupDataTable();
+                FaultSegmentTable = new FaultLocationData.FaultSegmentDataTable();
+                FaultCurveTable = new FaultLocationData.FaultCurveDataTable();
+                FaultSummaryTable = new FaultLocationData.FaultSummaryDataTable();
+
+                m_faultGroupList = new List<Tuple<Tuple<int, DateTime, DateTime>, FaultLocationData.FaultGroupRow>>();
                 m_faultSegmentList = new List<Tuple<EventKey, FaultLocationData.FaultSegmentRow>>();
                 m_faultCurveList = new List<Tuple<EventKey, FaultLocationData.FaultCurveRow>>();
                 m_faultSummaryList = new List<Tuple<EventKey, FaultLocationData.FaultSummaryRow>>();
+
                 m_systemFrequency = systemFrequency;
             }
 
@@ -89,7 +98,10 @@ namespace FaultData.DataOperations
                 eventKey = Tuple.Create(DataGroup.Line.ID, DataGroup.StartTime, DataGroup.EndTime);
                 faultNumber = 1;
 
-                foreach (Fault fault in Faults)
+                // Create a fault group row for the whole group of faults
+                m_faultGroupList.Add(Tuple.Create(eventKey, CreateFaultGroupRow(FaultGroup)));
+
+                foreach (Fault fault in FaultGroup.Faults)
                 {
                     // Create a fault segment for the fault itself
                     faultSegment = CreateFaultSegment(fault);
@@ -115,14 +127,72 @@ namespace FaultData.DataOperations
                 }
 
                 // Generate fault curves for each algorithm used to analyze the fault
-                if (Faults.Any())
+                if (FaultGroup.Faults.Any())
                 {
-                    for (int i = 0; i < Faults[0].Curves.Count; i++)
+                    for (int i = 0; i < FaultGroup.Faults[0].Curves.Count; i++)
                     {
                         faultCurveRow = CreateFaultCurveRow(i);
                         m_faultCurveList.Add(Tuple.Create(eventKey, faultCurveRow));
                     }
                 }
+            }
+
+            public void FillTables(DbAdapterContainer dbAdapterContainer)
+            {
+                MeterData.EventDataTable eventTable;
+                Dictionary<EventKey, MeterData.EventRow> eventLookup;
+                MeterData.EventRow eventRow;
+
+                eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(MeterDataSet.FileGroup.ID);
+                eventLookup = eventTable.Where(evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+
+                foreach (Tuple<EventKey, FaultLocationData.FaultGroupRow> faultGroup in m_faultGroupList)
+                {
+                    if (eventLookup.TryGetValue(faultGroup.Item1, out eventRow))
+                    {
+                        faultGroup.Item2.EventID = eventRow.ID;
+                        FaultGroupTable.AddFaultGroupRow(faultGroup.Item2);
+                    }
+                }
+
+                foreach (Tuple<EventKey, FaultLocationData.FaultSegmentRow> faultSegment in m_faultSegmentList)
+                {
+                    if (eventLookup.TryGetValue(faultSegment.Item1, out eventRow))
+                    {
+                        faultSegment.Item2.EventID = eventRow.ID;
+                        FaultSegmentTable.AddFaultSegmentRow(faultSegment.Item2);
+                    }
+                }
+
+                foreach (Tuple<EventKey, FaultLocationData.FaultCurveRow> faultCurve in m_faultCurveList)
+                {
+                    if (eventLookup.TryGetValue(faultCurve.Item1, out eventRow))
+                    {
+                        faultCurve.Item2.EventID = eventRow.ID;
+                        FaultCurveTable.AddFaultCurveRow(faultCurve.Item2);
+                    }
+                }
+
+                foreach (Tuple<EventKey, FaultLocationData.FaultSummaryRow> faultSummary in m_faultSummaryList)
+                {
+                    if (eventLookup.TryGetValue(faultSummary.Item1, out eventRow))
+                    {
+                        faultSummary.Item2.EventID = eventRow.ID;
+                        FaultSummaryTable.AddFaultSummaryRow(faultSummary.Item2);
+                    }
+                }
+            }
+
+            private FaultLocationData.FaultGroupRow CreateFaultGroupRow(FaultGroup faultGroup)
+            {
+                FaultLocationData.FaultGroupRow faultGroupRow = FaultGroupTable.NewFaultGroupRow();
+
+                if (faultGroup.FaultDetectionLogicResult.HasValue)
+                    faultGroupRow.FaultDetectionLogicResult = faultGroup.FaultDetectionLogicResult.GetValueOrDefault() ? 1 : 0;
+
+                faultGroupRow.FaultValidationLogicResult = faultGroup.FaultValidationLogicResult ? 1 : 0;
+
+                return faultGroupRow;
             }
 
             private FaultLocationData.FaultSegmentRow CreateFaultSegment(Fault fault)
@@ -211,11 +281,11 @@ namespace FaultData.DataOperations
 
                 // Create the fault curve record to be written to the database
                 faultCurveRow = FaultCurveTable.NewFaultCurveRow();
-                faultCurveRow.Algorithm = Faults[0].Curves[curveIndex].Algorithm;
+                faultCurveRow.Algorithm = FaultGroup.Faults[0].Curves[curveIndex].Algorithm;
 
                 series = DataGroup.DataSeries[0].Multiply(double.NaN);
 
-                foreach (Fault fault in Faults)
+                foreach (Fault fault in FaultGroup.Faults)
                 {
                     startSample = fault.StartSample;
                     endSample = startSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
@@ -227,43 +297,6 @@ namespace FaultData.DataOperations
                 faultCurveRow.Data = Serialize(series);
 
                 return faultCurveRow;
-            }
-
-            public void FillTables(DbAdapterContainer dbAdapterContainer)
-            {
-                MeterData.EventDataTable eventTable;
-                Dictionary<EventKey, MeterData.EventRow> eventLookup;
-                MeterData.EventRow eventRow;
-
-                eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(MeterDataSet.FileGroup.ID);
-                eventLookup = eventTable.Where(evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
-
-                foreach (Tuple<EventKey, FaultLocationData.FaultSegmentRow> faultSegment in m_faultSegmentList)
-                {
-                    if (eventLookup.TryGetValue(faultSegment.Item1, out eventRow))
-                    {
-                        faultSegment.Item2.EventID = eventRow.ID;
-                        FaultSegmentTable.AddFaultSegmentRow(faultSegment.Item2);
-                    }
-                }
-
-                foreach (Tuple<EventKey, FaultLocationData.FaultCurveRow> faultCurve in m_faultCurveList)
-                {
-                    if (eventLookup.TryGetValue(faultCurve.Item1, out eventRow))
-                    {
-                        faultCurve.Item2.EventID = eventRow.ID;
-                        FaultCurveTable.AddFaultCurveRow(faultCurve.Item2);
-                    }
-                }
-
-                foreach (Tuple<EventKey, FaultLocationData.FaultSummaryRow> faultSummary in m_faultSummaryList)
-                {
-                    if (eventLookup.TryGetValue(faultSummary.Item1, out eventRow))
-                    {
-                        faultSummary.Item2.EventID = eventRow.ID;
-                        FaultSummaryTable.AddFaultSummaryRow(faultSummary.Item2);
-                    }
-                }
             }
 
             private double ToDbFloat(double value)
@@ -335,7 +368,7 @@ namespace FaultData.DataOperations
         {
             FaultDataResource faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(m_dbAdapterContainer));
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            List<Fault> faults;
+            FaultGroup faultGroup;
 
             Log.Info("Executing operation to load fault location data into the database...");
 
@@ -344,12 +377,12 @@ namespace FaultData.DataOperations
 
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
-                if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faults))
+                if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
                     continue;
 
                 // Generate summary rows for the fault to be entered into the database
                 m_faultSummarizer.DataGroup = dataGroup;
-                m_faultSummarizer.Faults = faults;
+                m_faultSummarizer.FaultGroup = faultGroup;
                 m_faultSummarizer.SummarizeFault();
             }
         }

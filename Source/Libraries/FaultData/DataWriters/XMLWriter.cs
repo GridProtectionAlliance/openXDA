@@ -99,7 +99,7 @@ namespace FaultData.DataWriters
 
             DataGroup dataGroup;
             VICycleDataGroup viCycleDataGroup;
-            List<Fault> faults;
+            FaultGroup faultGroup;
 
             string rootFileName;
             string fileName;
@@ -114,13 +114,13 @@ namespace FaultData.DataWriters
             {
                 dataGroup = cycleDataResource.DataGroups[i];
 
-                if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out faults))
+                if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
                 {
                     rootFileName = FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath);
                     fileName = string.Format("{0},{1:000},Line{2}.xml", rootFileName, i, dataGroup.Line.AssetKey);
 
                     viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
-                    WriteResults(meterDataSet, dataGroup, viCycleDataGroup, faults, Path.Combine(m_resultsPath, fileName));
+                    WriteResults(meterDataSet, dataGroup, viCycleDataGroup, faultGroup.Faults, Path.Combine(m_resultsPath, fileName));
                 }
             }
         }

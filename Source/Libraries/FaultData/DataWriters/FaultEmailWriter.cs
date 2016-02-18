@@ -158,14 +158,23 @@ namespace FaultData.DataWriters
 
         public void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
         {
+            bool? faultDetectionResult;
+            bool faultValidationResult;
+
             Initialize(this);
 
-            foreach (FaultLocationData.FaultSummaryRow faultSummary in dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
+            foreach (var faultGroup in dbAdapterContainer.GetAdapter<FaultGroupTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
             {
-                if (faultSummary.IsSelectedAlgorithm != 0 && faultSummary.IsValid != 0 && faultSummary.IsSuppressed == 0)
+                faultDetectionResult = !faultGroup.IsFaultDetectionLogicResultNull()
+                    ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
+                    : (bool?)null;
+
+                faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
+
+                if (faultDetectionResult ?? faultValidationResult)
                 {
-                    if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultSummary.EventID) == 0)
-                        QueueEventID(faultSummary.EventID);
+                    if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultGroup.EventID) == 0)
+                        QueueEventID(faultGroup.EventID);
                 }
             }
         }

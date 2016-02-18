@@ -225,7 +225,7 @@ namespace FaultData.DataResources
         private FaultLocationSettings m_faultLocationSettings;
         private BreakerSettings m_breakerSettings;
 
-        private Dictionary<DataGroup, List<Fault>> m_faultLookup;
+        private Dictionary<DataGroup, FaultGroup> m_faultLookup;
 
         #endregion
 
@@ -236,14 +236,14 @@ namespace FaultData.DataResources
             m_dbAdapterContainer = dbAdapterContainer;
             m_faultLocationSettings = new FaultLocationSettings();
             m_breakerSettings = new BreakerSettings();
-            m_faultLookup = new Dictionary<DataGroup, List<Fault>>();
+            m_faultLookup = new Dictionary<DataGroup, FaultGroup>();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public Dictionary<DataGroup, List<Fault>> FaultLookup
+        public Dictionary<DataGroup, FaultGroup> FaultLookup
         {
             get
             {
@@ -367,18 +367,16 @@ namespace FaultData.DataResources
 
                     faults = DetectFaults(viDataGroup, viCycleDataGroup);
 
-                    if (faults.Count == 0)
-                        continue;
-
-                    ClassifyFaults(faults, dataGroup, viCycleDataGroup);
+                    if (faults.Count > 0)
+                        ClassifyFaults(faults, dataGroup, viCycleDataGroup);
                 }
                 finally
                 {
                     Log.Debug(stopwatch.Elapsed);
                 }
 
-                // Add list of faults to lookup table
-                m_faultLookup.Add(dataGroup, faults);
+                // Create a fault group and add it to the lookup table
+                m_faultLookup.Add(dataGroup, CreateFaultGroup(meterDataSet, dataGroup, faults));
 
                 // Create the fault location data set and begin populating
                 // the properties necessary for calculating fault location
@@ -416,6 +414,37 @@ namespace FaultData.DataResources
                 foreach (Fault fault in faults)
                     PopulateFaultInfo(fault, dataGroup, viCycleDataGroup);
             }
+        }
+
+        private FaultGroup CreateFaultGroup(MeterDataSet meterDataSet, DataGroup dataGroup, List<Fault> faults)
+        {
+            MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+            FaultLocationInfoDataContext faultInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
+
+            string expressionText;
+            int meterLineID;
+
+            expressionText = null;
+
+            // Find MeterLine record corresponding to the meter that produced
+            // the data and the line associated with the data group
+            meterLineID = meterInfo.MeterLines
+                .Where(meterLine => meterLine.MeterID == meterDataSet.Meter.ID)
+                .Where(meterLine => meterLine.LineID == dataGroup.Line.ID)
+                .Select(meterLine => meterLine.ID)
+                .DefaultIfEmpty(-1)
+                .First();
+
+            if (meterLineID > 0)
+            {
+                // Find fault detection logic defined for the meter and line
+                expressionText = faultInfo.FaultDetectionLogics
+                    .Where(logic => logic.MeterLineID == meterLineID)
+                    .Select(logic => logic.Expression)
+                    .FirstOrDefault();
+            }
+
+            return new FaultGroup(dataGroup, faults, expressionText);
         }
 
         private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo)

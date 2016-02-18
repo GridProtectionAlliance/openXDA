@@ -623,6 +623,19 @@ CREATE NONCLUSTERED INDEX IX_FaultCurve_EventID
 ON FaultCurve(EventID ASC)
 GO
 
+CREATE TABLE FaultGroup
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	EventID INT NOT NULL REFERENCES Event(ID),
+	FaultDetectionLogicResult INT NULL,
+	FaultValidationLogicResult INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultGroup_EventID
+ON FaultGroup(EventID ASC)
+GO
+
 CREATE TABLE FaultSummary
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,

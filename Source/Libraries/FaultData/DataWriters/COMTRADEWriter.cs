@@ -191,7 +191,7 @@ namespace FaultData.DataWriters
             FaultDataResource faultDataResource;
 
             DataGroup dataGroup;
-            List<Fault> faults;
+            FaultGroup faultGroup;
             List<int> seriesIDs;
             EventDataSet eventDataSet;
 
@@ -208,7 +208,7 @@ namespace FaultData.DataWriters
             {
                 dataGroup = cycleDataResource.DataGroups[i];
 
-                if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out faults))
+                if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
                 {
                     rootFileName = FilePath.GetFileNameWithoutExtension(meterDataSet.FilePath);
                     fileName = string.Format("{0},{1:000},Line{2}.dat", rootFileName, i, dataGroup.Line.AssetKey);
@@ -224,7 +224,7 @@ namespace FaultData.DataWriters
                         TimeZoneOffset = GetTimeZoneOffset(meterDataSet.Meter.TimeZone, dataGroup.StartTime),
                         DataGroup = dataGroup,
                         VICycleDataGroup = cycleDataResource.VICycleDataGroups[i],
-                        Faults = faults,
+                        Faults = faultGroup.Faults,
                         OutputChannels = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().OutputChannels.Where(channel => seriesIDs.Contains(channel.SeriesID)).ToList()
                     };
 

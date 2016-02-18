@@ -78,7 +78,7 @@ namespace FaultData.DataResources
         {
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             FaultDataResource faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(m_dbAdapterContainer));
-            List<Fault> faults;
+            FaultGroup faultGroup;
 
             DataGroup dataGroup;
             VICycleDataGroup viCycleDataGroup;
@@ -88,21 +88,21 @@ namespace FaultData.DataResources
                 dataGroup = cycleDataResource.DataGroups[i];
                 viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
-                if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faults))
-                    faults = new List<Fault>();
+                if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
+                    faultGroup = null;
 
-                m_classifications.Add(dataGroup, Classify(dataGroup, viCycleDataGroup, faults));
+                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup, viCycleDataGroup, faultGroup));
             }
         }
 
-        private EventClassification Classify(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, List<Fault> faults)
+        private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, FaultGroup faultGroup)
         {
             double nominalVoltage;
             DataSeries va;
             DataSeries vb;
             DataSeries vc;
 
-            if (faults.Any(fault => !fault.IsSuppressed && fault.Summaries.Any(summary => summary.IsValid)))
+            if (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult)
                 return EventClassification.Fault;
 
             // Get the line-to-neutral nominal voltage in volts
