@@ -102,7 +102,7 @@ namespace FaultData.DataResources
             DataSeries vb;
             DataSeries vc;
 
-            if (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult)
+            if ((object)faultGroup != null && (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult))
                 return EventClassification.Fault;
 
             // Get the line-to-neutral nominal voltage in volts
