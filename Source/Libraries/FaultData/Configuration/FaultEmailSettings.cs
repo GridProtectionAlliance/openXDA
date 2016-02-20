@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FaultGroup.cs - Gbtc
+//  FaultEmailSettings.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,70 +16,67 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/18/2016 - Stephen C. Wills
+//  02/19/2016 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace FaultData.DataAnalysis
+namespace FaultData.Configuration
 {
-    public class FaultGroup
+    public class FaultEmailSettings
     {
         #region [ Members ]
 
         // Fields
-        private bool? m_faultDetectionLogicResult;
-        private bool m_defaultFaultDetectionLogicResult;
-        private bool m_faultValidationLogicResult;
-        private List<Fault> m_faults;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public FaultGroup(List<Fault> faults, bool? faultDetectionLogicResult, bool defaultFaultDetectionLogicResult, bool faultValidationLogicResult)
-        {
-            m_faults = faults;
-            m_faultDetectionLogicResult = faultDetectionLogicResult;
-            m_defaultFaultDetectionLogicResult = defaultFaultDetectionLogicResult;
-            m_faultValidationLogicResult = faultValidationLogicResult;
-        }
+        private double m_waitPeriod;
+        private bool m_useDefaultFaultDetectionLogic;
 
         #endregion
 
         #region [ Properties ]
 
-        public bool? FaultDetectionLogicResult
+        /// <summary>
+        /// Gets or sets the amount of time, in seconds,
+        /// between the time a file is received and the time
+        /// an email should be sent out by the system.
+        /// </summary>
+        [Setting]
+        [DefaultValue(10.0D)]
+        public double WaitPeriod
         {
             get
             {
-                return m_faultDetectionLogicResult;
+                return m_waitPeriod;
+            }
+            set
+            {
+                m_waitPeriod = value;
             }
         }
 
-        public bool DefaultFaultDetectionLogicResult
+        /// <summary>
+        /// Indicates whether to use the default fault detection logic
+        /// when the line-specific fault detection logic fails.
+        /// </summary>
+        [Setting]
+        [DefaultValue(true)]
+        public bool UseDefaultFaultDetectionLogic
         {
             get
             {
-                return m_defaultFaultDetectionLogicResult;
+                return m_useDefaultFaultDetectionLogic;
             }
-        }
-
-        public bool FaultValidationLogicResult
-        {
-            get
+            set
             {
-                return m_faultValidationLogicResult;
-            }
-        }
-
-        public List<Fault> Faults
-        {
-            get
-            {
-                return m_faults;
+                m_useDefaultFaultDetectionLogic = value;
             }
         }
 

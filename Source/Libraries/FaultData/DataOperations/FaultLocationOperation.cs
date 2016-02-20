@@ -99,7 +99,8 @@ namespace FaultData.DataOperations
                 faultNumber = 1;
 
                 // Create a fault group row for the whole group of faults
-                m_faultGroupList.Add(Tuple.Create(eventKey, CreateFaultGroupRow(FaultGroup)));
+                if (FaultGroup.FaultDetectionLogicResult != false || FaultGroup.FaultValidationLogicResult != false)
+                    m_faultGroupList.Add(Tuple.Create(eventKey, CreateFaultGroupRow(FaultGroup)));
 
                 foreach (Fault fault in FaultGroup.Faults)
                 {
@@ -190,6 +191,7 @@ namespace FaultData.DataOperations
                 if (faultGroup.FaultDetectionLogicResult.HasValue)
                     faultGroupRow.FaultDetectionLogicResult = faultGroup.FaultDetectionLogicResult.GetValueOrDefault() ? 1 : 0;
 
+                faultGroupRow.DefaultFaultDetectionLogicResult = faultGroup.DefaultFaultDetectionLogicResult ? 1 : 0;
                 faultGroupRow.FaultValidationLogicResult = faultGroup.FaultValidationLogicResult ? 1 : 0;
 
                 return faultGroupRow;
@@ -389,12 +391,14 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
+            FaultLocationData.FaultGroupDataTable faultGroupTable;
             FaultLocationData.FaultSegmentDataTable faultSegmentTable;
             FaultLocationData.FaultCurveDataTable faultCurveTable;
             FaultLocationData.FaultSummaryDataTable faultSummaryTable;
 
             m_faultSummarizer.FillTables(dbAdapterContainer);
 
+            faultGroupTable = m_faultSummarizer.FaultGroupTable;
             faultSegmentTable = m_faultSummarizer.FaultSegmentTable;
             faultCurveTable = m_faultSummarizer.FaultCurveTable;
             faultSummaryTable = m_faultSummarizer.FaultSummaryTable;
@@ -408,6 +412,10 @@ namespace FaultData.DataOperations
             {
                 // Set timeout to infinite
                 bulkCopy.BulkCopyTimeout = 0;
+
+                // Submit fault groups to the database
+                bulkCopy.DestinationTableName = faultGroupTable.TableName;
+                bulkCopy.WriteToServer(faultGroupTable);
 
                 // Submit fault segments to the database
                 bulkCopy.DestinationTableName = faultSegmentTable.TableName;

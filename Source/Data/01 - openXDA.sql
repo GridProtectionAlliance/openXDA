@@ -628,6 +628,7 @@ CREATE TABLE FaultGroup
 	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
 	EventID INT NOT NULL REFERENCES Event(ID),
 	FaultDetectionLogicResult INT NULL,
+	DefaultFaultDetectionLogicResult INT NOT NULL,
 	FaultValidationLogicResult INT NOT NULL
 )
 GO

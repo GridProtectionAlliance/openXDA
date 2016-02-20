@@ -1315,6 +1315,19 @@ namespace openXDA
                     dataPoint.Time = TimeZoneInfo.ConvertTimeFromUtc(dataPoint.Time, xdaTimeZone);
                 }
             }
+
+            foreach (DataSeries dataSeries in meterDataSet.Digitals)
+            {
+                foreach (DataPoint dataPoint in dataSeries.DataPoints)
+                {
+                    if (dataPoint.Time.Kind != DateTimeKind.Unspecified)
+                        dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time);
+                    else
+                        dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time, meterTimeZone);
+
+                    dataPoint.Time = TimeZoneInfo.ConvertTimeFromUtc(dataPoint.Time, xdaTimeZone);
+                }
+            }
         }
 
         // Determines the start time and end time of the given data and sets the properties on the given file group.
@@ -1324,12 +1337,14 @@ namespace openXDA
             DateTime dataEndTime;
 
             dataStartTime = meterDataSet.DataSeries
+                .Concat(meterDataSet.Digitals)
                 .Where(dataSeries => dataSeries.DataPoints.Any())
                 .Select(dataSeries => dataSeries.DataPoints.First().Time)
                 .DefaultIfEmpty()
                 .Min();
 
             dataEndTime = meterDataSet.DataSeries
+                .Concat(meterDataSet.Digitals)
                 .Where(dataSeries => dataSeries.DataPoints.Any())
                 .Select(dataSeries => dataSeries.DataPoints.Last().Time)
                 .DefaultIfEmpty()

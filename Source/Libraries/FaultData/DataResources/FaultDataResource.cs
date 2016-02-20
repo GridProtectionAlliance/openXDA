@@ -35,6 +35,7 @@ using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
+using GSF.Parsing;
 using GSF.Units;
 using log4net;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
@@ -329,6 +330,10 @@ namespace FaultData.DataResources
 
             CycleDataResource cycleDataResource;
 
+            bool? faultDetectionLogicResult;
+            bool defaultFaultDetectionLogicResult;
+            bool faultValidationLogicResult;
+
             Stopwatch stopwatch;
 
             stopwatch = new Stopwatch();
@@ -375,8 +380,22 @@ namespace FaultData.DataResources
                     Log.Debug(stopwatch.Elapsed);
                 }
 
-                // Create a fault group and add it to the lookup table
-                m_faultLookup.Add(dataGroup, CreateFaultGroup(meterDataSet, dataGroup, faults));
+                // Check the fault detection logic and the default fault detection logic
+                faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
+                defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
+
+                // If the fault detection logic detects a fault and the default
+                // logic does not agree, treat the whole waveform as a fault
+                if (faultDetectionLogicResult == true && !defaultFaultDetectionLogicResult)
+                {
+                    faults.Add(new Fault()
+                    {
+                        StartSample = 0,
+                        EndSample = dataGroup[0].DataPoints.Count - 1
+                    });
+
+                    ClassifyFaults(faults, dataGroup, viCycleDataGroup);
+                }
 
                 // Create the fault location data set and begin populating
                 // the properties necessary for calculating fault location
@@ -392,31 +411,35 @@ namespace FaultData.DataResources
                 impedanceExtractor.Meter = meterDataSet.Meter;
                 impedanceExtractor.Line = dataGroup.Line;
 
-                if (!impedanceExtractor.TryExtractImpedances())
-                    continue;
+                if (impedanceExtractor.TryExtractImpedances())
+                {
+                    // Generate fault curves for fault analysis
+                    Log.Debug("Generating fault curves...");
+                    stopwatch.Restart();
 
-                // Generate fault curves for fault analysis
-                Log.Debug("Generating fault curves...");
-                stopwatch.Restart();
+                    faultCurveGenerator = new FaultCurveGenerator();
+                    faultCurveGenerator.SamplesPerCycle = (int)(viDataGroup.VA.SampleRate / m_systemFrequency);
+                    faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
+                    faultCurveGenerator.Faults = faults;
+                    faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
+                    faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
+                    faultCurveGenerator.GenerateFaultCurves();
 
-                faultCurveGenerator = new FaultCurveGenerator();
-                faultCurveGenerator.SamplesPerCycle = (int)(viDataGroup.VA.SampleRate / m_systemFrequency);
-                faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
-                faultCurveGenerator.Faults = faults;
-                faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
-                faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
-                faultCurveGenerator.GenerateFaultCurves();
+                    Log.Debug(stopwatch.Elapsed);
 
-                Log.Debug(stopwatch.Elapsed);
+                    // Gather additional info about each fault
+                    // based on the results of the above analysis
+                    foreach (Fault fault in faults)
+                        PopulateFaultInfo(fault, dataGroup, viCycleDataGroup);
+                }
 
-                // Gather additional info about each fault
-                // based on the results of the above analysis
-                foreach (Fault fault in faults)
-                    PopulateFaultInfo(fault, dataGroup, viCycleDataGroup);
+                // Create a fault group and add it to the lookup table
+                faultValidationLogicResult = CheckFaultValidationLogic(faults);
+                m_faultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
             }
         }
 
-        private FaultGroup CreateFaultGroup(MeterDataSet meterDataSet, DataGroup dataGroup, List<Fault> faults)
+        private bool? CheckFaultDetectionLogic(MeterDataSet meterDataSet, DataGroup dataGroup)
         {
             MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
             FaultLocationInfoDataContext faultInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
@@ -431,9 +454,8 @@ namespace FaultData.DataResources
             meterLineID = meterInfo.MeterLines
                 .Where(meterLine => meterLine.MeterID == meterDataSet.Meter.ID)
                 .Where(meterLine => meterLine.LineID == dataGroup.Line.ID)
-                .Select(meterLine => meterLine.ID)
-                .DefaultIfEmpty(-1)
-                .First();
+                .Select(meterLine => (int?)meterLine.ID)
+                .FirstOrDefault() ?? -1;
 
             if (meterLineID > 0)
             {
@@ -444,7 +466,48 @@ namespace FaultData.DataResources
                     .FirstOrDefault();
             }
 
-            return new FaultGroup(dataGroup, faults, expressionText);
+            try
+            {
+                if ((object)expressionText == null)
+                    throw new Exception($"Expression text is not defined for line '{dataGroup.Line.AssetKey}'.");
+
+                // Parse fault detection logic into a boolean expression
+                BooleanExpression expression = new BooleanExpression(expressionText);
+
+                // Put digital values into a lookup table
+                Dictionary<string, bool> digitalLookup = dataGroup.DataSeries
+                    .Where(series => series.SeriesInfo.Channel.MeasurementType.Name.Equals("Digital", StringComparison.OrdinalIgnoreCase))
+                    .GroupBy(series => series.SeriesInfo.Channel.Name)
+                    .Where(grouping => grouping.Count() == 1)
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.Single().DataPoints.Any(dataPoint => Convert.ToBoolean(dataPoint.Value)));
+
+                // Apply the digital values to the variables in the boolean expression
+                foreach (BooleanExpression.Variable variable in expression.Variables)
+                {
+                    if (!digitalLookup.TryGetValue(variable.Identifier, out variable.Value))
+                        throw new Exception($"Channel '{variable.Identifier}' that was required for fault detection logic was missing from the meter data set.");
+                }
+
+                // Evaluate the boolean expression
+                return expression.Evaluate();
+            }
+            catch (Exception ex)
+            {
+                // Store the exception so it
+                // can be handled elsewhere
+                Log.Error(ex.Message, ex);
+                return null;
+            }
+        }
+
+        private bool CheckDefaultFaultDetectionLogic(List<Fault> faults)
+        {
+            return faults.Any();
+        }
+
+        private bool CheckFaultValidationLogic(List<Fault> faults)
+        {
+            return faults.Any(fault => !fault.IsSuppressed && fault.Summaries.Any(summary => summary.IsValid));
         }
 
         private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo)

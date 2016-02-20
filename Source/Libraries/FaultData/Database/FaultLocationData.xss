@@ -13,7 +13,7 @@
     <Shape ID="DesignTable:NearestStructure" ZOrder="5" X="1186" Y="451" Height="134" Width="303" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="83" />
     <Shape ID="DesignTable:FaultEmail" ZOrder="3" X="1627" Y="349" Height="172" Width="205" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="121" />
     <Shape ID="DesignTable:EventFaultEmail" ZOrder="2" X="1616" Y="543" Height="153" Width="237" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="83" />
-    <Shape ID="DesignTable:FaultGroup" ZOrder="1" X="938" Y="88" Height="172" Width="224" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="102" />
+    <Shape ID="DesignTable:FaultGroup" ZOrder="1" X="935" Y="83" Height="191" Width="231" AdapterExpanded="true" DataTableExpanded="true" OldAdapterHeight="0" OldDataTableHeight="0" SplitterPosition="121" />
   </Shapes>
   <Connectors />
 </DiagramLayout>

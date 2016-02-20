@@ -236,25 +236,6 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the amount of time, in seconds,
-        /// between the time a file is received and the time
-        /// an email should be sent out by the system.
-        /// </summary>
-        [Setting]
-        [DefaultValue(10.0D)]
-        public double WaitPeriod
-        {
-            get
-            {
-                return m_waitPeriod;
-            }
-            set
-            {
-                m_waitPeriod = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the maximum distance, in seconds,
         /// between a meter's clock and real time.
         /// </summary>

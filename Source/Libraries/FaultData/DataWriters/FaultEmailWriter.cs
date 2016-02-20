@@ -63,6 +63,7 @@ namespace FaultData.DataWriters
         private string m_xdaTimeZone;
         private string m_lengthUnits;
         private EmailSettings m_emailSettings;
+        private FaultEmailSettings m_faultEmailSettings;
 
         #endregion
 
@@ -71,6 +72,7 @@ namespace FaultData.DataWriters
         public FaultEmailWriter()
         {
             m_emailSettings = new EmailSettings();
+            m_faultEmailSettings = new FaultEmailSettings();
         }
 
         #endregion
@@ -100,19 +102,6 @@ namespace FaultData.DataWriters
             set
             {
                 m_timeTolerance = value;
-            }
-        }
-
-        [Setting]
-        public double WaitPeriod
-        {
-            get
-            {
-                return m_waitPeriod;
-            }
-            set
-            {
-                m_waitPeriod = value;
             }
         }
 
@@ -152,6 +141,16 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Category]
+        [SettingName("FaultEmail")]
+        public FaultEmailSettings FaultEmailSettings
+        {
+            get
+            {
+                return m_faultEmailSettings;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -171,7 +170,7 @@ namespace FaultData.DataWriters
 
                 faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
 
-                if (faultDetectionResult ?? faultValidationResult)
+                if (faultDetectionResult == true && (m_faultEmailSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
                 {
                     if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultGroup.EventID) == 0)
                         QueueEventID(faultGroup.EventID);
@@ -218,7 +217,7 @@ namespace FaultData.DataWriters
                 s_username != writer.EmailSettings.Username ||
                 s_password != writer.EmailSettings.SecurePassword ||
                 s_enableSSL != writer.EmailSettings.EnableSSL ||
-                s_waitPeriod != TimeSpan.FromSeconds(writer.WaitPeriod) ||
+                s_waitPeriod != TimeSpan.FromSeconds(writer.FaultEmailSettings.WaitPeriod) ||
                 s_timeZone.Id != writer.XDATimeZone;
 
 
@@ -232,7 +231,7 @@ namespace FaultData.DataWriters
                     s_username = writer.EmailSettings.Username;
                     s_password = writer.EmailSettings.SecurePassword;
                     s_enableSSL = writer.EmailSettings.EnableSSL;
-                    s_waitPeriod = TimeSpan.FromSeconds(writer.WaitPeriod);
+                    s_waitPeriod = TimeSpan.FromSeconds(writer.FaultEmailSettings.WaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
                 });
             }

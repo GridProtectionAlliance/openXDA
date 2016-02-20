@@ -2956,6 +2956,8 @@ namespace FaultData.Database {
             
             private global::System.Data.DataColumn columnFaultDetectionLogicResult;
             
+            private global::System.Data.DataColumn columnDefaultFaultDetectionLogicResult;
+            
             private global::System.Data.DataColumn columnFaultValidationLogicResult;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -3017,6 +3019,14 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn DefaultFaultDetectionLogicResultColumn {
+                get {
+                    return this.columnDefaultFaultDetectionLogicResult;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public global::System.Data.DataColumn FaultValidationLogicResultColumn {
                 get {
                     return this.columnFaultValidationLogicResult;
@@ -3060,12 +3070,13 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public FaultGroupRow AddFaultGroupRow(int EventID, int FaultDetectionLogicResult, int FaultValidationLogicResult) {
+            public FaultGroupRow AddFaultGroupRow(int EventID, int FaultDetectionLogicResult, int DefaultFaultDetectionLogicResult, int FaultValidationLogicResult) {
                 FaultGroupRow rowFaultGroupRow = ((FaultGroupRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
                         EventID,
                         FaultDetectionLogicResult,
+                        DefaultFaultDetectionLogicResult,
                         FaultValidationLogicResult};
                 rowFaultGroupRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowFaultGroupRow);
@@ -3099,6 +3110,7 @@ namespace FaultData.Database {
                 this.columnID = base.Columns["ID"];
                 this.columnEventID = base.Columns["EventID"];
                 this.columnFaultDetectionLogicResult = base.Columns["FaultDetectionLogicResult"];
+                this.columnDefaultFaultDetectionLogicResult = base.Columns["DefaultFaultDetectionLogicResult"];
                 this.columnFaultValidationLogicResult = base.Columns["FaultValidationLogicResult"];
             }
             
@@ -3111,6 +3123,8 @@ namespace FaultData.Database {
                 base.Columns.Add(this.columnEventID);
                 this.columnFaultDetectionLogicResult = new global::System.Data.DataColumn("FaultDetectionLogicResult", typeof(int), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnFaultDetectionLogicResult);
+                this.columnDefaultFaultDetectionLogicResult = new global::System.Data.DataColumn("DefaultFaultDetectionLogicResult", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnDefaultFaultDetectionLogicResult);
                 this.columnFaultValidationLogicResult = new global::System.Data.DataColumn("FaultValidationLogicResult", typeof(int), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnFaultValidationLogicResult);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
@@ -3122,6 +3136,7 @@ namespace FaultData.Database {
                 this.columnID.ReadOnly = true;
                 this.columnID.Unique = true;
                 this.columnEventID.AllowDBNull = false;
+                this.columnDefaultFaultDetectionLogicResult.AllowDBNull = false;
                 this.columnFaultValidationLogicResult.AllowDBNull = false;
             }
             
@@ -3899,6 +3914,17 @@ namespace FaultData.Database {
                 }
                 set {
                     this[this.tableFaultGroup.FaultDetectionLogicResultColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int DefaultFaultDetectionLogicResult {
+                get {
+                    return ((int)(this[this.tableFaultGroup.DefaultFaultDetectionLogicResultColumn]));
+                }
+                set {
+                    this[this.tableFaultGroup.DefaultFaultDetectionLogicResultColumn] = value;
                 }
             }
             
@@ -7097,37 +7123,42 @@ SELECT ID, EventID, FaultEmailID FROM EventFaultEmail WHERE (ID = @ID)";
             tableMapping.ColumnMappings.Add("ID", "ID");
             tableMapping.ColumnMappings.Add("EventID", "EventID");
             tableMapping.ColumnMappings.Add("FaultDetectionLogicResult", "FaultDetectionLogicResult");
+            tableMapping.ColumnMappings.Add("DefaultFaultDetectionLogicResult", "DefaultFaultDetectionLogicResult");
             tableMapping.ColumnMappings.Add("FaultValidationLogicResult", "FaultValidationLogicResult");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[FaultGroup] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ((@IsNull_FaultDetectionLogicResult = 1 AND [FaultDetectionLogicResult] IS NULL) OR ([FaultDetectionLogicResult] = @Original_FaultDetectionLogicResult)) AND ([FaultValidationLogicResult] = @Original_FaultValidationLogicResult))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[FaultGroup] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ((@IsNull_FaultDetectionLogicResult = 1 AND [FaultDetectionLogicResult] IS NULL) OR ([FaultDetectionLogicResult] = @Original_FaultDetectionLogicResult)) AND ([DefaultFaultDetectionLogicResult] = @Original_DefaultFaultDetectionLogicResult) AND ([FaultValidationLogicResult] = @Original_FaultValidationLogicResult))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_FaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultDetectionLogicResult", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultDetectionLogicResult", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DefaultFaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DefaultFaultDetectionLogicResult", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultValidationLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultValidationLogicResult", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[FaultGroup] ([EventID], [FaultDetectionLogicResult], [FaultValidationLogicResult]) VALUES (@EventID, @FaultDetectionLogicResult, @FaultValidationLogicResult);
-SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM FaultGroup WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[FaultGroup] ([EventID], [FaultDetectionLogicResult], [DefaultFaultDetectionLogicResult], [FaultValidationLogicResult]) VALUES (@EventID, @FaultDetectionLogicResult, @DefaultFaultDetectionLogicResult, @FaultValidationLogicResult);
+SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult, FaultValidationLogicResult FROM FaultGroup WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultDetectionLogicResult", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DefaultFaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DefaultFaultDetectionLogicResult", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultValidationLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultValidationLogicResult", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[FaultGroup] SET [EventID] = @EventID, [FaultDetectionLogicResult] = @FaultDetectionLogicResult, [FaultValidationLogicResult] = @FaultValidationLogicResult WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ((@IsNull_FaultDetectionLogicResult = 1 AND [FaultDetectionLogicResult] IS NULL) OR ([FaultDetectionLogicResult] = @Original_FaultDetectionLogicResult)) AND ([FaultValidationLogicResult] = @Original_FaultValidationLogicResult));
-SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM FaultGroup WHERE (ID = @ID)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [dbo].[FaultGroup] SET [EventID] = @EventID, [FaultDetectionLogicResult] = @FaultDetectionLogicResult, [DefaultFaultDetectionLogicResult] = @DefaultFaultDetectionLogicResult, [FaultValidationLogicResult] = @FaultValidationLogicResult WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ((@IsNull_FaultDetectionLogicResult = 1 AND [FaultDetectionLogicResult] IS NULL) OR ([FaultDetectionLogicResult] = @Original_FaultDetectionLogicResult)) AND ([DefaultFaultDetectionLogicResult] = @Original_DefaultFaultDetectionLogicResult) AND ([FaultValidationLogicResult] = @Original_FaultValidationLogicResult));
+SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult, FaultValidationLogicResult FROM FaultGroup WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultDetectionLogicResult", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DefaultFaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DefaultFaultDetectionLogicResult", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@FaultValidationLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultValidationLogicResult", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_FaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultDetectionLogicResult", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultDetectionLogicResult", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DefaultFaultDetectionLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DefaultFaultDetectionLogicResult", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_FaultValidationLogicResult", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "FaultValidationLogicResult", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@ID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
@@ -7145,14 +7176,12 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
             this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM db" +
-                "o.FaultGroup";
+            this._commandCollection[0].CommandText = "SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult, " +
+                "FaultValidationLogicResult FROM dbo.FaultGroup";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = "SELECT FaultGroup.ID, FaultGroup.EventID, FaultGroup.FaultDetectionLogicResult, F" +
-                "aultGroup.FaultValidationLogicResult FROM FaultGroup JOIN Event ON FaultGroup.Ev" +
-                "entID = Event.ID WHERE Event.FileGroupID = @fileGroupID";
+            this._commandCollection[1].CommandText = @"SELECT FaultGroup.ID, FaultGroup.EventID, FaultGroup.FaultDetectionLogicResult, FaultGroup.DefaultFaultDetectionLogicResult, FaultGroup.FaultValidationLogicResult FROM FaultGroup JOIN Event ON FaultGroup.EventID = Event.ID WHERE Event.FileGroupID = @fileGroupID";
             this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@fileGroupID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
@@ -7240,7 +7269,7 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(int Original_ID, int Original_EventID, global::System.Nullable<int> Original_FaultDetectionLogicResult, int Original_FaultValidationLogicResult) {
+        public virtual int Delete(int Original_ID, int Original_EventID, global::System.Nullable<int> Original_FaultDetectionLogicResult, int Original_DefaultFaultDetectionLogicResult, int Original_FaultValidationLogicResult) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
             this.Adapter.DeleteCommand.Parameters[1].Value = ((int)(Original_EventID));
             if ((Original_FaultDetectionLogicResult.HasValue == true)) {
@@ -7251,7 +7280,8 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
                 this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(1));
                 this.Adapter.DeleteCommand.Parameters[3].Value = global::System.DBNull.Value;
             }
-            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_FaultValidationLogicResult));
+            this.Adapter.DeleteCommand.Parameters[4].Value = ((int)(Original_DefaultFaultDetectionLogicResult));
+            this.Adapter.DeleteCommand.Parameters[5].Value = ((int)(Original_FaultValidationLogicResult));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -7272,7 +7302,7 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(int EventID, global::System.Nullable<int> FaultDetectionLogicResult, int FaultValidationLogicResult) {
+        public virtual int Insert(int EventID, global::System.Nullable<int> FaultDetectionLogicResult, int DefaultFaultDetectionLogicResult, int FaultValidationLogicResult) {
             this.Adapter.InsertCommand.Parameters[0].Value = ((int)(EventID));
             if ((FaultDetectionLogicResult.HasValue == true)) {
                 this.Adapter.InsertCommand.Parameters[1].Value = ((int)(FaultDetectionLogicResult.Value));
@@ -7280,7 +7310,8 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
             else {
                 this.Adapter.InsertCommand.Parameters[1].Value = global::System.DBNull.Value;
             }
-            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(FaultValidationLogicResult));
+            this.Adapter.InsertCommand.Parameters[2].Value = ((int)(DefaultFaultDetectionLogicResult));
+            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(FaultValidationLogicResult));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -7301,7 +7332,7 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int EventID, global::System.Nullable<int> FaultDetectionLogicResult, int FaultValidationLogicResult, int Original_ID, int Original_EventID, global::System.Nullable<int> Original_FaultDetectionLogicResult, int Original_FaultValidationLogicResult, int ID) {
+        public virtual int Update(int EventID, global::System.Nullable<int> FaultDetectionLogicResult, int DefaultFaultDetectionLogicResult, int FaultValidationLogicResult, int Original_ID, int Original_EventID, global::System.Nullable<int> Original_FaultDetectionLogicResult, int Original_DefaultFaultDetectionLogicResult, int Original_FaultValidationLogicResult, int ID) {
             this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(EventID));
             if ((FaultDetectionLogicResult.HasValue == true)) {
                 this.Adapter.UpdateCommand.Parameters[1].Value = ((int)(FaultDetectionLogicResult.Value));
@@ -7309,19 +7340,21 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
             else {
                 this.Adapter.UpdateCommand.Parameters[1].Value = global::System.DBNull.Value;
             }
-            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(FaultValidationLogicResult));
-            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((int)(Original_EventID));
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((int)(DefaultFaultDetectionLogicResult));
+            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(FaultValidationLogicResult));
+            this.Adapter.UpdateCommand.Parameters[4].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((int)(Original_EventID));
             if ((Original_FaultDetectionLogicResult.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[5].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[6].Value = ((int)(Original_FaultDetectionLogicResult.Value));
+                this.Adapter.UpdateCommand.Parameters[6].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_FaultDetectionLogicResult.Value));
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[5].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[6].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[6].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[7].Value = global::System.DBNull.Value;
             }
-            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_FaultValidationLogicResult));
-            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(ID));
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((int)(Original_DefaultFaultDetectionLogicResult));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(Original_FaultValidationLogicResult));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((int)(ID));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -7342,8 +7375,8 @@ SELECT ID, EventID, FaultDetectionLogicResult, FaultValidationLogicResult FROM F
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(int EventID, global::System.Nullable<int> FaultDetectionLogicResult, int FaultValidationLogicResult, int Original_ID, int Original_EventID, global::System.Nullable<int> Original_FaultDetectionLogicResult, int Original_FaultValidationLogicResult) {
-            return this.Update(EventID, FaultDetectionLogicResult, FaultValidationLogicResult, Original_ID, Original_EventID, Original_FaultDetectionLogicResult, Original_FaultValidationLogicResult, Original_ID);
+        public virtual int Update(int EventID, global::System.Nullable<int> FaultDetectionLogicResult, int DefaultFaultDetectionLogicResult, int FaultValidationLogicResult, int Original_ID, int Original_EventID, global::System.Nullable<int> Original_FaultDetectionLogicResult, int Original_DefaultFaultDetectionLogicResult, int Original_FaultValidationLogicResult) {
+            return this.Update(EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult, FaultValidationLogicResult, Original_ID, Original_EventID, Original_FaultDetectionLogicResult, Original_DefaultFaultDetectionLogicResult, Original_FaultValidationLogicResult, Original_ID);
         }
     }
     

@@ -237,7 +237,7 @@ namespace FaultData.DataOperations
                 m_eventList.Add(Tuple.Create(CreateWaveformKey(eventDataRow), eventRow));
             }
 
-            Log.Info(string.Format("Finished processing {0} events.", m_eventTable.Count));
+            Log.Info(string.Format("Finished processing {0} events.", m_eventList.Count));
         }
 
         private void LoadDisturbances(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
