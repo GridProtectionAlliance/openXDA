@@ -479,7 +479,7 @@ namespace FaultData.DataResources
                     .Where(series => series.SeriesInfo.Channel.MeasurementType.Name.Equals("Digital", StringComparison.OrdinalIgnoreCase))
                     .GroupBy(series => series.SeriesInfo.Channel.Name)
                     .Where(grouping => grouping.Count() == 1)
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.Single().DataPoints.Any(dataPoint => Convert.ToBoolean(dataPoint.Value)));
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.Single().DataPoints.Any(dataPoint => Convert.ToBoolean(dataPoint.Value)), StringComparer.OrdinalIgnoreCase);
 
                 // Apply the digital values to the variables in the boolean expression
                 foreach (BooleanExpression.Variable variable in expression.Variables)

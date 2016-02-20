@@ -189,17 +189,20 @@ namespace FaultData.DataOperations
                 .Select(str => Tuple.Create(str[0], sourceIndex))
                 .ToList();
 
-            if (sourceIndexes.Count == 0)
-                return;
-
             if (series.Channel.MeasurementType.Name == "Digital")
             {
+                if (sourceIndexes.Any(tuple => tuple.Item2 < 0 || tuple.Item2 >= meterDataSet.Digitals.Count))
+                    return;
+
                 dataSeries = sourceIndexes
                     .Select(tuple => (tuple.Item1 != '-') ? meterDataSet.Digitals[tuple.Item2].Copy() : meterDataSet.Digitals[Math.Abs(tuple.Item2)].Negate())
                     .Aggregate((series1, series2) => series1.Add(series2));
             }
             else
             {
+                if (sourceIndexes.Any(tuple => tuple.Item2 < 0 || tuple.Item2 >= meterDataSet.DataSeries.Count))
+                    return;
+
                 dataSeries = sourceIndexes
                     .Select(tuple => (tuple.Item1 != '-') ? meterDataSet.DataSeries[tuple.Item2].Copy() : meterDataSet.DataSeries[Math.Abs(tuple.Item2)].Negate())
                     .Aggregate((series1, series2) => series1.Add(series2));
