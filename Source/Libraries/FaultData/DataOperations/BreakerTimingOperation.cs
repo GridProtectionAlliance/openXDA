@@ -221,6 +221,11 @@ namespace FaultData.DataOperations
                 double value;
                 double nextValue;
 
+                // If cycleIndex is zero, assume that the breaker
+                // is open at the very start of the waveform
+                if (cycleIndex == 0)
+                    return 0;
+
                 largestPostfaultPeak = 0.0D;
                 largestFaultCyclePeak = 0.0D;
 
