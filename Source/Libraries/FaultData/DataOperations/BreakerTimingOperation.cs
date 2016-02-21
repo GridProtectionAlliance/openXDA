@@ -147,14 +147,13 @@ namespace FaultData.DataOperations
             {
                 m_waveform = waveform;
                 m_cycleDataGroup = cycleDataGroup;
+                m_systemFrequency = systemFrequency;
                 m_timeCleared = FindBreakerOpen(breakerTiming.TimeEnergized.Index, openBreakerThreshold);
 
                 if ((object)m_timeCleared != null)
                     m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
                 else
                     m_timing = double.NaN;
-
-                m_systemFrequency = systemFrequency;
             }
 
             #endregion
