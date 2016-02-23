@@ -76,6 +76,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -797,8 +798,12 @@ namespace openXDA
                             systemSettings: systemSettings,
                             dbAdapterContainer: dbAdapterContainer);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        // There may be a problem here where the outer exception's call stack
+                        // was overwritten by the call stack of the point where it was thrown
+                        ExceptionDispatchInfo exInfo = ExceptionDispatchInfo.Capture(ex);
+
                         try
                         {
                             // Attempt to set the error flag on the file group
@@ -809,15 +814,15 @@ namespace openXDA
                             fileGroup.Error = 1;
                             fileInfo.SubmitChanges();
                         }
-                        catch (Exception ex)
+                        catch (Exception fileGroupError)
                         {
                             // Log exceptions that occur when setting the error flag on the file group
-                            string message = $"Exception occurred setting error flag on file group: {ex.Message}";
-                            OnProcessException(new Exception(message, ex));
+                            string message = $"Exception occurred setting error flag on file group: {fileGroupError.Message}";
+                            OnProcessException(new Exception(message, fileGroupError));
                         }
 
                         // Throw the original exception
-                        throw;
+                        exInfo.Throw();
                     }
                 }
             }
@@ -1003,22 +1008,27 @@ namespace openXDA
                     ProcessMeterDataSet(meterDataSet, systemSettings, dbAdapterContainer);
                     OnStatusMessage($"Finished processing data from file \"{filePath}\".");
                 }
-                catch
+                catch (Exception ex)
                 {
+                    // There seems to be a problem here where the outer exception's call stack
+                    // was overwritten by the call stack of the point where it was thrown
+                    ExceptionDispatchInfo exInfo = ExceptionDispatchInfo.Capture(ex);
+
                     try
                     {
                         // Attempt to set the error flag on the file group
                         if ((object)fileGroup != null)
                             fileGroup.Error = 1;
                     }
-                    catch (Exception ex)
+                    catch (Exception fileGroupError)
                     {
                         // Log any exceptions that occur when attempting to set the error flag on the file group
-                        string message = $"Exception occurred setting error flag on file group: {ex.Message}";
-                        OnProcessException(new Exception(message, ex));
+                        string message = $"Exception occurred setting error flag on file group: {fileGroupError.Message}";
+                        OnProcessException(new Exception(message, fileGroupError));
                     }
 
-                    throw;
+                    // Throw the original exception
+                    exInfo.Throw();
                 }
                 finally
                 {
@@ -1435,7 +1445,7 @@ namespace openXDA
         }
 
         // Determines whether the duration of data in the file exceeds a user-defined threshold.
-        private void ValidateFileDuration(string filePath, double maxFileDuration, FileGroup fileGroup)
+        private static void ValidateFileDuration(string filePath, double maxFileDuration, FileGroup fileGroup)
         {
             double timeDifference;
 
@@ -1452,7 +1462,7 @@ namespace openXDA
         }
 
         // Determines whether the timestamps in the file extend beyond user-defined thresholds.
-        private void ValidateFileTimestamps(string filePath, FileGroup fileGroup, SystemSettings systemSettings, FileInfoDataContext fileInfo)
+        private static void ValidateFileTimestamps(string filePath, FileGroup fileGroup, SystemSettings systemSettings, FileInfoDataContext fileInfo)
         {
             DateTime now;
             double timeDifference;
