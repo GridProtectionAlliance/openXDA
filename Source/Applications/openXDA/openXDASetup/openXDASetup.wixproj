@@ -121,6 +121,9 @@
     <WixTasksPath>$(WixToolPath)WixTasks.dll</WixTasksPath>
   </PropertyGroup>
   <Import Project="$(WixTargetsPath)" Condition="Exists($(WixTargetsPath))" />
+  <PropertyGroup>
+    <PreBuildEvent>"$(SolutionDir)\Tools\SqlClrAssemblyEncoder\bin\$(ConfigurationName)\SqlClrAssemblyEncoder.exe" -o %27$(ProjectDir)\obj\SqlClr.wxi%27 %27$(SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll%27 %27$(TargetDir)\..\..\Libraries\openHistorian.XDALink.SqlClr.dll%27</PreBuildEvent>
+  </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.

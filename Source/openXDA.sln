@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B3493118-9437-497D-A716-24232CE0D4F2}"
 EndProject
@@ -75,6 +75,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDAConsole", "Applications\openXDA\openXDAConsole\openXDAConsole.csproj", "{72F417E9-F592-4417-B87C-B681AE707294}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "openXDASetup", "Applications\openXDA\openXDASetup\openXDASetup.wixproj", "{36380070-81B6-4D71-A80A-C5AE76B0E357}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974} = {CE674B18-F140-47E4-A22C-8E7C37FAA974}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openHistorian", "openHistorian", "{947C5857-A97F-499E-BC07-4509132EAF52}"
 	ProjectSection(SolutionItems) = preProject
@@ -90,6 +93,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openHistorian.XDALink.SqlClr", "Libraries\openHistorian.XDALink.SqlClr\openHistorian.XDALink.SqlClr.csproj", "{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openHistorian.XDALink", "Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj", "{7F731255-FA83-4DBF-9E0F-C22AE4845E76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlClrAssemblyEncoder", "Tools\SqlClrAssemblyEncoder\SqlClrAssemblyEncoder.csproj", "{CE674B18-F140-47E4-A22C-8E7C37FAA974}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -173,6 +178,14 @@ Global
 		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F731255-FA83-4DBF-9E0F-C22AE4845E76}.Release|x86.ActiveCfg = Release|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Debug|x86.Build.0 = Debug|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Release|x86.ActiveCfg = Release|Any CPU
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -193,5 +206,6 @@ Global
 		{947C5857-A97F-499E-BC07-4509132EAF52} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{7F731255-FA83-4DBF-9E0F-C22AE4845E76} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
 	EndGlobalSection
 EndGlobal

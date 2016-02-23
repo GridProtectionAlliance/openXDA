@@ -77,14 +77,15 @@
     <CustomAction Id="CreateDBUser" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="GrantDBPermissions.SetProperty" Property="GrantDBPermissions" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[DBPERMISSIONSQUERY]" />
     <CustomAction Id="GrantDBPermissions" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    
-    <CustomAction Id="GSF.SortedTreeStore.SqlClr.SetProperty" Property="GSF.SortedTreeStore.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]GSF.SortedTreeStore.SqlClr[\]] AUTHORIZATION dbo FROM '[#GSF.SortedTreeStore.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+
+    <?include obj\SqlClr.wxi ?>
+    <CustomAction Id="GSF.SortedTreeStore.SqlClr.SetProperty" Property="GSF.SortedTreeStore.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]GSF.SortedTreeStore.SqlClr[\]] AUTHORIZATION dbo FROM [GSF.SortedTreeStore.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
     <CustomAction Id="GSF.SortedTreeStore.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="openHistorian.Core.SqlClr.SetProperty" Property="openHistorian.Core.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.Core.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.Core.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="openHistorian.Core.SqlClr.SetProperty" Property="openHistorian.Core.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.Core.SqlClr[\]] AUTHORIZATION dbo FROM [openHistorian.Core.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
     <CustomAction Id="openHistorian.Core.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="openHistorian.SqlClr.SetProperty" Property="openHistorian.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="openHistorian.SqlClr.SetProperty" Property="openHistorian.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.SqlClr[\]] AUTHORIZATION dbo FROM [openHistorian.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
     <CustomAction Id="openHistorian.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
-    <CustomAction Id="openHistorian.XDALink.SqlClr.SetProperty" Property="openHistorian.XDALink.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.XDALink.SqlClr[\]] AUTHORIZATION dbo FROM '[#openHistorian.XDALink.SqlClr.dll]' WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="openHistorian.XDALink.SqlClr.SetProperty" Property="openHistorian.XDALink.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.XDALink.SqlClr[\]] AUTHORIZATION dbo FROM [openHistorian.XDALink.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
     <CustomAction Id="openHistorian.XDALink.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     
     <CustomAction Id="openXDA.sql.SetProperty" Property="openXDA.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#openXDA.sql]" />
@@ -177,12 +178,6 @@
       <Component Id="DefaultTrendingAlarms">
         <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\04 - DefaultTrendingAlarms.sql" />
       </Component>
-
-      <!-- openHistorian Dependencies -->
-      <ComponentRef Id="GSF.SortedTreeStore.SqlClr" />
-      <ComponentRef Id="openHistorian.Core.SqlClr" />
-      <ComponentRef Id="openHistorian.SqlClr" />
-      <ComponentRef Id="openHistorian.XDALink.SqlClr" />
     </ComponentGroup>
     
     <!-- Service Components -->
@@ -332,18 +327,6 @@
       </Component>
       <Component Id="openHistorian.Core">
         <File Id="openHistorian.Core.dll" Name="openHistorian.Core.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.dll" />
-      </Component>
-      <Component Id="GSF.SortedTreeStore.SqlClr">
-        <File Id="GSF.SortedTreeStore.SqlClr.dll" Name="GSF.SortedTreeStore.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll" />
-      </Component>
-      <Component Id="openHistorian.Core.SqlClr">
-        <File Id="openHistorian.Core.SqlClr.dll" Name="openHistorian.Core.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll" />
-      </Component>
-      <Component Id="openHistorian.SqlClr">
-        <File Id="openHistorian.SqlClr.dll" Name="openHistorian.SqlClr.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll" />
-      </Component>
-      <Component Id="openHistorian.XDALink.SqlClr">
-        <File Id="openHistorian.XDALink.SqlClr.dll" Name="$(var.openHistorian.XDALink.SqlClr.TargetFileName)" Source="$(var.openHistorian.XDALink.SqlClr.TargetPath)" />
       </Component>
     </ComponentGroup>
   </Fragment>
