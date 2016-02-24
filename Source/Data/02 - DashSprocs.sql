@@ -243,7 +243,7 @@ FROM
 				(
 					SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
 					FROM MeterDataQualitySummary
-					WHERE Date BETWEEN @EventDateFrom AND @EventDateTo
+					WHERE Date BETWEEN @EventDateFrom AND @EventDateTo AND MeterID IN (SELECT * FROM @MeterIDs)
 				) MeterDataQualitySummary
 			) MeterDataQualitySummary
 			GROUP BY Date, CompletenessLevel
@@ -350,8 +350,8 @@ GO
 -- Author:		<Author, Jeff Walker>
 -- Create date: <Create Date, Aug 31, 2015>
 -- Description:	<Description, Selects Correctness for a MeterID by Date for date range>
--- [selectCorrectnessForMeterIDByDateRange2] '01/10/2013', '05/10/2015', '0'
--- [selectCorrectnessForMeterIDByDateRange2] '08/05/2007', '09/04/2008', '108,109,86,87,110,118,13,17,167,168,77,78,79,80,70,46,169,185,186,40,6,170,88,89,52,192,15,16,91,92,93,94,95,96,97,28,98,99,100,101,102,171,57,172,125,173,63,19,104,174,55,105,106,107,103,111,112,113,60,53,160,114,115,116,117,68,12,58,54,8,59,18,20,9,193,119,120,81,164,121,175,156,157,176,177,11,122,123,21,65,1,41,39,23,51,127,128,129,130,165,76,131,132,133,134,135,136,137,14,124,45,47,73,64,2,138,139,140,141,142,143,82,83,62,50,144,145,56,30,42,146,147,148,149,150,151,32,152,126,74,67,10,66,22,178,179,29,180,48,181,153,154,155,194,24,43,34,4,69,37,158,26,182,36,159,161,162,163,71,166,25,31,44,49,72,61,75,187,188,189,190,191,3,84,85,7,195,90,183,27,196,184,35,33,197,198,199,200,201,38,5,', 'jwalker'
+-- [selectCorrectnessForMeterIDByDateRange] '01/10/2013', '05/10/2015', '0'
+-- [selectCorrectnessForMeterIDByDateRange] '08/05/2007', '09/04/2008', '108,109,86,87,110,118,13,17,167,168,77,78,79,80,70,46,169,185,186,40,6,170,88,89,52,192,15,16,91,92,93,94,95,96,97,28,98,99,100,101,102,171,57,172,125,173,63,19,104,174,55,105,106,107,103,111,112,113,60,53,160,114,115,116,117,68,12,58,54,8,59,18,20,9,193,119,120,81,164,121,175,156,157,176,177,11,122,123,21,65,1,41,39,23,51,127,128,129,130,165,76,131,132,133,134,135,136,137,14,124,45,47,73,64,2,138,139,140,141,142,143,82,83,62,50,144,145,56,30,42,146,147,148,149,150,151,32,152,126,74,67,10,66,22,178,179,29,180,48,181,153,154,155,194,24,43,34,4,69,37,158,26,182,36,159,161,162,163,71,166,25,31,44,49,72,61,75,187,188,189,190,191,3,84,85,7,195,90,183,27,196,184,35,33,197,198,199,200,201,38,5,', 'jwalker'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectCorrectnessForMeterIDByDateRange]
 	@EventDateFrom as DateTime,
@@ -410,9 +410,9 @@ FROM
 					END AS CorrectnessLevel
 				FROM
 				(
-					SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Correctness
+					SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness
 					FROM MeterDataQualitySummary
-					WHERE Date BETWEEN @EventDateFrom AND @EventDateTo
+					WHERE Date BETWEEN @EventDateFrom AND @EventDateTo AND MeterID IN (SELECT * FROM @MeterIDs)
 				) MeterDataQualitySummary
 			) MeterDataQualitySummary
 			GROUP BY Date, CorrectnessLevel
@@ -911,9 +911,8 @@ GO
 -- [selectFaultsForMeterIDByDateRange] '01/12/2011', '03/12/2015', '52', 'jwalker'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectFaultsForMeterIDByDateRange]
-	-- Add the parameters for the stored procedure here
-	@EventDateFrom as DateTime, 
-	@EventDateTo as DateTime, 
+	@EventDateFrom as DateTime,
+	@EventDateTo as DateTime,
 	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
 AS
@@ -925,72 +924,55 @@ BEGIN
 
 	INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
 
-	declare  @TempTable TABLE (thedate Date, thecount int, theclass varchar(100));
-
-	insert into @TempTable (thedate,thecount,theclass)
-
-		SELECT CAST([StartTime] as Date) as thedate, [dbo].[EventType].[ID], [dbo].[Line].[VoltageKV] as theclass
-
-		FROM [dbo].[Event] 
-		
-		inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID] and [dbo].[EventType].[Name] = 'Fault'
-		inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[Event].[MeterID]
-		inner join [dbo].[Line] on [dbo].[Line].[ID] = [dbo].[Event].[LineID]
-
-		where [MeterID] in ( Select * from @MeterIDs)
-		and 
-		CAST([StartTime] as Date) between @EventDateFrom and @EventDateTo
-
-   declare  @composite TABLE (thedate Date, thecount int, theclass int );
-
-   declare @counter int = 0
-   declare @EventDate as DateTime
-   declare @NumberOfDays as INT
+	declare @counter int = 0
+	declare @EventDate as DateTime
+	declare @NumberOfDays as INT
 
 	set @NumberOfDays = DateDiff ( day  , @EventDateFrom , @EventDateTo )
 
-   set @EventDate = @EventDateFrom
+	set @EventDate = @EventDateFrom
 
-   PRINT @NumberOfDays
-   PRINT @EventDate
+	PRINT @NumberOfDays
+	PRINT @EventDate
 
-   while (@counter <= @NumberOfDays)
+	CREATE TABLE #temp(Date DATE)
 
-   begin
+	WHILE (@counter <= @numberOfDays)
+	BEGIN
+		INSERT INTO #temp VALUES(@eventDate)
+		SET @eventDate = DATEADD(DAY, 1, @eventDate)
+		SET @counter = @counter + 1
+	END
 
-	   DECLARE @class_KV int
-
-				DECLARE class_cursor CURSOR
-					FOR
-					select distinct VoltageKV as class from [dbo].[Line] 
-					join Channel on Line.ID = Channel.LineID
-					join Meter on Channel.MeterID = Meter.ID
-					where Meter.ID in (select * from authMeters(@username))
-					order by VoltageKV desc
-					
-					OPEN class_cursor
-
-					FETCH NEXT FROM class_cursor INTO @class_KV
-
-					WHILE @@FETCH_STATUS = 0
-					BEGIN
-
-   						insert into @composite (thedate, thecount, theclass) values (
-							CAST(@EventDate as Date),
-							(Select count(thecount) from @TempTable where theclass = @class_KV and thedate = @EventDate),
-							@class_KV)
-
-			    	FETCH NEXT FROM class_cursor INTO @class_KV
-				END
-
-				CLOSE class_cursor
-				DEALLOCATE class_cursor
-
-		set @EventDate = DateAdd(day, 1, @EventDate)
-		set @counter = @counter + 1
-	end
-
-   select * from @composite
+	SELECT
+		#temp.Date AS thedate,
+		COALESCE(Event.FaultCount, 0) AS thecount,
+		Line.VoltageKV AS theclass
+	FROM
+		#temp CROSS JOIN
+		(
+			SELECT DISTINCT VoltageKV
+			FROM Line
+		) Line LEFT OUTER JOIN
+		(
+			SELECT
+				CAST(Event.StartTime AS Date) AS Date,
+				Line.VoltageKV,
+				COUNT(*) AS FaultCount
+			FROM
+				Event JOIN
+				EventType ON Event.EventTypeID = EventType.ID JOIN
+				Line ON Event.LineID = Line.ID
+			WHERE
+				EventType.Name = 'Fault' AND
+				Event.MeterID IN (SELECT * FROM @MeterIDs)
+			GROUP BY
+				CAST(Event.StartTime AS Date),
+				Line.VoltageKV
+		) Event ON Event.Date = #temp.Date AND Event.VoltageKV = Line.VoltageKV
+	ORDER BY
+		#temp.Date,
+		Line.VoltageKV DESC
 
 END
 GO
