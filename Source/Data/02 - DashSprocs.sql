@@ -185,12 +185,10 @@ GO
 -- selectCompletenessForMeterIDByDateRange '01/01/2014', '01/01/2015', '108,109,86,87,110,118,13,17,167,168,77,78,79,80,70,46,169,185,186,40,6,170,88,89,52,192,15,16,91,92,93,94,95,96,97,28,98,99,100,101,102,171,57,172,125,173,63,19,104,174,55,105,106,107,103,111,112,113,60,53,160,114,115,116,117,68,12,58,54,8,59,18,20,9,193,119,120,81,164,121,175,156,157,176,177,11,122,123,21,65,1,41,39,23,51,127,128,129,130,165,76,131,132,133,134,135,136,137,14,124,45,47,73,64,2,138,139,140,141,142,143,82,83,62,50,144,145,56,30,42,146,147,148,149,150,151,32,152,126,74,67,10,66,22,178,179,29,180,48,181,153,154,155,194,24,43,34,4,69,37,158,26,182,36,159,161,162,163,71,166,25,31,44,49,72,61,75,187,188,189,190,191,3,84,85,7,195,90,183,27,196,184,35,33,197,198,199,200,201,38,5,', 'jwalker'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectCompletenessForMeterIDByDateRange]
-	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
 	@EventDateTo as DateTime, 
 	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
-
 AS
 BEGIN
 
@@ -205,102 +203,58 @@ DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eve
 
 SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
 
-CREATE TABLE #temp(Date DATE , First float, Second float, Third float, Fourth float, Fifth float, Sixth float)
+CREATE TABLE #temp(Date DATE)
 
 WHILE (@counter <= @numberOfDays)
 BEGIN
-    INSERT INTO #temp VALUES(@eventDate,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	> 100),0)
-	
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 98 and 100),0)
-
-	,
-     
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 90 and 97),0)
-
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 70 and 89),0)
-
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 50 and 69),0)
-
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 1 and 49),0)	
-	
-	--,
-
-	--COALESCE((SELECT count(distinct [MeterID])
-	--FROM [dbo].[MeterDataQualitySummary] 
-	--where (MeterID in ( Select * from @MeterIDs) )
-	--		and MeterID in (select * from authMeters(@username))
-	--		and [Date] = @eventDate 
-	--and COALESCE(CAST(CAST(
-	--(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints)
-	-- as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	--=0),0)
-
-	)
-
+    INSERT INTO #temp VALUES(@eventDate)
     SET @eventDate = DATEADD(DAY, 1, @eventDate)
     SET @counter = @counter + 1
 END
 
-Select * from #temp
+SELECT
+	Date,
+	COALESCE(First, 0) AS First,
+	COALESCE(Second, 0) AS Second,
+	COALESCE(Third, 0) AS Third,
+	COALESCE(Fourth, 0) AS Fourth,
+	COALESCE(Fifth, 0) AS Fifth,
+	COALESCE(Sixth, 0) AS Sixth
+FROM
+(
+    SELECT #temp.Date, CompletenessLevel, COALESCE(MeterCount, 0) AS MeterCount
+    FROM
+        #temp LEFT OUTER JOIN
+        (
+			SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
+			FROM
+			(
+				SELECT
+					Date,
+					CASE
+						WHEN Completeness >= 100.0 THEN 'First'
+						WHEN 98.0 <= Completeness AND Completeness < 100.0 THEN 'Second'
+						WHEN 90.0 <= Completeness AND Completeness < 98.0 THEN 'Third'
+						WHEN 70.0 <= Completeness AND Completeness < 90.0 THEN 'Fourth'
+						WHEN 50.0 <= Completeness AND Completeness < 70.0 THEN 'Fifth'
+						WHEN 0.0 < Completeness AND Completeness < 50.0 THEN 'Sixth'
+					END AS CompletenessLevel
+				FROM
+				(
+					SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
+					FROM MeterDataQualitySummary
+					WHERE Date BETWEEN @EventDateFrom AND @EventDateTo
+				) MeterDataQualitySummary
+			) MeterDataQualitySummary
+			GROUP BY Date, CompletenessLevel
+        ) MeterDataQualitySummary ON #temp.Date = MeterDataQualitySummary.Date
+) MeterDataQualitySummary
+PIVOT
+(
+    SUM(MeterCount)
+    FOR MeterDataQualitySummary.CompletenessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
+) as pvt
+ORDER BY Date
 
 DROP TABLE #temp
 
@@ -315,7 +269,6 @@ GO
 -- selectCompletenessForMeterIDsByDate '08/01/2006', '08/31/2015', '32,33,10,11,34,42,91,92,1,2,3,4,93,109,110,94,12,13,116,15,16,17,18,19,20,21,22,23,24,25,26,95,96,49,97,28,98,29,30,31,27,35,36,37,84,38,39,40,41,117,43,44,5,88,45,99,80,81,100,101,46,47,51,52,53,54,89,55,56,57,58,59,60,61,48,62,63,64,65,66,67,6,7,68,69,70,71,72,73,74,75,76,50,102,103,104,105,77,78,79,118,82,106,83,85,86,87,90,111,112,113,114,115,8,9,119,14,107,120,108,121,122,123,124,125,', 'jwalker'
 -- selectCompletenessForMeterIDsByDate '08/01/2015', '08/31/2015', '32,33,10,11,34,42,91,92,1,2,3,4,93,109,110,94,12,13,116,15,16,17,18,19,20,21,22,23,24,25,26,95,96,49,97,28,98,29,30,31,27,35,36,37,84,38,39,40,41,117,43,44,5,88,45,99,80,81,100,101,46,47,51,52,53,54,89,55,56,57,58,59,60,61,48,62,63,64,65,66,67,6,7,68,69,70,71,72,73,74,75,76,50,102,103,104,105,77,78,79,118,82,106,83,85,86,87,90,111,112,113,114,115,8,9,119,14,107,120,108,121,122,123,124,125,', 'jwalker'
 -- =============================================
-
 CREATE PROCEDURE [dbo].[selectCompletenessForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
@@ -401,12 +354,10 @@ GO
 -- [selectCorrectnessForMeterIDByDateRange2] '08/05/2007', '09/04/2008', '108,109,86,87,110,118,13,17,167,168,77,78,79,80,70,46,169,185,186,40,6,170,88,89,52,192,15,16,91,92,93,94,95,96,97,28,98,99,100,101,102,171,57,172,125,173,63,19,104,174,55,105,106,107,103,111,112,113,60,53,160,114,115,116,117,68,12,58,54,8,59,18,20,9,193,119,120,81,164,121,175,156,157,176,177,11,122,123,21,65,1,41,39,23,51,127,128,129,130,165,76,131,132,133,134,135,136,137,14,124,45,47,73,64,2,138,139,140,141,142,143,82,83,62,50,144,145,56,30,42,146,147,148,149,150,151,32,152,126,74,67,10,66,22,178,179,29,180,48,181,153,154,155,194,24,43,34,4,69,37,158,26,182,36,159,161,162,163,71,166,25,31,44,49,72,61,75,187,188,189,190,191,3,84,85,7,195,90,183,27,196,184,35,33,197,198,199,200,201,38,5,', 'jwalker'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectCorrectnessForMeterIDByDateRange]
-	-- Add the parameters for the stored procedure here
-	@EventDateFrom as DateTime, 
+	@EventDateFrom as DateTime,
 	@EventDateTo as DateTime, 
 	@MeterID as nvarchar(MAX),
 	@username as nvarchar(4000)
-
 AS
 BEGIN
 
@@ -421,90 +372,58 @@ DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eve
 
 SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
 
-CREATE TABLE #temp(Date DATE , First float, Second float, Third float, Fourth float, Fifth float, Sixth float)
+CREATE TABLE #temp(Date DATE)
 
 WHILE (@counter <= @numberOfDays)
 BEGIN
-    INSERT INTO #temp VALUES(@eventDate,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	> 100),0)
-	
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 98 and 100),0)
-
-	,
-     
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 90 and 97),0)
-
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 70 and 89),0)
-
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 50 and 69),0)
-
-	,
-
-	COALESCE((SELECT count(distinct [MeterID])
-	FROM [dbo].[MeterDataQualitySummary] 
-	where (MeterID in ( Select * from @MeterIDs) )
-			and MeterID in (select * from authMeters(@username))
-			and [Date] = @eventDate 
-	and COALESCE(CAST(CAST(
-	(GoodPoints)
-	 as float) / NULLIF(cast(expectedPoints as float),0) * 100 as int),0)
-	between 1 and 49),0)	
-
-	)
-
+    INSERT INTO #temp VALUES(@eventDate)
     SET @eventDate = DATEADD(DAY, 1, @eventDate)
     SET @counter = @counter + 1
 END
 
-Select * from #temp
+SELECT
+	Date,
+	COALESCE(First, 0) AS First,
+	COALESCE(Second, 0) AS Second,
+	COALESCE(Third, 0) AS Third,
+	COALESCE(Fourth, 0) AS Fourth,
+	COALESCE(Fifth, 0) AS Fifth,
+	COALESCE(Sixth, 0) AS Sixth
+FROM
+(
+    SELECT #temp.Date, CorrectnessLevel, COALESCE(MeterCount, 0) AS MeterCount
+    FROM
+        #temp LEFT OUTER JOIN
+        (
+			SELECT Date, CorrectnessLevel, COUNT(*) AS MeterCount
+			FROM
+			(
+				SELECT
+					Date,
+					CASE
+						WHEN Correctness >= 100.0 THEN 'First'
+						WHEN 98.0 <= Correctness AND Correctness < 100.0 THEN 'Second'
+						WHEN 90.0 <= Correctness AND Correctness < 98.0 THEN 'Third'
+						WHEN 70.0 <= Correctness AND Correctness < 90.0 THEN 'Fourth'
+						WHEN 50.0 <= Correctness AND Correctness < 70.0 THEN 'Fifth'
+						WHEN 0.0 < Correctness AND Correctness < 50.0 THEN 'Sixth'
+					END AS CorrectnessLevel
+				FROM
+				(
+					SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Correctness
+					FROM MeterDataQualitySummary
+					WHERE Date BETWEEN @EventDateFrom AND @EventDateTo
+				) MeterDataQualitySummary
+			) MeterDataQualitySummary
+			GROUP BY Date, CorrectnessLevel
+        ) MeterDataQualitySummary ON #temp.Date = MeterDataQualitySummary.Date
+) MeterDataQualitySummary
+PIVOT
+(
+    SUM(MeterCount)
+    FOR MeterDataQualitySummary.CorrectnessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
+) as pvt
+ORDER BY Date
 
 DROP TABLE #temp
 
@@ -519,7 +438,6 @@ GO
 -- selectCorrectnessForMeterIDsByDate '01/01/2007', '01/01/2008', '1,2,3,4,5,6,7,8,9,', 'jwalker'
 -- selectCorrectnessForMeterIDsByDate '08/01/2015', '08/31/2015', '32,33,10,11,34,42,91,92,1,2,3,4,93,109,110,94,12,13,116,15,16,17,18,19,20,21,22,23,24,25,26,95,96,49,97,28,98,29,30,31,27,35,36,37,84,38,39,40,41,117,43,44,5,88,45,99,80,81,100,101,46,47,51,52,53,54,89,55,56,57,58,59,60,61,48,62,63,64,65,66,67,6,7,68,69,70,71,72,73,74,75,76,50,102,103,104,105,77,78,79,118,82,106,83,85,86,87,90,111,112,113,114,115,8,9,119,14,107,120,108,121,122,123,124,125,', 'jwalker'
 -- =============================================
-
 CREATE PROCEDURE [dbo].[selectCorrectnessForMeterIDsByDate]
 	-- Add the parameters for the stored procedure here
 	@EventDateFrom as DateTime, 
