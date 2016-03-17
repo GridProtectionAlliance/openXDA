@@ -493,9 +493,8 @@ namespace FaultData.DataResources
             }
             catch (Exception ex)
             {
-                // Store the exception so it
-                // can be handled elsewhere
-                Log.Error(ex.Message, ex);
+                // Log the exception as a warning
+                Log.Warn(ex.Message, ex);
                 return null;
             }
         }
