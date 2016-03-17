@@ -170,7 +170,7 @@ namespace FaultData.DataWriters
 
                 faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
 
-                if (faultDetectionResult == true && (m_faultEmailSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
+                if (faultDetectionResult == true || (m_faultEmailSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
                 {
                     if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultGroup.EventID) == 0)
                         QueueEventID(faultGroup.EventID);
