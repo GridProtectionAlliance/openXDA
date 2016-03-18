@@ -1761,28 +1761,49 @@ CREATE PROCEDURE [dbo].[selectSiteLinesDetailsByDate]
 AS
 BEGIN
     SET NOCOUNT ON;
-
-    SELECT 
-    [Event].[LineID] as thelineid, 
-    [Event].[ID] as theeventid, 
-    [EventType].Name as theeventtype,
-    CAST(Coalesce(CAST([FaultSummary].[Inception] AS datetime2(7)), CAST([Event].[StartTime] AS datetime2(7))) as varchar(26)) as theinceptiontime,
-    [MeterLine].[LineName] + ' ' + [Line].[AssetKey] as thelinename,
-    [VoltageKV] as voltage,
-    COALESCE([FaultSummary].[FaultType],'N/A') as thefaulttype,
-    COALESCE([FaultSummary].[Distance],0) as thecurrentdistance,
-    [dbo].[EventHasImpactedComponents]([Event].[ID]) as pqiexists,
-    [dbo].[HasICFResult]([Event].[ID]) as easexists
-
-    from Event 
-    join [Line] on [Event].[LineID] = [Line].[ID]
-    left outer join [FaultSummary] on [FaultSummary].[EventID] = [Event].[ID] and [IsSelectedAlgorithm] = 1
-    join [Meter] on [Meter].[ID] = @MeterID
-    join [MeterLine] on [MeterLine].MeterID = @MeterID and [MeterLine].LineID = [Line].[ID]
-    join [EventType] on [Event].[EventTypeID] = [EventType].ID
-
-    where Cast([Event].[StartTime] as Date) = @EventDate and [Event].[MeterID] = @MeterID
-    order by [Event].[StartTime] ASC
+	
+	SELECT 
+		Event.LineID AS thelineid, 
+		Event.ID AS theeventid, 
+		EventType.Name AS theeventtype,
+		CAST(Event.StartTime AS VARCHAR(26)) AS theinceptiontime,
+		MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
+		Line.VoltageKV AS voltage,
+		COALESCE(FaultSummary.FaultType, Disturbance.Phase, '') AS thefaulttype,
+		CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)) + ' mi', '') END AS thecurrentdistance,
+		dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
+		dbo.HasICFResult(Event.ID) AS easexists
+	FROM
+		Event JOIN
+		EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
+		(
+			SELECT
+				Disturbance.EventID,
+				Disturbance.EventTypeID,
+				Phase.Name AS Phase,
+				ROW_NUMBER() OVER(PARTITION BY EventID ORDER BY Magnitude, StartTime) AS SagPriority,
+				ROW_NUMBER() OVER(PARTITION BY EventID ORDER BY Magnitude DESC, StartTime) AS SwellPriority
+			FROM
+				Disturbance JOIN
+				Phase ON Disturbance.PhaseID = Phase.ID
+			WHERE
+				Phase.Name <> 'None'
+		) Disturbance ON Disturbance.EventID = Event.ID AND Disturbance.EventTypeID = EventType.ID AND ((EventType.Name = 'Swell' AND Disturbance.SwellPriority = 1) OR (EventType.Name <> 'Swell' AND Disturbance.SagPriority = 1)) LEFT OUTER JOIN
+		(
+			SELECT
+				FaultSummary.EventID,
+				FaultSummary.FaultType,
+				FaultSummary.Distance,
+				ROW_NUMBER() OVER(PARTITION BY EventID ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, Inception) AS Priority
+			FROM FaultSummary
+		) FaultSummary ON FaultSummary.EventID = Event.ID AND FaultSummary.Priority = 1 AND EventType.Name = 'Fault' JOIN
+		Meter ON Meter.ID = @MeterID JOIN
+		Line ON Event.LineID = Line.ID JOIN
+		MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
+	WHERE
+		CAST(Event.StartTime AS DATE) = @EventDate AND Event.MeterID = @MeterID
+	ORDER BY
+		Event.StartTime ASC
 
 END
 GO
@@ -2290,7 +2311,7 @@ BEGIN
             Line.VoltageKV AS voltage,
             CAST(CAST(Event.StartTime AS TIME) AS NVARCHAR(100)) AS theinceptiontime,
             FaultSummary.FaultType AS thefaulttype,
-            CASE WHEN FaultSummary.Distance= '-1E308' THEN 'NaN' ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19)) END AS thecurrentdistance,
+            CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19)) END AS thecurrentdistance,
             ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS rk
         FROM
             FaultSummary JOIN
