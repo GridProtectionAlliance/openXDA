@@ -1772,7 +1772,8 @@ BEGIN
 		COALESCE(FaultSummary.FaultType, Disturbance.Phase, '') AS thefaulttype,
 		CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)) + ' mi', '') END AS thecurrentdistance,
 		dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
-		dbo.HasICFResult(Event.ID) AS easexists
+		dbo.HasICFResult(Event.ID) AS easexists,
+		dbo.HasCSAResult(Event.ID) AS csaexists
 	FROM
 		Event JOIN
 		EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
