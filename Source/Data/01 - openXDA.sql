@@ -1094,6 +1094,14 @@ CREATE TABLE DashSettings
 )
 GO
 
+CREATE TABLE EASExtension
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ServiceName VARCHAR(50) NOT NULL,
+	HasResultFunction VARCHAR(50) NOT NULL
+)
+GO
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
@@ -1225,25 +1233,7 @@ AS BEGIN
 END
 GO
 
-CREATE FUNCTION HasICFResult
-(
-    @eventID INT
-)
-RETURNS INT
-AS BEGIN
-    RETURN 0
-END
-GO
 
-CREATE FUNCTION HasCSAResult
-(
-    @eventID INT
-)
-RETURNS INT
-AS BEGIN
-    RETURN 0
-END
-GO
 ----- VIEWS -----
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -1524,21 +1514,7 @@ AS BEGIN
 END
 GO
 
-CREATE PROCEDURE GetICFResult
-    @eventID INT
-AS BEGIN
-    SELECT NULL AS Name, NULL AS Value
-    WHERE 1 IS NULL
-END
-GO
 
-CREATE PROCEDURE GetCSAResult
-    @eventID INT
-AS BEGIN
-    SELECT NULL AS Name, NULL AS Value
-    WHERE 1 IS NULL
-END
-GO
 
 ----- PQInvestigator Integration -----
 

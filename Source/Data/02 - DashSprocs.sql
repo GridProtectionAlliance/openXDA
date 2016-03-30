@@ -1747,6 +1747,20 @@ BEGIN
 END
 GO
 
+CREATE TYPE SiteLineDetailsByDate AS TABLE
+(
+	thelineid INT,
+	theeventid INT,
+	theeventtype VARCHAR(200),
+	theinceptiontime VARCHAR(26),
+	thelinename VARCHAR(251),
+	voltage FLOAT,
+	thefaulttype VARCHAR(200),
+	thecurrentdistance NVARCHAR(22),
+	pqiexists INT
+)
+GO
+
 -- =============================================
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, Jun 23, 2014>
@@ -1772,8 +1786,7 @@ BEGIN
 		COALESCE(FaultSummary.FaultType, Disturbance.Phase, '') AS thefaulttype,
 		CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)) + ' mi', '') END AS thecurrentdistance,
 		dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
-		dbo.HasICFResult(Event.ID) AS easexists,
-		dbo.HasCSAResult(Event.ID) AS csaexists
+	
 	FROM
 		Event JOIN
 		EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
