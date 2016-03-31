@@ -626,7 +626,7 @@ namespace DeviceDefinitionsMigrator
         private static void LoadLineAttributes(Line line, XElement lineElement)
         {
             line.VoltageKV = Convert.ToDouble((string)lineElement.Element("voltage"));
-            line.ThermalRating = Convert.ToDouble((string)lineElement.Element("rating50F"));
+            line.ThermalRating = Convert.ToDouble((string)lineElement.Element("rating50F") ?? "0.0");
             line.Length = Convert.ToDouble((string)lineElement.Element("length"));
         }
 
