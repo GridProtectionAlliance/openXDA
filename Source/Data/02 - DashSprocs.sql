@@ -864,15 +864,24 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
 
-        SELECT [dbo].[MeterLocation].[Longitude], [dbo].[MeterLocation].[Latitude], 
+    SELECT
+        MeterLocation.Longitude,
+        MeterLocation.Latitude, 
         (
-
-        Select count([dbo].[Event].[ID]) from [dbo].[Event] 
-        inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID] and [dbo].[EventType].[Name] = 'Fault'
-        where [dbo].[Meter].[ID] = [dbo].[Event].[MeterID] and CAST([StartTime] as Date) = CAST(@EventDate as Date)) as Event_Count
-
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID] --where [Latitude] <> 0 and [Longitude] <> 0
+            SELECT COUNT(Event.ID)
+            FROM
+                Event JOIN
+                EventType ON EventType.ID = Event.EventTypeID AND EventType.Name = 'Fault'
+            WHERE
+                Meter.ID = Event.MeterID AND
+                CAST([StartTime] AS DATE) = @thedate
+        ) AS Event_Count
+    FROM
+        Meter JOIN
+        Meterlocation ON Meter.MeterLocationID = MeterLocation.ID
 
 END
 GO
@@ -1287,18 +1296,26 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
 
-        SELECT [dbo].[Meter].[ID], [dbo].[Meter].[Name], [dbo].[MeterLocation].[Longitude], [dbo].[MeterLocation].[Latitude], 
+    SELECT
+        Meter.ID,
+        Meter.Name,
+        MeterLocation.Longitude,
+        MeterLocation.Latitude, 
         (
-        Select count([dbo].[Event].[ID]) from [dbo].[Event]
-        inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID]
-        where CAST([StartTime] as Date) = CAST(@EventDate as Date) and
-        [dbo].[Event].[MeterID] = [dbo].[Meter].[ID]
-        
-        
-        ) as Event_Count
-
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID] --where [Latitude] <> 0 and [Longitude] <> 0
+            SELECT COUNT(Event.ID)
+            FROM
+                Event JOIN
+                EventType ON EventType.ID = Event.EventTypeID
+            WHERE
+                CAST([StartTime] AS DATE) = @thedate AND
+                Event.MeterID = Meter.ID
+        ) AS Event_Count
+        FROM
+            Meter JOIN
+            MeterLocation on Meter.MeterLocationID = MeterLocation.ID
 
 END
 GO
@@ -1312,25 +1329,36 @@ GO
 --[selectMeterLocationsBreakers] '05/07/2014' , '05/07/2014', 'jwalker'
 
 CREATE PROCEDURE [dbo].[selectMeterLocationsBreakers]
-    @EventDateFrom DateTime,
-    @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @EventDateFrom DATETIME,
+    @EventDateTo DATETIME,
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-        SELECT [dbo].[Meter].[ID], [dbo].[Meter].[Name], [dbo].[MeterLocation].[Longitude], [dbo].[MeterLocation].[Latitude], 
+    SELECT
+        Meter.ID,
+        Meter.Name,
+        MeterLocation.Longitude,
+        MeterLocation.Latitude, 
         (
-        select count (BreakerOperation.ID) from BreakerOperation 
-        join Event on BreakerOperation.EventID = Event.ID
-        where (CAST([TripCoilEnergized] as Date) between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)) 
-        and Event.MeterID = [dbo].[Meter].[ID]
-        ) as Event_Count
-
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID]
-        where [dbo].[Meter].[ID] in (select * from authMeters(@username))
-        order by [dbo].[Meter].[Name] asc
+            SELECT COUNT(BreakerOperation.ID)
+            FROM
+                BreakerOperation JOIN
+                Event ON BreakerOperation.EventID = Event.ID
+            WHERE
+                CAST([TripCoilEnergized] AS DATE) BETWEEN @startDate AND @endDate AND
+                Event.MeterID = Meter.ID
+        ) AS Event_Count
+        FROM
+            Meter JOIN
+            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        ORDER BY Meter.Name
 
 END
 GO
@@ -1351,20 +1379,25 @@ AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-        SELECT 
-        [dbo].[Meter].[ID], 
-        [dbo].[Meter].[Name], 
-        [dbo].[MeterLocation].[Longitude], 
-        [dbo].[MeterLocation].[Latitude],
+    SELECT
+        Meter.ID, 
+        Meter.Name, 
+        MeterLocation.Longitude, 
+        MeterLocation.Latitude,
         (
-        Select Cast(Coalesce(cast(SUM(goodPoints) as float) / NULLIF(cast(SUM(expectedPoints) as float),0) * 100 , 0 ) as int) from MeterDataQualitySummary
-            where [dbo].[MeterDataQualitySummary].[MeterID] = [dbo].[Meter].[ID] and [Date] between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)
-        ) as Event_Count
-
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID]
-        where [dbo].[Meter].[ID] in (select * from authMeters(@username))
-        order by [dbo].[Meter].[Name] asc
+            SELECT CAST(COALESCE(CAST(SUM(goodPoints) AS FLOAT) / NULLIF(CAST(SUM(expectedPoints) AS FLOAT), 0) * 100 , 0) AS INT)
+            FROM MeterDataQualitySummary
+            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
+        ) AS Event_Count
+        FROM
+            Meter JOIN
+            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        ORDER BY Meter.Name
 
 END
 GO
@@ -1377,27 +1410,32 @@ GO
 --[selectMeterLocationsCorrectness] '08/14/2008' , '08/16/2008', 'jwalker'
 
 CREATE PROCEDURE [dbo].[selectMeterLocationsCorrectness]
-    @EventDateFrom DateTime,
-    @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @EventDateFrom DATETIME,
+    @EventDateTo DATETIME,
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-        SELECT 
-        [dbo].[Meter].[ID], 
-        [dbo].[Meter].[Name], 
-        [dbo].[MeterLocation].[Longitude], 
-        [dbo].[MeterLocation].[Latitude], 
+    SELECT 
+        Meter.ID, 
+        Meter.Name, 
+        MeterLocation.Longitude, 
+        MeterLocation.Latitude, 
         (
-        Select Cast(Coalesce(cast(SUM(goodPoints) as float) / NULLIF(cast(SUM(expectedPoints) as float),0) * 100 , 0 ) as int) from MeterDataQualitySummary
-            where [dbo].[MeterDataQualitySummary].[MeterID] = [dbo].[Meter].[ID] and [Date] between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)
-        ) as Event_Count
-
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID] --where [Latitude] <> 0 and [Longitude] <> 0
-        and [dbo].[Meter].[ID] in (select * from authMeters(@username))
-        order by [dbo].[Meter].[Name] asc
+            SELECT CAST(COALESCE(CAST(SUM(goodPoints) AS FLOAT) / NULLIF(CAST(SUM(expectedPoints) AS FLOAT), 0) * 100 , 0) AS INT)
+            FROM MeterDataQualitySummary
+            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
+        ) AS Event_Count
+        FROM
+            Meter JOIN
+            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        ORDER BY Meter.Name
 
 END
 GO
@@ -1410,24 +1448,36 @@ GO
 --[selectMeterLocationsEvents] '04/07/2008' , '04/07/2014', 'jwalker'
 
 CREATE PROCEDURE [dbo].[selectMeterLocationsEvents]
-    @EventDateFrom DateTime,
-    @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @EventDateFrom DATETIME,
+    @EventDateTo DATETIME,
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-        SELECT [dbo].[Meter].[ID], [dbo].[Meter].[Name], [dbo].[MeterLocation].[Longitude], [dbo].[MeterLocation].[Latitude], 
+    SELECT
+        Meter.ID,
+        Meter.Name,
+        MeterLocation.Longitude,
+        MeterLocation.Latitude, 
         (
-        Select count([dbo].[Event].[ID]) from [dbo].[Event]
-        inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID] 
-        where (CAST([StartTime] as Date) between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)) and
-        [dbo].[Event].[MeterID] = [dbo].[Meter].[ID] 
-        ) as Event_Count
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID] --where [Latitude] <> 0 and [Longitude] <> 0
-        and [dbo].[Meter].[ID] in (select * from authMeters(@username))
-        order by [dbo].[Meter].[Name] asc
+            SELECT COUNT(Event.ID)
+            FROM
+                Event JOIN
+                EventType ON EventType.ID = Event.EventTypeID 
+            WHERE
+                CAST([StartTime] AS DATE) between @startDate AND @endDate AND
+                Event.MeterID = Meter.ID 
+        ) AS Event_Count
+        FROM
+            Meter JOIN
+            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        ORDER BY Meter.Name
 
 END
 GO
@@ -1480,26 +1530,39 @@ GO
 --[selectMeterLocationsMaximumSwell] '08/22/2014' , '09/21/2014', 'jwalker'
 
 CREATE PROCEDURE [dbo].[selectMeterLocationsMaximumSwell]
-    @EventDateFrom DateTime,
-    @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @EventDateFrom DATETIME,
+    @EventDateTo DATETIME,
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-        SELECT [dbo].[Meter].[ID], [dbo].[Meter].[Name], [dbo].[MeterLocation].[Longitude], [dbo].[MeterLocation].[Latitude], 
-        cast(Coalesce((
-        SELECT (10.0/9.0) * ((max([PerUnitMagnitude]) - 1.1)) * 100  from [Disturbance] 
-        join [Event] on [Disturbance].[EventID] = [Event].[ID]
-        join [EventType] on [EventType].[ID] = [Event].[EventTypeID] and [EventType].[Name] = 'Swell'
-        where (CAST([Event].[StartTime] as Date) between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)) and
-        [dbo].[Event].[MeterID] = [dbo].[Meter].[ID] and 
-        [PerUnitMagnitude] is not null and [PerUnitMagnitude] >= 1.1
-        ),0) as int) as Event_Count
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID] --where [Latitude] <> 0 and [Longitude] <> 0
-        and [dbo].[Meter].[ID] in (select * from authMeters(@username))
-        order by [dbo].[Meter].[Name] asc
+    SELECT
+        Meter.ID,
+        Meter.Name,
+        MeterLocation.Longitude,
+        MeterLocation.Latitude, 
+        CAST(COALESCE((
+            SELECT (10.0/9.0) * ((MAX([PerUnitMagnitude]) - 1.1)) * 100
+            FROM
+                Disturbance  JOIN
+                Event ON Disturbance.EventID = Event.ID JOIN
+                EventType ON EventType.ID = Event.EventTypeID AND EventType.Name = 'Swell'
+            WHERE
+                CAST(Event.StartTime AS DATE) BETWEEN @startDate AND @endDate AND
+                Event.MeterID = Meter.ID AND
+                PerUnitMagnitude IS NOT NULL AND
+                PerUnitMagnitude >= 1.1
+        ), 0) AS INT) AS Event_Count
+    FROM
+        Meter JOIN
+        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    ORDER BY Meter.Name
 
 END
 GO
@@ -1512,27 +1575,39 @@ GO
 --[selectMeterLocationsMinimumSags] '09/07/2014' , '09/07/2014', 'jwalker'
 
 CREATE PROCEDURE [dbo].[selectMeterLocationsMinimumSags]
-    @EventDateFrom DateTime,
-    @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @EventDateFrom DATETIME,
+    @EventDateTo DATETIME,
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
 
     SET NOCOUNT ON;
+    
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-        SELECT [dbo].[Meter].[ID], [dbo].[Meter].[Name], [dbo].[MeterLocation].[Longitude], [dbo].[MeterLocation].[Latitude], 
-        cast(Coalesce((
+    SELECT
+        Meter.ID,
+        Meter.Name,
+        MeterLocation.Longitude,
+        MeterLocation.Latitude, 
+        CAST(COALESCE((
+            SELECT (10.0/8.0) * (0.9 - (MIN(PerUnitMagnitude))) * 100
+            FROM
+                Disturbance JOIN
+                Event ON Disturbance.EventID = Event.ID JOIN
+                EventType ON EventType.ID = Event.EventTypeID AND EventType.Name = 'Sag'
+            WHERE
+                CAST(Event.StartTime AS DATE) BETWEEN @startDate AND @endDate AND
+                Event.MeterID = Meter.ID AND 
+                PerUnitMagnitude IS NOT NULL AND PerUnitMagnitude <= 0.9
+        ), 0) AS INT) AS Event_Count
+    FROM
+        Meter JOIN
+        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    ORDER BY Meter.Name
 
-        SELECT (10.0/8.0) * ( .9 - (min([PerUnitMagnitude]))) * 100  from [Disturbance] 
-        join [Event] on [Disturbance].[EventID] = [Event].[ID]
-        join [EventType] on [EventType].[ID] = [Event].[EventTypeID] and [EventType].[Name] = 'Sag'
-        where (CAST([Event].[StartTime] as Date) between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)) and
-        [dbo].[Event].[MeterID] = [dbo].[Meter].[ID] and 
-        [PerUnitMagnitude] is not null and [PerUnitMagnitude] <= .9
-        ),0) as int) as Event_Count
-        from [dbo].[Meter] inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID] --where [Latitude] <> 0 and [Longitude] <> 0
-        and [dbo].[Meter].[ID] in (select * from authMeters(@username))
-        order by [dbo].[Meter].[Name] asc
 END
 GO
 
@@ -1830,48 +1905,43 @@ GO
 -- =============================================
 CREATE PROCEDURE [dbo].[selectSitesBreakersDetailsByDate]
     -- Add the parameters for the stored procedure here
-    @EventDate as DateTime,
-    @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
+    @EventDate AS DATETIME,
+    @MeterID AS NVARCHAR(MAX),
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
+    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
+    DECLARE @MeterIDs TABLE (ID int);
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID)
+    SELECT Value FROM dbo.String_to_int_table(@MeterID, ',')
+    WHERE Value IN (SELECT * FROM authMeters(@username));
 
-        SELECT 
-
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Event].[ID] as theeventid, 
-        [dbo].[EventType].[Name] as eventtype, 
-
-        Cast(Cast([dbo].[BreakerOperation].[TripCoilEnergized] as Time) as nvarchar(100)) as energized,
-
-        --[dbo].[BreakerOperation].[TripCoilEnergized] as energized,
-        [dbo].[BreakerOperation].[BreakerNumber] as breakernumber,
-        [dbo].[MeterLine].[LineName] as linename,
-        [dbo].[Phase].[Name] as phasename,
-
-        CAST([dbo].[BreakerOperation].[BreakerTiming] as decimal(16,5)) as timing,
-
-        [dbo].[BreakerOperation].[BreakerSpeed] as speed,
-        [dbo].[BreakerOperationType].[Name] as operationtype 
-        
-        FROM [dbo].[BreakerOperation] 
-
-        join [dbo].[Event] on [BreakerOperation].[EventID] = [Event].[ID]
-        join [dbo].[EventType] on [EventType].[ID] = [Event].[EventTypeID]
-        join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[Event].[MeterID]
-        join [dbo].[Line] on [dbo].[Line].[ID] = [dbo].[Event].[LineID]
-        join [dbo].[MeterLine] on [dbo].[MeterLine].LineID = [dbo].[Event].[LineID] and [dbo].[MeterLine].MeterID = Meter.ID
-        join [dbo].[BreakerOperationType] on [dbo].[BreakerOperation].[BreakerOperationTypeID] = [dbo].[BreakerOperationType].[ID]
-        join [dbo].[Phase] on [BreakerOperation].[PhaseID] = [Phase].[ID]
-
-        where [dbo].[Meter].[ID] in ( Select * from @MeterIDs)
-        and CAST([TripCoilEnergized] as Date) = CAST(@EventDate as Date)
-        
+    SELECT 
+        Meter.ID AS meterid, 
+        Event.ID AS theeventid, 
+        EventType.Name AS eventtype, 
+        CAST(CAST(BreakerOperation.TripCoilEnergized AS TIME) AS NVARCHAR(100)) AS energized,
+        BreakerOperation.BreakerNumber AS breakernumber,
+        MeterLine.LineName AS linename,
+        Phase.Name AS phasename,
+        CAST(BreakerOperation.BreakerTiming AS DECIMAL(16,5)) AS timing,
+        BreakerOperation.BreakerSpeed AS speed,
+        BreakerOperationType.Name AS operationtype 
+    FROM
+        BreakerOperation JOIN
+        Event ON BreakerOperation.EventID = Event.ID JOIN
+        EventType ON EventType.ID = Event.EventTypeID JOIN
+        Meter ON Meter.ID = Event.MeterID JOIN
+        Line ON Line.ID = Event.LineID JOIN
+        MeterLine ON MeterLine.LineID = Event.LineID AND MeterLine.MeterID = Meter.ID JOIN
+        BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
+        Phase ON BreakerOperation.PhaseID = Phase.ID
+    WHERE
+        Meter.ID IN (SELECT * FROM @MeterIDs) AND
+        CAST(TripCoilEnergized AS DATE) = @thedate
 
 END
 GO
@@ -1886,154 +1956,143 @@ GO
 -- =============================================
 CREATE PROCEDURE [dbo].[selectSitesCompletenessDetailsByDate]
     -- Add the parameters for the stored procedure here
-    @EventDate as DateTime,
-    @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
+    @EventDate AS DATETIME,
+    @MeterID AS NVARCHAR(MAX),
+    @username AS NVARCHAR(4000)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
+    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
+    DECLARE @MeterIDs TABLE (ID INT);
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID)
+    SELECT Value FROM dbo.String_to_int_table(@MeterID, ',')
+    WHERE Value IN (SELECT * FROM authMeters(@username));
 
-    declare  @TempTable TABLE ( themeterid int, thesite varchar(100), thecount float, thename varchar(100));
+    DECLARE @TempTable TABLE (themeterid INT, thesite VARCHAR(100), thecount FLOAT, thename VARCHAR(100));
 
-    insert into @TempTable ( themeterid, thesite , thecount , thename )
-
-        SELECT 
-
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT 
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
         (
-        Select  COALESCE((Select CAST( cast((GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) as float) / NULLIF(cast(expectedPoints as float),0) as float) as completenessPercentage from MeterDataQualitySummary
-            where 
-             MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate), 0)) as thecount,
-
+            SELECT COALESCE((
+                SELECT CAST(CAST((GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) AS FLOAT) / NULLIF(CAST(expectedPoints AS FLOAT), 0) AS FLOAT) AS completenessPercentage
+                FROM MeterDataQualitySummary
+                WHERE
+                    MeterID = Meter.ID AND
+                    [Date] = @thedate
+            )
+        , 0)) AS thecount,
         'Completeness' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
-
-        where [MeterID] in (Select * from @MeterIDs)
-        
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
-
-        insert into @TempTable ( themeterid, thesite , thecount , thename )
-
-        SELECT 
-
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT 
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
         (
-        Select  COALESCE((Select CAST( NULLIF(cast(expectedPoints as float),0) as float) as completenessPercentage from MeterDataQualitySummary
-            where 
-             MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate), 0)) as thecount,
+            SELECT COALESCE((
+                SELECT CAST(NULLIF(CAST(expectedPoints AS FLOAT), 0) AS FLOAT) AS completenessPercentage
+                FROM MeterDataQualitySummary
+                WHERE 
+                    MeterID = Meter.ID AND
+                    [Date] = @thedate
+            )
+        , 0)) AS thecount,
+        'Expected' AS thename 
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-        'Expected' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
-
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
-
-        where [MeterID] in (Select * from @MeterIDs)
-        
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
-
-        insert into @TempTable ( themeterid, thesite , thecount , thename )
-
-        SELECT 
-
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT 
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
         (
-        Select  COALESCE((Select CAST( cast((GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints + DuplicatePoints) as float) / NULLIF(cast(expectedPoints as float),0) as float) as completenessPercentage from MeterDataQualitySummary
-            where 
-             MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate), 0)) as thecount,
+            SELECT COALESCE((
+                SELECT CAST(CAST((GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints + DuplicatePoints) AS FLOAT) / NULLIF(CAST(expectedPoints AS FLOAT), 0) AS FLOAT) AS completenessPercentage
+                FROM MeterDataQualitySummary
+                WHERE 
+                    MeterID = Meter.ID AND
+                    [Date] = @theDate
+            )
+        , 0)) AS thecount,
+        'Received' AS thename 
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-        'Received' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
-
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
-
-        where [MeterID] in (Select * from @MeterIDs)
-        
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
-
-                insert into @TempTable ( themeterid, thesite , thecount , thename )
-
-        SELECT 
-
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
         (
-        Select  COALESCE((Select CAST( cast((DuplicatePoints) as float) / NULLIF(cast(expectedPoints as float),0) as float) as completenessPercentage from MeterDataQualitySummary
-            where 
-             MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate), 0)) as thecount,
+            SELECT COALESCE((
+                SELECT CAST(CAST((DuplicatePoints) AS FLOAT) / NULLIF(CAST(expectedPoints AS FLOAT), 0) AS FLOAT) AS completenessPercentage
+                FROM MeterDataQualitySummary
+                WHERE 
+                    MeterID = Meter.ID AND
+                    [Date] = @thedate
+            )
+        , 0)) AS thecount,
+        'Duplicate' AS thename
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-        'Duplicate' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
+    DECLARE @composite TABLE (theeventid INT, themeterid INT, thesite VARCHAR(100), Expected FLOAT, Received FLOAT, Duplicate FLOAT, Completeness FLOAT);
 
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
+    DECLARE @sitename VARCHAR(100)
+    DECLARE @themeterid INT
+    DECLARE @theeventid INT
 
-        where [MeterID] in (Select * from @MeterIDs)
-        
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
-
-        --select * from @TempTable
-
-    declare @composite TABLE (theeventid int, themeterid int, thesite varchar(100), Expected float, Received float, Duplicate float, Completeness float);
-
-    DECLARE @sitename varchar(100)
-    DECLARE @themeterid int
-    DECLARE @theeventid int
-
-    DECLARE site_cursor CURSOR FOR Select distinct (themeterid), thesite from @TempTable
+    DECLARE site_cursor CURSOR FOR SELECT DISTINCT themeterid, thesite FROM @TempTable
 
     OPEN site_cursor
 
-    FETCH NEXT FROM site_cursor into @themeterid , @sitename
+    FETCH NEXT FROM site_cursor INTO @themeterid , @sitename
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        insert @composite VALUES (
-
-            (Select top 1 [dbo].[MeterDataQualitySummary].[ID] FROM [dbo].[MeterDataQualitySummary]
-
-                
-            where [dbo].[MeterDataQualitySummary].[MeterID] = @themeterid
-
-            
-            and CAST([Date] as Date) = CAST(@EventDate as Date)),
-
-            
+        INSERT @composite VALUES(
+            (
+                SELECT TOP 1 MeterDataQualitySummary.ID
+                FROM MeterDataQualitySummary
+                WHERE
+                    MeterDataQualitySummary.MeterID = @themeterid AND
+                    CAST([Date] as Date) = @thedate
+            ),
             @themeterid,
             @sitename,
-            (Select thecount * 100 from @TempTable where thename = 'Expected' and thesite = @sitename ),
-            (Select thecount * 100 from @TempTable where thename = 'Received' and thesite = @sitename ),
-            (Select thecount * 100 from @TempTable where thename = 'Duplicate' and thesite = @sitename ),
-            (Select thecount * 100 from @TempTable where thename = 'Completeness' and thesite = @sitename )
+            (SELECT thecount * 100 FROM @TempTable WHERE thename = 'Expected' AND thesite = @sitename),
+            (SELECT thecount * 100 FROM @TempTable WHERE thename = 'Received' AND thesite = @sitename),
+            (SELECT thecount * 100 FROM @TempTable WHERE thename = 'Duplicate' AND thesite = @sitename),
+            (SELECT thecount * 100 FROM @TempTable WHERE thename = 'Completeness' AND thesite = @sitename)
+        )
 
-            )
-
-    FETCH NEXT FROM site_cursor into @themeterid , @sitename
+        FETCH NEXT FROM site_cursor INTO @themeterid , @sitename
     END
  
     CLOSE site_cursor;
     DEALLOCATE site_cursor;
 
-    select * from @composite
+    SELECT * FROM @composite
 END
 GO
 
@@ -2054,118 +2113,109 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
+    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
+    DECLARE @MeterIDs TABLE (ID INT);
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID)
+    SELECT Value
+    FROM dbo.String_to_int_table(@MeterID, ',')
+    WHERE Value IN (SELECT * FROM authMeters(@username));
 
-    declare  @TempTable TABLE ( themeterid int, thesite varchar(100), thecount float, thename varchar(100));
+    DECLARE @TempTable TABLE (themeterid INT, thesite VARCHAR(100), thecount FLOAT, thename VARCHAR(100));
 
-    insert into @TempTable ( themeterid, thesite , thecount , thename )
-
-        SELECT
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-
-        (Select 
-        
-
-        COALESCE(Round(CAST(
-        sum(LatchedPoints)
-        as float) / NULLIF(cast(sum(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) as float),0) * 100 , 0),0)
-        
-        as correctnessPercentage from MeterDataQualitySummary
-            where MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate) as thecount,
-
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
+        (
+            SELECT COALESCE(ROUND(CAST(SUM(LatchedPoints) AS FLOAT) / NULLIF(CAST(SUM(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) AS FLOAT), 0) * 100 , 0), 0) AS correctnessPercentage
+            FROM MeterDataQualitySummary
+            WHERE
+                MeterID = Meter.ID AND
+                [Date] = @thedate
+        ) AS thecount,
         'Latched' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
-        where [MeterID] in (Select * from @MeterIDs)
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-    insert into @TempTable ( themeterid, thesite , thecount , thename )
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT
+        Meter.ID AS meterid,
+        Meter.Name AS thesite,
+        (
+            SELECT COALESCE(ROUND(CAST(SUM(UnreasonablePoints) AS FLOAT) / NULLIF(CAST(SUM(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) AS FLOAT), 0) * 100 ,0), 0) AS correctnessPercentage
+            FROM MeterDataQualitySummary
+            WHERE
+                MeterID = [dbo].[Meter].[ID] AND
+                [Date] = @thedate
+        ) AS thecount,
+        'Unreasonable' AS thename 
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-        SELECT
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
+    INSERT INTO @TempTable(themeterid, thesite , thecount , thename)
+    SELECT
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
+        (
+            SELECT COALESCE(ROUND(CAST(SUM(NoncongruentPoints) AS FLOAT) / NULLIF(CAST(SUM(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) AS FLOAT), 0) * 100 , 0), 0) AS correctnessPercentage
+            FROM MeterDataQualitySummary
+            WHERE
+                MeterID = Meter.ID AND
+                [Date] = @thedate
+        ) AS thecount,
+        'Noncongruent' AS thename
+    FROM
+        MeterDataQualitySummary JOIN
+        Meter ON Meter.ID = MeterDataQualitySummary.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([Date] AS DATE) = @thedate
 
-        (Select 
+    DECLARE @composite TABLE (theeventid INT, themeterid INT, thesite VARCHAR(100), Latched FLOAT, Unreasonable FLOAT, Noncongruent FLOAT);
 
-        COALESCE(Round(CAST(
-        sum(UnreasonablePoints)
-        as float) / NULLIF(cast(sum(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) as float),0) * 100 , 0),0)
+    DECLARE @sitename VARCHAR(100)
+    DECLARE @themeterid INT
+    DECLARE @theeventid INT
 
-        
-        as correctnessPercentage from MeterDataQualitySummary
-            where MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate) as thecount,
-
-        'Unreasonable' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
-        where [MeterID] in (Select * from @MeterIDs)
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
-
-    insert into @TempTable ( themeterid, thesite , thecount , thename )
-
-        SELECT
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-
-        (Select 
-        
-        COALESCE(Round(CAST(
-        sum(NoncongruentPoints)
-        as float) / NULLIF(cast(sum(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints) as float),0) * 100 , 0),0)
-
-        as correctnessPercentage from MeterDataQualitySummary
-            where MeterID = [dbo].[Meter].[ID]
-            and [Date] = @eventDate) as thecount,
-
-        'Noncongruent' as thename 
-        
-        FROM [dbo].[MeterDataQualitySummary]
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[MeterDataQualitySummary].[MeterID]
-        where [MeterID] in (Select * from @MeterIDs)
-        and CAST([Date] as Date) = CAST(@EventDate as Date)
-
-        --select * from @TempTable
-
-    declare @composite TABLE (theeventid int, themeterid int, thesite varchar(100), Latched float, Unreasonable float , Noncongruent float);
-
-    DECLARE @sitename varchar(100)
-    DECLARE @themeterid int
-    DECLARE @theeventid int
-
-    DECLARE site_cursor CURSOR FOR Select distinct (themeterid), thesite from @TempTable
+    DECLARE site_cursor CURSOR FOR SELECT DISTINCT themeterid, thesite FROM @TempTable
 
     OPEN site_cursor
 
-    FETCH NEXT FROM site_cursor into @themeterid , @sitename
+    FETCH NEXT FROM site_cursor INTO @themeterid, @sitename
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        insert @composite VALUES (
-
-            (Select top 1 [dbo].[MeterDataQualitySummary].[ID] FROM [dbo].[MeterDataQualitySummary]
-            where [dbo].[MeterDataQualitySummary].[MeterID] = @themeterid
-            and CAST([Date] as Date) = CAST(@EventDate as Date)),
+        INSERT INTO @composite VALUES(
+            (
+                SELECT TOP 1 MeterDataQualitySummary.ID
+                FROM MeterDataQualitySummary
+                WHERE
+                    MeterDataQualitySummary.MeterID = @themeterid AND
+                    CAST([Date] AS DATE) = @theDate
+            ),
             @themeterid,
             @sitename,
-            (Select thecount from @TempTable where thename = 'Latched' and thesite = @sitename ),
-            (Select thecount from @TempTable where thename = 'Unreasonable' and thesite = @sitename ),
-            (Select thecount from @TempTable where thename = 'Noncongruent' and thesite = @sitename )
-            )
+            (SELECT thecount FROM @TempTable WHERE thename = 'Latched' AND thesite = @sitename),
+            (SELECT thecount FROM @TempTable WHERE thename = 'Unreasonable' AND thesite = @sitename),
+            (SELECT thecount FROM @TempTable WHERE thename = 'Noncongruent' AND thesite = @sitename)
+        )
 
-    FETCH NEXT FROM site_cursor into @themeterid , @sitename
+        FETCH NEXT FROM site_cursor INTO @themeterid , @sitename
     END
  
     CLOSE site_cursor;
     DEALLOCATE site_cursor;
 
-    select * from @composite
+    SELECT * FROM @composite
 END
 GO
 
@@ -2185,67 +2235,68 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
+    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
+    DECLARE  @MeterIDs TABLE (ID INT);
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID)
+    SELECT Value
+    FROM dbo.String_to_int_table(@MeterID, ',')
+    WHERE Value IN (SELECT * FROM authMeters(@username));
 
-    declare  @TempTable TABLE ( themeterid int, thesite varchar(100), thecount int, thename varchar(100));
+    DECLARE @TempTable TABLE (themeterid INT, thesite VARCHAR(100), thecount INT, thename VARCHAR(100));
 
-    insert into @TempTable ( themeterid, thesite , thecount , thename )
+    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
+    SELECT 
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite, 
+        Event.EventTypeID AS thecount, 
+        EventType.Name AS thename 
+    FROM
+        Event JOIN
+        EventType ON EventType.ID = Event.EventTypeID JOIN
+        Meter ON Meter.ID = Event.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST([StartTime] AS DATE) = @thedate
 
-        SELECT 
+    DECLARE @composite TABLE (theeventid INT, themeterid INT, thesite VARCHAR(100), faults INT, interruptions INT, sags INT, swells INT, others INT);
 
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite, 
-        [dbo].[Event].[EventTypeID] as thecount, 
-        [dbo].[EventType].[Name] as thename 
-        
-        FROM [dbo].[Event]
+    DECLARE @sitename VARCHAR(100)
+    DECLARE @themeterid INT
+    DECLARE @theeventid INT
 
-        inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID]    
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[Event].[MeterID]
-
-        where [MeterID] in (Select * from @MeterIDs)
-        
-        and CAST([StartTime] as Date) = CAST(@EventDate as Date)
-
-        --select * from @TempTable
-
-    declare @composite TABLE (theeventid int, themeterid int, thesite varchar(100), faults int, interruptions int, sags int, swells int, others int );
-
-    DECLARE @sitename varchar(100)
-    DECLARE @themeterid int
-    DECLARE @theeventid int
-
-    DECLARE site_cursor CURSOR FOR Select distinct (themeterid), thesite from @TempTable
+    DECLARE site_cursor CURSOR FOR SELECT DISTINCT themeterid, thesite FROM @TempTable
 
     OPEN site_cursor
 
-    FETCH NEXT FROM site_cursor into @themeterid , @sitename
+    FETCH NEXT FROM site_cursor INTO @themeterid, @sitename
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        insert @composite VALUES (
-
-            (Select top 1 [dbo].[Event].[ID] FROM [dbo].[Event]
-            where [dbo].[Event].[MeterID] = @themeterid
-            and CAST([StartTime] as Date) = CAST(@EventDate as Date)),
+        INSERT INTO @composite VALUES(
+            (
+                SELECT TOP 1 Event.ID
+                FROM Event
+                WHERE
+                    Event.MeterID = @themeterid AND
+                    CAST([StartTime] AS DATE) = @theDate
+            ),
             @themeterid,
             @sitename,
-            (Select count(thecount) from @TempTable where thename = 'Fault' and thesite = @sitename ),
-            (Select count(thecount) from @TempTable where thename = 'Interruption' and thesite = @sitename ),
-            (Select count(thecount) from @TempTable where thename = 'Sag' and thesite = @sitename ),
-            (Select count(thecount) from @TempTable where thename = 'Swell' and thesite = @sitename ),
-            (Select count(thecount) from @TempTable where thename = 'Other' and thesite = @sitename )
-            )
+            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Fault' AND thesite = @sitename),
+            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Interruption' AND thesite = @sitename),
+            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Sag' AND thesite = @sitename),
+            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Swell' AND thesite = @sitename),
+            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Other' AND thesite = @sitename)
+        )
 
-    FETCH NEXT FROM site_cursor into @themeterid , @sitename
+        FETCH NEXT FROM site_cursor into @themeterid , @sitename
     END
  
     CLOSE site_cursor;
     DEALLOCATE site_cursor;
 
-    select * from @composite
+    SELECT * FROM @composite
 END
 GO
 
@@ -2263,31 +2314,30 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
+    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
+    DECLARE  @MeterIDs TABLE (ID INT);
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+    INSERT INTO @MeterIDs(ID)
+    SELECT Value
+    FROM dbo.String_to_int_table(@MeterID, ',')
+    WHERE Value IN (SELECT * FROM authMeters(@username));
 
-    SELECT 
-
-    CAST(CAST([dbo].[Event].[StartTime] AS datetime2(7))as varchar(26)) as starttime,
-    --CAST(Coalesce(CAST([FaultSummary].[Inception] AS datetime2(7)), CAST([Event].[StartTime] AS datetime2(7))) as varchar(26)) as inceptiontime,
-    CAST(CAST([dbo].[Event].[EndTime] AS datetime2(7))as varchar(26)) as endtime,
-
-        [dbo].[Event].[ID] as eventid,
-        [dbo].[Meter].[ID] as meterid, 
-        [dbo].[Meter].[Name] as thesite,
-        [dbo].[EventType].[Name] as thename 
-        
-        FROM [dbo].[Event]
-        --left outer join [dbo].[FaultSummary] on [dbo].[Event].[ID] = [dbo].[FaultSummary].[EventID] 
-        inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID]    
-        inner join [dbo].[Meter] on [dbo].[Meter].[ID] = [dbo].[Event].[MeterID]
-
-        where [MeterID] in (Select * from @MeterIDs)
-        
-        and CAST([StartTime] as Date) between CAST(@EventDateFrom as Date) and CAST(@EventDateTo as Date)
-
-        order by [StartTime]
+    SELECT
+        CAST(CAST(Event.StartTime AS DATETIME2(7)) AS VARCHAR(26)) AS starttime,
+        CAST(CAST(Event.EndTime AS DATETIME2(7)) AS VARCHAR(26)) AS endtime,
+        Event.ID AS eventid,
+        Meter.ID AS meterid, 
+        Meter.Name AS thesite,
+        EventType.Name AS thename 
+    FROM
+        Event JOIN
+        EventType ON EventType.ID = Event.EventTypeID JOIN
+        Meter ON Meter.ID = Event.MeterID
+    WHERE
+        MeterID IN (SELECT * FROM @MeterIDs) AND
+        CAST(StartTime AS DATE) BETWEEN @startDate AND @endDate
+    ORDER BY StartTime
 
 END
 GO
