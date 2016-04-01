@@ -2916,3 +2916,31 @@ BEGIN
 END
 GO
 
+
+CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIds]
+    @EventID as INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE @currentTime DATETIME2,
+			@meterID INT,
+			@lineID INT
+
+	SELECT @currentTime = StartTime, @meterID = MeterID, @lineID = LineID
+	FROM Event
+	WHERE ID = @EventID
+
+	SELECT evt2.ID as previd, evt3.ID as nextid
+	FROM Event evt1 LEFT OUTER JOIN 
+		 Event evt2 ON evt2.StartTime = (SELECT MAX(StartTime)
+		 FROM Event
+		 WHERE StartTime < @currentTime AND MeterID = @meterID AND LineID = @lineID) AND evt2.MeterID = @meterID AND evt2.LineID = @lineID 
+		 LEFT OUTER JOIN 
+		 Event evt3 ON evt3.StartTime = (SELECT MIN(StartTime)
+		 FROM Event
+		 WHERE StartTime > @currentTime AND MeterID = @meterID AND LineID = @lineID) 
+		 AND evt3.MeterID = @meterID AND evt3.LineID = @lineID
+	WHERE evt1.ID = @EventID
+END
+GO
