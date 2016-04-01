@@ -2329,13 +2329,15 @@ BEGIN
         Event.ID AS eventid,
         Meter.ID AS meterid, 
         Meter.Name AS thesite,
-        EventType.Name AS thename 
+        EventType.Name AS thename,
+		MeterLine.LineName AS linename  
     FROM
         Event JOIN
         EventType ON EventType.ID = Event.EventTypeID JOIN
-        Meter ON Meter.ID = Event.MeterID
+        Meter ON Meter.ID = Event.MeterID JOIN
+		MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID
     WHERE
-        MeterID IN (SELECT * FROM @MeterIDs) AND
+        Meter.ID IN (SELECT * FROM @MeterIDs) AND
         CAST(StartTime AS DATE) BETWEEN @startDate AND @endDate
     ORDER BY StartTime
 
