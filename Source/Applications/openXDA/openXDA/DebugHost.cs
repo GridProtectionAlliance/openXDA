@@ -67,6 +67,7 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 using GSF.Reflection;
 
@@ -78,6 +79,7 @@ namespace openXDA
 
         // Fields
         private string m_productName;
+        private Process m_remoteConsole;
 
         #endregion
 
@@ -94,32 +96,43 @@ namespace openXDA
 
         private void DebugHost_Load(object sender, EventArgs e)
         {
-            // Initialize text.
-            m_productName = AssemblyInfo.EntryAssembly.Title;
-            this.Text = string.Format(this.Text, m_productName);
-            m_notifyIcon.Text = string.Format(m_notifyIcon.Text, m_productName);
-            LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
-            m_exitToolStripMenuItem.Text = string.Format(m_exitToolStripMenuItem.Text, m_productName);
+            if (!DesignMode)
+            {
+                m_remoteConsole = Process.Start("openXDAConsole.exe");
 
-            // Minimize the window.
-            this.WindowState = FormWindowState.Minimized;
+                // Initialize text.
+                m_productName = AssemblyInfo.EntryAssembly.Title;
+                this.Text = string.Format(this.Text, m_productName);
+                m_notifyIcon.Text = string.Format(m_notifyIcon.Text, m_productName);
+                LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
+                m_exitToolStripMenuItem.Text = string.Format(m_exitToolStripMenuItem.Text, m_productName);
 
-            // Start the windows service.
-            m_serviceHost.StartDebugging(Environment.CommandLine.Split(' '));
+                // Minimize the window.
+                this.WindowState = FormWindowState.Minimized;
+
+                // Start the windows service.
+                m_serviceHost.StartDebugging(Environment.CommandLine.Split(' '));
+            }
         }
 
         private void DebugHost_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(string.Format("Are you sure you want to stop {0} windows service? ",
-                m_productName), "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (!DesignMode)
             {
-                // Stop the windows service.
-                m_serviceHost.StopDebugging();
-            }
-            else
-            {
-                // Stop the application from exiting.
-                e.Cancel = true;
+                if (MessageBox.Show(string.Format("Are you sure you want to stop {0} windows service? ",
+                    m_productName), "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    // Stop the windows service.
+                    m_serviceHost.StopDebugging();
+
+                    if ((object)m_remoteConsole != null && !m_remoteConsole.HasExited)
+                        m_remoteConsole.Kill();
+                }
+                else
+                {
+                    // Stop the application from exiting.
+                    e.Cancel = true;
+                }
             }
         }
 
