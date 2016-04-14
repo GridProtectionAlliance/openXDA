@@ -1039,7 +1039,7 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / m_systemFrequency);
             int start = fault.EndSample + 1;
-            int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int end = Math.Min(start + 5 * samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
