@@ -367,6 +367,31 @@ GO
 INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.FaultEmailWriter', 1)
 GO
 
+INSERT INTO [Group](GroupName, Active) VALUES('AllMeters', 1)
+GO
+
+INSERT INTO [User](Name, Active) VALUES('External', 1)
+GO
+
+INSERT INTO UserGroup(UserID, GroupID)
+SELECT [User].ID, [Group].ID
+FROM [User] CROSS JOIN [Group]
+GO
+
+CREATE TRIGGER AugmentAllMetersGroup
+ON Meter
+AFTER INSERT
+AS BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO GroupMeter(GroupID, MeterID)
+    SELECT [Group].ID, Meter.ID
+    FROM [Group] CROSS JOIN inserted Meter
+    WHERE [Group].GroupName = 'AllMeters'
+END
+GO
+
+
 -- ------ --
 -- Events --
 -- ------ --
