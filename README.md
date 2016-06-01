@@ -38,7 +38,11 @@ openXDA is a platform comprised of a back office service designed to consume all
   * Additional analytics can be included as new modules in the platform.
 
 
-![openXDA Overview](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/XDA-Overview.png)
+![openXDA Overview](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/XDA-Overview.png)
+
+**Where If Fits In:**
+![Where-It-Fits-In](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/Where%20it%20fits%20in.png)
+
 
 # Why openXDA?
 
@@ -58,28 +62,25 @@ Documentation for openXDA can be found [here](https://github.com/GridProtectionA
 * Follow the wizard.
 * Enjoy.
 
-# Requirements
-## Operating System
+## Requirements
+### Operating System
 * 64-bit Windows 7 or Windows Server 2008 R2 (or newer).
 
-## Minimum Hardware
+### Minimum Hardware
 * 2.0 GHz CPU.
 * 2.0 GB RAM.
 * 50 GB of available disk space for installation and testing. Operational disk space requirements will be proportional to the volume of input data.
 
-## Software
+### Software
 * .NET 3.5 SP1 (required by SQL Server 2012).
 * .NET 4.6.
 * SQL Server 2012 with management tools.
   * Free Express version is fine, but has a 10GB limit.
   * Mixed mode authentication must be enable on the SQL Server.
 
-# Downloads
-Download a stable release from the releases page [here](https://github.com/GridProtectionAlliance/openXDA/releases).
-
-OR
-
-Download the nightly build [here](http://www.gridprotectionalliance.org/nightlybuilds/openXDA/Beta/Applications/openXDA/openXDASetup.msi).
+## Downloads
+* Download a stable release from the releases page [here](https://github.com/GridProtectionAlliance/openXDA/releases).
+* Download the nightly build [here](http://www.gridprotectionalliance.org/nightlybuilds/openXDA/Beta/Applications/openXDA/openXDASetup.msi).
 
 # Contributing
 If you would like to contribute please:
