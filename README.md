@@ -40,7 +40,7 @@ openXDA is a platform comprised of a back office service designed to consume all
 
 ![openXDA Overview](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/XDA-Overview.png)
 
-**Where If Fits In:**
+**Where It Fits In:**
 ![Where-It-Fits-In](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/Where%20it%20fits%20in.png)
 
 
