@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openFLE>
+    <!-- This device definitions example file is intended to be a model for configuring an openXDA database
+	to recognize and analyze data contained in files recorded by PQ devices in PQDIF format. If the data is
+	in COMTRADE format, please use the DeviceDefinitionsExample-DFR-Relay.xml file as a template rather than
+	this file. 
+	
+	The analytics section defines the fault distance algorithms to be used by openXDA.
+    All of the following algorithms are available and will be used by default to calculate
+	fault distances and generate fault distance curves. In most cases this section should be left as is, even 
+	for PQ devices. If any specific algorithms are not desired they should be removed or commented out. -->
+	<analytics>
+		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Simple" />
+		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Reactance" />
+		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.Takagi" />
+		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.ModifiedTakagi" />
+		<faultLocation assembly="FaultAlgorithms.dll" method="FaultAlgorithms.FaultLocationAlgorithms.NovoselEtAl" />
+	</analytics>
+    
+    <!-- Each device is modelled using one of these device tags. By default, the openXDA service
+    is configured to match the device id to the folder in which that device's fault records
+    are located. As a general rule, you can use the name of the folder that contains the COMTRADE
+    or PQDIF files created by this device as the device id. -->
+	<device id="0001">
+		<attributes>
+            <!-- Make and model of the device. This information will be used in reporting. -->
+			<make>GPA</make>
+			<model>EXAMPLE</model>
+            
+            <!-- Where is the device located?
+			stationID is a unique identifier used by openXDA in calculations
+			stationName is a human readable name used in reporting. -->
+			<stationID>Station1</stationID>
+			<stationName>Station1</stationName>
+		</attributes>
+		<lines>
+            <!-- If this device is NOT monitoring a line remove everything in the line section after <voltage>161</voltage>
+			If this device IS monitoring a line, and a device at Station3 is monitoring this line from the other end,
+			the same line id should be used when modelling that device. 
+			line id is a unique identifier used by openXDA in calculations.
+			If no line is being monitored any id is ok. -->
+			<line id="01">
+                <!-- name is a human readable name for the line used in reporting.
+				If no line is being monitored any mame is ok. -->
+				<name>Station1-Station3</name>
+                
+                <!-- voltage is the nominal voltage for this line or location specified in kV. -->
+				<voltage>161</voltage>
+                                             
+                <!-- The remainder of this line section should be removed if no line is being monitored by this device. -->
+				
+				<!--The length of the line must be correct to obtain accurate distance calculations.
+				By default this value is specified in miles. If km is preferred, the value of the label
+				to be used in displays and reports is specified by the LengthUnits configuration option
+				located in the Setting table as described in the openXDA Service Configuration section
+				of the openXDA Installation Manual.-->
+				<length>14.39000</length>
+                
+                <!-- Is there a device at the other end of the line? If so, define it here,
+				if not remove these two definitions. 
+				endStationID is a unique identifier used by openXDA in calculations
+				endStationName is a human readable name used in reporting. -->
+				<endStationID>Station3</endStationID>
+				<endStationName>Station3</endStationName>
+                
+                <!-- Line impedances must be specified for fault distance calculations.
+				If no line is being monitored by this device remove the impedances section.
+				Nominal impedance of the line:
+                R1 = Positive sequence resistance
+                R0 = Zero sequence resistance
+                X1 = Positive sequence reactance
+                X0 = Zero sequence reactance -->
+				<impedances>
+					<R1>3.27560</R1>
+					<R0>8.79830</R0>
+					<X1>11.42600</X1>
+					<X0>36.52600</X0>
+				</impedances>
+                
+            </line>
+        </lines>
+	</device>
+    
+    <!-- Add additional devices by copying and modifying the entire device section following the
+	guidance provided in the sections above. Remove any unused device sections. -->
+	<device id="0002">
+		<attributes>
+			<make>GPA</make>
+			<model>EXAMPLE</model>
+			<stationID>Station2</stationID>
+			<stationName>Station2</stationName>
+		</attributes>
+		<lines>
+			<line id="03">
+				<name>Station2-Station3</name>
+				<voltage>161</voltage>
+				<rating50F>400</rating50F>
+				<length>28.61200</length>
+				<endStationID>Station3</endStationID>
+				<endStationName>Station3</endStationName>
+				<impedances>
+					<R1>12.58500</R1>
+					<R0>20.72400</R0>
+					<X1>26.27700</X1>
+					<X0>83.58900</X0>
+				</impedances>
+				els>
+			</line>
+		</lines>
+	</device>
+</openFLE>
