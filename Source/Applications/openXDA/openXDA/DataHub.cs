@@ -254,5 +254,52 @@ namespace openXDA
 
         #endregion
 
+        #region [ Group ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Group), RecordOperation.QueryRecordCount)]
+        public int QueryGroupCount(string filterString)
+        {
+            return m_dataContext.Table<Group>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Group), RecordOperation.QueryRecords)]
+        public IEnumerable<Group> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<Group>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Group), RecordOperation.DeleteRecord)]
+        public void DeleteGroup(int id)
+        {
+            m_dataContext.Table<Group>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Group), RecordOperation.CreateNewRecord)]
+        public Group NewGroup()
+        {
+            return new Group();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Group), RecordOperation.AddNewRecord)]
+        public void AddNewActionItem(Group record)
+        {
+            m_dataContext.Table<Group>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Group), RecordOperation.UpdateRecord)]
+        public void UpdateActionItem(Group record)
+        {
+            m_dataContext.Table<Group>().UpdateRecord(record);
+        }
+
+        #endregion
+
+
     }
 }
