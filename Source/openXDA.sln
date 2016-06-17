@@ -40,6 +40,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GSF", "GSF", "{F5BD3958-FFB
 		Dependencies\GSF\GSF.SortedTreeStore.dll = Dependencies\GSF\GSF.SortedTreeStore.dll
 		Dependencies\GSF\GSF.TimeSeries.dll = Dependencies\GSF\GSF.TimeSeries.dll
 		Dependencies\GSF\GSF.TimeSeries.xml = Dependencies\GSF\GSF.TimeSeries.xml
+		Dependencies\GSF\GSF.Web.dll = Dependencies\GSF\GSF.Web.dll
+		Dependencies\GSF\GSF.Web.xml = Dependencies\GSF\GSF.Web.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WiX", "WiX", "{598B0FE9-B4EA-4797-982D-BF243F3C5BEC}"
