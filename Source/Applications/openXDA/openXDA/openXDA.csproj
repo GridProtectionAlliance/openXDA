@@ -180,6 +180,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core">
@@ -246,6 +247,8 @@
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="Model\AppModel.cs" />
+    <Compile Include="Model\Meter.cs" />
+    <Compile Include="Model\MeterLocation.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="ServiceHost.cs">
       <SubType>Component</SubType>
@@ -304,6 +307,7 @@
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
+    <None Include="wwwroot\Devices.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />
     <None Include="wwwroot\fonts\fontawesome-webfont.ttf" />
@@ -323,6 +327,7 @@
     <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Settings.cshtml" />
+    <None Include="wwwroot\Stations.cshtml" />
     <None Include="wwwroot\Users.cshtml" />
   </ItemGroup>
   <ItemGroup>

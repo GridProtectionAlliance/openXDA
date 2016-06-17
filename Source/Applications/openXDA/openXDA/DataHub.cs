@@ -116,6 +116,8 @@ namespace openXDA
 
         #endregion
 
+        #region [ Setting ]
+
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecordCount)]
         public int QuerySettingCount(string filterString)
@@ -139,7 +141,7 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.CreateNewRecord)]
-        public Setting NewActionItem()
+        public Setting NewSetting()
         {
             return new Setting();
         }
@@ -158,6 +160,99 @@ namespace openXDA
             m_dataContext.Table<Setting>().UpdateRecord(record);
         }
 
+        #endregion
+
+        #region [ Meter ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
+        public int QueryMeterCount(string filterString)
+        {
+            return m_dataContext.Table<Meter>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
+        public IEnumerable<Meter> QueryMeters(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<Meter>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.DeleteRecord)]
+        public void DeleteMeter(int id)
+        {
+            m_dataContext.Table<Meter>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.CreateNewRecord)]
+        public Meter NewMeter()
+        {
+            return new Meter();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.AddNewRecord)]
+        public void AddNewActionItem(Meter record)
+        {
+            m_dataContext.Table<Meter>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Meter), RecordOperation.UpdateRecord)]
+        public void UpdateActionItem(Meter record)
+        {
+            m_dataContext.Table<Meter>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ MeterLocation ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
+        public int QueryMeterLocationCount(string filterString)
+        {
+            return m_dataContext.Table<MeterLocation>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
+        public void DeleteMeterLocation(int id)
+        {
+            m_dataContext.Table<MeterLocation>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.CreateNewRecord)]
+        public MeterLocation NewMeterLocation()
+        {
+            return new MeterLocation();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
+        public void AddNewActionItem(MeterLocation record)
+        {
+            m_dataContext.Table<MeterLocation>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
+        public void UpdateActionItem(MeterLocation record)
+        {
+            m_dataContext.Table<MeterLocation>().UpdateRecord(record);
+        }
+
+        #endregion
 
     }
 }
