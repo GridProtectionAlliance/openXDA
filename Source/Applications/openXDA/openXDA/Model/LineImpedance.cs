@@ -7,15 +7,14 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [TableName("LineView")]
-    public class LineView: Lines
+    public class LineImpedance
     {
-        public string TopName { get; set; }
-        public int LineImpedanceID { get; set; }
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public int LineID { get; set; }
         public float R0 { get; set; }
         public float R1 { get; set; }
         public float X0 { get; set; }
         public float X1 { get; set; }
-
     }
 }

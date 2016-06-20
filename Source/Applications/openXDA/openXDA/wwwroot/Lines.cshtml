@@ -71,10 +71,16 @@
         @Raw(dataContext.AddInputField<LineView>("VoltageKV"))
         @Raw(dataContext.AddInputField<LineView>("ThermalRating"))
         @Raw(dataContext.AddInputField<LineView>("Length"))
+        @Raw(dataContext.AddTextAreaField<LineView>("Description"))
     </div>
 
     <div class="col-md-6">
-        @Raw(dataContext.AddTextAreaField<LineView>("Description", 4))
+        <h5><b>Line Impedance:</b></h5>
+        @Raw(dataContext.AddInputField<LineView>("R0"))
+        @Raw(dataContext.AddInputField<LineView>("X0"))
+        @Raw(dataContext.AddInputField<LineView>("R1"))
+        @Raw(dataContext.AddInputField<LineView>("X1"))
+
     </div>
 
 }

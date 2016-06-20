@@ -335,6 +335,7 @@ namespace openXDA
         public void AddNewLineView(LineView record)
         {
             m_dataContext.Table<Lines>().AddNewRecord(CreateLines(record));
+            m_dataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
@@ -342,17 +343,30 @@ namespace openXDA
         public void UpdateLineView(LineView record)
         {
             m_dataContext.Table<Lines>().UpdateRecord(CreateLines(record));
+            m_dataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
+
         }
 
         public Lines CreateLines(LineView record)
         {
-            Lines line = NewLineView();
+            Lines line = NewLines();
             line.AssetKey = record.AssetKey;
             line.Description = record.Description;
             line.Length = record.Length;
             line.ThermalRating = record.ThermalRating;
             line.VoltageKV = record.VoltageKV;
             return line;
+        }
+
+        public LineImpedance CreateLineImpedance(LineView record)
+        {
+            LineImpedance li = new LineImpedance();
+            li.R0 = record.R0;
+            li.R1 = record.R1;
+            li.X0 = record.X0;
+            li.X1 = record.X1;
+            li.LineID = record.ID;
+            return li;
         }
 
         #endregion

@@ -251,6 +251,7 @@
     <Compile Include="Model\Group.cs" />
     <Compile Include="Model\GroupMeter.cs" />
     <Compile Include="Model\GroupMeterView.cs" />
+    <Compile Include="Model\LineImpedance.cs" />
     <Compile Include="Model\Lines.cs" />
     <Compile Include="Model\LineView.cs" />
     <Compile Include="Model\MeasurementCharacteristic.cs" />
