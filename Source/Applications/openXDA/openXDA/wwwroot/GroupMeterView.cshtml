@@ -80,6 +80,11 @@
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             observableRecord.GroupID = @groupID;
         });
+        
+        $(function(){
+            $('#bodyContainer').removeClass("container theme-showcase");
+            $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});
 
+        });
     </script>
 }
