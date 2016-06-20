@@ -88,20 +88,6 @@
     </div>
 
 }
-
-
-<div id="metersDialog" class="modal modal-wide fade" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body" style="overflow-y: hidden">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <iframe style="border: none; overflow-y: hidden" id="metersFrame" marginheight="0" marginwidth="0"></iframe>
-                <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @Include("PagedViewModel.cshtml")
 
 @section Scripts 
@@ -122,36 +108,8 @@
         }
 
         function openMeters(record) {
-            //console.log(record);
-            //$("#metersFrame").attr({
-            //    "src": "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID,
-            //    "height": ($(document).height() - 150) + "px",
-            //    "width": "100%"
-            //});
-
-            //$("#metersDialog").modal("show");
             location.href = "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID + "&Title=" + record.Name;
-
         }
-
-        $("#metersDialog").on("hidden.bs.modal", function () {
-            // Refresh page counts after editing tasks
-            viewModel.queryPageRecords();
-
-            // Clear frame page
-            $("#metersFrame").attr("src", "about:blank");
-        });
-
-        $(window).resize(function () {
-            setTimeout(function () {
-                $("#metersFrame").attr("height", ($(document).height() - 150) + "px");
-            }, 500);
-        });
-
-
-        $(function () {
-            $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
-        });
 
     </script>
 }

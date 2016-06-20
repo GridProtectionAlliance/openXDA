@@ -300,6 +300,64 @@ namespace openXDA
 
         #endregion
 
+        #region [ LineView ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
+        public int QueryLineViewCount(string filterString)
+        {
+            return m_dataContext.Table<LineView>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
+        public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
+        public void DeleteLineView(int id)
+        {
+            m_dataContext.Table<Lines>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.CreateNewRecord)]
+        public LineView NewLineView()
+        {
+            return new LineView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
+        public void AddNewLineView(LineView record)
+        {
+            m_dataContext.Table<Lines>().AddNewRecord(CreateLines(record));
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
+        public void UpdateLineView(LineView record)
+        {
+            m_dataContext.Table<Lines>().UpdateRecord(CreateLines(record));
+        }
+
+        public Lines CreateLines(LineView record)
+        {
+            Lines line = NewLineView();
+            line.AssetKey = record.AssetKey;
+            line.Description = record.Description;
+            line.Length = record.Length;
+            line.ThermalRating = record.ThermalRating;
+            line.VoltageKV = record.VoltageKV;
+            return line;
+        }
+
+        #endregion
+
+
         #region [ MeterLine ]
 
         [AuthorizeHubRole("Administrator")]
