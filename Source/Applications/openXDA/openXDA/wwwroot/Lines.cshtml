@@ -29,26 +29,19 @@
 @using openXDA.Model
 
 @inherits TemplateBase<AppModel>
-@section StyleSheets {
-    <style>
-        html, body {
-            height: 100%;
-        }
-    </style>
-}
 
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Devices";
+    ViewBag.Title = "Lines";
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "Name", "Name", "text-Left" },
-        new[] { "MeterLocationID", "Station", "text-left"},
-        new[] { "Make", "Make", "text-left" },
-        new[] { "Model", "Model", "text-left" },
+        new[] { "AssetKey", "Name", "text-Left" },
+        new[] { "VoltageKV", "Voltage", "text-left"},
+        new[] { "ThermalRating", "Thermal Rating", "text-left" },
+        new[] { "Length", "Length", "text-left" },
         new[] { null, "Meter-to-Line", "text-center valign-middle"}
 
     };
@@ -61,10 +54,10 @@
 }
 @helper BodyRows()
 {
-    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: lookupNameValue(MeterLocationID)"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Length"></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">MeterLine&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -74,21 +67,17 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Meter>("Name"))
-        @Raw(dataContext.AddSelectField<Meter, MeterLocation>("MeterLocationID", "ID", "Name"))
-        @Raw(dataContext.AddInputField<Meter>("AssetKey"))
-        @Raw(dataContext.AddInputField<Meter>("ShortName"))
+        @Raw(dataContext.AddInputField<Lines>("AssetKey"))
+        @Raw(dataContext.AddInputField<Lines>("VoltageKV"))
+        @Raw(dataContext.AddInputField<Lines>("ThermalRating"))
+        @Raw(dataContext.AddInputField<Lines>("Length"))
     </div>
 
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Meter>("Make"))
-        @Raw(dataContext.AddInputField<Meter>("Model"))
-        @Raw(dataContext.AddInputField<Meter>("TimeZone"))
-        @Raw(dataContext.AddTextAreaField<Meter>("Description"))
+        @Raw(dataContext.AddTextAreaField<Lines>("Description", 4))
     </div>
 
 }
-
 
 <div id="metersDialog" class="modal modal-wide fade" role="dialog">
     <div class="modal-dialog">
@@ -108,12 +97,11 @@
 {
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag))
-        @Raw(Model.RenderAbstract<MeterLocation>("Name"))
+        @Raw(dataContext.RenderViewModelConfiguration<Lines, DataHub>(ViewBag))
         
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
+                dataHub.queryMeterLineCount(sourceID,-1, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
@@ -124,7 +112,7 @@
         function openMeters(record) {
             //console.log(record);
             $("#metersFrame").attr({
-                "src": "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID,
+                "src": "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1",
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });

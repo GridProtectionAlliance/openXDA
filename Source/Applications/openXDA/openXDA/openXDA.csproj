@@ -250,7 +250,9 @@
     <Compile Include="Model\Group.cs" />
     <Compile Include="Model\GroupMeter.cs" />
     <Compile Include="Model\GroupMeterView.cs" />
+    <Compile Include="Model\Lines.cs" />
     <Compile Include="Model\Meter.cs" />
+    <Compile Include="Model\MeterLine.cs" />
     <Compile Include="Model\MeterLocation.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="ServiceHost.cs">
@@ -327,7 +329,9 @@
     <None Include="wwwroot\Images\Icons\Thumbs.db" />
     <None Include="wwwroot\index.cshtml" />
     <None Include="wwwroot\Layout.cshtml" />
+    <None Include="wwwroot\Lines.cshtml" />
     <None Include="wwwroot\MeterGroups.cshtml" />
+    <None Include="wwwroot\MeterLine.cshtml" />
     <None Include="wwwroot\PagedViewModel.cshtml" />
     <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />

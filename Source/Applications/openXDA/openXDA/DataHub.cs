@@ -194,14 +194,14 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.AddNewRecord)]
-        public void AddNewActionItem(Meter record)
+        public void AddNewMeter(Meter record)
         {
             m_dataContext.Table<Meter>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Meter), RecordOperation.UpdateRecord)]
-        public void UpdateActionItem(Meter record)
+        public void UpdateMeter(Meter record)
         {
             m_dataContext.Table<Meter>().UpdateRecord(record);
         }
@@ -240,16 +240,136 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
-        public void AddNewActionItem(MeterLocation record)
+        public void AddNewMeterLocation(MeterLocation record)
         {
             m_dataContext.Table<MeterLocation>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
-        public void UpdateActionItem(MeterLocation record)
+        public void UpdateMeterLocation(MeterLocation record)
         {
             m_dataContext.Table<MeterLocation>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ Lines ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Lines), RecordOperation.QueryRecordCount)]
+        public int QueryLinesCount(string filterString)
+        {
+            return m_dataContext.Table<Lines>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Lines), RecordOperation.QueryRecords)]
+        public IEnumerable<Lines> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<Lines>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Lines), RecordOperation.DeleteRecord)]
+        public void DeleteLines(int id)
+        {
+            m_dataContext.Table<Lines>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Lines), RecordOperation.CreateNewRecord)]
+        public Lines NewLines()
+        {
+            return new Lines();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Lines), RecordOperation.AddNewRecord)]
+        public void AddNewLines(Lines record)
+        {
+            m_dataContext.Table<Lines>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Lines), RecordOperation.UpdateRecord)]
+        public void UpdateLines(Lines record)
+        {
+            m_dataContext.Table<Lines>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ MeterLine ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
+        public int QueryMeterLineCount(int lineID, int meterID, string filterString)
+        {
+            string restrictionString = "";
+            if(lineID == -1 && meterID != -1)
+            {
+                restrictionString = $"MeterID = {meterID}";
+            }
+            else if (meterID == -1 && lineID != -1)
+            {
+                restrictionString = $"LineID = {lineID}";
+            }
+            else if(meterID != -1 && lineID != -1)
+            {
+                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
+            }
+
+            return m_dataContext.Table<MeterLine>().QueryRecordCount(new RecordRestriction(restrictionString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterLine> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string restrictionString = "";
+            if (lineID == -1 && meterID != -1)
+            {
+                restrictionString = $"MeterID = {meterID}";
+            }
+            else if (meterID == -1 && lineID != -1)
+            {
+                restrictionString = $"LineID = {lineID}";
+            }
+            else if (meterID != -1 && lineID != -1)
+            {
+                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
+            }
+
+            return m_dataContext.Table<MeterLine>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
+        public void DeleteMeterLine(int id)
+        {
+            m_dataContext.Table<MeterLine>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
+        public MeterLine NewMeterLine()
+        {
+            return new MeterLine();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
+        public void AddNewMeterLine(MeterLine record)
+        {
+            m_dataContext.Table<MeterLine>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
+        public void UpdateMeterLine(MeterLine record)
+        {
+            m_dataContext.Table<MeterLine>().UpdateRecord(record);
         }
 
         #endregion
