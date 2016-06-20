@@ -274,6 +274,11 @@ namespace openXDA
         [RecordOperation(typeof(Group), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
+            IEnumerable<GroupMeter> table = m_dataContext.Table<GroupMeter>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
+            foreach (GroupMeter gm in table)
+            {
+                m_dataContext.Table<GroupMeter>().DeleteRecord(gm.ID);
+            }
             m_dataContext.Table<Group>().DeleteRecord(id);
         }
 
@@ -286,16 +291,70 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Group), RecordOperation.AddNewRecord)]
-        public void AddNewActionItem(Group record)
+        public void AddNewGroup(Group record)
         {
             m_dataContext.Table<Group>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Group), RecordOperation.UpdateRecord)]
-        public void UpdateActionItem(Group record)
+        public void UpdateGroup(Group record)
         {
             m_dataContext.Table<Group>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ GroupMeterView ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(GroupMeterView), RecordOperation.QueryRecordCount)]
+        public int QueryGroupMeterViewCount(int groupID, string filterString)
+        {
+            return m_dataContext.Table<GroupMeterView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(GroupMeterView), RecordOperation.QueryRecords)]
+        public IEnumerable<GroupMeterView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<GroupMeterView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(GroupMeterView), RecordOperation.DeleteRecord)]
+        public void DeleteGroupMeterView(int id)
+        {
+            m_dataContext.Table<GroupMeter>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(GroupMeterView), RecordOperation.CreateNewRecord)]
+        public GroupMeterView NewGroupMeterView()
+        {
+            return new GroupMeterView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(GroupMeterView), RecordOperation.AddNewRecord)]
+        public void AddNewGroupMeterView(GroupMeterView record)
+        {
+            m_dataContext.Table<GroupMeter>().AddNewRecord(CreateNewGroupMeter(record));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(GroupMeterView), RecordOperation.UpdateRecord)]
+        public void UpdateGroupMeterView(GroupMeterView record)
+        {
+            m_dataContext.Table<GroupMeter>().UpdateRecord(CreateNewGroupMeter(record));
+        }
+
+        public GroupMeter CreateNewGroupMeter(GroupMeterView record)
+        {
+            GroupMeter gm = new GroupMeter();
+            gm.GroupID = record.GroupID;
+            gm.MeterID = record.MeterID;
+            return gm;
         }
 
         #endregion

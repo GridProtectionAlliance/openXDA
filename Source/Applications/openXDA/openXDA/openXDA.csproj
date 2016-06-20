@@ -248,6 +248,8 @@
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="Model\AppModel.cs" />
     <Compile Include="Model\Group.cs" />
+    <Compile Include="Model\GroupMeter.cs" />
+    <Compile Include="Model\GroupMeterView.cs" />
     <Compile Include="Model\Meter.cs" />
     <Compile Include="Model\MeterLocation.cs" />
     <Compile Include="Model\Setting.cs" />
@@ -319,6 +321,7 @@
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.ttf" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff2" />
+    <None Include="wwwroot\GroupMeterView.cshtml" />
     <None Include="wwwroot\Groups.cshtml" />
     <None Include="wwwroot\Help.cshtml" />
     <None Include="wwwroot\Images\Icons\Thumbs.db" />
