@@ -110,14 +110,16 @@
         }
 
         function openMeters(record) {
-            //console.log(record);
-            $("#metersFrame").attr({
-                "src": "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1",
-                "height": ($(document).height() - 150) + "px",
-                "width": "100%"
-            });
+            ////console.log(record);
+            //$("#metersFrame").attr({
+            //    "src": "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1",
+            //    "height": ($(document).height() - 150) + "px",
+            //    "width": "100%"
+            //});
 
-            $("#metersDialog").modal("show");
+            //$("#metersDialog").modal("show");
+            location.href = "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1" + "&Title=" + record.AssetKey;
+
 
         }
 

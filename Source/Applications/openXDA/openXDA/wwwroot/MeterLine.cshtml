@@ -41,8 +41,7 @@
     ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
 
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Meter to Line";
-    ViewBag.ShowMenu = false;
+    ViewBag.Title = "Meter to Line for " + parameters["Title"];
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
@@ -120,12 +119,7 @@ else
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
-        
-        $(function(){
-            $('#bodyContainer').removeClass("container theme-showcase");
-            $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});
 
-        });
         
         function getChannelCount(lineID, meterID, element) {
             if (viewModel.dataHubIsConnected()) {
@@ -146,7 +140,7 @@ else
             //});
 
             //$("#channelsDialog").modal("show");
-            location.href =  "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID;
+            location.href =  "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID + "&Title=" + lookupAssetKeyValue(record.LineID) + " and " + lookupNameValue(record.MeterID) ;
 
         }
 

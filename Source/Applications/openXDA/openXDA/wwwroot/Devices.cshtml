@@ -123,13 +123,14 @@
 
         function openMeters(record) {
             //console.log(record);
-            $("#metersFrame").attr({
-                "src": "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID,
-                "height": ($(document).height() - 150) + "px",
-                "width": "100%"
-            });
+            //$("#metersFrame").attr({
+            //    "src": "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID,
+            //    "height": ($(document).height() - 150) + "px",
+            //    "width": "100%"
+            //});
 
-            $("#metersDialog").modal("show");
+            //$("#metersDialog").modal("show");
+            location.href = "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID + "&Title=" + record.Name;
 
         }
 

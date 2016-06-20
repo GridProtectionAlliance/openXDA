@@ -41,8 +41,7 @@
     ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
 
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Channels";
-    ViewBag.ShowMenu = false;
+    ViewBag.Title = "Channels for " + parameters["Title"] ;
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
@@ -68,7 +67,7 @@
     <td width="20%" class="text-left valign-middle" data-bind="text: Name"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: lookupMeasurementTypes(MeasurementTypeID)"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: lookupMeasurementCharacteristic(MeasurementCharacteristicID)"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: lookupPhase(PhaseID)"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: lookupPhase(PhaseID)"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -116,11 +115,6 @@
                 observableRecord.MeterID = @ViewBag.meterID;
         });
 
-        $(function(){
-            $('#bodyContainer').removeClass("container theme-showcase");
-            $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});
-
-        });
 
 
         $(function () {
