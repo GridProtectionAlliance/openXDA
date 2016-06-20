@@ -374,6 +374,54 @@ namespace openXDA
 
         #endregion
 
+        #region [ Channel ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
+        public int QueryChannelCount(int lineID, int meterID, string filterString)
+        {
+
+            return m_dataContext.Table<Channel>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
+        public IEnumerable<Channel> QueryChannel(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<Channel>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.DeleteRecord)]
+        public void DeleteChannel(int id)
+        {
+            m_dataContext.Table<Channel>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.CreateNewRecord)]
+        public Channel NewChannel()
+        {
+            return new Channel();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.AddNewRecord)]
+        public void AddNewChannel(Channel record)
+        {
+            m_dataContext.Table<Channel>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Channel), RecordOperation.UpdateRecord)]
+        public void UpdateChannel(Channel record)
+        {
+            m_dataContext.Table<Channel>().UpdateRecord(record);
+        }
+
+        #endregion
+
+
         #region [ Group ]
 
         [AuthorizeHubRole("Administrator")]

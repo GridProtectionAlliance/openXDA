@@ -247,13 +247,17 @@
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="Model\AppModel.cs" />
+    <Compile Include="Model\Channel.cs" />
     <Compile Include="Model\Group.cs" />
     <Compile Include="Model\GroupMeter.cs" />
     <Compile Include="Model\GroupMeterView.cs" />
     <Compile Include="Model\Lines.cs" />
+    <Compile Include="Model\MeasurementCharacteristic.cs" />
+    <Compile Include="Model\MeasurementType.cs" />
     <Compile Include="Model\Meter.cs" />
     <Compile Include="Model\MeterLine.cs" />
     <Compile Include="Model\MeterLocation.cs" />
+    <Compile Include="Model\Phase.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="ServiceHost.cs">
       <SubType>Component</SubType>
@@ -305,6 +309,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="wwwroot\Channel.cshtml" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />

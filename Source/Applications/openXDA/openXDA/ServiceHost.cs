@@ -309,7 +309,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("GroupMeterView.cshtml", new Tuple<Type, Type>(typeof(GroupMeterView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Lines.cshtml", new Tuple<Type, Type>(typeof(Lines), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("MeterLine.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
-
+                webServer.PagedViewModelTypes.TryAdd("Channel.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 // Initiate pre-compile of base templates
                 if (AssemblyInfo.EntryAssembly.Debuggable)
                 {

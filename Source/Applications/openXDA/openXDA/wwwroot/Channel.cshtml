@@ -41,7 +41,7 @@
     ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
 
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Meter to Line";
+    ViewBag.Title = "Channels";
     ViewBag.ShowMenu = false;
 
     // Define column headers, use null for field name to make column non-sortable
@@ -49,8 +49,10 @@
 {   //    { "Field", "Label", "Classes" }
         new[] { "LineID", "Line", "text-left" },
         new[] { "MeterID", "Meter", "text-left"},
-        new[] { "LineName", "Line Name", "text-left"},
-        new[] { null, "Channel", "text-center valign-middle"}
+        new[] { "Name", "Name", "text-left"},
+        new[] { "MeasurementTypeID", "Meas Type", "text-left"},
+        new[] { "MeasurementCharacteristicID", "Meas Char", "text-left"},
+        new[] { "Phase", "Phase", "text-center"}
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -61,10 +63,12 @@
 }
 @helper BodyRows()
 {
-    <td width="30%" class="text-left valign-middle"data-bind="text: lookupAssetKeyValue(LineID)"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: lookupNameValue(MeterID)"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: LineName"></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openChannels.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></button></td>
+    <td width="5%" class="text-left valign-middle"data-bind="text: lookupAssetKeyValue(LineID)"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: lookupNameValue(MeterID)"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Name"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: lookupMeasurementTypes(MeasurementTypeID)"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: lookupMeasurementCharacteristic(MeasurementCharacteristicID)"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: lookupPhase(PhaseID)"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -72,37 +76,25 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    if (ViewBag.lineID == -1)
-    {
-        @Raw(dataContext.AddSelectField<MeterLine, Lines>("LineID", "ID", "AssetKey"))
-}
-else
-{
-        @Raw(dataContext.AddSelectField<MeterLine, Lines>("LineID", "ID", "AssetKey", customDataBinding: "enable: false"))
-}
-if (ViewBag.meterID == -1)
-{
-        @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "Name"))
-}
-else
-{
-        @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "Name", customDataBinding: "enable: false"))
-}
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Channel>("Name"))
+        @Raw(dataContext.AddSelectField<Channel, Lines>("LineID", "ID", "AssetKey", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddSelectField<Channel, Meter>("MeterID", "ID", "Name", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddSelectField<Channel, MeasurementType>("MeasurementTypeID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<Channel, MeasurementCharacteristic>("MeasurementCharacteristicID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<Channel, Phase>("PhaseID", "ID", "Name"))
 
-    @Raw(dataContext.AddInputField<MeterLine>("LineName"))
-
-}
-<div id="channelsDialog" class="modal modal-wide fade" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body" style="overflow-y: hidden">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <iframe style="border: none; overflow-y: hidden" id="channelsFrame" marginheight="0" marginwidth="0"></iframe>
-                <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
-            </div>
-        </div>
     </div>
-</div>
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Channel>("SamplesPerHour"))
+        @Raw(dataContext.AddInputField<Channel>("PerUnitValue"))
+        @Raw(dataContext.AddInputField<Channel>("HarmonicGroup"))
+        @Raw(dataContext.AddCheckBoxField<Channel>("Enabled"))
+        @Raw(dataContext.AddTextAreaField<Channel>("Description"))
+
+    </div>
+
+}
 
 @Include("PagedViewModel.cshtml")
 
@@ -110,66 +102,32 @@ else
 {
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
+        @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
         @Raw(Model.RenderAbstract<Meter>("Name"))
         @Raw(Model.RenderAbstract<Lines>("AssetKey"))
-        
+        @Raw(Model.RenderAbstract<MeasurementType>("Name","ID","lookupMeasurementTypes", "measurementTypes"))
+        @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name","ID","lookupMeasurementCharacteristic", "measurementCharacteristic"))
+        @Raw(Model.RenderAbstract<Phase>("Name","ID","lookupPhase", "phase"))
+
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
                 observableRecord.LineID = @ViewBag.lineID;
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
-        
+
         $(function(){
             $('#bodyContainer').removeClass("container theme-showcase");
             $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});
 
         });
-        
-        function getChannelCount(lineID, meterID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryChannelCount(lineID,meterID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-
-        function openChannels(record) {
-            //console.log(record);
-            //$("#channelsFrame").attr({
-            //    "src": "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID,
-            //    "height": ($(document).height() - 150) + "px",
-            //    "width": "100%"
-            //});
-
-            //$("#channelsDialog").modal("show");
-            location.href =  "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID;
-
-        }
-
-        $("#channelsDialog").on("hidden.bs.modal", function () {
-            // Refresh page counts after editing tasks
-            viewModel.queryPageRecords();
-
-            // Clear frame page
-            $("#channelsFrame").attr("src", "about:blank");
-        });
-
-        $(window).resize(function () {
-            setTimeout(function () {
-                $("#channelsFrame").attr("height", ($(document).height() - 150) + "px");
-            }, 500);
-        });
 
 
         $(function () {
-            $("#channelsDialog").modal({ show: false, backdrop: "static", keyboard: false });
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if(@ViewBag.lineID !== -1)
                     $('#selectLineID').val(@ViewBag.lineID);
+                if(@ViewBag.meterID !== -1)
                     $('#selectMeterID').val(@ViewBag.meterID);
 
             });

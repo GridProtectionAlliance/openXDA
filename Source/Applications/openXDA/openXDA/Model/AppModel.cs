@@ -60,38 +60,42 @@ namespace openXDA.Model
         }
 
         #endregion
-
         /// <summary>
         /// Renders client-side Javascript function for looking up single values from a table.
         /// </summary>
         /// <param name="valueFieldName">Table field name as defined in the table.</param>
-        /// <param name="dataContext">Use different datacontext than default</param>
         /// <param name="idFieldName">Name of primary key field, defaults to "ID".</param>
+        /// <param name="lookupFunctionName">Name of lookup function, defaults to lookup + <paramref name="groupName"/>.ToTitleCase() + Value.</param>
+        /// <param name="arrayName">Name of lookup function, defaults to lookup + <paramref name="groupName"/>.ToTitleCase() + Value.</param>
         /// <returns>Client-side Javascript lookup function.</returns>
-        public string RenderAbstract<T>(string valueFieldName, DataContext dataContext = null, string idFieldName = "ID") where T : class, new()
+        public string RenderAbstract<T>(string valueFieldName, string idFieldName = "ID", string lookupFunctionName = null, string arrayName = null) where T : class, new()
         {
-            if (dataContext == null) dataContext = new DataContext();
-
             StringBuilder javascript = new StringBuilder();
+            DataContext dataContext = new DataContext();
 
-            var lookupFunctionName = $"lookup{valueFieldName}Value";
+            if (string.IsNullOrWhiteSpace(lookupFunctionName))
+                lookupFunctionName = $"lookup{valueFieldName}Value";
+
+            if (string.IsNullOrWhiteSpace(arrayName))
+                arrayName = $"{valueFieldName}";
             TableOperations<T> operations = dataContext.Table<T>() as TableOperations<T>;
 
-            javascript.AppendLine($"var {valueFieldName} = [];\r\n");
+            javascript.AppendLine($"var {arrayName} = [];\r\n");
             foreach (T record in operations.QueryRecords())
             {
                 var valueField = operations.GetFieldValue(record, valueFieldName);
                 var idField = operations.GetFieldValue(record, idFieldName);
 
-                javascript.AppendLine($"        {valueFieldName}[{idField.ToString().JavaScriptEncode()}] = \"{valueField?.ToString().JavaScriptEncode()}\";");
+                javascript.AppendLine($"        {arrayName}[{idField.ToString().JavaScriptEncode()}] = \"{valueField?.ToString().JavaScriptEncode()}\";");
             }
 
             javascript.AppendLine($"\r\n        function {lookupFunctionName}(value) {{");
-            javascript.AppendLine($"            return {valueFieldName}[value];");
+            javascript.AppendLine($"            return {arrayName}[value];");
             javascript.AppendLine("        }");
 
             return javascript.ToString();
         }
+
 
 
     }
