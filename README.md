@@ -1,4 +1,4 @@
-![openXDA](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/wiki/openXDA_Logo.png)
+![openXDA](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/openXDA.png)![openXDA](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/wiki/openXDA_Logo.png)
 
 **eXtensible Disturbance Analytics**
 
