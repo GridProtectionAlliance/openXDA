@@ -49,9 +49,10 @@ openXDA is a platform comprised of a back office service designed to consume all
 Traditional disturbance analytic processes typically require manual retrieval of the data from a variety of substation devices, and a thorough knowledge of many different proprietary vendor software packages.  Ultimately, the process requires a significant investment of staff time to retrieve, analyze, and notify, or publish results of the analysis.  The openXDA provides a platform that is designed for easy extension and integration into existing data processes, to facilitate the development and deployment of fully automated analysis systems.  An example system could produce automated fault recognition, type determination, and distance to fault calculations to be included in notifications, emails, or an event database.  Systems built on the openXDA platform can produce analytic results as quickly as files can be retrieved from the remote devices.  The openXDA platform is suitable for developing systems to automatically perform any analysis that is appropriate for data contained in disturbance records from IEDs.
 
 
-# Documentation
-
-Documentation for openXDA can be found [here](https://github.com/GridProtectionAlliance/openXDA/tree/master/Source/Documentation).
+# Documentation and Support
+* Documentation for openXDA can be found [here](https://github.com/GridProtectionAlliance/openXDA/tree/master/Source/Documentation).
+* Get in contact with our developement team on our new [discussion boards](http://discussions.gridprotectionalliance.org/c/gpa-products/openxda).
+* Check out the [wiki](https://gridprotectionalliance.org/wiki/doku.php?id=openxda:overview).
 
 # Deployment
 
