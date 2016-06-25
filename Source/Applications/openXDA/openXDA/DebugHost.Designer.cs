@@ -99,6 +99,7 @@ namespace openXDA
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DebugHost));
             this.LabelNotice = new System.Windows.Forms.Label();
+            this.m_serviceHost = new openXDA.ServiceHost(this.components);
             this.m_notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.m_contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.m_showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -116,6 +117,11 @@ namespace openXDA
             this.LabelNotice.TabIndex = 1;
             this.LabelNotice.Text = resources.GetString("LabelNotice.Text");
             this.LabelNotice.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // m_serviceHost
+            // 
+            this.m_serviceHost.ExitCode = 0;
+            this.m_serviceHost.ServiceName = "openXDA";
             // 
             // m_notifyIcon
             // 
@@ -178,6 +184,7 @@ namespace openXDA
         #endregion
 
         private System.Windows.Forms.Label LabelNotice;
+        private ServiceHost m_serviceHost;
         private System.Windows.Forms.NotifyIcon m_notifyIcon;
         private System.Windows.Forms.ContextMenuStrip m_contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem m_showToolStripMenuItem;

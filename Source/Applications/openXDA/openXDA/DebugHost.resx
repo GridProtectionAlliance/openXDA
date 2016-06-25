@@ -120,6 +120,9 @@
   <data name="LabelNotice.Text" xml:space="preserve">
     <value>{0} windows service is running as a windows application for debugging purpose. Closing this window will cause the service to stop. Minimize this window to keep the service running as an application in the system tray.</value>
   </data>
+  <metadata name="m_serviceHost.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="m_notifyIcon.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>132, 17</value>
   </metadata>

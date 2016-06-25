@@ -120,22 +120,11 @@ namespace openXDA
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!this.m_disposed)
+            if (disposing && (components != null))
             {
-                try
-                {
-                    if (disposing && (components != null))
-                    {
-                        this.m_webAppHost?.Dispose();
-                        components.Dispose();
-                    }
-                }
-                finally
-                {
-                    this.m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                components.Dispose();
             }
+            base.Dispose(disposing);
         }
 
         #region Component Designer generated code
@@ -200,8 +189,6 @@ namespace openXDA
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.StatusLog)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_remotingServer)).EndInit();
-
-
 
         }
 
