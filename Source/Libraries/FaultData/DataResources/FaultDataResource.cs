@@ -469,7 +469,12 @@ namespace FaultData.DataResources
             try
             {
                 if ((object)expressionText == null)
-                    throw new Exception($"Expression text is not defined for line '{dataGroup.Line.AssetKey}'.");
+                {
+                    if (m_faultLocationSettings.WarnMissingDetectionLogic)
+                        throw new Exception($"Expression text is not defined for line '{dataGroup.Line.AssetKey}'.");
+
+                    return null;
+                }
 
                 // Parse fault detection logic into a boolean expression
                 BooleanExpression expression = new BooleanExpression(expressionText);
