@@ -80,13 +80,17 @@ namespace openXDA
         // Fields
         private string m_productName;
         private Process m_remoteConsole;
+        private ServiceHost m_serviceHost;
 
         #endregion
 
         #region [ Constructors ]
 
-        public DebugHost()
+        public DebugHost(ServiceHost host)
         {
+            m_serviceHost = host;
+            m_serviceHost.ExitCode = 0;
+            m_serviceHost.ServiceName = "openXDA";
             InitializeComponent();
         }
 

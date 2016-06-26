@@ -67,20 +67,36 @@
 //*********************************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using FaultAlgorithms;
 using GSF;
+using GSF.Configuration;
 using GSF.Console;
+using GSF.Data;
+using GSF.Identity;
 using GSF.IO;
+using GSF.PQDIF.Logical;
+using GSF.Reflection;
+using GSF.Security.Model;
 using GSF.ServiceProcess;
+using GSF.TimeSeries;
+using GSF.Web.Hosting;
+using GSF.Web.Model;
+using GSF.Web.Security;
 using log4net.Appender;
 using log4net.Config;
+using log4net.Core;
 using log4net.Layout;
+using Microsoft.Owin.Hosting;
 using openXDA.Logging;
+using openXDA.Model;
 
 namespace openXDA
 {
@@ -88,13 +104,54 @@ namespace openXDA
     {
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Raised when there is a new status message reported to service.
+        /// </summary>
+        public event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
+
+        /// <summary>
+        /// Raised when there is a new exception logged to service.
+        /// </summary>
+        public event EventHandler<EventArgs<Exception>> LoggedException;
+
+
         // Fields
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
+        private IDisposable m_webAppHost;
+        private bool m_disposed;
+
+
 
         #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the configured default web page for the application.
+        /// </summary>
+        public string DefaultWebPage
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the model used for the application.
+        /// </summary>
+        public AppModel Model
+        {
+            get;
+            private set;
+        }
+
+
+        #endregion
+
 
         #region [ Constructors ]
 
@@ -117,6 +174,13 @@ namespace openXDA
         #endregion
 
         #region [ Methods ]
+ 
+
+        private void WebServer_StatusMessage(object sender, EventArgs<string> e)
+        {
+            //DisplayStatusMessage(e.Argument, UpdateType.Information);
+        }
+
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
@@ -192,10 +256,98 @@ namespace openXDA
             });
 
             m_startEngineThread.Start();
+
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+            CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];
+            ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
+
+
+            systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
+            systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
+            systemSettings.Add("WebHostURL", "http://localhost:8080", "The web hosting URL for remote system management.");
+            systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
+            systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
+            systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.");
+            systemSettings.Add("DefaultDialUpRetries", 3, "Default dial-up connection retries.");
+            systemSettings.Add("DefaultDialUpTimeout", 90, "Default dial-up connection timeout.");
+            systemSettings.Add("DefaultFTPUserName", "anonymous", "Default FTP user name to use for device connections.");
+            systemSettings.Add("DefaultFTPPassword", "anonymous", "Default FTP password to use for device connections.");
+            systemSettings.Add("DefaultRemotePath", "/", "Default remote FTP path to use for device connections.");
+            systemSettings.Add("DefaultLocalPath", "", "Default local path to use for file downloads.");
+
+            DefaultWebPage = systemSettings["DefaultWebPage"].Value;
+
+            Model = new AppModel();
+            Model.Global.CompanyName = systemSettings["CompanyName"].Value;
+            Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
+            Model.Global.ApplicationName = "openXDA";
+            Model.Global.ApplicationDescription = "open Meter Information Collection System";
+            Model.Global.ApplicationKeywords = "open source, utility, software, meter, interrogation";
+            Model.Global.DateFormat = systemSettings["DateFormat"].Value;
+            Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
+            Model.Global.DateTimeFormat = $"{Model.Global.DateFormat} {Model.Global.TimeFormat}";
+            Model.Global.BootstrapTheme = systemSettings["BootstrapTheme"].Value;
+            try
+            {
+                // Attach to default web server events
+                WebServer webServer = WebServer.Default;
+                webServer.StatusMessage += WebServer_StatusMessage;
+
+                // Define types for Razor pages - self-hosted web service does not use view controllers so
+                // we must define configuration types for all paged view model based Razor views here:
+                //webServer.PagedViewModelTypes.TryAdd("Companies.cshtml", new Tuple<Type, Type>(typeof(Company), typeof(DataHub)));
+                //webServer.PagedViewModelTypes.TryAdd("ConnectionProfiles.cshtml", new Tuple<Type, Type>(typeof(ConnectionProfile), typeof(DataHub)));
+                //webServer.PagedViewModelTypes.TryAdd("ConnectionProfileTasks.cshtml", new Tuple<Type, Type>(typeof(ConnectionProfileTask), typeof(DataHub)));
+                //webServer.PagedViewModelTypes.TryAdd("Vendors.cshtml", new Tuple<Type, Type>(typeof(Vendor), typeof(DataHub)));
+                //webServer.PagedViewModelTypes.TryAdd("VendorDevices.cshtml", new Tuple<Type, Type>(typeof(VendorDevice), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
+                webServer.PagedViewModelTypes.TryAdd("Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
+                webServer.PagedViewModelTypes.TryAdd("Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Devices.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Stations.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("MeterGroups.cshtml", new Tuple<Type, Type>(typeof(Group), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("GroupMeterView.cshtml", new Tuple<Type, Type>(typeof(GroupMeterView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("MeterLine.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Channel.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
+                // Initiate pre-compile of base templates
+                if (AssemblyInfo.EntryAssembly.Debuggable)
+                {
+                    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
+                    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
+                }
+                else
+                {
+                    RazorEngine<CSharp>.Default.PreCompile(HandleException);
+                    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
+                }
+
+                // Create new web application hosting environment
+                m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
+            }
+            catch (Exception ex)
+            {
+                HandleException(new InvalidOperationException($"Failed to initialize web hosting: {ex.Message}", ex));
+            }
+
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
         {
+            if (!m_disposed)
+            {
+                try
+                {
+                   m_webAppHost?.Dispose();
+                 
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose();    // Call base class Dispose().
+                }
+            }
+
             // If the start engine thread is still
             // running, wait for it to stop
             m_serviceStopping = true;
@@ -257,6 +409,7 @@ namespace openXDA
         private void ReloadConfigurationHandler(string s, object[] args)
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadConfiguration();
+            ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
         }
 
         // Reloads system settings from the database.
@@ -363,6 +516,71 @@ namespace openXDA
                     m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex2.Message + newLines);
                 }
             }
+        }
+
+        /// <summary>
+        /// Validate accounts and groups to ensure that account names and group names are converted to SIDs.
+        /// </summary>
+        /// <param name="database">Data connection to use for database operations.</param>
+        private static void ValidateAccountsAndGroups(AdoDataConnection database)
+        {
+            const string SelectUserAccountQuery = "SELECT ID, Name, UseADAuthentication FROM UserAccount";
+            const string SelectSecurityGroupQuery = "SELECT ID, Name FROM SecurityGroup";
+            const string UpdateUserAccountFormat = "UPDATE UserAccount SET Name = '{0}' WHERE ID = '{1}'";
+            const string UpdateSecurityGroupFormat = "UPDATE SecurityGroup SET Name = '{0}' WHERE ID = '{1}'";
+
+            string id;
+            string sid;
+            string accountName;
+            Dictionary<string, string> updateMap;
+
+            updateMap = new Dictionary<string, string>();
+
+            // Find user accounts that need to be updated
+            using (IDataReader userAccountReader = database.Connection.ExecuteReader(SelectUserAccountQuery))
+            {
+                while (userAccountReader.Read())
+                {
+                    id = userAccountReader["ID"].ToNonNullString();
+                    accountName = userAccountReader["Name"].ToNonNullString();
+
+                    if (userAccountReader["UseADAuthentication"].ToNonNullString().ParseBoolean())
+                    {
+                        sid = UserInfo.UserNameToSID(accountName);
+
+                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsUserSID(sid))
+                            updateMap.Add(id, sid);
+                    }
+                }
+            }
+
+            // Update user accounts
+            foreach (KeyValuePair<string, string> pair in updateMap)
+                database.Connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
+
+            updateMap.Clear();
+
+            // Find security groups that need to be updated
+            using (IDataReader securityGroupReader = database.Connection.ExecuteReader(SelectSecurityGroupQuery))
+            {
+                while (securityGroupReader.Read())
+                {
+                    id = securityGroupReader["ID"].ToNonNullString();
+                    accountName = securityGroupReader["Name"].ToNonNullString();
+
+                    if (accountName.Contains('\\'))
+                    {
+                        sid = UserInfo.GroupNameToSID(accountName);
+
+                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsGroupSID(sid))
+                            updateMap.Add(id, sid);
+                    }
+                }
+            }
+
+            // Update security groups
+            foreach (KeyValuePair<string, string> pair in updateMap)
+                database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
         }
 
         #region [ Service Monitor Handlers ]
