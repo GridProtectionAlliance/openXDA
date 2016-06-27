@@ -31,8 +31,8 @@ AS BEGIN
             Y AS Magnitude,
             X AS Duration
         FROM
-            IndustrialPQ.dbo.TestCurvePoint JOIN
-            IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
+            PQInvestigator.IndustrialPQ.dbo.TestCurvePoint JOIN
+            PQInvestigator.IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
     ),
     EPRIToleranceSegment AS
     (
@@ -86,8 +86,8 @@ AS BEGIN
             Y AS Magnitude,
             X AS Duration
         FROM
-            UserIndustrialPQ.dbo.TestCurvePoint JOIN
-            UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
+            PQInvestigator.UserIndustrialPQ.dbo.TestCurvePoint JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
     ),
     USERToleranceSegment AS
     (
@@ -142,10 +142,10 @@ AS BEGIN
             Rank AS SectionRank,
             Content AS SectionContent
         FROM
-            UserIndustrialPQ.dbo.FacilityAudit JOIN
-            UserIndustrialPQ.dbo.AuditSection ON AuditSection.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
-            UserIndustrialPQ.dbo.SectionType ON AuditSection.SectionTypeID = SectionType.SectionTypeID JOIN
-            UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = AuditSection.AuditSectionID
+            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.AuditSection ON AuditSection.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.SectionType ON AuditSection.SectionTypeID = SectionType.SectionTypeID JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = AuditSection.AuditSectionID
         WHERE
             AuditCurve.CurveType = 'TOLERANCE' AND
             FacilityAudit.FacilityID = @facilityID
@@ -190,9 +190,9 @@ AS BEGIN
         Company.CompanyName,
         Company.Industry
     FROM
-        UserIndustrialPQ.dbo.Facility JOIN
-        UserIndustrialPQ.dbo.Address ON Facility.AddressID = Address.AddressID JOIN
-        UserIndustrialPQ.dbo.Company ON Address.CompanyID = Company.CompanyID
+        PQInvestigator.UserIndustrialPQ.dbo.Facility JOIN
+        PQInvestigator.UserIndustrialPQ.dbo.Address ON Facility.AddressID = Address.AddressID JOIN
+        PQInvestigator.UserIndustrialPQ.dbo.Company ON Address.CompanyID = Company.CompanyID
     WHERE
         Facility.FacilityID = @facilityID
 END
@@ -212,8 +212,8 @@ AS BEGIN
             Y AS Magnitude,
             X AS Duration
         FROM
-            IndustrialPQ.dbo.TestCurvePoint JOIN
-            IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
+            PQInvestigator.IndustrialPQ.dbo.TestCurvePoint JOIN
+            PQInvestigator.IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
     ),
     EPRIToleranceSegment AS
     (
@@ -267,8 +267,8 @@ AS BEGIN
             Y AS Magnitude,
             X AS Duration
         FROM
-            UserIndustrialPQ.dbo.TestCurvePoint JOIN
-            UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
+            PQInvestigator.UserIndustrialPQ.dbo.TestCurvePoint JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
     ),
     USERToleranceSegment AS
     (
@@ -323,12 +323,12 @@ AS BEGIN
             Equipment.Title AS SectionTitle,
             Equipment.Rank AS SectionRank
         FROM
-            UserIndustrialPQ.dbo.FacilityAudit JOIN
-            UserIndustrialPQ.dbo.Facility ON FacilityAudit.FacilityID = Facility.FacilityID JOIN
-            UserIndustrialPQ.dbo.AuditSection Equipment ON Equipment.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
-            UserIndustrialPQ.dbo.AuditSectionTree ON AuditSectionTree.AuditSectionChildID = Equipment.AuditSectionID JOIN
-            UserIndustrialPQ.dbo.AuditSection Area ON AuditSectionTree.AuditSectionParentID = Area.AuditSectionID JOIN
-            UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = Equipment.AuditSectionID
+            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.Facility ON FacilityAudit.FacilityID = Facility.FacilityID JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.AuditSection Equipment ON Equipment.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.AuditSectionTree ON AuditSectionTree.AuditSectionChildID = Equipment.AuditSectionID JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.AuditSection Area ON AuditSectionTree.AuditSectionParentID = Area.AuditSectionID JOIN
+            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = Equipment.AuditSectionID
         WHERE
             AuditCurve.CurveType = 'TOLERANCE' AND
             FacilityAudit.FacilityID = @facilityID
@@ -343,10 +343,10 @@ AS BEGIN
         Series.SeriesName,
         ComponentType.ComponentTypeName
     FROM
-        IndustrialPQ.dbo.Component JOIN
-        IndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
-        IndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
-        IndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
+        PQInvestigator.IndustrialPQ.dbo.Component JOIN
+        PQInvestigator.IndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
+        PQInvestigator.IndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
+        PQInvestigator.IndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
         EPRIToleranceCurve ON EPRIToleranceCurve.ComponentID = Component.ComponentID JOIN
         FacilityCurve ON FacilityCurve.CurveID = EPRIToleranceCurve.TestCurveID
     WHERE
@@ -363,10 +363,10 @@ AS BEGIN
         Series.SeriesName,
         ComponentType.ComponentTypeName
     FROM
-        UserIndustrialPQ.dbo.Component JOIN
-        UserIndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
-        UserIndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
-        UserIndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
+        PQInvestigator.UserIndustrialPQ.dbo.Component JOIN
+        PQInvestigator.UserIndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
+        PQInvestigator.UserIndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
+        PQInvestigator.UserIndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
         USERToleranceCurve ON USERToleranceCurve.ComponentID = Component.ComponentID JOIN
         FacilityCurve ON FacilityCurve.CurveID = USERToleranceCurve.TestCurveID
     WHERE
