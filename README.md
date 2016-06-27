@@ -1,4 +1,4 @@
-![openXDA](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/openXDA.png)![openXDA](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/wiki/openXDA_Logo.png)
+![Icon](http://www.gridprotectionalliance.org/images/products/icons%2064/openXDA.png)![openXDA](http://www.gridprotectionalliance.org/images/products/openXDAW.png)
 
 **eXtensible Disturbance Analytics**
 
@@ -38,10 +38,10 @@ openXDA is a platform comprised of a back office service designed to consume all
   * Additional analytics can be included as new modules in the platform.
 
 
-![openXDA Overview](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/XDA-Overview.png)
+![openXDA Overview](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Readme%20Files/XDA-Overview.png)
 
 **Where It Fits In:**
-![Where-It-Fits-In](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/readme%20diagrams/Where%20it%20fits%20in.png)
+![Where-It-Fits-In](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Readme%20files/Where%20it%20fits%20in.png)
 
 
 # Why openXDA?
