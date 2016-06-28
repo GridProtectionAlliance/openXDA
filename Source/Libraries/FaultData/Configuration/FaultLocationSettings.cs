@@ -34,6 +34,7 @@ namespace FaultData.Configuration
         private double m_prefaultTrigger;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
+        private bool m_warnMissingDetectionLogic;
 
         #endregion
 
@@ -78,6 +79,20 @@ namespace FaultData.Configuration
             set
             {
                 m_minFaultDistanceMultiplier = value;
+            }
+        }
+
+        [Setting]
+        [DefaultValue(false)]
+        public bool WarnMissingDetectionLogic
+        {
+            get
+            {
+                return m_warnMissingDetectionLogic;
+            }
+            set
+            {
+                m_warnMissingDetectionLogic = value;
             }
         }
 
