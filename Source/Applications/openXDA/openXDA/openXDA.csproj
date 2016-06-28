@@ -248,6 +248,7 @@
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="Model\AppModel.cs" />
     <Compile Include="Model\Channel.cs" />
+    <Compile Include="Model\DashSettings.cs" />
     <Compile Include="Model\Group.cs" />
     <Compile Include="Model\GroupMeter.cs" />
     <Compile Include="Model\GroupMeterView.cs" />
@@ -319,6 +320,7 @@
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
+    <None Include="wwwroot\DashSettings.cshtml" />
     <None Include="wwwroot\Devices.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />

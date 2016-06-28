@@ -295,11 +295,6 @@ namespace openXDA
 
                 // Define types for Razor pages - self-hosted web service does not use view controllers so
                 // we must define configuration types for all paged view model based Razor views here:
-                //webServer.PagedViewModelTypes.TryAdd("Companies.cshtml", new Tuple<Type, Type>(typeof(Company), typeof(DataHub)));
-                //webServer.PagedViewModelTypes.TryAdd("ConnectionProfiles.cshtml", new Tuple<Type, Type>(typeof(ConnectionProfile), typeof(DataHub)));
-                //webServer.PagedViewModelTypes.TryAdd("ConnectionProfileTasks.cshtml", new Tuple<Type, Type>(typeof(ConnectionProfileTask), typeof(DataHub)));
-                //webServer.PagedViewModelTypes.TryAdd("Vendors.cshtml", new Tuple<Type, Type>(typeof(Vendor), typeof(DataHub)));
-                //webServer.PagedViewModelTypes.TryAdd("VendorDevices.cshtml", new Tuple<Type, Type>(typeof(VendorDevice), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
@@ -310,6 +305,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("MeterLine.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Channel.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
                 // Initiate pre-compile of base templates
                 if (AssemblyInfo.EntryAssembly.Debuggable)
                 {

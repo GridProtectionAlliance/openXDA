@@ -162,6 +162,52 @@ namespace openXDA
 
         #endregion
 
+        #region [ DashSettings ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DashSettings), RecordOperation.QueryRecordCount)]
+        public int QueryDashSettingsCount(string filterString)
+        {
+            return m_dataContext.Table<DashSettings>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DashSettings), RecordOperation.QueryRecords)]
+        public IEnumerable<DashSettings> QueryDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<DashSettings>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DashSettings), RecordOperation.DeleteRecord)]
+        public void DeleteDashSettings(int id)
+        {
+            m_dataContext.Table<DashSettings>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DashSettings), RecordOperation.CreateNewRecord)]
+        public DashSettings NewDashSettings()
+        {
+            return new DashSettings();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DashSettings), RecordOperation.AddNewRecord)]
+        public void AddNewActionItem(DashSettings record)
+        {
+            m_dataContext.Table<DashSettings>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(DashSettings), RecordOperation.UpdateRecord)]
+        public void UpdateActionItem(DashSettings record)
+        {
+            m_dataContext.Table<DashSettings>().UpdateRecord(record);
+        }
+
+        #endregion
+
         #region [ Meter ]
 
         [AuthorizeHubRole("Administrator")]
