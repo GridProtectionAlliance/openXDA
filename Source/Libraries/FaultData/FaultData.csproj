@@ -141,6 +141,9 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Database\SystemInfo.cs">
+      <DependentUpon>SystemInfo.dbml</DependentUpon>
+    </Compile>
     <Compile Include="Database\SystemInfo.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -152,6 +155,7 @@
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
     <Compile Include="DataOperations\DataOperationBase.cs" />
     <Compile Include="DataOperations\DataQualityOperation.cs" />
+    <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />

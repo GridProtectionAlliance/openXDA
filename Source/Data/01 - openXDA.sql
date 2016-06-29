@@ -340,22 +340,25 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DisturbanceSeverityOperation', 3)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 4)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 4)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 5)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 6)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 6)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 7)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 7)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 8)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 8)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 9)
 GO
 
 INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter', 1)
@@ -389,6 +392,91 @@ AS BEGIN
     FROM [Group] CROSS JOIN inserted Meter
     WHERE [Group].GroupName = 'AllMeters'
 END
+GO
+
+-- -------- --
+-- Security --
+-- -------- --
+CREATE TABLE Node
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    Enabled BIT NOT NULL DEFAULT 0,
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE ApplicationRole
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    NodeID UNIQUEIDENTIFIER NOT NULL REFERENCES Node(ID),
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE SecurityGroup
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE UserAccount
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Password VARCHAR(200) NULL,
+    FirstName VARCHAR(200) NULL,
+    LastName VARCHAR(200) NULL,
+    DefaultNodeID UNIQUEIDENTIFIER NOT NULL REFERENCES Node(ID),
+    Phone VARCHAR(200) NULL,
+    Email VARCHAR(200) NULL,
+    LockedOut BIT NOT NULL DEFAULT 0,
+    UseADAuthentication BIT NOT NULL DEFAULT 1,
+    ChangePasswordOn DATETIME NULL DEFAULT DATEADD(DAY, 90, GETUTCDATE()),
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE ApplicationRoleSecurityGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationRole(ID),
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID)
+)
+GO
+
+CREATE TABLE ApplicationRoleUserAccount
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationRole(ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+)
+GO
+
+CREATE TABLE SecurityGroupUserAccount
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+)
 GO
 
 
@@ -506,16 +594,50 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_EventTypeID
 ON Disturbance(EventTypeID ASC)
 GO
 
-CREATE TABLE CycleData
+CREATE TABLE VoltageEnvelope
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EventID INT NOT NULL REFERENCES Event(ID),
-    Data VARBINARY(MAX) NOT NULL
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_CycleData_EventID
-ON CycleData(EventID ASC)
+CREATE TABLE VoltageCurve
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE VoltageCurvePoint
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    VoltageCurveID INT NOT NULL REFERENCES VoltageCurve(ID),
+    PerUnitMagnitude FLOAT NOT NULL,
+    DurationSeconds FLOAT NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
+CREATE TABLE VoltageEnvelopeCurve
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    VoltageEnvelopeID INT NOT NULL REFERENCES VoltageEnvelope(ID),
+    VoltageCurveID INT NOT NULL REFERENCES VoltageCurve(ID)
+)
+GO
+
+CREATE TABLE DisturbanceSeverity
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    VoltageEnvelopeID INT NOT NULL REFERENCES VoltageEnvelope(ID),
+    DisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
+    SeverityCode INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_DisturbanceID
+ON DisturbanceSeverity(DisturbanceID ASC)
 GO
 
 CREATE TABLE BreakerOperationType
@@ -548,6 +670,54 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_BreakerOperation_EventID
 ON BreakerOperation(EventID ASC)
+GO
+
+INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
+GO
+
+INSERT INTO VoltageCurve(Name) VALUES ('ITIC Upper')
+GO
+
+INSERT INTO VoltageCurve(Name) VALUES ('ITIC Lower')
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 2.0, 0.001, 1)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.4, 0.003, 2)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.2, 0.003, 3)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.2, 0.5, 4)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.1, 0.5, 5)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.0, 0.02, 1)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.7, 0.02, 2)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.7, 0.5, 3)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.8, 0.5, 4)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.8, 10.0, 5)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.9, 10.0, 5)
+GO
+
+INSERT INTO VoltageEnvelopeCurve(VoltageEnvelopeID, VoltageCurveID) VALUES(1, 1)
+GO
+
+INSERT INTO VoltageEnvelopeCurve(VoltageEnvelopeID, VoltageCurveID) VALUES(1, 2)
 GO
 
 INSERT INTO BreakerOperationType(Name, Description) VALUES('Normal', 'Breaker operated normally')

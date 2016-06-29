@@ -220,6 +220,9 @@
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Web.Razor">
+      <HintPath>..\..\..\Dependencies\Microsoft\System.Web.Razor.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
