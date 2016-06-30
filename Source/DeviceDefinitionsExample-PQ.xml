@@ -29,22 +29,26 @@
             
             <!-- Where is the device located?
 			stationID is a unique identifier used by openXDA in calculations
-			stationName is a human readable name used in reporting. -->
+			stationName is a human readable name used in reporting. 
+			stationLatitude and stationLongitude are optional-->
 			<stationID>Station1</stationID>
 			<stationName>Station1</stationName>
+            <stationLatitude>37.95</stationLatitude>
+            <stationLongitude>-81.848</stationLongitude>
 		</attributes>
 		<lines>
             <!-- If this device is NOT monitoring a line remove everything in the line section after <voltage>161</voltage>
-			If this device IS monitoring a line, and a device at Station3 is monitoring this line from the other end,
+			If this device IS monitoring a line, and a device is monitoring this line from the other end,
 			the same line id should be used when modelling that device. 
 			line id is a unique identifier used by openXDA in calculations.
 			If no line is being monitored any id is ok. -->
 			<line id="01">
                 <!-- name is a human readable name for the line used in reporting.
-				If no line is being monitored any mame is ok. -->
+				If no line is being monitored any name is ok. -->
 				<name>Station1-Station3</name>
                 
-                <!-- voltage is the nominal voltage for this line or location specified in kV. -->
+                <!-- voltage is the nominal voltage for this line or location specified in kV. 
+				i.e. 161,000V should be specified as 161 similarly 480V should be specified as .48 -->
 				<voltage>161</voltage>
                                              
                 <!-- The remainder of this line section should be removed if no line is being monitored by this device. -->
@@ -89,6 +93,8 @@
 			<model>EXAMPLE</model>
 			<stationID>Station2</stationID>
 			<stationName>Station2</stationName>
+            <stationLatitude>37.95</stationLatitude>
+            <stationLongitude>-81.848</stationLongitude>
 		</attributes>
 		<lines>
 			<line id="03">

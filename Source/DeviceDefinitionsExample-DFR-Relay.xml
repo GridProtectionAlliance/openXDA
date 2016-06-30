@@ -28,9 +28,12 @@
             
             <!-- Where is the device located?
 			stationID is a unique identifier used by openXDA in calculations
-			stationName is a human readable name used in reporting. -->
+			stationName is a human readable name used in reporting. 
+			stationLatitude and stationLongitude are optional -->
 			<stationID>Station1</stationID>
 			<stationName>Station1</stationName>
+            <stationLatitude>37.95</stationLatitude>
+            <stationLongitude>-81.848</stationLongitude>
 		</attributes>
 		<lines>
             <!-- If a device at Station3 is monitoring this line from the other end,
@@ -131,6 +134,8 @@
 			<model>EXAMPLE</model>
 			<stationID>Station2</stationID>
 			<stationName>Station2</stationName>
+            <stationLatitude>37.95</stationLatitude>
+            <stationLongitude>-81.848</stationLongitude>
 		</attributes>
 		<lines>
 			<line id="03">
