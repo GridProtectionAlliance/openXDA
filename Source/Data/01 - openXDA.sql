@@ -294,6 +294,10 @@ CREATE TABLE GroupMeter
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_GroupMeter_MeterID
+ON GroupMeter(MeterID ASC)
+GO
+
 CREATE TABLE [User]
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -594,6 +598,14 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_EventTypeID
 ON Disturbance(EventTypeID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime
+ON Disturbance(StartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Disturbance_EndTime
+ON Disturbance(EndTime ASC)
+GO
+
 CREATE TABLE VoltageEnvelope
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -638,6 +650,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_DisturbanceID
 ON DisturbanceSeverity(DisturbanceID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_SeverityCode
+ON DisturbanceSeverity(SeverityCode ASC)
 GO
 
 CREATE TABLE BreakerOperationType
