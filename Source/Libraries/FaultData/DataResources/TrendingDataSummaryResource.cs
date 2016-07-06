@@ -291,9 +291,19 @@ namespace FaultData.DataResources
                 DateTime startTime = channelGroup.Key.Item1;
                 DateTime stopTime = channelGroup.Key.Item2;
                 IEnumerable<int> channels = channelGroup.Select(trendingRange => trendingRange.Channel.ID);
+                IEnumerable<TrendingDataPoint> trendingPoints = null;
 
-                foreach (TrendingDataPoint trendingPoint in historian.Read(channels, startTime, stopTime))
-                    existingTrendingPoints.Add(GetKey(trendingPoint));
+                try
+                {
+                    trendingPoints = historian.Read(channels, startTime, stopTime);
+
+                    foreach (TrendingDataPoint trendingPoint in trendingPoints)
+                        existingTrendingPoints.Add(GetKey(trendingPoint));
+                }
+                finally
+                {
+                    (trendingPoints as IDisposable)?.Dispose();
+                }
             }
 
             return existingTrendingPoints;
