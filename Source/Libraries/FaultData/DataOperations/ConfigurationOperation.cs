@@ -123,14 +123,15 @@ namespace FaultData.DataOperations
                         meterDataSet.DataSeries.RemoveAt(i);
                 }
 
-                // There may be some placeholder DataSeries objects with no data so that indexes
-                // would be correct for calculating data series--now that we are finished
-                // calculating data series, these need to be removed
                 for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
                 {
                     if ((object)meterDataSet.Digitals[i].SeriesInfo == null)
                         meterDataSet.Digitals.RemoveAt(i);
                 }
+
+                // Set samples per hour and enabled flags based on
+                // the configuration obtained from the latest file
+                FixUpdatedChannelInfo(meterDataSet, meter);
 
                 // Replace the parsed meter with
                 // the one from the database
@@ -150,7 +151,6 @@ namespace FaultData.DataOperations
                 // Add channels that are not already defined in the
                 // configuration by assuming the meter monitors only one line
                 AddUndefinedChannels(meterDataSet);
-                FixUpdatedChannelInfo(meterDataSet);
             }
             else
             {
@@ -315,18 +315,27 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void FixUpdatedChannelInfo(MeterDataSet meterDataSet)
+        private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter dbMeter)
         {
-            HashSet<int> channelLookup = new HashSet<int>(meterDataSet.DataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel.ID));
+            HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(meterDataSet.Meter.Channels.Select(GetGenericChannelKey));
 
             foreach (DataSeries dataSeries in meterDataSet.DataSeries)
             {
                 if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
-                    dataSeries.SeriesInfo.Channel.SamplesPerHour = (int)Math.Round((dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D));
+                {
+                    double samplesPerHour = (dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D);
+                    double roundedSamplesPerHour = Math.Round(samplesPerHour);
+
+                    if (Math.Abs(samplesPerHour - roundedSamplesPerHour) < 0.1D)
+                        samplesPerHour = roundedSamplesPerHour;
+
+                    if (samplesPerHour <= 60.0D)
+                        dataSeries.SeriesInfo.Channel.SamplesPerHour = samplesPerHour;
+                }
             }
 
-            foreach (Channel channel in meterDataSet.Meter.Channels)
-                channel.Enabled = channelLookup.Contains(channel.ID) ? 1 : 0;
+            foreach (Channel dbChannel in dbMeter.Channels)
+                dbChannel.Enabled = parsedChannelLookup.Contains(GetGenericChannelKey(dbChannel)) ? 1 : 0;
 
             m_meterInfo.SubmitChanges();
         }
@@ -354,6 +363,17 @@ namespace FaultData.DataOperations
         private static readonly ILog Log = LogManager.GetLogger(typeof(ConfigurationOperation));
 
         // Static Methods
+        private static ChannelKey GetGenericChannelKey(Channel channel)
+        {
+            return Tuple.Create(
+                channel.LineID,
+                0,
+                channel.Name,
+                channel.MeasurementType.Name,
+                channel.MeasurementCharacteristic.Name,
+                channel.Phase.Name);
+        }
+
         private static ChannelKey GetChannelKey(Channel channel)
         {
             return Tuple.Create(
