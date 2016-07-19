@@ -86,6 +86,9 @@
     <Compile Include="DataAnalysis\Transform.cs" />
     <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
+    <Compile Include="Database\AlarmData.cs">
+      <DependentUpon>AlarmData.xsd</DependentUpon>
+    </Compile>
     <Compile Include="Database\AlarmData.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

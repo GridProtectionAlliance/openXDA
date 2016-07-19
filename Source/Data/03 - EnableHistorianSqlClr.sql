@@ -74,3 +74,42 @@ BEGIN
 	RETURN
 END
 GO
+
+-- Queries trending data from the openHistorian, example: "SELECT * FROM GetTypedTrendingData('2015-05-04 00:00:00', '2015-05-04 00:10:00', '11,21,31', default)"
+CREATE FUNCTION GetTypedTrendingData(@startTime datetime2, @stopTime datetime2, @channelIDs nvarchar(MAX) = null, @seriesCount int = 3)
+RETURNS @trendingData TABLE
+(
+   [ChannelID] int,
+   [SeriesType] varchar(50),
+   [Time] datetime2,
+   [Value] real
+)
+AS
+BEGIN
+	DECLARE @server VARCHAR(MAX)
+	DECLARE @instanceName VARCHAR(MAX)
+
+	SELECT
+		@server = COALESCE(Server.Value, '127.0.0.1'),
+		@instanceName = COALESCE(InstanceName.Value, 'XDA')
+	FROM
+		(SELECT NULL) AS Dummy(dummy) LEFT OUTER JOIN
+		Setting Server ON Server.Name = 'Historian.Server' LEFT OUTER JOIN
+		Setting InstanceName ON InstanceName.Name = 'Historian.InstanceName'
+
+	INSERT INTO @trendingData
+	SELECT
+        ChannelID,
+        CASE SeriesID
+            WHEN 0 THEN 'Minimum'
+            WHEN 1 THEN 'Maximum'
+            WHEN 2 THEN 'Average'
+            ELSE 'Unknown'
+        END AS SeriesType,
+        Time,
+        Value
+	FROM ExternalGetTrendingData(@server, @instanceName, @startTime, @stopTime, @channelIDs, @seriesCount)
+
+	RETURN
+END
+GO

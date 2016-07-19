@@ -1248,6 +1248,62 @@ CREATE NONCLUSTERED INDEX IX_HourOfWeekLimit_Severity
 ON HourOfWeekLimit(Severity ASC)
 GO
 
+CREATE TABLE MeterAlarmSummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Date DATE NOT NULL,
+    ExpectedPoints INT NOT NULL,
+    ReceivedPoints INT NOT NULL,
+    AlarmPoints INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_MeterID
+ON MeterAlarmSummary(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_AlarmTypeID
+ON MeterAlarmSummary(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_Date
+ON MeterAlarmSummary(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_MeterID_Date
+ON MeterAlarmSummary(MeterID ASC, Date ASC)
+GO
+
+CREATE TABLE ChannelAlarmSummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Date DATE NOT NULL,
+    ExpectedPoints INT NOT NULL,
+    ReceivedPoints INT NOT NULL,
+    AlarmPoints INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID
+ON ChannelAlarmSummary(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_AlarmTypeID
+ON ChannelAlarmSummary(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_Date
+ON ChannelAlarmSummary(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID_Date
+ON ChannelAlarmSummary(ChannelID ASC, Date ASC)
+GO
+
 CREATE TABLE AlarmLog
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
