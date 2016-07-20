@@ -29,6 +29,8 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
 using GSF.PQDIF.Logical;
+using GSF.PQDIF.Physical;
+using log4net;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
@@ -135,6 +137,7 @@ namespace FaultData.DataReaders
 
             // Create a meter from the parsed data source
             meter = ParseDataSource(dataSources.First());
+            m_meterDataSet.Meter = meter;
 
             // Build the list of all channel instances in the PQDIF file
             channelInstances = observationRecords
@@ -150,6 +153,18 @@ namespace FaultData.DataReaders
 
             foreach (ChannelInstance channelInstance in channelInstances)
             {
+                bool timeValueChannel =
+                    channelInstance.Definition.QuantityTypeID == QuantityType.WaveForm ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.ValueLog ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.Phasor ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.Flash ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurTime ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurCount;
+
+                // TODO: Create representation for quantity types that do not define time/value data
+                if (!timeValueChannel)
+                    continue;
+
                 // Parse time data from the channel instance
                 timeData = ParseTimeData(channelInstance);
 
@@ -305,8 +320,10 @@ namespace FaultData.DataReaders
         {
             SeriesInstance timeSeries;
             SeriesDefinition timeSeriesDefinition;
+            VectorElement seriesValues;
             DateTime[] timeData;
             DateTime startTime;
+            double nominalFrequency;
 
             if (!channelInstance.SeriesInstances.Any())
                 return null;
@@ -317,13 +334,28 @@ namespace FaultData.DataReaders
             if (timeSeriesDefinition.ValueTypeID != SeriesValueType.Time)
                 return null;
 
-            if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Timestamp)
+            seriesValues = timeSeries.SeriesValues;
+
+            if (seriesValues.TypeOfValue == PhysicalType.Timestamp)
             {
                 timeData = timeSeries.OriginalValues
                     .Select(Convert.ToDateTime)
                     .ToArray();
             }
-            else if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Seconds)
+            else if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Cycles)
+            {
+                startTime = channelInstance.ObservationRecord.StartTime;
+                nominalFrequency = channelInstance.ObservationRecord?.Settings.NominalFrequency ?? 60.0D;
+
+                timeData = timeSeries.OriginalValues
+                    .Select(Convert.ToDouble)
+                    .Select(cycles => cycles / nominalFrequency)
+                    .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
+                    .Select(TimeSpan.FromTicks)
+                    .Select(timeSpan => startTime + timeSpan)
+                    .ToArray();
+            }
+            else
             {
                 startTime = channelInstance.ObservationRecord.StartTime;
 
@@ -333,10 +365,6 @@ namespace FaultData.DataReaders
                     .Select(TimeSpan.FromTicks)
                     .Select(timeSpan => startTime + timeSpan)
                     .ToArray();
-            }
-            else
-            {
-                return null;
             }
 
             return timeData;
@@ -353,6 +381,13 @@ namespace FaultData.DataReaders
                 return null;
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQDIFReader));
 
         #endregion
     }
