@@ -382,7 +382,7 @@ namespace FaultData.DataAnalysis
 
         private bool IsTrend()
         {
-            double samplesPerMinute = m_samples / (m_endTime - m_startTime).TotalMinutes;
+            double samplesPerMinute = (m_samples - 1) / (m_endTime - m_startTime).TotalMinutes;
             return samplesPerMinute <= TrendThreshold;
         }
 
