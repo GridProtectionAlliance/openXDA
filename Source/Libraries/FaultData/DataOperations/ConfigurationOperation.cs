@@ -412,14 +412,16 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "BN" ||
                    channel.Phase.Name == "CN" ||
                    channel.Phase.Name == "RES" ||
-                   channel.Phase.Name == "NG";
+                   channel.Phase.Name == "NG" ||
+                   channel.Phase.Name == "LineToNeutralAverage";
         }
 
         private static bool IsLineToLine(Channel channel)
         {
             return channel.Phase.Name == "AB" ||
                    channel.Phase.Name == "BC" ||
-                   channel.Phase.Name == "CA";
+                   channel.Phase.Name == "CA" ||
+                   channel.Phase.Name == "LineToLineAverage";
         }
 
         #endregion
