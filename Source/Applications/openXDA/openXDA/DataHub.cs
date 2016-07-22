@@ -645,6 +645,65 @@ namespace openXDA
 
         #endregion
 
+        #region [ AlarmRangeLimitView ]
 
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecordCount)]
+        public int QueryAlarmRangeLimitViewCount(int groupID, string filterString)
+        {
+            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecords)]
+        public IEnumerable<AlarmRangeLimitView> QueryAlarmRangeLimitViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.DeleteRecord)]
+        public void DeleteAlarmRangeLimitView(int id)
+        {
+            m_dataContext.Table<GroupMeter>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.CreateNewRecord)]
+        public AlarmRangeLimitView NewAlarmRangeLimitView()
+        {
+            return new AlarmRangeLimitView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.AddNewRecord)]
+        public void AddNewAlarmRangeLimitView(AlarmRangeLimitView record)
+        {
+            m_dataContext.Table<AlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.UpdateRecord)]
+        public void UpdateAlarmRangeLimitView(AlarmRangeLimitView record)
+        {
+            m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
+        }
+
+        public AlarmRangeLimit CreateNewAlarmRangeLimit(AlarmRangeLimitView record)
+        {
+            AlarmRangeLimit arl = new AlarmRangeLimit();
+            arl.ID = record.ID;
+            arl.ChannelID = record.ChannelID;
+            arl.AlarmTypeID = record.AlarmTypeID;
+            arl.Severity = record.Severity;
+            arl.High = record.High;
+            arl.Low = record.Low;
+            arl.RangeInclusive = record.RangeInclusive;
+            arl.PerUnit = record.PerUnit;
+            arl.Enabled = record.Enabled;
+            return arl;
+        }
+
+        #endregion
     }
 }
