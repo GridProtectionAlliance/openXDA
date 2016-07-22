@@ -582,7 +582,7 @@ namespace DeviceDefinitionsMigrator
             }
 
             meter.Make = (string)deviceAttributes.Element("make") ?? string.Empty;
-            meter.Model = (string)deviceAttributes.Element("make") ?? string.Empty;
+            meter.Model = (string)deviceAttributes.Element("model") ?? string.Empty;
         }
 
         private static void LoadMeterLocationAttributes(MeterLocation meterLocation, XElement deviceAttributes)

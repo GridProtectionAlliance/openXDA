@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 12.375, 8.75" name="SystemInfo">
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 20.375, 8.75" name="SystemInfo">
   <DataContextMoniker Name="/SystemInfoDataContext" />
   <nestedChildShapes>
     <classShape Id="dc7826b7-7271-43d6-b3d6-87e0fe0cf8d5" absoluteBounds="1, 4.625, 2, 1.3862939453125">
@@ -38,5 +38,50 @@
         <elementListCompartment Id="d4a50cd7-ec58-4718-b3a4-707f85ca625c" absoluteBounds="7.265, 7.335, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
+    <classShape Id="10b55c97-5cd7-4daf-81c6-687026519c1e" absoluteBounds="18.125, 2.125, 2, 1.1939925130208331">
+      <DataClassMoniker Name="/SystemInfoDataContext/VoltageCurve" />
+      <nestedChildShapes>
+        <elementListCompartment Id="7d097710-435a-4763-84de-3e8f65b31a93" absoluteBounds="18.14, 2.585, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="21cb398e-d878-4593-a342-7818a7467d1c" absoluteBounds="18.125, 4, 2, 1.7708968098958331">
+      <DataClassMoniker Name="/SystemInfoDataContext/VoltageCurvePoint" />
+      <nestedChildShapes>
+        <elementListCompartment Id="739849f9-da7c-4c7b-a673-f02badb4846e" absoluteBounds="18.14, 4.46, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <associationConnector edgePoints="[(19.125 : 3.31899251302083); (19.125 : 4)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/SystemInfoDataContext/VoltageCurve/VoltageCurve_VoltageCurvePoint" />
+      <nodes>
+        <classShapeMoniker Id="10b55c97-5cd7-4daf-81c6-687026519c1e" />
+        <classShapeMoniker Id="21cb398e-d878-4593-a342-7818a7467d1c" />
+      </nodes>
+    </associationConnector>
+    <classShape Id="98ec8ac7-443e-4ad9-8b7d-c647346af4f7" absoluteBounds="12.5, 2, 2, 1.3862939453125">
+      <DataClassMoniker Name="/SystemInfoDataContext/VoltageEnvelope" />
+      <nestedChildShapes>
+        <elementListCompartment Id="342375e0-0f4d-4423-b28f-1682763d41c8" absoluteBounds="12.515, 2.46, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="d9f19544-d2c1-4198-8263-5f7d641b0171" absoluteBounds="15.125, 2, 2, 1.3862939453125">
+      <DataClassMoniker Name="/SystemInfoDataContext/VoltageEnvelopeCurve" />
+      <nestedChildShapes>
+        <elementListCompartment Id="816fd3f1-9c84-4c7b-93cf-0e34144712fa" absoluteBounds="15.14, 2.46, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <associationConnector edgePoints="[(14.5 : 2.69314697265625); (15.125 : 2.69314697265625)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/SystemInfoDataContext/VoltageEnvelope/VoltageEnvelope_VoltageEnvelopeCurve" />
+      <nodes>
+        <classShapeMoniker Id="98ec8ac7-443e-4ad9-8b7d-c647346af4f7" />
+        <classShapeMoniker Id="d9f19544-d2c1-4198-8263-5f7d641b0171" />
+      </nodes>
+    </associationConnector>
+    <associationConnector edgePoints="[(18.125 : 2.72199625651042); (17.125 : 2.72199625651042)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+      <AssociationMoniker Name="/SystemInfoDataContext/VoltageCurve/VoltageCurve_VoltageEnvelopeCurve" />
+      <nodes>
+        <classShapeMoniker Id="10b55c97-5cd7-4daf-81c6-687026519c1e" />
+        <classShapeMoniker Id="d9f19544-d2c1-4198-8263-5f7d641b0171" />
+      </nodes>
+    </associationConnector>
   </nestedChildShapes>
 </ordesignerObjectsDiagram>

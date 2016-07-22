@@ -29,6 +29,8 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
 using GSF.PQDIF.Logical;
+using GSF.PQDIF.Physical;
+using log4net;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
@@ -100,54 +102,100 @@ namespace FaultData.DataReaders
         /// <returns>List of meter data sets, one per meter.</returns>
         public void Parse(string filePath)
         {
-            DataSourceRecord dataSource = null;
-            ObservationRecord observation;
-            IEnumerable<ChannelInstance> channelInstances;
+            List<DataSourceRecord> dataSources;
+            List<ObservationRecord> observationRecords;
+            List<ChannelInstance> channelInstances;
+            List<SeriesInstance> seriesInstances;
+            List<SeriesDefinition> seriesDefinitions;
 
-            Meter meter = null;
+            Meter meter;
             Channel channel;
             DataSeries dataSeries;
             DateTime[] timeData;
 
-            while (m_parser.HasNextObservationRecord())
-            {
-                observation = m_parser.NextObservationRecord();
+            // Build the list of observation records in the PQDIF file
+            observationRecords = new List<ObservationRecord>();
 
-                if ((object)observation.DataSource == null)
+            while (m_parser.HasNextObservationRecord())
+                observationRecords.Add(m_parser.NextObservationRecord());
+
+            // Build the list of all data source records in the PQDIF file
+            dataSources = observationRecords
+                .Select(observation => observation.DataSource)
+                .Distinct()
+                .ToList();
+
+            // If there are no data sources, there is no
+            // need to go any further because we won't be
+            // able to interpret any of the channel data
+            if (!dataSources.Any())
+                return;
+
+            // Validate data sources to make sure there is only one data source defined in the file
+            if (!dataSources.Zip(dataSources.Skip(1), (ds1, ds2) => AreEquivalent(ds1, ds2)).All(b => b))
+                throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
+
+            // Create a meter from the parsed data source
+            meter = ParseDataSource(dataSources.First());
+            m_meterDataSet.Meter = meter;
+
+            // Build the list of all channel instances in the PQDIF file
+            channelInstances = observationRecords
+                .SelectMany(observation => observation.ChannelInstances)
+                .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
+                .Where(channelInstance => channelInstance.SeriesInstances.Any())
+                .Where(channelInstance => channelInstance.SeriesInstances[0].Definition.ValueTypeID == SeriesValueType.Time)
+                .ToList();
+
+            // Create the list of series instances so we can
+            // build it as we process each channel instance
+            seriesInstances = new List<SeriesInstance>();
+
+            foreach (ChannelInstance channelInstance in channelInstances)
+            {
+                bool timeValueChannel =
+                    channelInstance.Definition.QuantityTypeID == QuantityType.WaveForm ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.ValueLog ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.Phasor ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.Flash ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurTime ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurCount;
+
+                // TODO: Create representation for quantity types that do not define time/value data
+                if (!timeValueChannel)
                     continue;
 
-                if ((object)dataSource == null)
+                // Parse time data from the channel instance
+                timeData = ParseTimeData(channelInstance);
+
+                foreach (SeriesInstance seriesInstance in channelInstance.SeriesInstances.Skip(1))
                 {
-                    dataSource = observation.DataSource;
-                    meter = ParseDataSource(dataSource);
-                    m_meterDataSet.Meter = meter;
-                }
+                    // Create a channel from the parsed series instance
+                    seriesInstances.Add(seriesInstance);
+                    channel = ParseSeries(seriesInstance);
 
-                if (!AreEquivalent(dataSource, observation.DataSource))
-                    throw new InvalidDataException($"PQDIF file \"{filePath}\" defines too many data sources.");
+                    // Parse the values and zip them with time data to create data points
+                    dataSeries = new DataSeries();
+                    dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d }).ToList();
+                    dataSeries.SeriesInfo = channel.Series[0];
 
-                channelInstances = observation.ChannelInstances
-                    .Where(channelInstance => QuantityType.IsQuantityTypeID(channelInstance.Definition.QuantityTypeID))
-                    .Where(channelInstance => channelInstance.SeriesInstances.Any())
-                    .Where(channelInstance => channelInstance.SeriesInstances[0].Definition.ValueTypeID == SeriesValueType.Time);
-
-                foreach (ChannelInstance channelInstance in channelInstances)
-                {
-                    timeData = ParseTimeData(channelInstance);
-
-                    foreach (SeriesInstance seriesInstance in channelInstance.SeriesInstances.Skip(1))
-                    {
-                        channel = ParseSeries(seriesInstance);
-
-                        dataSeries = new DataSeries();
-                        dataSeries.DataPoints = timeData.Zip(ParseValueData(seriesInstance), (time, d) => new DataPoint() { Time = time, Value = d }).ToList();
-                        dataSeries.SeriesInfo = channel.Series[0];
-
-                        meter.Channels.Add(channel);
-                        m_meterDataSet.DataSeries.Add(dataSeries);
-                    }
+                    // Add the new channel to the meter's channel list
+                    meter.Channels.Add(channel);
+                    m_meterDataSet.DataSeries.Add(dataSeries);
                 }
             }
+
+            // Build a list of series definitions that were not instanced by this PQDIF file
+            seriesDefinitions = dataSources
+                .SelectMany(dataSource => dataSource.ChannelDefinitions)
+                .SelectMany(channelDefinition => channelDefinition.SeriesDefinitions)
+                .Distinct()
+                .Except(seriesInstances.Select(seriesInstance => seriesInstance.Definition))
+                .ToList();
+
+            // Add each of the series definitions which were not instanced to the meter's list of channels
+            foreach (SeriesDefinition seriesDefinition in seriesDefinitions)
+                meter.Channels.Add(ParseSeries(seriesDefinition));
         }
 
         public void Dispose()
@@ -220,26 +268,24 @@ namespace FaultData.DataReaders
             return meter;
         }
 
-        private static Channel ParseSeries(SeriesInstance seriesInstance)
+        private static Channel ParseSeries(SeriesDefinition seriesDefinition)
         {
             Channel channel = new Channel();
             Series series = new Series();
 
-            ChannelInstance channelInstance = seriesInstance.Channel;
-            ChannelDefinition channelDefinition = channelInstance.Definition;
-            SeriesDefinition seriesDefinition = seriesInstance.Definition;
+            ChannelDefinition channelDefinition = seriesDefinition.ChannelDefinition;
             QuantityMeasured quantityMeasured = channelDefinition.QuantityMeasured;
             Phase phase = channelDefinition.Phase;
 
             // Populate channel properties
             channel.Name = channelDefinition.ChannelName;
-            channel.HarmonicGroup = channelInstance.ChannelGroupID;
+            channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
             channel.Phase = new Database.Phase();
 
-            if (seriesInstance.Definition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
-                channel.PerUnitValue = seriesInstance.Definition.SeriesNominalQuantity;
+            if (seriesDefinition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
+                channel.PerUnitValue = seriesDefinition.SeriesNominalQuantity;
 
             // Populate series properties
             series.SeriesType = new SeriesType();
@@ -263,12 +309,21 @@ namespace FaultData.DataReaders
             return channel;
         }
 
+        private static Channel ParseSeries(SeriesInstance seriesInstance)
+        {
+            Channel channel = ParseSeries(seriesInstance.Definition);
+            channel.HarmonicGroup = seriesInstance.Channel.ChannelGroupID;
+            return channel;
+        }
+
         private static DateTime[] ParseTimeData(ChannelInstance channelInstance)
         {
             SeriesInstance timeSeries;
             SeriesDefinition timeSeriesDefinition;
+            VectorElement seriesValues;
             DateTime[] timeData;
             DateTime startTime;
+            double nominalFrequency;
 
             if (!channelInstance.SeriesInstances.Any())
                 return null;
@@ -279,13 +334,28 @@ namespace FaultData.DataReaders
             if (timeSeriesDefinition.ValueTypeID != SeriesValueType.Time)
                 return null;
 
-            if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Timestamp)
+            seriesValues = timeSeries.SeriesValues;
+
+            if (seriesValues.TypeOfValue == PhysicalType.Timestamp)
             {
                 timeData = timeSeries.OriginalValues
                     .Select(Convert.ToDateTime)
                     .ToArray();
             }
-            else if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Seconds)
+            else if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Cycles)
+            {
+                startTime = channelInstance.ObservationRecord.StartTime;
+                nominalFrequency = channelInstance.ObservationRecord?.Settings.NominalFrequency ?? 60.0D;
+
+                timeData = timeSeries.OriginalValues
+                    .Select(Convert.ToDouble)
+                    .Select(cycles => cycles / nominalFrequency)
+                    .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
+                    .Select(TimeSpan.FromTicks)
+                    .Select(timeSpan => startTime + timeSpan)
+                    .ToArray();
+            }
+            else
             {
                 startTime = channelInstance.ObservationRecord.StartTime;
 
@@ -295,10 +365,6 @@ namespace FaultData.DataReaders
                     .Select(TimeSpan.FromTicks)
                     .Select(timeSpan => startTime + timeSpan)
                     .ToArray();
-            }
-            else
-            {
-                return null;
             }
 
             return timeData;
@@ -315,6 +381,13 @@ namespace FaultData.DataReaders
                 return null;
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQDIFReader));
 
         #endregion
     }

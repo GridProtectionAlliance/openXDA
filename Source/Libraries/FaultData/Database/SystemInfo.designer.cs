@@ -48,6 +48,18 @@ namespace FaultData.Database
     partial void InsertDataWriter(DataWriter instance);
     partial void UpdateDataWriter(DataWriter instance);
     partial void DeleteDataWriter(DataWriter instance);
+    partial void InsertVoltageCurve(VoltageCurve instance);
+    partial void UpdateVoltageCurve(VoltageCurve instance);
+    partial void DeleteVoltageCurve(VoltageCurve instance);
+    partial void InsertVoltageCurvePoint(VoltageCurvePoint instance);
+    partial void UpdateVoltageCurvePoint(VoltageCurvePoint instance);
+    partial void DeleteVoltageCurvePoint(VoltageCurvePoint instance);
+    partial void InsertVoltageEnvelope(VoltageEnvelope instance);
+    partial void UpdateVoltageEnvelope(VoltageEnvelope instance);
+    partial void DeleteVoltageEnvelope(VoltageEnvelope instance);
+    partial void InsertVoltageEnvelopeCurve(VoltageEnvelopeCurve instance);
+    partial void UpdateVoltageEnvelopeCurve(VoltageEnvelopeCurve instance);
+    partial void DeleteVoltageEnvelopeCurve(VoltageEnvelopeCurve instance);
     #endregion
 		
 		public SystemInfoDataContext() : 
@@ -125,6 +137,38 @@ namespace FaultData.Database
 			get
 			{
 				return this.GetTable<DataWriter>();
+			}
+		}
+		
+		public System.Data.Linq.Table<VoltageCurve> VoltageCurves
+		{
+			get
+			{
+				return this.GetTable<VoltageCurve>();
+			}
+		}
+		
+		public System.Data.Linq.Table<VoltageCurvePoint> VoltageCurvePoints
+		{
+			get
+			{
+				return this.GetTable<VoltageCurvePoint>();
+			}
+		}
+		
+		public System.Data.Linq.Table<VoltageEnvelope> VoltageEnvelopes
+		{
+			get
+			{
+				return this.GetTable<VoltageEnvelope>();
+			}
+		}
+		
+		public System.Data.Linq.Table<VoltageEnvelopeCurve> VoltageEnvelopeCurves
+		{
+			get
+			{
+				return this.GetTable<VoltageEnvelopeCurve>();
 			}
 		}
 	}
@@ -908,6 +952,677 @@ namespace FaultData.Database
 					this._LoadOrder = value;
 					this.SendPropertyChanged("LoadOrder");
 					this.OnLoadOrderChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.VoltageCurve")]
+	public partial class VoltageCurve : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private string _Name;
+		
+		private EntitySet<VoltageCurvePoint> _VoltageCurvePoints;
+		
+		private EntitySet<VoltageEnvelopeCurve> _VoltageEnvelopeCurves;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnNameChanging(string value);
+    partial void OnNameChanged();
+    #endregion
+		
+		public VoltageCurve()
+		{
+			this._VoltageCurvePoints = new EntitySet<VoltageCurvePoint>(new Action<VoltageCurvePoint>(this.attach_VoltageCurvePoints), new Action<VoltageCurvePoint>(this.detach_VoltageCurvePoints));
+			this._VoltageEnvelopeCurves = new EntitySet<VoltageEnvelopeCurve>(new Action<VoltageEnvelopeCurve>(this.attach_VoltageEnvelopeCurves), new Action<VoltageEnvelopeCurve>(this.detach_VoltageEnvelopeCurves));
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Name", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string Name
+		{
+			get
+			{
+				return this._Name;
+			}
+			set
+			{
+				if ((this._Name != value))
+				{
+					this.OnNameChanging(value);
+					this.SendPropertyChanging();
+					this._Name = value;
+					this.SendPropertyChanged("Name");
+					this.OnNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="VoltageCurve_VoltageCurvePoint", Storage="_VoltageCurvePoints", ThisKey="ID", OtherKey="VoltageCurveID")]
+		public EntitySet<VoltageCurvePoint> VoltageCurvePoints
+		{
+			get
+			{
+				return this._VoltageCurvePoints;
+			}
+			set
+			{
+				this._VoltageCurvePoints.Assign(value);
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="VoltageCurve_VoltageEnvelopeCurve", Storage="_VoltageEnvelopeCurves", ThisKey="ID", OtherKey="VoltageCurveID")]
+		public EntitySet<VoltageEnvelopeCurve> VoltageEnvelopeCurves
+		{
+			get
+			{
+				return this._VoltageEnvelopeCurves;
+			}
+			set
+			{
+				this._VoltageEnvelopeCurves.Assign(value);
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+		
+		private void attach_VoltageCurvePoints(VoltageCurvePoint entity)
+		{
+			this.SendPropertyChanging();
+			entity.VoltageCurve = this;
+		}
+		
+		private void detach_VoltageCurvePoints(VoltageCurvePoint entity)
+		{
+			this.SendPropertyChanging();
+			entity.VoltageCurve = null;
+		}
+		
+		private void attach_VoltageEnvelopeCurves(VoltageEnvelopeCurve entity)
+		{
+			this.SendPropertyChanging();
+			entity.VoltageCurve = this;
+		}
+		
+		private void detach_VoltageEnvelopeCurves(VoltageEnvelopeCurve entity)
+		{
+			this.SendPropertyChanging();
+			entity.VoltageCurve = null;
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.VoltageCurvePoint")]
+	public partial class VoltageCurvePoint : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _VoltageCurveID;
+		
+		private double _Magnitude;
+		
+		private double _Duration;
+		
+		private int _LoadOrder;
+		
+		private EntityRef<VoltageCurve> _VoltageCurve;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnVoltageCurveIDChanging(int value);
+    partial void OnVoltageCurveIDChanged();
+    partial void OnPerUnitMagnitudeChanging(double value);
+    partial void OnPerUnitMagnitudeChanged();
+    partial void OnDurationSecondsChanging(double value);
+    partial void OnDurationSecondsChanged();
+    partial void OnLoadOrderChanging(int value);
+    partial void OnLoadOrderChanged();
+    #endregion
+		
+		public VoltageCurvePoint()
+		{
+			this._VoltageCurve = default(EntityRef<VoltageCurve>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_VoltageCurveID", DbType="Int NOT NULL")]
+		public int VoltageCurveID
+		{
+			get
+			{
+				return this._VoltageCurveID;
+			}
+			set
+			{
+				if ((this._VoltageCurveID != value))
+				{
+					if (this._VoltageCurve.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnVoltageCurveIDChanging(value);
+					this.SendPropertyChanging();
+					this._VoltageCurveID = value;
+					this.SendPropertyChanged("VoltageCurveID");
+					this.OnVoltageCurveIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Magnitude", DbType="Float NOT NULL")]
+		public double PerUnitMagnitude
+		{
+			get
+			{
+				return this._Magnitude;
+			}
+			set
+			{
+				if ((this._Magnitude != value))
+				{
+					this.OnPerUnitMagnitudeChanging(value);
+					this.SendPropertyChanging();
+					this._Magnitude = value;
+					this.SendPropertyChanged("PerUnitMagnitude");
+					this.OnPerUnitMagnitudeChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Duration", DbType="Float NOT NULL")]
+		public double DurationSeconds
+		{
+			get
+			{
+				return this._Duration;
+			}
+			set
+			{
+				if ((this._Duration != value))
+				{
+					this.OnDurationSecondsChanging(value);
+					this.SendPropertyChanging();
+					this._Duration = value;
+					this.SendPropertyChanged("DurationSeconds");
+					this.OnDurationSecondsChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LoadOrder", DbType="Int NOT NULL")]
+		public int LoadOrder
+		{
+			get
+			{
+				return this._LoadOrder;
+			}
+			set
+			{
+				if ((this._LoadOrder != value))
+				{
+					this.OnLoadOrderChanging(value);
+					this.SendPropertyChanging();
+					this._LoadOrder = value;
+					this.SendPropertyChanged("LoadOrder");
+					this.OnLoadOrderChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="VoltageCurve_VoltageCurvePoint", Storage="_VoltageCurve", ThisKey="VoltageCurveID", OtherKey="ID", IsForeignKey=true)]
+		public VoltageCurve VoltageCurve
+		{
+			get
+			{
+				return this._VoltageCurve.Entity;
+			}
+			set
+			{
+				VoltageCurve previousValue = this._VoltageCurve.Entity;
+				if (((previousValue != value) 
+							|| (this._VoltageCurve.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._VoltageCurve.Entity = null;
+						previousValue.VoltageCurvePoints.Remove(this);
+					}
+					this._VoltageCurve.Entity = value;
+					if ((value != null))
+					{
+						value.VoltageCurvePoints.Add(this);
+						this._VoltageCurveID = value.ID;
+					}
+					else
+					{
+						this._VoltageCurveID = default(int);
+					}
+					this.SendPropertyChanged("VoltageCurve");
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.VoltageEnvelope")]
+	public partial class VoltageEnvelope : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private string _Name;
+		
+		private string _Description;
+		
+		private EntitySet<VoltageEnvelopeCurve> _VoltageEnvelopeCurves;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnNameChanging(string value);
+    partial void OnNameChanged();
+    partial void OnDescriptionChanging(string value);
+    partial void OnDescriptionChanged();
+    #endregion
+		
+		public VoltageEnvelope()
+		{
+			this._VoltageEnvelopeCurves = new EntitySet<VoltageEnvelopeCurve>(new Action<VoltageEnvelopeCurve>(this.attach_VoltageEnvelopeCurves), new Action<VoltageEnvelopeCurve>(this.detach_VoltageEnvelopeCurves));
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Name", DbType="VarChar(200) NOT NULL", CanBeNull=false)]
+		public string Name
+		{
+			get
+			{
+				return this._Name;
+			}
+			set
+			{
+				if ((this._Name != value))
+				{
+					this.OnNameChanging(value);
+					this.SendPropertyChanging();
+					this._Name = value;
+					this.SendPropertyChanged("Name");
+					this.OnNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Description", DbType="VarChar(MAX)")]
+		public string Description
+		{
+			get
+			{
+				return this._Description;
+			}
+			set
+			{
+				if ((this._Description != value))
+				{
+					this.OnDescriptionChanging(value);
+					this.SendPropertyChanging();
+					this._Description = value;
+					this.SendPropertyChanged("Description");
+					this.OnDescriptionChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="VoltageEnvelope_VoltageEnvelopeCurve", Storage="_VoltageEnvelopeCurves", ThisKey="ID", OtherKey="VoltageEnvelopeID")]
+		public EntitySet<VoltageEnvelopeCurve> VoltageEnvelopeCurves
+		{
+			get
+			{
+				return this._VoltageEnvelopeCurves;
+			}
+			set
+			{
+				this._VoltageEnvelopeCurves.Assign(value);
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+		
+		private void attach_VoltageEnvelopeCurves(VoltageEnvelopeCurve entity)
+		{
+			this.SendPropertyChanging();
+			entity.VoltageEnvelope = this;
+		}
+		
+		private void detach_VoltageEnvelopeCurves(VoltageEnvelopeCurve entity)
+		{
+			this.SendPropertyChanging();
+			entity.VoltageEnvelope = null;
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.VoltageEnvelopeCurve")]
+	public partial class VoltageEnvelopeCurve : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _ID;
+		
+		private int _VoltageEnvelopeID;
+		
+		private int _VoltageCurveID;
+		
+		private EntityRef<VoltageEnvelope> _VoltageEnvelope;
+		
+		private EntityRef<VoltageCurve> _VoltageCurve;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIDChanging(int value);
+    partial void OnIDChanged();
+    partial void OnVoltageEnvelopeIDChanging(int value);
+    partial void OnVoltageEnvelopeIDChanged();
+    partial void OnVoltageCurveIDChanging(int value);
+    partial void OnVoltageCurveIDChanged();
+    #endregion
+		
+		public VoltageEnvelopeCurve()
+		{
+			this._VoltageEnvelope = default(EntityRef<VoltageEnvelope>);
+			this._VoltageCurve = default(EntityRef<VoltageCurve>);
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int ID
+		{
+			get
+			{
+				return this._ID;
+			}
+			set
+			{
+				if ((this._ID != value))
+				{
+					this.OnIDChanging(value);
+					this.SendPropertyChanging();
+					this._ID = value;
+					this.SendPropertyChanged("ID");
+					this.OnIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_VoltageEnvelopeID", DbType="Int NOT NULL")]
+		public int VoltageEnvelopeID
+		{
+			get
+			{
+				return this._VoltageEnvelopeID;
+			}
+			set
+			{
+				if ((this._VoltageEnvelopeID != value))
+				{
+					if (this._VoltageEnvelope.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnVoltageEnvelopeIDChanging(value);
+					this.SendPropertyChanging();
+					this._VoltageEnvelopeID = value;
+					this.SendPropertyChanged("VoltageEnvelopeID");
+					this.OnVoltageEnvelopeIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_VoltageCurveID", DbType="Int NOT NULL")]
+		public int VoltageCurveID
+		{
+			get
+			{
+				return this._VoltageCurveID;
+			}
+			set
+			{
+				if ((this._VoltageCurveID != value))
+				{
+					if (this._VoltageCurve.HasLoadedOrAssignedValue)
+					{
+						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
+					}
+					this.OnVoltageCurveIDChanging(value);
+					this.SendPropertyChanging();
+					this._VoltageCurveID = value;
+					this.SendPropertyChanged("VoltageCurveID");
+					this.OnVoltageCurveIDChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="VoltageEnvelope_VoltageEnvelopeCurve", Storage="_VoltageEnvelope", ThisKey="VoltageEnvelopeID", OtherKey="ID", IsForeignKey=true)]
+		public VoltageEnvelope VoltageEnvelope
+		{
+			get
+			{
+				return this._VoltageEnvelope.Entity;
+			}
+			set
+			{
+				VoltageEnvelope previousValue = this._VoltageEnvelope.Entity;
+				if (((previousValue != value) 
+							|| (this._VoltageEnvelope.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._VoltageEnvelope.Entity = null;
+						previousValue.VoltageEnvelopeCurves.Remove(this);
+					}
+					this._VoltageEnvelope.Entity = value;
+					if ((value != null))
+					{
+						value.VoltageEnvelopeCurves.Add(this);
+						this._VoltageEnvelopeID = value.ID;
+					}
+					else
+					{
+						this._VoltageEnvelopeID = default(int);
+					}
+					this.SendPropertyChanged("VoltageEnvelope");
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="VoltageCurve_VoltageEnvelopeCurve", Storage="_VoltageCurve", ThisKey="VoltageCurveID", OtherKey="ID", IsForeignKey=true)]
+		public VoltageCurve VoltageCurve
+		{
+			get
+			{
+				return this._VoltageCurve.Entity;
+			}
+			set
+			{
+				VoltageCurve previousValue = this._VoltageCurve.Entity;
+				if (((previousValue != value) 
+							|| (this._VoltageCurve.HasLoadedOrAssignedValue == false)))
+				{
+					this.SendPropertyChanging();
+					if ((previousValue != null))
+					{
+						this._VoltageCurve.Entity = null;
+						previousValue.VoltageEnvelopeCurves.Remove(this);
+					}
+					this._VoltageCurve.Entity = value;
+					if ((value != null))
+					{
+						value.VoltageEnvelopeCurves.Add(this);
+						this._VoltageCurveID = value.ID;
+					}
+					else
+					{
+						this._VoltageCurveID = default(int);
+					}
+					this.SendPropertyChanged("VoltageCurve");
 				}
 			}
 		}

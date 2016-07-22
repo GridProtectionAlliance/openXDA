@@ -53,7 +53,7 @@ namespace FaultData.DataOperations
             public ChannelSummary(Channel channel, TrendingDataSummaryResource.TrendingDataSummary summary)
             {
                 m_channel = channel;
-                m_date = ToDate(summary.Time);
+                m_date = summary.Time.Date;
                 m_trendingSummary = summary;
             }
 
@@ -83,17 +83,6 @@ namespace FaultData.DataOperations
                 {
                     return m_trendingSummary;
                 }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            private DateTime ToDate(DateTime dateTime)
-            {
-                long ticks = dateTime.Ticks;
-                long remainder = ticks % TimeSpan.TicksPerDay;
-                return dateTime.AddTicks(-remainder);
             }
 
             #endregion

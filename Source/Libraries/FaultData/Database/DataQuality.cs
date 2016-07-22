@@ -1,11 +1,4 @@
-﻿namespace FaultData.Database
-{
-    public partial class DataQuality
-    {
-    }
-}
-
-namespace FaultData.Database.DataQualityTableAdapters
+﻿namespace FaultData.Database.DataQualityTableAdapters
 {
     public partial class MeterDataQualitySummaryTableAdapter
     {

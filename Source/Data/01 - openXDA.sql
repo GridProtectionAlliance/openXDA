@@ -294,6 +294,10 @@ CREATE TABLE GroupMeter
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_GroupMeter_MeterID
+ON GroupMeter(MeterID ASC)
+GO
+
 CREATE TABLE [User]
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
@@ -340,22 +344,25 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.EventOperation', 2)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 3)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DisturbanceSeverityOperation', 3)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 4)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.FaultLocationOperation', 4)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 5)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 6)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 6)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 7)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 7)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 8)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 8)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 9)
 GO
 
 INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter', 1)
@@ -389,6 +396,91 @@ AS BEGIN
     FROM [Group] CROSS JOIN inserted Meter
     WHERE [Group].GroupName = 'AllMeters'
 END
+GO
+
+-- -------- --
+-- Security --
+-- -------- --
+CREATE TABLE Node
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    Enabled BIT NOT NULL DEFAULT 0,
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE ApplicationRole
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    NodeID UNIQUEIDENTIFIER NOT NULL REFERENCES Node(ID),
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE SecurityGroup
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE UserAccount
+(
+    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Password VARCHAR(200) NULL,
+    FirstName VARCHAR(200) NULL,
+    LastName VARCHAR(200) NULL,
+    DefaultNodeID UNIQUEIDENTIFIER NOT NULL REFERENCES Node(ID),
+    Phone VARCHAR(200) NULL,
+    Email VARCHAR(200) NULL,
+    LockedOut BIT NOT NULL DEFAULT 0,
+    UseADAuthentication BIT NOT NULL DEFAULT 1,
+    ChangePasswordOn DATETIME NULL DEFAULT DATEADD(DAY, 90, GETUTCDATE()),
+    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CreatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME(),
+    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedBy VARCHAR(50) NOT NULL DEFAULT SUSER_NAME()
+)
+GO
+
+CREATE TABLE ApplicationRoleSecurityGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationRole(ID),
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID)
+)
+GO
+
+CREATE TABLE ApplicationRoleUserAccount
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ApplicationRoleID UNIQUEIDENTIFIER NOT NULL REFERENCES ApplicationRole(ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+)
+GO
+
+CREATE TABLE SecurityGroupUserAccount
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+)
 GO
 
 
@@ -506,16 +598,62 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_EventTypeID
 ON Disturbance(EventTypeID ASC)
 GO
 
-CREATE TABLE CycleData
+CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime
+ON Disturbance(StartTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Disturbance_EndTime
+ON Disturbance(EndTime ASC)
+GO
+
+CREATE TABLE VoltageEnvelope
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EventID INT NOT NULL REFERENCES Event(ID),
-    Data VARBINARY(MAX) NOT NULL
+    Name VARCHAR(200) NOT NULL,
+    Description VARCHAR(MAX) NULL
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_CycleData_EventID
-ON CycleData(EventID ASC)
+CREATE TABLE VoltageCurve
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE VoltageCurvePoint
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    VoltageCurveID INT NOT NULL REFERENCES VoltageCurve(ID),
+    PerUnitMagnitude FLOAT NOT NULL,
+    DurationSeconds FLOAT NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
+CREATE TABLE VoltageEnvelopeCurve
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    VoltageEnvelopeID INT NOT NULL REFERENCES VoltageEnvelope(ID),
+    VoltageCurveID INT NOT NULL REFERENCES VoltageCurve(ID)
+)
+GO
+
+CREATE TABLE DisturbanceSeverity
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    VoltageEnvelopeID INT NOT NULL REFERENCES VoltageEnvelope(ID),
+    DisturbanceID INT NOT NULL REFERENCES Disturbance(ID),
+    SeverityCode INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_DisturbanceID
+ON DisturbanceSeverity(DisturbanceID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_DisturbanceSeverity_SeverityCode
+ON DisturbanceSeverity(SeverityCode ASC)
 GO
 
 CREATE TABLE BreakerOperationType
@@ -548,6 +686,54 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_BreakerOperation_EventID
 ON BreakerOperation(EventID ASC)
+GO
+
+INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
+GO
+
+INSERT INTO VoltageCurve(Name) VALUES ('ITIC Upper')
+GO
+
+INSERT INTO VoltageCurve(Name) VALUES ('ITIC Lower')
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 2.0, 0.001, 1)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.4, 0.003, 2)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.2, 0.003, 3)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.2, 0.5, 4)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (1, 1.1, 0.5, 5)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.0, 0.02, 1)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.7, 0.02, 2)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.7, 0.5, 3)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.8, 0.5, 4)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.8, 10.0, 5)
+GO
+
+INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.9, 10.0, 5)
+GO
+
+INSERT INTO VoltageEnvelopeCurve(VoltageEnvelopeID, VoltageCurveID) VALUES(1, 1)
+GO
+
+INSERT INTO VoltageEnvelopeCurve(VoltageEnvelopeID, VoltageCurveID) VALUES(1, 2)
 GO
 
 INSERT INTO BreakerOperationType(Name, Description) VALUES('Normal', 'Breaker operated normally')
@@ -1062,6 +1248,58 @@ CREATE NONCLUSTERED INDEX IX_HourOfWeekLimit_Severity
 ON HourOfWeekLimit(Severity ASC)
 GO
 
+CREATE TABLE MeterAlarmSummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Date DATE NOT NULL,
+    AlarmPoints INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_MeterID
+ON MeterAlarmSummary(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_AlarmTypeID
+ON MeterAlarmSummary(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_Date
+ON MeterAlarmSummary(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAlarmSummary_MeterID_Date
+ON MeterAlarmSummary(MeterID ASC, Date ASC)
+GO
+
+CREATE TABLE ChannelAlarmSummary
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+    AlarmTypeID INT NOT NULL REFERENCES AlarmType(ID),
+    Date DATE NOT NULL,
+    AlarmPoints INT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID
+ON ChannelAlarmSummary(ChannelID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_AlarmTypeID
+ON ChannelAlarmSummary(AlarmTypeID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_Date
+ON ChannelAlarmSummary(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ChannelAlarmSummary_ChannelID_Date
+ON ChannelAlarmSummary(ChannelID ASC, Date ASC)
+GO
+
 CREATE TABLE AlarmLog
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1260,6 +1498,19 @@ GO
 
 
 ----- VIEWS -----
+
+CREATE VIEW UserMeter
+AS
+SELECT
+	[User].Name AS UserName,
+	Meter.ID AS MeterID
+FROM
+	Meter JOIN
+	GroupMeter ON GroupMeter.MeterID = Meter.ID JOIN
+	[Group] ON GroupMeter.GroupID = [Group].ID JOIN
+	UserGroup ON UserGroup.GroupID = [Group].ID JOIN
+	[User] ON UserGroup.UserID = [User].ID
+GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
 SELECT
@@ -1539,389 +1790,69 @@ AS BEGIN
 END
 GO
 
+-- Author: Kevin Conner
+-- Source: http://stackoverflow.com/questions/116968/in-sql-server-2005-can-i-do-a-cascade-delete-without-setting-the-property-on-my
+CREATE procedure usp_delete_cascade (
+	@base_table_name varchar(200), @base_criteria nvarchar(1000)
+)
+as begin
+	-- Adapted from http://www.sqlteam.com/article/performing-a-cascade-delete-in-sql-server-7
+	-- Expects the name of a table, and a conditional for selecting rows
+	-- within that table that you want deleted.
+	-- Produces SQL that, when run, deletes all table rows referencing the ones
+	-- you initially selected, cascading into any number of tables,
+	-- without the need for "ON DELETE CASCADE".
+	-- Does not appear to work with self-referencing tables, but it will
+	-- delete everything beneath them.
+	-- To make it easy on the server, put a "GO" statement between each line.
+
+	declare @to_delete table (
+		id int identity(1, 1) primary key not null,
+		criteria nvarchar(1000) not null,
+		table_name varchar(200) not null,
+		processed bit not null,
+		delete_sql varchar(1000)
+	)
+
+	insert into @to_delete (criteria, table_name, processed) values (@base_criteria, @base_table_name, 0)
+
+	declare @id int, @criteria nvarchar(1000), @table_name varchar(200)
+	while exists(select 1 from @to_delete where processed = 0) begin
+		select top 1 @id = id, @criteria = criteria, @table_name = table_name from @to_delete where processed = 0 order by id desc
+
+		insert into @to_delete (criteria, table_name, processed)
+			select referencing_column.name + ' in (select [' + referenced_column.name + '] from [' + @table_name +'] where ' + @criteria + ')',
+				referencing_table.name,
+				0
+			from  sys.foreign_key_columns fk
+				inner join sys.columns referencing_column on fk.parent_object_id = referencing_column.object_id 
+					and fk.parent_column_id = referencing_column.column_id 
+				inner join  sys.columns referenced_column on fk.referenced_object_id = referenced_column.object_id 
+					and fk.referenced_column_id = referenced_column.column_id 
+				inner join  sys.objects referencing_table on fk.parent_object_id = referencing_table.object_id 
+				inner join  sys.objects referenced_table on fk.referenced_object_id = referenced_table.object_id 
+				inner join  sys.objects constraint_object on fk.constraint_object_id = constraint_object.object_id
+			where referenced_table.name = @table_name
+				and referencing_table.name != referenced_table.name
+
+		update @to_delete set
+			processed = 1
+		where id = @id
+	end
+
+	select 'print ''deleting from ' + table_name + '...''; delete from [' + table_name + '] where ' + criteria from @to_delete order by id desc
+end
+GO
+
 
 
 ----- PQInvestigator Integration -----
 
--- The following commented statements and procedures are used to create a link to the PQInvestigator database.
+-- The following commented statements are used to create a link to the PQInvestigator database server.
 -- If the PQI databases are on a separate instance of SQL Server, be sure to associate the appropriate
 -- local login with a remote login that has db_owner privileges on both IndustrialPQ and UserIndustrialPQ.
 
 --EXEC sp_addlinkedserver PQInvestigator, N'', N'SQLNCLI', N'localhost\SQLEXPRESS'
 --GO
 --EXEC sp_addlinkedsrvlogin PQInvestigator, 'FALSE', [LocalLogin], [PQIAdmin], [PQIPassword]
---GO
---
---ALTER FUNCTION HasImpactedComponents
---(
---    @disturbanceID INT
---)
---RETURNS INT
---AS BEGIN
---    DECLARE @hasImpactedComponents INT
---    DECLARE @facilityID INT
---    DECLARE @magnitude FLOAT
---    DECLARE @duration FLOAT
---    
---    SELECT
---        @facilityID = FacilityID,
---        @magnitude = PerUnitMagnitude,
---        @duration = DurationSeconds
---    FROM
---        Disturbance JOIN
---        Event ON Disturbance.EventID = Event.ID JOIN
---        MeterFacility ON MeterFacility.MeterID = Event.MeterID
---    WHERE Disturbance.ID = @disturbanceID
---    
---    ; WITH EPRITolerancePoint AS
---    (
---        SELECT
---            ROW_NUMBER() OVER(PARTITION BY TestCurve.TestCurveID ORDER BY Y, X) AS RowNumber,
---            ComponentID,
---            TestCurve.TestCurveID,
---            Y AS Magnitude,
---            X AS Duration
---        FROM
---            PQInvestigator.IndustrialPQ.dbo.TestCurvePoint JOIN
---            PQInvestigator.IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
---    ),
---    EPRIToleranceSegment AS
---    (
---        SELECT
---            P1.RowNumber,
---            P1.ComponentID,
---            P1.TestCurveID,
---            CASE WHEN @duration < P1.Duration THEN 0
---                 WHEN @magnitude < P1.Magnitude THEN 1
---                 WHEN @duration > P2.Duration THEN 0
---                 WHEN P1.Duration = P2.Duration THEN 0
---                 WHEN @duration <= (((P2.Magnitude - P1.Magnitude) / (P2.Duration - P1.Duration)) * (@duration - P1.Duration) + P1.Magnitude) THEN 1
---                 ELSE 0
---            END AS IsUnder,
---            CASE WHEN P1.Duration > P2.Duration THEN 1
---                 ELSE 0
---            END AS IsBackwards
---        FROM
---            EPRITolerancePoint P1 LEFT OUTER JOIN
---            EPRITolerancePoint P2 ON P1.TestCurveID = P2.TestCurveID AND P1.RowNumber = P2.RowNumber - 1
---        WHERE
---            P1.Duration <> P2.Duration
---    ),
---    EPRIToleranceCurve AS
---    (
---        SELECT
---            ComponentID,
---            TestCurveID,
---            IsUnder
---        FROM
---        (
---            SELECT
---                ROW_NUMBER() OVER(PARTITION BY TestCurveID ORDER BY RowNumber) AS RowNumber,
---                ComponentID,
---                TestCurveID,
---                1 - IsBackwards AS IsUnder
---            FROM
---                EPRIToleranceSegment
---            WHERE
---                IsUnder <> 0
---        ) AS Temp
---        WHERE
---            RowNumber = 1
---    ),
---    USERTolerancePoint AS
---    (
---        SELECT
---            ROW_NUMBER() OVER(PARTITION BY TestCurve.TestCurveID ORDER BY Y, X) AS RowNumber,
---            ComponentID,
---            TestCurve.TestCurveID,
---            Y AS Magnitude,
---            X AS Duration
---        FROM
---            PQInvestigator.UserIndustrialPQ.dbo.TestCurvePoint JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
---    ),
---    USERToleranceSegment AS
---    (
---        SELECT
---            P1.RowNumber,
---            P1.ComponentID,
---            P1.TestCurveID,
---            CASE WHEN @duration < P1.Duration THEN 0
---                 WHEN @magnitude < P1.Magnitude THEN 1
---                 WHEN @duration > P2.Duration THEN 0
---                 WHEN P1.Duration = P2.Duration THEN 0
---                 WHEN @duration <= (((P2.Magnitude - P1.Magnitude) / (P2.Duration - P1.Duration)) * (@duration - P1.Duration) + P1.Magnitude) THEN 1
---                 ELSE 0
---            END AS IsUnder,
---            CASE WHEN P1.Duration > P2.Duration THEN 1
---                 ELSE 0
---            END AS IsBackwards
---        FROM
---            USERTolerancePoint P1 LEFT OUTER JOIN
---            USERTolerancePoint P2 ON P1.TestCurveID = P2.TestCurveID AND P1.RowNumber = P2.RowNumber - 1
---        WHERE
---            P1.Duration <> P2.Duration
---    ),
---    USERToleranceCurve AS
---    (
---        SELECT
---            ComponentID,
---            TestCurveID,
---            IsUnder
---        FROM
---        (
---            SELECT
---                ROW_NUMBER() OVER(PARTITION BY TestCurveID ORDER BY RowNumber) AS RowNumber,
---                ComponentID,
---                TestCurveID,
---                1 - IsBackwards AS IsUnder
---            FROM
---                USERToleranceSegment
---            WHERE
---                IsUnder <> 0
---        ) AS Temp
---        WHERE
---            RowNumber = 1
---    ),
---    FacilityCurve AS
---    (
---        SELECT
---            CurveID,
---            CurveDB,
---            SectionTypeName,
---            Title AS SectionTitle,
---            Rank AS SectionRank,
---            Content AS SectionContent
---        FROM
---            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditSection ON AuditSection.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.SectionType ON AuditSection.SectionTypeID = SectionType.SectionTypeID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = AuditSection.AuditSectionID
---        WHERE
---            AuditCurve.CurveType = 'TOLERANCE' AND
---            FacilityAudit.FacilityID = @facilityID
---    ),
---    ImpactedComponentID AS
---    (
---        SELECT EPRIToleranceCurve.ComponentID
---        FROM
---            EPRIToleranceCurve JOIN
---            FacilityCurve ON FacilityCurve.CurveID = EPRIToleranceCurve.TestCurveID
---        WHERE
---            CurveDB = 'EPRI' AND
---            IsUnder <> 0
---        UNION
---        SELECT USERToleranceCurve.ComponentID
---        FROM
---            USERToleranceCurve JOIN
---            FacilityCurve ON FacilityCurve.CurveID = USERToleranceCurve.TestCurveID
---        WHERE
---            CurveDB = 'USER' AND
---            IsUnder <> 0
---    )
---    SELECT @hasImpactedComponents = CASE WHEN EXISTS (SELECT * FROM ImpactedComponentID) THEN 1 ELSE 0 END
---    
---    RETURN @hasImpactedComponents
---END
---GO
---
---ALTER PROCEDURE GetPQIFacility
---    @facilityID INT
---AS BEGIN
---    SELECT
---        Facility.FacilityName,
---        Facility.FacilityVoltage,
---        Facility.UtilitySupplyVoltage,
---        Address.Address1,
---        Address.Address2,
---        Address.City,
---        Address.StateOrProvince,
---        Address.PostalCode,
---        Address.Country,
---        Company.CompanyName,
---        Company.Industry
---    FROM
---        PQInvestigator.UserIndustrialPQ.dbo.Facility JOIN
---        PQInvestigator.UserIndustrialPQ.dbo.Address ON Facility.AddressID = Address.AddressID JOIN
---        PQInvestigator.UserIndustrialPQ.dbo.Company ON Address.CompanyID = Company.CompanyID
---    WHERE
---        Facility.FacilityID = @facilityID
---END
---GO
---
---ALTER PROCEDURE GetImpactedComponents
---    @facilityID INT,
---    @magnitude FLOAT,
---    @duration FLOAT
---AS BEGIN
---    WITH EPRITolerancePoint AS
---    (
---        SELECT
---            ROW_NUMBER() OVER(PARTITION BY TestCurve.TestCurveID ORDER BY Y, X) AS RowNumber,
---            ComponentID,
---            TestCurve.TestCurveID,
---            Y AS Magnitude,
---            X AS Duration
---        FROM
---            PQInvestigator.IndustrialPQ.dbo.TestCurvePoint JOIN
---            PQInvestigator.IndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
---    ),
---    EPRIToleranceSegment AS
---    (
---        SELECT
---            P1.RowNumber,
---            P1.ComponentID,
---            P1.TestCurveID,
---            CASE WHEN @duration < P1.Duration THEN 0
---                 WHEN @magnitude < P1.Magnitude THEN 1
---                 WHEN @duration > P2.Duration THEN 0
---                 WHEN P1.Duration = P2.Duration THEN 0
---                 WHEN @duration <= (((P2.Magnitude - P1.Magnitude) / (P2.Duration - P1.Duration)) * (@duration - P1.Duration) + P1.Magnitude) THEN 1
---                 ELSE 0
---            END AS IsUnder,
---            CASE WHEN P1.Duration > P2.Duration THEN 1
---                 ELSE 0
---            END AS IsBackwards
---        FROM
---            EPRITolerancePoint P1 LEFT OUTER JOIN
---            EPRITolerancePoint P2 ON P1.TestCurveID = P2.TestCurveID AND P1.RowNumber = P2.RowNumber - 1
---        WHERE
---            P1.Duration <> P2.Duration
---    ),
---    EPRIToleranceCurve AS
---    (
---        SELECT
---            ComponentID,
---            TestCurveID,
---            IsUnder
---        FROM
---        (
---            SELECT
---                ROW_NUMBER() OVER(PARTITION BY TestCurveID ORDER BY RowNumber) AS RowNumber,
---                ComponentID,
---                TestCurveID,
---                1 - IsBackwards AS IsUnder
---            FROM
---                EPRIToleranceSegment
---            WHERE
---                IsUnder <> 0
---        ) AS Temp
---        WHERE
---            RowNumber = 1
---    ),
---    USERTolerancePoint AS
---    (
---        SELECT
---            ROW_NUMBER() OVER(PARTITION BY TestCurve.TestCurveID ORDER BY Y, X) AS RowNumber,
---            ComponentID,
---            TestCurve.TestCurveID,
---            Y AS Magnitude,
---            X AS Duration
---        FROM
---            PQInvestigator.UserIndustrialPQ.dbo.TestCurvePoint JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.TestCurve ON TestCurvePoint.TestCurveID = TestCurve.TestCurveID
---    ),
---    USERToleranceSegment AS
---    (
---        SELECT
---            P1.RowNumber,
---            P1.ComponentID,
---            P1.TestCurveID,
---            CASE WHEN @duration < P1.Duration THEN 0
---                 WHEN @magnitude < P1.Magnitude THEN 1
---                 WHEN @duration > P2.Duration THEN 0
---                 WHEN P1.Duration = P2.Duration THEN 0
---                 WHEN @duration <= (((P2.Magnitude - P1.Magnitude) / (P2.Duration - P1.Duration)) * (@duration - P1.Duration) + P1.Magnitude) THEN 1
---                 ELSE 0
---            END AS IsUnder,
---            CASE WHEN P1.Duration > P2.Duration THEN 1
---                 ELSE 0
---            END AS IsBackwards
---        FROM
---            USERTolerancePoint P1 LEFT OUTER JOIN
---            USERTolerancePoint P2 ON P1.TestCurveID = P2.TestCurveID AND P1.RowNumber = P2.RowNumber - 1
---        WHERE
---            P1.Duration <> P2.Duration
---    ),
---    USERToleranceCurve AS
---    (
---        SELECT
---            ComponentID,
---            TestCurveID,
---            IsUnder
---        FROM
---        (
---            SELECT
---                ROW_NUMBER() OVER(PARTITION BY TestCurveID ORDER BY RowNumber) AS RowNumber,
---                ComponentID,
---                TestCurveID,
---                1 - IsBackwards AS IsUnder
---            FROM
---                USERToleranceSegment
---            WHERE
---                IsUnder <> 0
---        ) AS Temp
---        WHERE
---            RowNumber = 1
---    ),
---    FacilityCurve AS
---    (
---        SELECT
---            CurveID,
---            CurveDB,
---            Facility.FacilityName AS Facility,
---            Area.Title AS Area,
---            Equipment.Title AS SectionTitle,
---            Equipment.Rank AS SectionRank
---        FROM
---            PQInvestigator.UserIndustrialPQ.dbo.FacilityAudit JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.Facility ON FacilityAudit.FacilityID = Facility.FacilityID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditSection Equipment ON Equipment.FacilityAuditID = FacilityAudit.FacilityAuditID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditSectionTree ON AuditSectionTree.AuditSectionChildID = Equipment.AuditSectionID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditSection Area ON AuditSectionTree.AuditSectionParentID = Area.AuditSectionID JOIN
---            PQInvestigator.UserIndustrialPQ.dbo.AuditCurve ON AuditCurve.AuditSectionID = Equipment.AuditSectionID
---        WHERE
---            AuditCurve.CurveType = 'TOLERANCE' AND
---            FacilityAudit.FacilityID = @facilityID
---    )
---    SELECT
---        FacilityCurve.Facility,
---        FacilityCurve.Area,
---        FacilityCurve.SectionTitle,
---        FacilityCurve.SectionRank,
---        Component.ComponentModel,
---        Manufacturer.ManufacturerName,
---        Series.SeriesName,
---        ComponentType.ComponentTypeName
---    FROM
---        PQInvestigator.IndustrialPQ.dbo.Component JOIN
---        PQInvestigator.IndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
---        PQInvestigator.IndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
---        PQInvestigator.IndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
---        EPRIToleranceCurve ON EPRIToleranceCurve.ComponentID = Component.ComponentID JOIN
---        FacilityCurve ON FacilityCurve.CurveID = EPRIToleranceCurve.TestCurveID
---    WHERE
---        CurveDB = 'EPRI' AND
---        IsUnder <> 0
---    UNION
---    SELECT
---        FacilityCurve.Facility,
---        FacilityCurve.Area,
---        FacilityCurve.SectionTitle,
---        FacilityCurve.SectionRank,
---        Component.ComponentModel,
---        Manufacturer.ManufacturerName,
---        Series.SeriesName,
---        ComponentType.ComponentTypeName
---    FROM
---        PQInvestigator.UserIndustrialPQ.dbo.Component JOIN
---        PQInvestigator.UserIndustrialPQ.dbo.Series ON Component.SeriesID = Series.SeriesID JOIN
---        PQInvestigator.UserIndustrialPQ.dbo.Manufacturer ON Series.ManufacturerID = Manufacturer.ManufacturerID JOIN
---        PQInvestigator.UserIndustrialPQ.dbo.ComponentType ON Component.ComponentTypeID = ComponentType.ComponentTypeID JOIN
---        USERToleranceCurve ON USERToleranceCurve.ComponentID = Component.ComponentID JOIN
---        FacilityCurve ON FacilityCurve.CurveID = USERToleranceCurve.TestCurveID
---    WHERE
---        CurveDB = 'USER' AND
---        IsUnder <> 0
---END
 --GO

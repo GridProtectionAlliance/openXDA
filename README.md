@@ -41,7 +41,7 @@ openXDA is a platform comprised of a back office service designed to consume all
 ![openXDA Overview](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Readme%20files/XDA-Overview.png)
 
 **Where It Fits In:**
-![Where-It-Fits-In](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Readme%20files/Where%20it%20fits%20in.png)
+![Where-It-Fits-In](http://www.gridprotectionalliance.org/images/products/PQ%20Tool%20Suite.png)
 
 
 # Why openXDA?

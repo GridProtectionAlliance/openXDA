@@ -48,4 +48,39 @@
       <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
+  <Table Name="dbo.VoltageCurve" Member="VoltageCurves">
+    <Type Name="VoltageCurve">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Association Name="VoltageCurve_VoltageCurvePoint" Member="VoltageCurvePoints" ThisKey="ID" OtherKey="VoltageCurveID" Type="VoltageCurvePoint" />
+      <Association Name="VoltageCurve_VoltageEnvelopeCurve" Member="VoltageEnvelopeCurves" ThisKey="ID" OtherKey="VoltageCurveID" Type="VoltageEnvelopeCurve" />
+    </Type>
+  </Table>
+  <Table Name="dbo.VoltageCurvePoint" Member="VoltageCurvePoints">
+    <Type Name="VoltageCurvePoint">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="VoltageCurveID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="PerUnitMagnitude" Storage="_Magnitude" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="DurationSeconds" Storage="_Duration" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="LoadOrder" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="VoltageCurve_VoltageCurvePoint" Member="VoltageCurve" ThisKey="VoltageCurveID" OtherKey="ID" Type="VoltageCurve" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.VoltageEnvelope" Member="VoltageEnvelopes">
+    <Type Name="VoltageEnvelope">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="Description" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Association Name="VoltageEnvelope_VoltageEnvelopeCurve" Member="VoltageEnvelopeCurves" ThisKey="ID" OtherKey="VoltageEnvelopeID" Type="VoltageEnvelopeCurve" />
+    </Type>
+  </Table>
+  <Table Name="dbo.VoltageEnvelopeCurve" Member="VoltageEnvelopeCurves">
+    <Type Name="VoltageEnvelopeCurve">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="VoltageEnvelopeID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="VoltageCurveID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="VoltageEnvelope_VoltageEnvelopeCurve" Member="VoltageEnvelope" ThisKey="VoltageEnvelopeID" OtherKey="ID" Type="VoltageEnvelope" IsForeignKey="true" />
+      <Association Name="VoltageCurve_VoltageEnvelopeCurve" Member="VoltageCurve" ThisKey="VoltageCurveID" OtherKey="ID" Type="VoltageCurve" IsForeignKey="true" />
+    </Type>
+  </Table>
 </Database>
