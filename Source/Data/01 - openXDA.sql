@@ -1420,6 +1420,29 @@ BEGIN
 END
 GO
 
+CREATE FUNCTION DateDiffTicks
+(
+    @startDate DATETIME2,
+    @endDate DATETIME2
+)
+RETURNS BIGINT
+AS
+BEGIN
+    DECLARE @startDay DATETIME2 = DATEADD(DAY, DATEDIFF(DAY, 0, @startDate), 0)
+    DECLARE @endDay DATETIME2 = DATEADD(DAY, DATEDIFF(DAY, 0, @endDate), 0)
+
+    DECLARE @startSeconds DATETIME2 = DATEADD(SECOND, DATEDIFF(SECOND, @startDay, @startDate), @startDay)
+    DECLARE @endSeconds DATETIME2 = DATEADD(SECOND, DATEDIFF(SECOND, @endDay, @endDate), @endDay)
+
+    RETURN
+        (CONVERT(BIGINT, DATEDIFF(DAY, @startDate, @endDate)) * 24 * 60 * 60 * 10000000) -
+        (CONVERT(BIGINT, DATEDIFF(SECOND, @startDay, @startDate)) * 10000000) +
+        (CONVERT(BIGINT, DATEDIFF(SECOND, @endDay, @endDate)) * 10000000) -
+        (DATEDIFF(NANOSECOND, @startSeconds, @startDate) / 100) +
+        (DATEDIFF(NANOSECOND, @endSeconds, @endDate) / 100)
+END
+GO
+
 CREATE FUNCTION GetSystemEventIDs
 (
     @startTime DATETIME2,
