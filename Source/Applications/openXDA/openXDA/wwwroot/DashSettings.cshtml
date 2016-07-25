@@ -79,7 +79,7 @@
 {
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<DashSettings, DataHub>(ViewBag, "ID"))
+        @Raw(dataContext.RenderViewModelConfiguration<DashSettings, DataHub>(ViewBag))
         
         function truncate(string) {
             if (string != null && string.length > 40)

@@ -60,7 +60,7 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-    ViewBag.HideAddNewButton = true;
+
 
 
 }
@@ -81,9 +81,24 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<Setting>("Name", customDataBinding: "enable: false"))
-    @*@Raw(dataContext.AddInputField<Setting>("Value"))*@
-    @*@Raw(dataContext.AddInputField<Setting>("DefaultValue", customDataBinding: "enable: false"))*@
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Name", customDataBinding: "enable: false"))
+        @*@Raw(dataContext.AddSelectField<AlarmRangeLimitView, Channel>("ChannelID", "ID", "ID"))*@
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("ChannelID"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeasurementCharacteristic"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Phase"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("HarmonicGroup"))
+        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, MeasurementType>("MeasurementTypeID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, AlarmType>("AlarmTypeID", "ID", "Name"))
+    </div>
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Severity"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("High"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Low"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("RangeInclusive"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("PerUnit"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Enabled"))
+    </div>
 
 }
 @Include("PagedViewModel.cshtml")
@@ -95,8 +110,8 @@
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
         
         function truncate(string) {
-            if (string != null && string.length > 40)
-                string = string.slice(0, 37) + '...';
+            if (string != null && string.length > 25)
+                string = string.slice(0, 23) + '...';
             return string;
         }
     </script>

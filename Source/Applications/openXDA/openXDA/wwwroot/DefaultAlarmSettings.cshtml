@@ -40,26 +40,34 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "PQ Dashboard Settings";
+    ViewBag.Title = "Default Alarm Limit Settings";
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "Name", "Name", "text-left" },
-        new[] { "Value", "Value", "text-left" },
+        new[] { "MeasurementType", "Measurement Type", "text-left"},
+        new[] { "MeasurementCharacteristic", "Measurement Characteristic", "text-left"},
+        new[] { "AlarmType", "Alarm Type", "text-left"},
+        //new[] { "HarmonicGroup", "Harmonic Group", "text-left"},
+        //new[] { "Severity", "Severity", "text-left" },
+        //new[] { "High", "High", "text-left" },
+        //new[] { "Low", "Low", "text-left" },
+        //new[] { "RangeInclusive", "Severity", "text-left" },
         //new[] { "DefaultValue", "Default Value", "text-center" }
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-    ViewBag.HideAddNewButton = true;
 
 
 }
 @helper BodyRows()
 {
-    <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: truncate(Value)"></td>
+    <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: MeasurementType, click: $parent.viewPageRecord"></button></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: AlarmType"></td>
+    @*<td width="10%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>*@
+
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
     <td width="10%" class="text-center valign-middle" nowrap>
@@ -68,23 +76,33 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<Setting>("Name", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddInputField<Setting>("Value"))
-    @*@Raw(dataContext.AddInputField<Setting>("DefaultValue", customDataBinding: "enable: false"))*@
+    <div class="col-md-6">
+        @Raw(dataContext.AddSelectField<DefaultAlarmRangeLimitView, MeasurementType>("MeasurementTypeID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<DefaultAlarmRangeLimitView, MeasurementCharacteristic>("MeasurementCharacteristicID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<DefaultAlarmRangeLimitView, AlarmType>("AlarmTypeID", "ID", "Name"))
+        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("Severity"))
+    </div>
 
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("High"))
+        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("Low"))
+        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("RangeInclusive"))
+        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("PerUnit"))
+    </div>
 }
 @Include("PagedViewModel.cshtml")
 
-@section Scripts 
+@section Scripts
 {
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<DashSettings, DataHub>(ViewBag, "ID"))
-        
+        @Raw(dataContext.RenderViewModelConfiguration<DefaultAlarmRangeLimitView, DataHub>(ViewBag, "ID"))
+
         function truncate(string) {
-            if (string != null && string.length > 40)
-                string = string.slice(0, 37) + '...';
+            if (string != null && string.length > 25)
+                string = string.slice(0, 23) + '...';
             return string;
         }
     </script>
 }
+

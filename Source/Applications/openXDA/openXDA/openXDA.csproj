@@ -251,9 +251,12 @@
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="Model\AlarmRangeLimit.cs" />
     <Compile Include="Model\AlarmRangeLimitView.cs" />
+    <Compile Include="Model\AlarmType.cs" />
     <Compile Include="Model\AppModel.cs" />
     <Compile Include="Model\Channel.cs" />
     <Compile Include="Model\DashSettings.cs" />
+    <Compile Include="Model\DefaultAlarmRangeLimit.cs" />
+    <Compile Include="Model\DefaultAlarmRangeLimitView.cs" />
     <Compile Include="Model\Group.cs" />
     <Compile Include="Model\GroupMeter.cs" />
     <Compile Include="Model\GroupMeterView.cs" />

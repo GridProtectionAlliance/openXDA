@@ -306,18 +306,20 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("MeterLine.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Channel.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("AlarmSettings", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
+
                 // Initiate pre-compile of base templates
-                if (AssemblyInfo.EntryAssembly.Debuggable)
-                {
-                    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
-                    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
-                }
-                else
-                {
-                    RazorEngine<CSharp>.Default.PreCompile(HandleException);
-                    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
-                }
+                //if (AssemblyInfo.EntryAssembly.Debuggable)
+                //{
+                //    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
+                //    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
+                //}
+                //else
+                //{
+                //    RazorEngine<CSharp>.Default.PreCompile(HandleException);
+                //    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
+                //}
 
                 // Create new web application hosting environment
                 m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);

@@ -649,23 +649,23 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecordCount)]
-        public int QueryAlarmRangeLimitViewCount(int groupID, string filterString)
+        public int QueryAlarmRangeLimitViewCount(string filterString)
         {
-            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecords)]
-        public IEnumerable<AlarmRangeLimitView> QueryAlarmRangeLimitViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<AlarmRangeLimitView> QueryAlarmRangeLimitViews( string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.DeleteRecord)]
         public void DeleteAlarmRangeLimitView(int id)
         {
-            m_dataContext.Table<GroupMeter>().DeleteRecord(id);
+            m_dataContext.Table<AlarmRangeLimit>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -705,5 +705,65 @@ namespace openXDA
         }
 
         #endregion
+
+        #region [ DefaultAlarmRangeLimitView ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecordCount)]
+        public int QueryDefaultAlarmRangeLimitViewCount(string filterString)
+        {
+            return m_dataContext.Table<DefaultAlarmRangeLimitView>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecords)]
+        public IEnumerable<DefaultAlarmRangeLimitView> QueryDefaultAlarmRangeLimitViews(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return m_dataContext.Table<DefaultAlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.DeleteRecord)]
+        public void DeleteDefaultAlarmRangeLimitView(int id)
+        {
+            m_dataContext.Table<AlarmRangeLimit>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.CreateNewRecord)]
+        public DefaultAlarmRangeLimitView NewDefaultAlarmRangeLimitView()
+        {
+            return new DefaultAlarmRangeLimitView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.AddNewRecord)]
+        public void AddNewDefaultAlarmRangeLimitView(DefaultAlarmRangeLimitView record)
+        {
+            m_dataContext.Table<DefaultAlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.UpdateRecord)]
+        public void UpdateDefaultAlarmRangeLimitView(DefaultAlarmRangeLimitView record)
+        {
+            m_dataContext.Table<DefaultAlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
+        }
+
+        public DefaultAlarmRangeLimit CreateNewAlarmRangeLimit(DefaultAlarmRangeLimitView record)
+        {
+            DefaultAlarmRangeLimit arl = new DefaultAlarmRangeLimit();
+            arl.ID = record.ID;
+            arl.AlarmTypeID = record.AlarmTypeID;
+            arl.Severity = record.Severity;
+            arl.High = record.High;
+            arl.Low = record.Low;
+            arl.RangeInclusive = record.RangeInclusive;
+            arl.PerUnit = record.PerUnit;
+            return arl;
+        }
+
+        #endregion
+
     }
 }
