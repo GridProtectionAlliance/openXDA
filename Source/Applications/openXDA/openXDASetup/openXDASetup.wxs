@@ -189,7 +189,7 @@
         <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
       </Component>
       <Component Id="openXDAConfig">
-        <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
+        <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.ProjectDir)\app.config" />
         <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[XDACONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
