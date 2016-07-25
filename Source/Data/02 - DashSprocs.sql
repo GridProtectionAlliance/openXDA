@@ -1,13 +1,13 @@
 CREATE TYPE [dbo].[SiteLineDetailsByDate] AS TABLE(
-	[thelineid] [int] NULL,
-	[theeventid] [int] NULL,
-	[theeventtype] [varchar](200) NULL,
-	[theinceptiontime] [varchar](26) NULL,
-	[thelinename] [varchar](251) NULL,
-	[voltage] [float] NULL,
-	[thefaulttype] [varchar](200) NULL,
-	[thecurrentdistance] [nvarchar](22) NULL,
-	[pqiexists] [int] NULL
+    [thelineid] [int] NULL,
+    [theeventid] [int] NULL,
+    [theeventtype] [varchar](200) NULL,
+    [theinceptiontime] [varchar](26) NULL,
+    [thelinename] [varchar](251) NULL,
+    [voltage] [float] NULL,
+    [thefaulttype] [varchar](200) NULL,
+    [thecurrentdistance] [nvarchar](22) NULL,
+    [pqiexists] [int] NULL
 )
 GO
 
@@ -15,27 +15,27 @@ CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIds]
     @EventID as INT
 AS
 BEGIN
-	SET NOCOUNT ON;
+    SET NOCOUNT ON;
 
-	DECLARE @currentTime DATETIME2,
-			@meterID INT,
-			@lineID INT
+    DECLARE @currentTime DATETIME2,
+            @meterID INT,
+            @lineID INT
 
-	SELECT @currentTime = StartTime, @meterID = MeterID, @lineID = LineID
-	FROM Event
-	WHERE ID = @EventID
+    SELECT @currentTime = StartTime, @meterID = MeterID, @lineID = LineID
+    FROM Event
+    WHERE ID = @EventID
 
-	SELECT evt2.ID as previd, evt3.ID as nextid
-	FROM Event evt1 LEFT OUTER JOIN 
-		 Event evt2 ON evt2.StartTime = (SELECT MAX(StartTime)
-		 FROM Event
-		 WHERE StartTime < @currentTime AND MeterID = @meterID AND LineID = @lineID) AND evt2.MeterID = @meterID AND evt2.LineID = @lineID 
-		 LEFT OUTER JOIN 
-		 Event evt3 ON evt3.StartTime = (SELECT MIN(StartTime)
-		 FROM Event
-		 WHERE StartTime > @currentTime AND MeterID = @meterID AND LineID = @lineID) 
-		 AND evt3.MeterID = @meterID AND evt3.LineID = @lineID
-	WHERE evt1.ID = @EventID
+    SELECT evt2.ID as previd, evt3.ID as nextid
+    FROM Event evt1 LEFT OUTER JOIN 
+         Event evt2 ON evt2.StartTime = (SELECT MAX(StartTime)
+         FROM Event
+         WHERE StartTime < @currentTime AND MeterID = @meterID AND LineID = @lineID) AND evt2.MeterID = @meterID AND evt2.LineID = @lineID 
+         LEFT OUTER JOIN 
+         Event evt3 ON evt3.StartTime = (SELECT MIN(StartTime)
+         FROM Event
+         WHERE StartTime > @currentTime AND MeterID = @meterID AND LineID = @lineID) 
+         AND evt3.MeterID = @meterID AND evt3.LineID = @lineID
+    WHERE evt1.ID = @EventID
 END
 GO
 
@@ -584,7 +584,7 @@ GO
 CREATE PROCEDURE [dbo].[selectDisturbancesDetailsByDate]
     -- Add the parameters for the stored procedure here
     @EventDateFrom as DateTime,
-	@EventDateTo as DateTime,
+    @EventDateTo as DateTime,
     @username as nvarchar(4000)
 AS
 BEGIN
@@ -592,50 +592,50 @@ BEGIN
 
     DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
     DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
-	
-	SELECT
-		Meter.ID AS themeterid,
-		Meter.Name AS thesite,
-		MeterLocation.Latitude AS latitude,
-		MeterLocation.Longitude AS longitude,
-		COALESCE(Disturbance_Count, 0) AS Disturbance_Count,
-		COALESCE([5], 0) AS [5],
-		COALESCE([4], 0) AS [4],
-		COALESCE([3], 0) AS [3],
-		COALESCE([2], 0) AS [2],
-		COALESCE([1], 0) AS [1],
-		COALESCE([0], 0) AS [0]
-	FROM
-		Meter JOIN
-		MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-		(
-			SELECT
-				MeterID,
-				6*[5] + 5*[4] + 4*[3] + 3*[2] + 2*[1] + 1*[0] AS Disturbance_Count,
-				[5],
-				[4],
-				[3],
-				[2],
-				[1],
-				[0]
-			FROM
-			(
-				SELECT
-					Event.MeterID,
-					DisturbanceSeverity.SeverityCode
-				FROM
-					DisturbanceSeverity JOIN
-					Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-					Event ON Disturbance.EventID = Event.ID
-				WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
-			) AS MeterSeverityCode
-			PIVOT
-			(
-				COUNT(SeverityCode)
-				FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
-			) AS PivotTable
-		) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
-	WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    
+    SELECT
+        Meter.ID AS themeterid,
+        Meter.Name AS thesite,
+        MeterLocation.Latitude AS latitude,
+        MeterLocation.Longitude AS longitude,
+        COALESCE(Disturbance_Count, 0) AS Disturbance_Count,
+        COALESCE([5], 0) AS [5],
+        COALESCE([4], 0) AS [4],
+        COALESCE([3], 0) AS [3],
+        COALESCE([2], 0) AS [2],
+        COALESCE([1], 0) AS [1],
+        COALESCE([0], 0) AS [0]
+    FROM
+        Meter JOIN
+        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+        (
+            SELECT
+                MeterID,
+                6*[5] + 5*[4] + 4*[3] + 3*[2] + 2*[1] + 1*[0] AS Disturbance_Count,
+                [5],
+                [4],
+                [3],
+                [2],
+                [1],
+                [0]
+            FROM
+            (
+                SELECT
+                    Event.MeterID,
+                    DisturbanceSeverity.SeverityCode
+                FROM
+                    DisturbanceSeverity JOIN
+                    Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
+                    Event ON Disturbance.EventID = Event.ID
+                WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
+            ) AS MeterSeverityCode
+            PIVOT
+            (
+                COUNT(SeverityCode)
+                FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
+            ) AS PivotTable
+        ) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
+    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
 END
 GO
 
@@ -677,19 +677,19 @@ FROM
     SELECT #temp.thesiteid, #temp.thesitename, SeverityCodes.SeverityCode AS SeverityCode, COALESCE(DisturbanceCount, 0) AS DisturbanceCount
     FROM
         #temp Cross JOIN
-		( Select 5 as SeverityCode UNION 
-		  SELECT 4 as SeverityCode UNION 
-		  SELECT 3 as SeverityCode UNION 
-		  SELECT 2 as SeverityCode UNION 
-		  SELECT 1 as SeverityCode UNION 
-		  SELECT 0 as SeverityCode
-		) AS SeverityCodes LEFT OUTER JOIN
+        ( Select 5 as SeverityCode UNION 
+          SELECT 4 as SeverityCode UNION 
+          SELECT 3 as SeverityCode UNION 
+          SELECT 2 as SeverityCode UNION 
+          SELECT 1 as SeverityCode UNION 
+          SELECT 0 as SeverityCode
+        ) AS SeverityCodes LEFT OUTER JOIN
         (
             SELECT MeterID, SeverityCode, COUNT(*) AS DisturbanceCount
             FROM DisturbanceSeverity JOIN
-				 Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
-				 Event ON Event.ID = Disturbance.EventID
-			Where ( (CAST( Event.StartTime as Date) between @EventDateFrom and @EventDateTo))
+                 Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
+                 Event ON Event.ID = Disturbance.EventID
+            Where ( (CAST( Event.StartTime as Date) between @EventDateFrom and @EventDateTo))
             and MeterID in (select * from authMeters(@username))
             GROUP BY SeverityCode, MeterID
         ) AS Disturbances ON #temp.thesiteid = Disturbances.MeterID AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
@@ -749,19 +749,19 @@ FROM
     SELECT #temp.Date,  SeverityCodes.SeverityCode AS SeverityCode, COALESCE(DisturbanceCount, 0) AS DisturbanceCount
     FROM
         #temp Cross JOIN
-		( Select 5 as SeverityCode UNION 
-		  SELECT 4 as SeverityCode UNION 
-		  SELECT 3 as SeverityCode UNION 
-		  SELECT 2 as SeverityCode UNION 
-		  SELECT 1 as SeverityCode UNION 
-		  SELECT 0 as SeverityCode
-		) AS SeverityCodes LEFT OUTER JOIN
+        ( Select 5 as SeverityCode UNION 
+          SELECT 4 as SeverityCode UNION 
+          SELECT 3 as SeverityCode UNION 
+          SELECT 2 as SeverityCode UNION 
+          SELECT 1 as SeverityCode UNION 
+          SELECT 0 as SeverityCode
+        ) AS SeverityCodes LEFT OUTER JOIN
         (
             SELECT CAST(Disturbance.StartTime AS Date) AS DisturbanceDate, SeverityCode, COUNT(*) AS DisturbanceCount
             FROM DisturbanceSeverity JOIN
-				 Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
-				 Event ON Event.ID = Disturbance.EventID
-			Where ( (@MeterID = '0' and MeterID = MeterID) or (MeterID in ( Select * from @MeterIDs) ) )
+                 Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
+                 Event ON Event.ID = Disturbance.EventID
+            Where ( (@MeterID = '0' and MeterID = MeterID) or (MeterID in ( Select * from @MeterIDs) ) )
             and MeterID in (select * from authMeters(@username))
             GROUP BY CAST(Disturbance.StartTime AS Date), SeverityCode
         ) AS Disturbances ON #temp.Date = Disturbances.DisturbanceDate AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
@@ -1045,8 +1045,8 @@ FROM
         EventType LEFT OUTER JOIN
         (
             SELECT MeterID, EventTypeID, COUNT(*) AS EventCount 
-			FROM Event 
-			WHERE (CAST([StartTime] as Date) between @EventDateFrom and @EventDateTo)
+            FROM Event 
+            WHERE (CAST([StartTime] as Date) between @EventDateFrom and @EventDateTo)
             GROUP BY EventTypeID, MeterID
         ) AS E ON EventType.ID = E.EventTypeID and E.MeterID = #temp.thesiteid 
 ) AS EventDate
@@ -1696,7 +1696,7 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsDisturbances]
     -- Add the parameters for the stored procedure here
     @EventDateFrom as DateTime,
-	@EventDateTo as DateTime,
+    @EventDateTo as DateTime,
     @username as nvarchar(4000)
 AS
 BEGIN
@@ -1704,50 +1704,50 @@ BEGIN
 
     DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
     DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
-	
-	SELECT
-		Meter.ID AS ID,
-		Meter.Name AS Name,
-		MeterLocation.Latitude AS Latitude,
-		MeterLocation.Longitude AS Longitude,
-		COALESCE(Disturbance_Count, 0) AS Disturbance_Count,
-		COALESCE([5], 0) AS [5],
-		COALESCE([4], 0) AS [4],
-		COALESCE([3], 0) AS [3],
-		COALESCE([2], 0) AS [2],
-		COALESCE([1], 0) AS [1],
-		COALESCE([0], 0) AS [0]
-	FROM
-		Meter JOIN
-		MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-		(
-			SELECT
-				MeterID,
-				6*[5] + 5*[4] + 4*[3] + 3*[2] + 2*[1] + 1*[0] AS Disturbance_Count,
-				[5],
-				[4],
-				[3],
-				[2],
-				[1],
-				[0]
-			FROM
-			(
-				SELECT
-					Event.MeterID,
-					DisturbanceSeverity.SeverityCode
-				FROM
-					DisturbanceSeverity JOIN
-					Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-					Event ON Disturbance.EventID = Event.ID
-				WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
-			) AS MeterSeverityCode
-			PIVOT
-			(
-				COUNT(SeverityCode)
-				FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
-			) AS PivotTable
-		) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
-	WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    
+    SELECT
+        Meter.ID AS ID,
+        Meter.Name AS Name,
+        MeterLocation.Latitude AS Latitude,
+        MeterLocation.Longitude AS Longitude,
+        COALESCE(Disturbance_Count, 0) AS Disturbance_Count,
+        COALESCE([5], 0) AS [5],
+        COALESCE([4], 0) AS [4],
+        COALESCE([3], 0) AS [3],
+        COALESCE([2], 0) AS [2],
+        COALESCE([1], 0) AS [1],
+        COALESCE([0], 0) AS [0]
+    FROM
+        Meter JOIN
+        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+        (
+            SELECT
+                MeterID,
+                6*[5] + 5*[4] + 4*[3] + 3*[2] + 2*[1] + 1*[0] AS Disturbance_Count,
+                [5],
+                [4],
+                [3],
+                [2],
+                [1],
+                [0]
+            FROM
+            (
+                SELECT
+                    Event.MeterID,
+                    DisturbanceSeverity.SeverityCode
+                FROM
+                    DisturbanceSeverity JOIN
+                    Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
+                    Event ON Disturbance.EventID = Event.ID
+                WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
+            ) AS MeterSeverityCode
+            PIVOT
+            (
+                COUNT(SeverityCode)
+                FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
+            ) AS PivotTable
+        ) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
+    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
 END
 GO
 
@@ -1776,45 +1776,45 @@ BEGIN
         Meter.Name,
         MeterLocation.Longitude,
         MeterLocation.Latitude,
-		COALESCE(Event_Count, 0) AS Event_Count,
-		COALESCE(Interruption, 0) AS Interruption,
-		COALESCE(Fault, 0) AS Fault,
-		COALESCE(Sag, 0) AS Sag,
-		COALESCE(Transient, 0) AS Transient,
-		COALESCE(Swell, 0) AS Swell,
-		COALESCE(Other, 0) AS Other
+        COALESCE(Event_Count, 0) AS Event_Count,
+        COALESCE(Interruption, 0) AS Interruption,
+        COALESCE(Fault, 0) AS Fault,
+        COALESCE(Sag, 0) AS Sag,
+        COALESCE(Transient, 0) AS Transient,
+        COALESCE(Swell, 0) AS Swell,
+        COALESCE(Other, 0) AS Other
 
         FROM
             Meter JOIN
             MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-			(
-				SELECT 
-					6*Interruption + 5*Fault + 4*Sag + 3*Transient + 2*Swell + 1*Other AS Event_Count, 
-					MeterID,
-					Interruption,
-					Fault,
-					Sag,
-					Transient,
-					Swell,
-					Other
-				FROM
-				(
-					SELECT 
-						Event.MeterID,
-						EventType.Name
-					FROM
-						Event JOIN
-						EventType ON EventType.ID = Event.EventTypeID 
-					WHERE
-						CAST([StartTime] AS DATE) between @startDate AND @endDate
-				)AS EventCode
-				PIVOT
-				(
-					COUNT(Name)
-					FOR Name IN (Interruption, Fault, Sag, Transient, Swell, Other)
-				) AS PivotTable
-				
-			)AS Event_Count ON Event_Count.MeterID = Meter.ID
+            (
+                SELECT 
+                    6*Interruption + 5*Fault + 4*Sag + 3*Transient + 2*Swell + 1*Other AS Event_Count, 
+                    MeterID,
+                    Interruption,
+                    Fault,
+                    Sag,
+                    Transient,
+                    Swell,
+                    Other
+                FROM
+                (
+                    SELECT 
+                        Event.MeterID,
+                        EventType.Name
+                    FROM
+                        Event JOIN
+                        EventType ON EventType.ID = Event.EventTypeID 
+                    WHERE
+                        CAST([StartTime] AS DATE) between @startDate AND @endDate
+                )AS EventCode
+                PIVOT
+                (
+                    COUNT(Name)
+                    FOR Name IN (Interruption, Fault, Sag, Transient, Swell, Other)
+                ) AS PivotTable
+                
+            )AS Event_Count ON Event_Count.MeterID = Meter.ID
 
         WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
 END
@@ -1976,40 +1976,40 @@ BEGIN
         set @thedateto = CAST(@EventDateTo as Date);
 
         SELECT 
-			[dbo].[Meter].[ID], 
-			[dbo].[Meter].[Name], 
-			[dbo].[MeterLocation].[Longitude], 
-			[dbo].[MeterLocation].[Latitude],
-			COALESCE(Alarm, 0) as Alarm,
-			COALESCE(Offnormal, 0) As Offnormal,
-			COALESCE(AlarmCount, 0) As AlarmCount
-		FROM
-			Meter JOIN
-			MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-			(
-				SELECT 
-					MeterID,
-					Alarm + Offnormal as AlarmCount,
-					Alarm,
-					Offnormal
-				FROM
-					(
-						SELECT
-							Channel.MeterID,
-							AlarmType.Name
-						FROM
-							AlarmType JOIN
-							ChannelAlarmSummary ON ChannelAlarmSummary.AlarmTypeID = AlarmType.ID JOIN
-							Channel ON Channel.ID = ChannelAlarmSummary.ChannelID
-						WHERE ChannelAlarmSummary.Date BETWEEN @thedatefrom AND @thedateto
-					
-					) AS AlarmCodes
-					PIVOT
-					(
-						COUNT(Name)
-						FOR Name IN (Alarm, Offnormal)
-					) AS PivotTable            
-		) AS AlarmCount ON AlarmCount.MeterID = Meter.ID
+            [dbo].[Meter].[ID], 
+            [dbo].[Meter].[Name], 
+            [dbo].[MeterLocation].[Longitude], 
+            [dbo].[MeterLocation].[Latitude],
+            COALESCE(Alarm, 0) as Alarm,
+            COALESCE(Offnormal, 0) As Offnormal,
+            COALESCE(AlarmCount, 0) As AlarmCount
+        FROM
+            Meter JOIN
+            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+            (
+                SELECT 
+                    MeterID,
+                    Alarm + Offnormal as AlarmCount,
+                    Alarm,
+                    Offnormal
+                FROM
+                    (
+                        SELECT
+                            Channel.MeterID,
+                            AlarmType.Name
+                        FROM
+                            AlarmType JOIN
+                            ChannelAlarmSummary ON ChannelAlarmSummary.AlarmTypeID = AlarmType.ID JOIN
+                            Channel ON Channel.ID = ChannelAlarmSummary.ChannelID
+                        WHERE ChannelAlarmSummary.Date BETWEEN @thedatefrom AND @thedateto
+                    
+                    ) AS AlarmCodes
+                    PIVOT
+                    (
+                        COUNT(Name)
+                        FOR Name IN (Alarm, Offnormal)
+                    ) AS PivotTable            
+        ) AS AlarmCount ON AlarmCount.MeterID = Meter.ID
             
        WHERE [dbo].[Meter].[ID] in (SELECT * FROM authMeters(@username))
 
@@ -2190,53 +2190,53 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-	DECLARE @localEventDate DATE = CAST(@EventDate AS DATE)
-	DECLARE @localMeterID INT = CAST(@MeterID AS INT)
+    DECLARE @localEventDate DATE = CAST(@EventDate AS DATE)
+    DECLARE @localMeterID INT = CAST(@MeterID AS INT)
 
-	; WITH cte AS
-	(
-		SELECT
-			Event.LineID AS thelineid, 
-			Event.ID AS theeventid, 
-			EventType.Name AS theeventtype,
-			CAST(Event.StartTime AS VARCHAR(26)) AS theinceptiontime,
-			MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
-			Line.VoltageKV AS voltage,
-			COALESCE(FaultSummary.FaultType, Phase.Name, '') AS thefaulttype,
-			CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)) + ' mi', '') END AS thecurrentdistance,
-			dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
-			Event.StartTime,
-			CASE EventType.Name
-				WHEN 'Sag' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
-				WHEN 'Swell' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude DESC, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
-				ELSE 1
-			END AS RowPriority
-		FROM
-			Event JOIN
-			EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
-			Disturbance ON Disturbance.EventID = Event.ID LEFT OUTER JOIN
-			FaultSummary ON FaultSummary.EventID = Event.ID  LEFT OUTER JOIN
-			Phase ON Disturbance.PhaseID = Phase.ID JOIN
-			Meter ON Meter.ID = @MeterID JOIN
-			Line ON Event.LineID = Line.ID JOIN
-			MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
-		WHERE
-			CAST(Event.StartTime AS DATE) = @localEventDate AND
-			Event.MeterID = @localMeterID
-	)
-	SELECT
-		thelineid,
-		theeventid,
-		theeventtype,
-		theinceptiontime,
-		thelinename,
-		voltage,
-		thefaulttype,
-		thecurrentdistance,
-		pqiexists
-	FROM cte
-	WHERE RowPriority = 1
-	ORDER BY StartTime
+    ; WITH cte AS
+    (
+        SELECT
+            Event.LineID AS thelineid, 
+            Event.ID AS theeventid, 
+            EventType.Name AS theeventtype,
+            CAST(Event.StartTime AS VARCHAR(26)) AS theinceptiontime,
+            MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
+            Line.VoltageKV AS voltage,
+            COALESCE(FaultSummary.FaultType, Phase.Name, '') AS thefaulttype,
+            CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)) + ' mi', '') END AS thecurrentdistance,
+            dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
+            Event.StartTime,
+            CASE EventType.Name
+                WHEN 'Sag' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
+                WHEN 'Swell' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude DESC, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
+                ELSE 1
+            END AS RowPriority
+        FROM
+            Event JOIN
+            EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
+            Disturbance ON Disturbance.EventID = Event.ID LEFT OUTER JOIN
+            FaultSummary ON FaultSummary.EventID = Event.ID  LEFT OUTER JOIN
+            Phase ON Disturbance.PhaseID = Phase.ID JOIN
+            Meter ON Meter.ID = @MeterID JOIN
+            Line ON Event.LineID = Line.ID JOIN
+            MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
+        WHERE
+            CAST(Event.StartTime AS DATE) = @localEventDate AND
+            Event.MeterID = @localMeterID
+    )
+    SELECT
+        thelineid,
+        theeventid,
+        theeventtype,
+        theinceptiontime,
+        thelinename,
+        voltage,
+        thefaulttype,
+        thecurrentdistance,
+        pqiexists
+    FROM cte
+    WHERE RowPriority = 1
+    ORDER BY StartTime
 
 END
 GO
@@ -2255,26 +2255,34 @@ CREATE PROCEDURE [dbo].[selectSiteLinesDisturbanceDetailsByDate]
 AS
 BEGIN
     SET NOCOUNT ON;
-	
-	SELECT 
-		Event.LineID AS thelineid, 
-		Event.ID AS theeventid, 
-		Disturbance.ID as disturbanceid,
-		CAST(Disturbance.StartTime AS VARCHAR(26)) AS theinceptiontime,
-		DisturbanceSeverity.SeverityCode,
-		MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
-		Line.VoltageKV AS voltage
-	FROM
-		Event JOIN
-		Disturbance ON Disturbance.EventID = Event.ID JOIN
-		DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
-		Meter ON Meter.ID = @MeterID JOIN
-		Line ON Event.LineID = Line.ID JOIN
-		MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
-	WHERE
-		CAST(Disturbance.StartTime AS DATE) = @EventDate AND Event.MeterID = @MeterID
-	ORDER BY
-		Event.StartTime ASC
+    
+    SELECT 
+        Event.LineID AS thelineid, 
+        Event.ID AS theeventid, 
+        Disturbance.ID as disturbanceid,
+        EventType.Name AS disturbancetype,
+        Phase.Name AS phase,
+        CONVERT(DECIMAL(4,3), Disturbance.PerUnitMagnitude) AS magnitude,
+        CONVERT(DECIMAL(10,3), Disturbance.DurationSeconds) AS duration,
+        CAST(Disturbance.StartTime AS VARCHAR(26)) AS theinceptiontime,
+        dbo.DateDiffTicks('1970-01-01', Disturbance.StartTime) / 10000.0 AS startmillis,
+        dbo.DateDiffTicks('1970-01-01', Disturbance.EndTime) / 10000.0 AS endmillis,
+        DisturbanceSeverity.SeverityCode,
+        MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
+        Line.VoltageKV AS voltage
+    FROM
+        Event JOIN
+        Disturbance ON Disturbance.EventID = Event.ID JOIN
+        EventType ON Disturbance.EventTypeID = EventType.ID JOIN
+        Phase ON Disturbance.PhaseID = Phase.ID JOIN
+        DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
+        Meter ON Meter.ID = @MeterID JOIN
+        Line ON Event.LineID = Line.ID JOIN
+        MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
+    WHERE
+        CAST(Disturbance.StartTime AS DATE) = @EventDate AND Event.MeterID = @MeterID
+    ORDER BY
+        Event.StartTime ASC
 
 END
 GO
@@ -2590,7 +2598,7 @@ BEGIN
             (SELECT thecount FROM @TempTable WHERE thename = 'Latched' AND thesite = @sitename),
             (SELECT thecount FROM @TempTable WHERE thename = 'Unreasonable' AND thesite = @sitename),
             (SELECT thecount FROM @TempTable WHERE thename = 'Noncongruent' AND thesite = @sitename),
-			 (
+             (
                     SELECT 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness
                     FROM MeterDataQualitySummary
                     WHERE CAST([Date] AS DATE) = @theDate AND MeterID = @themeterid
@@ -2641,16 +2649,16 @@ BEGIN
         SeverityCodes.SeverityCode AS thename 
     FROM
         DisturbanceSeverity JOIN
-		( Select 5 as SeverityCode UNION 
-		  SELECT 4 as SeverityCode UNION 
-		  SELECT 3 as SeverityCode UNION 
-		  SELECT 2 as SeverityCode UNION 
-		  SELECT 1 as SeverityCode UNION 
-		  SELECT 0 as SeverityCode
-		) AS SeverityCodes ON DisturbanceSeverity.SeverityCode = SeverityCodes.SeverityCode LEFT OUTER JOIN
-		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
-		Event ON Event.ID = Disturbance.EventID JOIN
-		Meter ON Meter.ID = Event.MeterID
+        ( Select 5 as SeverityCode UNION 
+          SELECT 4 as SeverityCode UNION 
+          SELECT 3 as SeverityCode UNION 
+          SELECT 2 as SeverityCode UNION 
+          SELECT 1 as SeverityCode UNION 
+          SELECT 0 as SeverityCode
+        ) AS SeverityCodes ON DisturbanceSeverity.SeverityCode = SeverityCodes.SeverityCode LEFT OUTER JOIN
+        Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID Join
+        Event ON Event.ID = Disturbance.EventID JOIN
+        Meter ON Meter.ID = Event.MeterID
     WHERE
         MeterID IN (SELECT * FROM @MeterIDs) AND
         CAST(Disturbance.StartTime AS DATE) = @thedate
@@ -2808,12 +2816,12 @@ BEGIN
         Meter.ID AS meterid, 
         Meter.Name AS thesite,
         EventType.Name AS thename,
-		MeterLine.LineName AS linename 
+        MeterLine.LineName AS linename 
     FROM
         Event JOIN
         EventType ON EventType.ID = Event.EventTypeID JOIN
         Meter ON Meter.ID = Event.MeterID JOIN
-		MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID
+        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID
     WHERE
         Meter.ID IN (SELECT * FROM @MeterIDs) AND
         CAST(StartTime AS DATE) BETWEEN @startDate AND @endDate
@@ -2906,7 +2914,7 @@ BEGIN
         [dbo].[MeasurementCharacteristic].[Name] as characteristic,
         [dbo].[MeasurementType].[Name] as measurementtype,
         [dbo].[Phase].[Name] as phasename,
-		Channel.HarmonicGroup,
+        Channel.HarmonicGroup,
         SUM (ChannelAlarmSummary.AlarmPoints) as eventcount,
         @theDate as date
         
