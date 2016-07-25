@@ -100,6 +100,9 @@
     <Content Include="openXDASetupBanner.bmp" />
     <Content Include="openXDASetupDialog.bmp" />
     <Content Include="packages.config" />
+    <Content Include="WebFeatures.wxi" />
+    <Content Include="WebFiles.wxi" />
+    <Content Include="WebFolders.wxi" />
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixUtilExtension">

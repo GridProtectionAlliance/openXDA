@@ -1,0 +1,13 @@
+<Include>
+<Directory Id="WWWROOTFOLDER" Name="wwwroot">
+  <Directory Id="CONTENTFOLDER" Name="Content">
+    <Directory Id="CONTENTIMAGESFOLDER" Name="images" />
+  </Directory>
+  <Directory Id="DOCSFOLDER" Name="Docs" />
+  <Directory Id="FONTSFOLDER" Name="fonts" />
+  <Directory Id="IMAGESFOLDER" Name="Images">
+    <Directory Id="IMAGESICONSFOLDER" Name="Icons" />
+  </Directory>
+  <Directory Id="SCRIPTSFOLDER" Name="Scripts" />
+</Directory>
+</Include>
