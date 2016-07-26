@@ -137,7 +137,10 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_samples - 1) / (m_endTime - m_startTime).TotalSeconds;
+                if (!m_dataSeries.Any())
+                    return double.NaN;
+
+                return m_dataSeries[0].SampleRate;
             }
         }
 

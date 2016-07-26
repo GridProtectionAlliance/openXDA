@@ -126,7 +126,17 @@ namespace FaultData.DataAnalysis
                 if (!m_dataPoints.Any())
                     return double.NaN;
 
-                m_sampleRate = (Duration != 0.0D) ? (m_dataPoints.Count - 1) / Duration : double.NaN;
+                if (Duration != 0.0D)
+                {
+                    double consecutiveSampleRate = (m_dataPoints.Count >= 2) ? 1.0D / (m_dataPoints[1].Time - m_dataPoints[0].Time).TotalSeconds : double.NaN;
+                    double totalSampleRate = (m_dataPoints.Count - 1) / Duration;
+                    double diff = Math.Abs(consecutiveSampleRate - totalSampleRate);
+                    m_sampleRate = (diff < 1.0D) ? totalSampleRate : double.NaN;
+                }
+                else
+                {
+                    m_sampleRate = double.NaN;
+                }
 
                 return m_sampleRate.Value;
             }

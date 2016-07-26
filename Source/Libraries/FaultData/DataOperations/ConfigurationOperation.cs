@@ -44,6 +44,7 @@ namespace FaultData.DataOperations
 
         // Fields
         private string m_filePattern;
+        private double m_systemFrequency;
 
         private MeterInfoDataContext m_meterInfo;
 
@@ -61,6 +62,19 @@ namespace FaultData.DataOperations
             set
             {
                 m_filePattern = value;
+            }
+        }
+
+        [Setting]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
             }
         }
 
@@ -162,6 +176,9 @@ namespace FaultData.DataOperations
             foreach (DataGroup dataGroup in meterDataSet.GetResource<DataGroupsResource>().DataGroups)
             {
                 if (dataGroup.Classification != DataClassification.Event)
+                    continue;
+
+                if (dataGroup.SamplesPerSecond / m_systemFrequency < 4.0D)
                     continue;
 
                 // Add missing current series based on IR = IA + IB + IC
