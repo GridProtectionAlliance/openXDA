@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF.Data.Model;
@@ -702,6 +703,25 @@ namespace openXDA
             arl.PerUnit = record.PerUnit;
             arl.Enabled = record.Enabled;
             return arl;
+        }
+
+        public void ResetAlarmToDefault(AlarmRangeLimitView record)
+        {
+            IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+
+            if(defaultLimits.Count() == 1)
+            {
+                foreach (DefaultAlarmRangeLimit limit in defaultLimits)
+                {
+                    record.Severity = limit.Severity;
+                    record.High = limit.High;
+                    record.Low = limit.Low;
+                    record.RangeInclusive = limit.RangeInclusive;
+                    record.PerUnit = limit.PerUnit;
+                }
+
+                m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
+            }
         }
 
         #endregion
