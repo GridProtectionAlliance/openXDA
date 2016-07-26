@@ -366,7 +366,7 @@ namespace FaultData.DataOperations
         private static ChannelKey GetGenericChannelKey(Channel channel)
         {
             return Tuple.Create(
-                channel.LineID,
+                0,
                 0,
                 channel.Name,
                 channel.MeasurementType.Name,
