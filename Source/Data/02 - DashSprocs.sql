@@ -3045,6 +3045,109 @@ GO
 -- =============================================
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, Jun 26, 2014>
+-- Description: <Description, Selects Trending Data for a ChannelID by Date for a day>
+-- selectTrendingDataByChannelIDDate2 '9/15/2015', 988
+-- =============================================
+CREATE PROCEDURE [dbo].[selectTrendingDataByChannelIDDate2]
+    @EventDate DateTime2,
+    @ChannelID int
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Trending Data
+    WITH TrendingDataPoint AS
+    (
+        SELECT
+            ChannelID,
+            SeriesType,
+            Time,
+            Value
+        FROM
+            GetTrendingData(@EventDate, DATEADD(NANOSECOND, -100, DATEADD(DAY, 1, @EventDate)), @ChannelID, default) AS TrendingData JOIN
+            (
+                SELECT 0 AS ID, 'Minimum' AS SeriesType UNION
+                SELECT 1 AS ID, 'Maximum' AS SeriesType UNION
+                SELECT 2 AS ID, 'Average' AS SeriesType
+            ) AS Series ON TrendingData.SeriesID = Series.ID
+    ),
+    TrendingData AS
+    (
+        SELECT
+            ChannelID,
+            Time,
+            Maximum,
+            Minimum,
+            Average
+        FROM TrendingDataPoint
+        PIVOT
+        (
+            SUM(Value)
+            FOR SeriesType IN (Maximum, Minimum, Average)
+        ) AS TrendingData
+    )
+    SELECT
+        TrendingData.Time AS thedate,
+        TrendingData.Minimum AS theminimum,
+        TrendingData.Maximum AS themaximum,
+        TrendingData.Average AS theaverage
+    FROM
+        TrendingData
+    WHERE
+        TrendingData.ChannelID = @ChannelID
+    ORDER BY TrendingData.Time
+    
+    -- Alarm Data
+    DECLARE @alarmHigh FLOAT
+    DECLARE @alarmLow FLOAT
+
+    SELECT
+        @EventDate AS thedatefrom,
+        DATEADD(DAY, 1, @EventDate) AS thedateto,
+        CASE
+            WHEN AlarmRangeLimit.PerUnit <> 0 AND Channel.PerUnitValue IS NOT NULL THEN AlarmRangeLimit.High * PerUnitValue
+            ELSE AlarmRangeLimit.High
+        END AS alarmlimithigh,
+        CASE
+            WHEN AlarmRangeLimit.PerUnit <> 0 AND Channel.PerUnitValue IS NOT NULL THEN AlarmRangeLimit.Low * PerUnitValue
+            ELSE AlarmRangeLimit.Low
+        END AS alarmlimitlow
+    FROM
+        AlarmRangeLimit JOIN
+        Channel ON AlarmRangeLimit.ChannelID = Channel.ID
+    WHERE
+        AlarmRangeLimit.AlarmTypeID = (SELECT ID FROM AlarmType WHERE Name = 'Alarm') AND
+        AlarmRangeLimit.ChannelID = @ChannelID
+
+    -- Off-normal data
+    DECLARE @dayOfWeek INT = DATEPART(DW, @EventDate) - 1
+    DECLARE @hourOfWeek INT = @dayOfWeek * 24
+
+    ; WITH HourlyIndex AS
+    (
+        SELECT @hourOfWeek AS HourOfWeek
+        UNION ALL
+        SELECT HourOfWeek + 1
+        FROM HourlyIndex
+        WHERE (HourOfWeek + 1) < @hourOfWeek + 24
+    )
+    SELECT
+        DATEADD(HOUR, HourlyIndex.HourOfWeek - @hourOfWeek, @EventDate) AS thedatefrom,
+        DATEADD(HOUR, HourlyIndex.HourOfWeek - @hourOfWeek + 1, @EventDate) AS thedateto,
+        HourOfWeekLimit.High AS offlimithigh,
+        HourOfWeekLimit.Low AS offlimitlow
+    FROM
+        HourlyIndex LEFT OUTER JOIN
+        HourOfWeekLimit ON HourOfWeekLimit.HourOfWeek = HourlyIndex.HourOfWeek
+    WHERE
+        HourOfWeekLimit.ChannelID IS NULL OR
+        HourOfWeekLimit.ChannelID = @ChannelID
+END
+GO
+
+-- =============================================
+-- Author:      <Author, Jeff Walker>
+-- Create date: <Create Date, Jun 26, 2014>
 -- Description: <Description, Selects Trending Data for a MeterID by Date, MeasurementCharacteristic, MeqasurementType, and Phase for 30 days back>
 -- selectTrendingDataMonthly '03/22/2008', 1 , 20 , 1 , 3
 
