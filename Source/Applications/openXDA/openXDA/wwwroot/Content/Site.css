@@ -48,7 +48,7 @@ div.readonly:focus {
     padding-right: 30px;
 }
 
-.right-inner-addon i {
+.right-inner-addon i, .right-inner-addon button {
     position: absolute;
     right: 0px;
     padding: 10px 12px;

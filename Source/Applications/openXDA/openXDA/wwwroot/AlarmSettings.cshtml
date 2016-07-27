@@ -34,6 +34,34 @@
         html, body {
             height: 100%;
         }
+
+        .modal-backdrop {
+            z-index: 950;
+        }
+        .modal {
+            z-index: 951;
+            top: 10%;
+        }
+
+        .ui-autocomplete {
+            width: 100%;
+            height: 100%;
+        }
+
+        #channelnamediv {
+            padding: 0;
+            border: none;
+        }
+
+        #channelname {
+            height: 100%;
+            width: 100%;
+        }
+
+        .ui-autocomplete button {
+            right: 0;
+            border: 1px solid #cccccc;
+        }
     </style>
 }
 
@@ -47,11 +75,11 @@
 {   //    { "Field", "Label", "Classes" }
         new[] { "ChannelID", "Channel ID", "text-left"},
         new[] { "Name", "Channel Name", "text-left" },
-        new[] { "MeasurementType", "Measurement Type", "text-left"},
-        new[] { "MeasurementCharacteristic", "Measurement Characteristic", "text-left"},
-        new[] { "Phase", "Phase", "text-left"},
-        new[] { "HarmonicGroup", "Harmonic Group", "text-left"},
-        //new[] { "Severity", "Severity", "text-left" },
+        new[] { "MeasurementType", "Meas Type", "text-left"},
+        new[] { "MeasurementCharacteristic", "Meas Char", "text-left"},
+        new[] { "Phase", "PH", "text-left"},
+        new[] { "HarmonicGroup", "HG", "text-left"},
+        new[] { "IsDefault", "Custom Limits", "text-left" },
         //new[] { "High", "High", "text-left" },
         //new[] { "Low", "Low", "text-left" },
         //new[] { "RangeInclusive", "Severity", "text-left" },
@@ -64,15 +92,50 @@
 
 
 }
+
+@helper Filters()
+{
+    <div class='row'>
+        <div class='col-md-4'>
+            <div class='form-group'>
+                <label for='channelfilter'>Channel Name Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='channelfilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+        <div class='col-md-4'>
+            <div class='form-group'>
+                <label for='typefilter'>Measurement Type Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='typefilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+        <div class='col-md-4'>
+            <div class='form-group'>
+                <label for='characteristicfilter'>Measurement Characteristic Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='characteristicfilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
 @helper BodyRows()
 {
     <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: ChannelID, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
+    <td width="50%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementType"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: Phase"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>
-
+    <td width="5%" class="text-left valign-middle" data-bind="text: Phase"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>
+    <td width="5%" class="text-left valign-middle" style="text-align: center"><span data-bind="visible: !(IsDefault)" class="glyphicon glyphicon-check"></span></td>
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
     <td width="10%" class="text-center valign-middle" nowrap>       
@@ -83,23 +146,50 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
+    <div class="col-md-6" data-bind="visible: $parent.recordMode()==RecordMode.View || $parent.recordMode()==RecordMode.Edit">
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("ChannelID", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Name", customDataBinding: "enable: false"))
-        @*@Raw(dataContext.AddSelectField<AlarmRangeLimitView, Channel>("ChannelID", "ID", "ID"))*@
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("ChannelID"))
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeasurementCharacteristic"))
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Phase"))
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("HarmonicGroup"))
-        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, MeasurementType>("MeasurementTypeID", "ID", "Name"))
-        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, AlarmType>("AlarmTypeID", "ID", "Name"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeasurementType", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeasurementCharacteristic", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Phase", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("HarmonicGroup", customDataBinding: "enable: false"))
     </div>
+    <div class="col-md-6" data-bind="visible: $parent.recordMode()==RecordMode.AddNew ">
+        @*@Raw(dataContext.AddInputField<AlarmRangeLimitView>("ChannelID"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Name", customDataBinding: "enable: false"))*@
+        <label for="channelid">Channel ID:</label>
+        <div id="channelid" class="form-control readonly inputtext"></div>
+        <label for="channelname">Channel Name:</label>
+        <div id="channelnamediv" class="form-control">
+            @*<button type="button" class="ui-autocomplete-dropdown ui-button ui-widget ui-state-default ui-corner-right ui-button-icon-only">
+                <span class="fa fa-fw fa-caret-down"></span>
+            </button>*@
+            <input id="channelname"  autocomplete="off" />
+            @*<input id="hidden" style="display: none" autocomplete="off"/>*@
+        </div>
+        <label for="meastype">Measurement Type: </label>
+        <div id="meastype" class="form-control readonly inputtext"></div>
+        <label for="measchar">Measurement Characteristic: </label>
+        <div id="measchar" class="form-control readonly inputtext"></div>
+        <label for="phase">Phase: </label>
+        <div id="phase" class="form-control readonly inputtext"></div>
+        <label for="harmonicgroup">Harmonic Group: </label>
+        <div id="harmonicgroup" class="form-control readonly inputtext"></div>
+        @*@Raw(dataContext.AddSelectField<AlarmRangeLimitView, MeasurementCharacteristic>("MeasurementCharacteristic", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, Phase>("Phase", "ID", "Name"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("HarmonicGroup"))
+        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, MeasurementType>("MeasurementTypeID", "ID", "Name"))*@
+    </div>
+
     <div class="col-md-6">
+        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, AlarmType>("AlarmTypeID", "ID", "Name"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Severity"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("High", "number"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Low"))
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("RangeInclusive"))
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("PerUnit"))
-        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Enabled"))
+        @Raw(dataContext.AddCheckBoxField<AlarmRangeLimitView>("RangeInclusive"))
+        @Raw(dataContext.AddCheckBoxField<AlarmRangeLimitView>("PerUnit"))
+        @Raw(dataContext.AddCheckBoxField<AlarmRangeLimitView>("Enabled"))
+        @Raw(dataContext.AddCheckBoxField<AlarmRangeLimitView>("IsDefault", fieldLabel: "Use Default Values"))
     </div>
 
 }
@@ -110,15 +200,118 @@
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
-        
+        @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))
+        @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name", "ID", "renderMeasurementCharacteristicName", "measurementCharacteristicName"))
+        @Raw(Model.RenderAbstract<Phase>("Name", "ID", "renderPhaseName", "phaseName"))
+
         function truncate(string) {
-            if (string != null && string.length > 25)
-                string = string.slice(0, 23) + '...';
+            if (string != null && string.length > 40)
+                string = string.slice(0, 37) + '...';
             return string;
         }
-        
+
         function resetLimits(record) {
-            dataHub.resetAlarmToDefault(record);
+            dataHub.resetAlarmToDefault(record).done(function () {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.filterPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.filterPageRecords();
+
+                }
+
+
+            });
         }
+
+
+        $(function () {
+
+            $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
+
+            $('#channelfilter').on('keyup', function (e) {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.filterPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.filterPageRecords();
+
+                }
+
+            });
+
+            $('#typefilter').on('keyup', function (e) {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.filterPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.filterPageRecords();
+
+                }
+
+            });
+
+            $('#characteristicfilter').on('keyup', function (e) {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.filterPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.filterPageRecords();
+
+                }
+
+            });
+
+        
+            $(viewModel).on("beforeSave", function (event, observableRecord) {
+                if (viewModel.recordMode() == RecordMode.AddNew) {
+                    observableRecord.ChannelID = $('#channelid').text();
+                    observableRecord.MeasurementTypeID = measurementTypeName.indexOf($('#meastype').text());
+                    observableRecord.MeasurementCharacteristicID = measurementCharacteristicName.indexOf($('#measchar').text());
+                }
+                observableRecord.Enabled = ($('#checkEnabled').prop('checked') ? 1 : 0);
+                observableRecord.PerUnit = ($('#checkPerUnit').prop('checked') ? 1 : 0);
+                observableRecord.RangeInclusive = ($('#checkRangeInclusive').prop('checked') ? 1 : 0);
+
+
+            });
+
+            $("#addNewEditDialog").on("shown.bs.modal", function () {
+
+                if (viewModel.recordMode() == RecordMode.AddNew) {
+                    $('#channelname').puiautocomplete({
+                        dropdown: true,
+                        completeSource: function (request, response) {
+                            var that = this;
+                            console.log();
+                            dataHub.queryChannelsForDropDown($("#channelname").val() + '%').done(function (data) {
+                                response.call(that, data);
+                            });
+                        },
+                        content: function (data) {
+                            return '<span id="' + data.ID + '" title="MT: ' + renderMeasurementTypeName(data.MeasurementTypeID) + ', MC: ' + renderMeasurementCharacteristicName(data.MeasurementCharacteristicID) + ', PH: ' + renderPhaseName(data.PhaseID) + ', HG: ' + data.HarmonicGroup + '" value="' + data.MeasurementTypeID + ';' + data.MeasurementCharacteristicID + ';' + data.PhaseID + ';' + data.HarmonicGroup + '">' + data.Name + '</span>';
+                        },
+                        select: function (event, item, d) {
+                            $('#channelname').val(item[0].innerText);
+                            $('#channelid').text($(item[0].innerHTML)[0].attributes.id.value);
+                            var list = $(item[0].innerHTML)[0].attributes.value.value.split(';');
+                            $('#meastype').text(renderMeasurementTypeName(list[0]));
+                            $('#measchar').text(renderMeasurementCharacteristicName(list[1]));
+                            $('#phase').text(renderPhaseName(list[2]));
+                            $('#harmonicgroup').text(list[3]);
+                        }
+                    });
+                    
+                    $('.ui-autocomplete button').removeClass("ui-button ui-widget ui-state-default ui-corner-right");
+                    $('.ui-autocomplete button').addClass("ui-state-hover");
+
+                }
+            });
+
+        });
     </script>
 }

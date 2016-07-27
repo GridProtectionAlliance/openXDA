@@ -20,6 +20,7 @@ namespace openXDA.Model
         public int RangeInclusive { get; set; }
         public int PerUnit { get; set; }
         public int Enabled { get; set; }
+        public bool IsDefault { get; set; }
 
     }
 }

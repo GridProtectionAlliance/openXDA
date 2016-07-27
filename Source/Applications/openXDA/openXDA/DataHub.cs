@@ -510,6 +510,11 @@ namespace openXDA
             return m_dataContext.Table<Channel>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
         }
 
+        public IEnumerable<Channel> QueryChannelsForDropDown(string filterString)
+        {
+            return m_dataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}" ,filterString), limit: 50);
+        }
+
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.DeleteRecord)]
         public void DeleteChannel(int id)
@@ -652,14 +657,44 @@ namespace openXDA
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecordCount)]
         public int QueryAlarmRangeLimitViewCount(string filterString)
         {
-            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecordCount();
+            string channelFilter = "%";
+            string typeFilter = "%";
+            string charFilter = "%";
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 3)
+                {
+                    channelFilter = filters[0] + '%';
+                    typeFilter = filters[1] += '%';
+                    charFilter = filters[2] += '%';
+                }
+            }
+
+
+            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecords)]
         public IEnumerable<AlarmRangeLimitView> QueryAlarmRangeLimitViews( string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize);
+            string channelFilter = "%";
+            string typeFilter = "%";
+            string charFilter = "%";
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 3)
+                {
+                    channelFilter = filters[0] + '%';
+                    typeFilter = filters[1] += '%';
+                    charFilter = filters[2] += '%';
+                }
+            }
+
+
+            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -680,6 +715,21 @@ namespace openXDA
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.AddNewRecord)]
         public void AddNewAlarmRangeLimitView(AlarmRangeLimitView record)
         {
+            if (record.IsDefault)
+            {
+                IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+
+                if (defaultLimits.Any())
+                {
+                    record.Severity = defaultLimits.First().Severity;
+                    record.High = defaultLimits.First().High;
+                    record.Low = defaultLimits.First().Low;
+                    record.RangeInclusive = defaultLimits.First().RangeInclusive;
+                    record.PerUnit = defaultLimits.First().PerUnit;
+                }
+            }
+
+
             m_dataContext.Table<AlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
         }
 
@@ -687,6 +737,20 @@ namespace openXDA
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.UpdateRecord)]
         public void UpdateAlarmRangeLimitView(AlarmRangeLimitView record)
         {
+            if (record.IsDefault)
+            {
+                IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+
+                if (defaultLimits.Any())
+                {
+                    record.Severity = defaultLimits.First().Severity;
+                    record.High = defaultLimits.First().High;
+                    record.Low = defaultLimits.First().Low;
+                    record.RangeInclusive = defaultLimits.First().RangeInclusive;
+                    record.PerUnit = defaultLimits.First().PerUnit;
+                }
+            }
+
             m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
         }
 
@@ -696,29 +760,32 @@ namespace openXDA
             arl.ID = record.ID;
             arl.ChannelID = record.ChannelID;
             arl.AlarmTypeID = record.AlarmTypeID;
+            arl.Enabled = record.Enabled;
+
+
             arl.Severity = record.Severity;
             arl.High = record.High;
             arl.Low = record.Low;
             arl.RangeInclusive = record.RangeInclusive;
             arl.PerUnit = record.PerUnit;
-            arl.Enabled = record.Enabled;
+            arl.IsDefault = record.IsDefault;
+
             return arl;
         }
 
+        [AuthorizeHubRole("Administrator")]
         public void ResetAlarmToDefault(AlarmRangeLimitView record)
         {
             IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
 
-            if(defaultLimits.Count() == 1)
+            if(defaultLimits.Any())
             {
-                foreach (DefaultAlarmRangeLimit limit in defaultLimits)
-                {
-                    record.Severity = limit.Severity;
-                    record.High = limit.High;
-                    record.Low = limit.Low;
-                    record.RangeInclusive = limit.RangeInclusive;
-                    record.PerUnit = limit.PerUnit;
-                }
+                record.Severity = defaultLimits.First().Severity;
+                record.High = defaultLimits.First().High;
+                record.Low = defaultLimits.First().Low;
+                record.RangeInclusive = defaultLimits.First().RangeInclusive;
+                record.PerUnit = defaultLimits.First().PerUnit;
+                record.IsDefault = true;
 
                 m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
             }
@@ -775,12 +842,40 @@ namespace openXDA
             DefaultAlarmRangeLimit arl = new DefaultAlarmRangeLimit();
             arl.ID = record.ID;
             arl.AlarmTypeID = record.AlarmTypeID;
+            arl.MeasurementTypeID = record.MeasurementTypeID;
+            arl.MeasurementCharacteristicID = record.MeasurementCharacteristicID;
             arl.Severity = record.Severity;
             arl.High = record.High;
             arl.Low = record.Low;
             arl.RangeInclusive = record.RangeInclusive;
             arl.PerUnit = record.PerUnit;
             return arl;
+        }
+
+
+        [AuthorizeHubRole("Administrator")]
+        public void ResetDefaultLimits(DefaultAlarmRangeLimitView record)
+        {
+            IEnumerable<Channel> channels = m_dataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+            string channelIDs = "";
+            foreach (Channel channel in channels)
+            {
+                if(channelIDs == "")
+                    channelIDs += channel.ID.ToString();
+                else
+                    channelIDs += ',' + channel.ID.ToString();
+            }
+            IEnumerable<AlarmRangeLimit> limits = m_dataContext.Table<AlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction($"ChannelID IN ({channelIDs})"));
+            foreach (AlarmRangeLimit limit in limits)
+            {
+                limit.IsDefault = true;
+                limit.High = record.High;
+                limit.Low = record.Low;
+                limit.Severity = record.Severity;
+                limit.RangeInclusive = record.RangeInclusive;
+                limit.PerUnit = record.PerUnit;
+                m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(limit);
+            }
         }
 
         #endregion

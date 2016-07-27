@@ -45,8 +45,8 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "MeasurementType", "Measurement Type", "text-left"},
-        new[] { "MeasurementCharacteristic", "Measurement Characteristic", "text-left"},
+        new[] { "MeasurementType", "Meas Type", "text-left"},
+        new[] { "MeasurementCharacteristic", "Meas Char", "text-left"},
         new[] { "AlarmType", "Alarm Type", "text-left"},
         //new[] { "HarmonicGroup", "Harmonic Group", "text-left"},
         //new[] { "Severity", "Severity", "text-left" },
@@ -71,7 +71,9 @@
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
     <td width="10%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
@@ -86,8 +88,8 @@
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("High"))
         @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("Low"))
-        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("RangeInclusive"))
-        @Raw(dataContext.AddInputField<DefaultAlarmRangeLimitView>("PerUnit"))
+        @Raw(dataContext.AddCheckBoxField<DefaultAlarmRangeLimitView>("RangeInclusive"))
+        @Raw(dataContext.AddCheckBoxField<DefaultAlarmRangeLimitView>("PerUnit"))
     </div>
 }
 @Include("PagedViewModel.cshtml")
@@ -103,6 +105,19 @@
                 string = string.slice(0, 23) + '...';
             return string;
         }
+        
+        function resetLimits(record) {
+            var confirmation = confirm("You are about to reset all alarms based on this default type. Press OK to continue.");
+            if (confirmation) {
+                dataHub.resetDefaultLimits(record);
+            }
+        }
+        
+        $(viewModel).on("beforeSave", function (event, observableRecord) {
+            observableRecord.PerUnit = ($('#checkPerUnit').prop('checked') ? 1 : 0);
+            observableRecord.RangeInclusive = ($('#checkRangeInclusive').prop('checked') ? 1 : 0);
+        });
+
     </script>
 }
 
