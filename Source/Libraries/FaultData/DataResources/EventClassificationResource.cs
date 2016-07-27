@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -48,6 +49,10 @@ namespace FaultData.DataResources
         private DbAdapterContainer m_dbAdapterContainer;
         private Dictionary<DataGroup, EventClassification> m_classifications;
 
+        private double m_sagThreshold;
+        private double m_swellThreshold;
+        private double m_interruptionThreshold;
+
         #endregion
 
         #region [ Constructors ]
@@ -67,6 +72,45 @@ namespace FaultData.DataResources
             get
             {
                 return m_classifications;
+            }
+        }
+
+        [Setting]
+        public double SagThreshold
+        {
+            get
+            {
+                return m_sagThreshold;
+            }
+            set
+            {
+                m_sagThreshold = value;
+            }
+        }
+
+        [Setting]
+        public double SwellThreshold
+        {
+            get
+            {
+                return m_swellThreshold;
+            }
+            set
+            {
+                m_swellThreshold = value;
+            }
+        }
+
+        [Setting]
+        public double InterruptionThreshold
+        {
+            get
+            {
+                return m_interruptionThreshold;
+            }
+            set
+            {
+                m_interruptionThreshold = value;
             }
         }
 
@@ -133,7 +177,7 @@ namespace FaultData.DataResources
             {
                 values = series.DataPoints.Select(dataPoint => dataPoint.Value);
 
-                if (values.Any(value => value <= 0.1D))
+                if (values.Any(value => value <= m_interruptionThreshold))
                     return true;
             }
 
@@ -148,7 +192,7 @@ namespace FaultData.DataResources
             {
                 values = series.DataPoints.Select(dataPoint => dataPoint.Value);
 
-                if (values.Any(value => value >= 1.1D))
+                if (values.Any(value => value >= m_swellThreshold))
                     return true;
             }
 
@@ -163,7 +207,7 @@ namespace FaultData.DataResources
             {
                 values = series.DataPoints.Select(dataPoint => dataPoint.Value);
 
-                if (values.Any(value => value <= 0.9D))
+                if (values.Any(value => value <= m_sagThreshold))
                     return true;
             }
 
