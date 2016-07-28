@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.Configuration;
+using System.Web.Http.Controllers;
 using GSF.Data.Model;
 using GSF.Web.Model;
 using GSF.Web.Security;
@@ -789,6 +793,32 @@ namespace openXDA
 
                 m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
             }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public string SendAlarmTableToCSV()
+        {
+            string csv = "";
+            string[] headers = m_dataContext.Table<AlarmRangeLimit>().GetFieldNames();
+
+            foreach (string h in headers)
+            {
+                if (csv == "")
+                    csv = h;
+                else
+                    csv += ',' + h;
+            }
+
+            csv += "\r\n";
+             
+            IEnumerable<AlarmRangeLimit> limits = m_dataContext.Table<AlarmRangeLimit>().QueryRecords();
+
+            foreach (AlarmRangeLimit limit in limits)
+            {
+                csv += limit.ID.ToString() + ',' + limit.ChannelID.ToString() + ',' + limit.AlarmTypeID.ToString() + ',' + limit.Severity.ToString() + ',' + limit.High.ToString() + ',' + limit.Low.ToString() + ',' + limit.RangeInclusive.ToString() + ',' + limit.PerUnit.ToString() + ',' + limit.Enabled.ToString() + ',' + limit.IsDefault.ToString() + "\r\n";
+            }
+
+            return csv;
         }
 
         #endregion

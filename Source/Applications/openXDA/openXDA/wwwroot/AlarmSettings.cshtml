@@ -224,12 +224,41 @@
 
             });
         }
+        
+        function exportCSV() {
+            $('#exportBtn').prop('disabled', true);
+            dataHub.sendAlarmTableToCSV().done(function (data) {
+                
+                window.URL = window.URL || window.webkitURL  ;
+                
+
+                var csvFile = new Blob([data], { type: 'text/csv' });
+
+                var element = document.createElement('a');
+                element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
+                element.href = window.URL.createObjectURL(csvFile);
+
+                //element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                //element.setAttribute('download', '');
+                element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
+                element.style.display = 'none';
+                document.body.appendChild(element);
+
+                element.click();
+
+                document.body.removeChild(element);
+                $('#exportBtn').prop('disabled', false);
+
+            });
+
+        }
 
 
         $(function () {
 
             $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
-
+            
+            $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary pull-right" onclick="exportCSV()" id="exportBtn"><span class="glyphicon glyphicon-download"></span>Export CSV</button>');
             $('#channelfilter').on('keyup', function (e) {
                 if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                     viewModel.filterText = '%';
