@@ -180,7 +180,7 @@ namespace FaultData.DataAnalysis
 
             // Determine the sample rate so that we can exclude
             // disturbances that are shorter than half a cycle
-            samplesPerCycle = (int)Math.Round(rms.SampleRate / m_systemFrequency);
+            samplesPerCycle = Transform.CalculateSamplesPerCycle(rms, m_systemFrequency);
 
             // Initialize disturbanceRanges and the start index
             disturbanceRanges = new List<Range<int>>();

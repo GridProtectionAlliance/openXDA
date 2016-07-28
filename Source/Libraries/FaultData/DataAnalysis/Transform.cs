@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GSF.Collections;
 using GSF.NumericalAnalysis;
 
 namespace FaultData.DataAnalysis
@@ -98,8 +99,23 @@ namespace FaultData.DataAnalysis
             yValues = new double[samplesPerCycle];
             tValues = new double[samplesPerCycle];
 
+            // Obtain a list of time gaps in the data series
+            List<int> gapIndexes = Enumerable.Range(0, dataSeries.DataPoints.Count - 1)
+                .Where(index =>
+                {
+                    DataPoint p1 = dataSeries[index];
+                    DataPoint p2 = dataSeries[index + 1];
+                    double cycleDiff = (p2.Time - p1.Time).TotalSeconds * frequency;
+                    return (cycleDiff >= 0.25);
+                })
+                .ToList();
+
             for (int i = 0; i <= dataSeries.DataPoints.Count - samplesPerCycle; i++)
             {
+                // If the cycle following i contains a data gap, do not calculate cycle data
+                if (gapIndexes.Any(index => i <= index && (i + samplesPerCycle - 1) > index))
+                    continue;
+
                 // Use the time of the first data point in the cycle as the time of the cycle
                 cycleTime = dataSeries.DataPoints[i].Time;
                 sum = 0.0D;
@@ -161,9 +177,24 @@ namespace FaultData.DataAnalysis
                 .ToList();
         }
 
-        private static int CalculateSamplesPerCycle(DataSeries dataSeries, double frequency)
+        public static int CalculateSamplesPerCycle(DataSeries dataSeries, double frequency)
         {
-            return (int)Math.Round(dataSeries.SampleRate / frequency);
+            return CalculateSamplesPerCycle(dataSeries.SampleRate, frequency);
+        }
+
+        public static int CalculateSamplesPerCycle(double samplesPerSecond, double frequency)
+        {
+            int[] commonSampleRates =
+            {
+                4, 8, 16, 32,
+                80, 96, 100, 200,
+                64, 128, 256, 512, 1024
+            };
+
+            int calculatedRate = (int)Math.Round(samplesPerSecond / frequency);
+            int nearestCommonRate = commonSampleRates.MinBy(rate => Math.Abs(calculatedRate - rate));
+            int diff = Math.Abs(calculatedRate - nearestCommonRate);
+            return (diff < nearestCommonRate * 0.1D) ? nearestCommonRate : calculatedRate;
         }
     }
 }

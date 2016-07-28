@@ -224,7 +224,7 @@ namespace FaultData.DataOperations
                 eventRow.Samples = dataGroup.Samples;
                 eventRow.TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes;
                 eventRow.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
-                eventRow.SamplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / m_systemFrequency);
+                eventRow.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
 
                 eventDataRow = m_eventDataTable.NewEventDataRow();
                 eventDataRow.FileGroupID = meterDataSet.FileGroup.ID;

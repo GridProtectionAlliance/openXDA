@@ -108,7 +108,6 @@ namespace FaultData.DataResources
             m_dataGroups = dataGroupsResource.DataGroups
                 .Where(dataGroup => dataGroup.Classification == DataClassification.Event)
                 .Where(dataGroup => dataGroup.SamplesPerSecond / m_systemFrequency >= 4.0D)
-                .Where(dataGroup => Math.Abs(dataGroup.SamplesPerSecond * dataGroup.Duration - dataGroup.Samples) < 32)
                 .ToList();
 
             Log.Info(string.Format("Found data for {0} events.", m_dataGroups.Count));
