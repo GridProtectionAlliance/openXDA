@@ -1748,6 +1748,7 @@ BEGIN
             ) AS PivotTable
         ) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
     WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    ORDER BY Meter.Name
 END
 GO
 
@@ -1817,6 +1818,7 @@ BEGIN
             )AS Event_Count ON Event_Count.MeterID = Meter.ID
 
         WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        ORDER BY Meter.Name
 END
 GO
 
@@ -2012,6 +2014,7 @@ BEGIN
         ) AS AlarmCount ON AlarmCount.MeterID = Meter.ID
             
        WHERE [dbo].[Meter].[ID] in (SELECT * FROM authMeters(@username))
+       ORDER BY Meter.Name
 
 END
 GO
