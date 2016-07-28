@@ -337,7 +337,7 @@ namespace FaultData.DataResources
             Stopwatch stopwatch;
 
             stopwatch = new Stopwatch();
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
             faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>());
 
             Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
@@ -347,6 +347,21 @@ namespace FaultData.DataResources
                 dataGroup = cycleDataResource.DataGroups[i];
                 viDataGroup = cycleDataResource.VIDataGroups[i];
                 viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+
+                // Defined channel checks
+                Log.Debug("Checking defined channels...");
+
+                if (viDataGroup.DefinedNeutralVoltages != 3)
+                {
+                    Log.Debug($"Not enough neutral voltage channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    continue;
+                }
+
+                if (viDataGroup.DefinedCurrents < 3)
+                {
+                    Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    continue;
+                }
 
                 // Engineering reasonableness checks
                 Log.Debug("Checking for engineering reasonableness...");

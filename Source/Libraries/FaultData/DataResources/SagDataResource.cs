@@ -25,7 +25,9 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.Database;
 using FaultData.DataSets;
+using GSF.Collections;
 
 namespace FaultData.DataResources
 {
@@ -34,8 +36,22 @@ namespace FaultData.DataResources
         #region [ Members ]
 
         // Fields
+        private DbAdapterContainer m_dbAdapterContainer;
+
         private double m_systemFrequency;
+        private double m_sagThreshold;
+        private double m_interruptionThreshold;
+
         private Dictionary<DataGroup, List<Disturbance>> m_sags;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        private SagDataResource(DbAdapterContainer dbAdapterContainer)
+        {
+            m_dbAdapterContainer = dbAdapterContainer;
+        }
 
         #endregion
 
@@ -51,6 +67,32 @@ namespace FaultData.DataResources
             set
             {
                 m_systemFrequency = value;
+            }
+        }
+
+        [Setting]
+        public double SagThreshold
+        {
+            get
+            {
+                return m_sagThreshold;
+            }
+            set
+            {
+                m_sagThreshold = value;
+            }
+        }
+
+        [Setting]
+        public double InterruptionThreshold
+        {
+            get
+            {
+                return m_interruptionThreshold;
+            }
+            set
+            {
+                m_interruptionThreshold = value;
             }
         }
 
@@ -70,31 +112,30 @@ namespace FaultData.DataResources
         {
             VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer;
 
-            voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, GetMagnitude, GetVAllPoint, EventClassification.Sag);
-            voltageDisturbanceAnalyzer.Initialize(meterDataSet);
+            voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, IsMoreSevere, EventClassification.Sag);
+            voltageDisturbanceAnalyzer.Initialize(meterDataSet, m_dbAdapterContainer);
 
             m_sags = voltageDisturbanceAnalyzer.Disturbances;
         }
 
         private bool IsSag(DataPoint dataPoint)
         {
-            return 0.1D < dataPoint.Value && dataPoint.Value <= 0.9D;
+            return m_interruptionThreshold < dataPoint.Value && dataPoint.Value <= m_sagThreshold;
         }
 
-        private double GetMagnitude(DataSeries rms)
+        private bool IsMoreSevere(double mag1, double mag2)
         {
-            return rms.DataPoints.Min(dataPoint => dataPoint.Value);
+            return mag1 < mag2;
         }
 
-        private DataPoint GetVAllPoint(DataPoint va, DataPoint vb, DataPoint vc)
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        public static SagDataResource GetResource(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
         {
-            if (va.Value < vb.Value && va.Value < vc.Value)
-                return va;
-
-            if (vb.Value < vc.Value)
-                return vb;
-
-            return vc;
+            return meterDataSet.GetResource(() => new SagDataResource(dbAdapterContainer));
         }
 
         #endregion

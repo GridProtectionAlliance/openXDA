@@ -276,7 +276,7 @@ namespace FaultData.DataOperations
             doubleEndedFaultDistanceAdapter = m_dbAdapterContainer.GetAdapter<DoubleEndedFaultDistanceTableAdapter>();
 
             // Get a time range for querying each system event that contains events in this meter data set
-            systemEvents = meterDataSet.GetResource<SystemEventResource>().SystemEvents;
+            systemEvents = SystemEventResource.GetResource(meterDataSet, m_dbAdapterContainer).SystemEvents;
 
             foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
             {

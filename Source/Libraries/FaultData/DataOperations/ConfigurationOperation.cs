@@ -172,21 +172,6 @@ namespace FaultData.DataOperations
                 // since configuration information cannot be added for it
                 RemoveUndefinedDataSeries(meterDataSet);
             }
-
-            foreach (DataGroup dataGroup in meterDataSet.GetResource<DataGroupsResource>().DataGroups)
-            {
-                if (dataGroup.Classification != DataClassification.Event)
-                    continue;
-
-                if (dataGroup.SamplesPerSecond / m_systemFrequency < 4.0D)
-                    continue;
-
-                // Add missing current series based on IR = IA + IB + IC
-                dataSeries = VIDataGroup.AddMissingCurrentSeries(m_meterInfo, meterDataSet.Meter, dataGroup);
-
-                if ((object)dataSeries != null)
-                    meterDataSet.DataSeries.Add(dataSeries);
-            }
         }
 
         public override void Load(DbAdapterContainer dbAdapterContainer)

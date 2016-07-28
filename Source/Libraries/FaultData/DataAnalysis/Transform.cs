@@ -45,7 +45,22 @@ namespace FaultData.DataAnalysis
 
         public static VICycleDataGroup ToVICycleDataGroup(VIDataGroup dataGroup, double frequency)
         {
-            return new VICycleDataGroup(dataGroup.ToDataGroup().DataSeries
+            DataSeries[] cycleSeries =
+            {
+                dataGroup.VA,
+                dataGroup.VB,
+                dataGroup.VC,
+                dataGroup.VAB,
+                dataGroup.VBC,
+                dataGroup.VCA,
+                dataGroup.IA,
+                dataGroup.IB,
+                dataGroup.IC,
+                dataGroup.IR
+            };
+
+            return new VICycleDataGroup(cycleSeries
+                .Where(dataSeries => (object)dataSeries != null)
                 .Select(dataSeries => ToCycleDataGroup(dataSeries, frequency))
                 .ToList());
         }
@@ -68,7 +83,7 @@ namespace FaultData.DataAnalysis
             SineWave sineFit;
 
             if ((object)dataSeries == null)
-                return new CycleDataGroup(dataGroup);
+                return null;
 
             // Set series info to the source series info
             rmsSeries.SeriesInfo = dataSeries.SeriesInfo;

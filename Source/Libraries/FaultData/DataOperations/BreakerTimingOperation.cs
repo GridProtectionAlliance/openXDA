@@ -372,7 +372,7 @@ namespace FaultData.DataOperations
             VIDataGroup viDataGroup;
             VICycleDataGroup viCycleDataGroup;
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {

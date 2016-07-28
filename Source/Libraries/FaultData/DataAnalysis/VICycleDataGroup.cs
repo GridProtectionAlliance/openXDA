@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultAlgorithms;
@@ -32,16 +31,18 @@ namespace FaultData.DataAnalysis
     {
         #region [ Members ]
 
-        // Constants
-        private const int VAIndex = 0;
-        private const int VBIndex = 1;
-        private const int VCIndex = 2;
-        private const int IAIndex = 3;
-        private const int IBIndex = 4;
-        private const int ICIndex = 5;
-        private const int IRIndex = 6;
-
         // Fields
+        private int m_vaIndex;
+        private int m_vbIndex;
+        private int m_vcIndex;
+        private int m_vabIndex;
+        private int m_vbcIndex;
+        private int m_vcaIndex;
+        private int m_iaIndex;
+        private int m_ibIndex;
+        private int m_icIndex;
+        private int m_irIndex;
+
         private List<CycleDataGroup> m_cycleDataGroups;
 
         #endregion
@@ -51,21 +52,20 @@ namespace FaultData.DataAnalysis
         public VICycleDataGroup(DataGroup dataGroup)
         {
             m_cycleDataGroups = dataGroup.DataSeries
-                .Select((series, i) => Tuple.Create(i / 4, series))
-                .GroupBy(tuple => tuple.Item1)
-                .Select(grouping => new DataGroup(grouping.Select(tuple => tuple.Item2)))
-                .Select(group => new CycleDataGroup(group))
+                .Select((dataSeries, index) => new { DataSeries = dataSeries, Index = index })
+                .GroupBy(obj => obj.Index / 4)
+                .Where(grouping => grouping.Count() >= 4)
+                .Select(grouping => grouping.Select(obj => obj.DataSeries))
+                .Select(grouping => new CycleDataGroup(new DataGroup(grouping)))
                 .ToList();
-        }
 
-        public VICycleDataGroup(CycleDataGroup va, CycleDataGroup vb, CycleDataGroup vc, CycleDataGroup ia, CycleDataGroup ib, CycleDataGroup ic, CycleDataGroup ir)
-        {
-            m_cycleDataGroups = new List<CycleDataGroup>() { va, vb, vc, ia, ib, ic, ir };
+            MapIndexes();
         }
 
         public VICycleDataGroup(List<CycleDataGroup> cycleDataGroups)
         {
-            m_cycleDataGroups = cycleDataGroups;
+            m_cycleDataGroups = new List<CycleDataGroup>(cycleDataGroups);
+            MapIndexes();
         }
 
         #endregion
@@ -76,7 +76,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[VAIndex];
+                return (m_vaIndex >= 0) ? m_cycleDataGroups[m_vaIndex] : null;
             }
         }
 
@@ -84,7 +84,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[VBIndex];
+                return (m_vbIndex >= 0) ? m_cycleDataGroups[m_vbIndex] : null;
             }
         }
 
@@ -92,7 +92,31 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[VCIndex];
+                return (m_vcIndex >= 0) ? m_cycleDataGroups[m_vcIndex] : null;
+            }
+        }
+
+        public CycleDataGroup VAB
+        {
+            get
+            {
+                return (m_vabIndex >= 0) ? m_cycleDataGroups[m_vabIndex] : null;
+            }
+        }
+
+        public CycleDataGroup VBC
+        {
+            get
+            {
+                return (m_vbcIndex >= 0) ? m_cycleDataGroups[m_vbcIndex] : null;
+            }
+        }
+
+        public CycleDataGroup VCA
+        {
+            get
+            {
+                return (m_vcaIndex >= 0) ? m_cycleDataGroups[m_vcaIndex] : null;
             }
         }
 
@@ -100,7 +124,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[IAIndex];
+                return (m_iaIndex >= 0) ? m_cycleDataGroups[m_iaIndex] : null;
             }
         }
 
@@ -108,7 +132,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[IBIndex];
+                return (m_ibIndex >= 0) ? m_cycleDataGroups[m_ibIndex] : null;
             }
         }
 
@@ -116,7 +140,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[ICIndex];
+                return (m_icIndex >= 0) ? m_cycleDataGroups[m_icIndex] : null;
             }
         }
 
@@ -124,7 +148,7 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return m_cycleDataGroups[IRIndex];
+                return (m_irIndex >= 0) ? m_cycleDataGroups[m_irIndex] : null;
             }
         }
 
@@ -175,6 +199,47 @@ namespace FaultData.DataAnalysis
                 }
 
                 cycleDataSet[i] = cycleData;
+            }
+        }
+
+        private void MapIndexes()
+        {
+            m_vaIndex = -1;
+            m_vbIndex = -1;
+            m_vcIndex = -1;
+            m_vabIndex = -1;
+            m_vbcIndex = -1;
+            m_vcaIndex = -1;
+            m_iaIndex = -1;
+            m_ibIndex = -1;
+            m_icIndex = -1;
+            m_irIndex = -1;
+
+            for (int i = 0; i < m_cycleDataGroups.Count; i++)
+            {
+                string measurementType = m_cycleDataGroups[i].RMS.SeriesInfo.Channel.MeasurementType.Name;
+                string phase = m_cycleDataGroups[i].RMS.SeriesInfo.Channel.Phase.Name;
+
+                if (measurementType == "Voltage" && phase == "AN")
+                    m_vaIndex = i;
+                else if (measurementType == "Voltage" && phase == "BN")
+                    m_vbIndex = i;
+                else if (measurementType == "Voltage" && phase == "CN")
+                    m_vcIndex = i;
+                else if (measurementType == "Voltage" && phase == "AB")
+                    m_vabIndex = i;
+                else if (measurementType == "Voltage" && phase == "BC")
+                    m_vbcIndex = i;
+                else if (measurementType == "Voltage" && phase == "CA")
+                    m_vcaIndex = i;
+                else if (measurementType == "Current" && phase == "AN")
+                    m_iaIndex = i;
+                else if (measurementType == "Current" && phase == "BN")
+                    m_ibIndex = i;
+                else if (measurementType == "Current" && phase == "CN")
+                    m_icIndex = i;
+                else if (measurementType == "Current" && phase == "RES")
+                    m_irIndex = i;
             }
         }
 
