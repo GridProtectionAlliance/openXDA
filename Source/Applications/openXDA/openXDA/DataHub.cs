@@ -799,23 +799,27 @@ namespace openXDA
         public string SendAlarmTableToCSV()
         {
             string csv = "";
-            string[] headers = m_dataContext.Table<AlarmRangeLimit>().GetFieldNames();
+            string[] headers = m_dataContext.Table<AlarmRangeLimitView>().GetFieldNames();
 
             foreach (string h in headers)
             {
                 if (csv == "")
-                    csv = h;
+                    csv = '[' + h + ']';
                 else
-                    csv += ',' + h;
+                    csv += ",[" + h + ']';
             }
 
-            csv += "\r\n";
+            csv += "\n";
              
-            IEnumerable<AlarmRangeLimit> limits = m_dataContext.Table<AlarmRangeLimit>().QueryRecords();
+            IEnumerable<AlarmRangeLimitView> limits = m_dataContext.Table<AlarmRangeLimitView>().QueryRecords();
 
-            foreach (AlarmRangeLimit limit in limits)
+            foreach (AlarmRangeLimitView limit in limits)
             {
-                csv += limit.ID.ToString() + ',' + limit.ChannelID.ToString() + ',' + limit.AlarmTypeID.ToString() + ',' + limit.Severity.ToString() + ',' + limit.High.ToString() + ',' + limit.Low.ToString() + ',' + limit.RangeInclusive.ToString() + ',' + limit.PerUnit.ToString() + ',' + limit.Enabled.ToString() + ',' + limit.IsDefault.ToString() + "\r\n";
+                csv += limit.csvString() + '\n';
+                //csv += limit.ID.ToString() + ',' + limit.ChannelID.ToString() + ',' + limit.Name.ToString() + ',' + limit.AlarmTypeID.ToString() + ',' + limit.Severity.ToString() + ',' + limit.High.ToString() + ',' 
+                //    + limit.Low.ToString() + ',' + limit.RangeInclusive.ToString() + ',' + limit.PerUnit.ToString() + ',' + limit.Enabled.ToString() + ',' + limit.MeasurementType.ToString() + ','
+                //    + limit.MeasurementTypeID.ToString() + ',' + limit.MeasurementCharacteristic.ToString() + ',' + limit.MeasurementCharacteristicID.ToString() + ',' + limit.Phase.ToString() + ','
+                //    + limit.PhaseID.ToString() + ',' + limit.HarmonicGroup.ToString() + ','  + limit.IsDefault.ToString() + "\n";
             }
 
             return csv;

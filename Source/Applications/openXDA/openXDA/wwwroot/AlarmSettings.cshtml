@@ -21,6 +21,7 @@
 //
 //*****************************************************************************************************@
 @using System
+
 @using System.Threading
 @using RazorEngine.Templating
 @using GSF.Web
@@ -139,8 +140,8 @@
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
     <td width="10%" class="text-center valign-middle" nowrap>       
-        <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
@@ -224,41 +225,70 @@
 
             });
         }
-        
+
         function exportCSV() {
-            $('#exportBtn').prop('disabled', true);
-            dataHub.sendAlarmTableToCSV().done(function (data) {
-                
-                window.URL = window.URL || window.webkitURL  ;
-                
+            //$('#exportBtn').prop('disabled', true);
+            //$("#exportBtn").css("cursor", "progress");
 
-                var csvFile = new Blob([data], { type: 'text/csv' });
+            //$.ajax({
+            //    type: "GET",
+            //    url: "FileDownloadHandler.ashx?ModelName=AlarmRangeLimitView",
+            //    success: function (msg) {
+            //            $('#exportBtn').prop('disabled', false);
+            //            $("#exportBtn").css("cursor", "default");
 
-                var element = document.createElement('a');
-                element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
-                element.href = window.URL.createObjectURL(csvFile);
+            //    },
+            //    error: function (msg) {
+            //        alert(msg);
+            //    }
+            //});
+            
+            window.location = "FileDownloadHandler.ashx?ModelName=AlarmRangeLimitView"
+            //$('#exportBtn').prop('disabled', true);
+            //$("#exportBtn").css("cursor", "progress");
+            //dataHub.sendAlarmTableToCSV().done(function (data) {
 
-                //element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-                //element.setAttribute('download', '');
-                element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
-                element.style.display = 'none';
-                document.body.appendChild(element);
+            //    window.URL = window.URL || window.webkitURL  ;
 
-                element.click();
 
-                document.body.removeChild(element);
-                $('#exportBtn').prop('disabled', false);
+            //    var csvFile = new Blob([data], { type: 'text/csv' });
+            //    if (window.navigator && window.navigator.msSaveBlob) {
+            //        window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
+            //    } else {
+            //        var element = document.createElement('a');
+            //        element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
+            //        element.href = window.URL.createObjectURL(csvFile);
 
-            });
+            //        element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
+            //        element.style.display = 'none';
+            //        document.body.appendChild(element);
+
+            //        element.click();
+
+            //        document.body.removeChild(element);
+
+            //    }
+
+            //    $('#exportBtn').prop('disabled', false);
+            //    $("#exportBtn").css("cursor", "default");
+            //});
 
         }
 
+        function importCSV() {
+            $('#fileInput').click();
+            $('#fileInput').one('change', function (e) {
+                console.log($('#fileInput')[0].files[0]);
+            });
+        }
 
         $(function () {
 
             $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
-            
-            $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary pull-right" onclick="exportCSV()" id="exportBtn"><span class="glyphicon glyphicon-download"></span>Export CSV</button>');
+
+            $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="exportCSV()" id="exportBtn" style="margin-left: 4px;"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV</button>');
+            $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
+            $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>')
             $('#channelfilter').on('keyup', function (e) {
                 if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                     viewModel.filterText = '%';
@@ -295,7 +325,7 @@
 
             });
 
-        
+
             $(viewModel).on("beforeSave", function (event, observableRecord) {
                 if (viewModel.recordMode() == RecordMode.AddNew) {
                     observableRecord.ChannelID = $('#channelid').text();
@@ -334,7 +364,7 @@
                             $('#harmonicgroup').text(list[3]);
                         }
                     });
-                    
+
                     $('.ui-autocomplete button').removeClass("ui-button ui-widget ui-state-default ui-corner-right");
                     $('.ui-autocomplete button').addClass("ui-state-hover");
 

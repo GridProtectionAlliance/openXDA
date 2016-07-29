@@ -17,6 +17,9 @@ namespace openXDA.Model
         [Label("Channel ID")]
         public int ChannelID { get; set; }
 
+        [Label("Channel Name")]
+        public string Name { get; set; }
+
         [Label("Alarm Type ID")]
         public int AlarmTypeID { get; set; }
         public int Severity { get; set; }
@@ -43,10 +46,18 @@ namespace openXDA.Model
         [Label("Harmonic Group")]
         public int HarmonicGroup { get; set; }
 
-        [Label("Channel Name")]
-        public string Name { get; set; }
 
         public bool IsDefault { get; set; }
 
+
+        public string csvString()
+        {
+
+            string word = ID.ToString() + ',' + ChannelID.ToString() + ',' + Name + ',' + AlarmTypeID.ToString() + ',' + Severity.ToString() + ',' + High.ToString() + ',' + Low.ToString() + ',' + RangeInclusive.ToString() + ',' 
+                + PerUnit.ToString() + ',' + Enabled.ToString() + ',' + MeasurementType + ',' + MeasurementTypeID.ToString() + ',' + MeasurementCharacteristic + ',' + MeasurementCharacteristicID.ToString() + ',' +
+                Phase + ',' + PhaseID.ToString() + ',' + HarmonicGroup.ToString() + ',' + IsDefault.ToString();
+
+            return word;
+        }
     }
 }

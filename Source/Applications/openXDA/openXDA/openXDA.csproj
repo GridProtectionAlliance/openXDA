@@ -246,6 +246,12 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
+    <Compile Include="FileDownloadHandler.ashx.cs">
+      <DependentUpon>FileDownloadHandler.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="FileUploadHandler.ashx.cs">
+      <DependentUpon>FileUploadHandler.ashx</DependentUpon>
+    </Compile>
     <Compile Include="GlobalSettings.cs" />
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
@@ -320,6 +326,8 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="FileDownloadHandler.ashx" />
+    <None Include="FileUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />
     <None Include="wwwroot\Channel.cshtml" />
     <None Include="packages.config" />
