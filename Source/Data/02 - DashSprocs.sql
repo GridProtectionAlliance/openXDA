@@ -691,6 +691,7 @@ FROM
                  Event ON Event.ID = Disturbance.EventID
             Where ( (CAST( Event.StartTime as Date) between @EventDateFrom and @EventDateTo))
             and MeterID in (select * from authMeters(@username))
+            and Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             GROUP BY SeverityCode, MeterID
         ) AS Disturbances ON #temp.thesiteid = Disturbances.MeterID AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
 ) AS DisturbanceData
@@ -763,6 +764,7 @@ FROM
                  Event ON Event.ID = Disturbance.EventID
             Where ( (@MeterID = '0' and MeterID = MeterID) or (MeterID in ( Select * from @MeterIDs) ) )
             and MeterID in (select * from authMeters(@username))
+            and Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             GROUP BY CAST(Disturbance.StartTime AS Date), SeverityCode
         ) AS Disturbances ON #temp.Date = Disturbances.DisturbanceDate AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
 ) AS DisturbanceDate
@@ -1739,7 +1741,9 @@ BEGIN
                     DisturbanceSeverity JOIN
                     Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
                     Event ON Disturbance.EventID = Event.ID
-                WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
+                WHERE
+                    CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate AND
+                    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             ) AS MeterSeverityCode
             PIVOT
             (
@@ -2664,7 +2668,8 @@ BEGIN
         Meter ON Meter.ID = Event.MeterID
     WHERE
         MeterID IN (SELECT * FROM @MeterIDs) AND
-        CAST(Disturbance.StartTime AS DATE) = @thedate
+        CAST(Disturbance.StartTime AS DATE) = @thedate AND
+        Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
 
     DECLARE @composite TABLE (theeventid INT, themeterid INT, thesite VARCHAR(100), [5] INT, [4] INT, [3] INT, [2] INT, [1] INT, [0] INT);
 
