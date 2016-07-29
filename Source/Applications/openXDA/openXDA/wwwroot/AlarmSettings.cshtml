@@ -323,8 +323,11 @@
                 var formData = new FormData(),
                     files = $('#fileInput').get(0).files;
                 $.each(files, function(i,file){
-                    formData.append('file', new Blob(file));
+                    formData.append('file', file);
                 });
+                var xhr = new XMLHttpRequest;
+                xhr.open('POST', '/', true);
+                xhr.send(formData);
 
                 $.ajax({
                     type: "POST",
