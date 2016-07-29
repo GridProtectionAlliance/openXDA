@@ -2215,6 +2215,7 @@ BEGIN
             Event.StartTime,
             CASE EventType.Name
                 WHEN 'Sag' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
+                WHEN 'Interruption' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
                 WHEN 'Swell' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude DESC, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
                 ELSE 1
             END AS RowPriority
@@ -2229,7 +2230,8 @@ BEGIN
             MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
         WHERE
             CAST(Event.StartTime AS DATE) = @localEventDate AND
-            Event.MeterID = @localMeterID
+            Event.MeterID = @localMeterID AND
+            (Phase.ID IS NULL OR Phase.Name <> 'Worst')
     )
     SELECT
         thelineid,
