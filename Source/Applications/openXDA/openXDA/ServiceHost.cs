@@ -287,6 +287,9 @@ namespace openXDA
             Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
             Model.Global.DateTimeFormat = $"{Model.Global.DateFormat} {Model.Global.TimeFormat}";
             Model.Global.BootstrapTheme = systemSettings["BootstrapTheme"].Value;
+
+            //var temp = new openXDA.FileDownloadHandler();
+
             try
             {
                 // Attach to default web server events

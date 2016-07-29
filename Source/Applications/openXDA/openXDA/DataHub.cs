@@ -825,6 +825,32 @@ namespace openXDA
             return csv;
         }
 
+        public void ImportAlarmTableCSV(string csv)
+        {
+            string[] csvRows = csv.Split('\n');
+            string[] tableFields = csvRows[0].Split(',');
+
+            TableOperations<AlarmRangeLimit> table = m_dataContext.Table<AlarmRangeLimit>();
+            if (table.GetFieldNames() == tableFields)
+            {
+                for (int i = 1; i < csvRows.Length; ++i)
+                {
+                    string[] row = csvRows[i].Split(',');
+                    AlarmRangeLimit newRecord = new AlarmRangeLimit();
+                    newRecord = m_dataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
+                    newRecord.Severity = int.Parse(row[4]);
+                    newRecord.High = float.Parse(row[5]);
+                    newRecord.Low = float.Parse(row[6]);
+                    newRecord.RangeInclusive = int.Parse(row[7]);
+                    newRecord.PerUnit = int.Parse(row[8]);
+                    newRecord.Enabled = int.Parse(row[9]);
+                    newRecord.IsDefault = bool.Parse(row[17]);
+
+                    table.UpdateRecord(newRecord);
+                }
+            }
+
+        }
         #endregion
 
         #region [ DefaultAlarmRangeLimitView ]

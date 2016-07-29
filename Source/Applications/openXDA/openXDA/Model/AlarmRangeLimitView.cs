@@ -53,7 +53,7 @@ namespace openXDA.Model
         public string csvString()
         {
 
-            string word = ID.ToString() + ',' + ChannelID.ToString() + ',' + Name + ',' + AlarmTypeID.ToString() + ',' + Severity.ToString() + ',' + High.ToString() + ',' + Low.ToString() + ',' + RangeInclusive.ToString() + ',' 
+            string word = ID.ToString() + ',' + ChannelID.ToString() + ',' + Name.Replace(',', '-') + ',' + AlarmTypeID.ToString() + ',' + Severity.ToString() + ',' + High.ToString() + ',' + Low.ToString() + ',' + RangeInclusive.ToString() + ',' 
                 + PerUnit.ToString() + ',' + Enabled.ToString() + ',' + MeasurementType + ',' + MeasurementTypeID.ToString() + ',' + MeasurementCharacteristic + ',' + MeasurementCharacteristicID.ToString() + ',' +
                 Phase + ',' + PhaseID.ToString() + ',' + HarmonicGroup.ToString() + ',' + IsDefault.ToString();
 
