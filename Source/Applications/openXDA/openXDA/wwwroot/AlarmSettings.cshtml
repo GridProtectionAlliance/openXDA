@@ -197,11 +197,14 @@
 }
 @Include("PagedViewModel.cshtml")
 
+<form id="uploadCSVFile" action="AlarmRangeLimitCSVUploadHandler.ashx" method="post" enctype="multipart/form-data" style="display: none">
+    <input id="importCSVFile" name="importCSVFile" type="file" accept=".csv" multiple>
+    <input type="submit"/>
+</form>
+
 @section Scripts 
 {
     @Raw(ViewBag.PageControlScripts.ToString())
-    <script type="text/javascript" src="Scripts/fileinput.min.js"></script>
-
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
         @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))
@@ -215,18 +218,19 @@
         }
 
         function resetLimits(record) {
-            dataHub.resetAlarmToDefault(record).done(function () {
-                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
-                    viewModel.filterText = '%';
-                    viewModel.filterPageRecords();
-                } else {
-                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                    viewModel.filterPageRecords();
+            dataHub.resetAlarmToDefault(record).
+                done(function() {
+                    if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                        viewModel.filterText = '%';
+                        viewModel.filterPageRecords();
+                    } else {
+                        viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                        viewModel.filterPageRecords();
 
-                }
+                    }
 
 
-            });
+                });
         }
 
         function exportCSV() {
@@ -236,37 +240,37 @@
             $.ajax({
                 type: "POST",
                 url: "CSVDownloadHandler.ashx?ModelName=AlarmRangeLimitView",
-                success: function (data) {
+                success: function(data) {
 
-                        window.URL = window.URL || window.webkitURL  ;
+                    window.URL = window.URL || window.webkitURL;
 
 
-                        var csvFile = new Blob([data], { type: 'text/csv' });
-                        if (window.navigator && window.navigator.msSaveBlob) {
-                            window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
-                        } else {
-                            var element = document.createElement('a');
-                            element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
-                            element.href = window.URL.createObjectURL(csvFile);
+                    var csvFile = new Blob([data], { type: 'text/csv' });
+                    if (window.navigator && window.navigator.msSaveBlob) {
+                        window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
+                    } else {
+                        var element = document.createElement('a');
+                        element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
+                        element.href = window.URL.createObjectURL(csvFile);
 
-                            element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
-                            element.style.display = 'none';
-                            document.body.appendChild(element);
+                        element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
+                        element.style.display = 'none';
+                        document.body.appendChild(element);
 
-                            element.click();
+                        element.click();
 
-                            document.body.removeChild(element);
+                        document.body.removeChild(element);
 
-                        }
+                    }
 
-                        $('#exportBtn').prop('disabled', false);
-                        $("#exportBtn").css("cursor", "default");
+                    $('#exportBtn').prop('disabled', false);
+                    $("#exportBtn").css("cursor", "default");
                 },
-                error: function (msg) {
+                error: function(msg) {
                     alert(msg.value);
                 }
             });
-            
+
 
             //    window.URL = window.URL || window.webkitURL  ;
 
@@ -288,15 +292,21 @@
             //        document.body.removeChild(element);
 
             //    }
-
-
-
-
         }
 
+
+        $(function() {
+            $("#importCSVFile").on("change", function(event) {
+                $("#uploadCSVFile").submit();
+            });
+        });
+
         function importCSV() {
-            $('#importBtn').prop('disabled', true);
-            $("#importBtn").css("cursor", "progress");
+            $("#importCSVFile").click();
+
+            //$('#importBtn').prop('disabled', true);
+            //$("#importBtn").css("cursor", "progress");
+
             //$("#fileInput").fileinput({
             //    uploadUrl: "AlarmRangeLimitCSVUploadHandler.ashx",
             //    uploadAsync: true,
@@ -306,49 +316,49 @@
             //    minFileCount: 1,
             //    maxFileCount: 12
             //});
-            $('#fileInput').click();
-            $('#fileInput').one('change', function (e) {
-                //console.log($('#fileInput')[0].files[0]);
-                //var reader = new FileReader();
-                //reader.onload = function () {
-                //    //console.log(reader.result);
-                //    dataHub.importAlarmTableCSV(reader.result).done(function () {
-                //        $('#importBtn').prop('disabled', false);
-                //        $("#importBtn").css("cursor", "default");
-                //    });
+            //$('#fileInput').click();
+            //$('#fileInput').one('change', function (e) {
+            //    //console.log($('#fileInput')[0].files[0]);
+            //    //var reader = new FileReader();
+            //    //reader.onload = function () {
+            //    //    //console.log(reader.result);
+            //    //    dataHub.importAlarmTableCSV(reader.result).done(function () {
+            //    //        $('#importBtn').prop('disabled', false);
+            //    //        $("#importBtn").css("cursor", "default");
+            //    //    });
 
-                //}
-                
-                //reader.readAsBinaryString($('#fileInput')[0].files[0]);
-                var formData = new FormData(),
-                    files = $('#fileInput').get(0).files;
-                $.each(files, function(i,file){
-                    formData.append('file', file);
-                });
-                var xhr = new XMLHttpRequest;
-                xhr.open('POST', '/', true);
-                xhr.send(formData);
+            //    //}
 
-                $.ajax({
-                    type: "POST",
-                    url: "AlarmRangeLimitCSVUploadHandler.ashx",
-                    data: formData,
-                    processData: false,  // tell jQuery not to process the data
-                    contentType: false,  // tell jQuery not to set contentType
-                    success: function (data) {
+            //    //reader.readAsBinaryString($('#fileInput')[0].files[0]);
+            //    var formData = new FormData(),
+            //        files = $('#fileInput').get(0).files;
+            //    $.each(files, function(i,file){
+            //        formData.append('file', file);
+            //    });
+            //    var xhr = new XMLHttpRequest;
+            //    xhr.open('POST', '/', true);
+            //    xhr.send(formData);
 
-                        $('#importBtn').prop('disabled', false);
-                        $("#importBtn").css("cursor", "default");
-                    },
-                    error: function (msg) {
-                        alert(msg.value);
-                    }
-                });
-                //$("#fileInput").fileinput("upload");
-            });
+            //    $.ajax({
+            //        type: "POST",
+            //        url: "AlarmRangeLimitCSVUploadHandler.ashx",
+            //        data: formData,
+            //        processData: false,  // tell jQuery not to process the data
+            //        contentType: false,  // tell jQuery not to set contentType
+            //        success: function (data) {
+
+            //            $('#importBtn').prop('disabled', false);
+            //            $("#importBtn").css("cursor", "default");
+            //        },
+            //        error: function (msg) {
+            //            alert(msg.value);
+            //        }
+            //    });
+            //    //$("#fileInput").fileinput("upload");
+            //});
         }
 
-        $(function () {
+        $(function() {
 
             $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
 

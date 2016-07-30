@@ -21,7 +21,10 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Net;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
 using System.Web.Http;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
@@ -66,7 +69,7 @@ namespace openXDA
             // Set configuration to use reflection to setup routes
             httpConfig.MapHttpAttributeRoutes();
 
-            // Load the WebPageController class and assign its routes
+           // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);
 
             // Check for configuration issues before first request

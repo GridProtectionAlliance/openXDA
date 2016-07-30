@@ -21,29 +21,13 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Data;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
-using System.Security;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
-using GSF.Collections;
-using GSF.Data;
 using GSF.Data.Model;
-using GSF.Identity;
-using GSF.IO;
-using GSF.Security;
 using GSF.Web;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
-using GSF.Web.Security;
 using openXDA.Model;
 
 namespace openXDA
@@ -100,9 +84,9 @@ namespace openXDA
 
         public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response)
         {
-            await request.GetFilesAsync().ContinueWith(async files =>
+            await request.GetPostDataAsync().ContinueWith(async postDataTask =>
             {
-                await Task.WhenAll(files.Result.Select(ProcessFileAsync));
+                await Task.WhenAll(postDataTask.Result.FileData.Select(ProcessFileAsync));
             });
         }
 
