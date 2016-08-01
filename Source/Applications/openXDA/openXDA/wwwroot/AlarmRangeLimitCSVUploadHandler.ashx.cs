@@ -21,14 +21,18 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using GSF.Data.Model;
 using GSF.Web;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
+using log4net.Core;
 using openXDA.Model;
+using RazorEngine.Compilation.ImpromptuInterface.InvokeExt;
 
 namespace openXDA
 {
@@ -88,24 +92,29 @@ namespace openXDA
             {
                 await Task.WhenAll(postDataTask.Result.FileData.Select(ProcessFileAsync));
             });
+            response.Headers.Location = request.Headers.Referrer;
+            response.StatusCode = HttpStatusCode.Moved;
         }
 
         private async Task ProcessFileAsync(HttpContent file)
         {
             string csvFileData = await file.ReadAsStringAsync();
-            string[] csvRows = csvFileData.Split('\n');
-            string[] tableFields = csvRows[0].Split(',');
 
-            using (DataContext dataContext = new DataContext())
+            try
             {
-                TableOperations<AlarmRangeLimit> table = dataContext.Table<AlarmRangeLimit>();
-                if (table.GetFieldNames() == tableFields)
+                string[] csvRows = csvFileData.Split('\n');
+                string[] tableFields = csvRows[0].Split(',');
+
+                using (DataContext dataContext = new DataContext())
                 {
+                    TableOperations<AlarmRangeLimit> table = dataContext.Table<AlarmRangeLimit>();
+
                     for (int i = 1; i < csvRows.Length; ++i)
                     {
                         string[] row = csvRows[i].Split(',');
                         AlarmRangeLimit newRecord = new AlarmRangeLimit();
-                        newRecord = dataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
+                        newRecord.ID = int.Parse(row[0]);
+                        newRecord.ChannelID = int.Parse(row[1]);
                         newRecord.Severity = int.Parse(row[4]);
                         newRecord.High = float.Parse(row[5]);
                         newRecord.Low = float.Parse(row[6]);
@@ -116,7 +125,12 @@ namespace openXDA
 
                         table.UpdateRecord(newRecord);
                     }
+
                 }
+            }
+            catch (LogException ex)
+            {
+                Debug.WriteLine(ex.Message);
             }
 
         }

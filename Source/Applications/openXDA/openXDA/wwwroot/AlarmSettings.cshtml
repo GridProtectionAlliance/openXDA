@@ -270,36 +270,8 @@
                     alert(msg.value);
                 }
             });
-
-
-            //    window.URL = window.URL || window.webkitURL  ;
-
-
-            //    var csvFile = new Blob([data], { type: 'text/csv' });
-            //    if (window.navigator && window.navigator.msSaveBlob) {
-            //        window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
-            //    } else {
-            //        var element = document.createElement('a');
-            //        element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
-            //        element.href = window.URL.createObjectURL(csvFile);
-
-            //        element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
-            //        element.style.display = 'none';
-            //        document.body.appendChild(element);
-
-            //        element.click();
-
-            //        document.body.removeChild(element);
-
-            //    }
         }
 
-
-        $(function() {
-            $("#importCSVFile").on("change", function(event) {
-                $("#uploadCSVFile").submit();
-            });
-        });
 
         function importCSV() {
             $("#importCSVFile").click();
@@ -446,6 +418,39 @@
 
                 }
             });
+        
+            $("#importCSVFile").on("change", function (event) {
+                $("#uploadCSVFile").submit();
+
+            //    $.post($('#uploadCSVFile').attr('action'), $('#uploadCSVFile').serialize(), function (data, status, xhr) {
+                    
+            //    //}, 'file');
+            //    $('#importBtn').prop('disabled', true);
+            //    $("#importBtn").css("cursor", "progress");
+            //        var formData = new FormData(),
+            //            files = $('#fileInput').get(0).files;
+            //        $.each(files, function(i,file){
+            //            formData.append('file', file);
+            //        });
+
+            //    $.ajax({
+            //        type: "POST",
+            //        url: $('#uploadCSVFile').attr('action'),
+            //        data: formData,
+            //        processData: false,  // tell jQuery not to process the data
+            //        contentType: false,  // tell jQuery not to set contentType
+            //        success: function (data) {
+
+            //            $('#importBtn').prop('disabled', false);
+            //            $("#importBtn").css("cursor", "default");
+            //        },
+            //        error: function (msg) {
+            //            alert(msg.value);
+            //        }
+            //    });
+
+            });
+
 
         });
     </script>
