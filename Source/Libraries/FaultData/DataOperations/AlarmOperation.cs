@@ -153,7 +153,7 @@ namespace FaultData.DataOperations
                             AlarmRangeLimitDataTable rangeLimitTable = InitializeRangeLimitTable(channel);
 
                             return channelGroup
-                                .SelectMany(TrendingPoint => rangeLimitTable.Select(RangeLimit => new { TrendingPoint, RangeLimit }))
+                                .SelectMany(TrendingPoint => rangeLimitTable.Where(rangeLimit => rangeLimit.Enabled != 0).Select(RangeLimit => new { TrendingPoint, RangeLimit }))
                                 .Where(obj => CheckAlarm(channel, obj.TrendingPoint, obj.RangeLimit))
                                 .GroupBy(obj => obj.RangeLimit.AlarmTypeID)
                                 .Select(alarmTypeGroup => CreateSummaryRow(channelAlarmSummaryTable, channelGroup.Key, alarmTypeGroup.Key, queryStart, alarmTypeGroup.Count()));

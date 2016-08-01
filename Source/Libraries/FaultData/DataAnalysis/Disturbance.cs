@@ -39,6 +39,7 @@ namespace FaultData.DataAnalysis
         private DateTime m_startTime;
         private DateTime m_endTime;
         private double m_magnitude;
+        private double m_perUnitMagnitude;
 
         #endregion
 
@@ -136,6 +137,18 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public double PerUnitMagnitude
+        {
+            get
+            {
+                return m_perUnitMagnitude;
+            }
+            set
+            {
+                m_perUnitMagnitude = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -148,6 +161,11 @@ namespace FaultData.DataAnalysis
         public double GetPerUnitMagnitude(double nominalValue)
         {
             return m_magnitude / nominalValue;
+        }
+
+        public Disturbance Clone()
+        {
+            return (Disturbance)MemberwiseClone();
         }
 
         #endregion

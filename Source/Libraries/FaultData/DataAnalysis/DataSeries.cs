@@ -126,7 +126,11 @@ namespace FaultData.DataAnalysis
                 if (!m_dataPoints.Any())
                     return double.NaN;
 
-                m_sampleRate = (Duration != 0.0D) ? (m_dataPoints.Count - 1) / Duration : double.NaN;
+                int index = (m_dataPoints.Count > 128) ? 128 : m_dataPoints.Count - 1;
+
+                m_sampleRate = (Duration != 0.0D)
+                    ? index / (m_dataPoints[index].Time - m_dataPoints[0].Time).TotalSeconds
+                    : double.NaN;
 
                 return m_sampleRate.Value;
             }

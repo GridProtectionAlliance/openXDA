@@ -75,24 +75,20 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using FaultAlgorithms;
 using GSF;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
 using GSF.Identity;
 using GSF.IO;
-using GSF.PQDIF.Logical;
 using GSF.Reflection;
 using GSF.Security.Model;
 using GSF.ServiceProcess;
-using GSF.TimeSeries;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using log4net.Appender;
 using log4net.Config;
-using log4net.Core;
 using log4net.Layout;
 using Microsoft.Owin.Hosting;
 using openXDA.Logging;
@@ -152,7 +148,6 @@ namespace openXDA
 
         #endregion
 
-
         #region [ Constructors ]
 
         public ServiceHost()
@@ -174,13 +169,11 @@ namespace openXDA
         #endregion
 
         #region [ Methods ]
- 
 
         private void WebServer_StatusMessage(object sender, EventArgs<string> e)
         {
             //DisplayStatusMessage(e.Argument, UpdateType.Information);
         }
-
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
@@ -261,7 +254,6 @@ namespace openXDA
             CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];
             ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
 
-
             systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
             systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
             systemSettings.Add("WebHostURL", "http://localhost:8080", "The web hosting URL for remote system management.");
@@ -288,8 +280,6 @@ namespace openXDA
             Model.Global.DateTimeFormat = $"{Model.Global.DateFormat} {Model.Global.TimeFormat}";
             Model.Global.BootstrapTheme = systemSettings["BootstrapTheme"].Value;
 
-            //var temp = new openXDA.FileDownloadHandler();
-
             try
             {
                 // Attach to default web server events
@@ -309,20 +299,18 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("MeterLine.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Channel.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
-
+                webServer.PagedViewModelTypes.TryAdd("AlarmSettings", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
                 // Initiate pre-compile of base templates
-                //if (AssemblyInfo.EntryAssembly.Debuggable)
-                //{
-                //    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
-                //    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
-                //}
-                //else
-                //{
-                //    RazorEngine<CSharp>.Default.PreCompile(HandleException);
-                //    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
-                //}
+                if (AssemblyInfo.EntryAssembly.Debuggable)
+                {
+                    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
+                    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
+                }
+                else
+                {
+                    RazorEngine<CSharp>.Default.PreCompile(HandleException);
+                    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
+                }
 
                 // Create new web application hosting environment
                 m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
@@ -331,7 +319,6 @@ namespace openXDA
             {
                 HandleException(new InvalidOperationException($"Failed to initialize web hosting: {ex.Message}", ex));
             }
-
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)

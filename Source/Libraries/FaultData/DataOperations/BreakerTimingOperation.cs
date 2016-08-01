@@ -208,7 +208,7 @@ namespace FaultData.DataOperations
 
             private int FindIndexCleared(DataSeries waveform, int cycleIndex)
             {
-                int samplesPerCycle = (int)Math.Round(waveform.SampleRate / m_systemFrequency);
+                int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform, m_systemFrequency);
                 int startIndex = cycleIndex - 1;
                 int endIndex = startIndex + samplesPerCycle - 1;
                 int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveform.DataPoints.Count - 1);
@@ -372,7 +372,7 @@ namespace FaultData.DataOperations
             VIDataGroup viDataGroup;
             VICycleDataGroup viCycleDataGroup;
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {

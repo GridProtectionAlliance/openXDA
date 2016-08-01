@@ -691,6 +691,7 @@ FROM
                  Event ON Event.ID = Disturbance.EventID
             Where ( (CAST( Event.StartTime as Date) between @EventDateFrom and @EventDateTo))
             and MeterID in (select * from authMeters(@username))
+            and Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             GROUP BY SeverityCode, MeterID
         ) AS Disturbances ON #temp.thesiteid = Disturbances.MeterID AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
 ) AS DisturbanceData
@@ -763,6 +764,7 @@ FROM
                  Event ON Event.ID = Disturbance.EventID
             Where ( (@MeterID = '0' and MeterID = MeterID) or (MeterID in ( Select * from @MeterIDs) ) )
             and MeterID in (select * from authMeters(@username))
+            and Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             GROUP BY CAST(Disturbance.StartTime AS Date), SeverityCode
         ) AS Disturbances ON #temp.Date = Disturbances.DisturbanceDate AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
 ) AS DisturbanceDate
@@ -1739,7 +1741,9 @@ BEGIN
                     DisturbanceSeverity JOIN
                     Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
                     Event ON Disturbance.EventID = Event.ID
-                WHERE CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate
+                WHERE
+                    CAST(Disturbance.StartTime AS DATE) BETWEEN @startDate AND @endDate AND
+                    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
             ) AS MeterSeverityCode
             PIVOT
             (
@@ -1748,6 +1752,7 @@ BEGIN
             ) AS PivotTable
         ) AS SeverityCount ON SeverityCount.MeterID = Meter.ID
     WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    ORDER BY Meter.Name
 END
 GO
 
@@ -1817,6 +1822,7 @@ BEGIN
             )AS Event_Count ON Event_Count.MeterID = Meter.ID
 
         WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        ORDER BY Meter.Name
 END
 GO
 
@@ -2012,6 +2018,7 @@ BEGIN
         ) AS AlarmCount ON AlarmCount.MeterID = Meter.ID
             
        WHERE [dbo].[Meter].[ID] in (SELECT * FROM authMeters(@username))
+       ORDER BY Meter.Name
 
 END
 GO
@@ -2208,6 +2215,7 @@ BEGIN
             Event.StartTime,
             CASE EventType.Name
                 WHEN 'Sag' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
+                WHEN 'Interruption' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
                 WHEN 'Swell' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude DESC, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
                 ELSE 1
             END AS RowPriority
@@ -2222,7 +2230,8 @@ BEGIN
             MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
         WHERE
             CAST(Event.StartTime AS DATE) = @localEventDate AND
-            Event.MeterID = @localMeterID
+            Event.MeterID = @localMeterID AND
+            (Phase.ID IS NULL OR Phase.Name <> 'Worst')
     )
     SELECT
         thelineid,
@@ -2661,7 +2670,8 @@ BEGIN
         Meter ON Meter.ID = Event.MeterID
     WHERE
         MeterID IN (SELECT * FROM @MeterIDs) AND
-        CAST(Disturbance.StartTime AS DATE) = @thedate
+        CAST(Disturbance.StartTime AS DATE) = @thedate AND
+        Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
 
     DECLARE @composite TABLE (theeventid INT, themeterid INT, thesite VARCHAR(100), [5] INT, [4] INT, [3] INT, [2] INT, [1] INT, [0] INT);
 
@@ -3039,6 +3049,109 @@ FROM [TrendingData]
       ([dbo].[HourOfWeekLimit].[HourOfWeek] = 0 or [dbo].[HourOfWeekLimit].[HourOfWeek] is null)
     order by [TrendingData].[Time]
 
+END
+GO
+
+-- =============================================
+-- Author:      <Author, Jeff Walker>
+-- Create date: <Create Date, Jun 26, 2014>
+-- Description: <Description, Selects Trending Data for a ChannelID by Date for a day>
+-- selectTrendingDataByChannelIDDate2 '9/15/2015', 988
+-- =============================================
+CREATE PROCEDURE [dbo].[selectTrendingDataByChannelIDDate2]
+    @EventDate DateTime2,
+    @ChannelID int
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Trending Data
+    WITH TrendingDataPoint AS
+    (
+        SELECT
+            ChannelID,
+            SeriesType,
+            Time,
+            Value
+        FROM
+            GetTrendingData(@EventDate, DATEADD(NANOSECOND, -100, DATEADD(DAY, 1, @EventDate)), @ChannelID, default) AS TrendingData JOIN
+            (
+                SELECT 0 AS ID, 'Minimum' AS SeriesType UNION
+                SELECT 1 AS ID, 'Maximum' AS SeriesType UNION
+                SELECT 2 AS ID, 'Average' AS SeriesType
+            ) AS Series ON TrendingData.SeriesID = Series.ID
+    ),
+    TrendingData AS
+    (
+        SELECT
+            ChannelID,
+            Time,
+            Maximum,
+            Minimum,
+            Average
+        FROM TrendingDataPoint
+        PIVOT
+        (
+            SUM(Value)
+            FOR SeriesType IN (Maximum, Minimum, Average)
+        ) AS TrendingData
+    )
+    SELECT
+        TrendingData.Time AS thedate,
+        TrendingData.Minimum AS theminimum,
+        TrendingData.Maximum AS themaximum,
+        TrendingData.Average AS theaverage
+    FROM
+        TrendingData
+    WHERE
+        TrendingData.ChannelID = @ChannelID
+    ORDER BY TrendingData.Time
+    
+    -- Alarm Data
+    DECLARE @alarmHigh FLOAT
+    DECLARE @alarmLow FLOAT
+
+    SELECT
+        @EventDate AS thedatefrom,
+        DATEADD(DAY, 1, @EventDate) AS thedateto,
+        CASE
+            WHEN AlarmRangeLimit.PerUnit <> 0 AND Channel.PerUnitValue IS NOT NULL THEN AlarmRangeLimit.High * PerUnitValue
+            ELSE AlarmRangeLimit.High
+        END AS alarmlimithigh,
+        CASE
+            WHEN AlarmRangeLimit.PerUnit <> 0 AND Channel.PerUnitValue IS NOT NULL THEN AlarmRangeLimit.Low * PerUnitValue
+            ELSE AlarmRangeLimit.Low
+        END AS alarmlimitlow
+    FROM
+        AlarmRangeLimit JOIN
+        Channel ON AlarmRangeLimit.ChannelID = Channel.ID
+    WHERE
+        AlarmRangeLimit.AlarmTypeID = (SELECT ID FROM AlarmType WHERE Name = 'Alarm') AND
+        AlarmRangeLimit.ChannelID = @ChannelID
+
+    -- Off-normal data
+    DECLARE @dayOfWeek INT = DATEPART(DW, @EventDate) - 1
+    DECLARE @hourOfWeek INT = @dayOfWeek * 24
+
+    ; WITH HourlyIndex AS
+    (
+        SELECT @hourOfWeek AS HourOfWeek
+        UNION ALL
+        SELECT HourOfWeek + 1
+        FROM HourlyIndex
+        WHERE (HourOfWeek + 1) < @hourOfWeek + 24
+    )
+    SELECT
+        DATEADD(HOUR, HourlyIndex.HourOfWeek - @hourOfWeek, @EventDate) AS thedatefrom,
+        DATEADD(HOUR, HourlyIndex.HourOfWeek - @hourOfWeek + 1, @EventDate) AS thedateto,
+        HourOfWeekLimit.High AS offlimithigh,
+        HourOfWeekLimit.Low AS offlimitlow
+    FROM
+        HourlyIndex LEFT OUTER JOIN
+        HourOfWeekLimit ON HourOfWeekLimit.HourOfWeek = HourlyIndex.HourOfWeek
+    WHERE
+        HourOfWeekLimit.ChannelID IS NULL OR
+        HourOfWeekLimit.ChannelID = @ChannelID
 END
 GO
 

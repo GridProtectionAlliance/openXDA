@@ -50,10 +50,10 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
-            SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
-            InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+            CycleDataResource cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            SagDataResource sagDataResource = SagDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            SwellDataResource swellDataResource = SwellDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            InterruptionDataResource interruptionDataResource = InterruptionDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
 
             DisturbanceTableAdapter disturbanceAdapter = m_dbAdapterContainer.GetAdapter<DisturbanceTableAdapter>();
             DisturbanceDataTable disturbanceTable = disturbanceAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);

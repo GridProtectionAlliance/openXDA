@@ -44,6 +44,7 @@ namespace FaultData.DataOperations
 
         // Fields
         private string m_filePattern;
+        private double m_systemFrequency;
 
         private MeterInfoDataContext m_meterInfo;
 
@@ -61,6 +62,19 @@ namespace FaultData.DataOperations
             set
             {
                 m_filePattern = value;
+            }
+        }
+
+        [Setting]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
             }
         }
 
@@ -157,18 +171,6 @@ namespace FaultData.DataOperations
                 // Remove data series that were not defined in the configuration
                 // since configuration information cannot be added for it
                 RemoveUndefinedDataSeries(meterDataSet);
-            }
-
-            foreach (DataGroup dataGroup in meterDataSet.GetResource<DataGroupsResource>().DataGroups)
-            {
-                if (dataGroup.Classification != DataClassification.Event)
-                    continue;
-
-                // Add missing current series based on IR = IA + IB + IC
-                dataSeries = VIDataGroup.AddMissingCurrentSeries(m_meterInfo, meterDataSet.Meter, dataGroup);
-
-                if ((object)dataSeries != null)
-                    meterDataSet.DataSeries.Add(dataSeries);
             }
         }
 
@@ -366,7 +368,7 @@ namespace FaultData.DataOperations
         private static ChannelKey GetGenericChannelKey(Channel channel)
         {
             return Tuple.Create(
-                channel.LineID,
+                0,
                 0,
                 channel.Name,
                 channel.MeasurementType.Name,

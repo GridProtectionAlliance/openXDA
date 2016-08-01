@@ -20,6 +20,9 @@
       <!-- openXDA Service -->
       <Feature Id="ServiceFeature" Title="openXDA Service" AllowAdvertise="no" Description="Installs the openXDA Windows service to perform data analytics.">
         <ComponentGroupRef Id="ServiceComponents" />
+
+        <!-- Web Files -->
+        <?include WebFeatures.wxi ?>
       </Feature>
 
       <!-- openXDA Console -->
@@ -33,7 +36,8 @@
       <UIRef Id="WixUI_FeatureTree" />
       <UIRef Id="WixUI_ErrorProgressText" />
       <DialogRef Id="DatabaseConnectionDialog" />
-      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="ServiceAccountDialog"><![CDATA[&ServiceFeature=3]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[NOT(&ServiceFeature=3) AND &DatabaseFeature=3]]></Publish>
       <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg"><![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
       <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="DatabaseConnectionDialog">NOT Installed AND <![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
       <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg">NOT Installed AND <![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
@@ -43,9 +47,14 @@
     <Icon Id="openXDAConsole.ico.exe" SourceFile="$(var.openXDAConsole.TargetPath)" />
     
     <Property Id="SERVICENAME" Value="$(var.openXDA.TargetName)" />
+    <Property Id="SERVICEPASSWORD" Hidden="yes" />
+    <Property Id="HTTPSERVICEPORTS" Value="8989" />
+    <Property Id="COMPANYNAME" Value="Grid Protection Alliance" />
+    <Property Id="COMPANYACRONYM" Value="GPA" />
     <Property Id="SERVERNAME" Value="localhost" />
     <Property Id="WINDOWSAUTH" Value="1" />
     <Property Id="DATAPROVIDERSTRING" Value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};; ConnectionType=System.Data.SqlClient.SqlConnection;; AdapterType=System.Data.SqlClient.SqlDataAdapter" />
+    <SetProperty Id="SERVICEACCOUNT" Value="NT SERVICE\[SERVICENAME]" After="LaunchConditions" Sequence="first" />
     <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
@@ -58,12 +67,17 @@
     
     <!-- Custom Actions -->
     <Binary Id="InstallerActions" SourceFile="$(var.SolutionDir)\Dependencies\GSF\GSF.InstallerActions.CA.dll" />
-    
+
+    <CustomAction Id="AuthenticateServiceAccountAction" BinaryKey="InstallerActions" DllEntry="AuthenticateServiceAccountAction" Execute="immediate" />
     <CustomAction Id="PasswordGenerationAction" BinaryKey="InstallerActions" DllEntry="PasswordGenerationAction" Execute="immediate" />
     <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
-    
+
+    <CustomAction Id="CompanyInfoAction.SetProperty" Property="CompanyInfoAction" Value="SERVICENAME=[SERVICENAME];INSTALLDIR=[INSTALLFOLDER];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM]" />
+    <CustomAction Id="CompanyInfoAction" BinaryKey="InstallerActions" DllEntry="CompanyInfoAction" Execute="deferred" Impersonate="no" />
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="ServiceAccountAction.SetProperty" Property="ServiceAccountAction" Value="SERVICENAME=[SERVICENAME];SERVICEACCOUNT=[SERVICEACCOUNT];HTTPSERVICEPORTS=[HTTPSERVICEPORTS]" />
+    <CustomAction Id="ServiceAccountAction" BinaryKey="InstallerActions" DllEntry="ServiceAccountAction" Execute="deferred" Impersonate="no" />
     
     <CustomAction Id="CreateDatabase.SetProperty" Property="CreateDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBQUERY]" />
     <CustomAction Id="CreateDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
@@ -98,8 +112,12 @@
     <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <InstallExecuteSequence>
+      <Custom Action="CompanyInfoAction.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
+      <Custom Action="CompanyInfoAction" After="CompanyInfoAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
+      <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction">NOT REMOVE</Custom>
+      <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty">NOT REMOVE</Custom>
       
       <Custom Action="CreateDatabase.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
@@ -140,18 +158,32 @@
         <Directory Id="ProgramFiles64Folder">
           <!-- C:\Program Files\openXDA -->
           <Directory Id="INSTALLFOLDER" Name="openXDA">
+            <Component Id="InstallFolderPermissions" Guid="{414759B2-2C29-4C37-978E-D1C8DC4DF4E1}">
+              <CreateFolder>
+                <util:PermissionEx User="[SERVICENAME] Admins" CreateFile="yes" CreateChild="yes" GenericRead="yes" GenericWrite="yes" GenericExecute="yes" Delete="yes" DeleteChild="yes" />
+              </CreateFolder>
+            </Component>
+            
             <Directory Id="DEBUGFOLDER" Name="Debug" />
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
+            <?include WebFolders.wxi ?>
           </Directory>
         </Directory>
       <?else ?>
         <Directory Id="ProgramFilesFolder">
           <!-- C:\Program Files (x86)\openXDA -->
           <Directory Id="INSTALLFOLDER" Name="openXDA">
+            <Component Id="InstallFolderPermissions" Guid="{414759B2-2C29-4C37-978E-D1C8DC4DF4E1}">
+              <CreateFolder>
+                <util:PermissionEx User="[SERVICENAME] Admins" CreateFile="yes" CreateChild="yes" GenericRead="yes" GenericWrite="yes" GenericExecute="yes" Delete="yes" DeleteChild="yes" />
+              </CreateFolder>
+            </Component>
+            
             <Directory Id="DEBUGFOLDER" Name="Debug" />
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
+            <?include WebFolders.wxi ?>
           </Directory>
         </Directory>
       <?endif ?>
@@ -160,6 +192,10 @@
         <Directory Id="ApplicationProgramsFolder" Name="openXDA" />
       </Directory>
     </Directory>
+  </Fragment>
+
+  <Fragment>
+    <?include WebFiles.wxi ?>
   </Fragment>
 
   <Fragment>
@@ -185,11 +221,11 @@
       <!-- Service Applications -->
       <Component Id="openXDA">
         <File Id="openXDA.exe" Name="$(var.openXDA.TargetFileName)" Source="$(var.openXDA.TargetPath)" />
-        <ServiceInstall Id="openXDAService" Name="openXDA" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
-        <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+        <ServiceInstall Id="openXDAService" Name="openXDA" Account="[SERVICEACCOUNT]" Password="[SERVICEPASSWORD]" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
+        <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" />
       </Component>
       <Component Id="openXDAConfig">
-        <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
+        <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.ProjectDir)\app.config" />
         <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[XDACONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
@@ -222,11 +258,14 @@
       <ComponentRef Id="GSF.COMTRADE" />
       <ComponentRef Id="GSF.Communication" />
       <ComponentRef Id="GSF.Core" />
+      <ComponentRef Id="GSF.EMAX" />
       <ComponentRef Id="GSF.PhasorProtocols" />
       <ComponentRef Id="GSF.PQDIF" />
       <ComponentRef Id="GSF.Security" />
       <ComponentRef Id="GSF.ServiceProcess" />
+      <ComponentRef Id="GSF.SELEventParser" />
       <ComponentRef Id="GSF.TimeSeries" />
+      <ComponentRef Id="GSF.Web" />
       <ComponentRef Id="TagDefinitions" />
 
       <!-- openHistorian Dependencies -->
@@ -234,6 +273,25 @@
       <ComponentRef Id="GSF.SortedTreeStore" />
       <ComponentRef Id="openHistorian.Core" />
 
+      <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
+      <ComponentRef Id="Microsoft.AspNet.Razor" />
+      <ComponentRef Id="Microsoft.AspNet.SignalR.Core" />
+      <ComponentRef Id="System.Net.Http.Formatting" />
+      <ComponentRef Id="System.Web.Http" />
+      <ComponentRef Id="System.Web.Http.Owin" />
+      <ComponentRef Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform" />
+      <ComponentRef Id="Microsoft.Owin" />
+      <ComponentRef Id="Microsoft.Owin.Diagnostics" />
+      <ComponentRef Id="Microsoft.Owin.Host.HttpListener" />
+      <ComponentRef Id="Microsoft.Owin.Hosting" />
+      <ComponentRef Id="Microsoft.Owin.Security" />
+      <ComponentRef Id="Newtonsoft.Json" />
+      <ComponentRef Id="Owin" />
+      <ComponentRef Id="RazorEngine" />
+      <ComponentRef Id="System.Web.Razor" />
+
+      <ComponentRef Id="InstallFolderPermissions"/>
+      
       <!-- Cleanup -->
       <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
         <CreateFolder />
@@ -303,6 +361,9 @@
       <Component Id="GSF.Core">
         <File Id="GSF.Core.dll" Name="GSF.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Core.dll" />
       </Component>
+      <Component Id="GSF.EMAX">
+        <File Id="GSF.EMAX.dll" Name="GSF.EMAX.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.EMAX.dll" />
+      </Component>
       <Component Id="GSF.PhasorProtocols">
         <File Id="GSF.PhasorProtocols.dll" Name="GSF.PhasorProtocols.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.PhasorProtocols.dll" />
       </Component>
@@ -315,8 +376,14 @@
       <Component Id="GSF.ServiceProcess">
         <File Id="GSF.ServiceProcess.dll" Name="GSF.ServiceProcess.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.ServiceProcess.dll" />
       </Component>
+      <Component Id="GSF.SELEventParser">
+        <File Id="GSF.SELEventParser.dll" Name="GSF.SELEventParser.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.SELEventParser.dll" />
+      </Component>
       <Component Id="GSF.TimeSeries">
         <File Id="GSF.TimeSeries.dll" Name="GSF.TimeSeries.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.TimeSeries.dll" />
+      </Component>
+      <Component Id="GSF.Web">
+        <File Id="GSF.Web.dll" Name="GSF.Web.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Web.dll" />
       </Component>
       <Component Id="TagDefinitions">
         <File Id="TagDefinitions.xml" Name="TagDefinitions.xml" Source="$(var.SolutionDir)\Dependencies\GSF\TagDefinitions.xml" />
@@ -332,12 +399,141 @@
       <Component Id="openHistorian.Core">
         <File Id="openHistorian.Core.dll" Name="openHistorian.Core.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.dll" />
       </Component>
+
+      <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
+      <Component Id="Microsoft.AspNet.Razor">
+        <File Id="Microsoft.AspNet.Razor.dll" Name="Microsoft.AspNet.Razor.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.Razor.4.0.0-beta7\lib\net45\Microsoft.AspNet.Razor.dll" />
+      </Component>
+      <Component Id="Microsoft.AspNet.SignalR.Core">
+        <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll" />
+      </Component>
+      <Component Id="System.Net.Http.Formatting">
+        <File Id="System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll" />
+      </Component>
+      <Component Id="System.Web.Http">
+        <File Id="System.Web.Http.dll" Name="System.Web.Http.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll" />
+      </Component>
+      <Component Id="System.Web.Http.Owin">
+        <File Id="System.Web.Http.Owin.dll" Name="System.Web.Http.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll" />
+      </Component>
+      <Component Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
+        <File Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Name="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
+      </Component>
+      <Component Id="Microsoft.Owin">
+        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.2.1.0\lib\net45\Microsoft.Owin.dll" />
+      </Component>
+      <Component Id="Microsoft.Owin.Diagnostics">
+        <File Id="Microsoft.Owin.Diagnostics.dll" Name="Microsoft.Owin.Diagnostics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Diagnostics.2.1.0\lib\net40\Microsoft.Owin.Diagnostics.dll" />
+      </Component>
+      <Component Id="Microsoft.Owin.Host.HttpListener">
+        <File Id="Microsoft.Owin.Host.HttpListener.dll" Name="Microsoft.Owin.Host.HttpListener.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Host.HttpListener.3.0.1\lib\net45\Microsoft.Owin.Host.HttpListener.dll" />
+      </Component>
+      <Component Id="Microsoft.Owin.Hosting">
+        <File Id="Microsoft.Owin.Hosting.dll" Name="Microsoft.Owin.Hosting.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Hosting.2.1.0\lib\net45\Microsoft.Owin.Hosting.dll" />
+      </Component>
+      <Component Id="Microsoft.Owin.Security">
+        <File Id="Microsoft.Owin.Security.dll" Name="Microsoft.Owin.Security.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Security.2.1.0\lib\net45\Microsoft.Owin.Security.dll" />
+      </Component>
+      <Component Id="Newtonsoft.Json">
+        <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll" />
+      </Component>
+      <Component Id="Owin">
+        <File Id="Owin.dll" Name="Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Owin.1.0\lib\net40\Owin.dll" />
+      </Component>
+      <Component Id="RazorEngine">
+        <File Id="RazorEngine.dll" Name="RazorEngine.dll" Source="$(var.SolutionDir)Dependencies\NuGet\RazorEngine.3.7.7\lib\net45\RazorEngine.dll" />
+      </Component>
+      <Component Id="System.Web.Razor">
+        <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)Dependencies\Microsoft\System.Web.Razor.dll" />
+      </Component>
     </ComponentGroup>
   </Fragment>
 
   <!-- Custom Dialogs -->
   <Fragment>
     <UI>
+      <!-- ServiceAccount Dialog -->
+      <Dialog Id="ServiceAccountDialog" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Service Account</Text>
+        </Control>
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Enter the [ProductName] service account.</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="ServiceAccountLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="&amp;Service Account:" />
+        <Control Id="ServiceAccountEdit" Type="Edit" X="45" Y="85" Width="220" Height="18" Property="SERVICEACCOUNT" Text="{80}" />
+        <Control Id="ServicePasswordLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="&amp;Service Password:" />
+        <Control Id="ServicePasswordEdit" Type="Edit" X="45" Y="125" Width="220" Height="18" Property="SERVICEPASSWORD" Text="{80}" Password="yes" />
+        <Control Id="ServicePasswordInfo" Type="Text" X="45" Y="153" Width="280" Height="30" Transparent="yes" NoPrefix="yes">
+          <Text>NOTE: If the service account is LocalSystem or begins with NT AUTHORITY or NT SERVICE you may leave the password field blank.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="DoAction" Value="AuthenticateServiceAccountAction">1</Publish>
+          <Publish Event="NewDialog" Value="ServiceAccountErrorDialog">NOT SERVICEAUTHENTICATED</Publish>
+          <Publish Event="NewDialog" Value="CompanyInfoDialog">SERVICEAUTHENTICATED</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+
+      <!-- ServiceAccountError Dialog -->
+      <Dialog Id="ServiceAccountErrorDialog" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Service Account</Text>
+        </Control>
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Setup encountered an error authenticating the service account.</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="InfoLabel" Type="Text" X="45" Y="73" Width="280" Height="60" TabSkip="no">
+          <Text>The service account entered could not be authorized. The username or password may have been entered incorrectly. To correct this, please click the "Back" button to go back to the previous step. To ignore this error and proceed with the installation, click the "Next" button.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="ServiceAccountDialog">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="NewDialog" Value="CompanyInfoDialog">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+
+      <!-- CompanyInfo Dialog -->
+      <Dialog Id="CompanyInfoDialog" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}Company Information</Text>
+        </Control>
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Enter information for the company using [ProductName].</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="CompanyNameLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="&amp;Company Name:" />
+        <Control Id="CompanyNameEdit" Type="Edit" X="45" Y="85" Width="220" Height="18" Property="COMPANYNAME" Text="{80}" />
+        <Control Id="CompanyAcronymLabel" Type="Text" X="45" Y="113" Width="100" Height="15" TabSkip="no" Text="&amp;Company Acronym:" />
+        <Control Id="CompanyAcronymEdit" Type="Edit" X="45" Y="125" Width="220" Height="18" Property="COMPANYACRONYM" Text="{80}" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="ServiceAccountDialog">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="NewDialog" Value="DatabaseConnectionDialog">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+      
       <!-- Database Connection Dialog -->
       <Dialog Id="DatabaseConnectionDialog" Width="370" Height="270" Title="[ProductName] Setup">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
@@ -371,7 +567,8 @@
         </Control>
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
-          <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
+          <Publish Event="NewDialog" Value="CompanyInfoDialog"><![CDATA[&ServiceFeature=3]]></Publish>
+          <Publish Event="NewDialog" Value="CustomizeDlg"><![CDATA[NOT(&ServiceFeature=3)]]></Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <!-- Set up the queries to create the database. -->

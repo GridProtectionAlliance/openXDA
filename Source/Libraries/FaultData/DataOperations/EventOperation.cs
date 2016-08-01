@@ -105,7 +105,7 @@ namespace FaultData.DataOperations
 
             Log.Info("Executing operation to load event data into the database...");
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
             eventClassificationResource = meterDataSet.GetResource(() => new EventClassificationResource(m_dbAdapterContainer));
             LoadEvents(meterDataSet, cycleDataResource.DataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
             LoadDisturbances(meterDataSet, cycleDataResource.DataGroups);
@@ -224,7 +224,7 @@ namespace FaultData.DataOperations
                 eventRow.Samples = dataGroup.Samples;
                 eventRow.TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes;
                 eventRow.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
-                eventRow.SamplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / m_systemFrequency);
+                eventRow.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
 
                 eventDataRow = m_eventDataTable.NewEventDataRow();
                 eventDataRow.FileGroupID = meterDataSet.FileGroup.ID;
@@ -242,9 +242,9 @@ namespace FaultData.DataOperations
 
         private void LoadDisturbances(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
         {
-            SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
-            SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
-            InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+            SagDataResource sagDataResource = SagDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            SwellDataResource swellDataResource = SwellDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            InterruptionDataResource interruptionDataResource = InterruptionDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
 
             EventKey eventKey;
             List<Disturbance> disturbances;
@@ -286,7 +286,7 @@ namespace FaultData.DataOperations
             row.EventTypeID = s_eventTypeLookup[disturbance.EventType];
             row.PhaseID = GetPhaseID(disturbance.Phase);
             row.Magnitude = disturbance.Magnitude;
-            row.PerUnitMagnitude = ToDbFloat(disturbance.GetPerUnitMagnitude(dataGroup.Line.VoltageKV * 1000.0D / Sqrt3));
+            row.PerUnitMagnitude = ToDbFloat(disturbance.PerUnitMagnitude);
             row.StartTime = disturbance.StartTime;
             row.EndTime = disturbance.EndTime;
             row.DurationSeconds = disturbance.DurationSeconds;

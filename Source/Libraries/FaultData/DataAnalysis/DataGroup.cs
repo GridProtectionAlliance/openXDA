@@ -137,7 +137,25 @@ namespace FaultData.DataAnalysis
         {
             get
             {
-                return (m_samples - 1) / (m_endTime - m_startTime).TotalSeconds;
+                if (!m_dataSeries.Any())
+                    return double.NaN;
+
+                return m_dataSeries[0].SampleRate;
+            }
+        }
+
+        /// <summary>
+        /// Gets the sample rate, in samples per second,
+        /// of the data series in this data group.
+        /// </summary>
+        public double Duration
+        {
+            get
+            {
+                if (!m_dataSeries.Any())
+                    return double.NaN;
+
+                return m_dataSeries[0].Duration;
             }
         }
 
@@ -388,32 +406,10 @@ namespace FaultData.DataAnalysis
 
         private bool IsEvent()
         {
-            // Create a list of relevant type names and phase names
-            List<string> voltageWaveforms = new List<string>()
-            {
-                "Voltage AN",
-                "Voltage BN",
-                "Voltage CN"
-            };
-
-            List<string> currentWaveforms = new List<string>()
-            {
-                "Current AN",
-                "Current BN",
-                "Current CN",
-                "Current RES"
-            };
-
-            IEnumerable<string> waveFormsInGroup = m_dataSeries
+            return m_dataSeries
                 .Where(IsInstantaneous)
                 .Where(dataSeries => (object)dataSeries.SeriesInfo != null)
-                .Select(dataSeries => GetMeasurementType(dataSeries) + " " + GetPhase(dataSeries));
-
-            HashSet<string> waveFormsHashSet = new HashSet<string>(waveFormsInGroup);
-
-            // Determine if a channel exists for each type and phase
-            return voltageWaveforms.All(waveFormType => waveFormsHashSet.Contains(waveFormType))
-                && (currentWaveforms.Count(waveFormType => waveFormsHashSet.Contains(waveFormType)) >= 3);
+                .Any();
         }
 
         private bool IsInstantaneous(DataSeries dataSeries)

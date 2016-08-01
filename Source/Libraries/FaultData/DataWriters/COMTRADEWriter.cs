@@ -198,7 +198,7 @@ namespace FaultData.DataWriters
             string rootFileName;
             string fileName;
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            cycleDataResource = meterDataSet.GetResource(() => CycleDataResource.GetResource(meterDataSet, dbAdapterContainer));
             faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(dbAdapterContainer));
 
             if (!Directory.Exists(m_resultsPath))

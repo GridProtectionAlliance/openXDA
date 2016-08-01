@@ -21,11 +21,13 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using FaultData.DataAnalysis;
+using FaultData.Database;
 using FaultData.DataSets;
 using log4net;
 
@@ -36,10 +38,21 @@ namespace FaultData.DataResources
         #region [ Members ]
 
         // Fields
+        private DbAdapterContainer m_dbAdapterContainer;
+
         private double m_systemFrequency;
         private List<DataGroup> m_dataGroups;
         private List<VIDataGroup> m_viDataGroups;
         private List<VICycleDataGroup> m_viCycleDataGroups;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        private CycleDataResource(DbAdapterContainer dbAdapterContainer)
+        {
+            m_dbAdapterContainer = dbAdapterContainer;
+        }
 
         #endregion
 
@@ -88,17 +101,24 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
+            MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
             DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
             Stopwatch stopwatch = new Stopwatch();
 
             m_dataGroups = dataGroupsResource.DataGroups
                 .Where(dataGroup => dataGroup.Classification == DataClassification.Event)
+                .Where(dataGroup => dataGroup.SamplesPerSecond / m_systemFrequency >= 4.0D)
                 .ToList();
 
             Log.Info(string.Format("Found data for {0} events.", m_dataGroups.Count));
 
             m_viDataGroups = m_dataGroups
-                .Select(dataGroup => new VIDataGroup(dataGroup))
+                .Select(dataGroup =>
+                {
+                    VIDataGroup viDataGroup = new VIDataGroup(dataGroup);
+                    dataGroup.Add(viDataGroup.CalculateMissingCurrentChannel(meterInfo));
+                    return viDataGroup;
+                })
                 .ToList();
 
             Log.Info(string.Format("Calculating cycle data for all {0} events.", m_dataGroups.Count));
@@ -118,6 +138,12 @@ namespace FaultData.DataResources
 
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(CycleDataResource));
+
+        // Static Methods
+        public static CycleDataResource GetResource(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
+        {
+            return meterDataSet.GetResource(() => new CycleDataResource(dbAdapterContainer));
+        }
 
         #endregion
     }

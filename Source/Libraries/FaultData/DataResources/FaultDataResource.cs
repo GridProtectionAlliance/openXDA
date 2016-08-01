@@ -337,7 +337,7 @@ namespace FaultData.DataResources
             Stopwatch stopwatch;
 
             stopwatch = new Stopwatch();
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
             faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>());
 
             Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
@@ -347,6 +347,21 @@ namespace FaultData.DataResources
                 dataGroup = cycleDataResource.DataGroups[i];
                 viDataGroup = cycleDataResource.VIDataGroups[i];
                 viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+
+                // Defined channel checks
+                Log.Debug("Checking defined channels...");
+
+                if (viDataGroup.DefinedNeutralVoltages != 3)
+                {
+                    Log.Debug($"Not enough neutral voltage channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    continue;
+                }
+
+                if (viDataGroup.DefinedCurrents < 3)
+                {
+                    Log.Debug($"Not enough current channels for fault analysis: {viDataGroup.DefinedNeutralVoltages}.");
+                    continue;
+                }
 
                 // Engineering reasonableness checks
                 Log.Debug("Checking for engineering reasonableness...");
@@ -418,7 +433,7 @@ namespace FaultData.DataResources
                     stopwatch.Restart();
 
                     faultCurveGenerator = new FaultCurveGenerator();
-                    faultCurveGenerator.SamplesPerCycle = (int)(viDataGroup.VA.SampleRate / m_systemFrequency);
+                    faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, m_systemFrequency);
                     faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
                     faultCurveGenerator.Faults = faults;
                     faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
@@ -655,7 +670,7 @@ namespace FaultData.DataResources
 
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
-            int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, m_systemFrequency);
             int prefaultIndex = Math.Max(0, cycleIndex - samplesPerCycle);
             int endIndex = cycleIndex + samplesPerCycle - 1;
 
@@ -725,7 +740,7 @@ namespace FaultData.DataResources
 
         private int FindFaultClearing(DataSeries waveForm, int cycleIndex)
         {
-            int samplesPerCycle = (int)Math.Round(waveForm.SampleRate / m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, m_systemFrequency);
             int startIndex = cycleIndex - 1;
             int endIndex = startIndex + samplesPerCycle - 1;
             int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveForm.DataPoints.Count - 1);
@@ -940,7 +955,7 @@ namespace FaultData.DataResources
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
@@ -1016,7 +1031,7 @@ namespace FaultData.DataResources
 
         private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = Math.Max(0, fault.StartSample - samplesPerCycle);
             int end = fault.StartSample;
 
@@ -1029,7 +1044,7 @@ namespace FaultData.DataResources
 
         private double GetPostfaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = (int)Math.Round(dataGroup[0].SampleRate / m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
             int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
 
@@ -1042,7 +1057,7 @@ namespace FaultData.DataResources
 
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            int samplesPerCycle = (int)Math.Round(dataGroup.SamplesPerSecond / m_systemFrequency);
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
             int end = Math.Min(start + 5 * samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
 

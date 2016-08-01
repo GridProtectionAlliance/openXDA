@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
@@ -48,6 +49,11 @@ namespace FaultData.DataResources
         private DbAdapterContainer m_dbAdapterContainer;
         private Dictionary<DataGroup, EventClassification> m_classifications;
 
+        private double m_systemFrequency;
+        private double m_sagThreshold;
+        private double m_swellThreshold;
+        private double m_interruptionThreshold;
+
         #endregion
 
         #region [ Constructors ]
@@ -70,13 +76,65 @@ namespace FaultData.DataResources
             }
         }
 
+        [Setting]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
+
+        [Setting]
+        public double SagThreshold
+        {
+            get
+            {
+                return m_sagThreshold;
+            }
+            set
+            {
+                m_sagThreshold = value;
+            }
+        }
+
+        [Setting]
+        public double SwellThreshold
+        {
+            get
+            {
+                return m_swellThreshold;
+            }
+            set
+            {
+                m_swellThreshold = value;
+            }
+        }
+
+        [Setting]
+        public double InterruptionThreshold
+        {
+            get
+            {
+                return m_interruptionThreshold;
+            }
+            set
+            {
+                m_interruptionThreshold = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            CycleDataResource cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
             FaultDataResource faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(m_dbAdapterContainer));
             FaultGroup faultGroup;
 
@@ -97,35 +155,38 @@ namespace FaultData.DataResources
 
         private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, FaultGroup faultGroup)
         {
-            double nominalVoltage;
-            DataSeries va;
-            DataSeries vb;
-            DataSeries vc;
-
             if ((object)faultGroup != null && (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult))
                 return EventClassification.Fault;
 
-            // Get the line-to-neutral nominal voltage in volts
-            nominalVoltage = dataGroup.Line.VoltageKV * 1000.0D / Math.Sqrt(3.0D);
+            DataSeries[] rms =
+            {
+                viCycleDataGroup.VA?.RMS,
+                viCycleDataGroup.VB?.RMS,
+                viCycleDataGroup.VC?.RMS,
+                viCycleDataGroup.VAB?.RMS,
+                viCycleDataGroup.VBC?.RMS,
+                viCycleDataGroup.VCA?.RMS
+            };
 
-            // Per-unit voltage waveforms based on nominal voltage
-            va = viCycleDataGroup.VA.RMS.Multiply(1.0D / nominalVoltage);
-            vb = viCycleDataGroup.VB.RMS.Multiply(1.0D / nominalVoltage);
-            vc = viCycleDataGroup.VC.RMS.Multiply(1.0D / nominalVoltage);
+            List<DataSeries> perUnitRMS = rms
+                .Where(dataSeries => (object)dataSeries != null)
+                .Where(dataSeries => dataSeries.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault() != 0.0D)
+                .Select(dataSeries => dataSeries.Multiply(1.0D / dataSeries.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault()))
+                .ToList();
 
-            if (HasInterruption(va, vb, vc))
+            if (HasInterruption(perUnitRMS))
                 return EventClassification.Interruption;
 
-            if (HasSwell(va, vb, vc))
-                return EventClassification.Swell;
-
-            if (HasSag(va, vb, vc))
+            if (HasSag(perUnitRMS))
                 return EventClassification.Sag;
+
+            if (HasSwell(perUnitRMS))
+                return EventClassification.Swell;
 
             return EventClassification.Other;
         }
 
-        private bool HasInterruption(params DataSeries[] seriesList)
+        private bool HasInterruption(IEnumerable<DataSeries> seriesList)
         {
             IEnumerable<double> values;
 
@@ -133,14 +194,14 @@ namespace FaultData.DataResources
             {
                 values = series.DataPoints.Select(dataPoint => dataPoint.Value);
 
-                if (values.Any(value => value <= 0.1D))
+                if (values.Any(value => value <= m_interruptionThreshold))
                     return true;
             }
 
             return false;
         }
 
-        private bool HasSwell(params DataSeries[] seriesList)
+        private bool HasSag(IEnumerable<DataSeries> seriesList)
         {
             IEnumerable<double> values;
 
@@ -148,14 +209,14 @@ namespace FaultData.DataResources
             {
                 values = series.DataPoints.Select(dataPoint => dataPoint.Value);
 
-                if (values.Any(value => value >= 1.1D))
+                if (values.Any(value => value <= m_sagThreshold))
                     return true;
             }
 
             return false;
         }
 
-        private bool HasSag(params DataSeries[] seriesList)
+        private bool HasSwell(IEnumerable<DataSeries> seriesList)
         {
             IEnumerable<double> values;
 
@@ -163,7 +224,7 @@ namespace FaultData.DataResources
             {
                 values = series.DataPoints.Select(dataPoint => dataPoint.Value);
 
-                if (values.Any(value => value <= 0.9D))
+                if (values.Any(value => value >= m_swellThreshold))
                     return true;
             }
 

@@ -60,11 +60,15 @@ namespace openXDA.Configuration
         private double m_systemFrequency;
         private double m_maxVoltage;
         private double m_maxCurrent;
+        private double m_sagThreshold;
+        private double m_swellThreshold;
+        private double m_interruptionThreshold;
 
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
         private FileEnumerationStrategy m_fileWatcherEnumerationStrategy;
+        private int m_maxQueuedFileCount;
         private int m_fileWatcherMaxFragmentation;
         private int m_fileWatcherInternalThreadCount;
         private int m_fileWatcherBufferSize;
@@ -379,6 +383,60 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
+        /// Gets or sets the threshold, in amps, at which the
+        /// current exceeds engineering reasonableness.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.9D)]
+        public double SagThreshold
+        {
+            get
+            {
+                return m_sagThreshold;
+            }
+            set
+            {
+                m_sagThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the threshold, in amps, at which the
+        /// current exceeds engineering reasonableness.
+        /// </summary>
+        [Setting]
+        [DefaultValue(1.1D)]
+        public double SwellThreshold
+        {
+            get
+            {
+                return m_swellThreshold;
+            }
+            set
+            {
+                m_swellThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the threshold, in amps, at which the
+        /// current exceeds engineering reasonableness.
+        /// </summary>
+        [Setting]
+        [DefaultValue(0.1D)]
+        public double InterruptionThreshold
+        {
+            get
+            {
+                return m_interruptionThreshold;
+            }
+            set
+            {
+                m_interruptionThreshold = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the units of measure to use
         /// for lengths (line length and fault distance).
         /// </summary>
@@ -635,7 +693,6 @@ namespace openXDA.Configuration
         // Static Fields
         private static readonly SystemSettings DefaultSystemSettings = new SystemSettings(string.Empty);
         private static readonly string DefaultConnectionString = DefaultSystemSettings.ToConnectionString();
-        private int m_maxQueuedFileCount;
 
         // Static Methods
         public static string ToConnectionString(Dictionary<string, string> settings)

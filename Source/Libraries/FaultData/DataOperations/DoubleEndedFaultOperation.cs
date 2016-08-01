@@ -96,7 +96,7 @@ namespace FaultData.DataOperations
 
             public void Initialize(DbAdapterContainer dbAdapterContainer, VICycleDataGroup viCycleDataGroup, double systemFrequency)
             {
-                int samplesPerCycle = (int)Math.Round(viCycleDataGroup.VA.RMS.SampleRate / systemFrequency);
+                int samplesPerCycle = Transform.CalculateSamplesPerCycle(viCycleDataGroup.VA.RMS, systemFrequency);
 
                 FaultSegment faultSegment = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().FaultSegments
                     .Where(segment => segment.EventID == Fault.EventID)
@@ -276,7 +276,7 @@ namespace FaultData.DataOperations
             doubleEndedFaultDistanceAdapter = m_dbAdapterContainer.GetAdapter<DoubleEndedFaultDistanceTableAdapter>();
 
             // Get a time range for querying each system event that contains events in this meter data set
-            systemEvents = meterDataSet.GetResource<SystemEventResource>().SystemEvents;
+            systemEvents = SystemEventResource.GetResource(meterDataSet, m_dbAdapterContainer).SystemEvents;
 
             foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
             {
