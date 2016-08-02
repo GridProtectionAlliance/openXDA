@@ -180,18 +180,23 @@
         </div>
     </div>
     <div class="pull-right" id="pageControlsRow">
-        @if (!hideExportCSVButton)
+        @if (!hideExportCSVButton || (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls)))
         {
-            <button class="btn btn-sm btn-primary" onclick="viewModel.exportCSV()" id="exportBtn" style="margin-left: 4px;"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV</button>
-        }
 
-        @if (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls))
-        {
-            <button type="button" class="btn btn-sm btn-primary pull-right" id="addRecordButton" @Raw(canAddNew ? "data-bind=\"enable: dataHubIsConnected\"" : "disabled")>
-                <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add&nbsp;New
-            </button>
-            <br/>
-            <hr class="half-break"/>
+
+            if (!hideExportCSVButton)
+            {
+                <button class="btn btn-sm btn-primary pull-right" onclick="viewModel.exportCSV()" id="exportBtn" style="margin-left: 4px;"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV</button>
+            }
+            if (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls))
+            {
+                <button type="button" class="btn btn-sm btn-primary pull-right" id="addRecordButton" @Raw(canAddNew ? "data-bind=\"enable: dataHubIsConnected\"" : "disabled")>
+                    <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add&nbsp;New
+                </button>
+            }
+            <br />
+            <hr class="half-break" />
+
         }
         <div class="btn-group btn-group-sm">
             <button type="button" class="btn btn-default" id="firstPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-backward"></span></button>
