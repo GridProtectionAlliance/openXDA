@@ -247,6 +247,7 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
+    <Compile Include="Model\TrendingData.cs" />
     <Compile Include="wwwroot\CSVDownloadHandler.ashx.cs">
       <DependentUpon>CSVDownloadHandler.ashx</DependentUpon>
     </Compile>
@@ -364,6 +365,41 @@
     <None Include="wwwroot\MeterGroups.cshtml" />
     <None Include="wwwroot\MeterLine.cshtml" />
     <None Include="wwwroot\PagedViewModel.cshtml" />
+    <None Include="wwwroot\Scripts\flot\API.md" />
+    <None Include="wwwroot\Scripts\flot\CONTRIBUTING.md" />
+    <None Include="wwwroot\Scripts\flot\examples\.DS_Store" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-1.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-2.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-3.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-4.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-5.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-japan-gdp-growth.json" />
+    <None Include="wwwroot\Scripts\flot\examples\ajax\data-usa-gdp-growth.json" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\africa" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\antarctica" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\asia" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\australasia" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\backward" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\etcetera" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\europe" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\factory" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\iso3166.tab" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\leapseconds" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\northamerica" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\pacificnew" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\solar87" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\solar88" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\solar89" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\southamerica" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\systemv" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\yearistype.sh" />
+    <None Include="wwwroot\Scripts\flot\examples\axes-time-zones\tz\zone.tab" />
+    <None Include="wwwroot\Scripts\flot\FAQ.md" />
+    <None Include="wwwroot\Scripts\flot\Makefile" />
+    <None Include="wwwroot\Scripts\flot\NEWS.md" />
+    <None Include="wwwroot\Scripts\flot\PLUGINS.md" />
+    <None Include="wwwroot\Scripts\flot\README.md" />
     <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Settings.cshtml" />
@@ -449,6 +485,81 @@
     <Content Include="wwwroot\Scripts\bootstrap.min.js" />
     <Content Include="wwwroot\Scripts\fileinput.js" />
     <Content Include="wwwroot\Scripts\fileinput.min.js" />
+    <Content Include="wwwroot\Scripts\flot\examples\ajax\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\annotating\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\axes-interacting\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\axes-multiple\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\axes-time-zones\date.js" />
+    <Content Include="wwwroot\Scripts\flot\examples\axes-time-zones\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\axes-time\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\background.png" />
+    <Content Include="wwwroot\Scripts\flot\examples\basic-options\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\basic-usage\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\canvas\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\categories\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\examples.css" />
+    <Content Include="wwwroot\Scripts\flot\examples\image\hs-2004-27-a-large-web.jpg" />
+    <Content Include="wwwroot\Scripts\flot\examples\image\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\interacting\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\navigate\arrow-down.gif" />
+    <Content Include="wwwroot\Scripts\flot\examples\navigate\arrow-left.gif" />
+    <Content Include="wwwroot\Scripts\flot\examples\navigate\arrow-right.gif" />
+    <Content Include="wwwroot\Scripts\flot\examples\navigate\arrow-up.gif" />
+    <Content Include="wwwroot\Scripts\flot\examples\navigate\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\percentiles\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\realtime\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\resize\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\selection\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\series-errorbars\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\series-pie\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\series-toggle\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\series-types\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\shared\jquery-ui\jquery-ui.min.css" />
+    <Content Include="wwwroot\Scripts\flot\examples\shared\jquery-ui\jquery-ui.min.js" />
+    <Content Include="wwwroot\Scripts\flot\examples\stacking\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\symbols\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\threshold\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\tracking\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\visitors\index.html" />
+    <Content Include="wwwroot\Scripts\flot\examples\zooming\index.html" />
+    <Content Include="wwwroot\Scripts\flot\excanvas.js" />
+    <Content Include="wwwroot\Scripts\flot\excanvas.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.colorhelpers.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.colorhelpers.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.canvas.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.canvas.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.categories.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.categories.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.crosshair.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.crosshair.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.errorbars.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.errorbars.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.fillbetween.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.fillbetween.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.image.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.image.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.navigate.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.navigate.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.pie.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.pie.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.resize.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.resize.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.selection.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.selection.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.stack.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.stack.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.symbol.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.symbol.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.threshold.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.threshold.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.time.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.time.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.min.js" />
+    <Content Include="wwwroot\Scripts\flot\LICENSE.txt" />
     <Content Include="wwwroot\Scripts\gsf.web.client.js" />
     <Content Include="wwwroot\Scripts\gsf.web.primeui.js" />
     <Content Include="wwwroot\Scripts\ie10-viewport-bug-workaround.js" />
@@ -487,7 +598,9 @@
     <Content Include="wwwroot\Scripts\Site.js" />
     <Content Include="XDA.ico" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="wwwroot\Scripts\flot\examples\gauge\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

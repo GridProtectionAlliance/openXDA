@@ -132,7 +132,7 @@
 @helper BodyRows()
 {
     <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: ChannelID, click: $parent.viewPageRecord"></button></td>
-    <td width="50%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
+    <td width="40%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementType"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: Phase"></td>
@@ -140,7 +140,8 @@
     <td width="5%" class="text-left valign-middle" style="text-align: center"><span data-bind="visible: !(IsDefault)" class="glyphicon glyphicon-check"></span></td>
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
-    <td width="10%" class="text-center valign-middle" nowrap>       
+    <td width="15%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" title="Generate Smart Alarm Limits" data-bind="click: smartLimits.bind($data), enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-stats"></span></button>
         <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -202,14 +203,77 @@
     <input type="submit"/>
 </form>
 
-@section Scripts 
+<!-- Modal -->
+<div id="smartAlarmsModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Smart Alarm</h4>
+            </div>
+            <div class="modal-body">
+                <p>Some text in the modal.</p>
+                <div class="row">
+                    <div class="col-md-5">
+                        <label>Start Date</label>
+                        <div class="input-group date">
+                            <input id="startDate" type="text" class="form-control">
+                            <div class="input-group-addon">
+                                <span class="glyphicon glyphicon-th"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-md-5">
+                        <label> End Date</label>
+                        <div class="input-group date">
+                            <input id="endDate" type="text" class="form-control">
+                            <div class="input-group-addon">
+                                <span class="glyphicon glyphicon-th"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <br/>
+                        <button class="btn btn-primary" onclick="getTrendingData()">Get Data</button>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div id="smartAlarmsWindow" style="display: none">
+                        <div id="flotchart" style="height: 200px"></div>
+                        <select id="sigmaValue">
+                            <option value="6">6 (99.9999998%)</option>
+                            <option value="5">5 (99.99994%)</option>
+                            <option value="4">4 (99.994%)</option>
+                            <option value="3">3 (99.7%)</option>
+                            <option value="2">2 (95%)</option>
+                            <option value="1" selected="selected">1 (68%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+@section Scripts
 {
+@*<script language="javascript" type="text/javascript" src="Scripts/flot/jquery.js"></script>*@
+<script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.js"></script>
+
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
         @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))
         @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name", "ID", "renderMeasurementCharacteristicName", "measurementCharacteristicName"))
         @Raw(Model.RenderAbstract<Phase>("Name", "ID", "renderPhaseName", "phaseName"))
+        var plot;
 
         function truncate(string) {
             if (string != null && string.length > 40)
@@ -232,110 +296,97 @@
 
                 });
         }
+        
+        var currentRecord;
+        function smartLimits(record) {
+            $('#sigmaValue').val("1");
+            $('#startDate').val("");
+            $('#endDate').val("");
+            if (plot)
+                plot.destroy();
+            $('#smartAlarmsModal').modal('show');
+            currentRecord = record;
+        }
+        
+        function getTrendingData() {
+            $('#flotchart').width($('#smartAlarmsModal .modal-body').width() - 30);
+            dataHub.getTrendingData($('#startDate').val(), $('#endDate').val(), currentRecord.ChannelID).done(function (data) {
+                var maxes = [];
+                var mins = [];
+                var averages = { data: [], color: "#000080" };
+                var dataPoints = [];
+                var startDate = new Date(data[0].Time);
+                var endDate = new Date(data[data.length - 1].Time);
+                $.each(data, function (i, d) {
+                    if (d.SeriesType === "Average") {
+                        averages.data.push([new Date(d.Time) , d.Value]);
+                        dataPoints.push(d.Value);
+                    }
+                    //else if (d.SeriesType === "Minimum")
+                    //    mins.push([i,d.Value]);
+                    //else if (d.SeriesType === "Maximum")
+                    //    maxes.push([i,d.Value]);
+                });
+                
+                var averageValue = average(dataPoints);
+                var minusonesigma = { data: [[ startDate, averageValue.mean - averageValue.deviation], [endDate, averageValue.mean - averageValue.deviation]], lines:{lineWidth: 1}, color: "black"};
+                var plusonesigma = { data: [[startDate, averageValue.mean + averageValue.deviation], [endDate, averageValue.mean + averageValue.deviation]], lines: { lineWidth: 1 }, color: "black"};
+                var minustwosigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 2], [endDate, averageValue.mean - averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black"};
+                var plustwosigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 2], [endDate, averageValue.mean + averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black" };
+                var minusthreesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 3], [endDate, averageValue.mean - averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black"};
+                var plusthreesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 3], [endDate, averageValue.mean + averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black"};
+                var minusfoursigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 4], [endDate, averageValue.mean - averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black" };
+                var plusfoursigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 4], [endDate, averageValue.mean + averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black"};
+                var minusfivesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 5], [endDate, averageValue.mean - averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
+                var plusfivesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 5], [endDate, averageValue.mean + averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
+                var minussixsigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 6], [endDate, averageValue.mean - averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
+                var plussixsigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 6], [endDate, averageValue.mean + averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black"};
 
-        //function exportCSV() {
-        //    $('#exportBtn').prop('disabled', true);
-        //    $("#exportBtn").css("cursor", "progress");
+                plot = $.plot("#flotchart", [ minusonesigma, averages, plusonesigma ]);
+                $('#sigmaValue').on('change', function (event) {
+                    if ($('#sigmaValue').val() == 6) {
+                        plot.setData([minussixsigma, averages, plussixsigma]);
+                    } else if ($('#sigmaValue').val() == 5) {
+                        plot.setData([minusfivesigma, averages, plusfivesigma]);
+                    } else if ($('#sigmaValue').val() == 4) {
+                        plot.setData([minusfoursigma, averages, plusfoursigma]);
+                    } else if ($('#sigmaValue').val() == 3) {
+                        plot.setData([minusthreesigma, averages, plusthreesigma]);
+                    } else if ($('#sigmaValue').val() == 2) {
+                        plot.setData([minustwosigma, averages, plustwosigma]);
+                    } else if ($('#sigmaValue').val() == 1) {
+                        plot.setData([minusonesigma, averages, plusonesigma]);
+                    }
+                    
+                    plot.setupGrid();
+                    plot.draw();
 
-        //    $.ajax({
-        //        type: "POST",
-        //        url: "CSVDownloadHandler.ashx?ModelName=AlarmRangeLimitView",
-        //        success: function(data) {
-
-        //            window.URL = window.URL || window.webkitURL;
-
-
-        //            var csvFile = new Blob([data], { type: 'text/csv' });
-        //            if (window.navigator && window.navigator.msSaveBlob) {
-        //                window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
-        //            } else {
-        //                var element = document.createElement('a');
-        //                element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
-        //                element.href = window.URL.createObjectURL(csvFile);
-
-        //                element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
-        //                element.style.display = 'none';
-        //                document.body.appendChild(element);
-
-        //                element.click();
-
-        //                document.body.removeChild(element);
-
-        //            }
-
-        //            $('#exportBtn').prop('disabled', false);
-        //            $("#exportBtn").css("cursor", "default");
-        //        },
-        //        error: function(msg) {
-        //            alert(msg.value);
-        //        }
-        //    });
-        //}
-
-
-        function importCSV() {
-            $("#importCSVFile").click();
-
-            //$('#importBtn').prop('disabled', true);
-            //$("#importBtn").css("cursor", "progress");
-
-            //$("#fileInput").fileinput({
-            //    uploadUrl: "AlarmRangeLimitCSVUploadHandler.ashx",
-            //    uploadAsync: true,
-            //    showUpload: false,
-            //    showRemove: true,
-            //    showPreview: false,
-            //    minFileCount: 1,
-            //    maxFileCount: 12
-            //});
-            //$('#fileInput').click();
-            //$('#fileInput').one('change', function (e) {
-            //    //console.log($('#fileInput')[0].files[0]);
-            //    //var reader = new FileReader();
-            //    //reader.onload = function () {
-            //    //    //console.log(reader.result);
-            //    //    dataHub.importAlarmTableCSV(reader.result).done(function () {
-            //    //        $('#importBtn').prop('disabled', false);
-            //    //        $("#importBtn").css("cursor", "default");
-            //    //    });
-
-            //    //}
-
-            //    //reader.readAsBinaryString($('#fileInput')[0].files[0]);
-            //    var formData = new FormData(),
-            //        files = $('#fileInput').get(0).files;
-            //    $.each(files, function(i,file){
-            //        formData.append('file', file);
-            //    });
-            //    var xhr = new XMLHttpRequest;
-            //    xhr.open('POST', '/', true);
-            //    xhr.send(formData);
-
-            //    $.ajax({
-            //        type: "POST",
-            //        url: "AlarmRangeLimitCSVUploadHandler.ashx",
-            //        data: formData,
-            //        processData: false,  // tell jQuery not to process the data
-            //        contentType: false,  // tell jQuery not to set contentType
-            //        success: function (data) {
-
-            //            $('#importBtn').prop('disabled', false);
-            //            $("#importBtn").css("cursor", "default");
-            //        },
-            //        error: function (msg) {
-            //            alert(msg.value);
-            //        }
-            //    });
-            //    //$("#fileInput").fileinput("upload");
-            //});
+                });
+                
+                $('#smartAlarmsWindow').toggle();
+            });
+        }
+        
+        average = function (a) {
+            var r = { mean: 0, variance: 0, deviation: 0 }, t = a.length;
+            for (var m, s = 0, l = t; l--; s += a[l]);
+            for (m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
+            return r.deviation = Math.sqrt(r.variance = s / t), r;
         }
 
         $(function() {
 
             $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
 
-            //$('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="exportCSV()" id="exportBtn" style="margin-left: 4px;"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV</button>');
             $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
+            
+            $('.date').datepicker({
+                format: 'mm/dd/yyyy',
+                autoClose: true,
+                orientation: 'bottom'
+            });
+
+
             $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>')
             $('#channelfilter').on('keyup', function (e) {
                 if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
@@ -421,34 +472,6 @@
         
             $("#importCSVFile").on("change", function (event) {
                 $("#uploadCSVFile").submit();
-
-            //    $.post($('#uploadCSVFile').attr('action'), $('#uploadCSVFile').serialize(), function (data, status, xhr) {
-                    
-            //    //}, 'file');
-            //    $('#importBtn').prop('disabled', true);
-            //    $("#importBtn").css("cursor", "progress");
-            //        var formData = new FormData(),
-            //            files = $('#fileInput').get(0).files;
-            //        $.each(files, function(i,file){
-            //            formData.append('file', file);
-            //        });
-
-            //    $.ajax({
-            //        type: "POST",
-            //        url: $('#uploadCSVFile').attr('action'),
-            //        data: formData,
-            //        processData: false,  // tell jQuery not to process the data
-            //        contentType: false,  // tell jQuery not to set contentType
-            //        success: function (data) {
-
-            //            $('#importBtn').prop('disabled', false);
-            //            $("#importBtn").css("cursor", "default");
-            //        },
-            //        error: function (msg) {
-            //            alert(msg.value);
-            //        }
-            //    });
-
             });
 
 

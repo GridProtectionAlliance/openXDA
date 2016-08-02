@@ -527,7 +527,7 @@ function PagedViewModel() {
         $("#exportBtn").css("cursor", "progress");
         $.ajax({
             type: "POST",
-            url: "../CSVDownloadHandler.ashx?ModelName=" + self.model,
+            url: "../CSVDownloadHandler.ashx?ModelName=" + self.modelName,
             success: function (data) {
 
                 window.URL = window.URL || window.webkitURL;
@@ -535,10 +535,10 @@ function PagedViewModel() {
 
                 var csvFile = new Blob([data], { type: 'text/csv' });
                 if (window.navigator && window.navigator.msSaveBlob) {
-                    window.navigator.msSaveBlob(csvFile, self.model + 'CSV' + new Date().getTime() + '.csv');
+                    window.navigator.msSaveBlob(csvFile, self.modelName + 'CSV' + new Date().getTime() + '.csv');
                 } else {
                     var element = document.createElement('a');
-                    element.download = self.model + 'CSV' + new Date().getTime() + '.csv';
+                    element.download = self.modelName + 'CSV' + new Date().getTime() + '.csv';
                     element.href = window.URL.createObjectURL(csvFile);
 
                     element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');

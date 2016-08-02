@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -940,5 +941,53 @@ namespace openXDA
 
         #endregion
 
+        #region [Stored Procedures]
+
+        public List<TrendingData> GetTrendingData(DateTime startDate, DateTime endDate, int channelId)
+        {
+            List<TrendingData> trendingData = new List<TrendingData>();
+
+            using (IDbCommand cmd = m_dataContext.Connection.Connection.CreateCommand())
+            {
+                cmd.CommandText = "dbo.selectAlarmDataByChannelByDate";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandTimeout = 30000;
+                IDbDataParameter StartDate = cmd.CreateParameter();
+                IDbDataParameter EndDate = cmd.CreateParameter();
+                IDbDataParameter ChannelID = cmd.CreateParameter();
+
+                StartDate.ParameterName = "@StartDate";
+                EndDate.ParameterName = "@EndDate";
+                ChannelID.ParameterName = "@ChannelID";
+
+                StartDate.Value = startDate;
+                EndDate.Value = endDate;
+                ChannelID.Value = channelId;
+
+                cmd.Parameters.Add(StartDate);
+                cmd.Parameters.Add(EndDate);
+                cmd.Parameters.Add(ChannelID);
+
+                using( IDataReader reader = cmd.ExecuteReader())
+                {
+
+                    while (reader.Read())
+                    {
+                        TrendingData obj = new TrendingData();
+
+                        obj.ChannelID = Convert.ToInt32(reader["ChannelID"]);
+                        obj.SeriesType = Convert.ToString(reader["SeriesType"]);
+                        obj.Time = Convert.ToDateTime(reader["Time"]);
+                        obj.Value = Convert.ToDouble(reader["Value"]);
+                        trendingData.Add(obj);
+                    }
+
+                }
+            }
+
+            return trendingData;
+           
+        }
+        #endregion
     }
 }
