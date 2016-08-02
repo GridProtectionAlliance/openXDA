@@ -191,6 +191,9 @@ namespace FaultData.DataOperations
                 .Select(str => Tuple.Create(str[0], sourceIndex))
                 .ToList();
 
+            if (sourceIndexes.Count == 0)
+                return;
+
             if (series.Channel.MeasurementType.Name == "Digital")
             {
                 if (sourceIndexes.Any(tuple => tuple.Item2 < 0 || tuple.Item2 >= meterDataSet.Digitals.Count))
