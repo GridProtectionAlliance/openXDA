@@ -7173,7 +7173,7 @@ SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult,
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         private void InitCommandCollection() {
-            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
+            this._commandCollection = new global::System.Data.SqlClient.SqlCommand[3];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
             this._commandCollection[0].CommandText = "SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult, " +
@@ -7181,9 +7181,15 @@ SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult,
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = @"SELECT FaultGroup.ID, FaultGroup.EventID, FaultGroup.FaultDetectionLogicResult, FaultGroup.DefaultFaultDetectionLogicResult, FaultGroup.FaultValidationLogicResult FROM FaultGroup JOIN Event ON FaultGroup.EventID = Event.ID WHERE Event.FileGroupID = @fileGroupID";
+            this._commandCollection[1].CommandText = "SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult, " +
+                "FaultValidationLogicResult FROM dbo.FaultGroup WHERE EventID = @eventID";
             this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
-            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@fileGroupID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@eventID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._commandCollection[2] = new global::System.Data.SqlClient.SqlCommand();
+            this._commandCollection[2].Connection = this.Connection;
+            this._commandCollection[2].CommandText = @"SELECT FaultGroup.ID, FaultGroup.EventID, FaultGroup.FaultDetectionLogicResult, FaultGroup.DefaultFaultDetectionLogicResult, FaultGroup.FaultValidationLogicResult FROM FaultGroup JOIN Event ON FaultGroup.EventID = Event.ID WHERE Event.FileGroupID = @fileGroupID";
+            this._commandCollection[2].CommandType = global::System.Data.CommandType.Text;
+            this._commandCollection[2].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@fileGroupID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "FileGroupID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -7214,8 +7220,34 @@ SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult,
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
-        public virtual int FillByFileGroup(FaultLocationData.FaultGroupDataTable dataTable, int fileGroupID) {
+        public virtual int FillByEvent(FaultLocationData.FaultGroupDataTable dataTable, int eventID) {
             this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(eventID));
+            if ((this.ClearBeforeFill == true)) {
+                dataTable.Clear();
+            }
+            int returnValue = this.Adapter.Fill(dataTable);
+            return returnValue;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
+        public virtual FaultLocationData.FaultGroupDataTable GetDataByEvent(int eventID) {
+            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand.Parameters[0].Value = ((int)(eventID));
+            FaultLocationData.FaultGroupDataTable dataTable = new FaultLocationData.FaultGroupDataTable();
+            this.Adapter.Fill(dataTable);
+            return dataTable;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
+        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Fill, false)]
+        public virtual int FillByFileGroup(FaultLocationData.FaultGroupDataTable dataTable, int fileGroupID) {
+            this.Adapter.SelectCommand = this.CommandCollection[2];
             this.Adapter.SelectCommand.Parameters[0].Value = ((int)(fileGroupID));
             if ((this.ClearBeforeFill == true)) {
                 dataTable.Clear();
@@ -7229,7 +7261,7 @@ SELECT ID, EventID, FaultDetectionLogicResult, DefaultFaultDetectionLogicResult,
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Select, false)]
         public virtual FaultLocationData.FaultGroupDataTable GetDataByFileGroup(int fileGroupID) {
-            this.Adapter.SelectCommand = this.CommandCollection[1];
+            this.Adapter.SelectCommand = this.CommandCollection[2];
             this.Adapter.SelectCommand.Parameters[0].Value = ((int)(fileGroupID));
             FaultLocationData.FaultGroupDataTable dataTable = new FaultLocationData.FaultGroupDataTable();
             this.Adapter.Fill(dataTable);

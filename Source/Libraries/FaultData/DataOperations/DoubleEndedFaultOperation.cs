@@ -36,6 +36,7 @@ using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
+using static FaultData.Database.FaultLocationData;
 
 namespace FaultData.DataOperations
 {
@@ -412,9 +413,29 @@ namespace FaultData.DataOperations
 
         private List<Mapping> GetMappings(IGrouping<int, MeterData.EventRow> lineGrouping)
         {
-            Func<FaultLocationData.FaultSummaryRow, bool> filter = fault =>
-                fault.IsSelectedAlgorithm != 0 &&
-                fault.IsSuppressed == 0;
+            Func<FaultSummaryRow, bool> filter = fault =>
+            {
+                FaultGroupTableAdapter faultGroupAdapter;
+
+                if (!Convert.ToBoolean(fault.IsSelectedAlgorithm))
+                    return false;
+
+                faultGroupAdapter = m_dbAdapterContainer.GetAdapter<FaultGroupTableAdapter>();
+
+                foreach (FaultGroupRow faultGroup in faultGroupAdapter.GetDataByEvent(fault.EventID))
+                {
+                    bool? faultDetectionResult = !faultGroup.IsFaultDetectionLogicResultNull()
+                        ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
+                        : (bool?)null;
+
+                    bool faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
+
+                    if (faultDetectionResult == false || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && !faultValidationResult))
+                        return false;
+                }
+
+                return true;
+            };
 
             List<FaultTimeline> meterGroupings = lineGrouping
                 .GroupBy(evt => evt.MeterID)

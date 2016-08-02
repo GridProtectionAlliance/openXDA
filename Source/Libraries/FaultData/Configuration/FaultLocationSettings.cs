@@ -35,6 +35,7 @@ namespace FaultData.Configuration
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private bool m_warnMissingDetectionLogic;
+        private bool m_useDefaultFaultDetectionLogic;
 
         #endregion
 
@@ -93,6 +94,24 @@ namespace FaultData.Configuration
             set
             {
                 m_warnMissingDetectionLogic = value;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether to use the default fault detection logic
+        /// when the line-specific fault detection logic fails.
+        /// </summary>
+        [Setting]
+        [DefaultValue(true)]
+        public bool UseDefaultFaultDetectionLogic
+        {
+            get
+            {
+                return m_useDefaultFaultDetectionLogic;
+            }
+            set
+            {
+                m_useDefaultFaultDetectionLogic = value;
             }
         }
 

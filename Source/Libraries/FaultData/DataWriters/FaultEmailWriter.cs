@@ -59,11 +59,11 @@ namespace FaultData.DataWriters
         // Fields
         private string m_dbConnectionString;
         private double m_timeTolerance;
-        private double m_waitPeriod;
         private string m_xdaTimeZone;
         private string m_lengthUnits;
         private EmailSettings m_emailSettings;
         private FaultEmailSettings m_faultEmailSettings;
+        private FaultLocationSettings m_faultLocationSettings;
 
         #endregion
 
@@ -73,6 +73,7 @@ namespace FaultData.DataWriters
         {
             m_emailSettings = new EmailSettings();
             m_faultEmailSettings = new FaultEmailSettings();
+            m_faultLocationSettings = new FaultLocationSettings();
         }
 
         #endregion
@@ -151,6 +152,16 @@ namespace FaultData.DataWriters
             }
         }
 
+        [Category]
+        [SettingName("FaultLocation")]
+        public FaultLocationSettings FaultLocationSettings
+        {
+            get
+            {
+                return m_faultLocationSettings;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -170,7 +181,7 @@ namespace FaultData.DataWriters
 
                 faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
 
-                if (faultDetectionResult == true || (m_faultEmailSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
+                if (faultDetectionResult == true || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
                 {
                     if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultGroup.EventID) == 0)
                         QueueEventID(faultGroup.EventID);
