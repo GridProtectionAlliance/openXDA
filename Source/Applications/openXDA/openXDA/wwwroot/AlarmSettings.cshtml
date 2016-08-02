@@ -233,44 +233,44 @@
                 });
         }
 
-        function exportCSV() {
-            $('#exportBtn').prop('disabled', true);
-            $("#exportBtn").css("cursor", "progress");
+        //function exportCSV() {
+        //    $('#exportBtn').prop('disabled', true);
+        //    $("#exportBtn").css("cursor", "progress");
 
-            $.ajax({
-                type: "POST",
-                url: "CSVDownloadHandler.ashx?ModelName=AlarmRangeLimitView",
-                success: function(data) {
+        //    $.ajax({
+        //        type: "POST",
+        //        url: "CSVDownloadHandler.ashx?ModelName=AlarmRangeLimitView",
+        //        success: function(data) {
 
-                    window.URL = window.URL || window.webkitURL;
+        //            window.URL = window.URL || window.webkitURL;
 
 
-                    var csvFile = new Blob([data], { type: 'text/csv' });
-                    if (window.navigator && window.navigator.msSaveBlob) {
-                        window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
-                    } else {
-                        var element = document.createElement('a');
-                        element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
-                        element.href = window.URL.createObjectURL(csvFile);
+        //            var csvFile = new Blob([data], { type: 'text/csv' });
+        //            if (window.navigator && window.navigator.msSaveBlob) {
+        //                window.navigator.msSaveBlob(csvFile, 'AlarmSettingsCSV' + new Date().getTime() + '.csv');
+        //            } else {
+        //                var element = document.createElement('a');
+        //                element.download = 'AlarmSettingsCSV' + new Date().getTime() + '.csv';
+        //                element.href = window.URL.createObjectURL(csvFile);
 
-                        element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
-                        element.style.display = 'none';
-                        document.body.appendChild(element);
+        //                element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
+        //                element.style.display = 'none';
+        //                document.body.appendChild(element);
 
-                        element.click();
+        //                element.click();
 
-                        document.body.removeChild(element);
+        //                document.body.removeChild(element);
 
-                    }
+        //            }
 
-                    $('#exportBtn').prop('disabled', false);
-                    $("#exportBtn").css("cursor", "default");
-                },
-                error: function(msg) {
-                    alert(msg.value);
-                }
-            });
-        }
+        //            $('#exportBtn').prop('disabled', false);
+        //            $("#exportBtn").css("cursor", "default");
+        //        },
+        //        error: function(msg) {
+        //            alert(msg.value);
+        //        }
+        //    });
+        //}
 
 
         function importCSV() {
@@ -334,7 +334,7 @@
 
             $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
 
-            $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="exportCSV()" id="exportBtn" style="margin-left: 4px;"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV</button>');
+            //$('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="exportCSV()" id="exportBtn" style="margin-left: 4px;"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV</button>');
             $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
             $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>')
             $('#channelfilter').on('keyup', function (e) {

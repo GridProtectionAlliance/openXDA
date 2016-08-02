@@ -47,44 +47,6 @@ namespace openXDA
         ///// <returns>
         ///// <c>true</c> if the <see cref="IHttpHandler"/> instance is reusable; otherwise, <c>false</c>.
         ///// </returns>
-        //public bool IsReusable => false;
-
-        ///// <summary>
-        ///// Enables processing of HTTP Web requests by a custom HttpHandler that implements the <see cref="IHttpHandler"/> interface.
-        ///// </summary>
-        ///// <param name="context">An <see cref="HttpContext"/> object that provides references to the intrinsic server objects (for example, Request, Response, Session, and Server) used to service HTTP requests. </param>
-        //public void ProcessRequest(HttpContext context)
-        //{
-        //    using (DataContext dataContext = new DataContext())
-        //    {
-        //        HttpPostedFile file = context.Request.Files[0];
-        //        byte[] documentBlob = file.InputStream.ReadStream();
-        //        string csv = System.Text.Encoding.UTF8.GetString(documentBlob);
-        //        string[] csvRows = csv.Split('\n');
-        //        string[] tableFields = csvRows[0].Split(',');
-
-        //        TableOperations<AlarmRangeLimit> table = dataContext.Table<AlarmRangeLimit>();
-        //        if(table.GetFieldNames() == tableFields)
-        //        {
-        //            for (int i = 1; i < csvRows.Length; ++i)
-        //            {
-        //                string[] row = csvRows[i].Split(',');
-        //                AlarmRangeLimit newRecord = new AlarmRangeLimit();
-        //                newRecord = dataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
-        //                newRecord.Severity = int.Parse(row[4]);
-        //                newRecord.High = float.Parse(row[5]);
-        //                newRecord.Low = float.Parse(row[6]);
-        //                newRecord.RangeInclusive = int.Parse(row[7]);
-        //                newRecord.PerUnit = int.Parse(row[8]);
-        //                newRecord.Enabled = int.Parse(row[9]);
-        //                newRecord.IsDefault = bool.Parse(row[17]);
-
-        //                table.UpdateRecord(newRecord);
-        //            }
-        //        }
-        //    }
-
-        //}
 
         public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response)
         {

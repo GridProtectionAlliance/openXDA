@@ -42,7 +42,7 @@ function PagedViewModel() {
     self.initialFocusField = "";                                    // Initial add/edit field with focus
     self.modelName = "{name}";                                      // Name of model used for cookie names, defaults to page title
     self.filterText = '%';                                         // filter string                              
-
+    self.model = '{name}';
     // Observable fields
     self.pageRecords = ko.observableArray();                        // Records queried for current page
     self.recordCount = ko.observable(0);                            // Queried record count
@@ -521,6 +521,45 @@ function PagedViewModel() {
         if (!self.isDirty() || confirm("Are you sure you want to discard unsaved changes?"))
             $("#addNewEditDialog").modal("hide");
     }
+
+    self.exportCSV = function () {
+        $('#exportBtn').prop('disabled', true);
+        $("#exportBtn").css("cursor", "progress");
+        $.ajax({
+            type: "POST",
+            url: "../CSVDownloadHandler.ashx?ModelName=" + self.model,
+            success: function (data) {
+
+                window.URL = window.URL || window.webkitURL;
+
+
+                var csvFile = new Blob([data], { type: 'text/csv' });
+                if (window.navigator && window.navigator.msSaveBlob) {
+                    window.navigator.msSaveBlob(csvFile, self.model + 'CSV' + new Date().getTime() + '.csv');
+                } else {
+                    var element = document.createElement('a');
+                    element.download = self.model + 'CSV' + new Date().getTime() + '.csv';
+                    element.href = window.URL.createObjectURL(csvFile);
+
+                    element.dataset.downloadurl = ['text/csv', element.download, element.href].join(':');
+                    element.style.display = 'none';
+                    document.body.appendChild(element);
+
+                    element.click();
+
+                    document.body.removeChild(element);
+
+                }
+
+                $('#exportBtn').prop('disabled', false);
+                $("#exportBtn").css("cursor", "default");
+            },
+            error: function (msg) {
+                alert(msg.value);
+            }
+        });
+    }
+
 };
 
 // Define page scoped view model instance
