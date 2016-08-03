@@ -852,6 +852,8 @@ namespace openXDA
             }
 
         }
+
+ 
         #endregion
 
         #region [ DefaultAlarmRangeLimitView ]

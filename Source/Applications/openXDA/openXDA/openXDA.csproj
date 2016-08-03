@@ -596,6 +596,7 @@
     <Content Include="wwwroot\Scripts\respond.matchmedia.addListener.min.js" />
     <Content Include="wwwroot\Scripts\respond.min.js" />
     <Content Include="wwwroot\Scripts\Site.js" />
+    <Content Include="wwwroot\Scripts\spin.js" />
     <Content Include="XDA.ico" />
   </ItemGroup>
   <ItemGroup>

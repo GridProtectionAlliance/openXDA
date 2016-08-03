@@ -211,10 +211,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Smart Alarm</h4>
+                <h4 class="modal-title">Smart Alarm Settings</h4>
             </div>
             <div class="modal-body">
-                <p>Some text in the modal.</p>
+                <p>Use this screen to calculate and apply smart alarm limits.  You can choose the number of standard deviations to use and whether you want to include zero values in the calculation.</p>
                 <div class="row">
                     <div class="col-md-5">
                         <label>Start Date</label>
@@ -224,6 +224,15 @@
                                 <span class="glyphicon glyphicon-th"></span>
                             </div>
                         </div>
+                        <label>Sigma Level</label>
+                        <select class="form-control" id="sigmaValue">
+                            <option value="6">6 (99.9999998%)</option>
+                            <option value="5">5 (99.99994%)</option>
+                            <option value="4">4 (99.994%)</option>
+                            <option value="3">3 (99.7%)</option>
+                            <option value="2">2 (95%)</option>
+                            <option value="1" selected="selected">1 (68%)</option>
+                        </select>
 
                     </div>
                     <div class="col-md-5">
@@ -234,25 +243,38 @@
                                 <span class="glyphicon glyphicon-th"></span>
                             </div>
                         </div>
+                        <div class="checkbox">
+                            <label><input type="checkbox" id="zeroValues" class="" />Ignore Zero Values</label>
+                        </div>
                     </div>
                     <div class="col-md-1">
                         <br/>
-                        <button class="btn btn-primary" onclick="getTrendingData()">Get Data</button>
+                        <button class="btn btn-primary" onclick="getTrendingData()">Calculate</button>
                     </div>
 
                 </div>
                 <div class="row">
-                    <div id="smartAlarmsWindow" style="display: none">
-                        <div id="flotchart" style="height: 200px"></div>
-                        <select id="sigmaValue">
-                            <option value="6">6 (99.9999998%)</option>
-                            <option value="5">5 (99.99994%)</option>
-                            <option value="4">4 (99.994%)</option>
-                            <option value="3">3 (99.7%)</option>
-                            <option value="2">2 (95%)</option>
-                            <option value="1" selected="selected">1 (68%)</option>
-                        </select>
+                    <div id="alert" class="alert alert-danger fade in" style="margin: 5px; display: none" >
+                        @*<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>*@
+                        <strong>Warning!!!</strong> No records found...
                     </div>
+                    <div id="smartAlarmsWindow" style="display: block">
+                        <div id="flotchart" style="height: 200px"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label>Upper Limit</label>
+                        <input id="upperLimit" type="number" step="auto" class="form-control">
+                    </div>
+
+                    <div class="col-md-5">
+                        <label>Lower Limit</label>
+                        <input id="lowerLimit" type="number" step="auto" class="form-control">
+                    </div>
+                    <div class="col-md-1">
+                        <br/>
+                        <button class="btn btn-primary" data-dismiss="modal" onclick="applyLimits()">Apply Limits</button>
+                    </div>
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -265,8 +287,9 @@
 @section Scripts
 {
 @*<script language="javascript" type="text/javascript" src="Scripts/flot/jquery.js"></script>*@
-<script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.js"></script>
-
+    <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.time.js"></script>
+<script language="javascript" type="text/javascript" src="Scripts/spin.js"></script>
     @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
@@ -304,69 +327,166 @@
             $('#endDate').val("");
             if (plot)
                 plot.destroy();
+            $('#alert').css('display', 'none');
+            $('#upperLimit').val("");
+            $('#lowerLimit').val("");
+            $('#zeroValues').prop('checked', false);
             $('#smartAlarmsModal').modal('show');
             currentRecord = record;
         }
         
         function getTrendingData() {
             $('#flotchart').width($('#smartAlarmsModal .modal-body').width() - 30);
+            var opts = {
+                lines: 9 // The number of lines to draw
+            , length: 24 // The length of each line
+            , width: 18 // The line thickness
+            , radius: 42 // The radius of the inner circle
+            , scale: 1 // Scales overall size of the spinner
+            , corners: 1 // Corner roundness (0..1)
+            , color: '#000' // #rgb or #rrggbb or array of colors
+            , opacity: 0.05 // Opacity of the lines
+            , rotate: 9 // The rotation offset
+            , direction: 1 // 1: clockwise, -1: counterclockwise
+            , speed: 1 // Rounds per second
+            , trail: 60 // Afterglow percentage
+            , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+            , zIndex: 2e9 // The z-index (defaults to 2000000000)
+            , className: 'spinner' // The CSS class to assign to the spinner
+            , top: '50%' // Top position relative to parent
+            , left: '50%' // Left position relative to parent
+            , shadow: false // Whether to render a shadow
+            , hwaccel: false // Whether to use hardware acceleration
+            , position: 'absolute' // Element positioning
+            };
+
+            var target = document.getElementById('smartAlarmsModal');
+            var spinner = new Spinner(opts).spin(target);
+
             dataHub.getTrendingData($('#startDate').val(), $('#endDate').val(), currentRecord.ChannelID).done(function (data) {
-                var maxes = [];
-                var mins = [];
-                var averages = { data: [], color: "#000080" };
-                var dataPoints = [];
-                var startDate = new Date(data[0].Time);
-                var endDate = new Date(data[data.length - 1].Time);
-                $.each(data, function (i, d) {
-                    if (d.SeriesType === "Average") {
-                        averages.data.push([new Date(d.Time) , d.Value]);
-                        dataPoints.push(d.Value);
-                    }
-                    //else if (d.SeriesType === "Minimum")
-                    //    mins.push([i,d.Value]);
-                    //else if (d.SeriesType === "Maximum")
-                    //    maxes.push([i,d.Value]);
-                });
-                
-                var averageValue = average(dataPoints);
-                var minusonesigma = { data: [[ startDate, averageValue.mean - averageValue.deviation], [endDate, averageValue.mean - averageValue.deviation]], lines:{lineWidth: 1}, color: "black"};
-                var plusonesigma = { data: [[startDate, averageValue.mean + averageValue.deviation], [endDate, averageValue.mean + averageValue.deviation]], lines: { lineWidth: 1 }, color: "black"};
-                var minustwosigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 2], [endDate, averageValue.mean - averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black"};
-                var plustwosigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 2], [endDate, averageValue.mean + averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black" };
-                var minusthreesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 3], [endDate, averageValue.mean - averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black"};
-                var plusthreesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 3], [endDate, averageValue.mean + averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black"};
-                var minusfoursigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 4], [endDate, averageValue.mean - averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black" };
-                var plusfoursigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 4], [endDate, averageValue.mean + averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black"};
-                var minusfivesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 5], [endDate, averageValue.mean - averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
-                var plusfivesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 5], [endDate, averageValue.mean + averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
-                var minussixsigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 6], [endDate, averageValue.mean - averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
-                var plussixsigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 6], [endDate, averageValue.mean + averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black"};
+                if (data.length === 0) {
+                    $('#alert').css('display', 'block');
+                    spinner.stop();
+                } else {
+                    $('#alert').css('display', 'none');
 
-                plot = $.plot("#flotchart", [ minusonesigma, averages, plusonesigma ]);
-                $('#sigmaValue').on('change', function (event) {
+                    var maxes = [];
+                    var mins = [];
+                    var averages = { data: [], color: "#000080" };
+                    var dataPoints = [];
+                    var startDate = new Date(data[0].Time);
+                    var endDate = new Date(data[data.length - 1].Time);
+                    var flotOptions = {
+                        xaxis: {
+                            mode: "time",
+                            timeformat: "%m/%d/%Y",
+                            minTickSize: [1, "day"]
+                        }
+                    };
+
+                    $.each(data, function (i, d) {
+                        if (d.SeriesType === "Average") {
+                            averages.data.push([new Date(d.Time), d.Value]);
+                            if (!$('#zeroValues').is(":checked") || d.Value != 0)
+                                dataPoints.push(d.Value);
+                        }
+                        //else if (d.SeriesType === "Minimum")
+                        //    mins.push([i,d.Value]);
+                        //else if (d.SeriesType === "Maximum")
+                        //    maxes.push([i,d.Value]);
+                    });
+
+                    var averageValue = average(dataPoints);
+                    var minusonesigma = { data: [[startDate, averageValue.mean - averageValue.deviation], [endDate, averageValue.mean - averageValue.deviation]], lines: { lineWidth: 1 }, color: "black" };
+                    var plusonesigma = { data: [[startDate, averageValue.mean + averageValue.deviation], [endDate, averageValue.mean + averageValue.deviation]], lines: { lineWidth: 1 }, color: "black" };
+                    var minustwosigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 2], [endDate, averageValue.mean - averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black" };
+                    var plustwosigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 2], [endDate, averageValue.mean + averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black" };
+                    var minusthreesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 3], [endDate, averageValue.mean - averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black" };
+                    var plusthreesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 3], [endDate, averageValue.mean + averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black" };
+                    var minusfoursigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 4], [endDate, averageValue.mean - averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black" };
+                    var plusfoursigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 4], [endDate, averageValue.mean + averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black" };
+                    var minusfivesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 5], [endDate, averageValue.mean - averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
+                    var plusfivesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 5], [endDate, averageValue.mean + averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
+                    var minussixsigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 6], [endDate, averageValue.mean - averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
+                    var plussixsigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 6], [endDate, averageValue.mean + averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
+
                     if ($('#sigmaValue').val() == 6) {
-                        plot.setData([minussixsigma, averages, plussixsigma]);
+                        plot = $.plot("#flotchart", [minussixsigma, averages, plussixsigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 6);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 6);
                     } else if ($('#sigmaValue').val() == 5) {
-                        plot.setData([minusfivesigma, averages, plusfivesigma]);
+                        plot = $.plot("#flotchart", [minusfivesigma, averages, plusfivesigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 5);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 5);
                     } else if ($('#sigmaValue').val() == 4) {
-                        plot.setData([minusfoursigma, averages, plusfoursigma]);
+                        plot = $.plot("#flotchart", [minusfoursigma, averages, plusfoursigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 4);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 4);
                     } else if ($('#sigmaValue').val() == 3) {
-                        plot.setData([minusthreesigma, averages, plusthreesigma]);
+                        plot = $.plot("#flotchart", [minusthreesigma, averages, plusthreesigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 3);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 3);
                     } else if ($('#sigmaValue').val() == 2) {
-                        plot.setData([minustwosigma, averages, plustwosigma]);
+                        plot = $.plot("#flotchart", [minustwosigma, averages, plustwosigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 2);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 2);
                     } else if ($('#sigmaValue').val() == 1) {
-                        plot.setData([minusonesigma, averages, plusonesigma]);
+                        plot = $.plot("#flotchart", [minusonesigma, averages, plusonesigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation);
+                    } else {
+                        plot = $.plot("#flotchart", [minusonesigma, averages, plusonesigma], flotOptions);
+                        $('#upperLimit').val(averageValue.mean + averageValue.deviation);
+                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation);
                     }
-                    
-                    plot.setupGrid();
-                    plot.draw();
 
-                });
-                
-                $('#smartAlarmsWindow').toggle();
+                    //plot = $.plot("#flotchart", [ minusonesigma, averages, plusonesigma ], flotOptions);
+                    $('#sigmaValue').on('change', function (event) {
+                        if ($('#sigmaValue').val() == 6) {
+                            plot.setData([minussixsigma, averages, plussixsigma]);
+                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 6);
+                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 6);
+                        } else if ($('#sigmaValue').val() == 5) {
+                            plot.setData([minusfivesigma, averages, plusfivesigma]);
+                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 5);
+                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 5);
+                        } else if ($('#sigmaValue').val() == 4) {
+                            plot.setData([minusfoursigma, averages, plusfoursigma]);
+                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 4);
+                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 4);
+                        } else if ($('#sigmaValue').val() == 3) {
+                            plot.setData([minusthreesigma, averages, plusthreesigma]);
+                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 3);
+                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 3);
+                        } else if ($('#sigmaValue').val() == 2) {
+                            plot.setData([minustwosigma, averages, plustwosigma]);
+                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 2);
+                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 2);
+                        } else if ($('#sigmaValue').val() == 1) {
+                            plot.setData([minusonesigma, averages, plusonesigma]);
+                            $('#upperLimit').val(averageValue.mean + averageValue.deviation);
+                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation);
+                        }
+
+                        plot.setupGrid();
+                        plot.draw();
+
+                    });
+                    spinner.stop();
+                    //$('#smartAlarmsWindow').toggle();
+                }
             });
         }
         
+        function applyLimits() {
+            currentRecord.High = $('#upperLimit').val();
+            currentRecord.Low = $('#lowerLimit').val();
+            currentRecord.IsDefault = false;
+            dataHub.updateAlarmRangeLimitView(currentRecord).done(function () {
+                viewModel.queryPageRecords();
+            });
+        }
+
         average = function (a) {
             var r = { mean: 0, variance: 0, deviation: 0 }, t = a.length;
             for (var m, s = 0, l = t; l--; s += a[l]);
