@@ -874,6 +874,10 @@ CREATE NONCLUSTERED INDEX IX_FaultSummary_EventID
 ON FaultSummary(EventID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_FaultSummary_Inception
+ON FaultSummary(Inception ASC)
+GO
+
 CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
