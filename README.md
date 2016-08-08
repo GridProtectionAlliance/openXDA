@@ -73,11 +73,20 @@ Traditional disturbance analytic processes typically require manual retrieval of
 * 50 GB of available disk space for installation and testing. Operational disk space requirements will be proportional to the volume of input data.
 
 ### Software
+* openHistorian 2.0
 * .NET 3.5 SP1 (required by SQL Server 2012).
 * .NET 4.6.
 * SQL Server 2012 with management tools.
   * Free Express version is fine, but has a 10GB limit.
   * Mixed mode authentication must be enable on the SQL Server.
+
+### Device Configuration
+The openXDA database needs to be configured with information on the devices that provide it data. 
+The steps to do this are:
+
+1. Fill out the appropriate [template](https://github.com/GridProtectionAlliance/openXDA/tree/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates) with information about the device.
+* Use [the DeviceDefinitionParser](https://github.com/GridProtectionAlliance/DeviceDefinitionParser/releases) to convert the filled out template into and xml file. **Important: Save the output file as 'DeviceDefinitions.xml' in the program directory.**
+* Run the ldconfig.bat script included in openXDA and found in the program directory to configure the database from the DeviceDefinitions.xml file.
 
 ## Downloads
 * Download a stable release from the releases page [here](https://github.com/GridProtectionAlliance/openXDA/releases).
