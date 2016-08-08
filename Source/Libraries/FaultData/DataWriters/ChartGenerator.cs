@@ -89,6 +89,8 @@ namespace FaultData.DataWriters
             ChartArea area;
             Series series;
 
+            DateTime dataStart;
+            DateTime dataEnd;
             DateTime topOfMinute;
             double seconds;
 
@@ -96,6 +98,17 @@ namespace FaultData.DataWriters
                 return null;
 
             dataSeriesList = keys.Select(GetDataSeries).ToList();
+
+            // Snap startTime and endTime
+            // to the data's time boundaries
+            dataStart = ToDateTime(0);
+            dataEnd = ToDateTime(dataSeriesList[0].DataPoints.Count - 1);
+
+            if (startTime < dataStart)
+                startTime = dataStart;
+
+            if (endTime > dataEnd)
+                endTime = dataEnd;
 
             // Align startTime with top of the minute
             topOfMinute = startTime.AddTicks(-(startTime.Ticks % TimeSpan.TicksPerMinute));
@@ -114,6 +127,9 @@ namespace FaultData.DataWriters
 
             for (int i = 0; i < dataSeriesList.Count; i++)
             {
+                if ((object)dataSeriesList[i] == null)
+                    continue;
+
                 series = new Series(names[i]);
                 series.ChartType = SeriesChartType.FastLine;
                 series.BorderWidth = 5;
@@ -182,11 +198,15 @@ namespace FaultData.DataWriters
         private DataSeries GetDataSeries(string key)
         {
             Lazy<DataSeries> lazySeries;
+            DataSeries faultCurve;
 
-            if (!m_seriesLookup.TryGetValue(key, out lazySeries))
-                return m_faultCurveLookup.Value[key];
+            if (m_seriesLookup.TryGetValue(key, out lazySeries))
+                return lazySeries.Value;
 
-            return lazySeries.Value;
+            if (m_faultCurveLookup.Value.TryGetValue(key, out faultCurve))
+                return faultCurve;
+
+            return null;
         }
 
         private VIDataGroup GetVIDataGroup()

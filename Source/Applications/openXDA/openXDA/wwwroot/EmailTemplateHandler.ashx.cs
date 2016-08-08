@@ -60,6 +60,13 @@ namespace openXDA
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Determines if client cache should be enabled for rendered handler content.
+        /// </summary>
+        /// <remarks>
+        /// If rendered handler content does not change often, the server and client will use the
+        /// <see cref="GetContentHash"/> to determine if the client needs to refresh the content.
+        /// </remarks>
         public bool UseClientCache
         {
             get
@@ -72,6 +79,13 @@ namespace openXDA
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Gets hash of response content based on any <paramref name="request"/> parameters.
+        /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <remarks>
+        /// Value is only used when <see cref="UseClientCache"/> is <c>true</c>.
+        /// </remarks>
         public long GetContentHash(HttpRequestMessage request)
         {
             NameValueCollection parameters = request.RequestUri.ParseQueryString();
@@ -85,9 +99,10 @@ namespace openXDA
         }
 
         /// <summary>
-        /// Enables processing of HTTP web requests by a custom handler that implements the <see cref="T:GSF.Web.Hosting.IHostedHttpHandler"/> interface.
+        /// Enables processing of HTTP web requests by a custom handler that implements the <see cref="GSF.Web.Hosting.IHostedHttpHandler"/> interface.
         /// </summary>
-        /// <param name="request">HTTP request message.</param><param name="response">HTTP response message.</param>
+        /// <param name="request">HTTP request message.</param>
+        /// <param name="response">HTTP response message.</param>
         public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response)
         {
             return Task.Run(() =>
@@ -162,6 +177,8 @@ namespace openXDA
 
         private Stream ConvertToChartImageStream(XElement chartElement)
         {
+            ChartGenerator chartGenerator;
+
             Lazy<DataRow> faultSummary;
             Lazy<double> systemFrequency;
             DateTime inception;
@@ -181,16 +198,24 @@ namespace openXDA
             int eventID;
             int faultID;
 
+            // Read parameters from the XML file and set up defaults
             eventID = Convert.ToInt32((string)chartElement.Attribute("eventID") ?? "-1");
             faultID = Convert.ToInt32((string)chartElement.Attribute("faultID") ?? "-1");
             prefaultCycles = Convert.ToDouble((string)chartElement.Attribute("prefaultCycles") ?? "NaN");
             postfaultCycles = Convert.ToDouble((string)chartElement.Attribute("postfaultCycles") ?? "NaN");
 
-            faultSummary = null;
+            title = (string)chartElement.Attribute("yAxisTitle");
+            keys = GetKeys(chartElement);
+            names = GetNames(chartElement);
+
+            width = Convert.ToInt32((string)chartElement.Attribute("width"));
+            height = Convert.ToInt32((string)chartElement.Attribute("height"));
+
             startTime = DateTime.MinValue;
             endTime = DateTime.MaxValue;
 
             using (DataContext dataContext = new DataContext())
+            using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer((SqlConnection)dataContext.Connection.Connection))
             {
                 faultSummary = new Lazy<DataRow>(() => dataContext.Connection.RetrieveData("SELECT * FROM FaultSummary WHERE ID = {0}", faultID).Select().FirstOrDefault());
                 systemFrequency = new Lazy<double>(() => dataContext.Connection.ExecuteScalar(60.0D, "SELECT Value FROM Setting WHERE Name = 'SystemFrequency'"));
@@ -202,42 +227,42 @@ namespace openXDA
                 if (eventID == -1)
                     eventID = m_eventID;
 
+                // If prefaultCycles is specified and we have a fault summary we can use,
+                // we can determine the start time of the chart based on fault inception
                 if (!double.IsNaN(prefaultCycles) && (object)faultSummary.Value != null)
                 {
                     inception = faultSummary.Value.ConvertField<DateTime>("Inception");
                     startTime = inception.AddSeconds(-prefaultCycles / systemFrequency.Value);
                 }
 
+                // If postfaultCycles is specified and we have a fault summary we can use,
+                // we can determine the start time of the chart based on fault clearing
                 if (!double.IsNaN(postfaultCycles) && (object)faultSummary.Value != null)
                 {
                     inception = faultSummary.Value.ConvertField<DateTime>("Inception");
                     clearing = inception.AddSeconds(faultSummary.Value.ConvertField<double>("DurationSeconds"));
                     endTime = clearing.AddSeconds(postfaultCycles / systemFrequency.Value);
                 }
-            }
 
-            title = (string)chartElement.Attribute("yAxisTitle");
-            keys = GetKeys(chartElement);
-            names = GetNames(chartElement);
-
-            width = Convert.ToInt32((string)chartElement.Attribute("width"));
-            height = Convert.ToInt32((string)chartElement.Attribute("height"));
-
-            using (DataContext dataContext = new DataContext())
-            using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer((SqlConnection)dataContext.Connection.Connection))
-            {
-                ChartGenerator chartGenerator = new ChartGenerator(dbAdapterContainer, eventID);
+                // Create the chart generator to generate the chart
+                chartGenerator = new ChartGenerator(dbAdapterContainer, eventID);
 
                 using (Chart chart = chartGenerator.GenerateChart(title, keys, names, startTime, endTime))
                 {
+                    // Set the chart size based on the specified width and height;
+                    // this allows us to dynamically change font sizes and line
+                    // widths before converting the chart to an image
                     SetChartSize(chart, width, height);
 
+                    // Determine if either the minimum or maximum of the y-axis is specified explicitly
                     if ((object)chartElement.Attribute("yAxisMaximum") != null)
                         chart.ChartAreas[0].AxisY.Maximum = Convert.ToDouble((string)chartElement.Attribute("yAxisMaximum"));
 
                     if ((object)chartElement.Attribute("yAxisMinimum") != null)
                         chart.ChartAreas[0].AxisY.Minimum = Convert.ToDouble((string)chartElement.Attribute("yAxisMinimum"));
 
+                    // If the calculation cycle is to be highlighted, determine whether the highlight should be in the range of a single index or a full cycle.
+                    // If we have a fault summary we can use, apply the appropriate highlight based on the calculation cycle
                     if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "index", StringComparison.OrdinalIgnoreCase))
                     {
                         if ((object)faultSummary.Value != null)
@@ -260,6 +285,7 @@ namespace openXDA
                         }
                     }
 
+                    // Convert the generated chart to an image
                     return ConvertToImageStream(chart, ChartImageFormat.Png);
                 }
             }
