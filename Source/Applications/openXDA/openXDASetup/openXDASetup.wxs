@@ -289,6 +289,7 @@
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
+      <ComponentRef Id="AjaxMin" />
 
       <ComponentRef Id="InstallFolderPermissions"/>
       
@@ -445,6 +446,9 @@
       </Component>
       <Component Id="System.Web.Razor">
         <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)Dependencies\Microsoft\System.Web.Razor.dll" />
+      </Component>
+      <Component Id="AjaxMin">
+        <File Id="AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll" />
       </Component>
     </ComponentGroup>
   </Fragment>

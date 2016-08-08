@@ -97,7 +97,7 @@ namespace openXDA
             Application.Run(new DebugHost(Host));
 #else
             // Run as Windows Service.
-            ServiceBase.Run(new ServiceHost());
+            ServiceBase.Run(Host);
 #endif
         }
     }

@@ -350,6 +350,9 @@ namespace openXDA
             // Dispose of the analysis engine
             m_extensibleDisturbanceAnalysisEngine.Stop();
             m_extensibleDisturbanceAnalysisEngine.Dispose();
+
+            // Save updated settings to the configuration file
+            ConfigurationFile.Current.Save();
         }
 
         // Attempts to start the engine and logs startup errors.
