@@ -42,6 +42,9 @@ using GSF.Xml;
 using GSF.Data;
 using System.Net;
 using System.Drawing;
+using GSF.Threading;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace openXDA
 {
@@ -51,6 +54,125 @@ namespace openXDA
     public class EmailTemplateHandler : IHostedHttpHandler
     {
         #region [ Members ]
+
+        // Nested Types
+        private class ChartIdentity : IEquatable<ChartIdentity>
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly Tuple<int, int, int> m_chartTuple;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public ChartIdentity(int eventID, int templateID, int chartID)
+            {
+                m_chartTuple = Tuple.Create(eventID, templateID, chartID);
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public int EventID
+            {
+                get
+                {
+                    return m_chartTuple.Item1;
+                }
+            }
+
+            public int TemplateID
+            {
+                get
+                {
+                    return m_chartTuple.Item2;
+                }
+            }
+
+            public int ChartID
+            {
+                get
+                {
+                    return m_chartTuple.Item3;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public bool Equals(ChartIdentity other)
+            {
+                return m_chartTuple.Equals(other.m_chartTuple);
+            }
+
+            public override bool Equals(object obj)
+            {
+                ChartIdentity other = obj as ChartIdentity;
+
+                if ((object)other != null)
+                    return Equals(other);
+
+                return base.Equals(obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return m_chartTuple.GetHashCode();
+            }
+
+            #endregion
+        }
+
+        private class ChartData
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly XElement m_chartElement;
+            private ICancellationToken m_cancellationToken;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public ChartData(XElement chartElement)
+            {
+                m_chartElement = chartElement;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public XElement ChartElement
+            {
+                get
+                {
+                    return m_chartElement;
+                }
+            }
+
+            public ICancellationToken CancellationToken
+            {
+                get
+                {
+                    return Interlocked.CompareExchange(ref m_cancellationToken, null, null);
+                }
+                set
+                {
+                    ICancellationToken cancellationToken = Interlocked.Exchange(ref m_cancellationToken, value);
+
+                    if ((object)cancellationToken != null)
+                        cancellationToken.Cancel();
+                }
+            }
+
+            #endregion
+        }
 
         // Fields
         private int m_eventID;
@@ -124,7 +246,7 @@ namespace openXDA
         {
             XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
             doc.TransformAll("format", element => element.Format());
-            doc.TransformAll("chart", (element, index) => ToImgTag(index));
+            doc.TransformAll("chart", (element, index) => ToImgTag(element, index));
 
             string html = doc.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
             response.Content = new StringContent(html);
@@ -133,12 +255,23 @@ namespace openXDA
 
         private void ProcessChartRequest(HttpRequestMessage request, HttpResponseMessage response)
         {
-            XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
+            ChartData chartData;
+            XElement chartElement;
+            string title;
+
             NameValueCollection parameters = request.RequestUri.ParseQueryString();
             int chartID = Convert.ToInt32(parameters["chartID"]);
+            ChartIdentity chartIdentity = new ChartIdentity(m_eventID, m_templateID, chartID);
 
-            XElement chartElement = doc.Descendants("chart").Skip(chartID).FirstOrDefault();
-            string title;
+            if (s_chartLookup.TryGetValue(chartIdentity, out chartData))
+            {
+                chartElement = chartData.ChartElement;
+            }
+            else
+            {
+                XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
+                chartElement = doc.Descendants("chart").Skip(chartID).FirstOrDefault();
+            }
 
             if ((object)chartElement == null)
             {
@@ -169,8 +302,19 @@ namespace openXDA
             return eventDetail.ApplyXSLTransform(emailTemplate);
         }
 
-        private XElement ToImgTag(int chartID)
+        private XElement ToImgTag(XElement chartElement, int chartID)
         {
+            ChartIdentity chartIdentity = new ChartIdentity(m_eventID, m_templateID, chartID);
+            ChartData chartData = s_chartLookup.GetOrAdd(chartIdentity, ident => new ChartData(chartElement));
+
+            // If the cancellation token has been initialized, but we are not able to cancel it,
+            // it's possible that the action already executed so we attempt to add it back into the lookup
+            if ((object)chartData.CancellationToken != null && !chartData.CancellationToken.Cancel())
+                chartData = s_chartLookup.GetOrAdd(chartIdentity, chartData);
+
+            // Create a new cancellation token to remove the chart data from the cache in one minute
+            chartData.CancellationToken = new Action(() => s_chartLookup.TryRemove(chartIdentity, out chartData)).DelayAndExecute(60 * 1000);
+
             string url = $"EmailTemplateHandler.ashx?EventID={m_eventID}&TemplateID={m_templateID}&ChartID={chartID}";
             return new XElement("img", new XAttribute("src", url));
         }
@@ -198,7 +342,7 @@ namespace openXDA
             int eventID;
             int faultID;
 
-            // Read parameters from the XML file and set up defaults
+            // Read parameters from the XML data and set up defaults
             eventID = Convert.ToInt32((string)chartElement.Attribute("eventID") ?? "-1");
             faultID = Convert.ToInt32((string)chartElement.Attribute("faultID") ?? "-1");
             prefaultCycles = Convert.ToDouble((string)chartElement.Attribute("prefaultCycles") ?? "NaN");
@@ -294,6 +438,9 @@ namespace openXDA
         #endregion
 
         #region [ Static ]
+
+        // Static Fields
+        private static readonly ConcurrentDictionary<ChartIdentity, ChartData> s_chartLookup = new ConcurrentDictionary<ChartIdentity, ChartData>();
 
         // Static Methods
         private static List<string> GetKeys(XElement chartElement)
