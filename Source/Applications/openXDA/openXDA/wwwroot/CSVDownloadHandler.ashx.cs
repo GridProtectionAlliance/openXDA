@@ -34,6 +34,7 @@ using GSF.Web.Model;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using System;
 
 namespace openXDA
 {
@@ -42,6 +43,19 @@ namespace openXDA
     /// </summary>
     public class CSVDownloadHandler : IHostedHttpHandler
     {
+        public bool UseClientCache
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public long GetContentHash(HttpRequestMessage request)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Enables processing of HTTP web requests by a custom handler that implements the <see cref="T:GSF.Web.Hosting.IHostedHttpHandler"/> interface.
         /// </summary>

@@ -57,6 +57,7 @@ namespace FaultData.Database
 
         public DbAdapterContainer(SqlConnection connection)
         {
+            m_adapters = new Dictionary<Type, object>();
             m_connection = connection;
         }
 

@@ -101,6 +101,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AjaxMin, Version=5.14.5506.26196, Culture=neutral, PublicKeyToken=21ef50ce11b5d80f, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="GSF.Communication">
       <HintPath>..\..\..\Dependencies\GSF\GSF.Communication.dll</HintPath>
     </Reference>
@@ -225,6 +229,7 @@
       <HintPath>..\..\..\Dependencies\Microsoft\System.Web.Razor.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -248,6 +253,9 @@
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="Model\TrendingData.cs" />
+    <Compile Include="wwwroot\EmailTemplateHandler.ashx.cs">
+      <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
+    </Compile>
     <Compile Include="wwwroot\CSVDownloadHandler.ashx.cs">
       <DependentUpon>CSVDownloadHandler.ashx</DependentUpon>
     </Compile>
@@ -331,6 +339,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="wwwroot\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\CSVDownloadHandler.ashx" />
     <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />

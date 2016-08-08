@@ -40,8 +40,6 @@ namespace FaultData.DataWriters
         #region [ Members ]
 
         // Fields
-        private string m_lengthUnits;
-
         private DbAdapterContainer m_dbAdapterContainer;
         private int m_eventID;
 
@@ -56,8 +54,6 @@ namespace FaultData.DataWriters
 
         public ChartGenerator(DbAdapterContainer dbAdapterContainer, int eventID)
         {
-            m_lengthUnits = "miles";
-
             m_dbAdapterContainer = dbAdapterContainer;
             m_eventID = eventID;
 
@@ -78,18 +74,6 @@ namespace FaultData.DataWriters
             get
             {
                 return m_eventID;
-            }
-        }
-
-        public string LengthUnits
-        {
-            get
-            {
-                return m_lengthUnits;
-            }
-            set
-            {
-                m_lengthUnits = value;
             }
         }
 

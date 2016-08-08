@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -41,6 +42,19 @@ namespace openXDA
     /// </summary>
     public class AlarmRangeLimitCSVUploadHandler : IHostedHttpHandler
     {
+        public bool UseClientCache
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public long GetContentHash(HttpRequestMessage request)
+        {
+            throw new NotImplementedException();
+        }
+
         ///// <summary>
         ///// Gets a value indicating whether another request can use the <see cref="IHttpHandler"/> instance.
         ///// </summary>
