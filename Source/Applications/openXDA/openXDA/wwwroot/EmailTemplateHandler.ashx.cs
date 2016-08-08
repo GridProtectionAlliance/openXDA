@@ -64,7 +64,7 @@ namespace openXDA
         {
             get
             {
-                return false;
+                return true;
             }
         }
 
@@ -74,7 +74,14 @@ namespace openXDA
 
         public long GetContentHash(HttpRequestMessage request)
         {
-            throw new NotImplementedException();
+            NameValueCollection parameters = request.RequestUri.ParseQueryString();
+            int eventID = Convert.ToInt32(parameters["EventID"]);
+            int templateID = Convert.ToInt32(parameters["TemplateID"]);
+
+            using (DataContext context = new DataContext())
+            {
+                return context.Connection.ExecuteScalar<long>("SELECT dbo.ComputeHash({0}, {1})", eventID, templateID);
+            }
         }
 
         /// <summary>
