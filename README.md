@@ -61,6 +61,7 @@ Traditional disturbance analytic processes typically require manual retrieval of
 * Unzip if necessary.
 * Run "openXDASetup.msi".
 * Follow the wizard.
+* [Configure the database with your devices](#device-configuration)
 * Enjoy.
 
 ## Requirements
