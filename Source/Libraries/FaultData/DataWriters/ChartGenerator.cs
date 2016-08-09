@@ -23,13 +23,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Xml.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
+using GSF.Data;
 using DataPoint = FaultData.DataAnalysis.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
@@ -248,6 +253,163 @@ namespace FaultData.DataWriters
             };
 
             return faultCurveTable.ToDictionary(faultCurve => faultCurve.Algorithm, toDataSeries);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        public static Stream ConvertToChartImageStream(DbAdapterContainer dbAdapterContainer, XElement chartElement)
+        {
+            ChartGenerator chartGenerator;
+
+            Lazy<DataRow> faultSummary;
+            Lazy<double> systemFrequency;
+            DateTime inception;
+            DateTime clearing;
+
+            int width;
+            int height;
+            double prefaultCycles;
+            double postfaultCycles;
+
+            string title;
+            List<string> keys;
+            List<string> names;
+            DateTime startTime;
+            DateTime endTime;
+
+            int eventID;
+            int faultID;
+
+            // Read parameters from the XML data and set up defaults
+            eventID = Convert.ToInt32((string)chartElement.Attribute("eventID") ?? "-1");
+            faultID = Convert.ToInt32((string)chartElement.Attribute("faultID") ?? "-1");
+            prefaultCycles = Convert.ToDouble((string)chartElement.Attribute("prefaultCycles") ?? "NaN");
+            postfaultCycles = Convert.ToDouble((string)chartElement.Attribute("postfaultCycles") ?? "NaN");
+
+            title = (string)chartElement.Attribute("yAxisTitle");
+            keys = GetKeys(chartElement);
+            names = GetNames(chartElement);
+
+            width = Convert.ToInt32((string)chartElement.Attribute("width"));
+            height = Convert.ToInt32((string)chartElement.Attribute("height"));
+
+            startTime = DateTime.MinValue;
+            endTime = DateTime.MaxValue;
+
+            using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+            {
+                faultSummary = new Lazy<DataRow>(() => connection.RetrieveData("SELECT * FROM FaultSummary WHERE ID = {0}", faultID).Select().FirstOrDefault());
+                systemFrequency = new Lazy<double>(() => connection.ExecuteScalar(60.0D, "SELECT Value FROM Setting WHERE Name = 'SystemFrequency'"));
+
+                // If prefaultCycles is specified and we have a fault summary we can use,
+                // we can determine the start time of the chart based on fault inception
+                if (!double.IsNaN(prefaultCycles) && (object)faultSummary.Value != null)
+                {
+                    inception = faultSummary.Value.ConvertField<DateTime>("Inception");
+                    startTime = inception.AddSeconds(-prefaultCycles / systemFrequency.Value);
+                }
+
+                // If postfaultCycles is specified and we have a fault summary we can use,
+                // we can determine the start time of the chart based on fault clearing
+                if (!double.IsNaN(postfaultCycles) && (object)faultSummary.Value != null)
+                {
+                    inception = faultSummary.Value.ConvertField<DateTime>("Inception");
+                    clearing = inception.AddSeconds(faultSummary.Value.ConvertField<double>("DurationSeconds"));
+                    endTime = clearing.AddSeconds(postfaultCycles / systemFrequency.Value);
+                }
+
+                // Create the chart generator to generate the chart
+                chartGenerator = new ChartGenerator(dbAdapterContainer, eventID);
+
+                using (Chart chart = chartGenerator.GenerateChart(title, keys, names, startTime, endTime))
+                {
+                    // Set the chart size based on the specified width and height;
+                    // this allows us to dynamically change font sizes and line
+                    // widths before converting the chart to an image
+                    SetChartSize(chart, width, height);
+
+                    // Determine if either the minimum or maximum of the y-axis is specified explicitly
+                    if ((object)chartElement.Attribute("yAxisMaximum") != null)
+                        chart.ChartAreas[0].AxisY.Maximum = Convert.ToDouble((string)chartElement.Attribute("yAxisMaximum"));
+
+                    if ((object)chartElement.Attribute("yAxisMinimum") != null)
+                        chart.ChartAreas[0].AxisY.Minimum = Convert.ToDouble((string)chartElement.Attribute("yAxisMinimum"));
+
+                    // If the calculation cycle is to be highlighted, determine whether the highlight should be in the range of a single index or a full cycle.
+                    // If we have a fault summary we can use, apply the appropriate highlight based on the calculation cycle
+                    if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "index", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if ((object)faultSummary.Value != null)
+                        {
+                            int calculationCycle = faultSummary.Value.ConvertField<int>("CalculationCycle");
+                            DateTime calculationTime = chartGenerator.ToDateTime(calculationCycle);
+                            double calculationPosition = chart.ChartAreas[0].AxisX.Minimum + (calculationTime - startTime).TotalSeconds;
+                            chart.ChartAreas[0].CursorX.Position = calculationPosition;
+                        }
+                    }
+                    else if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "cycle", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if ((object)faultSummary.Value != null)
+                        {
+                            int calculationCycle = faultSummary.Value.ConvertField<int>("CalculationCycle");
+                            DateTime calculationTime = chartGenerator.ToDateTime(calculationCycle);
+                            double calculationPosition = chart.ChartAreas[0].AxisX.Minimum + (calculationTime - startTime).TotalSeconds;
+                            chart.ChartAreas[0].CursorX.SelectionStart = calculationPosition;
+                            chart.ChartAreas[0].CursorX.SelectionEnd = calculationPosition + 1.0D / 60.0D;
+                        }
+                    }
+
+                    // Convert the generated chart to an image
+                    return ConvertToImageStream(chart, ChartImageFormat.Png);
+                }
+            }
+        }
+
+        public static List<string> GetKeys(XElement chartElement)
+        {
+            return chartElement
+                .Elements()
+                .Select(childElement => (string)childElement.Attribute("key"))
+                .ToList();
+        }
+
+        public static List<string> GetNames(XElement chartElement)
+        {
+            return chartElement
+                .Elements()
+                .Select(childElement => (string)childElement)
+                .ToList();
+        }
+
+        public static void SetChartSize(Chart chart, int width, int height)
+        {
+            int fontSize = (int)Math.Round(height / 37.0D);
+            int borderWidth = (int)Math.Round(height / 480.0D);
+
+            chart.Width = width;
+            chart.Height = height;
+
+            chart.ChartAreas[0].AxisX.LabelAutoFitMaxFontSize = fontSize;
+            chart.ChartAreas[0].AxisY.LabelAutoFitMaxFontSize = fontSize;
+            chart.ChartAreas[0].AxisX.LabelAutoFitMinFontSize = fontSize;
+            chart.ChartAreas[0].AxisY.LabelAutoFitMinFontSize = fontSize;
+            chart.ChartAreas[0].AxisX.TitleFont = new Font(chart.ChartAreas[0].AxisX.TitleFont.FontFamily, fontSize);
+            chart.ChartAreas[0].AxisY.TitleFont = new Font(chart.ChartAreas[0].AxisY.TitleFont.FontFamily, fontSize);
+            chart.Legends[0].Font = new Font(chart.Legends[0].Font.FontFamily, fontSize, FontStyle.Regular);
+
+            foreach (Series series in chart.Series)
+                series.BorderWidth = borderWidth;
+        }
+
+        public static Stream ConvertToImageStream(Chart chart, ChartImageFormat format)
+        {
+            MemoryStream stream = new MemoryStream();
+            chart.SaveImage(stream, format);
+            stream.Position = 0;
+            return stream;
         }
 
         #endregion
