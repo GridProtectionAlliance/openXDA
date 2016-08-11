@@ -26,6 +26,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using GSF.Data.Model;
 using GSF.Web;
@@ -33,7 +34,6 @@ using GSF.Web.Hosting;
 using GSF.Web.Model;
 using log4net.Core;
 using openXDA.Model;
-using RazorEngine.Compilation.ImpromptuInterface.InvokeExt;
 
 namespace openXDA
 {
@@ -62,7 +62,7 @@ namespace openXDA
         ///// <c>true</c> if the <see cref="IHttpHandler"/> instance is reusable; otherwise, <c>false</c>.
         ///// </returns>
 
-        public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response)
+        public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             await request.GetPostDataAsync().ContinueWith(async postDataTask =>
             {

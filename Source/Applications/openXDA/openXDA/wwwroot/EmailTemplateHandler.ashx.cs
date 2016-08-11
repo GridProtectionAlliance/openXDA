@@ -225,7 +225,7 @@ namespace openXDA
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="response">HTTP response message.</param>
-        public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response)
+        public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, System.Threading.CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {

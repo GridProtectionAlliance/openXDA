@@ -32,9 +32,9 @@ using GSF.Security;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
 using System.Net.Http.Headers;
-using System.Net.Mime;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
 
 namespace openXDA
 {
@@ -60,7 +60,7 @@ namespace openXDA
         /// Enables processing of HTTP web requests by a custom handler that implements the <see cref="T:GSF.Web.Hosting.IHostedHttpHandler"/> interface.
         /// </summary>
         /// <param name="request">HTTP request message.</param><param name="response">HTTP response message.</param>
-        public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response)
+        public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
