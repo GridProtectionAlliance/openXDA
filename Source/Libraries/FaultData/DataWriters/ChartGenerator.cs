@@ -232,11 +232,15 @@ namespace FaultData.DataWriters
 
         private VICycleDataGroup GetVICycleDataGroup()
         {
+            MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+            EventTableAdapter eventAdapter = m_dbAdapterContainer.GetAdapter<EventTableAdapter>();
             EventDataTableAdapter eventDataAdapter = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
+            MeterData.EventRow eventRow = eventAdapter.GetDataByID(m_eventID)[0];
             MeterData.EventDataRow eventDataRow = eventDataAdapter.GetDataBy(m_eventID)[0];
+            Meter meter = meterInfo.Meters.Single(m => m.ID == eventRow.MeterID);
 
             DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(eventDataRow.FrequencyDomainData);
+            dataGroup.FromData(meter, eventDataRow.FrequencyDomainData);
             return new VICycleDataGroup(dataGroup);
         }
 

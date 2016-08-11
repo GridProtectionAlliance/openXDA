@@ -21,24 +21,24 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Specialized;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using FaultData.Database;
+using FaultData.DataWriters;
 using GSF.Security;
+using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using FaultData.DataWriters;
-using FaultData.Database;
-using System.Data.SqlClient;
-using System;
-using System.Xml.Linq;
 using GSF.Xml;
-using System.Net;
-using GSF.Threading;
-using System.Collections.Concurrent;
-using System.Threading;
 
 namespace openXDA
 {
@@ -127,15 +127,17 @@ namespace openXDA
 
             // Fields
             private readonly XElement m_chartElement;
+            private readonly long m_contentHash;
             private ICancellationToken m_cancellationToken;
 
             #endregion
 
             #region [ Constructors ]
 
-            public ChartData(XElement chartElement)
+            public ChartData(XElement chartElement, long contentHash)
             {
                 m_chartElement = chartElement;
+                m_contentHash = contentHash;
             }
 
             #endregion
@@ -147,6 +149,14 @@ namespace openXDA
                 get
                 {
                     return m_chartElement;
+                }
+            }
+
+            public long ContentHash
+            {
+                get
+                {
+                    return m_contentHash;
                 }
             }
 
@@ -169,6 +179,7 @@ namespace openXDA
         }
 
         // Fields
+        private long m_contentHash;
         private int m_eventID;
         private int m_templateID;
 
@@ -210,7 +221,8 @@ namespace openXDA
 
             using (DataContext context = new DataContext())
             {
-                return context.Connection.ExecuteScalar<long>("SELECT dbo.ComputeHash({0}, {1})", eventID, templateID);
+                m_contentHash = context.Connection.ExecuteScalar<long>("SELECT dbo.ComputeHash({0}, {1})", eventID, templateID);
+                return m_contentHash;
             }
         }
 
@@ -304,12 +316,17 @@ namespace openXDA
         private XElement ToImgTag(XElement chartElement, int chartID)
         {
             ChartIdentity chartIdentity = new ChartIdentity(m_eventID, m_templateID, chartID);
-            ChartData chartData = s_chartLookup.GetOrAdd(chartIdentity, ident => new ChartData(chartElement));
+            ChartData chartData = s_chartLookup.GetOrAdd(chartIdentity, ident => new ChartData(chartElement, m_contentHash));
 
             // If the cancellation token has been initialized, but we are not able to cancel it,
             // it's possible that the action already executed so we attempt to add it back into the lookup
-            if ((object)chartData.CancellationToken != null && !chartData.CancellationToken.Cancel())
+            if ((object)chartData.CancellationToken != null && chartData.CancellationToken.Cancel())
                 chartData = s_chartLookup.GetOrAdd(chartIdentity, chartData);
+
+            // If the content hash of the chart does not match the content hash of the email,
+            // then the email has changed and we need to update the chart data in the cache
+            if (chartData.ContentHash != m_contentHash)
+                chartData = s_chartLookup[chartIdentity] = new ChartData(chartElement, m_contentHash);
 
             // Create a new cancellation token to remove the chart data from the cache in one minute
             chartData.CancellationToken = new Action(() => s_chartLookup.TryRemove(chartIdentity, out chartData)).DelayAndExecute(60 * 1000);
