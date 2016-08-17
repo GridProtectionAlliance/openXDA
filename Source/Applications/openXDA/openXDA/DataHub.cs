@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Web.Configuration;
 using System.Web.Http.Controllers;
 using GSF.Data.Model;
+using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using Microsoft.AspNet.SignalR;
