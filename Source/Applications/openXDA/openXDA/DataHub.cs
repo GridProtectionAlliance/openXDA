@@ -1,149 +1,65 @@
-﻿using System;
+﻿//******************************************************************************************************
+//  DataHub.cs - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  06/01/2016 - Billy Ernest
+//       Generated original version of source code.
+//  08/18/2016 - J. Ritchie Carroll
+//       Updated to use record operations hub base class.
+//
+//******************************************************************************************************
+
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Configuration;
-using System.Web.Http.Controllers;
 using GSF.Data.Model;
 using GSF.Web.Hubs;
-using GSF.Web.Model;
 using GSF.Web.Security;
-using Microsoft.AspNet.SignalR;
 using openXDA.Model;
 
 namespace openXDA
 {
-    public class DataHub: Hub, IRecordOperationsHub
+    [AuthorizeHubRole]
+    public class DataHub : RecordOperationsHub<DataHub>
     {
-        #region [ Members ]
+        // Client-side script functionality
 
-        // Fields
-        private readonly DataContext m_dataContext;
-        private bool m_disposed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        public DataHub()
-        {
-            m_dataContext = new DataContext();
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets <see cref="IRecordOperationsHub.RecordOperationsCache"/> for SignalR hub.
-        /// </summary>
-        public RecordOperationsCache RecordOperationsCache => s_recordOperationsCache;
-
-        // Gets reference to MiPlan context, creating it if needed
-
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="DataHub"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                        m_dataContext?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
-
-        public override Task OnConnected()
-        {
-            // Store the current connection ID for this thread
-            s_connectionID.Value = Context.ConnectionId;
-            s_connectCount++;
-
-            //MvcApplication.LogStatusMessage($"DataHub connect by {Context.User?.Identity?.Name ?? "Undefined User"} [{Context.ConnectionId}] - count = {s_connectCount}");
-            return base.OnConnected();
-        }
-
-        public override Task OnDisconnected(bool stopCalled)
-        {
-            if (stopCalled)
-            {
-                s_connectCount--;
-                //MvcApplication.LogStatusMessage($"DataHub disconnect by {Context.User?.Identity?.Name ?? "Undefined User"} [{Context.ConnectionId}] - count = {s_connectCount}");
-            }
-
-            return base.OnDisconnected(stopCalled);
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Properties
-
-        /// <summary>
-        /// Gets the hub connection ID for the current thread.
-        /// </summary>
-        public static string CurrentConnectionID => s_connectionID.Value;
-
-        // Static Fields
-        private static volatile int s_connectCount;
-        private static readonly ThreadLocal<string> s_connectionID = new ThreadLocal<string>();
-        private static readonly RecordOperationsCache s_recordOperationsCache;
-
-        /// <summary>
-        /// Gets statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="DataHub"/> instances.
-        /// </summary>
-        /// <returns>Statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="DataHub"/> instances.</returns>
-        public static RecordOperationsCache GetRecordOperationsCache() => s_recordOperationsCache;
-
-
-        // Static Constructor
-        static DataHub()
-        {
-            // Analyze and cache record operations of security hub
-            s_recordOperationsCache = new RecordOperationsCache(typeof(DataHub));
-        }
-
-        #endregion
-
-        #region [ Setting ]
+        #region [ Setting Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecordCount)]
         public int QuerySettingCount(string filterString)
         {
-            return m_dataContext.Table<Setting>().QueryRecordCount();
+            return DataContext.Table<Setting>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecords)]
         public IEnumerable<Setting> QuerySettings(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<Setting>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<Setting>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.DeleteRecord)]
         public void DeleteSetting(int id)
         {
-            m_dataContext.Table<Setting>().DeleteRecord(id);
+            DataContext.Table<Setting>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -157,39 +73,39 @@ namespace openXDA
         [RecordOperation(typeof(Setting), RecordOperation.AddNewRecord)]
         public void AddNewActionItem(Setting record)
         {
-            m_dataContext.Table<Setting>().AddNewRecord(record);
+            DataContext.Table<Setting>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Setting), RecordOperation.UpdateRecord)]
         public void UpdateActionItem(Setting record)
         {
-            m_dataContext.Table<Setting>().UpdateRecord(record);
+            DataContext.Table<Setting>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ DashSettings ]
+        #region [ DashSettings Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DashSettings), RecordOperation.QueryRecordCount)]
         public int QueryDashSettingsCount(string filterString)
         {
-            return m_dataContext.Table<DashSettings>().QueryRecordCount();
+            return DataContext.Table<DashSettings>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DashSettings), RecordOperation.QueryRecords)]
         public IEnumerable<DashSettings> QueryDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<DashSettings>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<DashSettings>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DashSettings), RecordOperation.DeleteRecord)]
         public void DeleteDashSettings(int id)
         {
-            m_dataContext.Table<DashSettings>().DeleteRecord(id);
+            DataContext.Table<DashSettings>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -203,39 +119,39 @@ namespace openXDA
         [RecordOperation(typeof(DashSettings), RecordOperation.AddNewRecord)]
         public void AddNewActionItem(DashSettings record)
         {
-            m_dataContext.Table<DashSettings>().AddNewRecord(record);
+            DataContext.Table<DashSettings>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(DashSettings), RecordOperation.UpdateRecord)]
         public void UpdateActionItem(DashSettings record)
         {
-            m_dataContext.Table<DashSettings>().UpdateRecord(record);
+            DataContext.Table<DashSettings>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ Meter ]
+        #region [ Meter Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
         public int QueryMeterCount(string filterString)
         {
-            return m_dataContext.Table<Meter>().QueryRecordCount();
+            return DataContext.Table<Meter>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
         public IEnumerable<Meter> QueryMeters(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<Meter>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<Meter>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.DeleteRecord)]
         public void DeleteMeter(int id)
         {
-            m_dataContext.Table<Meter>().DeleteRecord(id);
+            DataContext.Table<Meter>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -249,39 +165,39 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.AddNewRecord)]
         public void AddNewMeter(Meter record)
         {
-            m_dataContext.Table<Meter>().AddNewRecord(record);
+            DataContext.Table<Meter>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Meter), RecordOperation.UpdateRecord)]
         public void UpdateMeter(Meter record)
         {
-            m_dataContext.Table<Meter>().UpdateRecord(record);
+            DataContext.Table<Meter>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ MeterLocation ]
+        #region [ MeterLocation Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
         public int QueryMeterLocationCount(string filterString)
         {
-            return m_dataContext.Table<MeterLocation>().QueryRecordCount();
+            return DataContext.Table<MeterLocation>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
         public void DeleteMeterLocation(int id)
         {
-            m_dataContext.Table<MeterLocation>().DeleteRecord(id);
+            DataContext.Table<MeterLocation>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -295,39 +211,39 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
         public void AddNewMeterLocation(MeterLocation record)
         {
-            m_dataContext.Table<MeterLocation>().AddNewRecord(record);
+            DataContext.Table<MeterLocation>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
         public void UpdateMeterLocation(MeterLocation record)
         {
-            m_dataContext.Table<MeterLocation>().UpdateRecord(record);
+            DataContext.Table<MeterLocation>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ Lines ]
+        #region [ Lines Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Lines), RecordOperation.QueryRecordCount)]
         public int QueryLinesCount(string filterString)
         {
-            return m_dataContext.Table<Lines>().QueryRecordCount();
+            return DataContext.Table<Lines>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Lines), RecordOperation.QueryRecords)]
         public IEnumerable<Lines> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<Lines>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<Lines>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Lines), RecordOperation.DeleteRecord)]
         public void DeleteLines(int id)
         {
-            m_dataContext.Table<Lines>().DeleteRecord(id);
+            DataContext.Table<Lines>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -341,39 +257,39 @@ namespace openXDA
         [RecordOperation(typeof(Lines), RecordOperation.AddNewRecord)]
         public void AddNewLines(Lines record)
         {
-            m_dataContext.Table<Lines>().AddNewRecord(record);
+            DataContext.Table<Lines>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Lines), RecordOperation.UpdateRecord)]
         public void UpdateLines(Lines record)
         {
-            m_dataContext.Table<Lines>().UpdateRecord(record);
+            DataContext.Table<Lines>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ LineView ]
+        #region [ LineView Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
         public int QueryLineViewCount(string filterString)
         {
-            return m_dataContext.Table<LineView>().QueryRecordCount();
+            return DataContext.Table<LineView>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
         public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
         public void DeleteLineView(int id)
         {
-            m_dataContext.Table<Lines>().DeleteRecord(id);
+            DataContext.Table<Lines>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -387,16 +303,16 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
         public void AddNewLineView(LineView record)
         {
-            m_dataContext.Table<Lines>().AddNewRecord(CreateLines(record));
-            m_dataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
+            DataContext.Table<Lines>().AddNewRecord(CreateLines(record));
+            DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
         public void UpdateLineView(LineView record)
         {
-            m_dataContext.Table<Lines>().UpdateRecord(CreateLines(record));
-            m_dataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
+            DataContext.Table<Lines>().UpdateRecord(CreateLines(record));
+            DataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
 
         }
 
@@ -424,8 +340,7 @@ namespace openXDA
 
         #endregion
 
-
-        #region [ MeterLine ]
+        #region [ MeterLine Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
@@ -445,7 +360,7 @@ namespace openXDA
                 restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
             }
 
-            return m_dataContext.Table<MeterLine>().QueryRecordCount(new RecordRestriction(restrictionString));
+            return DataContext.Table<MeterLine>().QueryRecordCount(new RecordRestriction(restrictionString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -466,14 +381,14 @@ namespace openXDA
                 restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
             }
 
-            return m_dataContext.Table<MeterLine>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
+            return DataContext.Table<MeterLine>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
         public void DeleteMeterLine(int id)
         {
-            m_dataContext.Table<MeterLine>().DeleteRecord(id);
+            DataContext.Table<MeterLine>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -487,45 +402,45 @@ namespace openXDA
         [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
         public void AddNewMeterLine(MeterLine record)
         {
-            m_dataContext.Table<MeterLine>().AddNewRecord(record);
+            DataContext.Table<MeterLine>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
         public void UpdateMeterLine(MeterLine record)
         {
-            m_dataContext.Table<MeterLine>().UpdateRecord(record);
+            DataContext.Table<MeterLine>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ Channel ]
+        #region [ Channel Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
         public int QueryChannelCount(int lineID, int meterID, string filterString)
         {
 
-            return m_dataContext.Table<Channel>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
+            return DataContext.Table<Channel>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
         public IEnumerable<Channel> QueryChannel(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<Channel>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
+            return DataContext.Table<Channel>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
         }
 
         public IEnumerable<Channel> QueryChannelsForDropDown(string filterString)
         {
-            return m_dataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}" ,filterString), limit: 50);
+            return DataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}" ,filterString), limit: 50);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.DeleteRecord)]
         public void DeleteChannel(int id)
         {
-            m_dataContext.Table<Channel>().DeleteRecord(id);
+            DataContext.Table<Channel>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -539,45 +454,44 @@ namespace openXDA
         [RecordOperation(typeof(Channel), RecordOperation.AddNewRecord)]
         public void AddNewChannel(Channel record)
         {
-            m_dataContext.Table<Channel>().AddNewRecord(record);
+            DataContext.Table<Channel>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Channel), RecordOperation.UpdateRecord)]
         public void UpdateChannel(Channel record)
         {
-            m_dataContext.Table<Channel>().UpdateRecord(record);
+            DataContext.Table<Channel>().UpdateRecord(record);
         }
 
         #endregion
 
-
-        #region [ Group ]
+        #region [ Group Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Group), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(string filterString)
         {
-            return m_dataContext.Table<Group>().QueryRecordCount();
+            return DataContext.Table<Group>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Group), RecordOperation.QueryRecords)]
         public IEnumerable<Group> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<Group>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<Group>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Group), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
-            IEnumerable<GroupMeter> table = m_dataContext.Table<GroupMeter>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
+            IEnumerable<GroupMeter> table = DataContext.Table<GroupMeter>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
             foreach (GroupMeter gm in table)
             {
-                m_dataContext.Table<GroupMeter>().DeleteRecord(gm.ID);
+                DataContext.Table<GroupMeter>().DeleteRecord(gm.ID);
             }
-            m_dataContext.Table<Group>().DeleteRecord(id);
+            DataContext.Table<Group>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -591,39 +505,39 @@ namespace openXDA
         [RecordOperation(typeof(Group), RecordOperation.AddNewRecord)]
         public void AddNewGroup(Group record)
         {
-            m_dataContext.Table<Group>().AddNewRecord(record);
+            DataContext.Table<Group>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Group), RecordOperation.UpdateRecord)]
         public void UpdateGroup(Group record)
         {
-            m_dataContext.Table<Group>().UpdateRecord(record);
+            DataContext.Table<Group>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ GroupMeterView ]
+        #region [ GroupMeterView Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(GroupMeterView), RecordOperation.QueryRecordCount)]
         public int QueryGroupMeterViewCount(int groupID, string filterString)
         {
-            return m_dataContext.Table<GroupMeterView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<GroupMeterView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(GroupMeterView), RecordOperation.QueryRecords)]
         public IEnumerable<GroupMeterView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<GroupMeterView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<GroupMeterView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(GroupMeterView), RecordOperation.DeleteRecord)]
         public void DeleteGroupMeterView(int id)
         {
-            m_dataContext.Table<GroupMeter>().DeleteRecord(id);
+            DataContext.Table<GroupMeter>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -637,14 +551,14 @@ namespace openXDA
         [RecordOperation(typeof(GroupMeterView), RecordOperation.AddNewRecord)]
         public void AddNewGroupMeterView(GroupMeterView record)
         {
-            m_dataContext.Table<GroupMeter>().AddNewRecord(CreateNewGroupMeter(record));
+            DataContext.Table<GroupMeter>().AddNewRecord(CreateNewGroupMeter(record));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(GroupMeterView), RecordOperation.UpdateRecord)]
         public void UpdateGroupMeterView(GroupMeterView record)
         {
-            m_dataContext.Table<GroupMeter>().UpdateRecord(CreateNewGroupMeter(record));
+            DataContext.Table<GroupMeter>().UpdateRecord(CreateNewGroupMeter(record));
         }
 
         public GroupMeter CreateNewGroupMeter(GroupMeterView record)
@@ -657,7 +571,7 @@ namespace openXDA
 
         #endregion
 
-        #region [ AlarmRangeLimitView ]
+        #region [ AlarmRangeLimitView Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecordCount)]
@@ -678,7 +592,7 @@ namespace openXDA
             }
 
 
-            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
+            return DataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -700,14 +614,14 @@ namespace openXDA
             }
 
 
-            return m_dataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
+            return DataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.DeleteRecord)]
         public void DeleteAlarmRangeLimitView(int id)
         {
-            m_dataContext.Table<AlarmRangeLimit>().DeleteRecord(id);
+            DataContext.Table<AlarmRangeLimit>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -723,7 +637,7 @@ namespace openXDA
         {
             if (record.IsDefault)
             {
-                IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+                IEnumerable<DefaultAlarmRangeLimit> defaultLimits = DataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
 
                 if (defaultLimits.Any())
                 {
@@ -736,7 +650,7 @@ namespace openXDA
             }
 
 
-            m_dataContext.Table<AlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
+            DataContext.Table<AlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -745,7 +659,7 @@ namespace openXDA
         {
             if (record.IsDefault)
             {
-                IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+                IEnumerable<DefaultAlarmRangeLimit> defaultLimits = DataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
 
                 if (defaultLimits.Any())
                 {
@@ -757,7 +671,7 @@ namespace openXDA
                 }
             }
 
-            m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
+            DataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
         }
 
         public AlarmRangeLimit CreateNewAlarmRangeLimit(AlarmRangeLimitView record)
@@ -782,7 +696,7 @@ namespace openXDA
         [AuthorizeHubRole("Administrator")]
         public void ResetAlarmToDefault(AlarmRangeLimitView record)
         {
-            IEnumerable<DefaultAlarmRangeLimit> defaultLimits = m_dataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+            IEnumerable<DefaultAlarmRangeLimit> defaultLimits = DataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
 
             if(defaultLimits.Any())
             {
@@ -793,7 +707,7 @@ namespace openXDA
                 record.PerUnit = defaultLimits.First().PerUnit;
                 record.IsDefault = true;
 
-                m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
+                DataContext.Table<AlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
             }
         }
 
@@ -801,7 +715,7 @@ namespace openXDA
         public string SendAlarmTableToCSV()
         {
             string csv = "";
-            string[] headers = m_dataContext.Table<AlarmRangeLimitView>().GetFieldNames();
+            string[] headers = DataContext.Table<AlarmRangeLimitView>().GetFieldNames();
 
             foreach (string h in headers)
             {
@@ -813,7 +727,7 @@ namespace openXDA
 
             csv += "\n";
              
-            IEnumerable<AlarmRangeLimitView> limits = m_dataContext.Table<AlarmRangeLimitView>().QueryRecords();
+            IEnumerable<AlarmRangeLimitView> limits = DataContext.Table<AlarmRangeLimitView>().QueryRecords();
 
             foreach (AlarmRangeLimitView limit in limits)
             {
@@ -832,14 +746,16 @@ namespace openXDA
             string[] csvRows = csv.Split('\n');
             string[] tableFields = csvRows[0].Split(',');
 
-            TableOperations<AlarmRangeLimit> table = m_dataContext.Table<AlarmRangeLimit>();
+            TableOperations<AlarmRangeLimit> table = DataContext.Table<AlarmRangeLimit>();
+
             if (table.GetFieldNames() == tableFields)
             {
                 for (int i = 1; i < csvRows.Length; ++i)
                 {
                     string[] row = csvRows[i].Split(',');
-                    AlarmRangeLimit newRecord = new AlarmRangeLimit();
-                    newRecord = m_dataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
+
+                    AlarmRangeLimit newRecord = DataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
+
                     newRecord.Severity = int.Parse(row[4]);
                     newRecord.High = float.Parse(row[5]);
                     newRecord.Low = float.Parse(row[6]);
@@ -851,33 +767,31 @@ namespace openXDA
                     table.UpdateRecord(newRecord);
                 }
             }
-
         }
 
- 
         #endregion
 
-        #region [ DefaultAlarmRangeLimitView ]
+        #region [ DefaultAlarmRangeLimit Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecordCount)]
         public int QueryDefaultAlarmRangeLimitViewCount(string filterString)
         {
-            return m_dataContext.Table<DefaultAlarmRangeLimitView>().QueryRecordCount();
+            return DataContext.Table<DefaultAlarmRangeLimitView>().QueryRecordCount();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecords)]
         public IEnumerable<DefaultAlarmRangeLimitView> QueryDefaultAlarmRangeLimitViews(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return m_dataContext.Table<DefaultAlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<DefaultAlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.DeleteRecord)]
         public void DeleteDefaultAlarmRangeLimitView(int id)
         {
-            m_dataContext.Table<AlarmRangeLimit>().DeleteRecord(id);
+            DataContext.Table<AlarmRangeLimit>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -891,14 +805,14 @@ namespace openXDA
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.AddNewRecord)]
         public void AddNewDefaultAlarmRangeLimitView(DefaultAlarmRangeLimitView record)
         {
-            m_dataContext.Table<DefaultAlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
+            DataContext.Table<DefaultAlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.UpdateRecord)]
         public void UpdateDefaultAlarmRangeLimitView(DefaultAlarmRangeLimitView record)
         {
-            m_dataContext.Table<DefaultAlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
+            DataContext.Table<DefaultAlarmRangeLimit>().UpdateRecord(CreateNewAlarmRangeLimit(record));
         }
 
         public DefaultAlarmRangeLimit CreateNewAlarmRangeLimit(DefaultAlarmRangeLimitView record)
@@ -920,7 +834,7 @@ namespace openXDA
         [AuthorizeHubRole("Administrator")]
         public void ResetDefaultLimits(DefaultAlarmRangeLimitView record)
         {
-            IEnumerable<Channel> channels = m_dataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
+            IEnumerable<Channel> channels = DataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", record.MeasurementTypeID, record.MeasurementCharacteristicID));
             string channelIDs = "";
             foreach (Channel channel in channels)
             {
@@ -929,7 +843,7 @@ namespace openXDA
                 else
                     channelIDs += ',' + channel.ID.ToString();
             }
-            IEnumerable<AlarmRangeLimit> limits = m_dataContext.Table<AlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction($"ChannelID IN ({channelIDs})"));
+            IEnumerable<AlarmRangeLimit> limits = DataContext.Table<AlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction($"ChannelID IN ({channelIDs})"));
             foreach (AlarmRangeLimit limit in limits)
             {
                 limit.IsDefault = true;
@@ -938,19 +852,19 @@ namespace openXDA
                 limit.Severity = record.Severity;
                 limit.RangeInclusive = record.RangeInclusive;
                 limit.PerUnit = record.PerUnit;
-                m_dataContext.Table<AlarmRangeLimit>().UpdateRecord(limit);
+                DataContext.Table<AlarmRangeLimit>().UpdateRecord(limit);
             }
         }
 
         #endregion
 
-        #region [Stored Procedures]
+        #region [ Stored Procedure Operations]
 
         public List<TrendingData> GetTrendingData(DateTime startDate, DateTime endDate, int channelId)
         {
             List<TrendingData> trendingData = new List<TrendingData>();
 
-            using (IDbCommand cmd = m_dataContext.Connection.Connection.CreateCommand())
+            using (IDbCommand cmd = DataContext.Connection.Connection.CreateCommand())
             {
                 cmd.CommandText = "dbo.selectAlarmDataByChannelByDate";
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -991,6 +905,7 @@ namespace openXDA
             return trendingData;
            
         }
+
         #endregion
     }
 }

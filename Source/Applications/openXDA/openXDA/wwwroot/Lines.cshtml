@@ -22,14 +22,11 @@
 //*****************************************************************************************************@
 @using System
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
-
+@inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
@@ -37,7 +34,7 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "TopName", "Name", "text-Left" },
         new[] { "VoltageKV", "Voltage", "text-left"},
         new[] { "ThermalRating", "Thermal Rating", "text-left" },
@@ -48,9 +45,6 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-
-
-
 }
 @helper BodyRows()
 {
@@ -84,12 +78,9 @@
     </div>
 
 }
-
-@Include("PagedViewModel.cshtml")
-
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<LineView, DataHub>(ViewBag))
         
@@ -106,7 +97,5 @@
         function openMeters(record) {
             location.href = "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1" + "&Title=" + record.AssetKey;
         }
-
-
     </script>
 }

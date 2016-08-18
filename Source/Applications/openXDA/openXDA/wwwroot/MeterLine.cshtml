@@ -24,13 +24,11 @@
 @using System.Collections.Generic
 @using System.Net.Http
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 
 @{
     DataContext dataContext = ViewBag.DataContext;
@@ -45,7 +43,7 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "LineID", "Line", "text-left" },
         new[] { "MeterID", "Meter", "text-left"},
         new[] { "LineName", "Line Name", "text-left"},
@@ -54,9 +52,6 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-
-
-
 }
 @helper BodyRows()
 {
@@ -74,22 +69,21 @@
     if (ViewBag.lineID == -1)
     {
         @Raw(dataContext.AddSelectField<MeterLine, Lines>("LineID", "ID", "AssetKey"))
-}
-else
-{
+    }
+    else
+    {
         @Raw(dataContext.AddSelectField<MeterLine, Lines>("LineID", "ID", "AssetKey", customDataBinding: "enable: false"))
-}
-if (ViewBag.meterID == -1)
-{
+    }
+    if (ViewBag.meterID == -1)
+    {
         @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "Name"))
-}
-else
-{
+    }
+    else
+    {
         @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "Name", customDataBinding: "enable: false"))
-}
+    }
 
     @Raw(dataContext.AddInputField<MeterLine>("LineName"))
-
 }
 <div id="channelsDialog" class="modal modal-wide fade" role="dialog">
     <div class="modal-dialog">
@@ -102,12 +96,9 @@ else
         </div>
     </div>
 </div>
-
-@Include("PagedViewModel.cshtml")
-
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
         @Raw(Model.RenderAbstract<Meter>("Name"))

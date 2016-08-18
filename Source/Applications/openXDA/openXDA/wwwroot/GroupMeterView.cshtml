@@ -24,14 +24,11 @@
 @using System.Collections.Generic
 @using System.Net.Http
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
-
+@inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
     HttpRequestMessage request = ViewBag.Request;
@@ -45,16 +42,13 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "MeterName", "Meter Name", "text-Left" },
         new[] { "Location", "Station", "text-left"}
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-
-
-
 }
 @helper BodyRows()
 {
@@ -68,12 +62,9 @@
 {
     @Raw(dataContext.AddSelectField<GroupMeterView,Meter>("MeterID", "ID", "Name"))
 }
-
-@Include("PagedViewModel.cshtml")
-
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<GroupMeterView, DataHub>(ViewBag, "ID", null, groupID))
         

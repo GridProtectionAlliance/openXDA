@@ -21,15 +21,12 @@
 //
 //*****************************************************************************************************@
 @using System
-
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
     <link href="Content/fileinput.css" rel="stylesheet">
     <style>
@@ -196,8 +193,7 @@
     </div>
 
 }
-@Include("PagedViewModel.cshtml")
-
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 <form id="uploadCSVFile" action="AlarmRangeLimitCSVUploadHandler.ashx" method="post" enctype="multipart/form-data" style="display: none">
     <input id="importCSVFile" name="importCSVFile" type="file" accept=".csv" multiple>
     <input type="submit"/>
@@ -286,11 +282,9 @@
 </div>
 @section Scripts
 {
-@*<script language="javascript" type="text/javascript" src="Scripts/flot/jquery.js"></script>*@
     <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.js"></script>
     <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.time.js"></script>
-<script language="javascript" type="text/javascript" src="Scripts/spin.js"></script>
-    @Raw(ViewBag.PageControlScripts.ToString())
+    <script language="javascript" type="text/javascript" src="Scripts/spin.js"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
         @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))

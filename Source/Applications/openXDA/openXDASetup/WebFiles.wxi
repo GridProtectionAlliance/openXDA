@@ -57,9 +57,6 @@
   <Component Id="MeterLine_cshtml">
     <File Id="MeterLine.cshtml" Name="MeterLine.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterLine.cshtml" />
   </Component>
-  <Component Id="PagedViewModel_cshtml">
-    <File Id="PagedViewModel.cshtml" Name="PagedViewModel.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\PagedViewModel.cshtml" />
-  </Component>
   <Component Id="Settings_cshtml">
     <File Id="Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Settings.cshtml" />
   </Component>
@@ -359,12 +356,6 @@
   <Component Id="Scripts_fileinput_min_js">
     <File Id="Scripts_fileinput.min.js" Name="fileinput.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fileinput.min.js" />
   </Component>
-  <Component Id="Scripts_gsf_web_client_js">
-    <File Id="Scripts_gsf.web.client.js" Name="gsf.web.client.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\gsf.web.client.js" />
-  </Component>
-  <Component Id="Scripts_gsf_web_primeui_js">
-    <File Id="Scripts_gsf.web.primeui.js" Name="gsf.web.primeui.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\gsf.web.primeui.js" />
-  </Component>
   <Component Id="Scripts_ie10_viewport_bug_workaround_js">
     <File Id="Scripts_ie10_viewport_bug_workaround.js" Name="ie10-viewport-bug-workaround.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\ie10-viewport-bug-workaround.js" />
   </Component>
@@ -407,9 +398,6 @@
   <Component Id="Scripts_jquery_validate_unobtrusive_min_js">
     <File Id="Scripts_jquery.validate.unobtrusive.min.js" Name="jquery.validate.unobtrusive.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.validate.unobtrusive.min.js" />
   </Component>
-  <Component Id="Scripts_js_cookie_js">
-    <File Id="Scripts_js.cookie.js" Name="js.cookie.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\js.cookie.js" />
-  </Component>
   <Component Id="Scripts_knockout_3_4_0_debug_js">
     <File Id="Scripts_knockout_3.4.0.debug.js" Name="knockout-3.4.0.debug.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\knockout-3.4.0.debug.js" />
   </Component>
@@ -431,23 +419,11 @@
   <Component Id="Scripts_knockout_validation_min_js_map">
     <File Id="Scripts_knockout.validation.min.js.map" Name="knockout.validation.min.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\knockout.validation.min.js.map" />
   </Component>
-  <Component Id="Scripts_ko_reactor_js">
-    <File Id="Scripts_ko_reactor.js" Name="ko-reactor.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\ko-reactor.js" />
-  </Component>
-  <Component Id="Scripts_ko_reactor_min_js">
-    <File Id="Scripts_ko_reactor.min.js" Name="ko-reactor.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\ko-reactor.min.js" />
-  </Component>
-  <Component Id="Scripts_ko_observableDictionary_js">
-    <File Id="Scripts_ko.observableDictionary.js" Name="ko.observableDictionary.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\ko.observableDictionary.js" />
-  </Component>
   <Component Id="Scripts_modernizr_2_8_3_js">
     <File Id="Scripts_modernizr_2.8.3.js" Name="modernizr-2.8.3.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\modernizr-2.8.3.js" />
   </Component>
   <Component Id="Scripts_mustache_min_js">
     <File Id="Scripts_mustache.min.js" Name="mustache.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\mustache.min.js" />
-  </Component>
-  <Component Id="Scripts_pagedViewModel_js">
-    <File Id="Scripts_pagedViewModel.js" Name="pagedViewModel.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\pagedViewModel.js" />
   </Component>
   <Component Id="Scripts_plugins_all_js">
     <File Id="Scripts_plugins_all.js" Name="plugins-all.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\plugins-all.js" />

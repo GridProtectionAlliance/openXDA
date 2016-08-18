@@ -24,14 +24,11 @@
 @using System.Collections.Generic
 @using System.Net.Http
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
-
+@inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
     HttpRequestMessage request = ViewBag.Request;
@@ -45,7 +42,7 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "LineID", "Line", "text-left" },
         new[] { "MeterID", "Meter", "text-left"},
         new[] { "Name", "Name", "text-left"},
@@ -95,11 +92,10 @@
 
 }
 
-@Include("PagedViewModel.cshtml")
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 
 @section Scripts 
 {
-    @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
         @Raw(Model.RenderAbstract<Meter>("Name"))

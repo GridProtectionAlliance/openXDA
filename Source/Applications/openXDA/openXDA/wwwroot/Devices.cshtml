@@ -22,13 +22,11 @@
 //*****************************************************************************************************@
 @using System
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
     <style>
         html, body {
@@ -36,7 +34,6 @@
         }
     </style>
 }
-
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
@@ -44,7 +41,7 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Name", "text-Left" },
         new[] { "MeterLocationID", "Station", "text-left"},
         new[] { "Make", "Make", "text-left" },
@@ -55,9 +52,6 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-
-
-
 }
 @helper BodyRows()
 {
@@ -88,11 +82,9 @@
     </div>
 
 }
-@Include("PagedViewModel.cshtml")
-
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag))
         @Raw(Model.RenderAbstract<MeterLocation>("Name"))

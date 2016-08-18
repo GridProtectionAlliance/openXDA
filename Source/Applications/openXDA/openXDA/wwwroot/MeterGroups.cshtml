@@ -23,13 +23,11 @@
 @using System
 @using System.Security.Policy
 @using System.Threading
-@using RazorEngine.Templating
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
-
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
     <style>
         html, body {
@@ -37,7 +35,6 @@
         }
     </style>
 }
-
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
@@ -45,7 +42,7 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "GroupName", "Name", "text-Left" },
         new[] { null, "Active", "text-center valign-middle" },
         new[] { null, "Meters", "text-center valign-middle"}
@@ -54,9 +51,6 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-
-
-
 }
 @helper BodyRows()
 {
@@ -86,17 +80,12 @@
         </div>
     </div>
 </div>
-
-@Include("PagedViewModel.cshtml")
-
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    @Raw(ViewBag.PageControlScripts.ToString())
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Group, DataHub>(ViewBag))
-        
-  
-        
+                
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryGroupMeterViewCount(sourceID, null).done(function (count) {
