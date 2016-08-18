@@ -69,6 +69,7 @@
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using GSF.IO;
 using GSF.Reflection;
 
 namespace openXDA
@@ -102,6 +103,7 @@ namespace openXDA
         {
             if (!DesignMode)
             {
+                Environment.CurrentDirectory = FilePath.GetAbsolutePath("");
                 m_remoteConsole = Process.Start("openXDAConsole.exe");
 
                 // Initialize text.
