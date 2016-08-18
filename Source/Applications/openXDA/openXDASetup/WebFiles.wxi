@@ -12,12 +12,6 @@
   <Component Id="Channel_cshtml">
     <File Id="Channel.cshtml" Name="Channel.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Channel.cshtml" />
   </Component>
-  <Component Id="CSVDownloadHandler_ashx">
-    <File Id="CSVDownloadHandler.ashx" Name="CSVDownloadHandler.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\CSVDownloadHandler.ashx" />
-  </Component>
-  <Component Id="CSVDownloadHandler_ashx_cs">
-    <File Id="CSVDownloadHandler.ashx.cs" Name="CSVDownloadHandler.ashx.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\CSVDownloadHandler.ashx.cs" />
-  </Component>
   <Component Id="DashSettings_cshtml">
     <File Id="DashSettings.cshtml" Name="DashSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\DashSettings.cshtml" />
   </Component>

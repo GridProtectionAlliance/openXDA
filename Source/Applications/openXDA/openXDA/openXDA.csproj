@@ -256,9 +256,6 @@
     <Compile Include="wwwroot\EmailTemplateHandler.ashx.cs">
       <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
     </Compile>
-    <Compile Include="wwwroot\CSVDownloadHandler.ashx.cs">
-      <DependentUpon>CSVDownloadHandler.ashx</DependentUpon>
-    </Compile>
     <Compile Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx.cs">
       <DependentUpon>AlarmRangeLimitCSVUploadHandler.ashx</DependentUpon>
     </Compile>
@@ -340,7 +337,6 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="wwwroot\EmailTemplateHandler.ashx" />
-    <None Include="wwwroot\CSVDownloadHandler.ashx" />
     <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />
     <None Include="wwwroot\Channel.cshtml" />
