@@ -1369,6 +1369,63 @@ CREATE TABLE EASExtension
 )
 GO
 
+CREATE TABLE ContourColorScale
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    NominalValue FLOAT NOT NULL DEFAULT 0.0
+)
+GO
+
+CREATE TABLE ContourChannelType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ContourColorScaleID INT NOT NULL REFERENCES ContourColorScale(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+    PhaseID INT NOT NULL REFERENCES Phase(ID),
+    HarmonicGroup INT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE TABLE ContourColorScalePoint
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ContourColorScaleID INT NOT NULL REFERENCES ContourColorScale(ID),
+    Value FLOAT NOT NULL,
+    Color INT NOT NULL,
+    OrderID INT NOT NULL
+)
+GO
+
+CREATE TABLE ContourAnimation
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ColorScaleName VARCHAR(200) NOT NULL,
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NOT NULL,
+    StepSize INT NOT NULL,
+    AccessedOn DATETIME NOT NULL DEFAULT GETUTCDATE()
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourAnimation_AccessedOn
+ON ContourAnimation(AccessedOn ASC)
+GO
+
+CREATE TABLE ContourAnimationFrame
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ContourAnimationID INT NOT NULL REFERENCES ContourAnimation(ID),
+    FrameIndex INT NOT NULL,
+    FrameImage VARBINARY(MAX) NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_ContourAnimationFrame_ContourAnimationID
+ON ContourAnimationFrame(ContourAnimationID ASC)
+GO
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
@@ -1580,6 +1637,23 @@ SELECT
 FROM
     DoubleEndedFaultDistance JOIN
     FaultSummary ON DoubleEndedFaultDistance.LocalFaultSummaryID = FaultSummary.ID AND FaultSummary.IsSelectedAlgorithm <> 0
+GO
+
+CREATE VIEW ContourChannel
+AS
+SELECT
+    ContourColorScale.ID AS ContourColorScaleID,
+    ContourColorScale.Name AS ContourColorScaleName,
+    Channel.MeterID AS MeterID,
+    Channel.ID AS ChannelID
+FROM
+    ContourColorScale JOIN
+    ContourChannelType ON ContourChannelType.ContourColorScaleID = ContourColorScale.ID JOIN
+    Channel ON
+        Channel.MeasurementTypeID = ContourChannelType.MeasurementTypeID AND
+        Channel.MeasurementCharacteristicID = ContourChannelType.MeasurementCharacteristicID AND
+        Channel.PhaseID = ContourChannelType.PhaseID AND
+        Channel.HarmonicGroup = ContourChannelType.HarmonicGroup
 GO
 
 CREATE VIEW EventDetail AS

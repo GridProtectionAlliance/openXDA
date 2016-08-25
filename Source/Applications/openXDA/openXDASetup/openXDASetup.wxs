@@ -110,6 +110,8 @@
     <CustomAction Id="EnableHistorianSqlClr.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultTrendingAlarms.sql.SetProperty" Property="DefaultTrendingAlarms.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultTrendingAlarms.sql]" />
     <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="DefaultContours.sql.SetProperty" Property="DefaultContours.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultContours.sql]" />
+    <CustomAction Id="DefaultContours.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
     <InstallExecuteSequence>
       <Custom Action="CompanyInfoAction.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
@@ -149,6 +151,8 @@
       <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="EnableHistorianSqlClr.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
     </InstallExecuteSequence>
   </Product>
 
@@ -213,6 +217,9 @@
       </Component>
       <Component Id="DefaultTrendingAlarms">
         <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\04 - DefaultTrendingAlarms.sql" />
+      </Component>
+      <Component Id="DefaultContours">
+        <File Id="DefaultContours.sql" Name="DefaultContours.sql" Source="$(var.SolutionDir)\Data\05 - DefaultContours.sql" />
       </Component>
     </ComponentGroup>
     
