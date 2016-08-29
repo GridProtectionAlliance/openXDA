@@ -256,7 +256,7 @@ namespace openXDA
 
             systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
             systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
-            systemSettings.Add("WebHostURL", "http://localhost:8080", "The web hosting URL for remote system management.");
+            systemSettings.Add("WebHostURL", "http://localhost:8989", "The web hosting URL for remote system management.");
             systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
             systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
             systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.");
