@@ -256,7 +256,7 @@ namespace openXDA
 
             systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
             systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
-            systemSettings.Add("WebHostURL", "http://localhost:8080", "The web hosting URL for remote system management.");
+            systemSettings.Add("WebHostURL", "http://localhost:8989", "The web hosting URL for remote system management.");
             systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
             systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
             systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.");
@@ -273,7 +273,7 @@ namespace openXDA
             Model.Global.CompanyName = systemSettings["CompanyName"].Value;
             Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
             Model.Global.ApplicationName = "openXDA";
-            Model.Global.ApplicationDescription = "open Meter Information Collection System";
+            Model.Global.ApplicationDescription = "open eXtensible Disturbance Analytics";
             Model.Global.ApplicationKeywords = "open source, utility, software, meter, interrogation";
             Model.Global.DateFormat = systemSettings["DateFormat"].Value;
             Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
