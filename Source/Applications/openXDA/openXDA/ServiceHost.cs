@@ -273,7 +273,7 @@ namespace openXDA
             Model.Global.CompanyName = systemSettings["CompanyName"].Value;
             Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
             Model.Global.ApplicationName = "openXDA";
-            Model.Global.ApplicationDescription = "open Meter Information Collection System";
+            Model.Global.ApplicationDescription = "open eXtensible Disturbance Analytics";
             Model.Global.ApplicationKeywords = "open source, utility, software, meter, interrogation";
             Model.Global.DateFormat = systemSettings["DateFormat"].Value;
             Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
