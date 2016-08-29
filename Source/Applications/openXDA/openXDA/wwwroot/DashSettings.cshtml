@@ -49,13 +49,13 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-    ViewBag.HideAddNewButton = true;
+    ViewBag.HideAddNewButton = false;
 }
 @helper BodyRows()
 {
     <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: truncate(Value)"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: (Enabled? 'True': 'False')"></td>
+    <td width="30%" class="text-center valign-middle" data-bind="text: (Enabled? 'True': 'False')"></td>
 
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>

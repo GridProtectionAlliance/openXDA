@@ -55,8 +55,8 @@
 }
 @helper BodyRows()
 {
-    <td width="30%" class="text-left valign-middle"data-bind="text: lookupAssetKeyValue(LineID)"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: lookupNameValue(MeterID)"></td>
+    <td width="30%" class="text-left valign-middle"><button type="button" class="btn btn-link" data-bind="text: lookupAssetKeyValue(LineID), click: goToLine.bind($data)"></button></td>
+    <td width="30%" class="text-left valign-middle"><button type="button" class="btn btn-link" data-bind="text: lookupNameValue(MeterID), click: goToDevice.bind($data)"></button></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: LineName"></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openChannels.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
@@ -134,6 +134,14 @@
             location.href =  "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID + "&Title=" + lookupAssetKeyValue(record.LineID) + " and " + lookupNameValue(record.MeterID) ;
 
         }
+        
+        function goToLine(data) {
+            location.href = "/Lines.cshtml"+ '?LineID=' + data.LineID;
+        }
+        function goToDevice(data) {
+            location.href = "/Devices.cshtml" + '?Meter=' + lookupNameValue(data.MeterID);
+        }
+
 
         $("#channelsDialog").on("hidden.bs.modal", function () {
             // Refresh page counts after editing tasks

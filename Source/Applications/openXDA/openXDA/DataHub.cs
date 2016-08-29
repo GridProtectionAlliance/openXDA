@@ -137,14 +137,28 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
         public int QueryMeterCount(string filterString)
         {
-            return DataContext.Table<Meter>().QueryRecordCount();
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+            return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
         public IEnumerable<Meter> QueryMeters(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<Meter>().QueryRecords(sortField, ascending, page, pageSize);
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+            return DataContext.Table<Meter>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -183,14 +197,30 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
         public int QueryMeterLocationCount(string filterString)
         {
-            return DataContext.Table<MeterLocation>().QueryRecordCount();
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+
+            return DataContext.Table<MeterLocation>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize);
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+
+            return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -229,14 +259,30 @@ namespace openXDA
         [RecordOperation(typeof(Lines), RecordOperation.QueryRecordCount)]
         public int QueryLinesCount(string filterString)
         {
-            return DataContext.Table<Lines>().QueryRecordCount();
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+
+            return DataContext.Table<Lines>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Lines), RecordOperation.QueryRecords)]
         public IEnumerable<Lines> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<Lines>().QueryRecords(sortField, ascending, page, pageSize);
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+
+            return DataContext.Table<Lines>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -275,14 +321,28 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
         public int QueryLineViewCount(string filterString)
         {
-            return DataContext.Table<LineView>().QueryRecordCount();
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+            return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
         public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize);
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("TopName LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]

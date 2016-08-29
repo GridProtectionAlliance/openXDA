@@ -21,6 +21,8 @@
 //
 //*****************************************************************************************************@
 @using System
+@using System.Collections.Generic
+@using System.Net.Http
 @using System.Threading
 @using GSF.Web
 @using GSF.Web.Model
@@ -36,6 +38,14 @@
 }
 @{
     DataContext dataContext = ViewBag.DataContext;
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+    if (parameters.ContainsKey("Meter"))
+    {
+        ViewBag.meter = parameters["Meter"];
+    }
+
+
     Layout = "Layout.cshtml";
     ViewBag.Title = "Devices";
 
@@ -53,10 +63,27 @@
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
+@helper DeviceFilter()
+{
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='form-group'>
+                <label for='devicefilter'>Device Name Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='devicefilter' placeholder='Search'/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+
 @helper BodyRows()
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: lookupNameValue(MeterLocationID)"></td>
+    <td width="20%" class="text-left valign-middle" ><button type="button" class="btn btn-link" data-bind="text: lookupNameValue(MeterLocationID), click: goToStation.bind($data)"></button></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">MeterLine&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
@@ -89,6 +116,25 @@
         @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag))
         @Raw(Model.RenderAbstract<MeterLocation>("Name"))
         
+        $(function () {
+            $("#pageHeader").append("@Raw(DeviceFilter().ToString().Replace("\r\n", ""))");
+            
+            $('#devicefilter').on('keyup', function (e) {
+                if ($('#devicefilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#devicefilter').val();
+                    viewModel.queryPageRecords();
+
+                }
+
+            });
+            $('#devicefilter').val('@ViewBag.meter');
+            $('#devicefilter').trigger('keyup');
+
+        });
+        
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
@@ -101,6 +147,10 @@
 
         function openMeters(record) {
             location.href = "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID + "&Title=" + record.Name;
+        }
+        
+        function goToStation(data) {
+            location.href = "/Stations.cshtml" + '?Station=' + lookupNameValue(data.MeterLocationID);
         }
 
     </script>

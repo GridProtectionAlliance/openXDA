@@ -19,6 +19,7 @@ namespace openXDA.Model
 
         public int MeterLocationID { get; set; }
 
+        [Searchable]
         [StringLength(200)]
         public string Name { get; set; }
 
