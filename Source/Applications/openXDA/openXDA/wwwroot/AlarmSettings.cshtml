@@ -138,7 +138,7 @@
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
     <td width="15%" class="text-center valign-middle" nowrap>
-        <button type="button" class="btn btn-xs" title="Generate Smart Alarm Limits" data-bind="click: smartLimits.bind($data), enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-stats"></span></button>
+        <button type="button" class="btn btn-xs" title="Generate Smart Alarm Limits" data-bind="click: smartLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-stats"></span></button>
         <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
