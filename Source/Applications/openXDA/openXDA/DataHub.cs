@@ -623,6 +623,7 @@ namespace openXDA
             return newRecord;
         }
         #endregion
+
         #region [ Group Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -724,6 +725,120 @@ namespace openXDA
             gm.GroupID = record.GroupID;
             gm.MeterID = record.MeterID;
             return gm;
+        }
+
+        #endregion
+
+        #region [ UserGroupView Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserGroupView), RecordOperation.QueryRecordCount)]
+        public int QueryUserGroupViewCount(int groupID, string filterString)
+        {
+            return DataContext.Table<UserGroupView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserGroupView), RecordOperation.QueryRecords)]
+        public IEnumerable<UserGroupView> QueryUserGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<UserGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserGroupView), RecordOperation.DeleteRecord)]
+        public void DeleteUserGroupView(int id)
+        {
+            DataContext.Table<UserGroup>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserGroupView), RecordOperation.CreateNewRecord)]
+        public UserGroupView NewUserGroupView()
+        {
+            return new UserGroupView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserGroupView), RecordOperation.AddNewRecord)]
+        public void AddNewUserGroupView(UserGroupView record)
+        {
+            DataContext.Table<UserGroup>().AddNewRecord(CreateNewUserGroup(record));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserGroupView), RecordOperation.UpdateRecord)]
+        public void UpdateUserGroupView(UserGroupView record)
+        {
+            DataContext.Table<UserGroup>().UpdateRecord(CreateNewUserGroup(record));
+        }
+
+        public UserGroup CreateNewUserGroup(UserGroupView record)
+        {
+            UserGroup gm = new UserGroup();
+            gm.GroupID = record.GroupID;
+            gm.UserID = record.UserID;
+            return gm;
+        }
+
+        #endregion
+
+        #region [ User Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(User), RecordOperation.QueryRecordCount)]
+        public int QueryUserCount(string filterString)
+        {
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+            return DataContext.Table<User>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(User), RecordOperation.QueryRecords)]
+        public IEnumerable<User> QueryUsers(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            if (filterString == null) filterString = "%";
+            else
+            {
+                // Build your filter string here!
+                filterString += "%";
+            }
+
+            return DataContext.Table<User>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(User), RecordOperation.DeleteRecord)]
+        public void DeleteUser(int id)
+        {
+            DataContext.Table<User>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(User), RecordOperation.CreateNewRecord)]
+        public User NewUser()
+        {
+            return new User();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(User), RecordOperation.AddNewRecord)]
+        public void AddNewUser(User record)
+        {
+            DataContext.Table<User>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(User), RecordOperation.UpdateRecord)]
+        public void UpdateUser(User record)
+        {
+            DataContext.Table<User>().UpdateRecord(record);
         }
 
         #endregion
