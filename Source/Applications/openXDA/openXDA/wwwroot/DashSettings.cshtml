@@ -44,7 +44,7 @@
     {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Name", "text-left" },
         new[] { "Value", "Value", "text-left" },
-        //new[] { "DefaultValue", "Default Value", "text-center" }
+        new[] { "Enabled", "Enabled", "text-center" }
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -55,7 +55,7 @@
 {
     <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: truncate(Value)"></td>
-    @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
+    <td width="30%" class="text-left valign-middle" data-bind="text: (Enabled? 'True': 'False')"></td>
 
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -65,7 +65,7 @@
 {
     @Raw(dataContext.AddInputField<Setting>("Name", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<Setting>("Value"))
-    @*@Raw(dataContext.AddInputField<Setting>("DefaultValue", customDataBinding: "enable: false"))*@
+    @Raw(dataContext.AddCheckBoxField<Setting>("Enabled", "Enable?"))
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
