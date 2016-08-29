@@ -627,7 +627,7 @@ namespace DeviceDefinitionsMigrator
         {
             line.VoltageKV = Convert.ToDouble((string)lineElement.Element("voltage"));
             line.ThermalRating = Convert.ToDouble((string)lineElement.Element("rating50F") ?? "0.0");
-            line.Length = Convert.ToDouble((string)lineElement.Element("length"));
+            line.Length = Convert.ToDouble((string)lineElement.Element("length") ?? "0");
         }
 
         private static MeterLine Link(Meter meter, Line line, XElement lineElement, Dictionary<Tuple<string, string>, MeterLine> meterLineLookup)
