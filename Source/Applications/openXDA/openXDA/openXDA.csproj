@@ -260,6 +260,7 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
+    <Compile Include="Model\ChannelView.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="wwwroot\EmailTemplateHandler.ashx.cs">
       <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>

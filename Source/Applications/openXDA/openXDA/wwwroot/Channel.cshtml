@@ -46,8 +46,8 @@
         new[] { "LineID", "Line", "text-left" },
         new[] { "MeterID", "Meter", "text-left"},
         new[] { "Name", "Name", "text-left"},
-        new[] { "MeasurementTypeID", "Meas Type", "text-left"},
-        new[] { "MeasurementCharacteristicID", "Meas Char", "text-left"},
+        new[] { "MeasurementType", "Meas Type", "text-left"},
+        new[] { "MeasurementCharacteristic", "Meas Char", "text-left"},
         new[] { "Phase", "Phase", "text-center"}
     };
 
@@ -57,13 +57,47 @@
 
 
 }
+@helper Filters()
+{
+    <div class='row'>
+        <div class='col-md-4'>
+            <div class='form-group'>
+                <label for='channelfilter'>Channel Name Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='channelfilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+        <div class='col-md-4'>
+            <div class='form-group'>
+                <label for='typefilter'>Measurement Type Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='typefilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+        <div class='col-md-4'>
+            <div class='form-group'>
+                <label for='characteristicfilter'>Measurement Characteristic Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='characteristicfilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
 @helper BodyRows()
 {
     <td width="5%" class="text-left valign-middle"data-bind="text: lookupAssetKeyValue(LineID)"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: lookupNameValue(MeterID)"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Name"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: lookupMeasurementTypes(MeasurementTypeID)"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: lookupMeasurementCharacteristic(MeasurementCharacteristicID)"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementType"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: lookupPhase(PhaseID)"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -95,12 +129,12 @@
 @section Scripts 
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
+        @Raw(dataContext.RenderViewModelConfiguration<ChannelView, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
         @Raw(Model.RenderAbstract<Meter>("Name"))
         @Raw(Model.RenderAbstract<Lines>("AssetKey"))
-        @Raw(Model.RenderAbstract<MeasurementType>("Name","ID","lookupMeasurementTypes", "measurementTypes"))
-        @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name","ID","lookupMeasurementCharacteristic", "measurementCharacteristic"))
-        @Raw(Model.RenderAbstract<Phase>("Name","ID","lookupPhase", "phase"))
+        @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "lookupMeasurementTypes", "measurementTypes"))
+        @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name", "ID", "lookupMeasurementCharacteristic", "measurementCharacteristic"))
+        @Raw(Model.RenderAbstract<Phase>("Name", "ID", "lookupPhase", "phase"))
 
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
@@ -112,6 +146,8 @@
 
 
         $(function () {
+            $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
+
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if(@ViewBag.lineID !== -1)
                     $('#selectLineID').val(@ViewBag.lineID);
@@ -119,6 +155,44 @@
                     $('#selectMeterID').val(@ViewBag.meterID);
 
             });
+            
+            $('#channelfilter').on('keyup', function (e) {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.queryPageRecords();
+
+                }
+
+            });
+
+            $('#typefilter').on('keyup', function (e) {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.queryPageRecords();
+
+                }
+
+            });
+
+            $('#characteristicfilter').on('keyup', function (e) {
+                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+                    viewModel.filterText = '%';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.queryPageRecords();
+
+                }
+
+            });
+
+
         });
 
     </script>

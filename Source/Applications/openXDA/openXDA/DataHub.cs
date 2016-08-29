@@ -478,7 +478,7 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
-        public int QueryChannelCount(int lineID, int meterID, string filterString)
+        public int QueryChannelCount(int lineID, int meterID, string filterString = "%")
         {
 
             return DataContext.Table<Channel>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
@@ -488,6 +488,7 @@ namespace openXDA
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
         public IEnumerable<Channel> QueryChannel(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
+
             return DataContext.Table<Channel>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
         }
 
@@ -526,6 +527,102 @@ namespace openXDA
 
         #endregion
 
+        #region [ ChannelView Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ChannelView), RecordOperation.QueryRecordCount)]
+        public int QueryChannelViewCount(int lineID, int meterID, string filterString = "%")
+        {
+            string ChannelFilter = "%";
+            string typeFilter = "%";
+            string charFilter = "%";
+            if (filterString != "%" && filterString != null)
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 3)
+                {
+                    ChannelFilter = filters[0] + '%';
+                    typeFilter = filters[1] += '%';
+                    charFilter = filters[2] += '%';
+                }
+            }
+
+            return DataContext.Table<ChannelView>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID} AND Name LIKE '{ChannelFilter}' AND MeasurementType LIKE '{typeFilter}' AND MeasurementCharacteristic LIKE '{charFilter}'"));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ChannelView), RecordOperation.QueryRecords)]
+        public IEnumerable<ChannelView> QueryChannelView(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string ChannelFilter = "%";
+            string typeFilter = "%";
+            string charFilter = "%";
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 3)
+                {
+                    ChannelFilter = filters[0] + '%';
+                    typeFilter = filters[1] += '%';
+                    charFilter = filters[2] += '%';
+                }
+            }
+
+            return DataContext.Table<ChannelView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID} AND Name LIKE '{ChannelFilter}' AND MeasurementType LIKE '{typeFilter}' AND MeasurementCharacteristic LIKE '{charFilter}'"));
+        }
+
+        public IEnumerable<ChannelView> QueryChannelViewsForDropDown(string filterString)
+        {
+            return DataContext.Table<ChannelView>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}", filterString), limit: 50);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ChannelView), RecordOperation.DeleteRecord)]
+        public void DeleteChannelView(int id)
+        {
+            DataContext.Table<Channel>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ChannelView), RecordOperation.CreateNewRecord)]
+        public ChannelView NewChannelView()
+        {
+            return new ChannelView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ChannelView), RecordOperation.AddNewRecord)]
+        public void AddNewChannelView(ChannelView record)
+        {
+            DataContext.Table<Channel>().AddNewRecord(MakeChannel(record));
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(ChannelView), RecordOperation.UpdateRecord)]
+        public void UpdateChannelView(ChannelView record)
+        {
+            DataContext.Table<Channel>().UpdateRecord(MakeChannel(record));
+        }
+
+        public Channel MakeChannel(ChannelView record)
+        {
+            Channel newRecord = new Channel();
+            newRecord.ID = record.ID;
+            newRecord.MeterID = record.MeterID;
+            newRecord.MeasurementCharacteristicID = record.MeasurementCharacteristicID;
+            newRecord.MeasurementTypeID = record.MeasurementTypeID;
+            newRecord.PhaseID = record.PhaseID;
+            newRecord.SamplesPerHour = record.SamplesPerHour;
+            newRecord.PerUnitValue = record.PerUnitValue;
+            newRecord.HarmonicGroup = record.HarmonicGroup;
+            newRecord.Description = record.Description;
+            newRecord.Enabled = record.Enabled;
+            newRecord.Name = record.Name;
+            newRecord.LineID = record.LineID;
+
+            return newRecord;
+        }
+        #endregion
         #region [ Group Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
