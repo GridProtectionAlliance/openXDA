@@ -841,6 +841,10 @@ namespace openXDA
             DataContext.Table<User>().UpdateRecord(record);
         }
 
+        public IEnumerable<User> GetUsers()
+        {
+            return DataContext.Table<User>().QueryRecords(restriction: new RecordRestriction("Active <> 0"));
+        }
         #endregion
 
         #region [ AlarmRangeLimitView Table Operations ]
