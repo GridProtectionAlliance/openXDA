@@ -172,6 +172,7 @@ namespace FaultData.DataOperations
                 };
 
                 shiftedPhaseSeries = new DataSeries();
+                shiftedPhaseSeries.SeriesInfo = phaseSeries.SeriesInfo;
 
                 shiftedPhaseSeries.DataPoints = phaseSeries.DataPoints
                     .Zip(referenceSeries.DataPoints, shiftFunc)
@@ -542,8 +543,19 @@ namespace FaultData.DataOperations
             if (eventDataTable.Count == 0)
                 return null;
 
+            int meterID = m_dbAdapterContainer.GetAdapter<EventTableAdapter>()
+                .GetDataByID(eventID)
+                .Select(row => row.MeterID)
+                .FirstOrDefault();
+
+            Meter meter = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>().Meters
+                .FirstOrDefault(m => m.ID == meterID);
+
+            if ((object)meter == null)
+                return null;
+
             dataGroup = new DataGroup();
-            dataGroup.FromData(eventDataTable[0].FrequencyDomainData);
+            dataGroup.FromData(meter, eventDataTable[0].FrequencyDomainData);
 
             return new VICycleDataGroup(dataGroup);
         }
