@@ -7,15 +7,17 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [Table("UserGroupView")]
-    public class UserGroupView
+    public class UserAccountMeterGroup
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int UserID { get; set; }
-        public int GroupID { get; set; }
+        public Guid UserAccountID { get; set; }
+        public int MeterGroupID { get; set; }
+    }
+
+    public class UserAccountMeterGroupView : UserAccountMeterGroup
+    {
         public string Username { get; set; }
-        public bool Active { get; set; }
         public string GroupName { get; set; }
     }
 }

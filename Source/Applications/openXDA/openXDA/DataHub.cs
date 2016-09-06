@@ -644,10 +644,10 @@ namespace openXDA
         [RecordOperation(typeof(Group), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
-            IEnumerable<GroupMeter> table = DataContext.Table<GroupMeter>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
-            foreach (GroupMeter gm in table)
+            IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
+            foreach (MeterMeterGroup gm in table)
             {
-                DataContext.Table<GroupMeter>().DeleteRecord(gm.ID);
+                DataContext.Table<MeterMeterGroup>().DeleteRecord(gm.ID);
             }
             DataContext.Table<Group>().DeleteRecord(id);
         }
@@ -675,103 +675,94 @@ namespace openXDA
 
         #endregion
 
-        #region [ GroupMeterView Table Operations ]
+        #region [ MeterMeterGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(GroupMeterView), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupMeterViewCount(int groupID, string filterString)
         {
-            return DataContext.Table<GroupMeterView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<MeterMeterGroupView>().QueryRecordCount(new RecordRestriction("MeterGroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(GroupMeterView), RecordOperation.QueryRecords)]
-        public IEnumerable<GroupMeterView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterMeterGroupView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<GroupMeterView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<MeterMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(GroupMeterView), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroupMeterView(int id)
         {
-            DataContext.Table<GroupMeter>().DeleteRecord(id);
+            DataContext.Table<MeterMeterGroup>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(GroupMeterView), RecordOperation.CreateNewRecord)]
-        public GroupMeterView NewGroupMeterView()
+        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.CreateNewRecord)]
+        public MeterMeterGroupView NewGroupMeterView()
         {
-            return new GroupMeterView();
+            return new MeterMeterGroupView();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(GroupMeterView), RecordOperation.AddNewRecord)]
-        public void AddNewGroupMeterView(GroupMeterView record)
+        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.AddNewRecord)]
+        public void AddNewGroupMeterView(MeterMeterGroup record)
         {
-            DataContext.Table<GroupMeter>().AddNewRecord(CreateNewGroupMeter(record));
+            DataContext.Table<MeterMeterGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(GroupMeterView), RecordOperation.UpdateRecord)]
-        public void UpdateGroupMeterView(GroupMeterView record)
+        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.UpdateRecord)]
+        public void UpdateGroupMeterView(MeterMeterGroup record)
         {
-            DataContext.Table<GroupMeter>().UpdateRecord(CreateNewGroupMeter(record));
-        }
-
-        public GroupMeter CreateNewGroupMeter(GroupMeterView record)
-        {
-            GroupMeter gm = new GroupMeter();
-            gm.ID = record.ID;
-            gm.GroupID = record.GroupID;
-            gm.MeterID = record.MeterID;
-            return gm;
+            DataContext.Table<MeterMeterGroup>().UpdateRecord(record);
         }
 
         #endregion
 
-        #region [ UserGroupView Table Operations ]
+        #region [ UserAccountMeterGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserGroupView), RecordOperation.QueryRecordCount)]
-        public int QueryUserGroupViewCount(int groupID, string filterString)
+        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecordCount)]
+        public int QueryUserAccountMeterGroupCount(int groupID, string filterString)
         {
-            return DataContext.Table<UserGroupView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<UserAccountMeterGroupView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserGroupView), RecordOperation.QueryRecords)]
-        public IEnumerable<UserGroupView> QueryUserGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<UserAccountMeterGroupView> QueryUserAccountMeterGroups(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<UserGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserGroupView), RecordOperation.DeleteRecord)]
-        public void DeleteUserGroupView(int id)
+        [RecordOperation(typeof(UserAccountMeterGroupView), RecordOperation.DeleteRecord)]
+        public void DeleteUserAccountMeterGroup(int id)
         {
-            DataContext.Table<UserGroup>().DeleteRecord(id);
+            DataContext.Table<UserAccountMeterGroup>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserGroupView), RecordOperation.CreateNewRecord)]
-        public UserGroupView NewUserGroupView()
+        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.CreateNewRecord)]
+        public UserAccountMeterGroupView NewUserAccountMeterGroup()
         {
-            return new UserGroupView();
+            return new UserAccountMeterGroupView();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserGroupView), RecordOperation.AddNewRecord)]
-        public void AddNewUserGroupView(UserGroupView record)
+        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.AddNewRecord)]
+        public void AddNewUserAccountMeterGroup(UserAccountMeterGroup record)
         {
-            DataContext.Table<UserGroup>().AddNewRecord(CreateNewUserGroup(record));
+            DataContext.Table<UserAccountMeterGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserGroupView), RecordOperation.UpdateRecord)]
-        public void UpdateUserGroupView(UserGroupView record)
+        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.UpdateRecord)]
+        public void UpdateUserAccountMeterGroup(UserAccountMeterGroup record)
         {
-            DataContext.Table<UserGroup>().UpdateRecord(CreateNewUserGroup(record));
+            DataContext.Table<UserAccountMeterGroup>().UpdateRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -783,15 +774,6 @@ namespace openXDA
                 .Select(user => new IDLabel(user.ID.ToString(), user.Name));
         }
 
-        public UserGroup CreateNewUserGroup(UserGroupView record)
-        {
-            UserGroup gm = new UserGroup();
-            gm.ID = record.ID;
-            gm.GroupID = record.GroupID;
-            gm.UserID = record.UserID;
-            return gm;
-        }
-
         #endregion
 
         #region [ User Table Operations ]
@@ -800,13 +782,7 @@ namespace openXDA
         [RecordOperation(typeof(User), RecordOperation.QueryRecordCount)]
         public int QueryUserCount(string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<User>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -814,13 +790,7 @@ namespace openXDA
         [RecordOperation(typeof(User), RecordOperation.QueryRecords)]
         public IEnumerable<User> QueryUsers(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<User>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 

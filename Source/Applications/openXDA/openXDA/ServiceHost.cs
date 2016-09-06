@@ -72,6 +72,7 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -294,14 +295,14 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Devices.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Stations.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("MeterGroups.cshtml", new Tuple<Type, Type>(typeof(Group), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("GroupMeterView.cshtml", new Tuple<Type, Type>(typeof(GroupMeterView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroupView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("UserGroupView.cshtml", new Tuple<Type, Type>(typeof(UserGroupView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroupView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("EmailGroups.cshtml", new Tuple<Type, Type>(typeof(EmailGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("EmailGroupType.cshtml", new Tuple<Type, Type>(typeof(EmailGroupType), typeof(DataHub)));
@@ -322,6 +323,10 @@ namespace openXDA
 
                 // Create new web application hosting environment
                 m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
+            }
+            catch (TargetInvocationException ex)
+            {
+                HandleException(new InvalidOperationException($"Failed to initialize web hosting: {ex.InnerException.Message}", ex));
             }
             catch (Exception ex)
             {

@@ -3505,22 +3505,3 @@ from UserMeter
 where UserName = @username
 )
 GO
-
-CREATE VIEW [dbo].[GroupMeterView]
-AS
-SELECT        dbo.GroupMeter.MeterID, dbo.GroupMeter.GroupID, dbo.GroupMeter.ID, dbo.Meter.Name AS MeterName, dbo.MeterLocation.Name AS Location
-FROM            dbo.GroupMeter INNER JOIN
-                         dbo.Meter ON dbo.GroupMeter.MeterID = dbo.Meter.ID INNER JOIN
-                         dbo.MeterLocation ON dbo.Meter.MeterLocationID = dbo.MeterLocation.ID
-
-GO
-
-CREATE VIEW [dbo].[LineView]
-AS
-SELECT        dbo.Line.ID, dbo.Line.AssetKey, dbo.Line.VoltageKV, dbo.Line.ThermalRating, dbo.Line.Length, dbo.Line.Description,
-                             (SELECT        TOP (1) LineName
-                               FROM            dbo.MeterLine
-                               WHERE        (LineID = dbo.Line.ID)) AS TopName, dbo.LineImpedance.R0, dbo.LineImpedance.X0, dbo.LineImpedance.R1, dbo.LineImpedance.X1, dbo.LineImpedance.ID AS LineImpedanceID
-FROM            dbo.Line LEFT OUTER JOIN
-                         dbo.LineImpedance ON dbo.Line.ID = dbo.LineImpedance.LineID
-GO

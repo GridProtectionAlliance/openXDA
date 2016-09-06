@@ -115,9 +115,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FaultLocationData.xsd</DependentUpon>
     </Compile>
-    <Compile Include="Database\FaultLocationInfo.cs">
-      <DependentUpon>FaultLocationInfo.dbml</DependentUpon>
-    </Compile>
     <Compile Include="Database\FaultLocationInfo.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -185,7 +182,7 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
-    <Compile Include="DataWriters\FaultEmailWriter.cs" />
+    <Compile Include="DataWriters\EventEmailWriter.cs" />
     <Compile Include="DataWriters\IDataWriter.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
@@ -297,7 +294,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DataWriters\EmailTemplate.html" />
+    <Content Include="DataWriters\DisturbanceEmailTemplate.xslt" />
+    <Content Include="DataWriters\FaultEmailTemplate.xslt">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Dependencies\GSF\TagDefinitions.xml">
@@ -305,6 +305,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
