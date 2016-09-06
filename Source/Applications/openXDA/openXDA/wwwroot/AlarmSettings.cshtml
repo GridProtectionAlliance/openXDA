@@ -20,9 +20,7 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
-@using System.Threading
-@using GSF.Web
+@using System.Text.RegularExpressions
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
@@ -490,7 +488,7 @@
 
         $(function() {
 
-            $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
+            $("#pageHeader").append("@Raw(Regex.Replace(Filters().ToString(), @"\r|\n", ""))");
 
             $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
             

@@ -20,10 +20,9 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
 @using System.Collections.Generic
 @using System.Net.Http
-@using System.Threading
+@using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
@@ -76,10 +75,7 @@
             </div>
         </div>
     </div>
-
 }
-
-
 @helper BodyRows()
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
@@ -117,7 +113,7 @@
         @Raw(Model.RenderAbstract<MeterLocation>("Name"))
         
         $(function () {
-            $("#pageHeader").append("@Raw(DeviceFilter().ToString().Replace("\r\n", ""))");
+            $("#pageHeader").append("@Raw(Regex.Replace(DeviceFilter().ToString(), @"\r|\n", ""))");
             
             $('#devicefilter').on('keyup', function (e) {
                 if ($('#devicefilter').val().length == 0) {

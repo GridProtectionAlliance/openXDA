@@ -20,10 +20,9 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
 @using System.Collections.Generic
 @using System.Net.Http
-@using System.Threading
+@using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
@@ -110,7 +109,7 @@
         @Raw(dataContext.RenderViewModelConfiguration<MeterLocation, DataHub>(ViewBag))       
         
         $(function () {
-            $("#pageHeader").append("@Raw(StationFilter().ToString().Replace("\r\n", ""))");
+            $("#pageHeader").append("@Raw(Regex.Replace(StationFilter().ToString(), @"\r|\n", ""))");
             
             $('#stationfilter').on('keyup', function (e) {
                 if ($('#stationfilter').val().length == 0) {

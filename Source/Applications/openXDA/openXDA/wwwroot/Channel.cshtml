@@ -20,10 +20,9 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
 @using System.Collections.Generic
 @using System.Net.Http
-@using System.Threading
+@using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
@@ -53,9 +52,6 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-
-
-
 }
 @helper Filters()
 {
@@ -89,8 +85,6 @@
         </div>
     </div>
 }
-
-
 @helper BodyRows()
 {
     <td width="5%" class="text-left valign-middle"data-bind="text: lookupAssetKeyValue(LineID)"></td>
@@ -146,7 +140,7 @@
 
 
         $(function () {
-            $("#pageHeader").append("@Raw(Filters().ToString().Replace("\r\n", ""))");
+            $("#pageHeader").append("@Raw(Regex.Replace(Filters().ToString(), @"\r|\n", ""))");
 
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if(@ViewBag.lineID !== -1)
