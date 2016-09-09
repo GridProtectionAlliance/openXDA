@@ -60,21 +60,39 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddSelectField<UserGroupView, User>("GroupID", "ID", "Name"))
+    @Raw(dataContext.AddInputField<UserGroupView>("Username"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
+    <script src="@("@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<UserGroupView, DataHub>(ViewBag, "ID", null, groupID))
-        
+
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             observableRecord.GroupID = @groupID;
         });
-        
+
         $(function(){
+            $("#addNewEditDialog").on("shown.bs.modal", function () {
+                if (viewModel.dataHubIsConnected()) {
+                    function searchUsers(searchText, limit) {
+                        return dataHub.searchUsersByGroup(@groupID, searchText, limit);
+                    }
+
+                    initializeAutoCompleteLookupField("Username", searchUsers, false);
+
+                    $('#inputUsername').puiautocomplete({
+                        select: function (event, item) {
+                            var id = Number(item.data("id"));
+                            viewModel.currentRecord().UserID(id);
+                        }
+                    });
+                }
+            });
+
             $('#bodyContainer').removeClass("container theme-showcase");
-            $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});            
+            $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});
         });
     </script>
 }

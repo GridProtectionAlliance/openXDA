@@ -117,10 +117,8 @@
                     $(element).text(count.toString());
                 });
             }
-
             return element.text();
         }
-
 
         function openMeters(record) {
             //console.log(record);
@@ -131,7 +129,6 @@
             });
             
             $("#metersDialog").modal("show");
-
         }
         
         function openUsers(record) {
@@ -143,7 +140,6 @@
             });
 
             $("#usersDialog").modal("show");
-
         }
 
         $("#metersDialog").on("hidden.bs.modal", function () {
@@ -168,12 +164,10 @@
             }, 500);
         });
 
-
         $(function () {
             $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
             $("#usersDialog").modal({ show: false, backdrop: "static", keyboard: false });
 
         });
-        
     </script>
 }

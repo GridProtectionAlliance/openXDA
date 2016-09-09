@@ -197,6 +197,15 @@ namespace openXDA
                 .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
         }
 
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMetersByGroup(int groupID, string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT MeterID FROM GroupMeter WHERE GroupID = {1})", $"%{searchText}%", groupID);
+
+            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+        }
+
         #endregion
 
         #region [ MeterLocation Table Operations ]
@@ -711,6 +720,7 @@ namespace openXDA
         public GroupMeter CreateNewGroupMeter(GroupMeterView record)
         {
             GroupMeter gm = new GroupMeter();
+            gm.ID = record.ID;
             gm.GroupID = record.GroupID;
             gm.MeterID = record.MeterID;
             return gm;
@@ -762,9 +772,19 @@ namespace openXDA
             DataContext.Table<UserGroup>().UpdateRecord(CreateNewUserGroup(record));
         }
 
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchUsersByGroup(int groupID, string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT UserID FROM UserGroup WHERE GroupID = {1})", $"%{searchText}%", groupID);
+
+            return DataContext.Table<User>().QueryRecords("Name", restriction, limit)
+                .Select(user => new IDLabel(user.ID.ToString(), user.Name));
+        }
+
         public UserGroup CreateNewUserGroup(UserGroupView record)
         {
             UserGroup gm = new UserGroup();
+            gm.ID = record.ID;
             gm.GroupID = record.GroupID;
             gm.UserID = record.UserID;
             return gm;
