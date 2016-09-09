@@ -49,11 +49,11 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Name", "text-Left" },
         new[] { "Latitude", "Latitude", "text-left" },
-        new[] { "Longitude", "Longitude", "text-left" }
-
+        new[] { "Longitude", "Longitude", "text-left" },
+        new[] { null, "Devices", "text-center valign-middle" }
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -72,15 +72,13 @@
             </div>
         </div>
     </div>
-
 }
-
-
 @helper BodyRows()
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Latitude"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Longitude"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Devices.cshtml?StationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Devices&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -100,7 +98,6 @@
         @Raw(dataContext.AddInputField<MeterLocation>("Longitude"))
         @Raw(dataContext.AddTextAreaField<MeterLocation>("Description"))
     </div>
-
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
@@ -122,10 +119,19 @@
                 }
 
             });
+
             $('#stationfilter').val('@ViewBag.station');
             $('#stationfilter').trigger('keyup');
-
         });
 
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeterCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
     </script>
 }

@@ -35,30 +35,59 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    ViewBag.lineID = int.Parse(parameters["LineID"] ?? "-1");
     ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
+    ViewBag.lineID = int.Parse(parameters["LineID"] ?? "-1");
 
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Meter to Line for " + parameters["Title"];
 
-    // Define column headers, use null for field name to make column non-sortable
-    ViewBag.HeaderColumns = new[]
-    {   //    { "Field", "Label", "Classes" }
-        new[] { "LineID", "Line", "text-left" },
-        new[] { "MeterID", "Meter", "text-left"},
-        new[] { "LineName", "Line Name", "text-left"},
-        new[] { null, "Channel", "text-center valign-middle"}
-    };
+    if (ViewBag.meterID != -1)
+    {
+        string meterName = parameters["Title"];
+        ViewBag.Title = "Lines monitored by " + meterName;
+        ViewBag.CustomHeader = "Lines monitored by <a href=\"/Devices.cshtml?Meter=" + meterName + "\">" + meterName + "</a>";
+
+        // Define column headers, use null for field name to make column non-sortable
+        ViewBag.HeaderColumns = new[]
+        {   //    { "Field", "Label", "Classes" }
+            new[] { "MeterID", "Meter", "text-left"},
+            new[] { "LineID", "Line", "text-left" },
+            new[] { "LineName", "Line Name", "text-left"},
+            new[] { null, "Channel", "text-center valign-middle"}
+        };
+    }
+    else
+    {
+        string lineKey = parameters["Title"];
+        ViewBag.Title = "Meters monitoring " + lineKey;
+        ViewBag.CustomHeader = "Meters monitoring <a href=\"/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>";
+
+        // Define column headers, use null for field name to make column non-sortable
+        ViewBag.HeaderColumns = new[]
+        {   //    { "Field", "Label", "Classes" }
+            new[] { "LineID", "Line", "text-left" },
+            new[] { "MeterID", "Meter", "text-left"},
+            new[] { "LineName", "Line Name", "text-left"},
+            new[] { null, "Channel", "text-center valign-middle"}
+        };
+    }
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
 @helper BodyRows()
 {
-    <td width="30%" class="text-left valign-middle"><button type="button" class="btn btn-link" data-bind="text: lookupAssetKeyValue(LineID), click: goToLine.bind($data)"></button></td>
-    <td width="30%" class="text-left valign-middle"><button type="button" class="btn btn-link" data-bind="text: lookupNameValue(MeterID), click: goToDevice.bind($data)"></button></td>
+    if (ViewBag.meterID != -1)
+    {
+        <td width="30%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Devices.cshtml?Meter=' + MeterName }"></a></td>
+        <td width="30%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Lines.cshtml?Line=' + LineKey }"></a></td>
+    }
+    else
+    {
+        <td width="30%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Lines.cshtml?Line=' + LineKey }"></a></td>
+        <td width="30%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Devices.cshtml?Meter=' + MeterName }"></a></td>
+    }
     <td width="30%" class="text-left valign-middle" data-bind="text: LineName"></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openChannels.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></button></td>
+    <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -68,19 +97,20 @@
 {
     if (ViewBag.lineID == -1)
     {
-        @Raw(dataContext.AddSelectField<MeterLine, Lines>("LineID", "ID", "AssetKey"))
+        @Raw(dataContext.AddInputField<MeterLine>("LineKey"))
     }
     else
     {
-        @Raw(dataContext.AddSelectField<MeterLine, Lines>("LineID", "ID", "AssetKey", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<MeterLine>("LineKey", customDataBinding: "enable: false"))
     }
+
     if (ViewBag.meterID == -1)
     {
-        @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "Name"))
+        @Raw(dataContext.AddInputField<MeterLine>("MeterName"))
     }
     else
     {
-        @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "Name", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<MeterLine>("MeterName", customDataBinding: "enable: false"))
     }
 
     @Raw(dataContext.AddInputField<MeterLine>("LineName"))
@@ -99,11 +129,10 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
+    <script src="@("@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
-        @Raw(Model.RenderAbstract<Meter>("Name"))
-        @Raw(Model.RenderAbstract<Lines>("AssetKey"))
-        
+
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
                 observableRecord.LineID = @ViewBag.lineID;
@@ -111,37 +140,15 @@
                 observableRecord.MeterID = @ViewBag.meterID;
         });
 
-        
         function getChannelCount(lineID, meterID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryChannelCount(lineID,meterID, null).done(function (count) {
+                dataHub.queryChannelCount(meterID, lineID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
 
             return element.text();
         }
-
-        function openChannels(record) {
-            //console.log(record);
-            //$("#channelsFrame").attr({
-            //    "src": "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID,
-            //    "height": ($(document).height() - 150) + "px",
-            //    "width": "100%"
-            //});
-
-            //$("#channelsDialog").modal("show");
-            location.href =  "/Channel.cshtml?LineID=" + record.LineID + "&MeterID="+record.MeterID + "&Title=" + lookupAssetKeyValue(record.LineID) + " and " + lookupNameValue(record.MeterID) ;
-
-        }
-        
-        function goToLine(data) {
-            location.href = "/Lines.cshtml"+ '?LineID=' + data.LineID;
-        }
-        function goToDevice(data) {
-            location.href = "/Devices.cshtml" + '?Meter=' + lookupNameValue(data.MeterID);
-        }
-
 
         $("#channelsDialog").on("hidden.bs.modal", function () {
             // Refresh page counts after editing tasks
@@ -160,11 +167,31 @@
 
         $(function () {
             $("#channelsDialog").modal({ show: false, backdrop: "static", keyboard: false });
-            $("#addNewEditDialog").on("shown.bs.modal", function () {
-                if(@ViewBag.lineID !== -1)
-                    $('#selectLineID').val(@ViewBag.lineID);
-                    $('#selectMeterID').val(@ViewBag.meterID);
 
+            $("#addNewEditDialog").on("shown.bs.modal", function () {
+                if (viewModel.dataHubIsConnected()) {
+                    if (@ViewBag.lineID === -1) {
+                        initializeAutoCompleteLookupField("LineKey", dataHub.searchLines, false);
+
+                        $('#inputLineKey').puiautocomplete({
+                            select: function (event, item) {
+                                var id = Number(item.data("id"));
+                                viewModel.currentRecord().LineID(id);
+                            }
+                        });
+                    }
+
+                    if (@ViewBag.meterID === -1) {
+                        initializeAutoCompleteLookupField("MeterName", dataHub.searchMeters, false);
+
+                        $('#inputMeterName').puiautocomplete({
+                            select: function (event, item) {
+                                var id = Number(item.data("id"));
+                                viewModel.currentRecord().MeterID(id);
+                            }
+                        });
+                    }
+                }
             });
         });
 

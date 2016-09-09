@@ -39,14 +39,26 @@
     DataContext dataContext = ViewBag.DataContext;
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
+
+    int stationID = -1;
+    string stationName = null;
+
+    ViewBag.Title = "Devices";
+
     if (parameters.ContainsKey("Meter"))
     {
         ViewBag.meter = parameters["Meter"];
     }
 
+    if (parameters.ContainsKey("StationID"))
+    {
+        stationID = int.Parse(parameters["StationID"] ?? "-1");
+        stationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", stationID);
+        ViewBag.CustomHeader = "Devices at <a href=\"/Stations.cshtml?Station=" + stationName + "\">" + stationName + "</a>";
+        ViewBag.Title = "Devices at " + stationName;
+    }
 
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Devices";
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
@@ -56,7 +68,6 @@
         new[] { "Make", "Make", "text-left" },
         new[] { "Model", "Model", "text-left" },
         new[] { null, "Meter-to-Line", "text-center valign-middle"}
-
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -79,10 +90,10 @@
 @helper BodyRows()
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" ><button type="button" class="btn btn-link" data-bind="text: lookupNameValue(MeterLocationID), click: goToStation.bind($data)"></button></td>
+    <td width="20%" class="text-left valign-middle" ><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Stations.cshtml?Station=' + Location }"></a></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">MeterLine&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -92,7 +103,7 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Name"))
-        @Raw(dataContext.AddSelectField<Meter, MeterLocation>("MeterLocationID", "ID", "Name"))
+        @Raw(dataContext.AddInputField<Meter>("Location"))
         @Raw(dataContext.AddInputField<Meter>("AssetKey"))
         @Raw(dataContext.AddInputField<Meter>("ShortName"))
     </div>
@@ -108,9 +119,9 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
+    <script src="@("@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag))
-        @Raw(Model.RenderAbstract<MeterLocation>("Name"))
+        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, stationID))
         
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(DeviceFilter().ToString(), @"\r|\n", ""))");
@@ -122,13 +133,24 @@
                 } else {
                     viewModel.filterText = $('#devicefilter').val();
                     viewModel.queryPageRecords();
-
                 }
-
             });
+
             $('#devicefilter').val('@ViewBag.meter');
             $('#devicefilter').trigger('keyup');
 
+            $('#addNewEditDialog').on('shown.bs.modal', function () {
+                if (viewModel.dataHubIsConnected()) {
+                    initializeAutoCompleteLookupField("Location", dataHub.searchMeterLocations, false);
+
+                    $('#inputLocation').puiautocomplete({
+                        select: function (event, item) {
+                            var id = Number(item.data("id"));
+                            viewModel.currentRecord().MeterLocationID(id);
+                        }
+                    });
+                }
+            });
         });
         
         function getMeterCount(sourceID, element) {
@@ -140,14 +162,5 @@
 
             return element.text();
         }
-
-        function openMeters(record) {
-            location.href = "/MeterLine.cshtml?LineID=-1" + "&MeterID=" + record.ID + "&Title=" + record.Name;
-        }
-        
-        function goToStation(data) {
-            location.href = "/Stations.cshtml" + '?Station=' + lookupNameValue(data.MeterLocationID);
-        }
-
     </script>
 }

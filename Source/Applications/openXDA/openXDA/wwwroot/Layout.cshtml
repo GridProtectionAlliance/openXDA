@@ -37,6 +37,7 @@
 
     // Define ViewBag.CustomTitle in page code for custom page titles
     string pageTitle = ViewBag.CustomTitle ?? ViewBag.Title;
+    string pageHeader = ViewBag.CustomHeader ?? pageTitle;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -202,7 +203,7 @@ else {
                 <span id="error-msg-text"></span>
             </div>
             <h3>
-                @pageTitle <small class="pull-right" id="titleText" style="margin-top: 8px"></small>
+                @Raw(pageHeader) <small class="pull-right" id="titleText" style="margin-top: 8px"></small>
             </h3>
         </div>
         <!-- Page Body for @ViewBag.Request.RequestUri.AbsolutePath -->

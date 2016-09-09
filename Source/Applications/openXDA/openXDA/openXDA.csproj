@@ -260,7 +260,6 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
-    <Compile Include="Model\ChannelView.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserGroup.cs" />
@@ -286,7 +285,7 @@
     <Compile Include="Model\GroupMeter.cs" />
     <Compile Include="Model\GroupMeterView.cs" />
     <Compile Include="Model\LineImpedance.cs" />
-    <Compile Include="Model\Lines.cs" />
+    <Compile Include="Model\Line.cs" />
     <Compile Include="Model\LineView.cs" />
     <Compile Include="Model\MeasurementCharacteristic.cs" />
     <Compile Include="Model\MeasurementType.cs" />
@@ -351,7 +350,7 @@
     <None Include="wwwroot\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />
-    <None Include="wwwroot\Channel.cshtml" />
+    <None Include="wwwroot\Channels.cshtml" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />
@@ -380,7 +379,7 @@
     <None Include="wwwroot\Layout.cshtml" />
     <None Include="wwwroot\Lines.cshtml" />
     <None Include="wwwroot\MeterGroups.cshtml" />
-    <None Include="wwwroot\MeterLine.cshtml" />
+    <None Include="wwwroot\MeterLines.cshtml" />
     <None Include="wwwroot\Scripts\flot\API.md" />
     <None Include="wwwroot\Scripts\flot\CONTRIBUTING.md" />
     <None Include="wwwroot\Scripts\flot\examples\.DS_Store" />

@@ -27,8 +27,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Transactions;
+using GSF;
 using GSF.Data.Model;
 using GSF.Web.Hubs;
+using GSF.Web.Model;
 using GSF.Web.Security;
 using openXDA.Model;
 
@@ -135,30 +138,26 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
-        public int QueryMeterCount(string filterString)
+        public int QueryMeterCount(int stationID, string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
+            filterString = (filterString ?? "%").EnsureEnd("%");
 
-            return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+            if (stationID > 0)
+                return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
+            else
+                return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
-        public IEnumerable<Meter> QueryMeters(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<MeterDetail> QueryMeters(int stationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
+            filterString = (filterString ?? "%").EnsureEnd("%");
 
-            return DataContext.Table<Meter>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
+            if (stationID > 0)
+                return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
+            else
+                return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -170,9 +169,9 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.CreateNewRecord)]
-        public Meter NewMeter()
+        public MeterDetail NewMeter()
         {
-            return new Meter();
+            return new MeterDetail();
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -189,6 +188,15 @@ namespace openXDA
             DataContext.Table<Meter>().UpdateRecord(record);
         }
 
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMeters(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+        }
+
         #endregion
 
         #region [ MeterLocation Table Operations ]
@@ -197,14 +205,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
         public int QueryMeterLocationCount(string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
-
+            filterString = (filterString ?? "%").EnsureEnd("%");
             return DataContext.Table<MeterLocation>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -212,14 +213,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
-
+            filterString = (filterString ?? "%").EnsureEnd("%");
             return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -251,66 +245,70 @@ namespace openXDA
             DataContext.Table<MeterLocation>().UpdateRecord(record);
         }
 
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMeterLocations(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<MeterLocation>().QueryRecords("Name", restriction, limit)
+                .Select(meterLocation => new IDLabel(meterLocation.ID.ToString(), meterLocation.Name));
+        }
+
         #endregion
 
         #region [ Lines Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Lines), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
         public int QueryLinesCount(string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
-
-            return DataContext.Table<Lines>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<Line>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Lines), RecordOperation.QueryRecords)]
-        public IEnumerable<Lines> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
+        public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
-
-            return DataContext.Table<Lines>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Lines), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(Line), RecordOperation.DeleteRecord)]
         public void DeleteLines(int id)
         {
-            DataContext.Table<Lines>().DeleteRecord(id);
+            DataContext.Table<Line>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Lines), RecordOperation.CreateNewRecord)]
-        public Lines NewLines()
+        [RecordOperation(typeof(Line), RecordOperation.CreateNewRecord)]
+        public Line NewLine()
         {
-            return new Lines();
+            return new Line();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Lines), RecordOperation.AddNewRecord)]
-        public void AddNewLines(Lines record)
+        [RecordOperation(typeof(Line), RecordOperation.AddNewRecord)]
+        public void AddNewLines(Line record)
         {
-            DataContext.Table<Lines>().AddNewRecord(record);
+            DataContext.Table<Line>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(Lines), RecordOperation.UpdateRecord)]
-        public void UpdateLines(Lines record)
+        [RecordOperation(typeof(Line), RecordOperation.UpdateRecord)]
+        public void UpdateLines(Line record)
         {
-            DataContext.Table<Lines>().UpdateRecord(record);
+            DataContext.Table<Line>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchLines(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<Line>().QueryRecords("AssetKey", restriction, limit)
+                .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
         }
 
         #endregion
@@ -321,13 +319,7 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
         public int QueryLineViewCount(string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
+            filterString = (filterString ?? "%").EnsureEnd("%");
             return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
         }
 
@@ -335,21 +327,15 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
         public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            if (filterString == null) filterString = "%";
-            else
-            {
-                // Build your filter string here!
-                filterString += "%";
-            }
-
-            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("TopName LIKE {0}", filterString));
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
         public void DeleteLineView(int id)
         {
-            DataContext.Table<Lines>().DeleteRecord(id);
+            DataContext.Table<Line>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -363,7 +349,7 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
         public void AddNewLineView(LineView record)
         {
-            DataContext.Table<Lines>().AddNewRecord(CreateLines(record));
+            DataContext.Table<Line>().AddNewRecord(CreateLine(record));
             DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
         }
 
@@ -371,14 +357,14 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
         public void UpdateLineView(LineView record)
         {
-            DataContext.Table<Lines>().UpdateRecord(CreateLines(record));
+            DataContext.Table<Line>().UpdateRecord(CreateLine(record));
             DataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
 
         }
 
-        public Lines CreateLines(LineView record)
+        public Line CreateLine(LineView record)
         {
-            Lines line = NewLines();
+            Line line = NewLine();
             line.AssetKey = record.AssetKey;
             line.Description = record.Description;
             line.Length = record.Length;
@@ -425,7 +411,7 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterLine> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             string restrictionString = "";
             if (lineID == -1 && meterID != -1)
@@ -441,7 +427,7 @@ namespace openXDA
                 restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
             }
 
-            return DataContext.Table<MeterLine>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
+            return DataContext.Table<MeterLineDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -453,9 +439,9 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
-        public MeterLine NewMeterLine()
+        public MeterLineDetail NewMeterLine()
         {
-            return new MeterLine();
+            return new MeterLineDetail();
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -478,23 +464,41 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
-        public int QueryChannelCount(int lineID, int meterID, string filterString = "%")
+        public int QueryChannelCount(int meterID, int lineID, string filterString)
         {
+            var filters = (filterString ?? "").ParseKeyValuePairs()
+                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.EnsureEnd("%") })
+                .ToList();
 
-            return DataContext.Table<Channel>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
+            filters.Add(new { Field = "MeterID", Operator = "=", Value = meterID.ToString() });
+            filters.Add(new { Field = "LineID", Operator = "=", Value = lineID.ToString() });
+
+            string expression = string.Join(" AND ", filters.Select((filter, index) => $"{filter.Field} {filter.Operator} {{{index}}}"));
+            object[] parameters = filters.Select(filter => (object)filter.Value).ToArray();
+
+            return DataContext.Table<Channel>().QueryRecordCount(new RecordRestriction(expression, parameters));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
-        public IEnumerable<Channel> QueryChannel(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
+            var filters = (filterString ?? "").ParseKeyValuePairs()
+                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.EnsureEnd("%") })
+                .ToList();
 
-            return DataContext.Table<Channel>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID}"));
+            filters.Add(new { Field = "MeterID", Operator = "=", Value = meterID.ToString() });
+            filters.Add(new { Field = "LineID", Operator = "=", Value = lineID.ToString() });
+
+            string expression = string.Join(" AND ", filters.Select((filter, index) => $"{filter.Field} {filter.Operator} {{{index}}}"));
+            object[] parameters = filters.Select(filter => (object)filter.Value).ToArray();
+
+            return DataContext.Table<ChannelDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(expression, parameters));
         }
 
         public IEnumerable<Channel> QueryChannelsForDropDown(string filterString)
         {
-            return DataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}" ,filterString), limit: 50);
+            return DataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}", filterString), limit: 50);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -506,122 +510,107 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.CreateNewRecord)]
-        public Channel NewChannel()
+        public ChannelDetail NewChannel()
         {
-            return new Channel();
+            return new ChannelDetail();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.AddNewRecord)]
-        public void AddNewChannel(Channel record)
+        public void AddNewChannel(ChannelDetail record)
         {
             DataContext.Table<Channel>().AddNewRecord(record);
+            record.ID = DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
+            if (!string.IsNullOrEmpty(record.Mapping))
+            {
+                using (TransactionScope transaction = new TransactionScope())
+                {
+                    bool seriesTypeExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM SeriesType WHERE Name = 'Values'") > 0;
+
+                    if (!seriesTypeExists)
+                        DataContext.Connection.ExecuteNonQuery("INSERT INTO SeriesType VALUES('Values', 'Values')");
+
+                    transaction.Complete();
+                }
+
+                int seriesTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = 'Values'");
+                DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, seriesTypeID, record.Mapping);
+            }
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Channel), RecordOperation.UpdateRecord)]
-        public void UpdateChannel(Channel record)
+        public void UpdateChannel(ChannelDetail record)
         {
             DataContext.Table<Channel>().UpdateRecord(record);
-        }
 
-        #endregion
-
-        #region [ ChannelView Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(ChannelView), RecordOperation.QueryRecordCount)]
-        public int QueryChannelViewCount(int lineID, int meterID, string filterString = "%")
-        {
-            string ChannelFilter = "%";
-            string typeFilter = "%";
-            string charFilter = "%";
-            if (filterString != "%" && filterString != null)
+            if (!string.IsNullOrEmpty(record.Mapping))
             {
-                string[] filters = filterString.Split(';');
-                if (filters.Length == 3)
+                using (TransactionScope transaction = new TransactionScope())
                 {
-                    ChannelFilter = filters[0] + '%';
-                    typeFilter = filters[1] += '%';
-                    charFilter = filters[2] += '%';
+                    bool seriesTypeExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM SeriesType WHERE Name = 'Values'") > 0;
+
+                    if (!seriesTypeExists)
+                        DataContext.Connection.ExecuteNonQuery("INSERT INTO SeriesType VALUES('Values', 'Values')");
+
+                    transaction.Complete();
+                }
+
+                int seriesTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = 'Values'");
+
+                using (TransactionScope transaction = new TransactionScope())
+                {
+                    bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, seriesTypeID) > 0;
+
+                    if (seriesExists)
+                        DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, seriesTypeID);
+                    else
+                        DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, seriesTypeID, record.Mapping);
+
+                    transaction.Complete();
                 }
             }
-
-            return DataContext.Table<ChannelView>().QueryRecordCount(new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID} AND Name LIKE '{ChannelFilter}' AND MeasurementType LIKE '{typeFilter}' AND MeasurementCharacteristic LIKE '{charFilter}'"));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(ChannelView), RecordOperation.QueryRecords)]
-        public IEnumerable<ChannelView> QueryChannelView(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            string ChannelFilter = "%";
-            string typeFilter = "%";
-            string charFilter = "%";
-            if (filterString != "%")
+            else
             {
-                string[] filters = filterString.Split(';');
-                if (filters.Length == 3)
-                {
-                    ChannelFilter = filters[0] + '%';
-                    typeFilter = filters[1] += '%';
-                    charFilter = filters[2] += '%';
-                }
+                int seriesTypeID = DataContext.Connection.ExecuteScalar(defaultValue: -1, sqlFormat: "SELECT ID FROM SeriesType WHERE Name = 'Values'");
+                DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = '' WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, seriesTypeID);
             }
-
-            return DataContext.Table<ChannelView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"MeterID = {meterID} AND LineID = {lineID} AND Name LIKE '{ChannelFilter}' AND MeasurementType LIKE '{typeFilter}' AND MeasurementCharacteristic LIKE '{charFilter}'"));
-        }
-
-        public IEnumerable<ChannelView> QueryChannelViewsForDropDown(string filterString)
-        {
-            return DataContext.Table<ChannelView>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0}", filterString), limit: 50);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(ChannelView), RecordOperation.DeleteRecord)]
-        public void DeleteChannelView(int id)
+        public IEnumerable<IDLabel> SearchMeasurementTypes(string searchText, int limit = -1)
         {
-            DataContext.Table<Channel>().DeleteRecord(id);
+            string limitText = (limit > 0) ? $"TOP {limit}" : "";
+
+            return DataContext.Connection
+                .RetrieveData($"SELECT {limitText} ID, Name FROM MeasurementType WHERE Name LIKE {{0}}", $"%{searchText}%")
+                .Select()
+                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(ChannelView), RecordOperation.CreateNewRecord)]
-        public ChannelView NewChannelView()
+        public IEnumerable<IDLabel> SearchMeasurementCharacteristics(string searchText, int limit = -1)
         {
-            return new ChannelView();
+            string limitText = (limit > 0) ? $"TOP {limit}" : "";
+
+            return DataContext.Connection
+                .RetrieveData($"SELECT {limitText} ID, Name FROM MeasurementCharacteristic WHERE Name LIKE {{0}}", $"%{searchText}%")
+                .Select()
+                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(ChannelView), RecordOperation.AddNewRecord)]
-        public void AddNewChannelView(ChannelView record)
+        public IEnumerable<IDLabel> SearchPhases(string searchText, int limit = -1)
         {
-            DataContext.Table<Channel>().AddNewRecord(MakeChannel(record));
+            string limitText = (limit > 0) ? $"TOP {limit}" : "";
+
+            return DataContext.Connection
+                .RetrieveData($"SELECT {limitText} ID, Name FROM Phase WHERE Name LIKE {{0}}", $"%{searchText}%")
+                .Select()
+                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
         }
 
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(ChannelView), RecordOperation.UpdateRecord)]
-        public void UpdateChannelView(ChannelView record)
-        {
-            DataContext.Table<Channel>().UpdateRecord(MakeChannel(record));
-        }
-
-        public Channel MakeChannel(ChannelView record)
-        {
-            Channel newRecord = new Channel();
-            newRecord.ID = record.ID;
-            newRecord.MeterID = record.MeterID;
-            newRecord.MeasurementCharacteristicID = record.MeasurementCharacteristicID;
-            newRecord.MeasurementTypeID = record.MeasurementTypeID;
-            newRecord.PhaseID = record.PhaseID;
-            newRecord.SamplesPerHour = record.SamplesPerHour;
-            newRecord.PerUnitValue = record.PerUnitValue;
-            newRecord.HarmonicGroup = record.HarmonicGroup;
-            newRecord.Description = record.Description;
-            newRecord.Enabled = record.Enabled;
-            newRecord.Name = record.Name;
-            newRecord.LineID = record.LineID;
-
-            return newRecord;
-        }
         #endregion
 
         #region [ Group Table Operations ]
@@ -1134,7 +1123,7 @@ namespace openXDA
 
         #endregion
 
-        #region [ Stored Procedure Operations]
+        #region [ Stored Procedure Operations ]
 
         public List<TrendingData> GetTrendingData(DateTime startDate, DateTime endDate, int channelId)
         {

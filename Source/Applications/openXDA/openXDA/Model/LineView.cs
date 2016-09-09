@@ -8,7 +8,7 @@ using GSF.Data.Model;
 namespace openXDA.Model
 {
     [TableName("LineView")]
-    public class LineView: Lines
+    public class LineView: Line
     {
         public string TopName { get; set; }
         public int LineImpedanceID { get; set; }

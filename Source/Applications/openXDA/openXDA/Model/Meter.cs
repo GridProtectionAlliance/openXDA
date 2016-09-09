@@ -17,6 +17,7 @@ namespace openXDA.Model
         [StringLength(50)]
         public string AssetKey { get; set; }
 
+        [Label("Location")]
         public int MeterLocationID { get; set; }
 
         [Searchable]
@@ -39,6 +40,10 @@ namespace openXDA.Model
         public string TimeZone { get; set; }
 
         public string Description { get; set; }
+    }
 
+    public class MeterDetail : Meter
+    {
+        public string Location { get; set; }
     }
 }
