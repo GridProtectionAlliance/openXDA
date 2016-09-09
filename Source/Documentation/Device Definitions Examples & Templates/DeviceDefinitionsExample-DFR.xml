@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openFLE>
     <!-- This device definitions example file is intended to be a model for configuring an openXDA database
-	to recognize and analyze data contained in files recorded by DFRs and/or relays. If your data is in a 
-	PQDIF file please use the DeviceDefinitionsExample-PQ.xml file rather than this one.
+	to recognize and analyze data contained in files recorded by DFRs, typically in COMTRADE format.
+	A separate example file is available for PQ monitors and/or relays.
+	If your data is in a PQDIF file please use the DeviceDefinitionsExample-PQ.xml file rather than this one.
 	
 	The analytics section defines the fault distance algorithms to be used by openXDA.
     All of the following algorithms are available and will be used by default to calculate
@@ -18,8 +19,8 @@
     
     <!-- Each device is modelled using one of these device tags. By default, the openXDA service
     is configured to match the device id to the folder in which that device's fault records
-    are located. As a general rule, you can use the name of the folder that contains the COMTRADE
-    or PQDIF files created by this device as the device id. -->
+    are located. As a general rule, you typically use the name of the folder that contains the COMTRADE
+    files created by this device as the device id. -->
 	<device id="0001">
 		<attributes>
             <!-- Make and model of the device. This information will be used in reporting. -->
@@ -27,11 +28,13 @@
 			<model>EXAMPLE</model>
             
             <!-- Where is the device located?
+			ID fields can contain up to 50 alphanumeric characters.
+			Name fields and other non-numeric fields can contain up to 200 alphanumeric characters.
 			stationID is a unique identifier used by openXDA in calculations
 			stationName is a human readable name used in reporting. 
-			stationLatitude and stationLongitude are optional -->
+			stationLatitude and stationLongitude are used in geographic displays -->
 			<stationID>Station1</stationID>
-			<stationName>Station1</stationName>
+			<stationName>MyStation1</stationName>
             <stationLatitude>37.95</stationLatitude>
             <stationLongitude>-81.848</stationLongitude>
 		</attributes>
