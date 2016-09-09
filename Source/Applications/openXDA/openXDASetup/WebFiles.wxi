@@ -9,8 +9,8 @@
   <Component Id="AlarmSettings_cshtml">
     <File Id="AlarmSettings.cshtml" Name="AlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\AlarmSettings.cshtml" />
   </Component>
-  <Component Id="Channel_cshtml">
-    <File Id="Channel.cshtml" Name="Channel.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Channel.cshtml" />
+  <Component Id="Channels_cshtml">
+    <File Id="Channels.cshtml" Name="Channels.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Channels.cshtml" />
   </Component>
   <Component Id="DashSettings_cshtml">
     <File Id="DashSettings.cshtml" Name="DashSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\DashSettings.cshtml" />
@@ -48,14 +48,17 @@
   <Component Id="MeterGroups_cshtml">
     <File Id="MeterGroups.cshtml" Name="MeterGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterGroups.cshtml" />
   </Component>
-  <Component Id="MeterLine_cshtml">
-    <File Id="MeterLine.cshtml" Name="MeterLine.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterLine.cshtml" />
+  <Component Id="MeterLines_cshtml">
+    <File Id="MeterLines.cshtml" Name="MeterLines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterLines.cshtml" />
   </Component>
   <Component Id="Settings_cshtml">
     <File Id="Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Settings.cshtml" />
   </Component>
   <Component Id="Stations_cshtml">
     <File Id="Stations.cshtml" Name="Stations.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Stations.cshtml" />
+  </Component>
+  <Component Id="UserGroupView_cshtml">
+    <File Id="UserGroupView.cshtml" Name="UserGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\UserGroupView.cshtml" />
   </Component>
   <Component Id="Users_cshtml">
     <File Id="Users.cshtml" Name="Users.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Users.cshtml" />
