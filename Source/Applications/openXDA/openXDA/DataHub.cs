@@ -1143,6 +1143,157 @@ namespace openXDA
 
         #endregion
 
+        #region [ EmailType Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailType), RecordOperation.QueryRecordCount)]
+        public int QueryEmailTypeCount(string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<EmailType>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailType), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailType> QueryEmailType(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<EmailType>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailType), RecordOperation.DeleteRecord)]
+        public void DeleteEmailType(int id)
+        {
+            DataContext.Table<EmailType>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailType), RecordOperation.CreateNewRecord)]
+        public EmailType NewEmailType()
+        {
+            return new EmailType();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailType), RecordOperation.AddNewRecord)]
+        public void AddNewEmailType(EmailType record)
+        {
+            DataContext.Table<EmailType>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EmailType), RecordOperation.UpdateRecord)]
+        public void UpdateEmailType(EmailType record)
+        {
+            DataContext.Table<EmailType>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ EmailGroup Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecordCount)]
+        public int QueryEmailGroupCount(string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<EmailGroup>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailGroup> QueryEmailGroup(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroup), RecordOperation.DeleteRecord)]
+        public void DeleteEmailGroup(int id)
+        {
+            DataContext.Table<EmailGroup>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroup), RecordOperation.CreateNewRecord)]
+        public EmailGroup NewEmailGroup()
+        {
+            return new EmailGroup();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroup), RecordOperation.AddNewRecord)]
+        public void AddNewEmailGroup(EmailGroup record)
+        {
+            DataContext.Table<EmailGroup>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EmailGroup), RecordOperation.UpdateRecord)]
+        public void UpdateEmailGroup(EmailGroup record)
+        {
+            DataContext.Table<EmailGroup>().UpdateRecord(record);
+        }
+
+
+        #endregion
+
+        #region [ XSLTemplate Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(XSLTemplate), RecordOperation.QueryRecordCount)]
+        public int QueryXSLTemplateCount(string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<XSLTemplate>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(XSLTemplate), RecordOperation.QueryRecords)]
+        public IEnumerable<XSLTemplate> QueryXSLTemplate(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<XSLTemplate>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        public XSLTemplate QueryXSLTemplateByID(int id)
+        {
+            return DataContext.Table<XSLTemplate>().QueryRecords(restriction: new RecordRestriction("ID = {0}", id)).First();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(XSLTemplate), RecordOperation.DeleteRecord)]
+        public void DeleteXSLTemplate(int id)
+        {
+            DataContext.Table<XSLTemplate>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(XSLTemplate), RecordOperation.CreateNewRecord)]
+        public XSLTemplate NewXSLTemplate()
+        {
+            return new XSLTemplate();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(XSLTemplate), RecordOperation.AddNewRecord)]
+        public void AddNewXSLTemplate(XSLTemplate record)
+        {
+            DataContext.Table<XSLTemplate>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(XSLTemplate), RecordOperation.UpdateRecord)]
+        public void UpdateXSLTemplate(XSLTemplate record)
+        {
+            DataContext.Table<XSLTemplate>().UpdateRecord(record);
+        }
+
+
+        #endregion
+
         #region [ Stored Procedure Operations ]
 
         public List<TrendingData> GetTrendingData(DateTime startDate, DateTime endDate, int channelId)

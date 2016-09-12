@@ -31,51 +31,27 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Lines";
-
-    HttpRequestMessage request = ViewBag.Request;
-    Dictionary<string, string> parameters = request.QueryParameters();
-
-    if (parameters.ContainsKey("Line"))
-    {
-        ViewBag.Line = parameters["Line"];
-    }
+    ViewBag.Title = "Email Types";
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-        new[] { "AssetKey", "Key", "text-Left" },
-        new[] { "VoltageKV", "Voltage", "text-left"},
-        new[] { "ThermalRating", "Thermal Rating", "text-left" },
-        new[] { "Length", "Length", "text-left" },
-        new[] { null, "Meter-to-Line", "text-center valign-middle"}
+        new[] { "EmailCategoryID", "Category", "text-Left" },
+        new[] { "XSLTemplateID", "XSL Template", "text-left"},
+        new[] { null, "Event ID: <input id='eventID'class='' type='text'/>", "text-left valign-middle"},
 
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.AddNewEditTitle = "Email Type";
 }
-@helper LineFilter()
-{
-    <div class='row'>
-        <div class='col-md-12'>
-            <div class='form-group'>
-                <label for='linefilter'>Line Name Filter:</label>
-                <div class='right-inner-addon'>
-                    <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='linefilter' placeholder='Search' />
-                </div>
-            </div>
-        </div>
-    </div>
-}
+
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AssetKey, click: $parent.viewPageRecord"></button></td>
-    <td width="25%" class="text-left valign-middle" data-bind="text: VoltageKV"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: ThermalRating"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Length"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/MeterLines.cshtml?LineID=' + ID + '&MeterID=-1&Title=' + AssetKey }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: lookupEmailCategoryName(EmailCategoryID), click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: lookupXSLTemplateName(XSLTemplateID)"></td>
+    <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data)">View</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -83,56 +59,100 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
-        @Raw(dataContext.AddInputField<LineView>("AssetKey", fieldLabel: "Key"))
-        @Raw(dataContext.AddInputField<LineView>("VoltageKV"))
-        @Raw(dataContext.AddInputField<LineView>("ThermalRating"))
-        @Raw(dataContext.AddInputField<LineView>("Length"))
-        @Raw(dataContext.AddTextAreaField<LineView>("Description"))
+    @Raw(dataContext.AddSelectField<EmailType,EmailCategory>("EmailCategoryID", "ID", "Name"))
+    @Raw(dataContext.AddSelectField<EmailType, XSLTemplate>("XSLTemplateID", "ID", "Name"))
+    <div class="form-group">
+        <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: createXSLTemplate">Create New XSL Template</button>
+        <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: editXSLTemplate">Edit XSL Template</button>
     </div>
 
-    <div class="col-md-6">
-        <h5><b>Line Impedance:</b></h5>
-        @Raw(dataContext.AddInputField<LineView>("R0"))
-        @Raw(dataContext.AddInputField<LineView>("X0"))
-        @Raw(dataContext.AddInputField<LineView>("R1"))
-        @Raw(dataContext.AddInputField<LineView>("X1"))
+    <div id="textArea" class="form-group" data-bind="visible: false">
+        <div class="form-group">
+            <div id="xslID" style="display: none"></div>
+            <label>XSL Template Name:</label>
+            <input id="templateName" class="form-control" type="text"/>
+        </div>
+        <div class="form-group">
+            <textarea id="template" class="form-control"></textarea>
+        </div>
+        <button id="saveNew" class="btn btn-primary pull-right" data-bind="visible: false, click: saveXSLTemplateNew">Save XSL Template</button>
+        <button id="saveEdit" class="btn btn-primary pull-right" data-bind="visible: false, click: saveXSLTemplateEdit">Save XSL Template</button>
     </div>
-}
+        
+ }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts 
+@section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<LineView, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<EmailType, DataHub>(ViewBag))
+        @Raw(Model.RenderAbstract<EmailCategory>("Name", "ID", "lookupEmailCategoryName", "emailCategoryName"))
+        @Raw(Model.RenderAbstract<XSLTemplate>("Name", "ID", "lookupXSLTemplateName", "xslTemplateName"))
 
         $(function () {
-            $("#pageHeader").append("@Raw(Regex.Replace(LineFilter().ToString(), @"\r|\n", ""))");
-
-            $('#linefilter').on('keyup', function (e) {
-                if ($('#linefilter').val().length == 0) {
-                    viewModel.filterText = '%';
-                    viewModel.queryPageRecords();
-                } else {
-                    viewModel.filterText = $('#linefilter').val();
-                    viewModel.queryPageRecords();
-                }
-            });
-            $('#linefilter').val('@ViewBag.Line');
-            $('#linefilter').trigger('keyup');
         });
 
-        function getMeterCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(sourceID,-1, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
+        function createXSLTemplate() {
+            $('#templateName').val('');
+            $('#template').val('');
+            $('#template').height($(window).height() / 3);
+            $('#saveNew').show();
+            $('#saveEdit').hide();
 
-            return element.text();
+            if ($('#textArea').css('display') === 'none')
+                $('#textArea').slideToggle();
         }
 
-        function openMeters(record) {
-            location.href = "/MeterLine.cshtml?LineID=" + record.ID + "&MeterID=-1" + "&Title=" + record.AssetKey;
+        function editXSLTemplate() {
+            dataHub.queryXSLTemplateByID($('#selectXSLTemplateID').val()).done(function (data) {
+                $('#templateName').val(data.Name);
+                $('#template').val(data.Template);
+                $('#template').height($(window).height() / 3);
+                $('#xslID').html(data.ID);
+                $('#saveEdit').show();
+                $('#saveNew').hide();
+                if ($('#textArea').css('display') === 'none')
+                    $('#textArea').slideToggle();
+                
+
+            });
+        }
+        
+        function saveXSLTemplateNew() {
+            var record = { Name: $('#templateName').val(), Template: $('#template').val() };
+            
+            dataHub.addNewXSLTemplate(record).done(function (data) {
+                dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
+                    $('#selectXSLTemplateID').children().remove();
+                    $.each(data2, function (i, d) {
+                        $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
+                    });
+                });
+            });
+        }
+        
+        function saveXSLTemplateEdit() {
+            var record = { ID: $('#xslID').html(), Name: $('#templateName').val(), Template: $('#template').val() };
+            dataHub.updateXSLTemplate(record).done(function (data) {
+                dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
+                    $('#selectXSLTemplateID').children().remove();
+                    $.each(data2, function (i, d) {
+                        $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
+                    });
+                });
+            });
+        }
+        
+        $('#addNewEditDialog').on('shown.bs.modal', function () {
+            dataHub.queryXSLTemplate("Name", true, 1, 1000000000000, '%').done(function (data2) {
+                $('#selectXSLTemplateID').children().remove();
+                $.each(data2, function (i, d) {
+                    $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
+                });
+            });
+        });
+        
+        function viewTemplate(data) {
+            window.open("@Url.Content("~/EmailTemplateHandler.ashx")?EventID= " + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
         }
     </script>
 }
