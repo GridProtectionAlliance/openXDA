@@ -260,10 +260,21 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
+    <Compile Include="Model\AlarmEmailCriterion.cs" />
+    <Compile Include="Model\DisturbanceEmailCriterion.cs" />
+    <Compile Include="Model\EmailCategory.cs" />
+    <Compile Include="Model\EmailGroup.cs" />
+    <Compile Include="Model\EmailGroupMeterGroup.cs" />
+    <Compile Include="Model\EmailGroupSecurityGroup.cs" />
+    <Compile Include="Model\EmailGroupType.cs" />
+    <Compile Include="Model\EmailGroupUserAccount.cs" />
+    <Compile Include="Model\EmailType.cs" />
+    <Compile Include="Model\FaultEmailCriterion.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserGroup.cs" />
     <Compile Include="Model\UserGroupView.cs" />
+    <Compile Include="Model\XSLTemplate.cs" />
     <Compile Include="wwwroot\EmailTemplateHandler.ashx.cs">
       <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
     </Compile>
@@ -347,6 +358,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\EmailGroups.cshtml" />
     <None Include="wwwroot\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />
@@ -362,6 +374,7 @@
     <None Include="wwwroot\DefaultAlarmSettings.cshtml" />
     <None Include="wwwroot\Devices.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
+    <Content Include="wwwroot\EmailTypes.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />
     <None Include="wwwroot\fonts\fontawesome-webfont.ttf" />
     <None Include="wwwroot\fonts\fontawesome-webfont.woff" />
