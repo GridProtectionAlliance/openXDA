@@ -1,12 +1,12 @@
-﻿@*******************************************************************************************************
-//  Settings.cshtml - Gbtc
+﻿@*//******************************************************************************************************
+//  EmailGroups.cshtml - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-//  file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,158 +16,107 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/15/2016 - J. Ritchie Carroll
+//  09/12/2016 - Billy Ernest
 //       Generated original version of source code.
 //
-//*****************************************************************************************************@
-@using System
-@using System.Security.Policy
-@using System.Threading
+//*******************************************************************************************************@
+
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
 @inherits ExtendedTemplateBase<AppModel>
-@section StyleSheets {
-    <style>
-        html, body {
-            height: 100%;
-        }
-    </style>
-}
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Meter Groupings";
+    ViewBag.Title = "Email Groups";
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-        new[] { "GroupName", "Name", "text-Left" },
-        new[] { null, "Active", "text-center valign-middle" },
-        new[] { null, "Meters", "text-center valign-middle"},
-        new[] {null, "Users", "text-center valign-middle"}
+        new[] { "EmailGroupID", "Email Group", "text-Left" },
+        new[] { "EmailTypeID", "EmailType", "text-left"},
 
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.AddNewEditTitle = "Email Group Type";
 }
+
 @helper BodyRows()
 {
-    <td width="80%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: GroupName, click: $parent.viewPageRecord"></button></td>
-    <td width="5%" class="text-center valign-middle"><span data-bind="visible: Active" class="glyphicon glyphicon-check"></span></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
-    <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></button></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: EmailTypeID"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Group>("GroupName"))
-        @Raw(dataContext.AddCheckBoxField<Group>("Active"))
+    @Raw(dataContext.AddSelectField<EmailGroupType, EmailGroup>("EmailGroupID", "ID", "Name"))
+    @Raw(dataContext.AddSelectField<EmailGroupType, EmailType>("EmailTypeID", "ID"))
+    <div class="form-group">
+        <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: addNewGroup">Add New Group</button>
     </div>
+
+    <div id="textArea" class="form-group" data-bind="visible: false">
+        <div class="form-group">
+            <div id="xslID" style="display: none"></div>
+            <label>New Group Name:</label>
+            <input id="groupName" class="form-control" type="text" />
+        </div>
+        <button id="saveNew" class="btn btn-primary pull-right" data-bind=" click: addGroup">Add Group</button>
+    </div>
+
 }
-<div id="metersDialog" class="modal modal-wide fade" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body" style="overflow-y: hidden">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <iframe style="border: none; overflow-y: hidden" id="metersFrame" marginheight="0" marginwidth="0"></iframe>
-                <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="usersDialog" class="modal modal-wide fade" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body" style="overflow-y: hidden">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <iframe style="border: none; overflow-y: hidden" id="usersFrame" marginheight="0" marginwidth="0"></iframe>
-                <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts 
+@section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Group, DataHub>(ViewBag))
-                
-        function getMeterCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryGroupMeterViewCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-        
-        function getUserCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryUserGroupViewCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-            return element.text();
-        }
-
-        function openMeters(record) {
-            //console.log(record);
-            $("#metersFrame").attr({
-                "src": "/GroupMeterView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
-                "height": ($(document).height() - 150) + "px",
-                "width": "100%"
-            });
-            
-            $("#metersDialog").modal("show");
-        }
-        
-        function openUsers(record) {
-            //console.log(record);
-            $("#usersFrame").attr({
-                "src": "/UserGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
-                "height": ($(document).height() - 150) + "px",
-                "width": "100%"
-            });
-
-            $("#usersDialog").modal("show");
-        }
-
-        $("#metersDialog").on("hidden.bs.modal", function () {
-            // Refresh page counts after editing tasks
-            viewModel.queryPageRecords();
-
-            // Clear frame page
-            $("#metersFrame").attr("src", "about:blank");
-        });
-        
-        $("#usersDialog").on("hidden.bs.modal", function () {
-            // Refresh page counts after editing tasks
-            viewModel.queryPageRecords();
-
-            // Clear frame page
-            $("#usersFrame").attr("src", "about:blank");
-        });
-
-        $(window).resize(function () {
-            setTimeout(function () {
-                $("#metersFrame").attr("height", ($(document).height() - 150) + "px");
-            }, 500);
-        });
+        @Raw(dataContext.RenderViewModelConfiguration<EmailGroupType, DataHub>(ViewBag))
+        @Raw(Model.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
 
         $(function () {
-            $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
-            $("#usersDialog").modal({ show: false, backdrop: "static", keyboard: false });
-
         });
+
+        function addNewGroup() {
+            $('#groupName').val('');
+            $('#textArea').slideToggle();
+        }
+
+        function addGroup() {
+            var record = { Name: $('#groupName').val() };
+
+            dataHub.addNewEmailGroup(record).done(function (data) {
+                dataHub.queryEmailGroup("Name", true, 1, 10000000000, '%').done(function (data2) {
+                    $('#selectEmailGroupID').children().remove();
+                    $.each(data2, function (i, d) {
+                        $('#selectEmailGroupID').append(new Option(d.Name, d.ID));
+                    });
+                });
+
+                $('#templateName').val('');
+                $('#template').val('');
+                $('#textArea').slideToggle();
+            });
+        }
+
+        $('#addNewEditDialog').on('shown.bs.modal', function () {
+            dataHub.queryEmailGroup("Name", true, 1, 10000000000, '%').done(function (data2) {
+                $('#selectEmailGroupID').children().remove();
+                $.each(data2, function (i, d) {
+                    $('#selectEmailGroupID').append(new Option(d.Name, d.ID));
+                });
+            });
+        });
+
+        function viewTemplate(data) {
+            window.open("@Url.Content("~/EmailTemplateHandler.ashx")?EventID=" + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
+        }
     </script>
 }

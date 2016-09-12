@@ -1,12 +1,12 @@
-﻿@*******************************************************************************************************
-//  Settings.cshtml - Gbtc
+﻿@*//******************************************************************************************************
+//  EmailTypes.cshtml - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-//  file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,11 +16,11 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/15/2016 - J. Ritchie Carroll
+//  09/12/2016 - Billy Ernest
 //       Generated original version of source code.
 //
-//*****************************************************************************************************@
-@using System.Collections.Generic
+//*******************************************************************************************************@
+
 @using System.Net.Http
 @using System.Text.RegularExpressions
 @using GSF.Web
@@ -51,7 +51,7 @@
 {
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: lookupEmailCategoryName(EmailCategoryID), click: $parent.viewPageRecord"></button></td>
     <td width="25%" class="text-left valign-middle" data-bind="text: lookupXSLTemplateName(XSLTemplateID)"></td>
-    <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data)">View</button></td>
+    <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data)">View Template</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -127,6 +127,10 @@
                         $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
                     });
                 });
+                
+                $('#templateName').val('');
+                $('#template').val('');
+                $('#textArea').slideToggle();
             });
         }
         
@@ -139,6 +143,11 @@
                         $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
                     });
                 });
+                
+                $('#templateName').val('');
+                $('#template').val('');
+                $('#textArea').slideToggle();
+
             });
         }
         
@@ -152,7 +161,7 @@
         });
         
         function viewTemplate(data) {
-            window.open("@Url.Content("~/EmailTemplateHandler.ashx")?EventID= " + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
+            window.open("@Url.Content("~/EmailTemplateHandler.ashx")?EventID=" + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
         }
     </script>
 }

@@ -1240,6 +1240,55 @@ namespace openXDA
 
         #endregion
 
+        #region [ EmailGroupType Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupType), RecordOperation.QueryRecordCount)]
+        public int QueryEmailGroupTypeCount(string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<EmailGroupType>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupType), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailGroupType> QueryEmailGroupType(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<EmailGroupType>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupType), RecordOperation.DeleteRecord)]
+        public void DeleteEmailGroupType(int id)
+        {
+            DataContext.Table<EmailGroupType>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupType), RecordOperation.CreateNewRecord)]
+        public EmailGroupType NewEmailGroupType()
+        {
+            return new EmailGroupType();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupType), RecordOperation.AddNewRecord)]
+        public void AddNewEmailGroupType(EmailGroupType record)
+        {
+            DataContext.Table<EmailGroupType>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EmailGroupType), RecordOperation.UpdateRecord)]
+        public void UpdateEmailGroupType(EmailGroupType record)
+        {
+            DataContext.Table<EmailGroupType>().UpdateRecord(record);
+        }
+
+
+        #endregion
+
         #region [ XSLTemplate Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
