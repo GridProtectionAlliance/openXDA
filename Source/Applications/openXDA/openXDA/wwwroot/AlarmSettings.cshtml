@@ -237,9 +237,27 @@
                                 <span class="glyphicon glyphicon-th"></span>
                             </div>
                         </div>
-                        <div class="checkbox">
-                            <label><input type="checkbox" id="zeroValues" class="" />Ignore Zero Values</label>
+                        <div style="float: left">
+                            <div class="input-group">
+                                <label>Decimals in Result</label>
+                                <select class="form-control" id="significance">
+                                    <option>9</option>
+                                    <option>8</option>
+                                    <option>7</option>
+                                    <option>6</option>
+                                    <option>5</option>
+                                    <option selected="selected">4</option>
+                                    <option>3</option>
+                                    <option>2</option>
+                                    <option>1</option>
+                                    <option>0</option>
+                                </select>
+                            </div>
                         </div>
+                        <div class="checkbox" style="margin-left: 60%">
+                            <label><input type="checkbox" id="zeroValues" class="" checked="checked" />Ignore Zero Values</label>
+                        </div>
+
                     </div>
                     <div class="col-md-1">
                         <br/>
@@ -322,8 +340,9 @@
             $('#alert').css('display', 'none');
             $('#upperLimit').val("");
             $('#lowerLimit').val("");
-            $('#zeroValues').prop('checked', false);
+            $('#zeroValues').prop('checked', true);
             $('#smartAlarmsModal').modal('show');
+            $('#smartAlarmsModal .modal-title').text($('#smartAlarmsModal .modal-title').text() + ' - Channel: ' + record.ChannelID + ' - ' + record.Name);
             currentRecord = record;
         }
         
@@ -402,70 +421,59 @@
                     var minussixsigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 6], [endDate, averageValue.mean - averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
                     var plussixsigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 6], [endDate, averageValue.mean + averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
 
-                    if ($('#sigmaValue').val() == 6) {
-                        plot = $.plot("#flotchart", [minussixsigma, averages, plussixsigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 6);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 6);
-                    } else if ($('#sigmaValue').val() == 5) {
-                        plot = $.plot("#flotchart", [minusfivesigma, averages, plusfivesigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 5);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 5);
-                    } else if ($('#sigmaValue').val() == 4) {
-                        plot = $.plot("#flotchart", [minusfoursigma, averages, plusfoursigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 4);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 4);
-                    } else if ($('#sigmaValue').val() == 3) {
-                        plot = $.plot("#flotchart", [minusthreesigma, averages, plusthreesigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 3);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 3);
-                    } else if ($('#sigmaValue').val() == 2) {
-                        plot = $.plot("#flotchart", [minustwosigma, averages, plustwosigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation * 2);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 2);
-                    } else if ($('#sigmaValue').val() == 1) {
-                        plot = $.plot("#flotchart", [minusonesigma, averages, plusonesigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation);
-                    } else {
-                        plot = $.plot("#flotchart", [minusonesigma, averages, plusonesigma], flotOptions);
-                        $('#upperLimit').val(averageValue.mean + averageValue.deviation);
-                        $('#lowerLimit').val(averageValue.mean - averageValue.deviation);
-                    }
-
+                    displayLimits();
                     //plot = $.plot("#flotchart", [ minusonesigma, averages, plusonesigma ], flotOptions);
                     $('#sigmaValue').on('change', function (event) {
-                        if ($('#sigmaValue').val() == 6) {
-                            plot.setData([minussixsigma, averages, plussixsigma]);
-                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 6);
-                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 6);
-                        } else if ($('#sigmaValue').val() == 5) {
-                            plot.setData([minusfivesigma, averages, plusfivesigma]);
-                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 5);
-                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 5);
-                        } else if ($('#sigmaValue').val() == 4) {
-                            plot.setData([minusfoursigma, averages, plusfoursigma]);
-                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 4);
-                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 4);
-                        } else if ($('#sigmaValue').val() == 3) {
-                            plot.setData([minusthreesigma, averages, plusthreesigma]);
-                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 3);
-                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 3);
-                        } else if ($('#sigmaValue').val() == 2) {
-                            plot.setData([minustwosigma, averages, plustwosigma]);
-                            $('#upperLimit').val(averageValue.mean + averageValue.deviation * 2);
-                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation * 2);
-                        } else if ($('#sigmaValue').val() == 1) {
-                            plot.setData([minusonesigma, averages, plusonesigma]);
-                            $('#upperLimit').val(averageValue.mean + averageValue.deviation);
-                            $('#lowerLimit').val(averageValue.mean - averageValue.deviation);
-                        }
+                        displayLimits();
+                        plot.setupGrid();
+                        plot.draw();
+                        
 
+                    });
+                    
+                    $('#significance').on('change', function (event) {
+                        displayLimits();
                         plot.setupGrid();
                         plot.draw();
 
                     });
+
                     spinner.stop();
                     //$('#smartAlarmsWindow').toggle();
+                    
+                    function displayLimits() {
+                        if ($('#sigmaValue').val() == 6) {
+                            plot = $.plot("#flotchart", [minussixsigma, averages, plussixsigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation * 6).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation * 6).toFixed($('#significance').val()));
+                        } else if ($('#sigmaValue').val() == 5) {
+                            plot = $.plot("#flotchart", [minusfivesigma, averages, plusfivesigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation * 5).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation * 5).toFixed($('#significance').val()));
+                        } else if ($('#sigmaValue').val() == 4) {
+                            plot = $.plot("#flotchart", [minusfoursigma, averages, plusfoursigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation * 4).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation * 4).toFixed($('#significance').val()));
+                        } else if ($('#sigmaValue').val() == 3) {
+                            plot = $.plot("#flotchart", [minusthreesigma, averages, plusthreesigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation * 3).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation * 3).toFixed($('#significance').val()));
+                        } else if ($('#sigmaValue').val() == 2) {
+                            plot = $.plot("#flotchart", [minustwosigma, averages, plustwosigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation * 2).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation * 2).toFixed($('#significance').val()));
+                        } else if ($('#sigmaValue').val() == 1) {
+                            plot = $.plot("#flotchart", [minusonesigma, averages, plusonesigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation).toFixed($('#significance').val()));
+                        } else {
+                            plot = $.plot("#flotchart", [minusonesigma, averages, plusonesigma], flotOptions);
+                            $('#upperLimit').val((averageValue.mean + averageValue.deviation).toFixed($('#significance').val()));
+                            $('#lowerLimit').val((averageValue.mean - averageValue.deviation).toFixed($('#significance').val()));
+                        }
+
+                    }
+
                 }
             });
         }
