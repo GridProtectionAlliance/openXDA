@@ -35,6 +35,8 @@ using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using openXDA.Model;
+using openHistorian.XDALink;
+
 
 namespace openXDA
 {
@@ -1573,44 +1575,63 @@ namespace openXDA
         public List<TrendingData> GetTrendingData(DateTime startDate, DateTime endDate, int channelId)
         {
             List<TrendingData> trendingData = new List<TrendingData>();
+            //using (IDbCommand cmd = DataContext.Connection.Connection.CreateCommand())
+            //{
+            //    cmd.CommandText = "dbo.selectAlarmDataByChannelByDate";
+            //    cmd.CommandType = CommandType.StoredProcedure;
+            //    cmd.CommandTimeout = 30000;
+            //    IDbDataParameter StartDate = cmd.CreateParameter();
+            //    IDbDataParameter EndDate = cmd.CreateParameter();
+            //    IDbDataParameter ChannelID = cmd.CreateParameter();
 
-            using (IDbCommand cmd = DataContext.Connection.Connection.CreateCommand())
+            //    StartDate.ParameterName = "@StartDate";
+            //    EndDate.ParameterName = "@EndDate";
+            //    ChannelID.ParameterName = "@ChannelID";
+
+            //    StartDate.Value = startDate;
+            //    EndDate.Value = endDate;
+            //    ChannelID.Value = channelId;
+
+            //    cmd.Parameters.Add(StartDate);
+            //    cmd.Parameters.Add(EndDate);
+            //    cmd.Parameters.Add(ChannelID);
+
+            //    using( IDataReader reader = cmd.ExecuteReader())
+            //    {
+
+            //        while (reader.Read())
+            //        {
+            //            TrendingData obj = new TrendingData();
+
+            //            obj.ChannelID = Convert.ToInt32(reader["ChannelID"]);
+            //            obj.SeriesType = Convert.ToString(reader["SeriesType"]);
+            //            obj.Time = Convert.ToDateTime(reader["Time"]);
+            //            obj.Value = Convert.ToDouble(reader["Value"]);
+            //            trendingData.Add(obj);
+            //        }
+
+            //    }
+            //}
+
+            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+            IEnumerable<int> channelIDs = new List<int> { channelId };
+
+            
+            using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                cmd.CommandText = "dbo.selectAlarmDataByChannelByDate";
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandTimeout = 30000;
-                IDbDataParameter StartDate = cmd.CreateParameter();
-                IDbDataParameter EndDate = cmd.CreateParameter();
-                IDbDataParameter ChannelID = cmd.CreateParameter();
-
-                StartDate.ParameterName = "@StartDate";
-                EndDate.ParameterName = "@EndDate";
-                ChannelID.ParameterName = "@ChannelID";
-
-                StartDate.Value = startDate;
-                EndDate.Value = endDate;
-                ChannelID.Value = channelId;
-
-                cmd.Parameters.Add(StartDate);
-                cmd.Parameters.Add(EndDate);
-                cmd.Parameters.Add(ChannelID);
-
-                using( IDataReader reader = cmd.ExecuteReader())
+                foreach (TrendingDataPoint point in historian.Read(channelIDs, startDate, endDate))
                 {
+                    TrendingData obj = new TrendingData();
 
-                    while (reader.Read())
-                    {
-                        TrendingData obj = new TrendingData();
-
-                        obj.ChannelID = Convert.ToInt32(reader["ChannelID"]);
-                        obj.SeriesType = Convert.ToString(reader["SeriesType"]);
-                        obj.Time = Convert.ToDateTime(reader["Time"]);
-                        obj.Value = Convert.ToDouble(reader["Value"]);
-                        trendingData.Add(obj);
-                    }
-
+                    obj.ChannelID = point.ChannelID;
+                    obj.SeriesType = point.SeriesID.ToString();
+                    obj.Time = point.Timestamp;
+                    obj.Value = point.Value;
+                    trendingData.Add(obj);
                 }
             }
+
 
             return trendingData;
            
