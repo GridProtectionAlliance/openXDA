@@ -21,6 +21,7 @@
 //
 //*******************************************************************************************************@
 
+@using System.Collections.Generic
 @using System.Net.Http
 @using System.Text.RegularExpressions
 @using GSF.Web
@@ -33,9 +34,22 @@
     Layout = "Layout.cshtml";
     ViewBag.Title = "Email Types";
 
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("EmailTypeID"))
+    {
+        ViewBag.EmailTypeID = parameters["EmailTypeID"];
+    }
+    else
+    {
+        ViewBag.EmailTypeID = '%';
+    }
+
+
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-    {   //    { "Field", "Label", "Classes" }
+{   //    { "Field", "Label", "Classes" }
         new[] { "EmailCategoryID", "Category", "text-Left" },
         new[] { "XSLTemplateID", "XSL Template", "text-left"},
         new[] { null, "Event ID: <input id='eventID'class='' type='text'/>", "text-left valign-middle"},
@@ -89,6 +103,9 @@
         @Raw(Model.RenderAbstract<XSLTemplate>("Name", "ID", "lookupXSLTemplateName", "xslTemplateName"))
 
         $(function () {
+            viewModel.filterText = '@ViewBag.EmailTypeID';
+            viewModel.queryPageRecords();
+
         });
 
         function createXSLTemplate() {
@@ -112,14 +129,14 @@
                 $('#saveNew').hide();
                 if ($('#textArea').css('display') === 'none')
                     $('#textArea').slideToggle();
-                
+
 
             });
         }
-        
+
         function saveXSLTemplateNew() {
             var record = { Name: $('#templateName').val(), Template: $('#template').val() };
-            
+
             dataHub.addNewXSLTemplate(record).done(function (data) {
                 dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
                     $('#selectXSLTemplateID').children().remove();
@@ -127,13 +144,13 @@
                         $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
                     });
                 });
-                
+
                 $('#templateName').val('');
                 $('#template').val('');
                 $('#textArea').slideToggle();
             });
         }
-        
+
         function saveXSLTemplateEdit() {
             var record = { ID: $('#xslID').html(), Name: $('#templateName').val(), Template: $('#template').val() };
             dataHub.updateXSLTemplate(record).done(function (data) {
@@ -143,14 +160,14 @@
                         $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
                     });
                 });
-                
+
                 $('#templateName').val('');
                 $('#template').val('');
                 $('#textArea').slideToggle();
 
             });
         }
-        
+
         $('#addNewEditDialog').on('shown.bs.modal', function () {
             dataHub.queryXSLTemplate("Name", true, 1, 1000000000000, '%').done(function (data2) {
                 $('#selectXSLTemplateID').children().remove();
@@ -159,7 +176,7 @@
                 });
             });
         });
-        
+
         function viewTemplate(data) {
             window.open("@Url.Content("~/EmailTemplateHandler.ashx")?EventID=" + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
         }

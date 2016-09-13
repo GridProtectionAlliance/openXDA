@@ -359,6 +359,9 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="wwwroot\EmailGroups.cshtml" />
+    <Content Include="wwwroot\EmailGroupType.cshtml" />
+    <Content Include="wwwroot\EmailGroupMeterGroup.cshtml" />
+    <Content Include="wwwroot\EmailGroupUserAccount.cshtml" />
     <None Include="wwwroot\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />

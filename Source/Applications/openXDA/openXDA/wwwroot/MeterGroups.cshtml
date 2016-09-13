@@ -21,6 +21,8 @@
 //
 //*****************************************************************************************************@
 @using System
+@using System.Collections.Generic
+@using System.Net.Http
 @using System.Security.Policy
 @using System.Threading
 @using GSF.Web
@@ -39,10 +41,23 @@
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
     ViewBag.Title = "Meter Groupings";
+    HttpRequestMessage request = ViewBag.Request;
+
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("MeterGroupID"))
+    {
+        ViewBag.MeterGroupID = parameters["MeterGroupID"];
+    }
+    else
+    {
+        ViewBag.MeterGroupID = '%';
+    }
+
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-    {   //    { "Field", "Label", "Classes" }
+{   //    { "Field", "Label", "Classes" }
         new[] { "GroupName", "Name", "text-Left" },
         new[] { null, "Active", "text-center valign-middle" },
         new[] { null, "Meters", "text-center valign-middle"},
@@ -165,6 +180,9 @@
         });
 
         $(function () {
+            viewModel.filterText = '@ViewBag.MeterGroupID';
+            viewModel.queryPageRecords();
+
             $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
             $("#usersDialog").modal({ show: false, backdrop: "static", keyboard: false });
 

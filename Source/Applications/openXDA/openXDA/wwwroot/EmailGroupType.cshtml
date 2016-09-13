@@ -32,7 +32,8 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Email Groups";
+    ViewBag.Title = "Email Group Types";
+
     HttpRequestMessage request = ViewBag.Request;
 
     Dictionary<string, string> parameters = request.QueryParameters();
@@ -46,12 +47,13 @@
         ViewBag.GroupID = '%';
     }
 
+
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "Name", "Group Name", "text-Left" },
-        new[] { null, "Email Types", "text-center valign-middle"},
-        new[] { null, "Meter Groups", "text-center valign-middle"},
+        new[] { "EmailGroupID", "Group Name", "text-Left" },
+        new[] { "EmailTypeID", "Email Types", "text-left valign-middle"},
+
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -61,11 +63,8 @@
 
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupType.cshtml?GroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Email Types&nbsp;&nbsp;<span class="badge" data-bind="text: getTypesCount(ID, $($element)), attr: {id: 'typesCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupMeterGroup.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meter Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterGroupCount(ID, $($element)), attr: {id: 'meterGroupCount' + ID}">0</span></a></td>
-    @*<td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>*@
-
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), attr: { href: '/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: EmailTypeID, attr: { href: '/EmailTypes.cshtml?EmailTypeID=' + EmailTypeID }"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -73,34 +72,16 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<EmailGroup>("Name"))
+    @Raw(dataContext.AddSelectField<EmailGroupType, EmailGroup>("EmailGroupID", "ID", "Name"))
+    @Raw(dataContext.AddSelectField<EmailGroupType, EmailType>("EmailTypeID", "ID"))
+
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EmailGroup, DataHub>(ViewBag))
-        
-        function getTypesCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-        
-        function getMeterGroupCount(sourceID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                dataHub.queryEmailGroupMeterGroupCount(sourceID, null).done(function (count) {
-                    $(element).text(count.toString());
-                });
-            }
-
-            return element.text();
-        }
-
+        @Raw(dataContext.RenderViewModelConfiguration<EmailGroupType, DataHub>(ViewBag))
+        @Raw(Model.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
         $(function () {
             viewModel.filterText = '@ViewBag.GroupID';
             viewModel.queryPageRecords();

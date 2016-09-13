@@ -628,14 +628,16 @@ namespace openXDA
         [RecordOperation(typeof(Group), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(string filterString)
         {
-            return DataContext.Table<Group>().QueryRecordCount();
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<Group>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Group), RecordOperation.QueryRecords)]
         public IEnumerable<Group> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<Group>().QueryRecords(sortField, ascending, page, pageSize);
+            filterString = (filterString ?? "%").EnsureEnd("%");
+            return DataContext.Table<Group>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1150,7 +1152,7 @@ namespace openXDA
         public int QueryEmailTypeCount(string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<EmailType>().QueryRecordCount();
+            return DataContext.Table<EmailType>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1158,7 +1160,7 @@ namespace openXDA
         public IEnumerable<EmailType> QueryEmailType(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<EmailType>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<EmailType>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1198,7 +1200,7 @@ namespace openXDA
         public int QueryEmailGroupCount(string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<EmailGroup>().QueryRecordCount();
+            return DataContext.Table<EmailGroup>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1206,7 +1208,7 @@ namespace openXDA
         public IEnumerable<EmailGroup> QueryEmailGroup(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1240,6 +1242,166 @@ namespace openXDA
 
         #endregion
 
+        #region [ EmailGroupMeterGroup Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.QueryRecordCount)]
+        public int QueryEmailGroupMeterGroupCount(string filterString)
+        {
+            string emailGroupFilter = "%";
+            string meterGroupFilter = "%";
+
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 2)
+                {
+                    emailGroupFilter = filters[0] + '%';
+                    meterGroupFilter = filters[1] + '%';
+                }
+            }
+
+
+            return DataContext.Table<EmailGroupMeterGroup>().QueryRecordCount(new RecordRestriction("EmailGroupID LIKE {0} AND MeterGroupID LIKE {1}", emailGroupFilter, meterGroupFilter));
+        }
+
+        public int QueryEmailGroupMeterGroupCount(int EmailGroupID, string filterString)
+        {
+            return DataContext.Table<EmailGroupMeterGroup>().QueryRecordCount(new RecordRestriction("EmailGroupID = {0}", EmailGroupID));
+        }
+
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailGroupMeterGroup> QueryEmailGroupMeterGroup(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string emailGroupFilter = "%";
+            string meterGroupFilter = "%";
+
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 2)
+                {
+                    emailGroupFilter = filters[0] + '%';
+                    meterGroupFilter = filters[1] + '%';
+                }
+            }
+
+            return DataContext.Table<EmailGroupMeterGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("EmailGroupID LIKE {0} AND MeterGroupID LIKE {1}", emailGroupFilter, meterGroupFilter));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.DeleteRecord)]
+        public void DeleteEmailGroupMeterGroup(int id)
+        {
+            DataContext.Table<EmailGroupMeterGroup>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.CreateNewRecord)]
+        public EmailGroupMeterGroup NewEmailGroupMeterGroup()
+        {
+            return new EmailGroupMeterGroup();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.AddNewRecord)]
+        public void AddNewEmailGroupMeterGroup(EmailGroupMeterGroup record)
+        {
+            DataContext.Table<EmailGroupMeterGroup>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.UpdateRecord)]
+        public void UpdateEmailGroupMeterGroup(EmailGroupMeterGroup record)
+        {
+            DataContext.Table<EmailGroupMeterGroup>().UpdateRecord(record);
+        }
+
+
+        #endregion
+
+        #region [ EmailGroupUserAccount Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.QueryRecordCount)]
+        public int QueryEmailGroupUserAccountCount(string filterString)
+        {
+            string emailGroupFilter = "%";
+            string userAccountFilter = "%";
+
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 2)
+                {
+                    emailGroupFilter = filters[0] + '%';
+                    userAccountFilter = filters[1] + '%';
+                }
+            }
+
+
+            return DataContext.Table<EmailGroupUserAccount>().QueryRecordCount(new RecordRestriction("EmailGroupID LIKE {0} AND UserAccountID LIKE {1}", emailGroupFilter, userAccountFilter));
+        }
+
+        public int QueryEmailGroupUserAccountCount(int EmailGroupID, string filterString)
+        {
+            return DataContext.Table<EmailGroupUserAccount>().QueryRecordCount(new RecordRestriction("EmailGroupID = {0}", EmailGroupID));
+        }
+
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailGroupUserAccount> QueryEmailGroupUserAccount(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string emailGroupFilter = "%";
+            string userAccountFilter = "%";
+
+            if (filterString != "%")
+            {
+                string[] filters = filterString.Split(';');
+                if (filters.Length == 2)
+                {
+                    emailGroupFilter = filters[0] + '%';
+                    userAccountFilter = filters[1] + '%';
+                }
+            }
+
+            return DataContext.Table<EmailGroupUserAccount>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("EmailGroupID LIKE {0} AND UserAccountID LIKE {1}", emailGroupFilter, userAccountFilter));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.DeleteRecord)]
+        public void DeleteEmailGroupUserAccount(int id)
+        {
+            DataContext.Table<EmailGroupUserAccount>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.CreateNewRecord)]
+        public EmailGroupUserAccount NewEmailGroupUserAccount()
+        {
+            return new EmailGroupUserAccount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.AddNewRecord)]
+        public void AddNewEmailGroupUserAccount(EmailGroupUserAccount record)
+        {
+            DataContext.Table<EmailGroupUserAccount>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.UpdateRecord)]
+        public void UpdateEmailGroupUserAccount(EmailGroupUserAccount record)
+        {
+            DataContext.Table<EmailGroupUserAccount>().UpdateRecord(record);
+        }
+
+
+        #endregion
+
         #region [ EmailGroupType Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -1247,7 +1409,7 @@ namespace openXDA
         public int QueryEmailGroupTypeCount(string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<EmailGroupType>().QueryRecordCount();
+            return DataContext.Table<EmailGroupType>().QueryRecordCount(new RecordRestriction("EmailGroupID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1255,7 +1417,7 @@ namespace openXDA
         public IEnumerable<EmailGroupType> QueryEmailGroupType(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<EmailGroupType>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<EmailGroupType>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("EmailGroupID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]

@@ -86,7 +86,7 @@ namespace openXDA.Model
                 var valueField = operations.GetFieldValue(record, valueFieldName);
                 var idField = operations.GetFieldValue(record, idFieldName);
 
-                javascript.AppendLine($"        {arrayName}[{idField.ToString().JavaScriptEncode()}] = \"{valueField?.ToString().JavaScriptEncode()}\";");
+                javascript.AppendLine($"        {arrayName}[\"{idField.ToString().JavaScriptEncode()}\"] = \"{valueField?.ToString().JavaScriptEncode()}\";");
             }
 
             javascript.AppendLine($"\r\n        function {lookupFunctionName}(value) {{");
