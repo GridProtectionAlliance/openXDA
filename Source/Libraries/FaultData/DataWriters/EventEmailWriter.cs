@@ -25,15 +25,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Security;
 using System.Threading;
-using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Xsl;
 using FaultData.Configuration;
 using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
@@ -42,6 +42,7 @@ using FaultData.DataSets;
 using GSF;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Data;
 using GSF.Xml;
 using log4net;
 
@@ -50,7 +51,7 @@ namespace FaultData.DataWriters
     /// <summary>
     /// Writes the results of fault analysis to an email.
     /// </summary>
-    public class FaultEmailWriter : IDataWriter
+    public class EventEmailWriter : IDataWriter
     {
         #region [ Members ]
 
@@ -67,7 +68,7 @@ namespace FaultData.DataWriters
 
         #region [ Constructors ]
 
-        public FaultEmailWriter()
+        public EventEmailWriter()
         {
             m_emailSettings = new EmailSettings();
             m_faultEmailSettings = new FaultEmailSettings();
@@ -171,18 +172,21 @@ namespace FaultData.DataWriters
 
             Initialize(this);
 
-            foreach (var faultGroup in dbAdapterContainer.GetAdapter<FaultGroupTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
+            using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
             {
-                faultDetectionResult = !faultGroup.IsFaultDetectionLogicResultNull()
-                    ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
-                    : (bool?)null;
-
-                faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
-
-                if (faultDetectionResult == true || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
+                foreach (var faultGroup in dbAdapterContainer.GetAdapter<FaultGroupTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
                 {
-                    if (dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(faultGroup.EventID) == 0)
-                        QueueEventID(faultGroup.EventID);
+                    faultDetectionResult = !faultGroup.IsFaultDetectionLogicResultNull()
+                        ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
+                        : (bool?)null;
+
+                    faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
+
+                    if (faultDetectionResult == true || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
+                    {
+                        if (GetEmailCount(dbAdapterContainer, faultGroup.EventID) == 0)
+                            QueueEventID(faultGroup.EventID);
+                    }
                 }
             }
         }
@@ -205,10 +209,10 @@ namespace FaultData.DataWriters
         private static TimeZoneInfo s_timeZone;
         private static DbAdapterContainer s_dbAdapterContainer;
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(FaultEmailWriter));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EventEmailWriter));
 
         // Static Constructor
-        static FaultEmailWriter()
+        static EventEmailWriter()
         {
             QueuedEventIDs = new HashSet<int>();
             ProcessQueue = ProcessQueue<Action>.CreateRealTimeQueue(action => action());
@@ -217,7 +221,7 @@ namespace FaultData.DataWriters
         }
 
         // Static Methods
-        private static void Initialize(FaultEmailWriter writer)
+        private static void Initialize(EventEmailWriter writer)
         {
             bool configurationChanged =
                 s_timeTolerance != writer.TimeTolerance ||
@@ -300,7 +304,7 @@ namespace FaultData.DataWriters
                 if (systemEvent.Any(evt => evt.LineID == eventRow.LineID && QueuedEventIDs.Contains(evt.ID)))
                     return;
 
-                if (s_dbAdapterContainer.GetAdapter<EventFaultEmailTableAdapter>().GetFaultEmailCount(eventID) == 0)
+                if (GetEmailCount(s_dbAdapterContainer, eventID) == 0)
                     GenerateEmail(eventID);
             });
         }
@@ -315,12 +319,6 @@ namespace FaultData.DataWriters
 
             int faultTypeID;
             string eventDetail;
-            MeterData.EventRow eventRow;
-            List<int> faultedMeters;
-            List<int> meterGroups;
-            List<Recipient> recipients;
-
-            XslCompiledTransform transform;
             XDocument htmlDocument;
 
             List<Attachment> attachments;
@@ -339,38 +337,38 @@ namespace FaultData.DataWriters
                 .FirstOrDefault();
 
             eventDetail = eventAdapter.GetEventDetail(eventID);
-            eventRow = eventAdapter.GetDataByID(eventID)[0];
 
-            faultedMeters = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance)
-                .Where(evt => evt.LineID == eventRow.LineID)
-                .Where(evt => evt.EventTypeID == faultTypeID)
-                .Select(evt => evt.MeterID)
-                .ToList();
+            List<IGrouping<int, Guid>> templateGroups;
 
-            meterGroups = meterInfo.GroupMeters
-                .Where(groupMeter => faultedMeters.Contains(groupMeter.MeterID))
-                .Select(groupMeter => groupMeter.GroupID)
-                .ToList();
-
-            foreach (FaultEmailTemplate template in faultInfo.FaultEmailTemplates.ToList())
+            using (SqlCommand command = new SqlCommand("GetEventEmailRecipients", s_dbAdapterContainer.Connection))
+            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
             {
-                recipients = template.GetRecipients(systemInfo.Recipients, meterGroups);
+                DataTable recipientTable = new DataTable();
+                command.Parameters.AddWithValue("@eventID", eventID);
+                adapter.Fill(recipientTable);
 
-                if (recipients.Count == 0)
-                    continue;
+                templateGroups = recipientTable
+                    .Select()
+                    .GroupBy(row => row.ConvertField<int>("TemplateID"), row => row.ConvertField<Guid>("UserAccountID"))
+                    .ToList();
+            }
 
-                using (StringReader templateReader = new StringReader(template.Template))
-                using (StringReader dataReader = new StringReader(eventDetail))
-                using (XmlReader xmlTemplateReader = XmlReader.Create(templateReader))
-                using (XmlReader xmlDataReader = XmlReader.Create(dataReader))
-                using (StringWriter transformWriter = new StringWriter())
+            foreach (IGrouping<int, Guid> templateGroup in templateGroups)
+            {
+                string template;
+                List<string> recipients;
+
+                using (AdoDataConnection connection = new AdoDataConnection(s_dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
                 {
-                    transform = new XslCompiledTransform();
-                    transform.Load(xmlTemplateReader);
-                    transform.Transform(xmlDataReader, null, transformWriter);
-                    htmlDocument = XDocument.Parse(transformWriter.ToString(), LoadOptions.PreserveWhitespace);
+                    template = connection.ExecuteScalar<string>("SELECT Template FROM XSLTemplate WHERE ID = {0}", templateGroup.Key);
+
+                    string paramString = string.Join(",", templateGroup.Select((userAccountID, index) => $"{{{index}}}"));
+                    string sql = $"SELECT Email FROM UserAccount WHERE Email IS NOT NULL AND Email <> '' AND ID IN ({paramString})";
+                    DataTable emailTable = connection.RetrieveData(sql, templateGroup.ToArray());
+                    recipients = emailTable.Select().Select(row => row.ConvertField<string>("Email")).ToList();
                 }
 
+                htmlDocument = XDocument.Parse(eventDetail.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
                 htmlDocument.TransformAll("format", element => element.Format());
                 attachments = new List<Attachment>();
 
@@ -390,8 +388,19 @@ namespace FaultData.DataWriters
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
                     html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
+
+                    try
+                    {
+                        LoadEmail(eventID, recipients, subject, html);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Failure to load the email into the database should
+                        // not prevent us from attempting to send the email
+                        Log.Error(ex.Message, ex);
+                    }
+
                     SendEmail(recipients, subject, html, attachments);
-                    LoadEmail(eventID, recipients, subject, html);
                 }
                 finally
                 {
@@ -401,7 +410,42 @@ namespace FaultData.DataWriters
             }
         }
 
-        private static void SendEmail(List<Recipient> recipients, string subject, string body, IEnumerable<Attachment> attachments)
+        private static void LoadEmail(int eventID, List<string> recipients, string subject, string body)
+        {
+            EventTableAdapter eventAdapter = s_dbAdapterContainer.GetAdapter<EventTableAdapter>();
+            MeterData.EventRow eventRow = eventAdapter.GetDataByID(eventID)[0];
+            MeterData.EventDataTable systemEvent = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance);
+
+            DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, s_timeZone);
+            string toLine = string.Join("; ", recipients.Select(recipient => recipient.Trim()));
+
+            BulkLoader bulkLoader;
+            DataTable eventSentEmailTable;
+            int sentEmailID;
+
+            using (AdoDataConnection connection = new AdoDataConnection(s_dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+            {
+                connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
+                sentEmailID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
+                // Query an empty table with matching schema --
+                // union table to itself to eliminate unique key constraints
+                eventSentEmailTable = connection.RetrieveData("SELECT * FROM EventSentEmail WHERE 1 IS NULL UNION ALL SELECT * FROM EventSentEmail WHERE 1 IS NULL");
+            }
+
+            foreach (MeterData.EventRow evt in systemEvent)
+            {
+                if (eventRow.LineID == evt.LineID)
+                    eventSentEmailTable.Rows.Add(0, evt.ID, sentEmailID);
+            }
+
+            bulkLoader = new BulkLoader();
+            bulkLoader.Connection = s_dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = s_dbAdapterContainer.CommandTimeout;
+            bulkLoader.Load(eventSentEmailTable);
+        }
+
+        private static void SendEmail(List<string> recipients, string subject, string body, IEnumerable<Attachment> attachments)
         {
             const int DefaultSMTPPort = 25;
 
@@ -426,7 +470,7 @@ namespace FaultData.DataWriters
                 emailMessage.IsBodyHtml = true;
 
                 // Add the specified To recipients for the email message
-                foreach (string toRecipient in recipients.Select(recipient => recipient.Email))
+                foreach (string toRecipient in recipients)
                     emailMessage.To.Add(toRecipient.Trim());
 
                 // Create the image attachment for the email message
@@ -438,34 +482,15 @@ namespace FaultData.DataWriters
             }
         }
 
-        private static void LoadEmail(int eventID, List<Recipient> recipients, string subject, string body)
+        private static int GetEmailCount(DbAdapterContainer dbAdapterContainer, int eventID)
         {
-            EventTableAdapter eventAdapter = s_dbAdapterContainer.GetAdapter<EventTableAdapter>();
-            MeterData.EventRow eventRow = eventAdapter.GetDataByID(eventID)[0];
-            MeterData.EventDataTable systemEvent = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance);
-
-            FaultEmailTableAdapter faultEmailAdapter = s_dbAdapterContainer.GetAdapter<FaultEmailTableAdapter>();
-            FaultLocationData.FaultEmailDataTable faultEmailTable = new FaultLocationData.FaultEmailDataTable();
-            FaultLocationData.EventFaultEmailDataTable eventFaultEmailTable = new FaultLocationData.EventFaultEmailDataTable();
-
-            DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, s_timeZone);
-            string toLine = string.Join("; ", recipients.Select(recipient => recipient.Email));
-
-            BulkLoader bulkLoader;
-
-            faultEmailTable.AddFaultEmailRow(now, toLine, subject, body);
-            faultEmailAdapter.Update(faultEmailTable);
-
-            foreach (MeterData.EventRow evt in systemEvent)
+            using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
             {
-                if (eventRow.LineID == evt.LineID)
-                    eventFaultEmailTable.AddEventFaultEmailRow(evt.ID, faultEmailTable[0].ID);
+                int timeout = dbAdapterContainer.CommandTimeout;
+                string sql = "SELECT COUNT(*) FROM EventSentEmail WHERE EventID = {0}";
+                object[] parameters = { eventID };
+                return connection.ExecuteScalar<int>(timeout: timeout, sqlFormat: sql, parameters: parameters);
             }
-
-            bulkLoader = new BulkLoader();
-            bulkLoader.Connection = s_dbAdapterContainer.Connection;
-            bulkLoader.CommandTimeout = s_dbAdapterContainer.CommandTimeout;
-            bulkLoader.Load(eventFaultEmailTable);
         }
 
         #endregion

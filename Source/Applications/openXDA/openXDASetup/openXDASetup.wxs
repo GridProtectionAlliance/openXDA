@@ -607,7 +607,7 @@
           <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];Initial Catalog=[DATABASENAME];[XDAAUTHSTRING]">1</Publish>
           
           <!-- Determine whether we can connect to the database server. -->
-          <Publish Property="CONNECTIONSTRING" Value="[SERVERCONNECTIONSTRING]">1</Publish>
+          <Publish Property="CONNECTIONSTRING" Value="[SERVERCONNECTIONSTRING];;Connection Timeout=5">1</Publish>
           <Publish Event="DoAction" Value="TestDatabaseConnectionAction">1</Publish>
           <Publish Property="DBSERVERCONNECTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBSERVERCONNECTS" Value="1">DATABASECONNECTED</Publish>
@@ -615,7 +615,7 @@
           <Publish Event="SpawnDialog" Value="ModalErrorDialog">NOT DBSERVERCONNECTS</Publish>
           
           <!-- Determine whether the database already exists on the server. -->
-          <Publish Property="CONNECTIONSTRING" Value="[DBCONNECTIONSTRING]">DBSERVERCONNECTS</Publish>
+          <Publish Property="CONNECTIONSTRING" Value="[DBCONNECTIONSTRING];;Connection Timeout=5">DBSERVERCONNECTS</Publish>
           <Publish Event="DoAction" Value="TestDatabaseConnectionAction">DBSERVERCONNECTS</Publish>
           <Publish Property="DBEXISTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBEXISTS" Value="1">DATABASECONNECTED</Publish>

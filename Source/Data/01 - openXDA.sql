@@ -278,49 +278,23 @@ CREATE TABLE BreakerChannel
 )
 GO
 
-CREATE TABLE [Group]
+CREATE TABLE MeterGroup
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    GroupName NVARCHAR(100) NOT NULL,
-    Active BIT NOT NULL
+    Name VARCHAR(200) NOT NULL
 )
 GO
 
-CREATE TABLE GroupMeter
+CREATE TABLE MeterMeterGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    GroupID INT NOT NULL REFERENCES [Group](ID),
-    MeterID INT NOT NULL REFERENCES Meter(ID)
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID)
 )
 GO
 
-CREATE NONCLUSTERED INDEX IX_GroupMeter_MeterID
-ON GroupMeter(MeterID ASC)
-GO
-
-CREATE TABLE [User]
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name NVARCHAR(100) NOT NULL,
-    Active BIT NOT NULL,
-)
-GO
-
-CREATE TABLE UserGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    UserID INT NOT NULL REFERENCES [User](ID),
-    GroupID INT NOT NULL REFERENCES [Group](ID)
-)
-GO
-
-CREATE TABLE Recipient
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    FirstName VARCHAR(50) NOT NULL,
-    LastName VARCHAR(50) NOT NULL,
-    Email VARCHAR(200) NOT NULL
-)
+CREATE NONCLUSTERED INDEX IX_MeterMeterGroup_MeterID
+ON MeterMeterGroup(MeterID ASC)
 GO
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
@@ -371,30 +345,22 @@ GO
 INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.COMTRADEWriter', 1)
 GO
 
-INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.FaultEmailWriter', 1)
+INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.EventEmailWriter', 1)
 GO
 
-INSERT INTO [Group](GroupName, Active) VALUES('AllMeters', 1)
+INSERT INTO MeterGroup(Name) VALUES('AllMeters')
 GO
 
-INSERT INTO [User](Name, Active) VALUES('External', 1)
-GO
-
-INSERT INTO UserGroup(UserID, GroupID)
-SELECT [User].ID, [Group].ID
-FROM [User] CROSS JOIN [Group]
-GO
-
-CREATE TRIGGER AugmentAllMetersGroup
+CREATE TRIGGER Meter_AugmentAllMetersGroup
 ON Meter
 AFTER INSERT
 AS BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO GroupMeter(GroupID, MeterID)
-    SELECT [Group].ID, Meter.ID
-    FROM [Group] CROSS JOIN inserted Meter
-    WHERE [Group].GroupName = 'AllMeters'
+    INSERT INTO MeterMeterGroup(MeterID, MeterGroupID)
+    SELECT Meter.ID, MeterGroup.ID
+    FROM inserted Meter CROSS JOIN MeterGroup
+    WHERE MeterGroup.Name = 'AllMeters'
 END
 GO
 
@@ -481,6 +447,161 @@ CREATE TABLE SecurityGroupUserAccount
     SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID),
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
+GO
+
+CREATE TABLE UserAccountMeterGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
+    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID)
+)
+GO
+
+CREATE TRIGGER UserAccount_AugmentAllMetersGroup
+ON UserAccount
+AFTER INSERT
+AS BEGIN
+    SET NOCOUNT ON;
+    
+    INSERT INTO UserAccountMeterGroup(UserAccountID, MeterGroupID)
+    SELECT UserAccount.ID, MeterGroup.ID
+    FROM inserted UserAccount CROSS JOIN MeterGroup
+    WHERE MeterGroup.Name = 'AllMeters'
+END
+GO
+
+
+-- ----- --
+-- Email --
+-- ----- --
+
+CREATE TABLE XSLTemplate
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Template VARCHAR(MAX) NOT NULL
+)
+GO
+
+CREATE TABLE EmailGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL
+)
+GO
+
+CREATE TABLE EmailGroupUserAccount
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+)
+GO
+
+CREATE TABLE EmailGroupSecurityGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID)
+)
+GO
+
+CREATE TABLE EmailGroupMeterGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID)
+)
+GO
+
+CREATE TABLE EmailCategory
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL
+)
+GO
+
+CREATE TABLE EmailType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailCategoryID INT NOT NULL REFERENCES EmailCategory(ID),
+    XSLTemplateID INT NOT NULL REFERENCES XSLTemplate(ID)
+)
+GO
+
+CREATE TABLE EmailGroupType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID)
+)
+GO
+
+CREATE TABLE DisturbanceEmailCriterion
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    SeverityCode INT NOT NULL
+)
+GO
+
+CREATE TABLE FaultEmailCriterion
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID)
+)
+GO
+
+CREATE TABLE AlarmEmailCriterion
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID)
+)
+GO
+
+CREATE TABLE SentEmail
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    TimeSent DATETIME NOT NULL,
+    ToLine VARCHAR(MAX) NOT NULL,
+    Subject VARCHAR(500) NOT NULL,
+    Message VARCHAR(MAX) NOT NULL
+)
+GO
+
+INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
+GO
+
+INSERT INTO XSLTemplate(Name, Template) VALUES('Default Disturbance', '')
+GO
+
+INSERT INTO XSLTemplate(Name, Template) VALUES('Default Fault', '')
+GO
+
+INSERT INTO XSLTemplate(Name, Template) VALUES('Default Alarm', '')
+GO
+
+INSERT INTO EmailCategory(Name) VALUES('Daily')
+GO
+
+INSERT INTO EmailCategory(Name) VALUES('Event')
+GO
+
+INSERT INTO EmailCategory(Name) VALUES('Alarm')
+GO
+
+INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(1, 1)
+GO
+
+INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 2)
+GO
+
+INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 3)
+GO
+
+INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(3, 4)
 GO
 
 
@@ -686,6 +807,18 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_BreakerOperation_EventID
 ON BreakerOperation(EventID ASC)
+GO
+
+CREATE TABLE EventSentEmail
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    SentEmailID INT NOT NULL REFERENCES SentEmail(ID)
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_EventSentEmail_EventID
+ON EventSentEmail(ID ASC)
 GO
 
 INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
@@ -903,52 +1036,6 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_DoubleEndedFaultDistance_RemoteFaultSummaryID
 ON DoubleEndedFaultDistance(RemoteFaultSummaryID ASC)
-GO
-
-CREATE TABLE FaultEmailTemplate
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Template VARCHAR(MAX) NOT NULL
-)
-GO
-
-CREATE TABLE FaultEmailRecipient
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    RecipientID INT NOT NULL REFERENCES Recipient(ID),
-    FaultEmailTemplateID INT NOT NULL REFERENCES FaultEmailTemplate(ID),
-    MeterGroupID INT NOT NULL REFERENCES [Group](ID)
-)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FaultEmailRecipient_RecipientID
-ON FaultEmailRecipient(RecipientID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FaultEmailRecipient_FaultEmailTemplateID
-ON FaultEmailRecipient(FaultEmailTemplateID ASC)
-GO
-
-CREATE NONCLUSTERED INDEX IX_FaultEmailRecipient_MeterGroupID
-ON FaultEmailRecipient(MeterGroupID ASC)
-GO
-
-CREATE TABLE FaultEmail
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    TimeSent DATETIME NOT NULL,
-    ToLine VARCHAR(MAX) NOT NULL,
-    Subject VARCHAR(500) NOT NULL,
-    Message VARCHAR(MAX) NOT NULL
-)
-GO
-
-CREATE TABLE EventFaultEmail
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EventID INT NOT NULL REFERENCES Event(ID),
-    FaultEmailID INT NOT NULL REFERENCES FaultEmail(ID)
-)
 GO
 
 INSERT INTO FaultLocationAlgorithm(AssemblyName, TypeName, MethodName, ExecutionOrder) VALUES('FaultAlgorithms.dll', 'FaultAlgorithms.FaultLocationAlgorithms', 'Simple', 1)
@@ -1207,6 +1294,7 @@ CREATE TABLE AlarmRangeLimit
     Low FLOAT NULL,
     RangeInclusive INT NOT NULL DEFAULT 0,
     PerUnit INT NOT NULL DEFAULT 0,
+    IsDefault INT NOT NULL DEFAULT 1,
     Enabled INT NOT NULL DEFAULT 1
 )
 GO
@@ -1463,7 +1551,7 @@ BEGIN
     WHERE EventID = @eventID
 
     SELECT @md5Hash = master.sys.fn_repl_hash_binary(@md5Hash + CONVERT(VARBINARY(MAX), Template))
-    FROM FaultEmailTemplate
+    FROM XSLTemplate
     WHERE ID = @templateID
 
     RETURN CONVERT(BIGINT, SUBSTRING(@md5Hash, 0, 8)) ^ CONVERT(BIGINT, SUBSTRING(@md5Hash, 8, 8))
@@ -1566,6 +1654,75 @@ AS BEGIN
 END
 GO
 
+CREATE FUNCTION GetDisturbancesInSystemEvent
+(
+    @startTime DATETIME2,
+    @endTime DATETIME2,
+    @timeTolerance FLOAT
+)
+RETURNS @Sequence TABLE
+(
+    ID INT PRIMARY KEY,
+    SequenceNumber INT
+)
+AS BEGIN
+    DECLARE @seq INT
+    DECLARE @seqStartTime DATETIME2
+    DECLARE @seqEndTime DATETIME2
+
+    DECLARE @disturbanceID INT
+    DECLARE @disturbanceStartTime DATETIME2
+    DECLARE @disturbanceEndTime DATETIME2
+
+    DECLARE DisturbanceCursor CURSOR FOR
+    SELECT ID, StartTime, EndTime
+    FROM Disturbance
+    WHERE
+        EventID IN (SELECT * FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance)) AND
+        PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')
+    ORDER BY StartTime
+
+    OPEN DisturbanceCursor
+
+    FETCH NEXT FROM DisturbanceCursor
+    INTO @disturbanceID, @disturbanceStartTime, @disturbanceEndTime
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        SELECT
+            @seq =
+                CASE
+                    WHEN @seq IS NULL THEN 1
+                    WHEN @disturbanceStartTime <= @seqEndTime THEN @seq
+                    ELSE @seq + 1
+                END,
+            @seqStartTime =
+                CASE
+                    WHEN @seqStartTime IS NULL THEN @disturbanceStartTime
+                    WHEN @disturbanceStartTime <= @seqEndTime THEN @seqStartTime
+                    ELSE @disturbanceStartTime
+                END,
+            @seqEndTime =
+                CASE
+                    WHEN @seqEndTime IS NULL THEN @disturbanceEndTime
+                    WHEN @disturbanceEndTime < @seqEndTime THEN @seqEndTime
+                    ELSE @disturbanceEndTime
+                END
+
+        INSERT INTO @Sequence
+        VALUES(@disturbanceID, @seq)
+
+        FETCH NEXT FROM DisturbanceCursor
+        INTO @disturbanceID, @disturbanceStartTime, @disturbanceEndTime
+    END
+
+    CLOSE DisturbanceCursor
+    DEALLOCATE DisturbanceCursor
+
+    RETURN
+END
+GO
+
 CREATE FUNCTION HasImpactedComponents
 (
     @disturbanceID INT
@@ -1604,17 +1761,196 @@ GO
 
 ----- VIEWS -----
 
+CREATE VIEW MeterDetail
+AS
+SELECT
+    Meter.ID,
+    Meter.AssetKey,
+    Meter.MeterLocationID,
+    MeterLocation.AssetKey AS LocationKey,
+    MeterLocation.Name AS Location,
+    MeterLocation.Latitude,
+    MeterLocation.Longitude,
+    Meter.Name,
+    Meter.Alias,
+    Meter.ShortName,
+    Meter.Make,
+    Meter.Model,
+    Meter.TimeZone,
+    Meter.Description
+FROM
+    Meter JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+GO
+
+CREATE VIEW LineView
+AS
+SELECT
+    Line.ID,
+    Line.AssetKey,
+    Line.VoltageKV,
+    Line.ThermalRating,
+    Line.Length,
+    Line.Description,
+    (
+        SELECT TOP 1 LineName
+        FROM MeterLine
+        WHERE LineID = Line.ID
+    ) AS TopName,
+    LineImpedance.R0,
+    LineImpedance.X0,
+    LineImpedance.R1,
+    LineImpedance.X1,
+    LineImpedance.ID AS LineImpedanceID
+FROM
+    Line LEFT OUTER JOIN
+    LineImpedance ON Line.ID = LineImpedance.LineID
+GO
+
+CREATE VIEW MeterLineDetail
+AS
+SELECT
+    MeterLine.ID,
+    MeterLine.MeterID,
+    Meter.AssetKey AS MeterKey,
+    Meter.Name AS MeterName,
+    MeterLine.LineID,
+    Line.AssetKey AS LineKey,
+    MeterLine.LineName
+FROM
+    MeterLine JOIN
+    Meter ON MeterLine.MeterID = Meter.ID JOIN
+    Line ON MeterLIne.LineID = Line.ID
+GO
+
+CREATE VIEW ChannelDetail
+AS
+SELECT
+    Channel.ID,
+    Channel.MeterID,
+    Meter.AssetKey AS MeterKey,
+    Meter.Name AS MeterName,
+    Channel.LineID,
+    Line.AssetKey AS LineKey,
+    MeterLine.LineName,
+    Channel.MeasurementTypeID,
+    MeasurementType.Name AS MeasurementType,
+    Channel.MeasurementCharacteristicID,
+    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+    Channel.PhaseID,
+    Phase.Name AS Phase,
+    Channel.Name,
+    Channel.SamplesPerHour,
+    Channel.PerUnitValue,
+    Channel.HarmonicGroup,
+    Series.SourceIndexes AS Mapping,
+    Channel.Description,
+    Channel.Enabled
+FROM
+    Channel JOIN
+    Meter ON Channel.MeterID = Meter.ID JOIN
+    Line ON Channel.LineID = Line.ID JOIN
+    MeterLine ON
+        MeterLine.MeterID = Meter.ID AND
+        MeterLine.LineID = Line.ID JOIN
+    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+    Phase ON Channel.PhaseID = Phase.ID LEFT OUTER JOIN
+    Series ON
+        Series.ChannelID = Channel.ID AND
+        Series.SourceIndexes <> ''
+GO
+
+CREATE VIEW DefaultAlarmRangeLimitView
+AS
+SELECT
+    DefaultAlarmRangeLimit.ID,
+    DefaultAlarmRangeLimit.MeasurementTypeID,
+    DefaultAlarmRangeLimit.AlarmTypeID,
+    DefaultAlarmRangeLimit.MeasurementCharacteristicID, 
+    DefaultAlarmRangeLimit.Severity,
+    DefaultAlarmRangeLimit.High,
+    DefaultAlarmRangeLimit.Low,
+    DefaultAlarmRangeLimit.PerUnit,
+    DefaultAlarmRangeLimit.RangeInclusive, 
+    AlarmType.Name AS AlarmType,
+    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+    MeasurementType.Name AS MeasurementType
+FROM
+    DefaultAlarmRangeLimit JOIN
+    AlarmType ON DefaultAlarmRangeLimit.AlarmTypeID = AlarmType.ID JOIN
+    MeasurementCharacteristic ON DefaultAlarmRangeLimit.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+    MeasurementType ON DefaultAlarmRangeLimit.MeasurementTypeID = MeasurementType.ID
+GO
+
+CREATE VIEW AlarmRangeLimitView
+AS
+SELECT
+    AlarmRangeLimit.ID,
+    AlarmRangeLimit.ChannelID,
+    Channel.Name,
+    AlarmRangeLimit.AlarmTypeID,
+    AlarmRangeLimit.Severity,
+    AlarmRangeLimit.High,
+    AlarmRangeLimit.Low,
+    AlarmRangeLimit.RangeInclusive,
+    AlarmRangeLimit.PerUnit,
+    AlarmRangeLimit.Enabled,
+    MeasurementType.Name AS MeasurementType,
+    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+    Phase.Name AS Phase,
+    Channel.HarmonicGroup,
+    Channel.MeasurementTypeID,
+    Channel.MeasurementCharacteristicID,
+    Channel.PhaseID,
+    AlarmRangeLimit.IsDefault
+FROM
+    AlarmRangeLimit JOIN
+    Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
+    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+    Phase ON Channel.PhaseID = Phase.ID
+GO
+
+CREATE VIEW MeterMeterGroupView
+AS
+SELECT
+    MeterMeterGroup.ID,
+    Meter.Name AS MeterName,
+    Meter.ID AS MeterID,
+    MeterGroupID,
+    MeterLocation.Name AS Location
+FROM
+    MeterMeterGroup JOIN
+    Meter ON MeterMeterGroup.MeterID = Meter.ID JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+GO
+
+CREATE VIEW UserAccountMeterGroupView
+AS
+SELECT
+    UserAccountMeterGroup.ID,
+    UserAccountMeterGroup.UserAccountID,
+    UserAccountMeterGroup.MeterGroupID,
+    UserAccount.Name AS Username,
+    MeterGroup.Name AS GroupName
+FROM
+    UserAccountMeterGroup JOIN
+    UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID JOIN
+    MeterGroup ON UserAccountMeterGroup.MeterGroupID = MeterGroup.ID
+GO
+
 CREATE VIEW UserMeter
 AS
 SELECT
-	[User].Name AS UserName,
+	UserAccount.Name AS UserName,
 	Meter.ID AS MeterID
 FROM
 	Meter JOIN
-	GroupMeter ON GroupMeter.MeterID = Meter.ID JOIN
-	[Group] ON GroupMeter.GroupID = [Group].ID JOIN
-	UserGroup ON UserGroup.GroupID = [Group].ID JOIN
-	[User] ON UserGroup.UserID = [User].ID
+	MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
+	MeterGroup ON MeterMeterGroup.MeterGroupID = MeterGroup.ID JOIN
+	UserAccountMeterGroup ON UserAccountMeterGroup.MeterGroupID = MeterGroup.ID JOIN
+	UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID
 GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -1665,6 +2001,57 @@ WITH TimeTolerance AS
         (SELECT 'TimeTolerance' AS Name) AS SettingName LEFT OUTER JOIN
         Setting ON SettingName.Name = Setting.Name
 ),
+SelectedDisturbance AS
+(
+    SELECT Disturbance.*
+    FROM
+        Disturbance JOIN
+        Phase ON Disturbance.PhaseID = Phase.ID JOIN
+        Disturbance WorstDisturbance ON
+            Disturbance.EventID = WorstDisturbance.EventID AND
+            Disturbance.Magnitude = WorstDisturbance.Magnitude AND
+            Disturbance.DurationCycles = WorstDisturbance.DurationCycles JOIN
+        Phase WorstPhase ON WorstDisturbance.PhaseID = WorstPhase.ID
+    WHERE
+        Phase.Name <> 'Worst' AND
+        WorstPhase.Name = 'Worst'
+),
+DisturbanceData AS
+(
+    SELECT
+        SelectedDisturbance.ID AS DisturbanceID,
+        Meter.AssetKey AS MeterKey,
+        MeterLocation.Name AS StationName,
+        MeterLine.LineName,
+        EventType.Name AS DisturbanceType,
+        Phase.Name AS Phase,
+        SelectedDisturbance.StartTime,
+        SelectedDisturbance.EndTime,
+        SelectedDisturbance.DurationCycles,
+        SelectedDisturbance.DurationSeconds * 1000.0 AS DurationMilliseconds,
+        SelectedDisturbance.Magnitude,
+        SelectedDisturbance.PerUnitMagnitude,
+        RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
+        RIGHT(DataFile.FilePath, CHARINDEX(',', REVERSE(DataFile.FilePath)) - 1) AS ShortFileName,
+        SelectedDisturbance.EventID,
+        Event.StartTime AS EventStartTime,
+        Event.EndTime AS EventEndTime
+    FROM
+        SelectedDisturbance JOIN
+        Event ON SelectedDisturbance.EventID = Event.ID JOIN
+        EventType ON SelectedDisturbance.EventTypeID = EventType.ID JOIN
+        DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
+        Meter ON Event.MeterID = Meter.ID JOIN
+        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
+        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
+        Phase ON SelectedDisturbance.PhaseID = Phase.ID
+    WHERE
+        DataFile.FilePath LIKE '%.DAT' OR
+        DataFile.FilePath LIKE '%.D00' OR
+        DataFile.FilePath LIKE '%.PQD' OR
+        DataFile.FilePath LIKE '%.RCD' OR
+        DataFile.FilePath LIKE '%.RCL'
+),
 SelectedSummary AS
 (
     SELECT *
@@ -1682,22 +2069,33 @@ SummaryData AS
         SelectedSummary.Inception,
         SelectedSummary.DurationCycles,
         SelectedSummary.DurationSeconds * 1000.0 AS DurationMilliseconds,
+        SelectedSummary.PrefaultCurrent,
+        SelectedSummary.PostfaultCurrent,
         SelectedSummary.CurrentMagnitude AS FaultCurrent,
         SelectedSummary.Algorithm,
         SelectedSummary.Distance AS SingleEndedDistance,
         DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
         DoubleEndedFaultSummary.Angle AS DoubleEndedAngle,
+        RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
+        RIGHT(DataFile.FilePath, CHARINDEX(',', REVERSE(DataFile.FilePath)) - 1) AS ShortFileName,
         SelectedSummary.EventID,
         Event.StartTime AS EventStartTime,
         Event.EndTime AS EventEndTime
     FROM
         SelectedSummary JOIN
         Event ON SelectedSummary.EventID = Event.ID JOIN
+        DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
         Meter ON Event.MeterID = Meter.ID JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
         MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID LEFT OUTER JOIN
         DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = SelectedSummary.ID LEFT OUTER JOIN
         DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
+    WHERE
+        DataFile.FilePath LIKE '%.DAT' OR
+        DataFile.FilePath LIKE '%.D00' OR
+        DataFile.FilePath LIKE '%.PQD' OR
+        DataFile.FilePath LIKE '%.RCD' OR
+        DataFile.FilePath LIKE '%.RCL'
 ),
 SummaryIDs AS
 (
@@ -1721,6 +2119,53 @@ SELECT
             EventType.Name AS [Event/Type],
             (
                 SELECT
+                    SequenceNumber AS [@num],
+                    (
+                        SELECT
+                            MeterKey,
+                            StationName,
+                            LineName,
+                            DisturbanceType,
+                            Phase,
+                            StartTime,
+                            EndTime,
+                            DurationCycles,
+                            DurationMilliseconds,
+                            Magnitude,
+                            PerUnitMagnitude,
+                            FileName,
+                            ShortFileName,
+                            EventStartTime,
+                            EventEndTime,
+                            FileName,
+                            ShortFileName,
+                            EventID,
+                            DisturbanceID
+                        FROM DisturbanceData
+                        WHERE DisturbanceID IN
+                        (
+                            SELECT PhaseDisturbance.ID
+                            FROM
+                                dbo.GetDisturbancesInSystemEvent(Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)) InnerSequenceNumber JOIN
+                                Disturbance ON Disturbance.ID = InnerSequenceNumber.ID JOIN
+                                Disturbance PhaseDisturbance ON
+                                    Disturbance.EventID = PhaseDisturbance.EventID AND
+                                    Disturbance.StartTime = PhaseDisturbance.StartTime AND
+                                    Disturbance.PerUnitMagnitude = PhaseDisturbance.PerUnitMagnitude
+                            WHERE InnerSequenceNumber.SequenceNumber = OuterSequenceNumber.SequenceNumber
+                        )
+                        ORDER BY DisturbanceData.StartTime
+                        FOR XML PATH('Disturbance'), TYPE
+                    )
+                FROM
+                (
+                    SELECT DISTINCT SequenceNumber
+                    FROM dbo.GetDisturbancesInSystemEvent(Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance))
+                ) OuterSequenceNumber
+                FOR XML PATH('DisturbanceGroup'), TYPE
+            ) AS [DisturbanceGroups],
+            (
+                SELECT
                     FaultNumber AS [@num],
                     (
                         SELECT
@@ -1731,6 +2176,8 @@ SELECT
                             Inception,
                             DurationCycles,
                             DurationMilliseconds,
+                            PrefaultCurrent,
+                            PostfaultCurrent,
                             FaultCurrent,
                             Algorithm,
                             SingleEndedDistance,
@@ -1738,6 +2185,8 @@ SELECT
                             DoubleEndedAngle,
                             EventStartTime,
                             EventEndTime,
+                            FileName,
+                            ShortFileName,
                             EventID,
                             FaultSummaryID AS FaultID
                         FROM SummaryData

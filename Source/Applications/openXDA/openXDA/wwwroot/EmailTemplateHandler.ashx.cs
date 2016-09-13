@@ -307,7 +307,7 @@ namespace openXDA
             using (DataContext dataContext = new DataContext())
             {
                 eventDetail = dataContext.Connection.ExecuteScalar<string>("SELECT EventDetail FROM EventDetail WHERE EventID = {0}", m_eventID);
-                emailTemplate = dataContext.Connection.ExecuteScalar<string>("SELECT Template FROM FaultEmailTemplate WHERE ID = {0}", m_templateID);
+                emailTemplate = dataContext.Connection.ExecuteScalar<string>("SELECT Template FROM XSLTemplate WHERE ID = {0}", m_templateID);
             }
 
             return eventDetail.ApplyXSLTransform(emailTemplate);

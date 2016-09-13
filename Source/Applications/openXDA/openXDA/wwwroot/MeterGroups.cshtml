@@ -138,7 +138,7 @@
         function openMeters(record) {
             //console.log(record);
             $("#metersFrame").attr({
-                "src": "/GroupMeterView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
+                "src": "/MeterMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });
@@ -149,7 +149,7 @@
         function openUsers(record) {
             //console.log(record);
             $("#usersFrame").attr({
-                "src": "/UserGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
+                "src": "/UserAccountMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });

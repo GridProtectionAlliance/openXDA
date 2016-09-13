@@ -30,6 +30,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using GSF.Collections;
+using GSF.Data;
 
 namespace FaultData.Database
 {

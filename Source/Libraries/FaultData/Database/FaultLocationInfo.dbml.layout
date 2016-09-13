@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11.875, 8.5" name="FaultLocationInfo">
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="FaultLocationInfo">
   <DataContextMoniker Name="/FaultLocationInfoDataContext" />
   <nestedChildShapes>
     <classShape Id="2438e825-58c3-4da5-8395-cdc138cd0571" absoluteBounds="3.875, 3.75, 2, 1.3862939453125">
@@ -45,25 +45,6 @@
         <elementListCompartment Id="0a933891-ff92-41e7-92ae-9708ec2efed3" absoluteBounds="6.6400000000000006, 1.585, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <classShape Id="a8a15eb2-f570-497f-af05-91d41c773bcf" absoluteBounds="9.625, 2.625, 2, 1.1939925130208335">
-      <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultEmailTemplate" />
-      <nestedChildShapes>
-        <elementListCompartment Id="3769c984-2b8c-4eae-ba93-9162eb709b05" absoluteBounds="9.64, 3.085, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
-      </nestedChildShapes>
-    </classShape>
-    <classShape Id="af09b21c-8ac0-44f7-b0fa-0196495bada1" absoluteBounds="9.625, 4.75, 2, 1.5785953776041666">
-      <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultEmailRecipient" />
-      <nestedChildShapes>
-        <elementListCompartment Id="de5df09f-fc07-4847-babe-3ffedd830b22" absoluteBounds="9.64, 5.21, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
-      </nestedChildShapes>
-    </classShape>
-    <associationConnector edgePoints="[(10.625 : 3.81899251302083); (10.625 : 4.75)]" fixedFrom="NotFixed" fixedTo="NotFixed">
-      <AssociationMoniker Name="/FaultLocationInfoDataContext/FaultEmailTemplate/FaultEmailTemplate_FaultEmailRecipient" />
-      <nodes>
-        <classShapeMoniker Id="a8a15eb2-f570-497f-af05-91d41c773bcf" />
-        <classShapeMoniker Id="af09b21c-8ac0-44f7-b0fa-0196495bada1" />
-      </nodes>
-    </associationConnector>
     <classShape Id="35f9f048-19d4-4969-b031-8c269dec5c7b" absoluteBounds="4.25, 1.125, 2, 1.3862939453125">
       <DataClassMoniker Name="/FaultLocationInfoDataContext/FaultDetectionLogic" />
       <nestedChildShapes>

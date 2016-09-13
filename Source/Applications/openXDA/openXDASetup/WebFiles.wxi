@@ -21,14 +21,26 @@
   <Component Id="Devices_cshtml">
     <File Id="Devices.cshtml" Name="Devices.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Devices.cshtml" />
   </Component>
+  <Component Id="EmailGroupMeterGroup_cshtml">
+    <File Id="EmailGroupMeterGroup.cshtml" Name="EmailGroupMeterGroup.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailGroupMeterGroup.cshtml" />
+  </Component>
+  <Component Id="EmailGroups_cshtml">
+    <File Id="EmailGroups.cshtml" Name="EmailGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailGroups.cshtml" />
+  </Component>
+  <Component Id="EmailGroupType_cshtml">
+    <File Id="EmailGroupType.cshtml" Name="EmailGroupType.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailGroupType.cshtml" />
+  </Component>
+  <Component Id="EmailGroupUserAccount_cshtml">
+    <File Id="EmailGroupUserAccount.cshtml" Name="EmailGroupUserAccount.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailGroupUserAccount.cshtml" />
+  </Component>
   <Component Id="EmailTemplateHandler_ashx">
     <File Id="EmailTemplateHandler.ashx" Name="EmailTemplateHandler.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailTemplateHandler.ashx" />
   </Component>
   <Component Id="EmailTemplateHandler_ashx_cs">
     <File Id="EmailTemplateHandler.ashx.cs" Name="EmailTemplateHandler.ashx.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailTemplateHandler.ashx.cs" />
   </Component>
-  <Component Id="GroupMeterView_cshtml">
-    <File Id="GroupMeterView.cshtml" Name="GroupMeterView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\GroupMeterView.cshtml" />
+  <Component Id="EmailTypes_cshtml">
+    <File Id="EmailTypes.cshtml" Name="EmailTypes.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailTypes.cshtml" />
   </Component>
   <Component Id="Groups_cshtml">
     <File Id="Groups.cshtml" Name="Groups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Groups.cshtml" />
@@ -51,14 +63,17 @@
   <Component Id="MeterLines_cshtml">
     <File Id="MeterLines.cshtml" Name="MeterLines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterLines.cshtml" />
   </Component>
+  <Component Id="MeterMeterGroupView_cshtml">
+    <File Id="MeterMeterGroupView.cshtml" Name="MeterMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterMeterGroupView.cshtml" />
+  </Component>
   <Component Id="Settings_cshtml">
     <File Id="Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Settings.cshtml" />
   </Component>
   <Component Id="Stations_cshtml">
     <File Id="Stations.cshtml" Name="Stations.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Stations.cshtml" />
   </Component>
-  <Component Id="UserGroupView_cshtml">
-    <File Id="UserGroupView.cshtml" Name="UserGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\UserGroupView.cshtml" />
+  <Component Id="UserAccountMeterGroupView_cshtml">
+    <File Id="UserAccountMeterGroupView.cshtml" Name="UserAccountMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\UserAccountMeterGroupView.cshtml" />
   </Component>
   <Component Id="Users_cshtml">
     <File Id="Users.cshtml" Name="Users.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Users.cshtml" />

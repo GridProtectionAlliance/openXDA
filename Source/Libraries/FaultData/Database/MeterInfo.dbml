@@ -136,7 +136,7 @@
       <Association Name="Meter_MeterFileGroup" Member="MeterFileGroups" ThisKey="ID" OtherKey="MeterID" Type="MeterFileGroup" />
       <Association Name="Meter_Channel" Member="Channels" ThisKey="ID" OtherKey="MeterID" Type="Channel" />
       <Association Name="Meter_MeterLine" Member="MeterLines" ThisKey="ID" OtherKey="MeterID" Type="MeterLine" />
-      <Association Name="Meter_GroupMeter" Member="GroupMeters" ThisKey="ID" OtherKey="MeterID" Type="GroupMeter" />
+      <Association Name="Meter_MeterMeterGroup" Member="MeterMeterGroups" ThisKey="ID" OtherKey="MeterID" Type="MeterMeterGroup" />
       <Association Name="MeterLocation_Meter" Member="MeterLocation" ThisKey="MeterLocationID" OtherKey="ID" Type="MeterLocation" IsForeignKey="true" />
     </Type>
   </Table>
@@ -158,12 +158,12 @@
       <Association Name="Channel_BreakerChannel" Member="Channel" ThisKey="ChannelID" OtherKey="ID" Type="Channel" IsForeignKey="true" />
     </Type>
   </Table>
-  <Table Name="dbo.GroupMeter" Member="GroupMeters">
-    <Type Name="GroupMeter">
+  <Table Name="dbo.MeterMeterGroup" Member="MeterMeterGroups">
+    <Type Name="MeterMeterGroup">
       <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="GroupID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="MeterID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Association Name="Meter_GroupMeter" Member="Meter" ThisKey="MeterID" OtherKey="ID" Type="Meter" IsForeignKey="true" />
+      <Column Name="MeterGroupID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="Meter_MeterMeterGroup" Member="Meter" ThisKey="MeterID" OtherKey="ID" Type="Meter" IsForeignKey="true" />
     </Type>
   </Table>
 </Database>

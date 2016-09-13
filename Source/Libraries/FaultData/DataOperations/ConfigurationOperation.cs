@@ -92,7 +92,6 @@ namespace FaultData.DataOperations
             Meter meter;
             List<Series> seriesList;
             Dictionary<SeriesKey, Series> seriesLookup;
-            DataSeries dataSeries;
             Series seriesInfo;
 
             Log.Info("Executing operation to locate meter in database...");
