@@ -140,7 +140,7 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
         public int QueryMeterCount(int stationID, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
 
             if (stationID > 0)
                 return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
@@ -152,7 +152,7 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
         public IEnumerable<MeterDetail> QueryMeters(int stationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
 
             if (stationID > 0)
                 return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
@@ -214,7 +214,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
         public int QueryMeterLocationCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<MeterLocation>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -222,7 +222,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -271,7 +271,7 @@ namespace openXDA
         [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
         public int QueryLinesCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<Line>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -279,7 +279,7 @@ namespace openXDA
         [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
         public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
         }
 
@@ -328,7 +328,7 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
         public int QueryLineViewCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
         }
 
@@ -336,7 +336,7 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
         public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "").TrimEnd('%') + "%";
             return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
         }
 
@@ -368,7 +368,6 @@ namespace openXDA
         {
             DataContext.Table<Line>().UpdateRecord(CreateLine(record));
             DataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
-
         }
 
         public Line CreateLine(LineView record)
@@ -476,7 +475,7 @@ namespace openXDA
         public int QueryChannelCount(int meterID, int lineID, string filterString)
         {
             var filters = (filterString ?? "").ParseKeyValuePairs()
-                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.EnsureEnd("%") })
+                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.TrimEnd('%') + "%" })
                 .ToList();
 
             filters.Add(new { Field = "MeterID", Operator = "=", Value = meterID.ToString() });
@@ -493,7 +492,7 @@ namespace openXDA
         public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             var filters = (filterString ?? "").ParseKeyValuePairs()
-                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.EnsureEnd("%") })
+                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.TrimEnd('%') + "%" })
                 .ToList();
 
             filters.Add(new { Field = "MeterID", Operator = "=", Value = meterID.ToString() });
