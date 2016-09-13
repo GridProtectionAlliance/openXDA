@@ -275,6 +275,8 @@
     <Compile Include="Model\UserGroup.cs" />
     <Compile Include="Model\UserGroupView.cs" />
     <Compile Include="Model\XSLTemplate.cs" />
+    <Compile Include="ServiceConnection.cs" />
+    <Compile Include="ServiceHub.cs" />
     <Compile Include="wwwroot\EmailTemplateHandler.ashx.cs">
       <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
     </Compile>

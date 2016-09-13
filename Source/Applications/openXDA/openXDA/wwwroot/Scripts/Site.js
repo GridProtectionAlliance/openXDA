@@ -168,8 +168,8 @@ $(function () {
     dataHubClient = $.connection.dataHub.client;
     securityHub = $.connection.securityHub.server;
     securityHubClient = $.connection.securityHub.client;
-    //serviceHub = $.connection.serviceHub.server;
-    //serviceHubClient = $.connection.serviceHub.client;
+    serviceHub = $.connection.serviceHub.server;
+    serviceHubClient = $.connection.serviceHub.client;
 
     $.connection.hub.reconnecting(function () {
         hubIsConnecting = true;

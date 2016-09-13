@@ -71,7 +71,7 @@
 @section Scripts 
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Setting, DataHub>(ViewBag, "ID"))
+        @Raw(dataContext.RenderViewModelConfiguration<Setting, DataHub>(ViewBag, "Name"))
         
         function truncate(string) {
             if (string != null && string.length > 40)

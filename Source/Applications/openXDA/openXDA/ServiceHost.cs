@@ -583,6 +583,70 @@ namespace openXDA
                 database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
         }
 
+
+        /// <summary>
+        /// Logs a status message to connected clients.
+        /// </summary>
+        /// <param name="message">Message to log.</param>
+        /// <param name="type">Type of message to log.</param>
+        public void LogStatusMessage(string message, UpdateType type = UpdateType.Information)
+        {
+            DisplayStatusMessage(message, type);
+        }
+
+
+        /// <summary>
+        /// Displays a broadcast message to all subscribed clients.
+        /// </summary>
+        /// <param name="status">Status message to send to all clients.</param>
+        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
+        protected virtual void DisplayStatusMessage(string status, UpdateType type)
+        {
+            try
+            {
+                status = status.Replace("{", "{{").Replace("}", "}}");
+                m_serviceHelper.UpdateStatus(type, string.Format("{0}\r\n\r\n", status));
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+            }
+        }
+
+        /// <summary>
+        /// Sends a command request to the service.
+        /// </summary>
+        /// <param name="clientID">Client ID of sender.</param>
+        /// <param name="userInput">Request string.</param>
+        public void SendRequest(Guid clientID, string userInput)
+        {
+            ClientRequest request = ClientRequest.Parse(userInput);
+
+            if ((object)request != null)
+            {
+                ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
+
+                if ((object)requestHandler != null)
+                    requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo() { ClientID = clientID }, request));
+                else
+                    DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
+            }
+        }
+
+        public void DisconnectClient(Guid clientID)
+        {
+            m_serviceHelper.DisconnectClient(clientID);
+        }
+
+        /// <summary>
+        /// Gets current performance statistics.
+        /// </summary>
+        public string PerformanceStatistics => m_extensibleDisturbanceAnalysisEngine.Status;
+
+
+
+
         #region [ Service Monitor Handlers ]
 
         // Ensure that service monitors save their settings to the configuration file
