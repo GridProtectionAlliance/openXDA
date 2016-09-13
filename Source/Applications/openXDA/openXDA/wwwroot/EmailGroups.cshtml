@@ -52,6 +52,9 @@
         new[] { "Name", "Group Name", "text-Left" },
         new[] { null, "Email Types", "text-center valign-middle"},
         new[] { null, "Meter Groups", "text-center valign-middle"},
+        new[] { null, "User Accounts", "text-center valign-middle"},
+        new[] { null, "Event Criteria", "text-center valign-middle"},
+
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -64,8 +67,8 @@
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupType.cshtml?GroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Email Types&nbsp;&nbsp;<span class="badge" data-bind="text: getTypesCount(ID, $($element)), attr: {id: 'typesCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupMeterGroup.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meter Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterGroupCount(ID, $($element)), attr: {id: 'meterGroupCount' + ID}">0</span></a></td>
-    @*<td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>*@
-
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupUserAccount.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">User Accounts&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><button data-bind="click: openEventCriterionModal.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Event Criteria</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -75,6 +78,52 @@
 {
     @Raw(dataContext.AddInputField<EmailGroup>("Name"))
 }
+<div id="manageEventCriterion" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Event Criteria</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="checkbox" id="distubanceCheck"/><label>Disturbances</label>
+                        <div class="row" style="margin-left: 10px">
+                            <input type="checkbox" id="fiveCheck" /><label>5</label>
+                        </div>
+                        <div class="row" style="margin-left: 10px">
+                            <input type="checkbox" id="fourCheck" /><label>4</label>
+                        </div>
+                        <div class="row" style="margin-left: 10px">
+                            <input type="checkbox" id="threeCheck" /><label>3</label>
+                        </div>
+                        <div class="row" style="margin-left: 10px">
+                            <input type="checkbox" id="twoCheck" /><label>2</label>
+                        </div>
+                        <div class="row" style="margin-left: 10px">
+                            <input type="checkbox" id="oneCheck" /><label>1</label>
+                        </div>
+                        <div class="row" style="margin-left: 10px">
+                            <input type="checkbox" id="zeroCheck" /><label>0</label>
+                        </div>
+
+                    </div>
+                    <div class="col-md-6">
+                        <input type="checkbox" id="faultCheck"/><label>Faults</label>
+                    </div>
+                    <div id="emailGroup" style="display: none"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateEventCriterion()">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
@@ -100,10 +149,57 @@
 
             return element.text();
         }
+        
+        function getUserCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryEmailGroupUserAccountCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+        
+        function openEventCriterionModal(record) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.getEventCriterion(record.ID).done(function (data) {
+                    $('#distubanceCheck').prop('checked', data.disturbances);
+                    $('#faultCheck').prop('checked', data.fault);
+                    $('#fiveCheck').prop('checked', data.five);
+                    $('#fourCheck').prop('checked', data.four);
+                    $('#threeCheck').prop('checked', data.three);
+                    $('#twoCheck').prop('checked', data.two);
+                    $('#oneCheck').prop('checked', data.one);
+                    $('#zeroCheck').prop('checked', data.zero);
+                    $('#emailGroup').html(record.ID);
+                });
+            }
+            $("#manageEventCriterion").modal({ show: true});
+        }
+        
+        function updateEventCriterion() {
+            var record = {
+                disturbances: $('#distubanceCheck').prop('checked'),
+                fault: $('#faultCheck').prop('checked'),
+                five: $('#fiveCheck').prop('checked'),
+                four: $('#fourCheck').prop('checked'),
+                three: $('#threeCheck').prop('checked'),
+                two: $('#twoCheck').prop('checked'),
+                one: $('#oneCheck').prop('checked'),
+                zero: $('#zeroCheck').prop('checked')
+            }
+            
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.updateEventCriterion(record, $('#emailGroup').html());
+            }
+        }
 
         $(function () {
             viewModel.filterText = '@ViewBag.GroupID';
             viewModel.queryPageRecords();
+            
+            $("#manageEventCriterion").modal({ show: false, backdrop: "static", keyboard: false });
+
         });
 
     </script>
