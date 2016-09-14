@@ -49,7 +49,7 @@
 }
 @helper BodyRows()
 {
-    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Username, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" nowrap><button id="accountNameButton"type="button" class="btn btn-link" data-bind="text: lookupAccountName(Username, $($element)), click: $parent.viewPageRecord"></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
@@ -68,6 +68,14 @@
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             observableRecord.MeterGroupID = @groupID;
         });
+        
+        function lookupAccountName(UserName, element) {
+            if (viewModel.dataHubIsConnected()) {
+                securityHub.sidToAccountName(UserName).done(function (accountName) {
+                    element.text(accountName);
+                });
+            }
+        }
 
         $(function(){
             $("#addNewEditDialog").on("shown.bs.modal", function () {

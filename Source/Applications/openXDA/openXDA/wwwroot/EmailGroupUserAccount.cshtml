@@ -75,7 +75,7 @@
 @helper BodyRows()
 {
     <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), attr: { href: '/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
-    <td width="25%" class="text-left valign-middle" nowrap><a id="accountNameLink" class="btn btn-link" data-bind="text: lookupAccountName(UserAccountID), attr: { href: '/Users.cshtml' }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a id="accountNameLink" class="btn btn-link" data-bind="text: lookupAccountName(UserAccountID, $($element)), attr: { href: '/Users.cshtml' }"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -100,10 +100,10 @@
             viewModel.queryPageRecords();
         });
 
-        function lookupAccountName(UserAccountID) {
+        function lookupAccountName(UserAccountID, element) {
             if (viewModel.dataHubIsConnected()) {
                 securityHub.sidToAccountName(lookupUserAccountName(UserAccountID)).done(function (accountName) {
-                   $('#accountNameLink').text(accountName);
+                   element.text(accountName);
                 });
             }
         }
