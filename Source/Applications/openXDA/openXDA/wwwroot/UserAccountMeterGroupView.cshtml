@@ -42,7 +42,6 @@
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { "Username", "Username", "text-Left" },
-        new[] { "Active", "Active", "text-left"}
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -51,7 +50,6 @@
 @helper BodyRows()
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Username, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: Active"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
@@ -68,7 +66,7 @@
         @Raw(dataContext.RenderViewModelConfiguration<UserAccountMeterGroup, DataHub>(ViewBag, "ID", null, groupID))
 
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            observableRecord.GroupID = @groupID;
+            observableRecord.MeterGroupID = @groupID;
         });
 
         $(function(){
@@ -82,8 +80,8 @@
 
                     $('#inputUsername').puiautocomplete({
                         select: function (event, item) {
-                            var id = Number(item.data("id"));
-                            viewModel.currentRecord().UserID(id);
+                            var id = item.data("id");
+                            viewModel.currentRecord().UserAccountID(id);
                         }
                     });
                 }

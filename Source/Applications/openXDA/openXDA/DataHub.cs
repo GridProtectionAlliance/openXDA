@@ -30,7 +30,9 @@ using System.Linq;
 using System.Transactions;
 using GSF;
 using GSF.Data.Model;
+using GSF.Identity;
 using GSF.PhasorProtocols.BPAPDCstream;
+using GSF.Security.Model;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
@@ -624,26 +626,26 @@ namespace openXDA
 
         #endregion
 
-        #region [ Group Table Operations ]
+        #region [ MeterGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Group), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<Group>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
+            return DataContext.Table<MeterGroup>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Group), RecordOperation.QueryRecords)]
-        public IEnumerable<Group> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterGroup> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<Group>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
+            return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Group), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(MeterGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
             IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
@@ -651,28 +653,28 @@ namespace openXDA
             {
                 DataContext.Table<MeterMeterGroup>().DeleteRecord(gm.ID);
             }
-            DataContext.Table<Group>().DeleteRecord(id);
+            DataContext.Table<MeterGroup>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Group), RecordOperation.CreateNewRecord)]
-        public Group NewGroup()
+        [RecordOperation(typeof(MeterGroup), RecordOperation.CreateNewRecord)]
+        public MeterGroup NewGroup()
         {
-            return new Group();
+            return new MeterGroup();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Group), RecordOperation.AddNewRecord)]
-        public void AddNewGroup(Group record)
+        [RecordOperation(typeof(MeterGroup), RecordOperation.AddNewRecord)]
+        public void AddNewGroup(MeterGroup record)
         {
-            DataContext.Table<Group>().AddNewRecord(record);
+            DataContext.Table<MeterGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(Group), RecordOperation.UpdateRecord)]
-        public void UpdateGroup(Group record)
+        [RecordOperation(typeof(MeterGroup), RecordOperation.UpdateRecord)]
+        public void UpdateGroup(MeterGroup record)
         {
-            DataContext.Table<Group>().UpdateRecord(record);
+            DataContext.Table<MeterGroup>().UpdateRecord(record);
         }
 
         #endregion
@@ -729,14 +731,14 @@ namespace openXDA
         [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryUserAccountMeterGroupCount(int groupID, string filterString)
         {
-            return DataContext.Table<UserAccountMeterGroupView>().QueryRecordCount(new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<UserAccountMeterGroupView>().QueryRecordCount(new RecordRestriction("MeterGroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<UserAccountMeterGroupView> QueryUserAccountMeterGroups(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("GroupID = {0}", groupID));
+            return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -770,10 +772,33 @@ namespace openXDA
         [AuthorizeHubRole("Administrator")]
         public IEnumerable<IDLabel> SearchUsersByGroup(int groupID, string searchText, int limit = -1)
         {
-            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT UserID FROM UserGroup WHERE GroupID = {1})", $"%{searchText}%", groupID);
+            RecordRestriction restriction = new RecordRestriction("ID NOT IN (SELECT UserAccountID FROM UserAccountMeterGroup WHERE MeterGroupID = {0})",  groupID);
 
-            return DataContext.Table<User>().QueryRecords("Name", restriction, limit)
-                .Select(user => new IDLabel(user.ID.ToString(), user.Name));
+
+            if (limit < 1)
+                return DataContext
+                    .Table<UserAccount>()
+                    .QueryRecords(restriction: restriction)
+                    .Select(record =>
+                    {
+                        record.Name = UserInfo.SIDToAccountName(record.Name ?? "");
+                        return record;
+                    })
+                    .Where(record => record.Name?.ToLower().Contains(searchText.ToLower()) ?? false)
+                    .Select(record => IDLabel.Create(record.ID.ToString(), record.Name));
+
+            return DataContext
+                .Table<UserAccount>()
+                .QueryRecords(restriction: restriction)
+                .Select(record =>
+                {
+                    record.Name = UserInfo.SIDToAccountName(record.Name ?? "");
+                    return record;
+                })
+                .Where(record => record.Name?.ToLower().Contains(searchText.ToLower()) ?? false)
+                .Take(limit)
+                .Select(record => IDLabel.Create(record.ID.ToString(), record.Name));
+
         }
 
         #endregion

@@ -8,15 +8,14 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [UseEscapedName]
-    public class Group
+
+    public class MeterGroup
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
         [StringLength(100)]
-        public string GroupName { get; set; }
+        public string Name { get; set; }
 
-        public bool Active { get; set; }
     }
 }

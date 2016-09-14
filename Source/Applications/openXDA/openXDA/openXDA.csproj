@@ -297,7 +297,7 @@
     <Compile Include="Model\DashSettings.cs" />
     <Compile Include="Model\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Model\DefaultAlarmRangeLimitView.cs" />
-    <Compile Include="Model\Group.cs" />
+    <Compile Include="Model\MeterGroup.cs" />
     <Compile Include="Model\MeterMeterGroup.cs" />
     <Compile Include="Model\LineImpedance.cs" />
     <Compile Include="Model\Line.cs" />
@@ -366,10 +366,12 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
     <Content Include="wwwroot\EmailGroups.cshtml" />
     <Content Include="wwwroot\EmailGroupType.cshtml" />
     <Content Include="wwwroot\EmailGroupMeterGroup.cshtml" />
     <Content Include="wwwroot\EmailGroupUserAccount.cshtml" />
+    <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
     <None Include="wwwroot\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\AlarmSettings.cshtml" />
@@ -443,6 +445,7 @@
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Settings.cshtml" />
     <None Include="wwwroot\Stations.cshtml" />
+    <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\UserAccountMeterGroupView.cshtml" />
     <None Include="wwwroot\Users.cshtml" />
   </ItemGroup>

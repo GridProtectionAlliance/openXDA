@@ -31,6 +31,7 @@
 @using openXDA.Model
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
+    <link rel="stylesheet" href="Content/fullscreenselect/bootstrap-fullscreen-select.css"/>
     <style>
         html, body {
             height: 100%;
@@ -58,8 +59,7 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "GroupName", "Name", "text-Left" },
-        new[] { null, "Active", "text-center valign-middle" },
+        new[] { "Name", "Name", "text-Left" },
         new[] { null, "Meters", "text-center valign-middle"},
         new[] {null, "Users", "text-center valign-middle"}
 
@@ -70,8 +70,7 @@
 }
 @helper BodyRows()
 {
-    <td width="80%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: GroupName, click: $parent.viewPageRecord"></button></td>
-    <td width="5%" class="text-center valign-middle"><span data-bind="visible: Active" class="glyphicon glyphicon-check"></span></td>
+    <td width="80%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
@@ -81,9 +80,15 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Group>("GroupName"))
-        @Raw(dataContext.AddCheckBoxField<Group>("Active"))
+    <div>
+        @Raw(dataContext.AddInputField<MeterGroup>("Name"))
+    </div>
+    <div data-bind="visible: $parent.recordMode()!==RecordMode.View">
+        <label>Meters:</label>
+        <select id="meterSelect" class="form-control mobileSelect" multiple></select>
+        <label>Users:</label>
+        <select id="userSelect" class="form-control mobileSelect" multiple></select>
+
     </div>
 }
 <div id="metersDialog" class="modal modal-wide fade" role="dialog">
@@ -111,10 +116,11 @@
 </div>
 
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts 
+@section Scripts
 {
+    <script type="text/javascript" src="Scripts/fullscreenselect/bootstrap-fullscreen-select.min.js"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Group, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<MeterGroup, DataHub>(ViewBag))
                 
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
@@ -128,7 +134,7 @@
         
         function getUserCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryUserGroupViewCount(sourceID, null).done(function (count) {
+                dataHub.queryUserAccountMeterGroupCount(sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
@@ -138,7 +144,7 @@
         function openMeters(record) {
             //console.log(record);
             $("#metersFrame").attr({
-                "src": "/MeterMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
+                "src": "/MeterMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });
@@ -149,7 +155,7 @@
         function openUsers(record) {
             //console.log(record);
             $("#usersFrame").attr({
-                "src": "/UserAccountMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.GroupName),
+                "src": "/UserAccountMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });
@@ -178,11 +184,32 @@
                 $("#metersFrame").attr("height", ($(document).height() - 150) + "px");
             }, 500);
         });
+        
+        $('#addNewEditDialog').on('shown.bs.modal', function () {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeters(-1, "Name", true, 1, 100000000000000000000000, '%').done(function (meters) {
+                    $('#meterSelect').children().remove();
+                    $.each(meters, function (i, d) {
+                        $('#meterSelect').append(new Option(d.Name, d.ID));
+                    });
+                });
+                
+                securityHub.queryUserAccounts("Name", true, 1, 100000000000000000000000, '%').done(function (users) {
+                    $('#userSelect').children().remove();
+                    $.each(users, function (i, d) {
+                        securityHub.sidToAccountName(d.Name).done(function (accountName) {
+                            $('#userSelect').append(new Option(accountName, d.ID));
+                        });
+                    });
+                });
+
+                $('.mobileSelect').mobileSelect();
+            }
+        });
 
         $(function () {
             viewModel.filterText = '@ViewBag.MeterGroupID';
             viewModel.queryPageRecords();
-
             $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
             $("#usersDialog").modal({ show: false, backdrop: "static", keyboard: false });
 

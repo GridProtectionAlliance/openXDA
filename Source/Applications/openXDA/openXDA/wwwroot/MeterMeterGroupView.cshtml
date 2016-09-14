@@ -70,7 +70,7 @@
         @Raw(dataContext.RenderViewModelConfiguration<MeterMeterGroup, DataHub>(ViewBag, "ID", null, groupID))
         
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            observableRecord.GroupID = @groupID;
+            observableRecord.MeterGroupID = @groupID;
         });
         
         $(function(){
