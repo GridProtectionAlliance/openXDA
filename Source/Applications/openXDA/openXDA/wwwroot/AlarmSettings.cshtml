@@ -319,10 +319,10 @@
                 done(function() {
                     if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                         viewModel.filterText = '%';
-                        viewModel.filterPageRecords();
+                        viewModel.queryPageRecords();
                     } else {
                         viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                        viewModel.filterPageRecords();
+                        viewModel.queryPageRecords();
 
                     }
 
@@ -511,10 +511,10 @@
             $('#channelfilter').on('keyup', function (e) {
                 if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                     viewModel.filterText = '%';
-                    viewModel.filterPageRecords();
+                    viewModel.queryPageRecords();
                 } else {
                     viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                    viewModel.filterPageRecords();
+                    viewModel.queryPageRecords();
 
                 }
 
@@ -523,10 +523,10 @@
             $('#typefilter').on('keyup', function (e) {
                 if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                     viewModel.filterText = '%';
-                    viewModel.filterPageRecords();
+                    viewModel.queryPageRecords();
                 } else {
                     viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                    viewModel.filterPageRecords();
+                    viewModel.queryPageRecords();
 
                 }
 
@@ -535,10 +535,10 @@
             $('#characteristicfilter').on('keyup', function (e) {
                 if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                     viewModel.filterText = '%';
-                    viewModel.filterPageRecords();
+                    viewModel.queryPageRecords();
                 } else {
                     viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                    viewModel.filterPageRecords();
+                    viewModel.queryPageRecords();
 
                 }
 
@@ -554,7 +554,7 @@
                 observableRecord.Enabled = ($('#checkEnabled').prop('checked') ? 1 : 0);
                 observableRecord.PerUnit = ($('#checkPerUnit').prop('checked') ? 1 : 0);
                 observableRecord.RangeInclusive = ($('#checkRangeInclusive').prop('checked') ? 1 : 0);
-
+                observableRecord.IsDefault = false;
 
             });
 

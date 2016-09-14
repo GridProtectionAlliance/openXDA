@@ -79,14 +79,14 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.AddNewRecord)]
-        public void AddNewActionItem(Setting record)
+        public void AddNewSetting(Setting record)
         {
             DataContext.Table<Setting>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Setting), RecordOperation.UpdateRecord)]
-        public void UpdateActionItem(Setting record)
+        public void UpdateSetting(Setting record)
         {
             DataContext.Table<Setting>().UpdateRecord(record);
         }
@@ -125,14 +125,14 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DashSettings), RecordOperation.AddNewRecord)]
-        public void AddNewActionItem(DashSettings record)
+        public void AddNewDashSetting(DashSettings record)
         {
             DataContext.Table<DashSettings>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(DashSettings), RecordOperation.UpdateRecord)]
-        public void UpdateActionItem(DashSettings record)
+        public void UpdateDashSetting(DashSettings record)
         {
             DataContext.Table<DashSettings>().UpdateRecord(record);
         }
@@ -349,6 +349,8 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
         public void DeleteLineView(int id)
         {
+            int index = DataContext.Connection.ExecuteScalar<int>("Select ID FROM LineImpedance WHERE LineID = {0}", id);
+            DataContext.Table<LineImpedance>().DeleteRecord(index);
             DataContext.Table<Line>().DeleteRecord(id);
         }
 
@@ -364,6 +366,8 @@ namespace openXDA
         public void AddNewLineView(LineView record)
         {
             DataContext.Table<Line>().AddNewRecord(CreateLine(record));
+            int index = DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
+            record.ID = index;
             DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
         }
 
@@ -489,7 +493,7 @@ namespace openXDA
             string expression = string.Join(" AND ", filters.Select((filter, index) => $"{filter.Field} {filter.Operator} {{{index}}}"));
             object[] parameters = filters.Select(filter => (object)filter.Value).ToArray();
 
-            return DataContext.Table<Channel>().QueryRecordCount(new RecordRestriction(expression, parameters));
+            return DataContext.Table<ChannelDetail>().QueryRecordCount(new RecordRestriction(expression, parameters));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -675,6 +679,22 @@ namespace openXDA
         public void UpdateGroup(MeterGroup record)
         {
             DataContext.Table<MeterGroup>().UpdateRecord(record);
+        }
+
+        public int GetLastMeterGroupID()
+        {
+            return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('MeterGroup')") ?? 0;
+        }
+
+
+        public void UpdateMeters(List<string> meters, int groupID )
+        {
+            IEnumerable<MeterMeterGroup> records = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", groupID));
+            foreach (MeterMeterGroup record in records)
+            {
+                if (!meters.Contains(record.MeterID.ToString()))
+                    DataContext.Table<MeterMeterGroup>().DeleteRecord(record.ID);
+            }
         }
 
         #endregion

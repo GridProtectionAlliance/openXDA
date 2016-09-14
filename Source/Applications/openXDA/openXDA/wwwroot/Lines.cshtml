@@ -27,6 +27,7 @@
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
+@using RazorEngine.Templating
 @inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
@@ -52,6 +53,8 @@
 
     };
 
+    ViewBag.AddNewEditTitle = "Line";
+    ViewBag.lengthUnits = dataContext.Connection.ExecuteScalar<string>("Select Value From [Setting] WHERE Name = 'LengthUnits'");
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
@@ -60,7 +63,7 @@
     <div class='row'>
         <div class='col-md-12'>
             <div class='form-group'>
-                <label for='linefilter'>Line Name Filter:</label>
+                <label for='linefilter'>Line Key Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
                     <input class='form-control' type='search' id='linefilter' placeholder='Search' />
@@ -86,8 +89,8 @@
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<LineView>("AssetKey", fieldLabel: "Key"))
         @Raw(dataContext.AddInputField<LineView>("VoltageKV"))
-        @Raw(dataContext.AddInputField<LineView>("ThermalRating"))
-        @Raw(dataContext.AddInputField<LineView>("Length"))
+        @Raw(dataContext.AddInputField<LineView>("ThermalRating", fieldLabel: "Thermal Rating (50" + char.ConvertFromUtf32(176) + "F)"))
+        @Raw(dataContext.AddInputField<LineView>("Length", fieldLabel: "Length (" + ViewBag.lengthUnits + ")"));
         @Raw(dataContext.AddTextAreaField<LineView>("Description"))
     </div>
 

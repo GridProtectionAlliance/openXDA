@@ -88,8 +88,8 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<MeterLocation>("Name"))
-        @Raw(dataContext.AddInputField<MeterLocation>("AssetKey"))
-        @Raw(dataContext.AddInputField<MeterLocation>("ShortName"))
+        @Raw(dataContext.AddInputField<MeterLocation>("AssetKey", fieldLabel: "Asset Key"))
+        @Raw(dataContext.AddInputField<MeterLocation>("ShortName", fieldLabel: "Short Name"))
         @Raw(dataContext.AddInputField<MeterLocation>("Alias"))
     </div>
 

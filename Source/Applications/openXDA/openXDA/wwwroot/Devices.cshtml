@@ -43,7 +43,7 @@
     int stationID = -1;
     string stationName = null;
 
-    ViewBag.Title = "Devices";
+    ViewBag.Title = "Meters";
 
     if (parameters.ContainsKey("Meter"))
     {
@@ -64,7 +64,7 @@
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Name", "text-Left" },
-        new[] { "MeterLocationID", "Station", "text-left"},
+        new[] { "MeterLocationID", "Substation", "text-left"},
         new[] { "Make", "Make", "text-left" },
         new[] { "Model", "Model", "text-left" },
         new[] { null, "Meter-to-Line", "text-center valign-middle"}
@@ -78,7 +78,7 @@
     <div class='row'>
         <div class='col-md-12'>
             <div class='form-group'>
-                <label for='devicefilter'>Device Name Filter:</label>
+                <label for='devicefilter'>Meter Name Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
                     <input class='form-control' type='search' id='devicefilter' placeholder='Search'/>
@@ -103,15 +103,15 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Name"))
-        @Raw(dataContext.AddInputField<Meter>("Location"))
-        @Raw(dataContext.AddInputField<Meter>("AssetKey"))
-        @Raw(dataContext.AddInputField<Meter>("ShortName"))
+        @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Substation"))
+        @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
+        @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
     </div>
 
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Make"))
         @Raw(dataContext.AddInputField<Meter>("Model"))
-        @Raw(dataContext.AddInputField<Meter>("TimeZone"))
+        @Raw(dataContext.AddInputField<Meter>("TimeZone", fieldLabel: "Time Zone"))
         @Raw(dataContext.AddTextAreaField<Meter>("Description"))
     </div>
 
