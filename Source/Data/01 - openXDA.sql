@@ -456,6 +456,9 @@ AS BEGIN
 END
 GO
 
+INSERT INTO UserAccount(Name, UseADAuthentication) VALUES('External', 0)
+GO
+
 INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
 GO
 
