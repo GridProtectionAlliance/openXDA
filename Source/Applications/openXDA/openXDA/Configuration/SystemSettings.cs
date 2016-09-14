@@ -223,7 +223,7 @@ namespace openXDA.Configuration
         /// time zone of the system openXDA is running on.
         /// </remarks>
         [Setting]
-        [DefaultValue("")]
+        [DefaultValue("UTC")]
         public string XDATimeZone
         {
             get
@@ -586,7 +586,7 @@ namespace openXDA.Configuration
         /// </summary>
         /// <seealso cref="FileSystemWatcher.InternalBufferSize"/>
         [Setting]
-        [DefaultValue(8192)]
+        [DefaultValue(65536)]
         public int FileWatcherBufferSize
         {
             get

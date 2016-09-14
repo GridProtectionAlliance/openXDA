@@ -52,7 +52,7 @@ namespace FaultData.Configuration
         /// Gets or sets historian server, e.g., 127.0.0.1:38402
         /// </summary>
         [Setting]
-        [DefaultValue("127.0.0.1")]
+        [DefaultValue("127.0.0.1:38402")]
         public string Server
         {
             get

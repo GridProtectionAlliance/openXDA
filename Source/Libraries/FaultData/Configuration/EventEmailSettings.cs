@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FaultEmailSettings.cs - Gbtc
+//  EventEmailSettings.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -26,7 +26,7 @@ using System.Configuration;
 
 namespace FaultData.Configuration
 {
-    public class FaultEmailSettings
+    public class EventEmailSettings
     {
         #region [ Members ]
 

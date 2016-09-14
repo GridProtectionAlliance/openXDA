@@ -72,7 +72,7 @@
   <ItemGroup>
     <Compile Include="Configuration\BreakerSettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
-    <Compile Include="Configuration\FaultEmailSettings.cs" />
+    <Compile Include="Configuration\EventEmailSettings.cs" />
     <Compile Include="Configuration\FaultLocationSettings.cs" />
     <Compile Include="Configuration\HistorianSettings.cs" />
     <Compile Include="DataAnalysis\CycleDataGroup.cs" />
