@@ -45,6 +45,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Xml;
 using log4net;
+using static FaultData.Database.MeterData;
 
 namespace FaultData.DataWriters
 {
@@ -61,7 +62,7 @@ namespace FaultData.DataWriters
         private string m_xdaTimeZone;
         private string m_lengthUnits;
         private EmailSettings m_emailSettings;
-        private FaultEmailSettings m_faultEmailSettings;
+        private EventEmailSettings m_eventEmailSettings;
         private FaultLocationSettings m_faultLocationSettings;
 
         #endregion
@@ -71,7 +72,7 @@ namespace FaultData.DataWriters
         public EventEmailWriter()
         {
             m_emailSettings = new EmailSettings();
-            m_faultEmailSettings = new FaultEmailSettings();
+            m_eventEmailSettings = new EventEmailSettings();
             m_faultLocationSettings = new FaultLocationSettings();
         }
 
@@ -142,12 +143,12 @@ namespace FaultData.DataWriters
         }
 
         [Category]
-        [SettingName("FaultEmail")]
-        public FaultEmailSettings FaultEmailSettings
+        [SettingName("EventEmail")]
+        public EventEmailSettings FaultEmailSettings
         {
             get
             {
-                return m_faultEmailSettings;
+                return m_eventEmailSettings;
             }
         }
 
@@ -172,22 +173,10 @@ namespace FaultData.DataWriters
 
             Initialize(this);
 
-            using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+            foreach (EventRow evt in dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
             {
-                foreach (var faultGroup in dbAdapterContainer.GetAdapter<FaultGroupTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
-                {
-                    faultDetectionResult = !faultGroup.IsFaultDetectionLogicResultNull()
-                        ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
-                        : (bool?)null;
-
-                    faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
-
-                    if (faultDetectionResult == true || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && faultValidationResult))
-                    {
-                        if (GetEmailCount(dbAdapterContainer, faultGroup.EventID) == 0)
-                            QueueEventID(faultGroup.EventID);
-                    }
-                }
+                if (GetEmailCount(dbAdapterContainer, evt.ID) == 0)
+                    QueueEventID(evt.ID);
             }
         }
 
@@ -261,9 +250,6 @@ namespace FaultData.DataWriters
 
         private static void QueueEventID(int eventID)
         {
-            if (string.IsNullOrEmpty(s_smtpServer))
-                return;
-
             ProcessQueue.Add(() =>
             {
                 EventArgs<RegisteredWaitHandle> args;
@@ -453,13 +439,16 @@ namespace FaultData.DataWriters
             string host = smtpServerParts[0];
             int port;
 
+            if (string.IsNullOrEmpty(s_smtpServer))
+                return;
+
             if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
                 port = DefaultSMTPPort;
 
             using (SmtpClient smtpClient = new SmtpClient(host, port))
             using (MailMessage emailMessage = new MailMessage())
             {
-                if ((object)s_username != null && (object)s_password != null)
+                if (!string.IsNullOrEmpty(s_username) && (object)s_password != null)
                     smtpClient.Credentials = new NetworkCredential(s_username, s_password);
 
                 smtpClient.EnableSsl = s_enableSSL;

@@ -35,8 +35,8 @@
 CREATE TABLE Setting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
-    Value VARCHAR(MAX) NOT NULL
+    Name VARCHAR(200) NULL,
+    Value VARCHAR(MAX) NULL
 )
 GO
 
@@ -367,25 +367,11 @@ GO
 -- -------- --
 -- Security --
 -- -------- --
-CREATE TABLE Node
-(
-    ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
-    Description VARCHAR(MAX) NULL,
-    Enabled BIT NOT NULL DEFAULT 0,
-    CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
-    CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
-    UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME()
-)
-GO
-
 CREATE TABLE ApplicationRole
 (
     ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
     Description VARCHAR(MAX) NULL,
-    NodeID UNIQUEIDENTIFIER NOT NULL REFERENCES Node(ID),
     CreatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
     CreatedBy VARCHAR(200) NOT NULL DEFAULT SUSER_NAME(),
     UpdatedOn DATETIME NOT NULL DEFAULT GETUTCDATE(),
@@ -412,7 +398,6 @@ CREATE TABLE UserAccount
     Password VARCHAR(200) NULL,
     FirstName VARCHAR(200) NULL,
     LastName VARCHAR(200) NULL,
-    DefaultNodeID UNIQUEIDENTIFIER NOT NULL REFERENCES Node(ID),
     Phone VARCHAR(200) NULL,
     Email VARCHAR(200) NULL,
     LockedOut BIT NOT NULL DEFAULT 0,
@@ -468,6 +453,15 @@ AS BEGIN
     FROM inserted UserAccount CROSS JOIN MeterGroup
     WHERE MeterGroup.Name = 'AllMeters'
 END
+GO
+
+INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
+GO
+
+INSERT INTO SecurityGroup(Name, Description) VALUES('BUILTIN\Users', 'All Windows authenticated users')
+GO
+
+INSERT INTO ApplicationRoleSecurityGroup(ApplicatoinRoleID, SecurityGroupID) VALUES((SELECT ID FROM ApplicationRole), (SELECT ID FROM SecurityGroup))
 GO
 
 

@@ -82,7 +82,7 @@ namespace FaultData.Configuration
         /// Gets or sets the username used to authenticate to the SMTP server.
         /// </summary>
         [Setting]
-        [DefaultValue(null)]
+        [DefaultValue("")]
         public string Username
         {
             get
