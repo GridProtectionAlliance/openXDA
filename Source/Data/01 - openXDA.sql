@@ -36,7 +36,8 @@ CREATE TABLE Setting
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NULL,
-    Value VARCHAR(MAX) NULL
+    Value VARCHAR(MAX) NULL,
+    DefaultValue VARCHAR(MAX) NULL
 )
 GO
 
@@ -453,6 +454,9 @@ AS BEGIN
     FROM inserted UserAccount CROSS JOIN MeterGroup
     WHERE MeterGroup.Name = 'AllMeters'
 END
+GO
+
+INSERT INTO UserAccount(Name, UseADAuthentication) VALUES('External', 0)
 GO
 
 INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
