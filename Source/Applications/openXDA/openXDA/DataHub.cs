@@ -145,7 +145,7 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
         public int QueryMeterCount(int stationID, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
 
             if (stationID > 0)
                 return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
@@ -157,7 +157,7 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
         public IEnumerable<MeterDetail> QueryMeters(int stationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
 
             if (stationID > 0)
                 return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
@@ -219,7 +219,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
         public int QueryMeterLocationCount(string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<MeterLocation>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -227,7 +227,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -276,7 +276,7 @@ namespace openXDA
         [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
         public int QueryLinesCount(string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<Line>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -284,7 +284,7 @@ namespace openXDA
         [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
         public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
         }
 
@@ -333,7 +333,7 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
         public int QueryLineViewCount(string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
         }
 
@@ -341,7 +341,7 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
         public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
         }
 
@@ -483,7 +483,7 @@ namespace openXDA
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
         public int QueryChannelCount(int meterID, int lineID, string filterString)
         {
-            var filters = (filterString ?? "").ParseKeyValuePairs()
+            var filters = (filterString ?? "").Replace('*', '%').ParseKeyValuePairs()
                 .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.TrimEnd('%') + "%" })
                 .ToList();
 
@@ -500,7 +500,7 @@ namespace openXDA
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
         public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            var filters = (filterString ?? "").ParseKeyValuePairs()
+            var filters = (filterString ?? "").Replace('*', '%').ParseKeyValuePairs()
                 .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.TrimEnd('%') + "%" })
                 .ToList();
 
@@ -636,7 +636,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<MeterGroup>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
@@ -644,7 +644,7 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<MeterGroup> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
@@ -829,7 +829,7 @@ namespace openXDA
         [RecordOperation(typeof(User), RecordOperation.QueryRecordCount)]
         public int QueryUserCount(string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<User>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -837,7 +837,7 @@ namespace openXDA
         [RecordOperation(typeof(User), RecordOperation.QueryRecords)]
         public IEnumerable<User> QueryUsers(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%') + "%";
+            filterString = (filterString ?? "").Replace('*', '%').TrimEnd('%') + "%";
             return DataContext.Table<User>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }
 
@@ -886,7 +886,7 @@ namespace openXDA
             string charFilter = "%";
             if (filterString != "%")
             {
-                string[] filters = filterString.Split(';');
+                string[] filters = filterString.Replace('*', '%').Split(';');
                 if (filters.Length == 3)
                 {
                     channelFilter = filters[0] + '%';
@@ -910,7 +910,7 @@ namespace openXDA
             string charFilter = "%";
             if (filterString != "%")
             {
-                string[] filters = filterString.Split(';');
+                string[] filters = filterString.Replace('*', '%').Split(';');
                 if (filters.Length == 3)
                 {
                     channelFilter = filters[0] + '%';
@@ -1170,7 +1170,7 @@ namespace openXDA
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecordCount)]
         public int QueryEmailTypeCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<EmailType>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
@@ -1178,7 +1178,7 @@ namespace openXDA
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecords)]
         public IEnumerable<EmailType> QueryEmailType(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<EmailType>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
@@ -1218,7 +1218,7 @@ namespace openXDA
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecordCount)]
         public int QueryEmailGroupCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<EmailGroup>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
         }
 
@@ -1226,7 +1226,7 @@ namespace openXDA
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecords)]
         public IEnumerable<EmailGroup> QueryEmailGroup(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID LIKE {0}", filterString));
         }
 
@@ -1272,7 +1272,7 @@ namespace openXDA
 
             if (filterString != "%")
             {
-                string[] filters = filterString.Split(';');
+                string[] filters = filterString.Replace('*', '%').Split(';');
                 if (filters.Length == 2)
                 {
                     emailGroupFilter = filters[0] + '%';
@@ -1299,7 +1299,7 @@ namespace openXDA
 
             if (filterString != "%")
             {
-                string[] filters = filterString.Split(';');
+                string[] filters = filterString.Replace('*', '%').Split(';');
                 if (filters.Length == 2)
                 {
                     emailGroupFilter = filters[0] + '%';
@@ -1352,7 +1352,7 @@ namespace openXDA
 
             if (filterString != "%")
             {
-                string[] filters = filterString.Split(';');
+                string[] filters = filterString.Replace('*', '%').Split(';');
                 if (filters.Length == 2)
                 {
                     emailGroupFilter = filters[0] + '%';
@@ -1379,7 +1379,7 @@ namespace openXDA
 
             if (filterString != "%")
             {
-                string[] filters = filterString.Split(';');
+                string[] filters = filterString.Replace('*', '%').Split(';');
                 if (filters.Length == 2)
                 {
                     emailGroupFilter = filters[0] + '%';
@@ -1427,7 +1427,7 @@ namespace openXDA
         [RecordOperation(typeof(EmailGroupType), RecordOperation.QueryRecordCount)]
         public int QueryEmailGroupTypeCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<EmailGroupType>().QueryRecordCount(new RecordRestriction("EmailGroupID LIKE {0}", filterString));
         }
 
@@ -1435,7 +1435,7 @@ namespace openXDA
         [RecordOperation(typeof(EmailGroupType), RecordOperation.QueryRecords)]
         public IEnumerable<EmailGroupType> QueryEmailGroupType(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<EmailGroupType>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("EmailGroupID LIKE {0}", filterString));
         }
 
@@ -1476,7 +1476,7 @@ namespace openXDA
         [RecordOperation(typeof(XSLTemplate), RecordOperation.QueryRecordCount)]
         public int QueryXSLTemplateCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<XSLTemplate>().QueryRecordCount();
         }
 
@@ -1484,7 +1484,7 @@ namespace openXDA
         [RecordOperation(typeof(XSLTemplate), RecordOperation.QueryRecords)]
         public IEnumerable<XSLTemplate> QueryXSLTemplate(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
+            filterString = (filterString ?? "%").Replace('*', '%').EnsureEnd("%");
             return DataContext.Table<XSLTemplate>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
