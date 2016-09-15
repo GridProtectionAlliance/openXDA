@@ -56,6 +56,7 @@
         stationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", stationID);
         ViewBag.CustomHeader = "Devices at <a href=\"/Stations.cshtml?Station=" + stationName + "\">" + stationName + "</a>";
         ViewBag.Title = "Devices at " + stationName;
+
     }
 
     Layout = "Layout.cshtml";
@@ -72,6 +73,7 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+ 
 }
 @helper DeviceFilter()
 {
@@ -111,7 +113,7 @@
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Make"))
         @Raw(dataContext.AddInputField<Meter>("Model"))
-        @Raw(dataContext.AddInputField<Meter>("TimeZone", fieldLabel: "Time Zone"))
+        @Raw(dataContext.AddInputField<Meter>("TimeZoneLabel", fieldLabel: "Time Zone"))
         @Raw(dataContext.AddTextAreaField<Meter>("Description"))
     </div>
 
@@ -147,6 +149,16 @@
                         select: function (event, item) {
                             var id = Number(item.data("id"));
                             viewModel.currentRecord().MeterLocationID(id);
+                        }
+                    });
+                    
+                    initializeAutoCompleteLookupField("TimeZoneLabel", dataHub.searchTimeZones, false);
+                    
+                    
+                    $('#inputTimeZoneLabel').puiautocomplete({
+                        select: function (event, item) {
+                            var id = item.data("id");
+                            viewModel.currentRecord().TimeZone(id);
                         }
                     });
                 }

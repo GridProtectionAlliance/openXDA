@@ -45,5 +45,24 @@ namespace openXDA.Model
     public class MeterDetail : Meter
     {
         public string Location { get; set; }
+
+        public string TimeZoneLabel
+        {
+            get
+            {
+                TimeZoneInfo tzi;
+                try
+                {
+                    tzi = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
+                }
+                catch 
+                {
+                    tzi = TimeZoneInfo.Utc;
+                }
+                return tzi.ToString();
+            }
+        }
+
+    
     }
 }

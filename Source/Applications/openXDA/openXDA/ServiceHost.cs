@@ -504,7 +504,7 @@ namespace openXDA
             string newLines = string.Format("{0}{0}", Environment.NewLine);
 
             m_serviceHelper.ErrorLogger.Log(ex);
-            m_serviceHelper.UpdateStatus(UpdateType.Alarm, ex.Message + newLines);
+            m_serviceHelper.UpdateStatus(UpdateType.Alarm, "{0}", ex.Message + newLines);
 
             foreach (IServiceMonitor serviceMonitor in m_serviceMonitors.Adapters)
             {
