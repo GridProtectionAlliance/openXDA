@@ -132,7 +132,7 @@
         
         function getTypesCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
+                dataHub.queryEmailGroupTypeCount(sourceID).done(function (count) {
                     $(element).text(count.toString());
                 });
             }

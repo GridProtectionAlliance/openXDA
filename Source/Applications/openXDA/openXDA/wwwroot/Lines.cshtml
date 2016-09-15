@@ -113,7 +113,7 @@
 
             $('#linefilter').on('keyup', function (e) {
                 if ($('#linefilter').val().length == 0) {
-                    viewModel.filterText = '%';
+                    viewModel.filterText = '';
                     viewModel.queryPageRecords();
                 } else {
                     viewModel.filterText = $('#linefilter').val();

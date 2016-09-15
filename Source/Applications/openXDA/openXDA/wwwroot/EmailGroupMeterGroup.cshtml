@@ -82,7 +82,7 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     @Raw(dataContext.AddSelectField<EmailGroupMeterGroup, EmailGroup>("EmailGroupID", "ID", "Name"))
-    @Raw(dataContext.AddSelectField<EmailGroupMeterGroup, openXDA.Model.Group>("MeterGroupID", "ID", "GroupName"))
+    @Raw(dataContext.AddSelectField<EmailGroupMeterGroup, MeterGroup>("MeterGroupID", "ID", "GroupName"))
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
@@ -91,7 +91,7 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailGroupMeterGroup, DataHub>(ViewBag))
         @Raw(Model.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
-        @Raw(Model.RenderAbstract<openXDA.Model.Group>("GroupName", "ID", "lookupGroupName", "groupName"))
+        @Raw(Model.RenderAbstract<MeterGroup>("Name", "ID", "lookupGroupName", "groupName"))
 
         $(function () {
             viewModel.filterText = '@ViewBag.EmailGroupID' + ';' + '@ViewBag.MeterGroupID';

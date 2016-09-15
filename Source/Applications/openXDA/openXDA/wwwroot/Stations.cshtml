@@ -110,7 +110,7 @@
             
             $('#stationfilter').on('keyup', function (e) {
                 if ($('#stationfilter').val().length == 0) {
-                    viewModel.filterText = '%';
+                    viewModel.filterText = '';
                     viewModel.queryPageRecords();
                 } else {
                     viewModel.filterText = $('#stationfilter').val();

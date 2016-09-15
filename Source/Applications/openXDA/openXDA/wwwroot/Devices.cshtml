@@ -130,7 +130,7 @@
             
             $('#devicefilter').on('keyup', function (e) {
                 if ($('#devicefilter').val().length == 0) {
-                    viewModel.filterText = '%';
+                    viewModel.filterText = '';
                     viewModel.queryPageRecords();
                 } else {
                     viewModel.filterText = $('#devicefilter').val();
