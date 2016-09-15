@@ -50,19 +50,24 @@ namespace openXDA.Model
         {
             get
             {
-                TimeZoneInfo tzi;
                 try
                 {
-                    tzi = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
+                    if (TimeZone != "UTC")
+                        return TimeZoneInfo.FindSystemTimeZoneById(TimeZone).ToString();
                 }
-                catch 
+                catch
                 {
-                    tzi = TimeZoneInfo.Utc;
+                    // Do not fail if the time zone cannot be found --
+                    // instead, fall through to the logic below to
+                    // find the label for UTC
                 }
-                return tzi.ToString();
+
+                return TimeZoneInfo.GetSystemTimeZones()
+                    .Where(info => info.Id == "UTC")
+                    .DefaultIfEmpty(TimeZoneInfo.Utc)
+                    .First()
+                    .ToString();
             }
         }
-
-    
     }
 }
