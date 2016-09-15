@@ -27,7 +27,7 @@ namespace openXDA.Model
         [StringLength(200)]
         public string Alias { get; set; }
 
-        [StringLength(50)]
+        [StringLength(12)]
         public string ShortName { get; set; }
 
         [StringLength(200)]

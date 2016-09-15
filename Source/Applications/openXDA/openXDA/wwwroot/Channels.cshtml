@@ -104,18 +104,18 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Channel>("Name"))
+        @Raw(dataContext.AddInputField<Channel>("Mapping", fieldLabel: "Channel Number"))
+        @Raw(dataContext.AddInputField<Channel>("Name", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<Channel>("MeterName", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<Channel>("LineName", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<Channel>("MeasurementType"))
         @Raw(dataContext.AddInputField<Channel>("MeasurementCharacteristic"))
-        @Raw(dataContext.AddInputField<Channel>("Phase"))
     </div>
     <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Channel>("Phase"))
         @Raw(dataContext.AddInputField<Channel>("SamplesPerHour"))
         @Raw(dataContext.AddInputField<Channel>("PerUnitValue"))
         @Raw(dataContext.AddInputField<Channel>("HarmonicGroup"))
-        @Raw(dataContext.AddCheckBoxField<Channel>("Enabled"))
         @Raw(dataContext.AddTextAreaField<Channel>("Description"))
     </div>
 }

@@ -879,7 +879,7 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecordCount)]
-        public int QueryAlarmRangeLimitViewCount(string filterString)
+        public int QueryAlarmRangeLimitViewCount(int meterID, int lineID, string filterString)
         {
             string channelFilter = "%";
             string typeFilter = "%";
@@ -895,13 +895,15 @@ namespace openXDA
                 }
             }
 
+            string MeterID = (meterID == -1 ? "%" : meterID.ToString());
+            string LineID = (lineID == -1 ? "%" : lineID.ToString());
 
-            return DataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
+            return DataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2} AND MeterID LIKE {3} AND LineID LIKE {4}", channelFilter, typeFilter, charFilter, MeterID, LineID));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AlarmRangeLimitView), RecordOperation.QueryRecords)]
-        public IEnumerable<AlarmRangeLimitView> QueryAlarmRangeLimitViews( string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<AlarmRangeLimitView> QueryAlarmRangeLimitViews(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             string channelFilter = "%";
             string typeFilter = "%";

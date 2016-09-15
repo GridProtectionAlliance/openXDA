@@ -20,7 +20,11 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
 @using System.Text.RegularExpressions
+@using GSF.Web
+
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
@@ -66,7 +70,26 @@
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
     ViewBag.Title = "Alarm Limit Settings";
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+    ViewBag.meterID = -1;
+    ViewBag.lineID = -1;
+    string lineKey = "";
+    if (parameters.ContainsKey("MeterID"))
+    {
+        ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
+    }
+    if (parameters.ContainsKey("LineID"))
+    {
+        ViewBag.lineID = int.Parse(parameters["LineID"] ?? "-1");
+    }
+    if (parameters.ContainsKey("Title"))
+    {
+        lineKey = parameters["Title"];
+    }
 
+
+    ViewBag.CustomHeader = (lineKey == "" ? null :"Alarms for <a href=\"/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>");
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
@@ -302,7 +325,7 @@
     <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.time.js"></script>
     <script language="javascript" type="text/javascript" src="Scripts/spin.js"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID"))
+        @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))
         @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))
         @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name", "ID", "renderMeasurementCharacteristicName", "measurementCharacteristicName"))
         @Raw(Model.RenderAbstract<Phase>("Name", "ID", "renderPhaseName", "phaseName"))

@@ -65,7 +65,7 @@
 {
     @Raw(dataContext.AddInputField<Setting>("Name", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<Setting>("Value"))
-    @Raw(dataContext.AddInputField<Setting>("DefaultValue", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<Setting>("DefaultValue", customDataBinding: "enable: false", fieldLabel: "Default Value"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 

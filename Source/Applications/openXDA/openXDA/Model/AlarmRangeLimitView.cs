@@ -16,6 +16,8 @@ namespace openXDA.Model
 
         [Label("Channel ID")]
         public int ChannelID { get; set; }
+        public int MeterID { get; set; }
+        public int LineID { get; set; }
 
         [Label("Channel Name")]
         public string Name { get; set; }
