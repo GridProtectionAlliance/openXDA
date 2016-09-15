@@ -152,8 +152,7 @@
                         }
                     });
                     
-                    initializeAutoCompleteLookupField("TimeZoneLabel", dataHub.searchTimeZones, false);
-                    
+                    initializeAutoCompleteLookupField("TimeZoneLabel", dataHub.searchTimeZones, false, undefined, undefined, -1);
                     
                     $('#inputTimeZoneLabel').puiautocomplete({
                         select: function (event, item) {

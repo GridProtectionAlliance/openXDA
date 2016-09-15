@@ -1774,11 +1774,15 @@ SELECT
     Meter.ShortName,
     Meter.Make,
     Meter.Model,
-    Meter.TimeZone,
+    CASE COALESCE(Meter.TimeZone, '')
+        WHEN '' THEN COALESCE(Setting.Value, 'UTC')
+        ELSE Meter.TimeZone
+    END AS TimeZone,
     Meter.Description
 FROM
     Meter JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+    Setting ON Setting.Name = 'DefaultMeterTimeZone'
 GO
 
 CREATE VIEW LineView

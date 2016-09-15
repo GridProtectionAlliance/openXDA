@@ -1686,20 +1686,17 @@ namespace openXDA
 
         #endregion
 
-        #region [Misc]
+        #region [ Misc ]
+
         public IEnumerable<IDLabel> SearchTimeZones(string searchText , int limit)
         {
             IReadOnlyCollection<TimeZoneInfo> tzi = TimeZoneInfo.GetSystemTimeZones();
 
-            return tzi.Select(row => new IDLabel(row.Id, row.ToString())).Where(row => row.label.ToLower().Contains(searchText.ToLower()));
+            return tzi
+                .Select(row => new IDLabel(row.Id, row.ToString()))
+                .Where(row => row.label.ToLower().Contains(searchText.ToLower()));
         }
 
-        public IDLabel GetDefaultTimeZone()
-        {
-            string id = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'DefaultMeterTimeZone'");
-            TimeZoneInfo tzi = TimeZoneInfo.FindSystemTimeZoneById(id);
-            return new IDLabel(id, tzi.ToString());
-        }
         #endregion
     }
 }
