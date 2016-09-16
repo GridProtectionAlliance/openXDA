@@ -652,11 +652,18 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
-            IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("GroupID = {0}", id));
+            IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
             foreach (MeterMeterGroup gm in table)
             {
                 DataContext.Table<MeterMeterGroup>().DeleteRecord(gm.ID);
             }
+
+            IEnumerable<UserAccountMeterGroup> users = DataContext.Table<UserAccountMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
+            foreach (UserAccountMeterGroup gm in users)
+            {
+                DataContext.Table<UserAccountMeterGroup>().DeleteRecord(gm.ID);
+            }
+
             DataContext.Table<MeterGroup>().DeleteRecord(id);
         }
 
@@ -695,7 +702,34 @@ namespace openXDA
                 if (!meters.Contains(record.MeterID.ToString()))
                     DataContext.Table<MeterMeterGroup>().DeleteRecord(record.ID);
             }
+
+            foreach (string meter in meters)
+            {
+                if (!records.Any(record => record.MeterID == int.Parse(meter)))
+                {
+                    DataContext.Table<MeterMeterGroup>().AddNewRecord(new MeterMeterGroup() { MeterGroupID = groupID, MeterID = int.Parse(meter) });
+                }
+            }
         }
+
+        public void UpdateUsers(List<string> users, int groupID)
+        {
+            IEnumerable<UserAccountMeterGroup> records = DataContext.Table<UserAccountMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", groupID));
+            foreach (UserAccountMeterGroup record in records)
+            {
+                if (!users.Contains(record.UserAccountID.ToString()))
+                    DataContext.Table<UserAccountMeterGroup>().DeleteRecord(record.ID);
+            }
+
+            foreach (string user in users)
+            {
+                if (!records.Any(record => record.UserAccountID == Guid.Parse(user)))
+                {
+                    DataContext.Table<UserAccountMeterGroup>().AddNewRecord(new UserAccountMeterGroup() { MeterGroupID = groupID, UserAccountID = Guid.Parse(user) });
+                }
+            }
+        }
+
 
         #endregion
 

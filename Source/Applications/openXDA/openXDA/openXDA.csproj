@@ -445,6 +445,7 @@
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Settings.cshtml" />
     <None Include="wwwroot\Stations.cshtml" />
+    <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\UserAccountMeterGroupView.cshtml" />
     <None Include="wwwroot\Users.cshtml" />

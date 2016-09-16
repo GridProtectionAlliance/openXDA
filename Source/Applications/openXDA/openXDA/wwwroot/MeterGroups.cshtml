@@ -41,7 +41,7 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Meter Groupings";
+    ViewBag.Title = "Meter Groups";
     HttpRequestMessage request = ViewBag.Request;
 
     Dictionary<string, string> parameters = request.QueryParameters();
@@ -189,10 +189,19 @@
             }, 500);
         });
         
+        var meters;
+        var users;
+        $(viewModel).on('beforeSave', function (event, record) {
+            meters = ($('#meterSelect').val() == null ? [] : $('#meterSelect').val());
+            users = ($('#userSelect').val() == null ? [] : $('#userSelect').val());
+        });
         $(viewModel).on('recordSaved', function (event, record) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.getLastMeterGroupID().done(function (id) {
-
+                    dataHub.updateMeters(meters, id);
+                    dataHub.updateUsers(users, id).done(function () {
+                        viewModel.queryPageRecords();
+                    })
                 });
             }
         });
@@ -201,37 +210,123 @@
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeters(-1, "Name", true, 1, 10000000, null).done(function (meters) {
                     $('#meterSelect').children().remove();
+
                     $.each(meters, function (i, d) {
                         $('#meterSelect').append(new Option(d.Name, d.ID));
                     });
-                    $('#meterSelect').mobileSelect();
-                    $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
-                    $('#metersSelectFrame .btn-mobileSelect-gen').off('click');
-                    $('#metersSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
-                        event.preventDefault();
-                        $('#meterSelect').mobileSelect('show');
-                    });
+                    var mobileSelectOptions = {
+                        padding: {
+                            top: '5%',
+                            left: '15%',
+                            right: '15%',
+                            bottom: '5%'
+                        },
+                        onOpen: function () {
+                            $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+                            $('.selectAllBtn').click(function () {
+                                $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+                            });
+                        },
+                        onClose: function () {
+                            $('.selectAllBtn').remove();
+                        }
+                    };
+
+                    if (viewModel.recordMode() === RecordMode.Edit) {
+                        dataHub.queryGroupMeterViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (metersInGroup) {
+
+                            $.each(metersInGroup, function (i, meter) {
+                                $('#meterSelect').find('option[value="' + meter.MeterID + '"]').attr('selected', true);
+                            });
+                            $('#meterSelect').mobileSelect(mobileSelectOptions);
+                            $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                            $('#metersSelectFrame .btn-mobileSelect-gen').off('click');
+                            $('#metersSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                                event.preventDefault();
+                                $('#meterSelect').mobileSelect('show');
+                            });
+
+                        });
+                    }
+                    else {
+                        $('#meterSelect').mobileSelect(mobileSelectOptions);
+                        $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                        $('#metersSelectFrame .btn-mobileSelect-gen').off('click');
+                        $('#metersSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                            event.preventDefault();
+                            $('#meterSelect').mobileSelect('show');
+                        });
+
+                    }
+
                 });
-                
+
                 securityHub.queryUserAccounts("Name", true, 1, 1000000, null).done(function (users) {
                     $('#userSelect').children().remove();
-                    $('#userSelect').mobileSelect();
-                    $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    var mobileSelectOptions = {
+                        padding: {
+                            top: '5%',
+                            left: '15%',
+                            right: '15%',
+                            bottom: '5%'
+                        },
+                        onOpen: function () {
+                            $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+                            $('.selectAllBtn').click(function () {
+                                $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+                            });
+                        },
+                        onClose: function () {
+                            $('.selectAllBtn').remove();
+                        }
+                    };
+                    
                     $.each(users, function (i, d) {
                         securityHub.sidToAccountName(d.Name).done(function (accountName) {
                             $('#userSelect').append(new Option(accountName, d.ID));
                         });
                     });
-                    $('#userSelectFrame .btn-mobileSelect-gen').off('click');
-                    $('#userSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
-                        event.preventDefault();
-                        $('#userSelect').mobileSelect('refresh');
-                        $('#userSelect').mobileSelect('show');
-                    });
-                });
 
+                    if (viewModel.recordMode() === RecordMode.Edit) {
+                        dataHub.queryUserAccountMeterGroups(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (usersInGroup) {
+                            $.each(usersInGroup, function (i, user) {
+                                $('#userSelect').find('option[value="' + user.UserAccountID + '"]').attr('selected', true);
+                            });
+                            $('#userSelect').mobileSelect(mobileSelectOptions);
+                            $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                            $('#userSelectFrame .btn-mobileSelect-gen').off('click');
+                            $('#userSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                                event.preventDefault();
+                                $('#userSelect').mobileSelect('refresh');
+                                $('#userSelect').mobileSelect('show');
+                            });
+
+
+                        });
+                    }
+                    else {
+                        $('#userSelect').mobileSelect(mobileSelectOptions);
+                        $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                        $('#userSelectFrame .btn-mobileSelect-gen').off('click');
+                        $('#userSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                            event.preventDefault();
+                            $('#userSelect').mobileSelect('refresh');
+                            $('#userSelect').mobileSelect('show');
+                        });
+                    }
+                });
             }
+        });
+        
+        $('#addNewEditDialog').on('hidden.bs.modal', function () {
+            $('#userSelect').mobileSelect('destroy');
+            $('#meterSelect').mobileSelect('destroy');
         });
 
         $(function () {
