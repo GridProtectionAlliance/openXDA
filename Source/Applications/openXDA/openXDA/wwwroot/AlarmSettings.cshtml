@@ -99,9 +99,9 @@
         new[] { "MeasurementCharacteristic", "Meas Char", "text-left"},
         new[] { "Phase", "PH", "text-left"},
         new[] { "HarmonicGroup", "HG", "text-left"},
+        new[] { "High", "High", "text-left" },
+        new[] { "Low", "Low", "text-left" },
         new[] { "IsDefault", "Custom Limits", "text-left" },
-        //new[] { "High", "High", "text-left" },
-        //new[] { "Low", "Low", "text-left" },
         //new[] { "RangeInclusive", "Severity", "text-left" },
         //new[] { "DefaultValue", "Default Value", "text-center" }
     };
@@ -150,11 +150,14 @@
 @helper BodyRows()
 {
     <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: ChannelID, click: $parent.viewPageRecord"></button></td>
-    <td width="40%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
+    <td width="30%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementType"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: Phase"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: High"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: Low"></td>
+
     <td width="5%" class="text-left valign-middle" style="text-align: center"><span data-bind="visible: !(IsDefault)" class="glyphicon glyphicon-check"></span></td>
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 

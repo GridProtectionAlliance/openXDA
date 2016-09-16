@@ -47,8 +47,8 @@
         new[] { "AlarmType", "Alarm Type", "text-left"},
         //new[] { "HarmonicGroup", "Harmonic Group", "text-left"},
         //new[] { "Severity", "Severity", "text-left" },
-        //new[] { "High", "High", "text-left" },
-        //new[] { "Low", "Low", "text-left" },
+        new[] { "High", "High", "text-left" },
+        new[] { "Low", "Low", "text-left" },
         //new[] { "RangeInclusive", "Severity", "text-left" },
         //new[] { "DefaultValue", "Default Value", "text-center" }
     };
@@ -61,8 +61,8 @@
     <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: MeasurementType, click: $parent.viewPageRecord"></button></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: AlarmType"></td>
-    @*<td width="10%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>*@
-
+    <td width="10%" class="text-left valign-middle" data-bind="text: High"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: Low"></td>
     @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
 
     <td width="10%" class="text-center valign-middle" nowrap>
