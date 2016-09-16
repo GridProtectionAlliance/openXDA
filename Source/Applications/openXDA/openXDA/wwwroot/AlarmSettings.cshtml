@@ -301,12 +301,12 @@
                     </div>
                     <div class="col-md-5">
                         <label>Upper Limit</label>
-                        <input id="upperLimit" type="number" step="auto" class="form-control">
+                        <input id="upperLimit" type="text" class="form-control">
                     </div>
 
                     <div class="col-md-5">
                         <label>Lower Limit</label>
-                        <input id="lowerLimit" type="number" step="auto" class="form-control">
+                        <input id="lowerLimit" type="text" class="form-control">
                     </div>
                     <div class="col-md-1">
                         <br/>
@@ -434,18 +434,18 @@
                     });
 
                     var averageValue = average(dataPoints);
-                    var minusonesigma = { data: [[startDate, averageValue.mean - averageValue.deviation], [endDate, averageValue.mean - averageValue.deviation]], lines: { lineWidth: 1 }, color: "black" };
-                    var plusonesigma = { data: [[startDate, averageValue.mean + averageValue.deviation], [endDate, averageValue.mean + averageValue.deviation]], lines: { lineWidth: 1 }, color: "black" };
-                    var minustwosigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 2], [endDate, averageValue.mean - averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black" };
-                    var plustwosigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 2], [endDate, averageValue.mean + averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "black" };
-                    var minusthreesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 3], [endDate, averageValue.mean - averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black" };
-                    var plusthreesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 3], [endDate, averageValue.mean + averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "black" };
-                    var minusfoursigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 4], [endDate, averageValue.mean - averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black" };
-                    var plusfoursigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 4], [endDate, averageValue.mean + averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "black" };
-                    var minusfivesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 5], [endDate, averageValue.mean - averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
-                    var plusfivesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 5], [endDate, averageValue.mean + averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "black" };
-                    var minussixsigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 6], [endDate, averageValue.mean - averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
-                    var plussixsigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 6], [endDate, averageValue.mean + averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "black" };
+                    var minusonesigma = { data: [[startDate, averageValue.mean - averageValue.deviation], [endDate, averageValue.mean - averageValue.deviation]], lines: { lineWidth: 1 }, color: "red" };
+                    var plusonesigma = { data: [[startDate, averageValue.mean + averageValue.deviation], [endDate, averageValue.mean + averageValue.deviation]], lines: { lineWidth: 1 }, color: "red" };
+                    var minustwosigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 2], [endDate, averageValue.mean - averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "red" };
+                    var plustwosigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 2], [endDate, averageValue.mean + averageValue.deviation * 2]], lines: { lineWidth: 1 }, color: "red" };
+                    var minusthreesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 3], [endDate, averageValue.mean - averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "red" };
+                    var plusthreesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 3], [endDate, averageValue.mean + averageValue.deviation * 3]], lines: { lineWidth: 1 }, color: "red" };
+                    var minusfoursigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 4], [endDate, averageValue.mean - averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "red" };
+                    var plusfoursigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 4], [endDate, averageValue.mean + averageValue.deviation * 4]], lines: { lineWidth: 1 }, color: "red" };
+                    var minusfivesigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 5], [endDate, averageValue.mean - averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "red" };
+                    var plusfivesigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 5], [endDate, averageValue.mean + averageValue.deviation * 5]], lines: { lineWidth: 1 }, color: "red" };
+                    var minussixsigma = { data: [[startDate, averageValue.mean - averageValue.deviation * 6], [endDate, averageValue.mean - averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "red" };
+                    var plussixsigma = { data: [[startDate, averageValue.mean + averageValue.deviation * 6], [endDate, averageValue.mean + averageValue.deviation * 6]], lines: { lineWidth: 1 }, color: "red" };
 
                     displayLimits();
                     //plot = $.plot("#flotchart", [ minusonesigma, averages, plusonesigma ], flotOptions);
