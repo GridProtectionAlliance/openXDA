@@ -38,7 +38,7 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
-    ViewBag.Title = "Substations";
+    ViewBag.Title = "Sites";
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
@@ -53,7 +53,7 @@
         new[] { "Name", "Name", "text-Left" },
         new[] { "Latitude", "Latitude", "text-left" },
         new[] { "Longitude", "Longitude", "text-left" },
-        new[] { null, "Devices", "text-center valign-middle" }
+        new[] { null, "Meters", "text-center valign-middle" }
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -64,7 +64,7 @@
     <div class='row'>
         <div class='col-md-12'>
             <div class='form-group'>
-                <label for='stationfilter'>Station Name Filter:</label>
+                <label for='stationfilter'>Site Name Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
                     <input class='form-control' type='search' id='stationfilter' placeholder='Search' />
@@ -78,7 +78,7 @@
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Latitude"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Longitude"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Devices.cshtml?StationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Devices&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Devices.cshtml?StationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>

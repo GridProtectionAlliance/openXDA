@@ -54,8 +54,8 @@
     {
         stationID = int.Parse(parameters["StationID"] ?? "-1");
         stationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", stationID);
-        ViewBag.CustomHeader = "Devices at <a href=\"/Stations.cshtml?Station=" + stationName + "\">" + stationName + "</a>";
-        ViewBag.Title = "Devices at " + stationName;
+        ViewBag.CustomHeader = "Meters at <a href=\"/Stations.cshtml?Station=" + stationName + "\">" + stationName + "</a>";
+        ViewBag.Title = "Meters at " + stationName;
 
     }
 
@@ -65,7 +65,7 @@
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Name", "text-Left" },
-        new[] { "MeterLocationID", "Substation", "text-left"},
+        new[] { "MeterLocationID", "Site", "text-left"},
         new[] { "Make", "Make", "text-left" },
         new[] { "Model", "Model", "text-left" },
         new[] { null, "Meter-to-Line", "text-center valign-middle"}
@@ -105,7 +105,7 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Name"))
-        @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Substation"))
+        @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Site"))
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
     </div>
