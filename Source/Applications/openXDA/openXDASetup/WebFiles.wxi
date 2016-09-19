@@ -69,8 +69,8 @@
   <Component Id="Settings_cshtml">
     <File Id="Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Settings.cshtml" />
   </Component>
-  <Component Id="Stations_cshtml">
-    <File Id="Stations.cshtml" Name="Stations.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Stations.cshtml" />
+  <Component Id="Sites_cshtml">
+    <File Id="Sites.cshtml" Name="Sites.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Sites.cshtml" />
   </Component>
   <Component Id="UserAccountMeterGroupView_cshtml">
     <File Id="UserAccountMeterGroupView.cshtml" Name="UserAccountMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\UserAccountMeterGroupView.cshtml" />

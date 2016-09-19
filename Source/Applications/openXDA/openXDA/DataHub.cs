@@ -143,24 +143,24 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
-        public int QueryMeterCount(int stationID, string filterString)
+        public int QueryMeterCount(int meterLocationID, string filterString)
         {
             filterString = (filterString ?? "").Replace("%", "[%]").Replace("[", "[[]").Replace("_", "[_]").Replace("*", "%") + "%";
 
-            if (stationID > 0)
-                return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
+            if (meterLocationID > 0)
+                return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", meterLocationID, filterString));
             else
                 return DataContext.Table<Meter>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterDetail> QueryMeters(int stationID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<MeterDetail> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             filterString = (filterString ?? "").Replace("%", "[%]").Replace("[", "[[]").Replace("_", "[_]").Replace("*", "%") + "%";
 
-            if (stationID > 0)
-                return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", stationID, filterString));
+            if (meterLocationID > 0)
+                return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterLocationID = {0} AND Name LIKE {1}", meterLocationID, filterString));
             else
                 return DataContext.Table<MeterDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
         }

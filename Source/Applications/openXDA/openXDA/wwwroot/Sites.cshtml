@@ -43,9 +43,9 @@
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
-    if (parameters.ContainsKey("Station"))
+    if (parameters.ContainsKey("Site"))
     {
-        ViewBag.station = parameters["Station"];
+        ViewBag.site = parameters["Site"];
     }
 
     // Define column headers, use null for field name to make column non-sortable
@@ -60,15 +60,15 @@
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
-@helper StationFilter()
+@helper SiteFilter()
 {
     <div class='row'>
         <div class='col-md-12'>
             <div class='form-group'>
-                <label for='stationfilter'>Site Name Filter:</label>
+                <label for='sitefilter'>Site Name Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='stationfilter' placeholder='Search' />
+                    <input class='form-control' type='search' id='sitefilter' placeholder='Search' />
                 </div>
             </div>
         </div>
@@ -79,7 +79,7 @@
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Latitude"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Longitude"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Meters.cshtml?StationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Meters.cshtml?LocationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -107,22 +107,22 @@
         @Raw(dataContext.RenderViewModelConfiguration<MeterLocation, DataHub>(ViewBag))       
         
         $(function () {
-            $("#pageHeader").append("@Raw(Regex.Replace(StationFilter().ToString(), @"\r|\n", ""))");
+            $("#pageHeader").append("@Raw(Regex.Replace(SiteFilter().ToString(), @"\r|\n", ""))");
             
-            $('#stationfilter').on('keyup', function (e) {
-                if ($('#stationfilter').val().length == 0) {
+            $('#sitefilter').on('keyup', function (e) {
+                if ($('#sitefilter').val().length == 0) {
                     viewModel.filterText = '';
                     viewModel.queryPageRecords();
                 } else {
-                    viewModel.filterText = $('#stationfilter').val();
+                    viewModel.filterText = $('#sitefilter').val();
                     viewModel.queryPageRecords();
 
                 }
 
             });
 
-            $('#stationfilter').val('@ViewBag.station');
-            $('#stationfilter').trigger('keyup');
+            $('#sitefilter').val('@ViewBag.site');
+            $('#sitefilter').trigger('keyup');
         });
 
         function getMeterCount(sourceID, element) {

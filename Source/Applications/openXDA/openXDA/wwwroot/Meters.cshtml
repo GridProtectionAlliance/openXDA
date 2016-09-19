@@ -40,8 +40,8 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    int stationID = -1;
-    string stationName = null;
+    int meterLocationID = -1;
+    string meterLocationName = null;
 
     ViewBag.Title = "Meters";
 
@@ -50,12 +50,12 @@
         ViewBag.meter = parameters["Meter"];
     }
 
-    if (parameters.ContainsKey("StationID"))
+    if (parameters.ContainsKey("LocationID"))
     {
-        stationID = int.Parse(parameters["StationID"] ?? "-1");
-        stationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", stationID);
-        ViewBag.CustomHeader = "Meters at <a href=\"/Stations.cshtml?Station=" + stationName + "\">" + stationName + "</a>";
-        ViewBag.Title = "Meters at " + stationName;
+        meterLocationID = int.Parse(parameters["LocationID"] ?? "-1");
+        meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", meterLocationID);
+        ViewBag.CustomHeader = "Meters at <a href=\"/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
+        ViewBag.Title = "Meters at " + meterLocationName;
 
     }
 
@@ -73,17 +73,17 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
- 
+
 }
-@helper DeviceFilter()
+@helper MeterFilter()
 {
     <div class='row'>
         <div class='col-md-12'>
             <div class='form-group'>
-                <label for='devicefilter'>Meter Name Filter:</label>
+                <label for='meterfilter'>Meter Name Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='devicefilter' placeholder='Search'/>
+                    <input class='form-control' type='search' id='meterfilter' placeholder='Search'/>
                 </div>
             </div>
         </div>
@@ -92,7 +92,7 @@
 @helper BodyRows()
 {
     <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="20%" class="text-left valign-middle" ><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Stations.cshtml?Station=' + Location }"></a></td>
+    <td width="20%" class="text-left valign-middle" ><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Sites.cshtml?Site=' + Location }"></a></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
@@ -123,23 +123,23 @@
 {
     <script src="@("@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, stationID))
+        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, meterLocationID))
         
         $(function () {
-            $("#pageHeader").append("@Raw(Regex.Replace(DeviceFilter().ToString(), @"\r|\n", ""))");
+            $("#pageHeader").append("@Raw(Regex.Replace(MeterFilter().ToString(), @"\r|\n", ""))");
             
-            $('#devicefilter').on('keyup', function (e) {
-                if ($('#devicefilter').val().length == 0) {
+            $('#meterfilter').on('keyup', function (e) {
+                if ($('#meterfilter').val().length == 0) {
                     viewModel.filterText = '';
                     viewModel.queryPageRecords();
                 } else {
-                    viewModel.filterText = $('#devicefilter').val();
+                    viewModel.filterText = $('#meterfilter').val();
                     viewModel.queryPageRecords();
                 }
             });
 
-            $('#devicefilter').val('@ViewBag.meter');
-            $('#devicefilter').trigger('keyup');
+            $('#meterfilter').val('@ViewBag.meter');
+            $('#meterfilter').trigger('keyup');
 
             $('#addNewEditDialog').on('shown.bs.modal', function () {
                 if (viewModel.dataHubIsConnected()) {
