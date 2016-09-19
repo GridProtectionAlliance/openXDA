@@ -39,6 +39,7 @@
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Layout.cshtml";
     ViewBag.Title = "Sites";
+    ViewBag.AddNewEditTitle = "Site";
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
