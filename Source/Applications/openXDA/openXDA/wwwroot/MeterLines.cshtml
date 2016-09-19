@@ -44,7 +44,7 @@
     {
         string meterName = parameters["Title"];
         ViewBag.Title = "Lines monitored by " + meterName;
-        ViewBag.CustomHeader = "Lines monitored by <a href=\"/Devices.cshtml?Meter=" + meterName + "\">" + meterName + "</a>";
+        ViewBag.CustomHeader = "Lines monitored by <a href=\"/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a>";
 
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
@@ -81,13 +81,13 @@
 {
     if (ViewBag.meterID != -1)
     {
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Devices.cshtml?Meter=' + MeterName }"></a></td>
+        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Meters.cshtml?Meter=' + MeterName }"></a></td>
         <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Lines.cshtml?Line=' + LineKey }"></a></td>
     }
     else
     {
         <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Lines.cshtml?Line=' + LineKey }"></a></td>
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Devices.cshtml?Meter=' + MeterName }"></a></td>
+        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Meters.cshtml?Meter=' + MeterName }"></a></td>
     }
     <td width="40%" class="text-left valign-middle" data-bind="text: LineName"></td>
     <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>

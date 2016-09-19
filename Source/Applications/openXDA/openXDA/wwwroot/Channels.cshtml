@@ -39,7 +39,7 @@
     string meterName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM Meter WHERE ID = {0}", ViewBag.meterID);
     string lineKey = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Line WHERE ID = {0}", ViewBag.lineID);
     string lineName = dataContext.Connection.ExecuteScalar<string>("SELECT LineName FROM MeterLine WHERE MeterID = {0} AND LineID = {1}", ViewBag.meterID, ViewBag.lineID);
-    ViewBag.CustomHeader = "Channels for <a href=\"/Devices.cshtml?Meter=" + meterName + "\">" + meterName + "</a> and <a href=\"/Lines.cshtml?Line=" + lineKey + "\">" + lineName + "</a>";
+    ViewBag.CustomHeader = "Channels for <a href=\"/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a> and <a href=\"/Lines.cshtml?Line=" + lineKey + "\">" + lineName + "</a>";
 
     Layout = "Layout.cshtml";
     ViewBag.Title = "Channels for " + meterName + " and " + lineName;

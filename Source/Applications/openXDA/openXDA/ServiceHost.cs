@@ -292,7 +292,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Devices.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Stations.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("MeterGroups.cshtml", new Tuple<Type, Type>(typeof(MeterGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroup), typeof(DataHub)));

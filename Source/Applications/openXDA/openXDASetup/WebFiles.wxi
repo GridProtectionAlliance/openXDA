@@ -18,9 +18,6 @@
   <Component Id="DefaultAlarmSettings_cshtml">
     <File Id="DefaultAlarmSettings.cshtml" Name="DefaultAlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\DefaultAlarmSettings.cshtml" />
   </Component>
-  <Component Id="Devices_cshtml">
-    <File Id="Devices.cshtml" Name="Devices.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Devices.cshtml" />
-  </Component>
   <Component Id="EmailGroupMeterGroup_cshtml">
     <File Id="EmailGroupMeterGroup.cshtml" Name="EmailGroupMeterGroup.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\EmailGroupMeterGroup.cshtml" />
   </Component>
@@ -65,6 +62,9 @@
   </Component>
   <Component Id="MeterMeterGroupView_cshtml">
     <File Id="MeterMeterGroupView.cshtml" Name="MeterMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\MeterMeterGroupView.cshtml" />
+  </Component>
+  <Component Id="Meters_cshtml">
+    <File Id="Meters.cshtml" Name="Meters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Meters.cshtml" />
   </Component>
   <Component Id="Settings_cshtml">
     <File Id="Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Settings.cshtml" />
@@ -175,6 +175,14 @@
   </Component>
   <Component Id="Content_Site_css">
     <File Id="Content_Site.css" Name="Site.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\Site.css" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Content_fullscreenselect_Components" Directory="CONTENTFULLSCREENSELECTFOLDER">
+  <Component Id="Content_fullscreenselect_bootstrap_fullscreen_select_css">
+    <File Id="Content_fullscreenselect_bootstrap_fullscreen_select.css" Name="bootstrap-fullscreen-select.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
+  </Component>
+  <Component Id="Content_fullscreenselect_bootstrap_fullscreen_select_css_map">
+    <File Id="Content_fullscreenselect_bootstrap_fullscreen_select.css.map" Name="bootstrap-fullscreen-select.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Content_images_Components" Directory="CONTENTIMAGESFOLDER">
@@ -859,6 +867,14 @@
 <ComponentGroup Id="wwwroot_Scripts_flot_examples_zooming_Components" Directory="SCRIPTSFLOTEXAMPLESZOOMINGFOLDER">
   <Component Id="Scripts_flot_examples_zooming_index_html">
     <File Id="Scripts_flot_examples_zooming_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\zooming\index.html" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_fullscreenselect_Components" Directory="SCRIPTSFULLSCREENSELECTFOLDER">
+  <Component Id="Scripts_fullscreenselect_bootstrap_fullscreen_select_js">
+    <File Id="Scripts_fullscreenselect_bootstrap_fullscreen_select.js" Name="bootstrap-fullscreen-select.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
+  </Component>
+  <Component Id="Scripts_fullscreenselect_bootstrap_fullscreen_select_min_js">
+    <File Id="Scripts_fullscreenselect_bootstrap_fullscreen_select.min.js" Name="bootstrap-fullscreen-select.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
   </Component>
 </ComponentGroup>
 </Include>

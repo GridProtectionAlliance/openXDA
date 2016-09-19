@@ -385,7 +385,7 @@
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
     <None Include="wwwroot\DashSettings.cshtml" />
     <None Include="wwwroot\DefaultAlarmSettings.cshtml" />
-    <None Include="wwwroot\Devices.cshtml" />
+    <None Include="wwwroot\Meters.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <Content Include="wwwroot\EmailTypes.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />

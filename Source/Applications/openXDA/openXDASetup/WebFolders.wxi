@@ -1,6 +1,7 @@
 <Include>
 <Directory Id="WWWROOTFOLDER" Name="wwwroot">
   <Directory Id="CONTENTFOLDER" Name="Content">
+    <Directory Id="CONTENTFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="CONTENTIMAGESFOLDER" Name="images" />
   </Directory>
   <Directory Id="DOCSFOLDER" Name="Docs" />
@@ -46,6 +47,7 @@
         <Directory Id="SCRIPTSFLOTEXAMPLESZOOMINGFOLDER" Name="zooming" />
       </Directory>
     </Directory>
+    <Directory Id="SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
   </Directory>
 </Directory>
 </Include>
