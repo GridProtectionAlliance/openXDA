@@ -85,12 +85,12 @@ Traditional disturbance analytic processes typically require manual retrieval of
 The openXDA database needs to be configured with information on the devices that provide it data. 
 The steps to do this are:
 
-1. Create a DeviceDefinitions.xml file. This is done by:
-  * Manually creating a DeviceDefinitions.xml file. Check out the example xml files for [DFR Relays](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates/DeviceDefinitionsExample-DFR.xml) and [PQ Devices](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates/DeviceDefinitionsExample-PQ.xml) to see what fields are necessary.
-  * OR
-  * Filling out the Excel template for [DFR Relays](https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/Device%20Definitions%20Examples%20&%20Templates/openXDA%20Configuration%20Template%20-%20DFR.xlsx?raw=true) or [PQ Devices](https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/Device%20Definitions%20Examples%20&%20Templates/openXDA%20Configuration%20Template%20-%20PQ.xlsx?raw=true) and using the [the DeviceDefinitionParser](https://github.com/GridProtectionAlliance/DeviceDefinitionParser/releases) to convert the files to the DeviceDefinitions.xml file.
-* Save the DeviceDefinitions.xml file in the folder where openXDA is installed.
-* Run the ldconfig.bat script included in openXDA and found in the program directory to configure the database from the DeviceDefinitions.xml file.
+1. Create the DeviceDefinitions.xml file. This is done by:
+ * Filling out the Excel template for [DFRs](https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/Device%20Definitions%20Examples%20&%20Templates/openXDA%20Configuration%20Template%20-%20DFR.xlsx?raw=true) or [PQ Monitors and Relays](https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/Device%20Definitions%20Examples%20&%20Templates/openXDA%20Configuration%20Template%20-%20PQ.xlsx?raw=true) and using the [the DeviceDefinitionParser](https://github.com/GridProtectionAlliance/DeviceDefinitionParser/releases) to convert the template(s) to the DeviceDefinitions.xml file.
+ * **OR**
+ * Manually creating the DeviceDefinitions.xml file. Check out the example xml files for      [DFRs](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates/DeviceDefinitionsExample-DFR.xml) and [PQ Monitors and Relays](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates/DeviceDefinitionsExample-PQ.xml) to see what fields are necessary.
+* Save the DeviceDefinitions.xml file in the folder where openXDA is installed. (rename the existing file or replace it)
+* To configure the database from the DeviceDefinitions.xml file, run the ldconfig.bat script included with openXDA and found in the folder where openXDA is installed.
 
 ## Downloads
 * Download a stable release from the releases page [here](https://github.com/GridProtectionAlliance/openXDA/releases).
