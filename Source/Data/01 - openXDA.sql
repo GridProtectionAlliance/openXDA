@@ -2258,6 +2258,98 @@ GO
 
 ----- PROCEDURES -----
 
+CREATE PROCEDURE GetEventEmailRecipients
+(
+    @eventID INT
+)
+AS BEGIN
+    DECLARE @startTime DATETIME2
+    DECLARE @endTime DATETIME2
+    DECLARE @timeTolerance FLOAT
+
+    SELECT
+        @startTime = StartTime,
+        @endTime = EndTime,
+        @timeTolerance = COALESCE(Value, 0.5)
+    FROM
+        Event LEFT OUTER JOIN
+        Setting ON Setting.Name = 'TimeTolerance'
+    WHERE Event.ID = @eventID
+
+    SELECT DISTINCT
+        EmailGroupUserAccount.UserAccountID,
+        EmailType.XSLTemplateID AS TemplateID
+    FROM
+        GetSystemEventIDs(@startTime, @endTime, @timeTolerance) SystemEventID JOIN
+        Event ON SystemEventID.EventID = Event.ID JOIN
+        Meter ON Event.MeterID = Meter.ID JOIN
+        MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
+        EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID JOIN
+        (
+            SELECT
+                EmailGroupID,
+                UserAccountID
+            FROM EmailGroupUserAccount
+            UNION ALL
+            SELECT
+                EmailGroupSecurityGroup.EmailGroupID,
+                UserAccount.ID
+            FROM
+                EmailGroupSecurityGroup JOIN
+                SecurityGroupUserAccount ON EmailGroupSecurityGroup.SecurityGroupID = SecurityGroupUserAccount.SecurityGroupID JOIN
+                UserAccount on SecurityGroupUserAccount.UserAccountID = UserAccount.ID
+        ) EmailGroupUserAccount ON EmailGroupMeterGroup.EmailGroupID = EmailGroupUserAccount.EmailGroupID JOIN
+        EmailGroupType ON EmailGroupMeterGroup.EmailGroupID = EmailGroupType.EmailGroupID JOIN
+        EmailType ON EmailGroupType.EmailTypeID = EmailType.ID JOIN
+        EmailCategory ON
+            EmailType.EmailCategoryID = EmailCategory.ID AND
+            EmailCategory.Name = 'Event'
+    WHERE
+    (
+        NOT EXISTS
+        (
+            SELECT *
+            FROM FaultEmailCriterion
+            WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+        )
+        OR EXISTS
+        (
+            SELECT *
+            FROM FaultGroup
+            WHERE
+                EventID = Event.ID AND
+                (
+                    FaultDetectionLogicResult <> 0 OR
+                    (
+                        (SELECT COALESCE(Value, 1) FROM Setting WHERE Name = 'UseDefaultFaultDetectionLogic') <> 0 AND
+                        FaultValidationLogicResult <> 0
+                    )
+                )
+        )
+    )
+    AND
+    (
+        NOT EXISTS
+        (
+            SELECT *
+            FROM DisturbanceEmailCriterion
+            WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+        )
+        OR EXISTS
+        (
+            SELECT *
+            FROM
+                Disturbance JOIN
+                DisturbanceSeverity ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
+                DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
+            WHERE
+                Disturbance.EventID = Event.ID AND
+                DisturbanceEmailCriterion.EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+        )
+    )
+END
+GO
+
 CREATE PROCEDURE GetSystemEvent
     @startTime DATETIME2,
     @endTime DATETIME2,
