@@ -64,7 +64,7 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.InstanceName', 'XDA', 'XDA')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.Server', '172.21.1.157:38402', '127.0.0.1:38402')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.Server', '127.0.0.1:38402', '127.0.0.1:38402')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LengthUnits', 'miles', 'miles')
