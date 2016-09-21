@@ -330,6 +330,7 @@ namespace FaultData.DataWriters
             using (SqlDataAdapter adapter = new SqlDataAdapter(command))
             {
                 DataTable recipientTable = new DataTable();
+                command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@eventID", eventID);
                 adapter.Fill(recipientTable);
 
