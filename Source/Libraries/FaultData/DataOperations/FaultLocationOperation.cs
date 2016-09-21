@@ -408,27 +408,13 @@ namespace FaultData.DataOperations
 
             Log.Info("Loading fault data into the database...");
 
-            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(dbAdapterContainer.Connection))
-            {
-                // Set timeout to infinite
-                bulkCopy.BulkCopyTimeout = 0;
-
-                // Submit fault groups to the database
-                bulkCopy.DestinationTableName = faultGroupTable.TableName;
-                bulkCopy.WriteToServer(faultGroupTable);
-
-                // Submit fault segments to the database
-                bulkCopy.DestinationTableName = faultSegmentTable.TableName;
-                bulkCopy.WriteToServer(faultSegmentTable);
-
-                // Submit fault curves to the database
-                bulkCopy.DestinationTableName = faultCurveTable.TableName;
-                bulkCopy.WriteToServer(faultCurveTable);
-
-                // Submit fault summary records to the database
-                bulkCopy.DestinationTableName = faultSummaryTable.TableName;
-                bulkCopy.WriteToServer(faultSummaryTable);
-            }
+            BulkLoader bulkLoader = new BulkLoader();
+            bulkLoader.Connection = dbAdapterContainer.Connection;
+            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
+            bulkLoader.Load(faultGroupTable);
+            bulkLoader.Load(faultSegmentTable);
+            bulkLoader.Load(faultCurveTable);
+            bulkLoader.Load(faultSummaryTable);
 
             Log.Info(string.Format("Loaded {0} faults into the database.", faultSummaryTable.Count));
         }
