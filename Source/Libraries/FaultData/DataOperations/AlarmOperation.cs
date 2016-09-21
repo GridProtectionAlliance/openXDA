@@ -293,6 +293,7 @@ namespace FaultData.DataOperations
                         alarmRangeLimitRow.Severity = row.Severity;
                         alarmRangeLimitRow.RangeInclusive = row.RangeInclusive;
                         alarmRangeLimitRow.PerUnit = row.PerUnit;
+                        alarmRangeLimitRow.IsDefault = 1;
                         alarmRangeLimitRow.Enabled = 1;
 
                         if (!row.IsHighNull())
