@@ -2036,7 +2036,6 @@ DisturbanceData AS
         SelectedDisturbance.Magnitude,
         SelectedDisturbance.PerUnitMagnitude,
         RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
-        RIGHT(DataFile.FilePath, CHARINDEX(',', REVERSE(DataFile.FilePath)) - 1) AS ShortFileName,
         SelectedDisturbance.EventID,
         Event.StartTime AS EventStartTime,
         Event.EndTime AS EventEndTime
@@ -2081,7 +2080,6 @@ SummaryData AS
         DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
         DoubleEndedFaultSummary.Angle AS DoubleEndedAngle,
         RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
-        RIGHT(DataFile.FilePath, CHARINDEX(',', REVERSE(DataFile.FilePath)) - 1) AS ShortFileName,
         SelectedSummary.EventID,
         Event.StartTime AS EventStartTime,
         Event.EndTime AS EventEndTime
@@ -2137,12 +2135,9 @@ SELECT
                             DurationMilliseconds,
                             Magnitude,
                             PerUnitMagnitude,
-                            FileName,
-                            ShortFileName,
                             EventStartTime,
                             EventEndTime,
                             FileName,
-                            ShortFileName,
                             EventID,
                             DisturbanceID
                         FROM DisturbanceData
@@ -2190,7 +2185,6 @@ SELECT
                             EventStartTime,
                             EventEndTime,
                             FileName,
-                            ShortFileName,
                             EventID,
                             FaultSummaryID AS FaultID
                         FROM SummaryData
