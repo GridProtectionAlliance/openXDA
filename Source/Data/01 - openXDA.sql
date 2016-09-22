@@ -1624,31 +1624,35 @@ RETURNS @systemEvent TABLE
     EventID INT
 )
 AS BEGIN
+    DECLARE @adjustedStartTime DATETIME2 = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
+    DECLARE @adjustedEndTime DATETIME2 = dbo.AdjustDateTime2(@endTime, @timeTolerance)
     DECLARE @minStartTime DATETIME2
     DECLARE @maxEndTime DATETIME2
 
     SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
     FROM Event
     WHERE
-        (dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
-        (@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
+        StartTime <= @adjustedEndTime AND
+        @adjustedStartTime <= EndTime
 
     WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
     BEGIN
         SET @startTime = @minStartTime
         SET @endTime = @maxEndTime
+        SET @adjustedStartTime = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
+        SET @adjustedEndTime = dbo.AdjustDateTime2(@endTime, @timeTolerance)
 
         SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
         FROM Event
         WHERE
-            (dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @startTime AND @startTime <= dbo.AdjustDateTime2(EndTime, @timeTolerance)) OR
-            (@startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(StartTime, -@timeTolerance) <= @endTime)
+            StartTime <= @adjustedEndTime AND
+            @adjustedStartTime <= EndTime
     END
 
     INSERT INTO @systemEvent
     SELECT ID
     FROM Event
-    WHERE @startTime <= dbo.AdjustDateTime2(StartTime, -@timeTolerance) AND dbo.AdjustDateTime2(EndTime, @timeTolerance) <= @endTime
+    WHERE @adjustedStartTime <= StartTime AND EndTime <= @adjustedEndTime
     
     RETURN
 END
@@ -1952,8 +1956,7 @@ SELECT
 FROM
 	Meter JOIN
 	MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
-	MeterGroup ON MeterMeterGroup.MeterGroupID = MeterGroup.ID JOIN
-	UserAccountMeterGroup ON UserAccountMeterGroup.MeterGroupID = MeterGroup.ID JOIN
+	UserAccountMeterGroup ON MeterMeterGroup.MeterGroupID = UserAccountMeterGroup.MeterGroupID JOIN
 	UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID
 GO
 
@@ -1985,7 +1988,8 @@ SELECT
     ContourColorScale.ID AS ContourColorScaleID,
     ContourColorScale.Name AS ContourColorScaleName,
     Channel.MeterID AS MeterID,
-    Channel.ID AS ChannelID
+    Channel.ID AS ChannelID,
+    Channel.PerUnitValue
 FROM
     ContourColorScale JOIN
     ContourChannelType ON ContourChannelType.ContourColorScaleID = ContourColorScale.ID JOIN
