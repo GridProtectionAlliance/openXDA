@@ -19,8 +19,8 @@ SELECT 1 ContourColorScaleID,  0.45 Value, 0xAA00FFFF Color,  7 OrderID UNION AL
 SELECT 1 ContourColorScaleID, 0.675 Value, 0xAA00FFFF Color,  8 OrderID UNION ALL
 SELECT 1 ContourColorScaleID, 0.675 Value, 0xAA0000FF Color,  9 OrderID UNION ALL
 SELECT 1 ContourColorScaleID,   0.9 Value, 0xAA0000FF Color, 10 OrderID UNION ALL
-SELECT 1 ContourColorScaleID,   0.9 Value, 0x00000000 Color, 11 OrderID UNION ALL
-SELECT 1 ContourColorScaleID,   1.1 Value, 0x00000000 Color, 12 OrderID UNION ALL
+SELECT 1 ContourColorScaleID,   0.9 Value, 0x66444444 Color, 11 OrderID UNION ALL
+SELECT 1 ContourColorScaleID,   1.1 Value, 0x66444444 Color, 12 OrderID UNION ALL
 SELECT 1 ContourColorScaleID,   1.1 Value, 0xAA0000FF Color, 13 OrderID UNION ALL
 SELECT 1 ContourColorScaleID, 1.325 Value, 0xAA0000FF Color, 14 OrderID UNION ALL
 SELECT 1 ContourColorScaleID, 1.325 Value, 0xAA00FFFF Color, 15 OrderID UNION ALL
@@ -44,8 +44,8 @@ WHERE MeasurementType.Name = 'Voltage' AND MeasurementCharacteristic.Name = 'Tot
 GO
 
 INSERT INTO ContourColorScalePoint(ContourColorScaleID, Value, Color, OrderID)
-SELECT 2 ContourColorScaleID, 0 Value, 0x00000000 Color,  1 OrderID UNION ALL
-SELECT 2 ContourColorScaleID, 1 Value, 0x00000000 Color,  2 OrderID UNION ALL
+SELECT 2 ContourColorScaleID, 0 Value, 0x66444444 Color,  1 OrderID UNION ALL
+SELECT 2 ContourColorScaleID, 1 Value, 0x66444444 Color,  2 OrderID UNION ALL
 SELECT 2 ContourColorScaleID, 1 Value, 0xAA0000FF Color,  3 OrderID UNION ALL
 SELECT 2 ContourColorScaleID, 2 Value, 0xAA0000FF Color,  4 OrderID UNION ALL
 SELECT 2 ContourColorScaleID, 2 Value, 0xAA00FFFF Color,  5 OrderID UNION ALL
@@ -69,8 +69,8 @@ WHERE MeasurementType.Name = 'Voltage' AND MeasurementCharacteristic.Name = 'Tot
 GO
 
 INSERT INTO ContourColorScalePoint(ContourColorScaleID, Value, Color, OrderID)
-SELECT 3 ContourColorScaleID, 0 Value, 0x00000000 Color,  1 OrderID UNION ALL
-SELECT 3 ContourColorScaleID, 1 Value, 0x00000000 Color,  2 OrderID UNION ALL
+SELECT 3 ContourColorScaleID, 0 Value, 0x66444444 Color,  1 OrderID UNION ALL
+SELECT 3 ContourColorScaleID, 1 Value, 0x66444444 Color,  2 OrderID UNION ALL
 SELECT 3 ContourColorScaleID, 1 Value, 0xAA0000FF Color,  3 OrderID UNION ALL
 SELECT 3 ContourColorScaleID, 2 Value, 0xAA0000FF Color,  4 OrderID UNION ALL
 SELECT 3 ContourColorScaleID, 2 Value, 0xAA00FFFF Color,  5 OrderID UNION ALL
@@ -94,8 +94,8 @@ WHERE MeasurementType.Name = 'Voltage' AND MeasurementCharacteristic.Name = 'Tot
 GO
 
 INSERT INTO ContourColorScalePoint(ContourColorScaleID, Value, Color, OrderID)
-SELECT 4 ContourColorScaleID, 0 Value, 0x00000000 Color,  1 OrderID UNION ALL
-SELECT 4 ContourColorScaleID, 1 Value, 0x00000000 Color,  2 OrderID UNION ALL
+SELECT 4 ContourColorScaleID, 0 Value, 0x66444444 Color,  1 OrderID UNION ALL
+SELECT 4 ContourColorScaleID, 1 Value, 0x66444444 Color,  2 OrderID UNION ALL
 SELECT 4 ContourColorScaleID, 1 Value, 0xAA0000FF Color,  3 OrderID UNION ALL
 SELECT 4 ContourColorScaleID, 2 Value, 0xAA0000FF Color,  4 OrderID UNION ALL
 SELECT 4 ContourColorScaleID, 2 Value, 0xAA00FFFF Color,  5 OrderID UNION ALL
@@ -119,8 +119,8 @@ WHERE MeasurementType.Name = 'Voltage' AND MeasurementCharacteristic.Name = 'Tot
 GO
 
 INSERT INTO ContourColorScalePoint(ContourColorScaleID, Value, Color, OrderID)
-SELECT 5 ContourColorScaleID, 0 Value, 0x00000000 Color,  1 OrderID UNION ALL
-SELECT 5 ContourColorScaleID, 1 Value, 0x00000000 Color,  2 OrderID UNION ALL
+SELECT 5 ContourColorScaleID, 0 Value, 0x66444444 Color,  1 OrderID UNION ALL
+SELECT 5 ContourColorScaleID, 1 Value, 0x66444444 Color,  2 OrderID UNION ALL
 SELECT 5 ContourColorScaleID, 1 Value, 0xAA0000FF Color,  3 OrderID UNION ALL
 SELECT 5 ContourColorScaleID, 2 Value, 0xAA0000FF Color,  4 OrderID UNION ALL
 SELECT 5 ContourColorScaleID, 2 Value, 0xAA00FFFF Color,  5 OrderID UNION ALL
@@ -144,8 +144,8 @@ WHERE MeasurementType.Name = 'Voltage' AND MeasurementCharacteristic.Name = 'Flk
 GO
 
 INSERT INTO ContourColorScalePoint(ContourColorScaleID, Value, Color, OrderID)
-SELECT 6 ContourColorScaleID,   0 Value, 0x00000000 Color,  1 OrderID UNION ALL
-SELECT 6 ContourColorScaleID, 0.2 Value, 0x00000000 Color,  2 OrderID UNION ALL
+SELECT 6 ContourColorScaleID,   0 Value, 0x66444444 Color,  1 OrderID UNION ALL
+SELECT 6 ContourColorScaleID, 0.2 Value, 0x66444444 Color,  2 OrderID UNION ALL
 SELECT 6 ContourColorScaleID, 0.2 Value, 0xAA0000FF Color,  3 OrderID UNION ALL
 SELECT 6 ContourColorScaleID, 0.4 Value, 0xAA0000FF Color,  4 OrderID UNION ALL
 SELECT 6 ContourColorScaleID, 0.4 Value, 0xAA00FFFF Color,  5 OrderID UNION ALL
@@ -169,8 +169,8 @@ WHERE MeasurementType.Name = 'Voltage' AND MeasurementCharacteristic.Name = 'Flk
 GO
 
 INSERT INTO ContourColorScalePoint(ContourColorScaleID, Value, Color, OrderID)
-SELECT 7 ContourColorScaleID,    0 Value, 0x00000000 Color,  1 OrderID UNION ALL
-SELECT 7 ContourColorScaleID, 0.16 Value, 0x00000000 Color,  2 OrderID UNION ALL
+SELECT 7 ContourColorScaleID,    0 Value, 0x66444444 Color,  1 OrderID UNION ALL
+SELECT 7 ContourColorScaleID, 0.16 Value, 0x66444444 Color,  2 OrderID UNION ALL
 SELECT 7 ContourColorScaleID, 0.16 Value, 0xAA0000FF Color,  3 OrderID UNION ALL
 SELECT 7 ContourColorScaleID, 0.32 Value, 0xAA0000FF Color,  4 OrderID UNION ALL
 SELECT 7 ContourColorScaleID, 0.32 Value, 0xAA00FFFF Color,  5 OrderID UNION ALL
