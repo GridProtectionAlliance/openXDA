@@ -67,6 +67,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.Server', '127.0.0.1:38402', '127.0.0.1:38402')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.URL', 'http://127.0.0.1:8180', 'http://127.0.0.1:8180')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LengthUnits', 'miles', 'miles')
 GO
 
