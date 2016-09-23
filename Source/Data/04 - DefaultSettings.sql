@@ -70,6 +70,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Historian.URL', 'http://127.0.0.1:8180', 'http://127.0.0.1:8180')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('InterruptionThreshold', '0.1', '0.1')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('LengthUnits', 'miles', 'miles')
 GO
 
@@ -98,6 +101,12 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ProcessingThreadCount', '
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ResultsPath', 'Results', 'Results')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SagThreshold', '0.9', '0.9')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SwellThreshold', '1.1', '1.1')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemFrequency', '60.0', '60.0')
