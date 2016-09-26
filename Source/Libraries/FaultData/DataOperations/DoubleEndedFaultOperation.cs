@@ -429,7 +429,9 @@ namespace FaultData.DataOperations
                         ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
                         : (bool?)null;
 
-                    bool faultValidationResult = Convert.ToBoolean(faultGroup.FaultValidationLogicResult);
+                    // Fault validation (based on line length) doesn't apply because the fault may have been
+                    // invalidated due to a high impedance so we only check whether it has been suppressed
+                    bool faultValidationResult = !Convert.ToBoolean(fault.IsSuppressed);
 
                     if (faultDetectionResult == false || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && !faultValidationResult))
                         return false;

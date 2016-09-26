@@ -2323,9 +2323,9 @@ AS BEGIN
             WHERE
                 EventID = Event.ID AND
                 (
-                    FaultDetectionLogicResult <> 0 OR
+                    NOT(FaultDetectionLogicResult = 0) AND
                     (
-                        (SELECT COALESCE(Value, 1) FROM Setting WHERE Name = 'UseDefaultFaultDetectionLogic') <> 0 AND
+                        (SELECT COALESCE(Value, 1) FROM Setting WHERE Name = 'UseDefaultFaultDetectionLogic') = 0 OR
                         FaultValidationLogicResult <> 0
                     )
                 )
