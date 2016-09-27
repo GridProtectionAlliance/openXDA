@@ -160,12 +160,22 @@ namespace FaultData.DataAnalysis
 
         private DataSeries ToPerUnit(DataSeries rms)
         {
-            double nominalValue = rms?.SeriesInfo.Channel.PerUnitValue ?? 0.0D;
+            double nominalValue = rms?.SeriesInfo.Channel.PerUnitValue ?? GetLineVoltage(rms);
 
             if (nominalValue == 0.0D)
                 return null;
 
             return rms?.Multiply(1.0D / nominalValue);
+        }
+
+        private double GetLineVoltage(DataSeries rms)
+        {
+            double lineVoltage = rms?.SeriesInfo.Channel.Line.VoltageKV ?? 0.0D;
+
+            if (new string[] { "AN", "BN", "CN" }.Contains(rms?.SeriesInfo.Channel.Phase.Name))
+                lineVoltage /= Math.Sqrt(3.0D);
+
+            return lineVoltage * 1000.0D;
         }
 
         private List<Range<int>> DetectDisturbanceRanges(DataSeries rms)
