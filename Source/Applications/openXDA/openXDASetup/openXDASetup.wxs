@@ -110,6 +110,8 @@
     <CustomAction Id="EnableHistorianSqlClr.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultSettings.sql.SetProperty" Property="DefaultSettings.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultSettings.sql]" />
     <CustomAction Id="DefaultSettings.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="DefaultChannelTypes.sql.SetProperty" Property="DefaultChannelTypes.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultChannelTypes.sql]" />
+    <CustomAction Id="DefaultChannelTypes.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultTrendingAlarms.sql.SetProperty" Property="DefaultTrendingAlarms.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultTrendingAlarms.sql]" />
     <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultContours.sql.SetProperty" Property="DefaultContours.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultContours.sql]" />
@@ -153,7 +155,9 @@
       <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultSettings.sql.SetProperty" After="EnableHistorianSqlClr.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultSettings.sql" After="DefaultSettings.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="DefaultSettings.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultChannelTypes.sql.SetProperty" After="DefaultSettings.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultChannelTypes.sql" After="DefaultChannelTypes.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="DefaultChannelTypes.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
@@ -222,11 +226,14 @@
       <Component Id="DefaultSettings">
         <File Id="DefaultSettings.sql" Name="DefaultSettings.sql" Source="$(var.SolutionDir)\Data\04 - DefaultSettings.sql" />
       </Component>
+      <Component Id="DefaultChannelTypes">
+        <File Id="DefaultChannelTypes.sql" Name="DefaultChannelTypes.sql" Source="$(var.SolutionDir)\Data\05 - DefaultChannelTypes.sql" />
+      </Component>
       <Component Id="DefaultTrendingAlarms">
-        <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\05 - DefaultTrendingAlarms.sql" />
+        <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\06 - DefaultTrendingAlarms.sql" />
       </Component>
       <Component Id="DefaultContours">
-        <File Id="DefaultContours.sql" Name="DefaultContours.sql" Source="$(var.SolutionDir)\Data\06 - DefaultContours.sql" />
+        <File Id="DefaultContours.sql" Name="DefaultContours.sql" Source="$(var.SolutionDir)\Data\07 - DefaultContours.sql" />
       </Component>
     </ComponentGroup>
     
