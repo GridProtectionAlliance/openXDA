@@ -28,6 +28,7 @@ using System.Net.Http.Headers;
 using System.Web.Http;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
+using JSONApi;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
 using Newtonsoft.Json;
@@ -49,11 +50,11 @@ namespace openXDA
 
             // Load security hub in application domain before establishing SignalR hub configuration
             using (new SecurityHub()) { }
+            using (new JSONApiController()) { }
 
             // Configuration Windows Authentication for self-hosted web service
             HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
-            listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication;
-
+            listener.AuthenticationSchemeSelectorDelegate = AuthenticationSchemeForClient;
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
 
@@ -66,6 +67,13 @@ namespace openXDA
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
 
+            // Map custom API controllers
+            httpConfig.Routes.MapHttpRoute(
+                name: "CustomAPIs",
+                routeTemplate: "api/{controller}/{action}/{id}",
+                defaults: new { id = RouteParameter.Optional }
+            );
+
             // Set configuration to use reflection to setup routes
             httpConfig.MapHttpAttributeRoutes();
 
@@ -74,6 +82,14 @@ namespace openXDA
 
             // Check for configuration issues before first request
             httpConfig.EnsureInitialized();
+        }
+
+        private static AuthenticationSchemes AuthenticationSchemeForClient(HttpListenerRequest request)
+        {
+            if (request.Url.PathAndQuery.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+                return AuthenticationSchemes.Anonymous;
+
+            return AuthenticationSchemes.IntegratedWindowsAuthentication;
         }
     }
 }
