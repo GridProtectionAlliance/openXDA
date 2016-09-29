@@ -59,7 +59,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BreakerOperation.cs" />
     <Compile Include="Channel.cs" />
+    <Compile Include="Disturbance.cs" />
+    <Compile Include="Event.cs" />
+    <Compile Include="FaultSummary.cs" />
     <Compile Include="JSONApiController.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="Meter.cs" />

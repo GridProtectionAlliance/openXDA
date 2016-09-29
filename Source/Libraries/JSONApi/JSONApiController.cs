@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using GSF.Collections;
 using GSF.Data;
 using GSF.Web.Model;
 
@@ -14,32 +15,29 @@ namespace JSONApi
     {
 
         #region [Query Classes]
-        public class MeterJSON
+        public class ConfigJSON
         {
             public string AssetKey { get; set; }
             public string ID { get; set; } 
             public string Name { get; set; }
         }
 
-        public class StationJSON
+        public class EventJSON
         {
-            public string AssetKey { get; set; }
-            public string ID { get; set; }
-            public string Name { get; set; }
+            public string MeterIDList { get; set; }
+            public string MeterAssetKeyList { get; set; }
+            public string EventIDList { get; set; }
+            public string LineIDList { get; set; }
+            public string LineAssetKeyList { get; set; }
+            public DateTime? StartDate { get; set; }
+            public DateTime? EndDate { get; set; }
+
         }
-
-
-        public class LineJSON
-        {
-            public string AssetKey { get; set; }
-            public string ID { get; set; }
-        }
-
         #endregion
 
-        #region [HttpPost Functions]
+        #region [Config Calls]
         [HttpPost]
-        public IEnumerable<Meter> GetMeters(MeterJSON json)
+        public IEnumerable<Meter> GetMeters(ConfigJSON json)
         {
             using(DataContext dataContext = new DataContext("systemSettings"))
             {
@@ -47,40 +45,26 @@ namespace JSONApi
                 string id = (json != null ? (json.ID ?? "%") : "%");
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Meter WHERE AssetKey LIKE {0} AND ID LIKE {1} AND NAME LIKE {2}", assetKey, id, name);
-                return table.Select().Select(row => dataContext.Table<Meter>().LoadRecord(row));
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Meter WHERE AssetKey LIKE {0} OR ID LIKE {1} OR NAME LIKE {2}", assetKey, id, name);
+                return table.Select().Select(row => dataContext.Table<Meter>().LoadRecord(row)).ToList();
             }
         }
 
         [HttpPost]
-        public IEnumerable<Line> GetLines(LineJSON json)
+        public IEnumerable<Line> GetLines(ConfigJSON json)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
                 string id = (json != null ? (json.ID ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Line WHERE AssetKey LIKE {0} AND ID LIKE {1} ", assetKey, id);
-                return table.Select().Select(row => dataContext.Table<Line>().LoadRecord(row));
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Line WHERE AssetKey LIKE {0} OR ID LIKE {1} ", assetKey, id);
+                return table.Select().Select(row => dataContext.Table<Line>().LoadRecord(row)).ToList();
             }
         }
 
         [HttpPost]
-        public IEnumerable<MeterLocation> GetStations(StationJSON json)
-        {
-            using (DataContext dataContext = new DataContext("systemSettings"))
-            {
-                string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
-                string id = (json != null ? (json.ID ?? "%") : "%");
-                string name = (json != null ? (json.Name ?? "%") : "%");
-
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM MeterLocation WHERE AssetKey LIKE {0} AND ID LIKE {1} AND NAME LIKE {2} ", assetKey, id, name);
-                return table.Select().Select(row => dataContext.Table<MeterLocation>().LoadRecord(row));
-            }
-        }
-
-        [HttpPost]
-        public IEnumerable<Channel> GetChannelsByMeter(MeterJSON json)
+        public IEnumerable<MeterLocation> GetStations(ConfigJSON json)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
@@ -88,10 +72,136 @@ namespace JSONApi
                 string id = (json != null ? (json.ID ?? "%") : "%");
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Channel WHERE MeterID IN (Select ID FROM Meter WHERE AssetKey LIKE {0} AND ID LIKE {1} AND NAME LIKE {2})", assetKey, id, name);
-                return table.Select().Select(row => dataContext.Table<Channel>().LoadRecord(row));
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM MeterLocation WHERE AssetKey LIKE {0} OR ID LIKE {1} OR NAME LIKE {2} ", assetKey, id, name);
+                return table.Select().Select(row => dataContext.Table<MeterLocation>().LoadRecord(row)).ToList();
             }
         }
+
+        [HttpPost]
+        public IEnumerable<Channel> GetChannelsByMeter(ConfigJSON json)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
+                string id = (json != null ? (json.ID ?? "%") : "%");
+                string name = (json != null ? (json.Name ?? "%") : "%");
+
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Channel WHERE MeterID IN (Select ID FROM Meter WHERE AssetKey LIKE {0} OR ID LIKE {1} OR NAME LIKE {2})", assetKey, id, name);
+                return table.Select().Select(row => dataContext.Table<Channel>().LoadRecord(row)).ToList();
+            }
+        }
+
+
+        #endregion
+
+        #region [Event Calls]
+        [HttpPost]
+        public IEnumerable<Event> GetEvents(EventJSON json)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                DateTime startTime = (json != null ? (json.StartDate ?? DateTime.Parse("01/01/01")) : DateTime.Parse("01/01/01"));
+                DateTime endTime = (json != null ? (json.EndDate ?? DateTime.Now) : DateTime.Now);
+
+                IEnumerable<DataRow> table = Enumerable.Empty<DataRow>();
+                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.EventIDList == null))
+                {
+                    table = dataContext.Connection.RetrieveData("Select * FROM Event WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
+                    return table.Select(row => dataContext.Table<Event>().LoadRecord(row)).ToList();
+
+                }
+
+                if (json.MeterIDList != null)
+                {
+                    object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Event WHERE StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND MeterID IN ({param})", ids).Select().Concat(table);
+                }
+                if(json.MeterAssetKeyList != null)
+                {
+                    object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.LineIDList != null)
+                {
+                    object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND LineID IN ({param})", ids).Select().Concat(table);
+                }
+                if (json.LineAssetKeyList != null)
+                {
+                    object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.EventIDList != null)
+                {
+                    object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Event WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND ID IN ({param})", ids).Select().Concat(table);
+
+                }
+
+
+                return table.Select(row => dataContext.Table<Event>().LoadRecord(row)).DistinctBy(evt => evt.ID).ToList();
+            }
+        }
+
+        [HttpPost]
+        public IEnumerable<FaultSummary> GetFaults(EventJSON json)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                DateTime startTime = (json != null ? (json.StartDate ?? DateTime.Parse("01/01/01")) : DateTime.Parse("01/01/01"));
+                DateTime endTime = (json != null ? (json.EndDate ?? DateTime.Now) : DateTime.Now);
+
+                IEnumerable<DataRow> table = Enumerable.Empty<DataRow>();
+                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.EventIDList == null))
+                {
+                    table = dataContext.Connection.RetrieveData("Select * FROM FaultSummary WHERE Inception >= {0} AND Inception <= {1}", startTime, endTime).Select();
+                    return table.Select(row => dataContext.Table<FaultSummary>().LoadRecord(row)).ToList();
+
+                }
+
+
+                if (json.MeterIDList != null)
+                {
+                    object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM FaultSummary WHERE Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.MeterAssetKeyList != null)
+                {
+                    object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                }
+                if (json.LineIDList != null)
+                {
+                    object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.LineAssetKeyList != null)
+                {
+                    object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                }
+                if (json.EventIDList != null)
+                {
+                    object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM FaultSummary WHERE  Inception >= '{startTime}' AND Inception <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
+
+                }
+
+
+                return table.Select(row => dataContext.Table<FaultSummary>().LoadRecord(row)).DistinctBy(evt => evt.ID).ToList();
+            }
+        }
+
 
         #endregion
     }
