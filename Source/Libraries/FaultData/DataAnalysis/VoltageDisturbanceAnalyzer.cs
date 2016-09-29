@@ -192,6 +192,10 @@ namespace FaultData.DataAnalysis
             // disturbances that are shorter than half a cycle
             samplesPerCycle = Transform.CalculateSamplesPerCycle(rms, m_systemFrequency);
 
+            // Sample rate of zero is invalid
+            if (samplesPerCycle == 0)
+                return new List<Range<int>>();
+
             // Initialize disturbanceRanges and the start index
             disturbanceRanges = new List<Range<int>>();
             start = 0;
