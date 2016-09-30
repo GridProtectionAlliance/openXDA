@@ -104,7 +104,7 @@ namespace JSONApi
                 DateTime endTime = (json != null ? (json.EndDate ?? DateTime.Now) : DateTime.Now);
 
                 IEnumerable<DataRow> table = Enumerable.Empty<DataRow>();
-                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.EventIDList == null))
+                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                 {
                     table = dataContext.Connection.RetrieveData("Select * FROM Event WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
                     return table.Select(row => dataContext.Table<Event>().LoadRecord(row)).ToList();
@@ -157,7 +157,7 @@ namespace JSONApi
                 DateTime endTime = (json != null ? (json.EndDate ?? DateTime.Now) : DateTime.Now);
 
                 IEnumerable<DataRow> table = Enumerable.Empty<DataRow>();
-                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.EventIDList == null))
+                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                 {
                     table = dataContext.Connection.RetrieveData("Select * FROM FaultSummary WHERE Inception >= {0} AND Inception <= {1}", startTime, endTime).Select();
                     return table.Select(row => dataContext.Table<FaultSummary>().LoadRecord(row)).ToList();
@@ -202,6 +202,113 @@ namespace JSONApi
             }
         }
 
+        [HttpPost]
+        public IEnumerable<Disturbance> GetDisturbances(EventJSON json)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                DateTime startTime = (json != null ? (json.StartDate ?? DateTime.Parse("01/01/01")) : DateTime.Parse("01/01/01"));
+                DateTime endTime = (json != null ? (json.EndDate ?? DateTime.Now) : DateTime.Now);
+
+                IEnumerable<DataRow> table = Enumerable.Empty<DataRow>();
+                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
+                {
+                    table = dataContext.Connection.RetrieveData("Select * FROM Disturbance WHERE StartTime >= {0} AND EndTime <= {1}", startTime, endTime).Select();
+                    return table.Select(row => dataContext.Table<Disturbance>().LoadRecord(row)).ToList();
+
+                }
+
+
+                if (json.MeterIDList != null)
+                {
+                    object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Disturbance WHERE StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.MeterAssetKeyList != null)
+                {
+                    object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                }
+                if (json.LineIDList != null)
+                {
+                    object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.LineAssetKeyList != null)
+                {
+                    object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                }
+                if (json.EventIDList != null)
+                {
+                    object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM Disturbance WHERE  StartTime >= '{startTime}' AND EndTime <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
+
+                }
+
+
+                return table.Select(row => dataContext.Table<Disturbance>().LoadRecord(row)).DistinctBy(evt => evt.ID).ToList();
+            }
+        }
+
+        [HttpPost]
+        public IEnumerable<BreakerOperation> GetBreakerOperations(EventJSON json)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                DateTime startTime = (json != null ? (json.StartDate ?? DateTime.Parse("01/01/01")) : DateTime.Parse("01/01/01"));
+                DateTime endTime = (json != null ? (json.EndDate ?? DateTime.Now) : DateTime.Now);
+
+                IEnumerable<DataRow> table = Enumerable.Empty<DataRow>();
+                if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
+                {
+                    table = dataContext.Connection.RetrieveData("Select * FROM BreakerOperation WHERE TripCoilEnergized >= {0} AND TripCoilEnergized <= {1}", startTime, endTime).Select();
+                    return table.Select(row => dataContext.Table<BreakerOperation>().LoadRecord(row)).ToList();
+
+                }
+
+
+                if (json.MeterIDList != null)
+                {
+                    object[] ids = json.MeterIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM BreakerOperation WHERE TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.MeterAssetKeyList != null)
+                {
+                    object[] ids = json.MeterAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE MeterID IN (SELECT ID FROM Meter WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                }
+                if (json.LineIDList != null)
+                {
+                    object[] ids = json.LineIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND  EventID IN (Select ID FROM Event WHERE LineID IN ({param}))", ids).Select().Concat(table);
+                }
+                if (json.LineAssetKeyList != null)
+                {
+                    object[] ids = json.LineAssetKeyList.Split(',').Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN (Select ID FROM Event WHERE LineID IN (SELECT ID FROM Line WHERE AssetKey IN ({param})))", ids).Select().Concat(table);
+                }
+                if (json.EventIDList != null)
+                {
+                    object[] ids = json.EventIDList.Split(',').Select(int.Parse).Cast<object>().ToArray();
+                    string param = string.Join(",", ids.Select((id, index) => $"{{{index}}}"));
+                    table = dataContext.Connection.RetrieveData($"Select * FROM BreakerOperation WHERE  TripCoilEnergized >= '{startTime}' AND TripCoilEnergized <= '{endTime}' AND EventID IN ({param})", ids).Select().Concat(table);
+
+                }
+
+
+                return table.Select(row => dataContext.Table<BreakerOperation>().LoadRecord(row)).DistinctBy(evt => evt.ID).ToList();
+            }
+        }
 
         #endregion
     }
