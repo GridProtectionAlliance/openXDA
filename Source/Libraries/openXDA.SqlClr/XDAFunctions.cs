@@ -44,6 +44,13 @@ namespace openXDA.SqlClr
             public double Value;
         }
 
+        private class FaultDataPoint
+        {
+            public string Algorithm;
+            public DateTime Time;
+            public double Value;
+        }
+
         [SqlFunction(
             DataAccess = DataAccessKind.Read,
             FillRowMethodName = "GetEventData_FillRow",
@@ -90,6 +97,53 @@ namespace openXDA.SqlClr
 
             seriesID = dataPoint.SeriesID;
             characteristic = dataPoint.Characteristic;
+            time = dataPoint.Time;
+            value = ToSqlDouble(dataPoint.Value);
+        }
+
+        [SqlFunction(
+            DataAccess = DataAccessKind.Read,
+            FillRowMethodName = "GetFaultData_FillRow",
+            TableDefinition = "[Algorithm] NVARCHAR(80), [Time] DATETIME2, [Value] FLOAT")
+        ]
+        public static IEnumerable GetFaultData(SqlInt32 eventID)
+        {
+            const string query =
+                "SELECT " +
+                "    Algorithm, " +
+                "    Data " +
+                "FROM FaultCurve " +
+                "WHERE EventID = @id";
+
+            DataSet faultDataSet = new DataSet();
+
+            using (SqlConnection connection = new SqlConnection("context connection=true"))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+            {
+                connection.Open();
+                command.Parameters.AddWithValue("@id", eventID);
+                adapter.Fill(faultDataSet);
+            }
+
+            return faultDataSet.Tables[0].Select()
+                .SelectMany(row => ReadFrom(Inflate((byte[])row["Data"])).Select(dataPoint => new FaultDataPoint()
+                {
+                    Algorithm = row["Algorithm"].ToString(),
+                    Time = dataPoint.Time,
+                    Value = dataPoint.Value
+                }))
+                .ToArray();
+        }
+
+        public static void GetFaultData_FillRow(object source, out SqlString algorithm, out DateTime time, out SqlDouble value)
+        {
+            FaultDataPoint dataPoint = source as FaultDataPoint;
+
+            if ((object)dataPoint == null)
+                throw new InvalidOperationException("FillRow source is not a DataPoint");
+
+            algorithm = dataPoint.Algorithm;
             time = dataPoint.Time;
             value = ToSqlDouble(dataPoint.Value);
         }
