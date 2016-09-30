@@ -101,6 +101,8 @@
     <CustomAction Id="openHistorian.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="openHistorian.XDALink.SqlClr.SetProperty" Property="openHistorian.XDALink.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.XDALink.SqlClr[\]] AUTHORIZATION dbo FROM [openHistorian.XDALink.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
     <CustomAction Id="openHistorian.XDALink.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="openXDA.SqlClr.SetProperty" Property="openXDA.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openXDA.SqlClr[\]] AUTHORIZATION dbo FROM [openXDA.SqlClr.dll]" />
+    <CustomAction Id="openXDA.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     
     <CustomAction Id="openXDA.sql.SetProperty" Property="openXDA.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#openXDA.sql]" />
     <CustomAction Id="openXDA.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
@@ -146,8 +148,10 @@
       <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openXDA.SqlClr.SetProperty" After="openHistorian.XDALink.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       
-      <Custom Action="openXDA.sql.SetProperty" After="openHistorian.XDALink.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openXDA.sql.SetProperty" After="openXDA.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
       <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
