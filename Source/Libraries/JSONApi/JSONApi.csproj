@@ -59,15 +59,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BreakerOperation.cs" />
-    <Compile Include="Channel.cs" />
-    <Compile Include="Disturbance.cs" />
-    <Compile Include="Event.cs" />
-    <Compile Include="FaultSummary.cs" />
+    <Compile Include="Model\BreakerOperation.cs" />
+    <Compile Include="Model\Channel.cs" />
+    <Compile Include="Model\Disturbance.cs" />
+    <Compile Include="Model\Event.cs" />
+    <Compile Include="Model\FaultSummary.cs" />
     <Compile Include="JSONApiController.cs" />
-    <Compile Include="Line.cs" />
-    <Compile Include="Meter.cs" />
-    <Compile Include="MeterLocation.cs" />
+    <Compile Include="Model\Line.cs" />
+    <Compile Include="Model\Meter.cs" />
+    <Compile Include="Model\MeterLocation.cs" />
+    <Compile Include="Model\EventData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
