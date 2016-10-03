@@ -36,44 +36,81 @@
       <UIRef Id="WixUI_FeatureTree" />
       <UIRef Id="WixUI_ErrorProgressText" />
       <DialogRef Id="DatabaseConnectionDialog" />
-      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="ServiceAccountDialog"><![CDATA[&ServiceFeature=3]]></Publish>
-      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[NOT(&ServiceFeature=3) AND &DatabaseFeature=3]]></Publish>
-      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg"><![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
-      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="DatabaseConnectionDialog">NOT Installed AND <![CDATA[&ServiceFeature=3 OR &DatabaseFeature=3]]></Publish>
-      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg">NOT Installed AND <![CDATA[NOT(&ServiceFeature=3 OR &DatabaseFeature=3)]]></Publish>
+      
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="FILEPATH" Value="[#openXDA.exe.config]" Order="1">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="MODE" Value="READ" Order="1">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="PROPERTYMAPPINGS" Value="[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING]" Order="1">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="DoAction" Value="ReadConfigFileAction" Order="2">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="XDACONNECTIONSTRING" Value="[DEFAULTCONNECTIONSTRING]" Order="3">NOT XDACONNECTIONSTRING</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="COMPANYNAME" Value="[DEFAULTCOMPANYNAME]" Order="3">NOT COMPANYNAME</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="COMPANYACRONYM" Value="[DEFAULTCOMPANYACRONYM]" Order="3">NOT COMPANYACRONYM</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="CONNECTIONSTRING" Value="[XDACONNECTIONSTRING]" Order="4">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="PROPERTYMAPPINGS" Value="[DBCONNECTIONSTRINGMAPPINGS]" Order="4">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="DoAction" Value="ReadConnectionStringAction" Order="5">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="WINDOWSAUTH" Value="1" Order="6">INTEGRATEDSECURITY = "SSPI"</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Property="WINDOWSAUTH" Order="6">NOT(INTEGRATEDSECURITY = "SSPI")</Publish>
+      
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="ServiceAccountDialog"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[NOT(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)) AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg"><![CDATA[NOT(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)) AND NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="DatabaseConnectionDialog"><![CDATA[(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)) OR (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="CustomizeDlg"><![CDATA[NOT((&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)) OR (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)))]]></Publish>
     </UI>
     
     <Icon Id="openXDA.ico.exe" SourceFile="$(var.openXDA.TargetPath)" />
     <Icon Id="openXDAConsole.ico.exe" SourceFile="$(var.openXDAConsole.TargetPath)" />
-    
+
+    <Property Id="SERVICEACCOUNT" Secure="yes" />
     <Property Id="SERVICENAME" Value="$(var.openXDA.TargetName)" />
     <Property Id="SERVICEPASSWORD" Hidden="yes" />
     <Property Id="HTTPSERVICEPORTS" Value="8989" />
-    <Property Id="COMPANYNAME" Value="Grid Protection Alliance" />
-    <Property Id="COMPANYACRONYM" Value="GPA" />
     <Property Id="SERVERNAME" Value="localhost" />
     <Property Id="WINDOWSAUTH" Value="1" />
+    
+    <Property Id="DEFAULTCOMPANYNAME" Value="Grid Protection Alliance" />
+    <Property Id="DEFAULTCOMPANYACRONYM" Value="GPA" />
+    <Property Id="COMPANYNAME" Secure="yes" />
+    <Property Id="COMPANYACRONYM" Secure="yes" />
+
+    <Property Id="DEFAULTCONNECTIONSTRING" Value="Data Source=localhost;Initial Catalog=openXDA;Integrated Security=SSPI" />
     <Property Id="DATAPROVIDERSTRING" Value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};; ConnectionType=System.Data.SqlClient.SqlConnection;; AdapterType=System.Data.SqlClient.SqlDataAdapter" />
+    <Property Id="DBCONNECTIONSTRING" Secure="yes" />
+    <Property Id="SERVERCONNECTIONSTRING" Secure="yes" />
+    <Property Id="XDACONNECTIONSTRING" Secure="yes" />
+    
+    <Property Id="CREATEDBQUERY" Secure="yes" />
+    <Property Id="ALTERDBQUERY" Secure="yes" />
+    <Property Id="CREATEDBLOGINQUERY" Secure="yes" />
+    <Property Id="ALTERDBLOGINQUERY" Secure="yes" />
+    <Property Id="CREATEDBUSERQUERY" Secure="yes" />
+    <Property Id="DBPERMISSIONSQUERY" Secure="yes" />
+    
+    <Property Id="DBCONNECTIONSTRINGMAPPINGS" Value="SERVERNAME=Data Source;DATABASENAME=Initial Catalog;INTEGRATEDSECURITY=Integrated Security;DBUSERNAME=User Id;DBPASSWORD=Password" />
+    <Property Id="CONNECTIONSTRINGMAPPING" Value="XDACONNECTIONSTRING={//add[@name='ConnectionString']/@value}" />
+    <Property Id="COMPANYNAMEMAPPING" Value="COMPANYNAME={//add[@name='CompanyName']/@value}" />
+    <Property Id="COMPANYACRONYMMAPPING" Value="COMPANYACRONYM={//add[@name='CompanyAcronym']/@value}" />
+    
     <SetProperty Id="SERVICEACCOUNT" Value="NT SERVICE\[SERVICENAME]" After="LaunchConditions" Sequence="first" />
     <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
+    
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\INSTALL_LICENSE.rtf" />
     
     <!-- Add/Remove Programs Properties -->
     <Property Id="ARPPRODUCTICON" Value="openXDA.ico.exe" />
-    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
-    <Property Id="ARPNOMODIFY" Value="yes" Secure="yes" />
     
     <!-- Custom Actions -->
     <Binary Id="InstallerActions" SourceFile="$(var.SolutionDir)\Dependencies\GSF\GSF.InstallerActions.CA.dll" />
 
+    <CustomAction Id="ReadConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="immediate" />
+    <CustomAction Id="ReadConnectionStringAction" BinaryKey="InstallerActions" DllEntry="ConnectionStringAction" Execute="immediate" />
     <CustomAction Id="AuthenticateServiceAccountAction" BinaryKey="InstallerActions" DllEntry="AuthenticateServiceAccountAction" Execute="immediate" />
     <CustomAction Id="PasswordGenerationAction" BinaryKey="InstallerActions" DllEntry="PasswordGenerationAction" Execute="immediate" />
     <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
 
-    <CustomAction Id="CompanyInfoAction.SetProperty" Property="CompanyInfoAction" Value="SERVICENAME=[SERVICENAME];INSTALLDIR=[INSTALLFOLDER];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM]" />
-    <CustomAction Id="CompanyInfoAction" BinaryKey="InstallerActions" DllEntry="CompanyInfoAction" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="UpdateConfigFileAction.SetProperty" Property="UpdateConfigFileAction" Value="FilePath=[#openXDA.exe.config];Mode=WRITE;PropertyMappings=[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING];XDACONNECTIONSTRING=[XDACONNECTIONSTRING];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM]" />
+    <CustomAction Id="UpdateConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="deferred" Impersonate="no" />
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
     <CustomAction Id="ServiceAccountAction.SetProperty" Property="ServiceAccountAction" Value="SERVICENAME=[SERVICENAME];SERVICEACCOUNT=[SERVICEACCOUNT];HTTPSERVICEPORTS=[HTTPSERVICEPORTS]" />
@@ -118,53 +155,53 @@
     <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultContours.sql.SetProperty" Property="DefaultContours.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultContours.sql]" />
     <CustomAction Id="DefaultContours.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
-
+    
     <InstallExecuteSequence>
-      <Custom Action="CompanyInfoAction.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
-      <Custom Action="CompanyInfoAction" After="CompanyInfoAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
-      <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
-      <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty">NOT REMOVE AND <![CDATA[&ServiceFeature=3]]></Custom>
-      <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction">NOT REMOVE</Custom>
-      <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty">NOT REMOVE</Custom>
+      <Custom Action="UpdateConfigFileAction.SetProperty" After="InstallFiles"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
+      <Custom Action="UpdateConfigFileAction" After="UpdateConfigFileAction.SetProperty"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
+      <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices"><![CDATA[NOT REMOVE AND &ServiceFeature=3]]></Custom>
+      <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[NOT REMOVE AND &ServiceFeature=3]]></Custom>
+      <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
+      <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
       
-      <Custom Action="CreateDatabase.SetProperty" After="InstallFiles">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBLogin.SetProperty" After="AlterDatabase">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBLogin" After="CreateDBLogin.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="AlterDBLogin.SetProperty" After="CreateDBLogin">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="AlterDBLogin" After="AlterDBLogin.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBUser.SetProperty" After="AlterDBLogin">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="CreateDatabase.SetProperty" After="InstallFiles"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="CreateDBLogin.SetProperty" After="AlterDatabase"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="CreateDBLogin" After="CreateDBLogin.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="AlterDBLogin.SetProperty" After="CreateDBLogin"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="AlterDBLogin" After="AlterDBLogin.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="CreateDBUser.SetProperty" After="AlterDBLogin"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
 
-      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openXDA.SqlClr.SetProperty" After="openHistorian.XDALink.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openXDA.SqlClr.SetProperty" After="openHistorian.XDALink.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
       
-      <Custom Action="openXDA.sql.SetProperty" After="openXDA.SqlClr">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultSettings.sql.SetProperty" After="EnableHistorianSqlClr.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultSettings.sql" After="DefaultSettings.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultChannelTypes.sql.SetProperty" After="DefaultSettings.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultChannelTypes.sql" After="DefaultChannelTypes.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="DefaultChannelTypes.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
-      <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty">NOT REMOVE AND <![CDATA[&DatabaseFeature=3]]></Custom>
+      <Custom Action="openXDA.sql.SetProperty" After="openXDA.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultSettings.sql.SetProperty" After="EnableHistorianSqlClr.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultSettings.sql" After="DefaultSettings.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultChannelTypes.sql.SetProperty" After="DefaultSettings.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultChannelTypes.sql" After="DefaultChannelTypes.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="DefaultChannelTypes.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
     </InstallExecuteSequence>
   </Product>
 
@@ -249,9 +286,8 @@
         <ServiceInstall Id="openXDAService" Name="openXDA" Account="[SERVICEACCOUNT]" Password="[SERVICEPASSWORD]" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for detecting and locating faults by analyzing power quality data files." />
         <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" />
       </Component>
-      <Component Id="openXDAConfig">
+      <Component Id="openXDAConfig" Permanent="yes">
         <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.ProjectDir)\app.config" />
-        <util:XmlFile Id="SetDBConnectionString" Action="setValue" ElementPath="/configuration/categorizedSettings/systemSettings/add[\[]@name='ConnectionString'[\]]/@value" Value="[XDACONNECTIONSTRING]" File="[#openXDA.exe.config]" SelectionLanguage="XPath" Sequence="1" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
         <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
@@ -577,7 +613,7 @@
         <Control Id="ServerNameEdit" Type="Edit" X="95" Y="65" Width="170" Height="18" Property="SERVERNAME" Text="{80}" />
         <Control Id="DatabaseNameLabel" Type="Text" X="95" Y="88" Width="100" Height="13" TabSkip="no" Text="&amp;Database name:" />
         <Control Id="DatabaseNameEdit" Type="Edit" X="95" Y="100" Width="170" Height="18" Property="DATABASENAME" Text="{80}" />
-        <Control Id="WindowsAuthenticationCheckBox" Type="CheckBox" X="85" Y="125" Width="200" Height="17" Property="WINDOWSAUTH" CheckBoxValue="1" Text="Use Windows Authentication" />
+        <Control Id="WindowsAuthenticationCheckBox" Type="CheckBox" X="85" Y="125" Width="200" Height="17" Property="WINDOWSAUTH" Text="Use Windows Authentication" />
         <Control Id="UsernameLabel" Type="Text" X="95" Y="143" Width="100" Height="13" TabSkip="no" Text="&amp;Username:">
           <Condition Action="enable">NOT WINDOWSAUTH</Condition>
           <Condition Action="disable">WINDOWSAUTH</Condition>
@@ -596,8 +632,8 @@
         </Control>
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
-          <Publish Event="NewDialog" Value="CompanyInfoDialog"><![CDATA[&ServiceFeature=3]]></Publish>
-          <Publish Event="NewDialog" Value="CustomizeDlg"><![CDATA[NOT(&ServiceFeature=3)]]></Publish>
+          <Publish Event="NewDialog" Value="CompanyInfoDialog"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Publish>
+          <Publish Event="NewDialog" Value="CustomizeDlg"><![CDATA[NOT(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
           <!-- Set up the queries to create the database. -->
@@ -615,14 +651,14 @@
           <!-- Set up the authentication part of the connection string based on user input. -->
           <Publish Property="AUTHSTRING" Value="Integrated Security=SSPI">WINDOWSAUTH</Publish>
           <Publish Property="AUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]">NOT WINDOWSAUTH</Publish>
-          <Publish Property="XDAAUTHSTRING" Value="Integrated Security=SSPI"><![CDATA[NOT(&DatabaseFeature=3)]]> AND WINDOWSAUTH</Publish>
-          <Publish Property="XDAAUTHSTRING" Value="User Id=[DBUSERNAME];Password=[DBPASSWORD]"><![CDATA[NOT(&DatabaseFeature=3)]]> AND NOT WINDOWSAUTH</Publish>
-          <Publish Property="XDAAUTHSTRING" Value="User Id=[XDASERVICELOGIN];Password=[XDASERVICEPASSWORD]"><![CDATA[&DatabaseFeature=3]]></Publish>
+          <Publish Property="XDAAUTHSTRING" Value="Integrated Security=SSPI"><![CDATA[NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]> AND WINDOWSAUTH</Publish>
+          <Publish Property="XDAAUTHSTRING" Value="User Id=[DBUSERNAME];;Password=[DBPASSWORD]"><![CDATA[NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]> AND NOT WINDOWSAUTH</Publish>
+          <Publish Property="XDAAUTHSTRING" Value="User Id=[XDASERVICELOGIN];;Password=[XDASERVICEPASSWORD]"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Publish>
           
           <!-- Set up connection strings for connecting to server and database. -->
           <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
           <Publish Property="DBCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">1</Publish>
-          <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];Initial Catalog=[DATABASENAME];[XDAAUTHSTRING]">1</Publish>
+          <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[XDAAUTHSTRING]">1</Publish>
           
           <!-- Determine whether we can connect to the database server. -->
           <Publish Property="CONNECTIONSTRING" Value="[SERVERCONNECTIONSTRING];;Connection Timeout=5">1</Publish>
@@ -637,12 +673,12 @@
           <Publish Event="DoAction" Value="TestDatabaseConnectionAction">DBSERVERCONNECTS</Publish>
           <Publish Property="DBEXISTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBEXISTS" Value="1">DATABASECONNECTED</Publish>
-          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] already exists on the server. Enter a different database name or drop the existing database, then try again. If you do not wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[&DatabaseFeature=3]]> AND DBSERVERCONNECTS AND DBEXISTS</Publish>
-          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again. If you wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[NOT(&DatabaseFeature=3)]]> AND DBSERVERCONNECTS AND NOT DBEXISTS</Publish>
-          <Publish Event="SpawnDialog" Value="ModalErrorDialog">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND NOT DBEXISTS))</Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] already exists on the server. Enter a different database name or drop the existing database, then try again. If you do not wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND DBSERVERCONNECTS AND DBEXISTS]]></Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again. If you wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[NOT((&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))) AND DBSERVERCONNECTS AND NOT DBEXISTS]]></Publish>
+          <Publish Event="SpawnDialog" Value="ModalErrorDialog"><![CDATA[DBSERVERCONNECTS AND (((&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND DBEXISTS) OR (NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND NOT DBEXISTS))]]></Publish>
 
           <!-- Move to the next dialog if the validation checks out. -->
-          <Publish Event="NewDialog" Value="VerifyReadyDlg">DBSERVERCONNECTS AND ((<![CDATA[&DatabaseFeature=3]]> AND NOT DBEXISTS) OR (<![CDATA[NOT(&DatabaseFeature=3)]]> AND DBEXISTS))</Publish>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg"><![CDATA[DBSERVERCONNECTS AND (((&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND NOT DBEXISTS) OR (NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND DBEXISTS))]]></Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
