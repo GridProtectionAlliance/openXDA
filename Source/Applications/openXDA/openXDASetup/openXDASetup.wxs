@@ -305,6 +305,7 @@
       <!-- XDA Libraries -->
       <ComponentRef Id="FaultAlgorithms" />
       <ComponentRef Id="FaultData" />
+      <ComponentRef Id="JSONApi" />
       <ComponentRef Id="openHistorian.XDALink" />
 
       <!-- DotNetZip Dependencies -->
@@ -391,6 +392,9 @@
       </Component>
       <Component Id="FaultData">
         <File Id="FaultData.dll" Name="$(var.FaultData.TargetFileName)" Source="$(var.FaultData.TargetPath)" />
+      </Component>
+      <Component Id="JSONApi">
+        <File Id="JSONApi.dll" Name="$(var.JSONApi.TargetFileName)" Source="$(var.JSONApi.TargetPath)" />
       </Component>
       <Component Id="openHistorian.XDALink">
         <File Id="openHistorian.XDALink.dll" Name="$(var.openHistorian.XDALink.TargetFileName)" Source="$(var.openHistorian.XDALink.TargetPath)" />
