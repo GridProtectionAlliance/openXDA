@@ -1911,6 +1911,8 @@ AS
 SELECT
     AlarmRangeLimit.ID,
     AlarmRangeLimit.ChannelID,
+    Channel.MeterID,
+    Channel.LineID,
     Channel.Name,
     AlarmRangeLimit.AlarmTypeID,
     AlarmRangeLimit.Severity,

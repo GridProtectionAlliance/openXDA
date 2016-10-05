@@ -918,6 +918,7 @@ namespace openXDA
             string channelFilter = "%";
             string typeFilter = "%";
             string charFilter = "%";
+
             if (filterString != "%")
             {
                 string[] filters = filterString.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%").Split(';');
@@ -932,7 +933,7 @@ namespace openXDA
             string MeterID = (meterID == -1 ? "%" : meterID.ToString());
             string LineID = (lineID == -1 ? "%" : lineID.ToString());
 
-            return DataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2} AND MeterID LIKE {3} AND LineID LIKE {4}", channelFilter, typeFilter, charFilter, MeterID, LineID));
+            return DataContext.Table<AlarmRangeLimitView>().QueryRecordCount(new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2} AND MeterID = {3} AND LineID = {4}", channelFilter, typeFilter, charFilter, MeterID, LineID));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -942,6 +943,7 @@ namespace openXDA
             string channelFilter = "%";
             string typeFilter = "%";
             string charFilter = "%";
+
             if (filterString != "%")
             {
                 string[] filters = filterString.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%").Split(';');
@@ -954,7 +956,7 @@ namespace openXDA
             }
 
 
-            return DataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2}", channelFilter, typeFilter, charFilter));
+            return DataContext.Table<AlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0} AND MeasurementType LIKE {1} AND MeasurementCharacteristic LIKE {2} AND MeterID = {3} AND LineID = {4}", channelFilter, typeFilter, charFilter, meterID, lineID));
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -989,7 +991,6 @@ namespace openXDA
                 }
             }
 
-
             DataContext.Table<AlarmRangeLimit>().AddNewRecord(CreateNewAlarmRangeLimit(record));
         }
 
@@ -1021,7 +1022,6 @@ namespace openXDA
             arl.ChannelID = record.ChannelID;
             arl.AlarmTypeID = record.AlarmTypeID;
             arl.Enabled = record.Enabled;
-
 
             arl.Severity = record.Severity;
             arl.High = record.High;
