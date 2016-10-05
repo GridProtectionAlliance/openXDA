@@ -153,12 +153,15 @@
     
       <!--List of binaries to archive.-->
       <BinariesToArchive Remove="@(BinariesToArchive)"/>
-      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe"/>
-      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.dll"/>
-      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.sql"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe" Exclude="$(BuildOutputFolder)\Applications\WixFolderGen\**\*.*"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.dll" Exclude="$(BuildOutputFolder)\Applications\WixFolderGen\**\*.*"/>
+      <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.sql" Exclude="$(BuildOutputFolder)\Applications\WixFolderGen\**\*.*"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Applications\**\*.exe.config"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Tools\**\*.exe"/>
       <BinariesToArchive Include="$(BuildOutputFolder)\Tools\**\*.dll"/>
+      
+      <!-- List of installs to archive. -->
+      <InstallsToArchive Include="$(BuildOutputFolder)\Setup\**\*.*" Exclude="$(BuildOutputFolder)\**\*.wixpdb"/>
 
       <!--Destinations of archive files (*.zip).-->
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>

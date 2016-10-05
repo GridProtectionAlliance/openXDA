@@ -17,21 +17,21 @@
     <Name>openXDASetup</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Applications\openXDA\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Setup\openXDA\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Applications\openXDA\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Setup\openXDA\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DefineConstants>Debug</DefineConstants>
-    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Applications\openXDA\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Setup\openXDA\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Applications\openXDA\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Setup\openXDA\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
@@ -113,9 +113,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="INSTALL_LICENSE.rtf" />
+    <Content Include="LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="openXDASetupBanner.bmp" />
     <Content Include="openXDASetupDialog.bmp" />
     <Content Include="packages.config" />
+    <Content Include="README.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="WebFeatures.wxi" />
     <Content Include="WebFiles.wxi" />
     <Content Include="WebFolders.wxi" />
@@ -143,6 +149,17 @@
   <PropertyGroup>
     <PreBuildEvent>"$(SolutionDir)\Tools\SqlClrAssemblyEncoder\bin\$(ConfigurationName)\SqlClrAssemblyEncoder.exe" -o %27$(ProjectDir)\obj\SqlClr.wxi%27 %27$(SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll%27 %27$(TargetDir)\..\..\Libraries\openHistorian.XDALink.SqlClr.dll%27 %27$(TargetDir)\..\..\Libraries\openXDA.SqlClr.dll%27</PreBuildEvent>
   </PropertyGroup>
+  <Target Name="AfterBuild">
+    <ItemGroup>
+      <CopyFiles Include="LICENSE.txt" />
+      <CopyFiles Include="README.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CopyFiles)" DestinationFolder="$(OutDir)" />
+    <CallTarget Targets="SignBuild" />
+  </Target>
+  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
+    <Exec Command="$(SIGNTOOL) $(TargetPath)" />
+  </Target>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.
