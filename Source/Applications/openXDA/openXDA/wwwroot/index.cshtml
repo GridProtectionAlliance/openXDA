@@ -31,227 +31,31 @@
 @using GSF.Web
 @using openXDA.Model
 
-@inherits TemplateBase<AppModel>
-@{
-    Layout = "Layout.cshtml";
-    ViewBag.Title = "Home";
-    Layout = "Layout.cshtml";
-    ViewBag.Title = "Home";
-
-    Version assemblyVersionInfo = AssemblyInfo.EntryAssembly.Version;
-    string applicationVersion = assemblyVersionInfo.Major + "." + assemblyVersionInfo.Minor + "." + assemblyVersionInfo.Build;
-    string databaseType;
-    string databaseName;
-
-    try
-    {
-        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-        {
-            databaseType = database.DatabaseType.ToString();
-
-            try
-            {
-                if (database.IsSqlite || database.IsJetEngine)
-                {
-                    // Extract database file name from connection string for file centric databases
-                    databaseName = FilePath.GetFileName(database.Connection.ConnectionString.ParseKeyValuePairs()["Data Source"]);
-                }
-                else if (database.IsOracle)
-                {
-                    // Extract user name from connection string for Oracle databases
-                    databaseName = database.Connection.ConnectionString.ParseKeyValuePairs()["User Id"];
-                }
-                else
-                {
-                    databaseName = database.Connection.Database;
-                }
-            }
-            catch
-            {
-                // Fall back on database name if file anything fails
-                databaseName = database.Connection.Database;
-            }
-        }
-    }
-    catch
-    {
-        databaseType = "Not Available";
-        databaseName = "Not Available";
-    }
-
-}
-@section StyleSheets {
-    <style>
-        /* Auto font resize CSS for system health window - targeting fixed 80 char width without wrap and
-           allowing for responsive screen rearrangement when window is col-**-8 and on the right */
-        @@media screen {
-            .performance-statistics {
-                font-size: 5.25px;
-            }
-        }
-        
-        @@media screen and (min-width: 430px) {
-            .performance-statistics {
-                font-size: 7px;
-            }
-        }
-
-        @@media screen and (min-width: 470px) {
-            .performance-statistics {
-                font-size: 8px;
-            }
-        }
-
-        @@media screen and (min-width: 515px) {
-            .performance-statistics {
-                font-size: 9px;
-            }
-        }
-
-        @@media screen and (min-width: 550px) {
-            .performance-statistics {
-                font-size: 10px;
-            }
-        }
-
-        @@media screen and (min-width: 600px) {
-            .performance-statistics {
-                font-size: 11px;
-            }
-        }
-
-        @@media screen and (min-width: 635px) {
-            .performance-statistics {
-                font-size: 12px;
-            }
-        }
-
-        @@media screen and (min-width: 685px) {
-            .performance-statistics {
-                font-size: 13px;
-            }
-        }
-
-        @@media screen and (min-width: 725px) {
-            .performance-statistics {
-                font-size: 14px;
-            }
-        }
-
-        @@media screen and (min-width: 768px) {
-            .performance-statistics {
-                font-size: 8px;
-            }
-        }
-
-        @@media screen and (min-width: 992px) {
-            .performance-statistics {
-                font-size: 12px;
-            }
-        }
-
-        @@media screen and (min-width: 1200px) {
-            .performance-statistics {
-                font-size: 14px;
-            }
-        }
-
-        .badge-fixed {
-            display:inline-block;
-            width: 150px;
-        }
-    </style>
-}
-@section Scripts {
-    <script>
-        function updateTimestamps() {
-            $('#localTime').html(new Date().formatDate());
-
-            if (hubIsConnected) {
-                serviceHub.getServerTime().done(function (serverTime) {
-                    $('#serverTime').html(serverTime.formatDate());
-                });
-            }
-        }
-
-        function updatePerformanceStatistics() {
-            if (hubIsConnected)
-                serviceHub.getPerformanceStatistics().done(function (statistics) {
-                    $("#performanceStatistics").html(statistics);
-                });
-        }
-
-        $(window).on("hubConnected", function (event) {
-            updatePerformanceStatistics();
-            setInterval(updatePerformanceStatistics, 5000);
-        });
-
-        $("#restartButton").click(function () {
-            if (hubIsConnected && confirm("Are you sure you want to restart service?"))
-                serviceHub.sendCommand("restart");
-        });
-
-        $(function () {
-            updateTimestamps();
-            setInterval(updateTimestamps, 1000);
-        });
-
-        //$(window).resize(function () {
-        //    $("#fontSizeLabel").html("Font Size: " + $("#performanceStatistics").css("font-size") + ", Window Size: " + $(window).width().toString());
-        //});
-
-    </script>
-}
-@functions {
-    public string GetCurrentUserID()
-    {
-        //if (Thread.CurrentPrincipal.Identity == null)
-        //    return UserInfo.CurrentUserID;
-
-        return Thread.CurrentPrincipal.Identity.Name;
-    }
-}
-
-<div class="row">
-    <div class="col-lg-4 col-md-4 col-sm-5">
-        @*<div class="panel panel-default">
-            <div class="panel-heading">Quick Links</div>
-            <div class="panel-body">
-                <div class="btn-group-vertical btn-block">
-                    <a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
-                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
-                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
-                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
-                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>
-                    <button type="button" class="btn btn-default" id="restartButton" hub-dependent>Restart Service</button>
-                </div>
-            </div>
-        </div>*@
-        <ul class="list-group">
-            <li class="list-group-item">
-                <span class="badge badge-fixed" id="serverTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Server&nbsp;Time
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="localTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Local&nbsp;Time
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="currentUser">@GetCurrentUserID()</span> Current User
-            </li>
-            <li class="list-group-item">
-                <span class="badge badge-fixed" id="applicationVersion">@applicationVersion</span>App&nbsp;Version
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="databaseType">DB: @databaseType</span>Config&nbsp;Type
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="databaseName">@databaseName</span>Config&nbsp;Name
-            </li>
-        </ul>
-        <p class="text-info text-center small">@ViewBag.Request.RequestUri.ToString()</p>
-        <!-- label class="small" id="fontSizeLabel"></label -->
-    </div>
-    <div class="col-lg-8 col-md-8 col-sm-7">
-        <div class="panel panel-default">
-            <div class="panel-heading">System Health</div>
-            <div class="panel-body">
-                <pre class="performance-statistics" id="performanceStatistics">Loading&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin"></span></pre>
-            </div>
-        </div>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    @* The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags *@
+    <title>@Model.Global.ApplicationName</title>
+    <meta name="application-name" content="@Model.Global.ApplicationName" />
+    <meta name="description" content="@Model.Global.ApplicationDescription" />
+    <meta name="keywords" content="@Model.Global.ApplicationKeywords" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <link href="Content/bootstrap.css" rel="stylesheet">
+    <link href="@Model.Global.BootstrapTheme" rel="stylesheet">
+    <link href="Content/bootstrap-datepicker3.css" rel="stylesheet">
+    <link href="Content/jquery-ui.css" rel="stylesheet">
+    <link href="Content/primeui-theme.css" rel="stylesheet">
+    <link href="Content/font-awesome.css" rel="stylesheet">
+    <link href="Content/primeui.css" rel="stylesheet">
+    <link href="Content/Site.css" rel="stylesheet">
+</head>
+<body role="document">
+<ul>
+    <li><a href="Config/index.cshtml">dD Config</a></li>
+    <li><a href="WorkBench/index.cshtml">dD Workbench</a></li>
+</ul>
+</body>
+</html>

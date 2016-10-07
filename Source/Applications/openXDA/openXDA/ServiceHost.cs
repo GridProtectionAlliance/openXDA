@@ -289,25 +289,25 @@ namespace openXDA
 
                 // Define types for Razor pages - self-hosted web service does not use view controllers so
                 // we must define configuration types for all paged view model based Razor views here:
-                webServer.PagedViewModelTypes.TryAdd("Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
-                webServer.PagedViewModelTypes.TryAdd("Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
-                webServer.PagedViewModelTypes.TryAdd("Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("MeterGroups.cshtml", new Tuple<Type, Type>(typeof(MeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("EmailGroups.cshtml", new Tuple<Type, Type>(typeof(EmailGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("EmailGroupType.cshtml", new Tuple<Type, Type>(typeof(EmailGroupType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("EmailGroupMeterGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("EmailGroupUserAccount.cshtml", new Tuple<Type, Type>(typeof(EmailGroupUserAccount), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterGroups.cshtml", new Tuple<Type, Type>(typeof(MeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroups.cshtml", new Tuple<Type, Type>(typeof(EmailGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupType.cshtml", new Tuple<Type, Type>(typeof(EmailGroupType), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupMeterGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupUserAccount.cshtml", new Tuple<Type, Type>(typeof(EmailGroupUserAccount), typeof(DataHub)));
 
                 // Initiate pre-compile of base templates
                 if (AssemblyInfo.EntryAssembly.Debuggable)

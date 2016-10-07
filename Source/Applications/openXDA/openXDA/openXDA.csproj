@@ -184,6 +184,10 @@
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.Owin.Security.2.1.0\lib\net45\Microsoft.Owin.Security.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -229,6 +233,10 @@
     </Reference>
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
       <Private>True</Private>
@@ -237,8 +245,24 @@
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web.Razor">
       <HintPath>..\..\..\Dependencies\Microsoft\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Forms.DataVisualization" />
@@ -280,10 +304,10 @@
     <Compile Include="Model\XSLTemplate.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />
-    <Compile Include="wwwroot\EmailTemplateHandler.ashx.cs">
+    <Compile Include="wwwroot\Config\EmailTemplateHandler.ashx.cs">
       <DependentUpon>EmailTemplateHandler.ashx</DependentUpon>
     </Compile>
-    <Compile Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx.cs">
+    <Compile Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx.cs">
       <DependentUpon>AlarmRangeLimitCSVUploadHandler.ashx</DependentUpon>
     </Compile>
     <Compile Include="GlobalSettings.cs" />
@@ -371,15 +395,15 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
-    <Content Include="wwwroot\EmailGroups.cshtml" />
-    <Content Include="wwwroot\EmailGroupType.cshtml" />
-    <Content Include="wwwroot\EmailGroupMeterGroup.cshtml" />
-    <Content Include="wwwroot\EmailGroupUserAccount.cshtml" />
+    <Content Include="wwwroot\Config\EmailGroups.cshtml" />
+    <Content Include="wwwroot\Config\EmailGroupType.cshtml" />
+    <Content Include="wwwroot\Config\EmailGroupMeterGroup.cshtml" />
+    <Content Include="wwwroot\Config\EmailGroupUserAccount.cshtml" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
-    <None Include="wwwroot\EmailTemplateHandler.ashx" />
-    <None Include="wwwroot\AlarmRangeLimitCSVUploadHandler.ashx" />
-    <None Include="wwwroot\AlarmSettings.cshtml" />
-    <None Include="wwwroot\Channels.cshtml" />
+    <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
+    <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
+    <None Include="wwwroot\Config\AlarmSettings.cshtml" />
+    <None Include="wwwroot\Config\Channels.cshtml" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />
@@ -387,11 +411,11 @@
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
-    <None Include="wwwroot\DashSettings.cshtml" />
-    <None Include="wwwroot\DefaultAlarmSettings.cshtml" />
-    <None Include="wwwroot\Meters.cshtml" />
+    <None Include="wwwroot\Config\DashSettings.cshtml" />
+    <None Include="wwwroot\Config\DefaultAlarmSettings.cshtml" />
+    <None Include="wwwroot\Config\Meters.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
-    <Content Include="wwwroot\EmailTypes.cshtml" />
+    <Content Include="wwwroot\Config\EmailTypes.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />
     <None Include="wwwroot\fonts\fontawesome-webfont.ttf" />
     <None Include="wwwroot\fonts\fontawesome-webfont.woff" />
@@ -401,15 +425,16 @@
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.ttf" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff2" />
-    <None Include="wwwroot\MeterMeterGroupView.cshtml" />
-    <None Include="wwwroot\Groups.cshtml" />
-    <None Include="wwwroot\Help.cshtml" />
+    <None Include="wwwroot\Config\MeterMeterGroupView.cshtml" />
+    <None Include="wwwroot\Config\Groups.cshtml" />
+    <None Include="wwwroot\Config\Help.cshtml" />
     <None Include="wwwroot\Images\Icons\Thumbs.db" />
-    <None Include="wwwroot\index.cshtml" />
-    <None Include="wwwroot\Layout.cshtml" />
-    <None Include="wwwroot\Lines.cshtml" />
-    <None Include="wwwroot\MeterGroups.cshtml" />
-    <None Include="wwwroot\MeterLines.cshtml" />
+    <None Include="wwwroot\Config\index.cshtml" />
+    <None Include="wwwroot\Config\Layout.cshtml" />
+    <None Include="wwwroot\Config\Lines.cshtml" />
+    <None Include="wwwroot\Config\MeterGroups.cshtml" />
+    <None Include="wwwroot\Config\MeterLines.cshtml" />
+    <Content Include="wwwroot\index.cshtml" />
     <None Include="wwwroot\Scripts\flot\API.md" />
     <None Include="wwwroot\Scripts\flot\CONTRIBUTING.md" />
     <None Include="wwwroot\Scripts\flot\examples\.DS_Store" />
@@ -447,12 +472,14 @@
     <None Include="wwwroot\Scripts\flot\README.md" />
     <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
-    <None Include="wwwroot\Settings.cshtml" />
-    <None Include="wwwroot\Sites.cshtml" />
+    <None Include="wwwroot\Config\Settings.cshtml" />
+    <None Include="wwwroot\Config\Sites.cshtml" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
-    <Content Include="wwwroot\UserAccountMeterGroupView.cshtml" />
-    <None Include="wwwroot\Users.cshtml" />
+    <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />
+    <None Include="wwwroot\Config\Users.cshtml" />
+    <Content Include="wwwroot\WorkBench\index.cshtml" />
+    <Content Include="wwwroot\WorkBench\Layout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
