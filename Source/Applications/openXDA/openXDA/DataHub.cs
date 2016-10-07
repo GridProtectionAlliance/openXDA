@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Transactions;
 using GSF;
 using GSF.Data.Model;
@@ -1728,6 +1729,72 @@ namespace openXDA
 
         #region [Filters Operations]
  
+        public IEnumerable<WorkbenchFilter> GetWorkbenchFiltersForSelect()
+        {
+            return DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+        } 
+
+        public WorkbenchFilter GetWorkbenchFilterForEdit(int id)
+        {
+            return DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("ID = {0}", id)).First();
+        }
+
+        public void AddWorkbenchFilter(WorkbenchFilter record)
+        {
+            if (record.IsDefault)
+            {
+                IEnumerable<WorkbenchFilter> wbfs = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+
+                foreach (WorkbenchFilter wbf in wbfs)
+                {
+                    if (wbf.IsDefault)
+                    {
+                        wbf.IsDefault = !wbf.IsDefault;
+                        DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
+                    }
+                }
+            }
+
+            record.UserID = GetCurrentUserID();
+
+            if(record.ID == 0)
+                DataContext.Table<WorkbenchFilter>().AddNewRecord(record);
+            else
+                DataContext.Table<WorkbenchFilter>().UpdateRecord(record);
+        }
+
+        public void EditWorkbenchFilter(WorkbenchFilter record)
+        {
+            if (record.IsDefault)
+            {
+                IEnumerable<WorkbenchFilter> wbfs = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+
+                foreach (WorkbenchFilter wbf in wbfs)
+                {
+                    if (wbf.IsDefault)
+                    {
+                        wbf.IsDefault = !wbf.IsDefault;
+                        DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
+                    }
+                }
+            }
+
+            DataContext.Table<WorkbenchFilter>().UpdateRecord(record);
+        }
+
+        public void DeleteWorkbenchFilter(WorkbenchFilter record)
+        {
+            DataContext.Table<WorkbenchFilter>().DeleteRecord(record.ID);
+            if (record.IsDefault)
+            {
+                WorkbenchFilter wbf = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID())).First();
+
+                wbf.IsDefault = !wbf.IsDefault;
+                DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
+            }
+        }
+
+
         public IEnumerable<EventType> GetEventTypesForSelect()
         {
             return DataContext.Table<EventType>().QueryRecords();
@@ -1745,6 +1812,15 @@ namespace openXDA
 
         #endregion
 
+        #region [Event Operations]
+        
+        public IEnumerable<Event> GetFilteredEvents(int filterId, DateTime startDate, DateTime endDate, string sortField, bool ascending, int page, int pageSize)
+        {
+            return DataContext.Table<Event>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3}", filterId, filterId, startDate, endDate));
+        }  
+
+        #endregion
+
         #endregion
 
         #region [ Misc ]
@@ -1756,6 +1832,18 @@ namespace openXDA
             return tzi
                 .Select(row => new IDLabel(row.Id, row.ToString()))
                 .Where(row => row.label.ToLower().Contains(searchText.ToLower()));
+        }
+
+
+        /// <summary>
+        /// Gets UserAccount table ID for current user.
+        /// </summary>
+        /// <returns>UserAccount.ID for current user.</returns>
+        public Guid GetCurrentUserID()
+        {
+            Guid userID;
+            AuthorizationCache.UserIDs.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out userID);
+            return userID;
         }
 
         #endregion

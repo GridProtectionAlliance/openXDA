@@ -297,11 +297,13 @@
     <Compile Include="Model\EmailGroupType.cs" />
     <Compile Include="Model\EmailGroupUserAccount.cs" />
     <Compile Include="Model\EmailType.cs" />
+    <Compile Include="Model\Event.cs" />
     <Compile Include="Model\EventType.cs" />
     <Compile Include="Model\FaultEmailCriterion.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserAccountMeterGroup.cs" />
+    <Compile Include="Model\WorkbenchFilter.cs" />
     <Compile Include="Model\XSLTemplate.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />
@@ -478,6 +480,7 @@
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Config\Settings.cshtml" />
     <None Include="wwwroot\Config\Sites.cshtml" />
+    <Content Include="wwwroot\Scripts\angular.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />

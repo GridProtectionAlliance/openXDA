@@ -31,5 +31,50 @@
     Layout = "Workbench/Layout.cshtml";
     ViewBag.Title = "Events";
 }
+
+@section StyleSheets{
+<style>
+    table, th, td {
+        border: 1px solid grey;
+        border-collapse: collapse;
+        padding: 5px;
+    }
+
+    table tr:nth-child(odd) {
+        background-color: #f1f1f1;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #ffffff;
+    }
+</style>
+}
+<div ng-app="eventsApp" ng-controller="eventsCtrl">
+    <table>
+        <tr>
+            <th>Event ID</th>
+            <th>Meter ID</th>
+            <th>Line ID</th>
+        </tr>
+        <tr ng-repeat="x in events">
+            <td>{{ x.ID }}</td>
+            <td>{{ x.MeterID }}</td>
+            <td>{{ x.LineID }}</td>
+        </tr>
+    </table>
+</div>
+
 @section Scripts {
+    <script>
+         var app = angular.module('eventsApp', []);
+         app.controller('eventsCtrl', function ($scope) {
+            $(window).one('hubConnected', function (event) {
+                dataHub.getFilteredEvents(5, '1/14/2014', '10/7/2016', 'StartTime', true, 1, 50).done(function (data) {
+                    $scope.events = data;
+                });
+            });
+         });
+
+
+    </script>
 }
