@@ -47,6 +47,8 @@ namespace openXDA
     {
         // Client-side script functionality
 
+        #region [Config Page]
+
         #region [ Setting Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -1717,6 +1719,31 @@ namespace openXDA
             return trendingData;
            
         }
+
+        #endregion
+
+        #endregion
+
+        #region [Workbench Page]
+
+        #region [Filters Operations]
+ 
+        public IEnumerable<EventType> GetEventTypesForSelect()
+        {
+            return DataContext.Table<EventType>().QueryRecords();
+        }
+
+        public IEnumerable<Meter> GetMetersForSelect()
+        {
+            return DataContext.Table<Meter>().QueryRecords();
+        }
+
+        public DateTime GetOldestEventDateTime()
+        {
+            return DataContext.Connection.ExecuteScalar<DateTime>("SELECT StartTime FROM [Event] ORDER BY StartTime ASC");
+        }
+
+        #endregion
 
         #endregion
 

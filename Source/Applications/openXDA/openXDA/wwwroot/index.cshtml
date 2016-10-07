@@ -51,11 +51,50 @@
     <link href="Content/font-awesome.css" rel="stylesheet">
     <link href="Content/primeui.css" rel="stylesheet">
     <link href="Content/Site.css" rel="stylesheet">
+    <style>
+        .container {
+            position: relative;
+            padding: 0;
+        }
+        
+        .center {
+            position: absolute;
+            top: 33%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            display: block;
+        }
+        
+       .container img {
+            width: 100%;
+            height: auto;
+            /*opacity: 0.3;*/
+        }
+
+       a img {
+           width: auto;
+           height: auto;
+       }
+       body {
+           padding-top: 0;
+       }
+        
+    </style>
 </head>
 <body role="document">
-<ul>
-    <li><a href="Config/index.cshtml">dD Config</a></li>
-    <li><a href="WorkBench/index.cshtml">dD Workbench</a></li>
-</ul>
+<div class="container">
+    <img id="splash" src="Images/dDSplashBackground.png"/>
+    <div class="center">
+        <div class="row"><a href="Config/index.cshtml"><img style="width: auto" src="Images/dD Config.png" /></a></div>
+        <div class="row"><a href="Workbench/index.cshtml"><img style="width: auto" src="Images/dD Workbench.png" /></a></div>
+    </div>
+</div>
+    <script src="/Scripts/jquery-2.2.1.js"></script>
+
+<script>
+</script>
 </body>
+
+
 </html>

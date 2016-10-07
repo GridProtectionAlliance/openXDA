@@ -297,6 +297,7 @@
     <Compile Include="Model\EmailGroupType.cs" />
     <Compile Include="Model\EmailGroupUserAccount.cs" />
     <Compile Include="Model\EmailType.cs" />
+    <Compile Include="Model\EventType.cs" />
     <Compile Include="Model\FaultEmailCriterion.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="Model\User.cs" />
@@ -434,6 +435,9 @@
     <None Include="wwwroot\Config\Lines.cshtml" />
     <None Include="wwwroot\Config\MeterGroups.cshtml" />
     <None Include="wwwroot\Config\MeterLines.cshtml" />
+    <Content Include="wwwroot\Images\dD Config.png" />
+    <Content Include="wwwroot\Images\dD Workbench.png" />
+    <Content Include="wwwroot\Images\dDSplashBackground.png" />
     <Content Include="wwwroot\index.cshtml" />
     <None Include="wwwroot\Scripts\flot\API.md" />
     <None Include="wwwroot\Scripts\flot\CONTRIBUTING.md" />
@@ -478,8 +482,13 @@
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />
     <None Include="wwwroot\Config\Users.cshtml" />
-    <Content Include="wwwroot\WorkBench\index.cshtml" />
-    <Content Include="wwwroot\WorkBench\Layout.cshtml" />
+    <Content Include="wwwroot\Workbench\index.cshtml" />
+    <Content Include="wwwroot\Workbench\Layout.cshtml" />
+    <Content Include="wwwroot\Workbench\Help.cshtml" />
+    <Content Include="wwwroot\Workbench\Filters.cshtml" />
+    <Content Include="wwwroot\Workbench\Events.cshtml" />
+    <Content Include="wwwroot\Workbench\Charts.cshtml" />
+    <Content Include="wwwroot\Workbench\SiteSummary.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
@@ -710,7 +719,7 @@ CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "$(TargetDir)*.dll"</P
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="AfterBuild">
-    <CallTarget Targets="SignBuild"/>
+    <CallTarget Targets="SignBuild" />
   </Target>
   <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
     <Exec Command="$(SIGNTOOL) $(TargetPath)" />

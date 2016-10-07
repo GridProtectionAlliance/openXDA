@@ -1,0 +1,235 @@
+﻿@*******************************************************************************************************
+//  Index.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/15/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System
+@using System.Threading
+@using RazorEngine.Templating
+@using GSF.Web
+@using openXDA.Model
+@using RazorEngine.Templating
+@inherits TemplateBase<AppModel>
+@{
+    Layout = "Workbench/Layout.cshtml";
+    ViewBag.Title = "Filters";
+    DateTime toDateTime = DateTime.Now;
+}
+@section StyleSheets{
+<link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
+
+    <style>
+        button {
+            margin: 2px;
+        }
+
+        .row {
+            margin: 5px 0 5px 0;
+        }
+    </style>
+}
+<br/>
+<div>
+    <div class="row">
+        <div class="col-md-2">
+            <select id="filters" class="form-control"><option>New</option></select>
+        </div>
+        <button class="btn btn-primary">Save</button><button class="btn btn-primary">Edit</button>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-2">
+            <span>1. Name filter: </span>
+        </div>
+        <div class="col-md-2">
+            <input id="filterName" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2">
+            <span>2. Pick time range: </span>
+        </div>
+        <div class="col-md-2">
+            <select id="preDefinedTimeRange" class="form-control">
+                <option>1 day</option>
+                <option>3 days</option>
+                <option>1 week</option>
+            </select>
+        </div>
+        <div class="col-md-1" style="text-align: center">
+            <span>or</span>
+        </div>
+        <div class="col-md-2">
+            @*<input id="fromDate" class="form-control">*@
+            <div class="input-group date" id="fromDate">
+                <input type="text" class="form-control">
+                <div class="input-group-addon">
+                    <span class="glyphicon glyphicon-th"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-1" style="text-align: center">
+            <span>to</span>
+        </div>
+        <div class="col-md-2">
+            @*<input id="toDate" class="form-control">*@
+            <div class="input-group date" id="toDate">
+                <input type="text" class="form-control">
+                <div class="input-group-addon">
+                    <span class="glyphicon glyphicon-th"></span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-2">
+        <span>3. Pick meters: </span>
+    </div>
+    <div class="col-md-2">
+        <select id="meters" class="form-control mobileSelect" multiple>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-2">
+        <span>4. Pick event types: </span>
+    </div>
+    <div class="col-md-2">
+        <select id="types" class="form-control mobileSelect" multiple></select>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.min.js"></script>
+
+    <script>
+        $(function () {
+            var mobileSelectOptions = {
+                padding: {
+                    top: '5%',
+                    left: '15%',
+                    right: '15%',
+                    bottom: '5%'
+                },
+                title: "",
+                onOpen: function () {
+                    $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+                    $('.selectAllBtn').click(function () {
+                        $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+                    });
+
+                },
+                onClose: function () {
+                    $('.selectAllBtn').remove();
+                }
+            };
+
+            $(window).one('hubConnected', function () {
+                $('#toDate input').val((new Date('@toDateTime')).formatDate(DateFormat));
+                $('#toDate').datepicker({
+                    format: 'mm/dd/yyyy'
+                });
+                dataHub.getOldestEventDateTime().done(function (data) {
+                    $('#fromDate input').val((new Date(data)).formatDate(DateFormat));
+                    $('#fromDate').datepicker({
+                        format: 'mm/dd/yyyy'
+                    });
+                });
+
+                dataHub.getEventTypesForSelect().done(function (data) {
+                    $.each(data, function (index, type) {
+                        $('#types').append($(new Option(type.Name, type.ID)));
+                    });
+                    mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
+                    $('#types').mobileSelect(mobileSelectOptions);
+                    
+                    $('#typefilter').on('keyup', function () {
+                        var string = $('#typefilter').val();
+                        if (string === "") {
+                            $('.mobileSelect-container :visible .list-container').children().show();
+
+                        }
+                        else {
+                            $('.mobileSelect-container :visible .list-container').children().hide();
+                            $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                                if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
+                                    $(item).show();
+                            });
+                        }
+                    });
+
+                    //$('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    //$('#typesFrame .btn-mobileSelect-gen').off('click');
+                    //$('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
+                    //    event.preventDefault();
+                    //    $('#types').mobileSelect('refresh');
+                    //    $('#types').mobileSelect('show');
+                    //});
+
+                });
+
+                dataHub.getMetersForSelect().done(function (data) {
+                    $.each(data, function (index, type) {
+                        $('#meters').append($(new Option(type.Name, type.ID)));
+                    });
+                    mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+                    $('#meters').mobileSelect(mobileSelectOptions);
+                    
+                    $('#meterfilter').on('keyup', function () {
+                        var string = $('#meterfilter').val();
+                        if (string === "") {
+                            $('.mobileSelect-container :visible .list-container').children().show();
+
+                        }
+                        else {
+                            $('.mobileSelect-container :visible .list-container').children().hide();
+                            $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                                if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                                    $(item).show();
+                            });
+                        }
+                    });
+                    
+                    //$('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    //$('#metersFrame .btn-mobileSelect-gen').off('click');
+                    //$('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+                    //    event.preventDefault();
+                    //    $('#meters').mobileSelect('refresh');
+                    //    $('#meters').mobileSelect('show');
+                    //});
+
+
+
+                });
+            });
+
+        });
+
+    </script>
+}
