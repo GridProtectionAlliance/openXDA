@@ -31,7 +31,7 @@
 @using openXDA.Model
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
-    <link rel="stylesheet" href="Content/fullscreenselect/bootstrap-fullscreen-select.css"/>
+    <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css"/>
     <style>
         html, body {
             height: 100%;
@@ -40,7 +40,7 @@
 }
 @{
     DataContext dataContext = ViewBag.DataContext;
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Meter Groups";
     HttpRequestMessage request = ViewBag.Request;
 
@@ -122,7 +122,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
-    <script type="text/javascript" src="Scripts/fullscreenselect/bootstrap-fullscreen-select.min.js"></script>
+    <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.min.js"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterGroup, DataHub>(ViewBag))
                 

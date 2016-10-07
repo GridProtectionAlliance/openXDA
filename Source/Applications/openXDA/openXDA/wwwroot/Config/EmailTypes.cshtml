@@ -31,7 +31,7 @@
 @inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Email Types";
 
     HttpRequestMessage request = ViewBag.Request;
@@ -178,7 +178,7 @@
         });
 
         function viewTemplate(data) {
-            window.open("@Url.Content("~/EmailTemplateHandler.ashx")?EventID=" + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
+            window.open("@Url.Content("~/Config/EmailTemplateHandler.ashx")?EventID=" + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
         }
     </script>
 }

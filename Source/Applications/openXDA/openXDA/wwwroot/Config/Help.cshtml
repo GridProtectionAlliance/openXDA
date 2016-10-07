@@ -28,11 +28,11 @@
 @using RazorEngine.Templating
 @inherits TemplateBase<AppModel>
 @{
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Help";
-    string pdfLink = "~/Docs/openXDAsettings.pdf";
+    string pdfLink = "/Docs/openXDAsettings.pdf";
 }
-<embed id="pdfContent" src="~/Docs/openXDAsettings.pdf" width="100%" height="200">
+<embed id="pdfContent" src="/Docs/openXDAsettings.pdf" width="100%" height="200">
 @section Scripts {
     <script>
         function resizePDFContent() {

@@ -38,7 +38,7 @@
     ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
     ViewBag.lineID = int.Parse(parameters["LineID"] ?? "-1");
 
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
 
     if (ViewBag.meterID != -1)
     {
@@ -81,17 +81,17 @@
 {
     if (ViewBag.meterID != -1)
     {
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Meters.cshtml?Meter=' + MeterName }"></a></td>
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Lines.cshtml?Line=' + LineKey }"></a></td>
+        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Config/Meters.cshtml?Meter=' + MeterName }"></a></td>
+        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Config/Lines.cshtml?Line=' + LineKey }"></a></td>
     }
     else
     {
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Lines.cshtml?Line=' + LineKey }"></a></td>
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Meters.cshtml?Meter=' + MeterName }"></a></td>
+        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Config/Lines.cshtml?Line=' + LineKey }"></a></td>
+        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Config/Meters.cshtml?Meter=' + MeterName }"></a></td>
     }
     <td width="40%" class="text-left valign-middle" data-bind="text: LineName"></td>
-    <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/AlarmSettings.cshtml?LineID=' + LineID + '&MeterID=' + MeterID + '&Title=' + LineName}, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(LineID, MeterID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Config/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(LineID, MeterID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/AlarmSettings.cshtml?LineID=' + LineID + '&MeterID=' + MeterID + '&Title=' + LineName}, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(LineID, MeterID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -133,7 +133,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    <script src="@("@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
+    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
 

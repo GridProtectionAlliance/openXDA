@@ -31,7 +31,7 @@
 @inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Email Groups";
     HttpRequestMessage request = ViewBag.Request;
 
@@ -65,9 +65,9 @@
 @helper BodyRows()
 {
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupType.cshtml?GroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Email Types&nbsp;&nbsp;<span class="badge" data-bind="text: getTypesCount(ID, $($element)), attr: {id: 'typesCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupMeterGroup.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meter Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterGroupCount(ID, $($element)), attr: {id: 'meterGroupCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/EmailGroupUserAccount.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">User Accounts&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupType.cshtml?GroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Email Types&nbsp;&nbsp;<span class="badge" data-bind="text: getTypesCount(ID, $($element)), attr: {id: 'typesCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupMeterGroup.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meter Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterGroupCount(ID, $($element)), attr: {id: 'meterGroupCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupUserAccount.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">User Accounts&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><button data-bind="click: openEventCriterionModal.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Event Criteria</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>

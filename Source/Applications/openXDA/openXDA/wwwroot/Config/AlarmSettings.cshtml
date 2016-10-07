@@ -30,7 +30,7 @@
 @using openXDA.Model
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
-    <link href="Content/fileinput.css" rel="stylesheet">
+    <link href="/Content/fileinput.css" rel="stylesheet">
     <style>
         html, body {
             height: 100%;
@@ -68,7 +68,7 @@
 
 @{
     DataContext dataContext = ViewBag.DataContext;
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Alarm Limit Settings";
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
@@ -324,9 +324,9 @@
 </div>
 @section Scripts
 {
-    <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.js"></script>
-    <script language="javascript" type="text/javascript" src="Scripts/flot/jquery.flot.time.js"></script>
-    <script language="javascript" type="text/javascript" src="Scripts/spin.js"></script>
+    <script language="javascript" type="text/javascript" src="/Scripts/flot/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="/Scripts/flot/jquery.flot.time.js"></script>
+    <script language="javascript" type="text/javascript" src="/Scripts/spin.js"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))
         @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))

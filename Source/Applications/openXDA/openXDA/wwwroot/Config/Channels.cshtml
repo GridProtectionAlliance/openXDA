@@ -41,7 +41,7 @@
     string lineName = dataContext.Connection.ExecuteScalar<string>("SELECT LineName FROM MeterLine WHERE MeterID = {0} AND LineID = {1}", ViewBag.meterID, ViewBag.lineID);
     ViewBag.CustomHeader = "Channels for <a href=\"/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a> and <a href=\"/Lines.cshtml?Line=" + lineKey + "\">" + lineName + "</a>";
 
-    Layout = "Layout.cshtml";
+    Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Channels for " + meterName + " and " + lineName;
 
     // Define column headers, use null for field name to make column non-sortable
@@ -122,7 +122,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    <script src="@("@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
+    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))
 

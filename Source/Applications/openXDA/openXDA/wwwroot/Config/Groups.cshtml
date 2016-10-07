@@ -24,6 +24,6 @@
 @using openXDA.Model
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
-@{Layout = "Layout.cshtml";}
+@{Layout = "Config/Layout.cshtml";}
 @Html.RenderResource("GSF.Web.Security.Views.Groups.cshtml")
 @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
