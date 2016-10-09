@@ -1,6 +1,7 @@
 <Include>
 <Feature Id="WebFilesFeature" Title="Web Files" Description="Web Files">
   <ComponentGroupRef Id="wwwroot_Components" />
+  <ComponentGroupRef Id="wwwroot_Config_Components" />
   <ComponentGroupRef Id="wwwroot_Content_Components" />
   <ComponentGroupRef Id="wwwroot_Content_fullscreenselect_Components" />
   <ComponentGroupRef Id="wwwroot_Content_images_Components" />
@@ -43,5 +44,6 @@
   <ComponentGroupRef Id="wwwroot_Scripts_flot_examples_visitors_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_flot_examples_zooming_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_fullscreenselect_Components" />
+  <ComponentGroupRef Id="wwwroot_WorkBench_Components" />
 </Feature>
 </Include>
