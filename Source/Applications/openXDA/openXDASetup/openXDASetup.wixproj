@@ -155,7 +155,10 @@
     <CallTarget Targets="SignBuild" />
   </Target>
   <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
-    <Exec Command="$(SIGNTOOL) $(TargetPath)" />
+    <PropertyGroup>
+      <SignToolNameArg Condition="'$(SIGNTOOLNAMEFLAG)' != ''">$(SIGNTOOLNAMEFLAG) $(TargetFileName)</SignToolNameArg>
+    </PropertyGroup>
+    <Exec Command="$(SIGNTOOL) $(SignToolNameArg) $(TargetPath)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>"$(SolutionDir)\Tools\SqlClrAssemblyEncoder\bin\$(ConfigurationName)\SqlClrAssemblyEncoder.exe" -o %27$(ProjectDir)\obj\SqlClr.wxi%27 %27$(SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll%27 %27$(TargetDir)\..\Libraries\openHistorian.XDALink.SqlClr.dll%27 %27$(TargetDir)\..\Libraries\openXDA.SqlClr.dll%27</PreBuildEvent>
