@@ -1,5 +1,6 @@
 <Include>
 <Directory Id="WWWROOTFOLDER" Name="wwwroot">
+  <Directory Id="CONFIGFOLDER" Name="Config" />
   <Directory Id="CONTENTFOLDER" Name="Content">
     <Directory Id="CONTENTFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="CONTENTIMAGESFOLDER" Name="images" />
@@ -49,5 +50,6 @@
     </Directory>
     <Directory Id="SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
   </Directory>
+  <Directory Id="WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
 </Include>
