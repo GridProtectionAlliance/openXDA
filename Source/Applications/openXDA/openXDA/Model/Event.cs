@@ -25,4 +25,10 @@ namespace openXDA.Model
         public int SamplesPerSecond { get; set; }
         public string Description { get; set; }
     }
+
+    public class EventView : Event
+    {
+        public string LineName { get; set; }
+        public string MeterName { get; set; }
+    }
 }

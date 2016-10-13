@@ -156,6 +156,8 @@
                     <li @Raw(pageTitle == "Help" ? "class=\"active\"" : "")><a href="Help.cshtml">Help</a></li>
                 </ul>
                 <p class="nav navbar-text navbar-right">
+                    Selected Filter:
+                    <select id="globalFilter"></select>
                     <button type="button" class="btn btn-sm btn-info disabled">Log Out</button>
                     <a href="https://www.gridprotectionalliance.org/" target="_blank" style="padding-left: 10px">
                         <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png">
@@ -206,6 +208,21 @@ else {
     <script src="/Scripts/plugins-all.js"></script>
     <script src="/Scripts/primeui@(min).js"></script>
     <script src="/Scripts/Site.js"></script>
+
+<script>
+        $(function () {
+            $(window).one('hubConnected', function (event) {
+                dataHub.getWorkbenchFiltersForSelect().done(function (data) {
+                    $.each(data, function (index, option) {
+                        $('#globalFilter').append(new Option(option.Name, option.ID));
+                        if (option.IsDefault)
+                            $('#globalFilter option[value=' + option.ID + ']').prop('selected', true);
+                    });
+                    $(window).trigger('globalFilterDone');
+                });
+            });
+        });
+    </script>
     @Raw(ViewBag.PageControlScripts.ToString())
     @RenderSection("Scripts", false)
 </body>
