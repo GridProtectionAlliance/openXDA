@@ -21,7 +21,10 @@
 //
 //*****************************************************************************************************@
 @using System
+@using System.Runtime.Serialization
+@using System.Security.Policy
 @using System.Threading
+@using System.Web.Mvc
 @using RazorEngine.Templating
 @using GSF.Web
 @using openXDA.Model
@@ -102,12 +105,12 @@
             </thead>
             <tbody>
                 <tr ng-repeat="item in events">
-                    <td>{{item.ID}}</td>
+                    <td><a href="~/OpenSEE.cshtml?ID={{item.ID.toString()}}"  target="_blank">{{item.ID}}</a></td>
                     <td>{{item.MeterName}}</td>
                     <td>{{item.LineName}}</td>
                     <td>{{getEventTypeName(item.EventTypeID)}}</td>
-                    <td>{{getDateTimeFormat(item.StartTime)}}</td>
-                    <td>{{getDateTimeFormat(item.EndTime)}}</td>
+                    <td><a href="EventsForDate.cshtml?Date={{item.StartTime.toString()}}"  target="_blank">{{getDateTimeFormat(item.StartTime)}}</a></td>
+                    <td><a href="EventsForDate.cshtml?Date={{item.EndTime.toString()}}" target="_blank">{{getDateTimeFormat(item.EndTime)}}</a></td>
                 </tr>
             </tbody>
         </table>
@@ -149,19 +152,19 @@
          var TableCtrl = myApp.controller('TableCtrl', function ($scope) {
              $scope.sortBy = 'ID';
              $scope.sortDirection = true;  // true for ascending and false for descending
-             $scope.Header = ['', '', '', '', '', ''];
+             $scope.Header = ['glyphicon glyphicon-chevron-up', '', '', '', '', ''];
              $scope.searchText = '';
+             $scope.pageSize = 50;
+
              $(window).one('globalFilterDone', function (event) {
-                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, 50, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                     $scope.pageSize = 4;
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
-                     $scope.reverse = false;
                      $scope.$apply();
 
                  });
                  
                  dataHub.getEventCounts($('#globalFilter').val(), ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
-                     $scope.count = Math.ceil(count / 50);
+                     $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
              });
@@ -173,10 +176,14 @@
              $scope.getDateTimeFormat = function (date) {
                  return new Date(date).formatDate(DateTimeFormat);
              }
-
+        
+             $scope.openOpenSEE = function (id) {
+                 var url = "/openSEE.aspx?eventid=" + id;
+                 var popup = window.open(url, id + "openSEE", "left=0,top=0,width=1024,height=768,status=no,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no");
+             }
 
              $scope.search = function () {
-                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, 50, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
@@ -192,7 +199,7 @@
 
 
              $scope.setPage = function (pageNumber) {
-                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, pageNumber, 50, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
@@ -200,7 +207,7 @@
              };
 
              $scope.firstPage = function () {
-                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, 50, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
@@ -208,7 +215,7 @@
              };
 
              $scope.lastPage = function () {
-                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, $scope.count, 50, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
@@ -242,7 +249,7 @@
                  } else {
                      $scope.Header[5] = iconName;
                  }
-                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, 50, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 

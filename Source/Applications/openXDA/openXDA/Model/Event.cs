@@ -30,5 +30,7 @@ namespace openXDA.Model
     {
         public string LineName { get; set; }
         public string MeterName { get; set; }
+        public double Length { get; set; }
+        public string EventTypeName { get; set; }
     }
 }
