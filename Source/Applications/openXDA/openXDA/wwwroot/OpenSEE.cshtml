@@ -31,8 +31,13 @@
 @using GSF.Data
 @using System.Collections.Generic;
 @using System.Data.SqlClient
+@using System.Globalization
+@using System.Linq
 @using System.Web
 @using System.Web.Script.Serialization
+@using FaultData.Database
+@using FaultData.Database.FaultLocationDataTableAdapters
+@using FaultData.Database.MeterDataTableAdapters
 @using GSF.Configuration
 @using RazorEngine.Templating
 @using GSF.Web
@@ -44,13 +49,21 @@
 @{
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
+    string connectionString = ConfigurationFile.Current.Settings["systemSettings"]["ConnectionString"].Value;
+
 
     string eventID = "-1";
-
+    string postedShowFaultCurves = "";
     if (parameters.ContainsKey("ID"))
     {
         eventID = parameters["ID"];
     }
+
+    if (parameters.ContainsKey("faultcurves"))
+    {
+        postedShowFaultCurves = parameters["faultcurves"];
+    }
+
 
     int[] postedAdjacentEventIds = new int[] { -1, -1 };
     string postedURLQueryString = string.Concat(request.QueryParameters().Keys
@@ -70,7 +83,6 @@
     string postedStartTime = "";
     string postedMagnitude = "";
     string postedDurationPeriod = "";
-    string postedShowFaultCurves = "";
     string postedShowBreakerDigitals = "";
     string postedErrorMessage = "";
     using (DataContext dataContext = new DataContext("systemSettings"))
@@ -92,7 +104,7 @@
         try
         {
             IDbCommand cmd = dataContext.Connection.Connection.CreateCommand();
-        cmd.CommandText = "GetPreviousAndNextEventIds";
+            cmd.CommandText = "GetPreviousAndNextEventIds";
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add(new SqlParameter("@EventID", eventID));
             cmd.CommandTimeout = 300;
@@ -124,6 +136,51 @@
             {
                 rdr.Close();
             }
+        }
+
+        using(DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(connectionString))
+        {
+            FaultSummaryTableAdapter summaryInfo = dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>();
+            DisturbanceTableAdapter disturbanceAdapter = dbAdapterContainer.GetAdapter<DisturbanceTableAdapter>();
+
+            if (postedEventName.Equals("Fault"))
+            {
+                FaultLocationData.FaultSummaryDataTable thesummarydatatable = summaryInfo.GetDataBy(Convert.ToInt32(eventID));
+
+                FaultLocationData.FaultSummaryRow thesummary = thesummarydatatable
+                    .Where(row => row.IsSelectedAlgorithm == 1)
+                    .OrderBy(row => row.IsSuppressed)
+                    .ThenBy(row => row.Inception)
+                    .FirstOrDefault();
+
+                if ((object)thesummary != null)
+                {
+                    postedStartTime = thesummary.Inception.TimeOfDay.ToString();
+                    postedDurationPeriod = thesummary.DurationCycles.ToString("##.##", CultureInfo.InvariantCulture) + " cycles";
+                    postedMagnitude = thesummary.CurrentMagnitude.ToString("####.#", CultureInfo.InvariantCulture) + " Amps (RMS)";
+                }
+            }
+            else if (new[] { "Sag", "Swell" }.Contains(postedEventName))
+            {
+                MeterData.DisturbanceDataTable disturbanceTable = disturbanceAdapter.GetDataBy(theEvent.ID);
+
+                MeterData.DisturbanceRow disturbance = disturbanceTable
+                    .Where(row => row.EventTypeID == theEvent.EventTypeID)
+                    .OrderBy(row => row.StartTime)
+                    .FirstOrDefault();
+
+                if ((object)disturbance != null)
+                {
+                    postedStartTime = disturbance.StartTime.TimeOfDay.ToString();
+                    postedDurationPeriod = disturbance.DurationCycles.ToString("##.##", CultureInfo.InvariantCulture) + " cycles";
+
+                    if (disturbance.PerUnitMagnitude != -1.0e308)
+                    {
+                        postedMagnitude = disturbance.PerUnitMagnitude.ToString("N3", CultureInfo.InvariantCulture) + " pu (RMS)";
+                    }
+                }
+            }
+
         }
     }
 

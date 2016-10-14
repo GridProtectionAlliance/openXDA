@@ -105,7 +105,7 @@
             </thead>
             <tbody>
                 <tr ng-repeat="item in events">
-                    <td><a href="~/OpenSEE.cshtml?ID={{item.ID.toString()}}"  target="_blank">{{item.ID}}</a></td>
+                    <td><a href="~/OpenSEE.cshtml?ID={{item.ID.toString()}}&faultcurves=1"  target="_blank">{{item.ID}}</a></td>
                     <td>{{item.MeterName}}</td>
                     <td>{{item.LineName}}</td>
                     <td>{{getEventTypeName(item.EventTypeID)}}</td>
@@ -257,16 +257,23 @@
 
 
              };
+             $('#globalFilter').on('change', function (event) {
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                     $scope.events = data;
+                     $scope.$apply();
+
+                 });
+
+                 dataHub.getEventCounts($('#globalFilter').val(), ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
+                     $scope.count = Math.ceil(count / $scope.pageSize);
+                     $scope.$apply();
+                 });
+
+
+             });
 
 
          });
 
-
-
-         //Inject Services for DI
-         //$scope is standard service provided by framework
-         TableCtrl.$inject = ['$scope'];
-
-    
     </script>
 }

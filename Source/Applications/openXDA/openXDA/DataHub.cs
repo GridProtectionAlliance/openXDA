@@ -26,7 +26,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading;
 using System.Transactions;
 using GSF;
@@ -37,6 +39,7 @@ using GSF.Security.Model;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
+using GSF.Identity;
 using openXDA.Model;
 using openHistorian.XDALink;
 
@@ -1899,6 +1902,438 @@ namespace openXDA
         }
         #endregion
 
+        #region [Chart Operations]
+        public class DailyEvents
+        {
+            public DateTime TheDate;
+            public int Faults;
+            public int Interruptions;
+            public int Sags;
+            public int Swells;
+            public int Others;
+            public int Transients;
+        }
+
+        public class DailyDisturbances
+        {
+            public DateTime TheDate;
+            public int Five;
+            public int Four;
+            public int Three;
+            public int Two;
+            public int One;
+            public int Zero;
+        }
+
+        public class DailyFaults
+        {
+            public DateTime TheDate;
+            public int FiveHundred;
+            public int ThreeHundred;
+            public int TwoThirty;
+            public int OneThirtyFive;
+            public int OneFifteen;
+            public int SixtyNine;
+            public int FourtySix;
+            public int Zero;
+        }
+
+        public class DailyBreakers
+        {
+            public DateTime TheDate;
+            public int Normal;
+            public int Late;
+            public int Indeterminate;
+        }
+
+
+        public List<DailyEvents> GetEventsForPeriod(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            SqlConnection conn = null;
+            SqlDataReader rdr = null;
+            List<DailyEvents> theList = new List<DailyEvents>();
+
+            try
+            {
+                conn = new SqlConnection(DataContext.Connection.Connection.ConnectionString);
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("dbo.selectEventsForMeterIDByDateRange", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
+                cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", meters));
+                cmd.Parameters.Add(new SqlParameter("@username", UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name)));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+
+                    while (rdr.Read())
+                    {
+                        DailyEvents de = new DailyEvents();
+
+                        de.Faults = Convert.ToInt32(rdr["faults"]);
+                        de.Interruptions = Convert.ToInt32(rdr["interruptions"]);
+                        de.Sags = Convert.ToInt32(rdr["sags"]);
+                        de.Swells = Convert.ToInt32(rdr["swells"]);
+                        de.Others = Convert.ToInt32(rdr["others"]);
+                        de.Transients = Convert.ToInt32(rdr["transients"]);
+                        de.TheDate = (DateTime)(rdr["thedate"]);
+                        theList.Add(de);
+                    }
+                }
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+
+            return (theList);
+        }
+
+        public List<DailyDisturbances> GetDisturbancesForPeriod(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            SqlConnection conn = null;
+            SqlDataReader rdr = null;
+            List<DailyDisturbances> theList = new List<DailyDisturbances>();
+
+            try
+            {
+                conn = new SqlConnection(DataContext.Connection.Connection.ConnectionString);
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("dbo.selectDisturbancesForMeterIDByDateRange", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
+                cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", meters));
+                cmd.Parameters.Add(new SqlParameter("@username", UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name)));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+
+                    while (rdr.Read())
+                    {
+                        DailyDisturbances de = new DailyDisturbances();
+
+                        de.Five = Convert.ToInt32(rdr["5"]);
+                        de.Four = Convert.ToInt32(rdr["4"]);
+                        de.Three = Convert.ToInt32(rdr["3"]);
+                        de.Two = Convert.ToInt32(rdr["2"]);
+                        de.One = Convert.ToInt32(rdr["1"]);
+                        de.Zero = Convert.ToInt32(rdr["0"]);
+                        de.TheDate = (DateTime)(rdr["thedate"]);
+                        theList.Add(de);
+                    }
+                }
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+
+            return (theList);
+
+        }
+
+        public List<DailyFaults> GetFaultsForPeriod(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            SqlConnection conn = null;
+            SqlDataReader rdr = null;
+            List<DailyFaults> theList = new List<DailyFaults>();
+
+            try
+            {
+                conn = new SqlConnection(DataContext.Connection.Connection.ConnectionString);
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("dbo.pivotedSelectFaultsForMeterIDByDateRange", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
+                cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", meters));
+                cmd.Parameters.Add(new SqlParameter("@username", UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name)));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+
+                    while (rdr.Read())
+                    {
+                        DailyFaults de = new DailyFaults();
+
+                        de.FiveHundred = Convert.ToInt32(rdr["500"]);
+                        de.ThreeHundred = Convert.ToInt32(rdr["300"]);
+                        de.TwoThirty = Convert.ToInt32(rdr["230"]);
+                        de.OneThirtyFive = Convert.ToInt32(rdr["135"]);
+                        de.OneFifteen = Convert.ToInt32(rdr["115"]);
+                        de.SixtyNine = Convert.ToInt32(rdr["69"]);
+                        de.FourtySix = Convert.ToInt32(rdr["46"]);
+                        de.Zero = Convert.ToInt32(rdr["0"]);
+                        de.TheDate = (DateTime)(rdr["thedate"]);
+                        theList.Add(de);
+                    }
+                }
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+
+            return (theList);
+
+        }
+
+        public List<DailyBreakers> GetBreakersForPeriod(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            SqlConnection conn = null;
+            SqlDataReader rdr = null;
+            List<DailyBreakers> theList = new List<DailyBreakers>();
+
+            try
+            {
+                conn = new SqlConnection(DataContext.Connection.Connection.ConnectionString);
+                conn.Open();
+                SqlCommand cmd = new SqlCommand("dbo.selectBreakersForMeterIDByDateRange", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
+                cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", meters));
+                cmd.Parameters.Add(new SqlParameter("@username", UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name)));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+
+                    while (rdr.Read())
+                    {
+                        DailyBreakers de = new DailyBreakers();
+
+                        de.Normal = Convert.ToInt32(rdr["normal"]);
+                        de.Late = Convert.ToInt32(rdr["late"]);
+                        de.Indeterminate = Convert.ToInt32(rdr["indeterminate"]);
+                        de.TheDate = (DateTime)(rdr["thedate"]);
+                        theList.Add(de);
+                    }
+                }
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+
+            return (theList);
+
+        }
+
+        public IEnumerable<DisturbanceView> GetVoltageMagnitudeData(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            DataTable table = DataContext.Connection.RetrieveData("SELECT * FROM DisturbanceView WHERE MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3}", filterId, filterId, startDate, endDate);
+            return table.Select().Select(row => DataContext.Table<DisturbanceView>().LoadRecord(row));
+        }
+
+        public IEnumerable<VoltageCurvePoint> GetCurves()
+        {
+            return DataContext.Table<VoltageCurvePoint>().QueryRecords("VoltageCurveID, LoadOrder", restriction: new RecordRestriction("VoltageCurveID IN (SELECT ID FROM VoltageCurve WHERE Name ='ITIC UPPER' OR Name = 'ITIC Lower' OR Name = 'SEMI')"));
+        }
+
+        #endregion
+
         #endregion
 
         #region [OpenSEE Operations]
@@ -1908,6 +2343,7 @@ namespace openXDA
             return sc.GetFlotData(eventID, seriesIndexes);
         }
         #endregion
+
         #region [ Misc ]
 
         public IEnumerable<IDLabel> SearchTimeZones(string searchText , int limit)

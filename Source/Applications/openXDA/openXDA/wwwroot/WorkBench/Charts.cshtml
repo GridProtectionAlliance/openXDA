@@ -31,5 +31,423 @@
     Layout = "Workbench/Layout.cshtml";
     ViewBag.Title = "Charts";
 }
+<div id="chart" style="width: 100%"></div>
 @section Scripts {
+<script type="text/javascript" src="/Scripts/D3/d3.js" charset="utf-8"></script>
+<script type="text/javascript" src="/Scripts/D3/d3-color.v1.min.js"></script>
+<script type="text/javascript" src="/Scripts/D3/d3-interpolate.v1.min.js"></script>
+<script type="text/javascript" src="/Scripts/D3/d3-scale.v1.min.js"></script>
+    <script type="text/javascript" src="/Scripts/D3/d3-shape.v1.min.js"></script>
+<script src="/Scripts/plotly-latest.min.js"></script>
+
+    <script>
+        $(function () {
+            $('#pageHeader').append('<select id="graphSelection" class="form-control"></select>');
+            $('#graphSelection').append(new Option("Event Type by Date", 1));
+            $('#graphSelection').append(new Option("Voltage Disturbances by Date", 2));
+            $('#graphSelection').append(new Option("Faults by Date", 3));
+            $('#graphSelection').append(new Option("Breaker Events by Date", 4));
+            $('#graphSelection').append(new Option("Disturbance/Magnitude SARFI", 5));
+            
+            $(window).one('globalFilterDone', function () {
+                $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
+
+                makeGraph($('#graphSelection').val());
+            });
+            
+            $('#graphSelection').on('change', function (event) {
+                Plotly.purge('chart');
+                makeGraph($('#graphSelection').val());
+            });
+            
+            $(window).on('resize', function () {
+                $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
+                Plotly.purge('chart');
+                makeGraph($('#graphSelection').val());
+            });
+        });
+        
+        function makeGraph(id) {
+            if (id == 1)
+                makeEventTypeByDate();
+            else if (id == 2)
+                makeVoltageDisturbanceByDate();
+            else if (id == 3)
+                makeFaultByDate();
+            else if (id == 4)
+                makeBreakerEventByDate();
+            else if (id == 5)
+                makeSARFI();
+            else
+                makeEventTypeByDate();
+        }
+        
+        function makeEventTypeByDate() {
+            dataHub.getEventsForPeriod($('#globalFilter').val()).done(function (data) {
+                
+                var faults = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat);}),
+                    y: data.map(function (obj) { return obj.Faults }),
+                    name: 'Faults',
+                    marker: {
+                        color: 'rgb(192,0,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var interruptions = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Interruptions }),
+                    name: 'Interruptions',
+                    marker: {
+                        color: 'rgb(255,40,0)',
+                    },
+                    type: 'bar'
+                };
+                
+                var sags = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Sags }),
+                    name: 'Sags',
+                    marker: {
+                        color: 'rgb(255,150,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var swells = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Swells }),
+                    name: 'Swells',
+                    marker: {
+                        color: 'rgb(0,255,244)',
+                    },
+                    type: 'bar'
+                };
+                
+                var transients = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Transients }),
+                    name: 'Transients',
+                    marker: {
+                        color: 'rgb(255,255,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var others = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Others }),
+                    name: 'Others',
+                    marker: {
+                        color: 'rgb(0,0,255)',
+                    },
+                    type: 'bar'
+                };
+
+                var data = [faults, interruptions, sags, swells, transients, others].reverse();
+
+                var layout = {
+                    title: "Event Type by Date",
+                    xaxis: {
+                        title: 'Date',
+                        nticks: 7,
+                    },
+                    yaxis: {
+                        title: 'Event Counts'
+                    },
+                    barmode: 'stack'
+                };
+
+                Plotly.newPlot('chart', data, layout);
+            });
+        }
+        
+        function makeVoltageDisturbanceByDate() {
+            dataHub.getDisturbancesForPeriod($('#globalFilter').val()).done(function (data) {
+
+                var Five = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Five }),
+                    name: '5',
+                    marker: {
+                        color: 'rgb(192,0,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var Four = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Four }),
+                    name: '4',
+                    marker: {
+                        color: 'rgb(255,40,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var Three = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Three }),
+                    name: '3',
+                    marker: {
+                        color: 'rgb(255,150,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var Two = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Two }),
+                    name: '2',
+                    marker: {
+                        color: 'rgb(0,255,244)',
+                    },
+                    type: 'bar'
+                };
+
+                var One = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.One }),
+                    name: '1',
+                    marker: {
+                        color: 'rgb(255,255,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var Zero = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Zero }),
+                    name: '0',
+                    marker: {
+                        color: 'rgb(0,0,255)',
+                    },
+                    type: 'bar'
+                };
+
+                var data = [Five, Four, Three, Two, One, Zero].reverse();
+
+                var layout = {
+                    title: "Voltage Disturbances by Date",
+                    xaxis: {
+                        title: 'Date',
+                        nticks: 7,
+                    },
+                    yaxis: {
+                        title: 'Voltage Disturbance Counts'
+                    },
+                    barmode: 'stack'
+                };
+
+                Plotly.newPlot('chart', data, layout);
+            });
+        }
+        
+        function makeFaultByDate() {
+            dataHub.getFaultsForPeriod($('#globalFilter').val()).done(function (data) {
+
+                var FiveHundred = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.FiveHundred }),
+                    name: '500 kV',
+                    marker: {
+                        color: 'rgb(255,0,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var ThreeHundred = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.ThreeHundred }),
+                    name: '300 kV',
+                    marker: {
+                        color: 'rgb(67,67,72)',
+                    },
+                    type: 'bar'
+                };
+
+                var TwoThirty = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.TwoThirty }),
+                    name: '230 kV',
+                    marker: {
+                        color: 'rgb(144,237,125)',
+                    },
+                    type: 'bar'
+                };
+
+                var OneThrityFive = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.OneThrityFive }),
+                    name: '135 kV',
+                    marker: {
+                        color: 'rgb(247,163,92)',
+                    },
+                    type: 'bar'
+                };
+
+                var OneFifteen = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.OneFifteen }),
+                    name: '115 kV',
+                    marker: {
+                        color: 'rgb(128,133,233)',
+                    },
+                    type: 'bar'
+                };
+                
+                var SixtyNine = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.SixtyNine }),
+                    name: '69 kV',
+                    marker: {
+                        color: 'rgb(241,92,128)',
+                    },
+                    type: 'bar'
+                };
+
+                var FourtySix = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.FourtySix }),
+                    name: '46 kV',
+                    marker: {
+                        color: 'rgb(228,211,84)',
+                    },
+                    type: 'bar'
+                };
+
+
+                var Zero = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Zero }),
+                    name: '0',
+                    marker: {
+                        color: 'rgb(43,144,143)',
+                    },
+                    type: 'bar'
+                };
+
+                var data = [FiveHundred, ThreeHundred, TwoThirty, OneThrityFive, OneFifteen,SixtyNine,FourtySix, Zero].reverse();
+
+                var layout = {
+                    title: "Faults by Date",
+                    xaxis: {
+                        title: 'Date',
+                        nticks: 7,
+                    },
+                    yaxis: {
+                        title: 'Fault Counts'
+                    },
+                    barmode: 'stack'
+                };
+
+                Plotly.newPlot('chart', data, layout);
+            });
+
+        }
+        
+        function makeBreakerEventByDate() {
+            dataHub.getBreakersForPeriod($('#globalFilter').val()).done(function (data) {
+
+                var Normal = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Normal }),
+                    name: 'Normal',
+                    marker: {
+                        color: 'rgb(255,0,0)',
+                    },
+                    type: 'bar'
+                };
+
+                var Late = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Late }),
+                    name: 'Late',
+                    marker: {
+                        color: 'rgb(67,67,72)',
+                    },
+                    type: 'bar'
+                };
+
+                var Indeterminate = {
+                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    y: data.map(function (obj) { return obj.Indeterminate }),
+                    name: 'Indeterminate',
+                    marker: {
+                        color: 'rgb(144,237,125)',
+                    },
+                    type: 'bar'
+                };
+
+                var data = [Normal, Late, Indeterminate].reverse();
+
+                var layout = {
+                    title: "Breaker Events by Date",
+                    xaxis: {
+                        title: 'Date',
+                        nticks: 7,
+                    },
+                    yaxis: {
+                        title: 'Breaker Event Counts'
+                    },
+                    barmode: 'stack'
+                };
+
+                Plotly.newPlot('chart', data, layout);
+            });
+
+        }
+        
+        function makeSARFI() {
+            dataHub.getVoltageMagnitudeData($('#globalFilter').val()).done(function (data) {
+                var companyTrace = {
+                    x: [],
+                    y: [],
+                    name: 'Disturbances',
+                    text: [],
+                    type: 'scatter',
+                    mode: 'markers'
+                };
+                $.each(data, function (i, d) {
+                    companyTrace.x.push(d.DurationSeconds);
+                    companyTrace.y.push(d.PerUnitMagnitude * 100);
+                    companyTrace.text.push(d.EventID)
+                });
+                var layout = {
+                    title: 'Disturbance Magnitude Duration Scatter Plot',
+                    hovermode: 'closest',
+                    //showLink: false,
+                    //displayLogo: false,
+                    //autosize: false,
+                    //width: $('#viewWindow').innerWidth(),
+                    xaxis: { title: 'Duration (Seconds)', type: 'log', autorange: false, autotick: false, tickvals: [0, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000], range: [-3, 4] },
+                    yaxis: { side: 'left', overlaying: 'y', anchor: 'x', title: 'Voltage Magnitude(% of Nominal)', range: [0, 150] },
+                    //margin: {
+                    //    l: 15,
+                    //    r: 15,
+                    //    t: 50,
+                    //    b: 50,
+                    //    pad: 15
+                    //},
+                    //height: $('#viewWindow').height() * 0.85,
+                };
+                
+                dataHub.getCurves().done(function (curves) {
+                    var iticUpper = { x: $.map(curves, function (curve) { if (curve.VoltageCurveID == 1) return parseFloat(curve.DurationSeconds) }), y: $.map(curves, function (curve) { if (curve.VoltageCurveID == 1) return parseFloat(curve.PerUnitMagnitude) * 100 }), name: 'ITIC-Upper', type: 'scatter', mode: 'lines' };
+                    var iticLower = { x: $.map(curves, function (curve) { if (curve.VoltageCurveID == 2) return parseFloat(curve.DurationSeconds) }), y: $.map(curves, function (curve) { if (curve.VoltageCurveID == 2) return parseFloat(curve.PerUnitMagnitude) * 100 }), name: 'ITIC-Lower', type: 'scatter', mode: 'lines' };
+                    var semi = { x: $.map(curves, function (curve) { if (curve.VoltageCurveID == 3) return curve.DurationSeconds }), y: $.map(curves, function (curve) { if (curve.VoltageCurveID == 3) return curve.PerUnitMagnitude * 100 }), name: 'SEMI', type: 'scatter', mode: 'lines' };
+                    var plot = Plotly.newPlot('chart', [companyTrace, iticUpper, iticLower, semi], layout);
+                    
+                    $('#chart').on('plotly_click', function (event, data) {
+                        window.open("../OpenSEE.cshtml?ID=" + data.points[0].fullData.text[data.points[0].pointNumber] + "&faultcurves=1");
+                    });
+                });
+                
+
+
+            });
+        }
+        
+    </script>
 }

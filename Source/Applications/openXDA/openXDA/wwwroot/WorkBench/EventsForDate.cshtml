@@ -112,7 +112,7 @@
             </thead>
             <tbody>
                 <tr ng-repeat="item in events">
-                    <td>{{item.ID}}</td>
+                    <td><a href="~/OpenSEE.cshtml?ID={{item.ID.toString()}}&faultcurves=1" target="_blank">{{item.ID}}</a></td>
                     <td>{{item.MeterName}}</td>
                     <td>{{item.LineName}}</td>
                     <td>{{getEventTypeName(item.EventTypeID)}}</td>
