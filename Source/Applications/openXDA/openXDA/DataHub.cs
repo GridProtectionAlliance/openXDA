@@ -1662,43 +1662,6 @@ namespace openXDA
         public List<TrendingData> GetTrendingData(DateTime startDate, DateTime endDate, int channelId)
         {
             List<TrendingData> trendingData = new List<TrendingData>();
-            //using (IDbCommand cmd = DataContext.Connection.Connection.CreateCommand())
-            //{
-            //    cmd.CommandText = "dbo.selectAlarmDataByChannelByDate";
-            //    cmd.CommandType = CommandType.StoredProcedure;
-            //    cmd.CommandTimeout = 30000;
-            //    IDbDataParameter StartDate = cmd.CreateParameter();
-            //    IDbDataParameter EndDate = cmd.CreateParameter();
-            //    IDbDataParameter ChannelID = cmd.CreateParameter();
-
-            //    StartDate.ParameterName = "@StartDate";
-            //    EndDate.ParameterName = "@EndDate";
-            //    ChannelID.ParameterName = "@ChannelID";
-
-            //    StartDate.Value = startDate;
-            //    EndDate.Value = endDate;
-            //    ChannelID.Value = channelId;
-
-            //    cmd.Parameters.Add(StartDate);
-            //    cmd.Parameters.Add(EndDate);
-            //    cmd.Parameters.Add(ChannelID);
-
-            //    using( IDataReader reader = cmd.ExecuteReader())
-            //    {
-
-            //        while (reader.Read())
-            //        {
-            //            TrendingData obj = new TrendingData();
-
-            //            obj.ChannelID = Convert.ToInt32(reader["ChannelID"]);
-            //            obj.SeriesType = Convert.ToString(reader["SeriesType"]);
-            //            obj.Time = Convert.ToDateTime(reader["Time"]);
-            //            obj.Value = Convert.ToDouble(reader["Value"]);
-            //            trendingData.Add(obj);
-            //        }
-
-            //    }
-            //}
 
             string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
             string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
@@ -1900,6 +1863,25 @@ namespace openXDA
             DateTime endTime = date.AddMinutes(5);
             return DataContext.Table<EventView>().QueryRecordCount( new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
         }
+
+        public IEnumerable<EventView> GetAllEventsForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) "+ " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime,filterString, filterString, filterString, filterString, filterString));
+        }
+
+        public int GetCountAllEventsForDay(DateTime date, string eventTypes, string filterString, int filterId)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime, filterString, filterString, filterString, filterString, filterString));
+        }
+
         #endregion
 
         #region [Chart Operations]

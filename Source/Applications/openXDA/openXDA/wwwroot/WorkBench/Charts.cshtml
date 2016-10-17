@@ -165,6 +165,12 @@
                 };
 
                 Plotly.newPlot('chart', data, layout);
+        
+                $('#chart').off('plotly_click');
+                $('#chart').on('plotly_click', function (event, data) {
+                    window.open("EventsForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
+                });
+
             });
         }
         
@@ -443,7 +449,8 @@
                     var iticLower = { x: $.map(curves, function (curve) { if (curve.VoltageCurveID == 2) return parseFloat(curve.DurationSeconds) }), y: $.map(curves, function (curve) { if (curve.VoltageCurveID == 2) return parseFloat(curve.PerUnitMagnitude) * 100 }), name: 'ITIC-Lower', type: 'scatter', mode: 'lines' };
                     var semi = { x: $.map(curves, function (curve) { if (curve.VoltageCurveID == 3) return curve.DurationSeconds }), y: $.map(curves, function (curve) { if (curve.VoltageCurveID == 3) return curve.PerUnitMagnitude * 100 }), name: 'SEMI', type: 'scatter', mode: 'lines' };
                     var plot = Plotly.newPlot('chart', [companyTrace, iticUpper, iticLower, semi], layout);
-                    
+
+                    $('#chart').off('plotly_click');
                     $('#chart').on('plotly_click', function (event, data) {
                         window.open("../OpenSEE.cshtml?ID=" + data.points[0].fullData.text[data.points[0].pointNumber] + "&faultcurves=1");
                     });

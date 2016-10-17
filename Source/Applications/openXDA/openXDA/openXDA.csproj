@@ -1152,6 +1152,7 @@
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\scss\_rotated-flipped.scss" />
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\scss\_stacked.scss" />
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\scss\_variables.scss" />
+    <Content Include="wwwroot\Workbench\EventsForDay.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
