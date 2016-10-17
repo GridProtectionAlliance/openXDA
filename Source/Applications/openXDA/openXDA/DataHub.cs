@@ -2334,6 +2334,66 @@ namespace openXDA
 
         #endregion
 
+        #region [Site Summary]
+        public class SiteSummary
+        {
+            [PrimaryKey]
+            public int MeterID { get; set; }
+            public double Completeness { get; set; }
+            public double Correctness { get; set; }
+            public int Events { get; set; }
+            public int Disturbances { get; set; }
+        }
+
+        public IEnumerable<SiteSummary> GetSiteSummaries(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            DataTable table = DataContext.Connection.RetrieveData(" SELECT temp.MeterID, SUM(Completeness) / DATEDIFF(day, '01/01/2008', '1/31/2016') as Completeness, " +
+                                                                  " SUM(Correctness) / DATEDIFF(day, '01/01/2008', '1/31/2016') as Correctness, " +
+                                                                  " (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = temp.MeterID) AS Events, " +
+                                                                  " (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = temp.MeterID) AS Disturbances " +
+                                                                  " FROM(" +
+                                                                        " SELECT MeterID, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness " +
+                                                                        " FROM MeterDataQualitySummary " +
+                                                                        " WHERE Date BETWEEN {0} AND {1} AND MeterID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
+                                                                       " ) as temp " +
+                                                                   " GROUP BY temp.MeterID ", startDate, endDate, filterId);
+            return table.Select().Select(row => DataContext.Table<SiteSummary>().LoadRecord(row));
+
+        }
+        #endregion
+
         #endregion
 
         #region [OpenSEE Operations]

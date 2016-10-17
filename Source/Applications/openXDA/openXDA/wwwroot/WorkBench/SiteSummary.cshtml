@@ -31,7 +31,216 @@
     Layout = "Workbench/Layout.cshtml";
     ViewBag.Title = "Site Summary";
 }
+
+@section StyleSheets{
+    <style>
+        table, th, td {
+            border: 1px solid grey;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+
+            table tr:nth-child(odd) {
+                background-color: #f1f1f1;
+            }
+
+            table tr:nth-child(even) {
+                background-color: #ffffff;
+            }
+    </style>
+}
+
+<div ng-app="myApp">
+    <div ng-controller="TableCtrl">
+        <div class="input-group">
+            <input class="form-control" ng-model="searchText" placeholder="Search" type="search" ng-change="search()" /> <span class="input-group-addon">
+                <span class="glyphicon glyphicon-search"></span>
+            </span>
+        </div>
+        <table class="table  table-hover data-table myTable">
+            <thead>
+                <tr>
+                    <th class="EmpId">
+                        <a href="#" ng-click="sort('MeterID')">
+                            Meter ID
+                            <span class="{{Header[0]}}"></span>
+                        </a>
+
+                    </th>
+                    <th class="name">
+                        <a ng-click="sort('Completeness')" href="#">
+                            Completeness
+                            <span class="{{Header[1]}}"></span>
+                        </a>
+                    </th>
+                    <th class="Email">
+                        <a ng-click="sort('Correctness')" href="#">
+                            Correctness
+                            <span class="{{Header[2]}}"></span>
+                        </a>
+                    </th>
+                    <th class="Email">
+                        <a ng-click="sort('Events')" href="#">
+                            Events
+                            <span class="{{Header[3]}}"></span>
+                        </a>
+                    </th>
+                    <th class="Email">
+                        <a ng-click="sort('Disturbances')" href="#">
+                            Disturbances
+                            <span class="{{Header[4]}}"></span>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in pagedSiteSummaries[currentPage] | orderBy: sortBy:reverse">
+                    <td>{{getMeterName(item.MeterID)}}</td>
+                    <td>{{item.Completeness + '%'}}</td>
+                    <td>{{item.Correctness + '%'}}</td>
+                    <td>{{item.Events}}</td>
+                    <td>{{item.Disturbances}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ul class="pagination pagination-sm">
+            <li ng-class="{active:0}">
+                <a href="#" ng-click="firstPage()">First</a>
+
+            </li>
+            <li ng-repeat="n in [] | range:count">
+                <a href="#" ng-if="n > 1 && n < count" ng-click="setPage(n)" ng-bind="n"></a>
+            </li>
+            <li>
+                <a href="#" ng-click="lastPage()">Last</a>
+
+            </li>
+        </ul>
+    </div>
+    <!-- Ends Controller -->
+</div>
+
 @section Scripts {
     <script>
+        @Raw(Model.RenderAbstract<Meter>("Name", "ID", "lookupMeterName", "meterName"))
+        
+        //Demo of Searching Sorting and Pagination of Table with AngularJS - Advance Example
+
+        var myApp = angular.module('myApp', []);
+         
+        myApp.filter('range', function () {
+            return function (input, total) {
+                total = parseInt(total);
+                for (var i = 0; i < total; ++i) {
+                    input.push(i);
+                }
+                return input;
+            }
+        });
+
+        var TableCtrl = myApp.controller('TableCtrl', function ($scope) {
+            $scope.sortBy = 'MeterID';
+            $scope.reverse = false;
+            $scope.Header = ['glyphicon glyphicon-chevron-up', '', '', '', ''];
+            $scope.searchText = '';
+            $scope.pageSize = 50;
+            $scope.pagedSiteSummaries = [];
+            $scope.currentPage = 0;
+            $scope.siteSummary;
+            $scope.pageCount = 0;
+
+
+            $(window).one('globalFilterDone', function (event) {
+                dataHub.getSiteSummaries($('#globalFilter').val()).done(function (data) {
+                    $scope.siteSummary = data;
+                    $scope.setPages();
+                    $scope.pageCount = Math.ceil(data.length / $scope.pageSize);
+                    $scope.$apply();
+                });                 
+            });
+
+            $scope.getMeterName = function (id) {
+                return lookupMeterName(id);
+            }
+             
+        
+            $scope.search = function () {
+                if ($scope.searchText === "") {
+                    var page = 0;
+                    $scope.pagedSiteSummaries = [];
+                    $scope.pagedSiteSummaries.push([]);
+                    $.each($scope.siteSummary, function (index, data) {
+                        if (index !== 0 && index % $scope.pageSize === 0)
+                            page++
+                        $scope.pagedSiteSummaries[page].push(data);
+                    });
+                }
+                else {
+                    var page = 0;
+                    $scope.pagedSiteSummaries = [];
+                    $scope.pagedSiteSummaries.push([]);
+                    $.each($scope.siteSummary.filter(function (data) { 
+                        if (lookupMeterName(data.MeterID).toLowerCase().indexOf($scope.searchText) > -1 /*|| data.Completeness.indexOf($scope.searchText) > -1 || data.Correctness.indexOf($scope.searchText) > -1 || data.Events.indexOf($scope.searchText) > -1 || data.Disturbances.indexOf($scope.searchText) > -1*/)
+                            return true;
+                        }), function (index, data) {
+                        if (index !== 0 && index % $scope.pageSize === 0)
+                            page++
+                        $scope.pagedSiteSummaries[page].push(data);
+                    });
+                }
+            }
+
+
+            $scope.setPage = function (pageNumber) {
+                $scope.currentPage = pageNumber - 1;
+            };
+
+            $scope.firstPage = function () {
+                $scope.currentPage = 0;
+            };
+
+            $scope.lastPage = function () {
+                $scope.currentPage = $scope.pageCount - 1;
+            };
+
+            $scope.sort = function (sortBy) {
+                if (sortBy === $scope.sortBy) {
+                    $scope.reverse = !$scope.reverse;                 
+                }
+                $scope.sortBy = sortBy;
+                $scope.Header = ['', '', '', '', '', ''];
+
+                if ($scope.reverse)
+                    iconName = 'glyphicon glyphicon-chevron-down';
+                else
+                    iconName = 'glyphicon glyphicon-chevron-up';
+                 
+                if (sortBy === 'MeterID') {
+                    $scope.Header[0] = iconName;
+                }
+                else if (sortBy === 'Completeness') {
+                    $scope.Header[1] = iconName;
+                } else if (sortBy === 'Correctness') {
+                    $scope.Header[2] = iconName;
+                }
+                else if (sortBy === 'Events') {
+                    $scope.Header[3] = iconName;
+                } else if (sortBy === 'Disturbances') {
+                    $scope.Header[4] = iconName;
+                } 
+            };
+            
+            $scope.setPages = function () {
+                var page = 0;
+                $scope.pagedSiteSummaries.push([]);
+                $.each($scope.siteSummary, function (index, data) {
+                    if(index !== 0 && index % $scope.pageSize === 0)
+                        page++
+                    $scope.pagedSiteSummaries[page].push(data);
+                });
+            };
+        });
+
+    
     </script>
 }
