@@ -60,6 +60,11 @@
                 makeGraph($('#graphSelection').val());
             });
             
+            $('#globalFilter').on('change', function (event) {
+                Plotly.purge('chart');
+                makeGraph($('#graphSelection').val());
+            });
+
             $(window).on('resize', function () {
                 $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
                 Plotly.purge('chart');
