@@ -128,7 +128,7 @@
             <li ng-class="{active:0}">
                 <a href="#" ng-if="getAbsDiff(0, currentPage) > 5" ng-click="minusPage()"><</a>
             </li>
-            <li ng-repeat="n in [] | range:count">
+            <li ng-repeat="n in [] | range:count" ng-class="{active: n == currentPage}">
                 <a href="#" ng-if="n > 0 && n <= count && getAbsDiff(n, currentPage) <= 5 " ng-click="setPage(n)" ng-bind="n"></a>
             </li>
             <li ng-class="{active:0}">
@@ -141,10 +141,10 @@
         <div class="pull-right">
             Rows:
             <div class="btn-group">
-                <button class="btn btn-default" ng-click="setPageSize(10)">10</button>
-                <button class="btn btn-default" ng-click="setPageSize(25)">25</button>
-                <button class="btn btn-default" ng-click="setPageSize(50)">50</button>
-                <button class="btn btn-default" ng-click="setPageSize(100)">100</button>
+                <button ng-class="{active: pageSize == 10}" class="btn btn-default" ng-click="setPageSize(10)">10</button>
+                <button ng-class="{active: pageSize == 25}" class="btn btn-default" ng-click="setPageSize(25)">25</button>
+                <button ng-class="{active: pageSize == 50}" class="btn btn-default" ng-click="setPageSize(50)">50</button>
+                <button ng-class="{active: pageSize == 100}" class="btn btn-default" ng-click="setPageSize(100)">100</button>
             </div>
         </div>
     </div>
