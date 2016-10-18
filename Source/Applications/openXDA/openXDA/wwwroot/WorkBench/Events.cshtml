@@ -114,19 +114,33 @@
                 </tr>
             </tbody>
         </table>
-        <ul class="pagination pagination-sm">
+        <ul class="pagination pagination-md pull-left">
             <li ng-class="{active:0}">
-                <a href="#" ng-click="firstPage()">First</a>
-
+                <a href="#" ng-click="firstPage()"><<</a>
+            </li>
+            <li ng-class="{active:0}">
+                <a href="#" ng-if="getAbsDiff(0, currentPage) > 5" ng-click="minusPage()"><</a>
             </li>
             <li ng-repeat="n in [] | range:count">
-                <a href="#" ng-if="n > 1 && n < count" ng-click="setPage(n)" ng-bind="n"></a>
+                <a href="#" ng-if="n > 0 && n <= count && getAbsDiff(n, currentPage) <= 5 " ng-click="setPage(n)" ng-bind="n"></a>
+            </li>
+            <li ng-class="{active:0}">
+                <a href="#" ng-if="getAbsDiff(count, currentPage) > 5" ng-click="plusPage()">></a>
             </li>
             <li>
-                <a href="#" ng-click="lastPage()">Last</a>
-
+                <a href="#" ng-click="lastPage()">>></a>
             </li>
         </ul>
+        <div class="pull-right">
+            Rows: 
+               <div class="btn-group">
+                    <button class="btn btn-default" ng-click="setPageSize(10)">10</button>
+                    <button class="btn btn-default" ng-click="setPageSize(25)">25</button>
+                    <button class="btn btn-default" ng-click="setPageSize(50)">50</button>
+                    <button class="btn btn-default" ng-click="setPageSize(100)">100</button>
+                </div>
+        </div>
+
     </div>
     <!-- Ends Controller -->
 </div>
@@ -154,7 +168,8 @@
              $scope.sortDirection = true;  // true for ascending and false for descending
              $scope.Header = ['glyphicon glyphicon-chevron-up', '', '', '', '', ''];
              $scope.searchText = '';
-             $scope.pageSize = 50;
+             $scope.pageSize = 10;
+             $scope.currentPage = 1;
 
              $(window).one('globalFilterDone', function (event) {
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
@@ -185,11 +200,12 @@
              $scope.search = function () {
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
+                     $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
                  dataHub.getEventCounts($('#globalFilter').val(), ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
-                     $scope.count = Math.ceil(count / 50);
+                     $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
 
@@ -201,6 +217,7 @@
              $scope.setPage = function (pageNumber) {
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
+                     $scope.currentPage = pageNumber;
                      $scope.$apply();
 
                  });
@@ -209,6 +226,7 @@
              $scope.firstPage = function () {
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
+                     $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
@@ -217,10 +235,18 @@
              $scope.lastPage = function () {
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
+                     $scope.currentPage = $scope.count;
                      $scope.$apply();
 
                  });
              };
+        
+             $scope.plusPage = function () {
+                 $scope.currentPage++;
+             }
+             $scope.minusPage = function () {
+                 $scope.currentPage--;
+             }
 
              $scope.sort = function (sortBy) {
                  if (sortBy === $scope.sortBy) {
@@ -251,15 +277,36 @@
                  }
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
+                     $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
 
 
              };
+             
+             $scope.setPageSize = function (size) {
+                 $scope.pageSize = size;
+                 dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                     $scope.events = data;
+                     $scope.$apply();
+
+                 });
+
+                 dataHub.getEventCounts($('#globalFilter').val(), ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
+                     $scope.count = Math.ceil(count / $scope.pageSize);
+                     $scope.$apply();
+                 });
+             };
+
+             $scope.getAbsDiff = function (a, b) {
+                 return Math.abs(a - b);
+             };
+
              $('#globalFilter').on('change', function (event) {
                  dataHub.getFilteredEvents($('#globalFilter').val(), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
+                     $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
