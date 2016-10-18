@@ -11,6 +11,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int EventID { get; set; }
+        public int EventTypeID { get; set; }
         public int PhaseID { get; set; }
         public float Magnitude { get; set; }
         public float PerUnitMagnitude { get; set; }
@@ -25,5 +26,9 @@ namespace openXDA.Model
     public class DisturbanceView : Disturbance
     {
         public int MeterID { get; set; }
+        public int SeverityCode { get; set; }
+        public string MeterName { get; set; }
+        public string PhaseName { get; set; }
+
     }
 }

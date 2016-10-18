@@ -1882,6 +1882,39 @@ namespace openXDA
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime, filterString, filterString, filterString, filterString, filterString));
         }
 
+        public IEnumerable<DisturbanceView> GetDisturbancesForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("5") ? "'5'," : "") + (eventTypes.Contains("4") ? "'4'," : "") + (eventTypes.Contains("3") ? "'3'," : "") + (eventTypes.Contains("2") ? "'2'," : "") + (eventTypes.Contains("1") ? "'1'," : "") + (eventTypes.Contains("0") ? "'0'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+            return DataContext.Table<DisturbanceView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " StartTime >= {1} AND StartTime <= {2} AND " +
+                " EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND " +
+                " (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR EventID LIKE {8} OR PhaseName Like {9}) AND " +
+                $" SeverityCode IN({eventTypeList}) ",
+                filterId, date, endTime, filterId,filterString, filterString, filterString, filterString, filterString,filterString));
+        }
+
+        public int GetCountDisturbancesForDay(DateTime date, string eventTypes, string filterString, int filterId)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("5") ? "'5'," : "") + (eventTypes.Contains("4") ? "'4'," : "") + (eventTypes.Contains("3") ? "'3'," : "") + (eventTypes.Contains("2") ? "'2'," : "") + (eventTypes.Contains("1") ? "'1'," : "") + (eventTypes.Contains("0") ? "'0'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+
+            return DataContext.Table<DisturbanceView>().QueryRecordCount(new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " StartTime >= {1} AND StartTime <= {2} AND "+ 
+                " EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND "+
+                " (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR EventID LIKE {8} OR PhaseName Like {9}) AND " +
+                $" SeverityCode IN({eventTypeList}) ", 
+                filterId, date, endTime, filterId,filterString, filterString, filterString, filterString, filterString, filterString));
+        }
+
         #endregion
 
         #region [Chart Operations]
