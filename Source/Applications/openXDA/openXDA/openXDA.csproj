@@ -306,6 +306,7 @@
     <Compile Include="Model\EventInfo.cs" />
     <Compile Include="Model\EventType.cs" />
     <Compile Include="Model\FaultEmailCriterion.cs" />
+    <Compile Include="Model\FaultView.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserAccountMeterGroup.cs" />
@@ -1156,6 +1157,7 @@
     <Content Include="wwwroot\Workbench\EventsForDay.cshtml" />
     <Content Include="wwwroot\Workbench\DisturbancesForDay.cshtml" />
     <Content Include="wwwroot\Workbench\BreakersForDay.cshtml" />
+    <Content Include="wwwroot\Workbench\FaultsForDay.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

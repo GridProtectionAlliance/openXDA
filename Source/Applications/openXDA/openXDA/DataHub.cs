@@ -1948,6 +1948,37 @@ namespace openXDA
                 filterId, date, endTime, filterId, filterString, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
         }
 
+        public IEnumerable<FaultView> GetFaultsForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("500 kV") ? "'500'," : "") + (eventTypes.Contains("300 kV") ? "'300'," : "") + (eventTypes.Contains("230 kV") ? "'230'," : "") + (eventTypes.Contains("135 kV") ? "'135'," : "") + (eventTypes.Contains("115 kV") ? "'115'," : "") + (eventTypes.Contains("69 kV") ? "'69'," : "") + (eventTypes.Contains("46 kV") ? "'46'," : "") + (eventTypes.Contains("0 kV") ? "'0'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+            return DataContext.Table<FaultView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " InceptionTime >= {1} AND InceptionTime <= {2} AND " +
+                " (MeterName LIKE {3} OR EventID LIKE {4} OR LineName LIKE {5} OR Voltage LIKE {6} OR FaultType Like {7} OR CurrentDistance LIKE {8} OR InceptionTime LIKE {9}) AND " +
+                $" Voltage IN({eventTypeList}) ",
+                filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
+        }
+
+        public int GetCountFaultsForDay(DateTime date, string eventTypes, string filterString, int filterId)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("500 kV") ? "'500'," : "") + (eventTypes.Contains("300 kV") ? "'300'," : "") + (eventTypes.Contains("230 kV") ? "'230'," : "") + (eventTypes.Contains("135 kV") ? "'135'," : "") + (eventTypes.Contains("115 kV") ? "'115'," : "") + (eventTypes.Contains("69 kV") ? "'69'," : "") + (eventTypes.Contains("46 kV") ? "'46'," : "") + (eventTypes.Contains("0 kV") ? "'0'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+
+            return DataContext.Table<FaultView>().QueryRecordCount(new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " InceptionTime >= {1} AND InceptionTime <= {2} AND " +
+                " (MeterName LIKE {3} OR EventID LIKE {4} OR LineName LIKE {5} OR Voltage LIKE {6} OR FaultType Like {7} OR CurrentDistance LIKE {8} OR InceptionTime LIKE {9}) AND " +
+                $" Voltage IN({eventTypeList}) ",
+                filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
+        }
+
 
         #endregion
 
