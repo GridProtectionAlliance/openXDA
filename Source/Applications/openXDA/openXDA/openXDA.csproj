@@ -354,10 +354,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\SystemSettings.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="wwwroot\OpenSEE.aspx.cs">
-      <DependentUpon>OpenSEE.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
     <Compile Include="wwwroot\SignalCode.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -416,6 +412,7 @@
     <Content Include="wwwroot\Config\EmailGroupMeterGroup.cshtml" />
     <Content Include="wwwroot\Config\EmailGroupUserAccount.cshtml" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
+    <None Include="Properties\PublishProfiles\Desktop Folder.pubxml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
@@ -521,7 +518,6 @@
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Config\Settings.cshtml" />
     <None Include="wwwroot\Config\Sites.cshtml" />
-    <Content Include="wwwroot\OpenSEE.aspx" />
     <Content Include="wwwroot\Scripts\angular.js" />
     <Content Include="wwwroot\Scripts\D3\conrec.js" />
     <Content Include="wwwroot\Scripts\D3\d3-color.v1.min.js" />
