@@ -1915,6 +1915,40 @@ namespace openXDA
                 filterId, date, endTime, filterId,filterString, filterString, filterString, filterString, filterString, filterString));
         }
 
+        public IEnumerable<BreakerView> GetBreakersForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("Normal") ? "'Normal'," : "") + (eventTypes.Contains("Late") ? "'Late'," : "") + (eventTypes.Contains("Indeterminate") ? "'Indeterminate'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+            return DataContext.Table<BreakerView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " Energized >= {1} AND Energized <= {2} AND " +
+                " EventType IN (Select Name FROM EventType WHERE ID IN (SELECT * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ','))) AND " +
+                " (MeterID LIKE {4} OR Energized LIKE {5} OR EventType LIKE {6} OR EventID LIKE {7} OR PhaseName Like {8} OR BreakerNumber LIKE {9} OR LineName LIKE {10} OR OperationType Like {11}) AND " +
+                $" OperationType IN({eventTypeList}) ",
+                filterId, date, endTime, filterId, filterString, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
+        }
+
+        public int GetCountBreakersForDay(DateTime date, string eventTypes, string filterString, int filterId)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("Normal") ? "'Normal'," : "") + (eventTypes.Contains("Late") ? "'Late'," : "") + (eventTypes.Contains("Indeterminate") ? "'Indeterminate'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+
+            return DataContext.Table<BreakerView>().QueryRecordCount(new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " Energized >= {1} AND Energized <= {2} AND " +
+                " EventType IN (Select Name FROM EventType WHERE ID IN (SELECT * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ','))) AND " +
+                " (MeterID LIKE {4} OR Energized LIKE {5} OR EventType LIKE {6} OR EventID LIKE {7} OR PhaseName Like {8} OR BreakerNumber LIKE {9} OR LineName LIKE {10} OR OperationType Like {11}) AND " +
+                $" OperationType IN({eventTypeList}) ",
+                filterId, date, endTime, filterId, filterString, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
+        }
+
+
         #endregion
 
         #region [Chart Operations]

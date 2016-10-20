@@ -48,7 +48,7 @@
         ViewBag.Filter = parameters["Filter"];
     }
 
-    ViewBag.Title = "Disturbances for date: " + ViewBag.Date;
+    ViewBag.Title = "Breakers for date: " + ViewBag.Date;
 }
 
 @section StyleSheets{
@@ -80,8 +80,8 @@
             <thead>
                 <tr>
                     <th class="EmpId">
-                        <a href="#" ng-click="sort('ID')">
-                            Disturbance ID
+                        <a href="#" ng-click="sort('MeterID')">
+                            Meter ID
                             <span class="{{Header[0]}}"></span>
                         </a>
 
@@ -93,51 +93,51 @@
                         </a>
                     </th>
                     <th class="name">
-                        <a ng-click="sort('MeterName')" href="#">
-                            Meter ID
+                        <a ng-click="sort('EventType')" href="#">
+                            Event Type
                             <span class="{{Header[2]}}"></span>
                         </a>
                     </th>
                     <th class="Email">
-                        <a ng-click="sort('EventTypeID')" href="#">
-                            Event Type
+                        <a ng-click="sort('Energized')" href="#">
+                            Energized
                             <span class="{{Header[3]}}"></span>
                         </a>
                     </th>
                     <th class="Email">
-                        <a ng-click="sort('SeverityCode')" href="#">
-                            Severity
+                        <a ng-click="sort('BreakerNumber')" href="#">
+                            Breaker Number
                             <span class="{{Header[9]}}"></span>
                         </a>
                     </th>
 
                     <th class="Email">
-                        <a ng-click="sort('PhaseName')" href="#">
-                            Phase
+                        <a ng-click="sort('LineName')" href="#">
+                            Line
                             <span class="{{Header[4]}}"></span>
                         </a>
                     </th>
                     <th class="Email">
-                        <a ng-click="sort('PerUnitMagnitude')" href="#">
-                            Per Unit Magnitude
+                        <a ng-click="sort('PhaseName')" href="#">
+                            Phase
                             <span class="{{Header[5]}}"></span>
                         </a>
                     </th>
                     <th class="Email">
-                        <a ng-click="sort('DurationSeconds')" href="#">
-                            Duration (s)
+                        <a ng-click="sort('Timeing')" href="#">
+                            Timeing
                             <span class="{{Header[6]}}"></span>
                         </a>
                     </th>
                     <th class="Email">
-                        <a ng-click="sort('StartTime')" href="#">
-                            Start Time
+                        <a ng-click="sort('Speed')" href="#">
+                            Speed
                             <span class="{{Header[7]}}"></span>
                         </a>
                     </th>
                     <th class="Email">
-                        <a ng-click="sort('EndTime')" href="#">
-                            End Time
+                        <a ng-click="sort('OperationType')" href="#">
+                            Operation
                             <span class="{{Header[8]}}"></span>
                         </a>
                     </th>
@@ -146,16 +146,16 @@
             </thead>
             <tbody>
             <tr ng-repeat="item in events">
-                <td>{{item.ID}}</td>
-                <td><a href="~/OpenSEE.cshtml?ID={{item.EventID.toString()}}&faultcurves=1" target="_blank">{{item.EventID}}</a></td>
-                <td>{{item.MeterName}}</td>
-                <td>{{getEventTypeName(item.EventTypeID)}}</td>
-                <td>{{item.SeverityCode}}</td>
+                <td>{{item.MeterID}}</td>
+                <td><a href="~/OpenSEE.cshtml?ID={{item.EventID.toString()}}&breakerdigitals=1" target="_blank">{{item.EventID}}</a></td>
+                <td>{{item.EventType}}</td>
+                <td>{{getDateTimeFormat(item.Energized)}}</td>
+                <td>{{item.BreakerNumber}}</td>
+                <td>{{item.LineName}}</td>
                 <td>{{item.PhaseName}}</td>
-                <td>{{item.PerUnitMagnitude}}</td>
-                <td>{{item.DurationSeconds}}</td>
-                <td><a href="EventsForDate.cshtml?Date={{item.StartTime.toString()}}" target="_blank">{{getDateTimeFormat(item.StartTime)}}</a></td>
-                <td><a href="EventsForDate.cshtml?Date={{item.EndTime.toString()}}" target="_blank">{{getDateTimeFormat(item.EndTime)}}</a></td>
+                <td>{{item.Timing}}</td>
+                <td>{{item.Speed}}</td>
+                <td>{{item.OperationType}}</td>
             </tr>
             </tbody>
         </table>
@@ -215,36 +215,33 @@
 
 
              $(window).one('globalFilterDone', function (event) {
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
                  });
 
-                 dataHub.getCountDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                 dataHub.getCountBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
              });
 
-             $scope.getEventTypeName = function (id) {
-                 return lookupEventTypeName(id);
-             }
 
              $scope.getDateTimeFormat = function (date) {
-                 return new Date(date).formatDate(DateTimeFormat);
+                 return new Date(date + ' Z').formatDate(DateTimeFormat);
              }
 
 
              $scope.search = function () {
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
 
-                 dataHub.getCountDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                 dataHub.getCountBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -255,7 +252,7 @@
 
 
              $scope.setPage = function (pageNumber) {
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      //$('.pagination li a').parent().removeClass("active");
                      //$('.pagination li a:contains('+pageNumber+')').parent().addClass("active")
                      $scope.events = data;
@@ -266,7 +263,7 @@
              };
 
              $scope.firstPage = function () {
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      //$('.pagination li a').parent().removeClass("active");
                      //$('.pagination li a:contains(1)').parent().addClass("active")
@@ -277,7 +274,7 @@
              };
 
              $scope.lastPage = function () {
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      //$('.pagination li a').parent().removeClass("active");
                      //$('.pagination li a:contains('+$scope.count+')').parent().addClass("active")
@@ -329,7 +326,7 @@
                  } else {
                      $scope.Header[9] = iconName;
                  }
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = 1;
                      $scope.$apply();
@@ -341,13 +338,13 @@
 
              $scope.setPageSize = function (size) {
                  $scope.pageSize = size;
-                 dataHub.getDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
                  });
 
-                 dataHub.getCountDisturbancesForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                 dataHub.getCountBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });

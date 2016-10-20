@@ -187,13 +187,13 @@
              $scope.currentPage = 1;
 
              $(window).one('globalFilterDone', function (event) {
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.$apply();
 
                  });
 
-                 dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                 dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -204,19 +204,19 @@
              }
 
              $scope.getDateTimeFormat = function (date) {
-                 return new Date(date).formatDate(DateTimeFormat);
+                 return new Date(date ).formatDate(DateTimeFormat);
              }
 
 
              $scope.search = function () {
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
 
-                 dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                 dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -227,7 +227,7 @@
 
 
              $scope.setPage = function (pageNumber) {
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = pageNumber;
 
@@ -237,7 +237,7 @@
              };
 
              $scope.firstPage = function () {
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = 1;
 
@@ -247,7 +247,7 @@
              };
 
              $scope.lastPage = function () {
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = $scope.count;
 
@@ -255,7 +255,7 @@
 
                  });
              };
-             
+
              $scope.plusPage = function () {
                  $scope.currentPage++;
              }
@@ -291,7 +291,7 @@
                  } else {
                      $scope.Header[5] = iconName;
                  }
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = 1;
 
@@ -301,17 +301,17 @@
 
 
              };
-             
+
              $scope.setPageSize = function (size) {
                  $scope.pageSize = size;
-                 dataHub.getAllEventsForDate(new Date('@ViewBag.Date'), $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
                      $scope.currentPage = 1;
                      $scope.$apply();
 
                  });
 
-                 dataHub.getCountAllEventsForDate(new Date('@ViewBag.Date'), ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
+                 dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });

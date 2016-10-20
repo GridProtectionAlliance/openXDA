@@ -414,6 +414,9 @@
 
                 Plotly.newPlot('chart', data, layout);
                 $('#chart').off('plotly_click');
+                $('#chart').on('plotly_click', function (event, data) {
+                    window.open("BreakersForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
+                });
 
             });
 

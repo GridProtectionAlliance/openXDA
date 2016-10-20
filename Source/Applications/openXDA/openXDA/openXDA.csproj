@@ -290,6 +290,7 @@
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="Model\AlarmEmailCriterion.cs" />
+    <Compile Include="Model\BreakerView.cs" />
     <Compile Include="Model\ChannelInfo.cs" />
     <Compile Include="Model\CycleDataSOEPointView.cs" />
     <Compile Include="Model\Disturbance.cs" />
@@ -1154,6 +1155,7 @@
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\scss\_variables.scss" />
     <Content Include="wwwroot\Workbench\EventsForDay.cshtml" />
     <Content Include="wwwroot\Workbench\DisturbancesForDay.cshtml" />
+    <Content Include="wwwroot\Workbench\BreakersForDay.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

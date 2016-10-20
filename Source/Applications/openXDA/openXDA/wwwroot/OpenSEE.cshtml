@@ -54,6 +54,8 @@
 
     string eventID = "-1";
     string postedShowFaultCurves = "";
+    string postedShowBreakerDigitals = "";
+
     if (parameters.ContainsKey("ID"))
     {
         eventID = parameters["ID"];
@@ -63,6 +65,11 @@
     {
         postedShowFaultCurves = parameters["faultcurves"];
     }
+    if (parameters.ContainsKey("breakerdigitals"))
+    {
+        postedShowBreakerDigitals = parameters["breakerdigitals"];
+    }
+
 
 
     int[] postedAdjacentEventIds = new int[] { -1, -1 };
@@ -83,7 +90,6 @@
     string postedStartTime = "";
     string postedMagnitude = "";
     string postedDurationPeriod = "";
-    string postedShowBreakerDigitals = "";
     string postedErrorMessage = "";
     using (DataContext dataContext = new DataContext("systemSettings"))
     {
