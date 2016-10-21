@@ -4,6 +4,11 @@
   <Directory Id="CONTENTFOLDER" Name="Content">
     <Directory Id="CONTENTFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="CONTENTIMAGESFOLDER" Name="images" />
+    <Directory Id="CONTENTTHEMESFOLDER" Name="themes">
+      <Directory Id="CONTENTTHEMESREDMONDFOLDER" Name="redmond">
+        <Directory Id="CONTENTTHEMESREDMONDIMAGESFOLDER" Name="images" />
+      </Directory>
+    </Directory>
   </Directory>
   <Directory Id="DOCSFOLDER" Name="Docs" />
   <Directory Id="FONTSFOLDER" Name="fonts" />
@@ -11,6 +16,7 @@
     <Directory Id="IMAGESICONSFOLDER" Name="Icons" />
   </Directory>
   <Directory Id="SCRIPTSFOLDER" Name="Scripts">
+    <Directory Id="SCRIPTSD3FOLDER" Name="D3" />
     <Directory Id="SCRIPTSFLOTFOLDER" Name="flot">
       <Directory Id="SCRIPTSFLOTEXAMPLESFOLDER" Name="examples">
         <Directory Id="SCRIPTSFLOTEXAMPLESAJAXFOLDER" Name="ajax" />
@@ -49,6 +55,132 @@
       </Directory>
     </Directory>
     <Directory Id="SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
+    <Directory Id="SCRIPTSPRIMEUIFOLDER" Name="PrimeUI">
+      <Directory Id="SCRIPTSPRIMEUIFONTAWESOMEFOLDER" Name="Font-Awesome">
+        <Directory Id="SCRIPTSPRIMEUIFONTAWESOMECSSFOLDER" Name="css" />
+        <Directory Id="SCRIPTSPRIMEUIFONTAWESOMEFONTSFOLDER" Name="fonts" />
+        <Directory Id="SCRIPTSPRIMEUIFONTAWESOMELESSFOLDER" Name="less" />
+        <Directory Id="SCRIPTSPRIMEUIFONTAWESOMESCSSFOLDER" Name="scss" />
+      </Directory>
+      <Directory Id="SCRIPTSPRIMEUIIMAGESFOLDER" Name="images" />
+      <Directory Id="SCRIPTSPRIMEUIPLUGINSFOLDER" Name="plugins" />
+      <Directory Id="SCRIPTSPRIMEUITHEMESFOLDER" Name="themes">
+        <Directory Id="SCRIPTSPRIMEUITHEMESAFTERDARKFOLDER" Name="afterdark">
+          <Directory Id="SCRIPTSPRIMEUITHEMESAFTERDARKIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESAFTERNOONFOLDER" Name="afternoon">
+          <Directory Id="SCRIPTSPRIMEUITHEMESAFTERNOONIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESAFTERWORKFOLDER" Name="afterwork">
+          <Directory Id="SCRIPTSPRIMEUITHEMESAFTERWORKIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESARISTOFOLDER" Name="aristo">
+          <Directory Id="SCRIPTSPRIMEUITHEMESARISTOIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESBLACKTIEFOLDER" Name="black-tie">
+          <Directory Id="SCRIPTSPRIMEUITHEMESBLACKTIEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESBLITZERFOLDER" Name="blitzer">
+          <Directory Id="SCRIPTSPRIMEUITHEMESBLITZERIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESBLUESKYFOLDER" Name="bluesky">
+          <Directory Id="SCRIPTSPRIMEUITHEMESBLUESKYIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESBOOTSTRAPFOLDER" Name="bootstrap">
+          <Directory Id="SCRIPTSPRIMEUITHEMESBOOTSTRAPIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESCASABLANCAFOLDER" Name="casablanca">
+          <Directory Id="SCRIPTSPRIMEUITHEMESCASABLANCAIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESCRUZEFOLDER" Name="cruze">
+          <Directory Id="SCRIPTSPRIMEUITHEMESCRUZEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESCUPERTINOFOLDER" Name="cupertino">
+          <Directory Id="SCRIPTSPRIMEUITHEMESCUPERTINOIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESDARKHIVEFOLDER" Name="dark-hive">
+          <Directory Id="SCRIPTSPRIMEUITHEMESDARKHIVEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESDELTAFOLDER" Name="delta">
+          <Directory Id="SCRIPTSPRIMEUITHEMESDELTAIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESDOTLUVFOLDER" Name="dot-luv">
+          <Directory Id="SCRIPTSPRIMEUITHEMESDOTLUVIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESEGGPLANTFOLDER" Name="eggplant">
+          <Directory Id="SCRIPTSPRIMEUITHEMESEGGPLANTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESEXCITEBIKEFOLDER" Name="excite-bike">
+          <Directory Id="SCRIPTSPRIMEUITHEMESEXCITEBIKEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESFLICKFOLDER" Name="flick">
+          <Directory Id="SCRIPTSPRIMEUITHEMESFLICKIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESGLASSXFOLDER" Name="glass-x">
+          <Directory Id="SCRIPTSPRIMEUITHEMESGLASSXIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESHOMEFOLDER" Name="home">
+          <Directory Id="SCRIPTSPRIMEUITHEMESHOMEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESHOTSNEAKSFOLDER" Name="hot-sneaks">
+          <Directory Id="SCRIPTSPRIMEUITHEMESHOTSNEAKSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESHUMANITYFOLDER" Name="humanity">
+          <Directory Id="SCRIPTSPRIMEUITHEMESHUMANITYIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESLEFROGFOLDER" Name="le-frog">
+          <Directory Id="SCRIPTSPRIMEUITHEMESLEFROGIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESMIDNIGHTFOLDER" Name="midnight">
+          <Directory Id="SCRIPTSPRIMEUITHEMESMIDNIGHTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESMINTCHOCFOLDER" Name="mint-choc">
+          <Directory Id="SCRIPTSPRIMEUITHEMESMINTCHOCIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESOVERCASTFOLDER" Name="overcast">
+          <Directory Id="SCRIPTSPRIMEUITHEMESOVERCASTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESPEPPERGRINDERFOLDER" Name="pepper-grinder">
+          <Directory Id="SCRIPTSPRIMEUITHEMESPEPPERGRINDERIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESREDMONDFOLDER" Name="redmond">
+          <Directory Id="SCRIPTSPRIMEUITHEMESREDMONDIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESROCKETFOLDER" Name="rocket">
+          <Directory Id="SCRIPTSPRIMEUITHEMESROCKETIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESSAMFOLDER" Name="sam">
+          <Directory Id="SCRIPTSPRIMEUITHEMESSAMIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESSMOOTHNESSFOLDER" Name="smoothness">
+          <Directory Id="SCRIPTSPRIMEUITHEMESSMOOTHNESSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESSOUTHSTREETFOLDER" Name="south-street">
+          <Directory Id="SCRIPTSPRIMEUITHEMESSOUTHSTREETIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESSTARTFOLDER" Name="start">
+          <Directory Id="SCRIPTSPRIMEUITHEMESSTARTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESSUNNYFOLDER" Name="sunny">
+          <Directory Id="SCRIPTSPRIMEUITHEMESSUNNYIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESSWANKYPURSEFOLDER" Name="swanky-purse">
+          <Directory Id="SCRIPTSPRIMEUITHEMESSWANKYPURSEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESTRONTASTICFOLDER" Name="trontastic">
+          <Directory Id="SCRIPTSPRIMEUITHEMESTRONTASTICIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESUIDARKNESSFOLDER" Name="ui-darkness">
+          <Directory Id="SCRIPTSPRIMEUITHEMESUIDARKNESSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESUILIGHTNESSFOLDER" Name="ui-lightness">
+          <Directory Id="SCRIPTSPRIMEUITHEMESUILIGHTNESSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="SCRIPTSPRIMEUITHEMESVADERFOLDER" Name="vader">
+          <Directory Id="SCRIPTSPRIMEUITHEMESVADERIMAGESFOLDER" Name="images" />
+        </Directory>
+      </Directory>
+    </Directory>
   </Directory>
   <Directory Id="WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
