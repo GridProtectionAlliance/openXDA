@@ -155,6 +155,23 @@
     <CustomAction Id="DefaultTrendingAlarms.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultContours.sql.SetProperty" Property="DefaultContours.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultContours.sql]" />
     <CustomAction Id="DefaultContours.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+
+    <UI>
+      <ProgressText Action="CreateDatabase">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="AlterDatabase">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="CreateDBLogin">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="AlterDBLogin">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="CreateDBUser">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="GrantDBPermissions">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+
+      <ProgressText Action="openXDA.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="DashSprocs.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="EnableHistorianSqlClr.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="DefaultSettings.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="DefaultChannelTypes.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="DefaultTrendingAlarms.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="DefaultContours.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+    </UI>
     
     <InstallExecuteSequence>
       <Custom Action="UpdateConfigFileAction.SetProperty" After="InstallFiles"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
