@@ -168,9 +168,6 @@ namespace FaultData.DataWriters
 
         public void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
         {
-            bool? faultDetectionResult;
-            bool faultValidationResult;
-
             Initialize(this);
 
             foreach (EventRow evt in dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(meterDataSet.FileGroup.ID))
@@ -351,7 +348,7 @@ namespace FaultData.DataWriters
 
                     string paramString = string.Join(",", templateGroup.Select((userAccountID, index) => $"{{{index}}}"));
                     string sql = $"SELECT Email FROM UserAccount WHERE Email IS NOT NULL AND Email <> '' AND ID IN ({paramString})";
-                    DataTable emailTable = connection.RetrieveData(sql, templateGroup.ToArray());
+                    DataTable emailTable = connection.RetrieveData(sql, templateGroup.Cast<object>().ToArray());
                     recipients = emailTable.Select().Select(row => row.ConvertField<string>("Email")).ToList();
                 }
 
@@ -418,6 +415,7 @@ namespace FaultData.DataWriters
                 // Query an empty table with matching schema --
                 // union table to itself to eliminate unique key constraints
                 eventSentEmailTable = connection.RetrieveData("SELECT * FROM EventSentEmail WHERE 1 IS NULL UNION ALL SELECT * FROM EventSentEmail WHERE 1 IS NULL");
+                eventSentEmailTable.TableName = "EventSentEmail";
             }
 
             foreach (MeterData.EventRow evt in systemEvent)
