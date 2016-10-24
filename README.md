@@ -76,7 +76,7 @@ Traditional disturbance analytic processes typically require manual retrieval of
 ### Minimum Hardware
 * 2.0 GHz CPU.
 * 2.0 GB RAM.
-* 50 GB of available disk space for installation and testing. Operational disk space requirements will be proportional to the volume of input data.
+* 10 GB of available disk space for installation and testing. Operational disk space requirements will be proportional to the volume of input data.
 
 ### Software
 * openHistorian 2.0
