@@ -247,91 +247,21 @@ namespace openXDA
                         Thread.Sleep(SleepTime);
                     }
                 }
+
+                // Set up separate thread to start the Web UI
+                while (!TryStartWebUI())
+                {
+                    for (int i = 0; i < LoopCount; i++)
+                    {
+                        if (m_serviceStopping)
+                            return;
+
+                        Thread.Sleep(SleepTime);
+                    }
+                }
             });
 
             m_startEngineThread.Start();
-
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-            CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];
-            ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
-
-            systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
-            systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
-            systemSettings.Add("WebHostURL", "http://localhost:8989", "The web hosting URL for remote system management.");
-            systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
-            systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
-            systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.");
-            systemSettings.Add("DefaultDialUpRetries", 3, "Default dial-up connection retries.");
-            systemSettings.Add("DefaultDialUpTimeout", 90, "Default dial-up connection timeout.");
-            systemSettings.Add("DefaultFTPUserName", "anonymous", "Default FTP user name to use for device connections.");
-            systemSettings.Add("DefaultFTPPassword", "anonymous", "Default FTP password to use for device connections.");
-            systemSettings.Add("DefaultRemotePath", "/", "Default remote FTP path to use for device connections.");
-            systemSettings.Add("DefaultLocalPath", "", "Default local path to use for file downloads.");
-
-            DefaultWebPage = systemSettings["DefaultWebPage"].Value;
-
-            Model = new AppModel();
-            Model.Global.CompanyName = systemSettings["CompanyName"].Value;
-            Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
-            Model.Global.ApplicationName = "openXDA";
-            Model.Global.ApplicationDescription = "open eXtensible Disturbance Analytics";
-            Model.Global.ApplicationKeywords = "open source, utility, software, meter, interrogation";
-            Model.Global.DateFormat = systemSettings["DateFormat"].Value;
-            Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
-            Model.Global.DateTimeFormat = $"{Model.Global.DateFormat} {Model.Global.TimeFormat}";
-            Model.Global.BootstrapTheme = systemSettings["BootstrapTheme"].Value;
-
-            try
-            {
-                // Attach to default web server events
-                WebServer webServer = WebServer.Default;
-                webServer.StatusMessage += WebServer_StatusMessage;
-
-                // Define types for Razor pages - self-hosted web service does not use view controllers so
-                // we must define configuration types for all paged view model based Razor views here:
-                webServer.PagedViewModelTypes.TryAdd("Config/Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MeterGroups.cshtml", new Tuple<Type, Type>(typeof(MeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroups.cshtml", new Tuple<Type, Type>(typeof(EmailGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupType.cshtml", new Tuple<Type, Type>(typeof(EmailGroupType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupMeterGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupUserAccount.cshtml", new Tuple<Type, Type>(typeof(EmailGroupUserAccount), typeof(DataHub)));
-
-                // Initiate pre-compile of base templates
-                if (AssemblyInfo.EntryAssembly.Debuggable)
-                {
-                    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
-                    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
-                }
-                else
-                {
-                    RazorEngine<CSharp>.Default.PreCompile(HandleException);
-                    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
-                }
-
-                // Create new web application hosting environment
-                m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
-            }
-            catch (TargetInvocationException ex)
-            {
-                HandleException(new InvalidOperationException($"Failed to initialize web hosting: {ex.InnerException.Message}", ex));
-            }
-            catch (Exception ex)
-            {
-                HandleException(new InvalidOperationException($"Failed to initialize web hosting: {ex.Message}", ex));
-            }
         }
 
         private void ServiceHelper_ServiceStopping(object sender, EventArgs e)
@@ -386,6 +316,107 @@ namespace openXDA
 
                 // Log the exception
                 message = "Failed to start XDA engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
+
+        // Attempts to start the web UI and logs startup errors.
+        private bool TryStartWebUI()
+        {
+            try
+            {
+                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+                CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];
+
+                systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Configuration database ADO.NET data provider assembly type creation string used when ConfigurationType=Database");
+                systemSettings.Add("NodeID", "00000000-0000-0000-0000-000000000000", "Unique Node ID");
+                systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
+                systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
+                systemSettings.Add("WebHostURL", "http://localhost:8989", "The web hosting URL for remote system management.");
+                systemSettings.Add("DefaultWebPage", "index.cshtml", "The default web page for the hosted web server.");
+                systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
+                systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
+                systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.");
+
+                securityProvider.Add("ConnectionString", "Eval(systemSettings.ConnectionString)", "Connection connection string to be used for connection to the backend security datastore.");
+                securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+
+                ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
+
+                DefaultWebPage = systemSettings["DefaultWebPage"].Value;
+
+                Model = new AppModel();
+                Model.Global.CompanyName = systemSettings["CompanyName"].Value;
+                Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
+                Model.Global.ApplicationName = "openXDA";
+                Model.Global.ApplicationDescription = "open eXtensible Disturbance Analytics";
+                Model.Global.ApplicationKeywords = "open source, utility, software, meter, interrogation";
+                Model.Global.DateFormat = systemSettings["DateFormat"].Value;
+                Model.Global.TimeFormat = systemSettings["TimeFormat"].Value;
+                Model.Global.DateTimeFormat = $"{Model.Global.DateFormat} {Model.Global.TimeFormat}";
+                Model.Global.BootstrapTheme = systemSettings["BootstrapTheme"].Value;
+
+                // Attach to default web server events
+                WebServer webServer = WebServer.Default;
+                webServer.StatusMessage += WebServer_StatusMessage;
+
+                // Define types for Razor pages - self-hosted web service does not use view controllers so
+                // we must define configuration types for all paged view model based Razor views here:
+                webServer.PagedViewModelTypes.TryAdd("Config/Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterGroups.cshtml", new Tuple<Type, Type>(typeof(MeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroups.cshtml", new Tuple<Type, Type>(typeof(EmailGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupType.cshtml", new Tuple<Type, Type>(typeof(EmailGroupType), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupMeterGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupUserAccount.cshtml", new Tuple<Type, Type>(typeof(EmailGroupUserAccount), typeof(DataHub)));
+
+                // Initiate pre-compile of base templates
+                if (AssemblyInfo.EntryAssembly.Debuggable)
+                {
+                    RazorEngine<CSharpDebug>.Default.PreCompile(HandleException);
+                    RazorEngine<VisualBasicDebug>.Default.PreCompile(HandleException);
+                }
+                else
+                {
+                    RazorEngine<CSharp>.Default.PreCompile(HandleException);
+                    RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
+                }
+
+                // Create new web application hosting environment
+                m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
+
+                return true;
+            }
+            catch (TargetInvocationException ex)
+            {
+                string message;
+
+                // Log the exception
+                message = "Failed to start web UI due to exception: " + ex.InnerException.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Log the exception
+                message = "Failed to start web UI due to exception: " + ex.Message;
                 HandleException(new InvalidOperationException(message, ex));
 
                 return false;
