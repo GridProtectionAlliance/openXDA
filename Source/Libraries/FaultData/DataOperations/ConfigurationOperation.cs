@@ -195,7 +195,7 @@ namespace FaultData.DataOperations
 
             if (series.Channel.MeasurementType.Name == "Digital")
             {
-                if (sourceIndexes.Any(tuple => tuple.Item2 < 0 || tuple.Item2 >= meterDataSet.Digitals.Count))
+                if (sourceIndexes.Any(tuple => Math.Abs(tuple.Item2) >= meterDataSet.Digitals.Count))
                     return;
 
                 dataSeries = sourceIndexes
@@ -204,7 +204,7 @@ namespace FaultData.DataOperations
             }
             else
             {
-                if (sourceIndexes.Any(tuple => tuple.Item2 < 0 || tuple.Item2 >= meterDataSet.DataSeries.Count))
+                if (sourceIndexes.Any(tuple => Math.Abs(tuple.Item2) >= meterDataSet.DataSeries.Count))
                     return;
 
                 dataSeries = sourceIndexes
