@@ -103,19 +103,32 @@
                 </tr>
             </tbody>
         </table>
-        <ul class="pagination pagination-sm">
+        <ul class="pagination pagination-md pull-left">
             <li ng-class="{active:0}">
-                <a href="#" ng-click="firstPage()">First</a>
-
+                <a href="#" ng-click="firstPage()"><<</a>
             </li>
-            <li ng-repeat="n in [] | range:count">
-                <a href="#" ng-if="n > 1 && n < count" ng-click="setPage(n)" ng-bind="n"></a>
+            <li ng-class="{active:0}">
+                <a href="#" ng-if="getAbsDiff(0, currentPage) > 5" ng-click="minusPage()"><</a>
+            </li>
+            <li ng-repeat="n in [] | range:pageCount" ng-class="{active: n == (currentPage + 1)}" >
+                <a href="#" ng-if="n > 0 && n <= pageCount && getAbsDiff(n, currentPage) <= 5" ng-click="setPage(n, this)" ng-bind="n"></a>
+            </li>
+            <li ng-class="{active:0}">
+                <a href="#" ng-if="getAbsDiff(pageCount, currentPage) > 5" ng-click="plusPage()">></a>
             </li>
             <li>
-                <a href="#" ng-click="lastPage()">Last</a>
-
+                <a href="#" ng-click="lastPage()">>></a>
             </li>
         </ul>
+        <div class="pull-right">
+            Rows:
+            <div class="btn-group">
+                <button ng-class="{active: pageSize == 10}" class="btn btn-default" ng-click="setPageSize(10)">10</button>
+                <button ng-class="{active: pageSize == 25}" class="btn btn-default" ng-click="setPageSize(25)">25</button>
+                <button ng-class="{active: pageSize == 50}" class="btn btn-default" ng-click="setPageSize(50)">50</button>
+                <button ng-class="{active: pageSize == 100}" class="btn btn-default" ng-click="setPageSize(100)">100</button>
+            </div>
+        </div>
     </div>
     <!-- Ends Controller -->
 </div>
@@ -131,7 +144,7 @@
         myApp.filter('range', function () {
             return function (input, total) {
                 total = parseInt(total);
-                for (var i = 0; i < total; ++i) {
+                for (var i = 0; i <= total; ++i) {
                     input.push(i);
                 }
                 return input;
@@ -143,7 +156,7 @@
             $scope.reverse = false;
             $scope.Header = ['glyphicon glyphicon-chevron-up', '', '', '', ''];
             $scope.searchText = '';
-            $scope.pageSize = 50;
+            $scope.pageSize = 10;
             $scope.pagedSiteSummaries = [];
             $scope.currentPage = 0;
             $scope.siteSummary;
@@ -153,8 +166,8 @@
             $(window).one('globalFilterDone', function (event) {
                 dataHub.getSiteSummaries($('#globalFilter').val()).done(function (data) {
                     $scope.siteSummary = data;
-                    $scope.setPages();
                     $scope.pageCount = Math.ceil(data.length / $scope.pageSize);
+                    $scope.setPages();
                     $scope.$apply();
                 });                 
             });
@@ -202,6 +215,14 @@
             $scope.lastPage = function () {
                 $scope.currentPage = $scope.pageCount - 1;
             };
+            
+            $scope.plusPage = function () {
+                $scope.currentPage++;
+            }
+            $scope.minusPage = function () {
+                $scope.currentPage--;
+            }
+
 
             $scope.sort = function (sortBy) {
                 if (sortBy === $scope.sortBy) {
@@ -230,14 +251,28 @@
                 } 
             };
             
+            $scope.setPageSize = function (size) {
+                $scope.pageSize = size;
+                $scope.setPages();
+            };
+            
+                         
+            $scope.getAbsDiff = function (a, b) {
+                return Math.abs(a - b);
+            };
+
             $scope.setPages = function () {
                 var page = 0;
+                $scope.pagedSiteSummaries = [];
                 $scope.pagedSiteSummaries.push([]);
                 $.each($scope.siteSummary, function (index, data) {
-                    if(index !== 0 && index % $scope.pageSize === 0)
+                    if (index !== 0 && index % $scope.pageSize === 0) {
+                        $scope.pagedSiteSummaries.push([]);
                         page++
+                    }
                     $scope.pagedSiteSummaries[page].push(data);
                 });
+                $scope.pageCount = page + 1;
             };
         });
 
