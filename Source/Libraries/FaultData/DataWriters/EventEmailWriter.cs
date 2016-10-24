@@ -392,6 +392,9 @@ namespace FaultData.DataWriters
                         attachment.Dispose();
                 }
             }
+
+            if (templateGroups.Any())
+                Log.Info($"All emails sent for event ID {eventID}.");
         }
 
         private static void LoadEmail(int eventID, List<string> recipients, string subject, string body)
