@@ -44,7 +44,7 @@
     {
         string meterName = parameters["Title"];
         ViewBag.Title = "Lines monitored by " + meterName;
-        ViewBag.CustomHeader = "Lines monitored by <a href=\"/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a>";
+        ViewBag.CustomHeader = "Lines monitored by <a href=\"/Config/Meters.cshtml?Meter=" + meterName + "\">" + meterName + "</a>";
 
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
@@ -61,7 +61,7 @@
     {
         string lineKey = parameters["Title"];
         ViewBag.Title = "Meters monitoring " + lineKey;
-        ViewBag.CustomHeader = "Meters monitoring <a href=\"/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>";
+        ViewBag.CustomHeader = "Meters monitoring <a href=\"/Config/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>";
 
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]

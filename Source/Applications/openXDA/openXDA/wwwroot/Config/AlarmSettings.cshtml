@@ -89,7 +89,7 @@
     }
 
 
-    ViewBag.CustomHeader = (lineKey == "" ? null :"Alarms for <a href=\"/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>");
+    ViewBag.CustomHeader = (lineKey == "" ? null :"Alarms for <a href=\"/Config/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>");
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }

@@ -54,7 +54,7 @@
     {
         meterLocationID = int.Parse(parameters["LocationID"] ?? "-1");
         meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", meterLocationID);
-        ViewBag.CustomHeader = "Meters at <a href=\"/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
+        ViewBag.CustomHeader = "Meters at <a href=\"/Config/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
         ViewBag.Title = "Meters at " + meterLocationName;
 
     }

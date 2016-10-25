@@ -2152,7 +2152,6 @@ namespace openXDA
             try
             {
                 conn = (SqlConnection)DataContext.Connection.Connection;
-                conn.Open();
                 SqlCommand cmd = new SqlCommand("dbo.selectDisturbancesForMeterIDByDateRange", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
@@ -2238,7 +2237,6 @@ namespace openXDA
             try
             {
                 conn = (SqlConnection)DataContext.Connection.Connection;
-                conn.Open();
                 SqlCommand cmd = new SqlCommand("dbo.pivotedSelectFaultsForMeterIDByDateRange", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
@@ -2326,7 +2324,6 @@ namespace openXDA
             try
             {
                 conn = (SqlConnection)DataContext.Connection.Connection;
-                conn.Open();
                 SqlCommand cmd = new SqlCommand("dbo.selectBreakersForMeterIDByDateRange", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
@@ -2402,7 +2399,12 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
 
-            DataTable table = DataContext.Connection.RetrieveData("SELECT * FROM DisturbanceView WHERE MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3}", filterId, filterId, startDate, endDate);
+            DataTable table = DataContext.Connection.RetrieveData(
+                " SELECT * " + 
+                " FROM DisturbanceView  " + 
+                " WHERE MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) "+ 
+                " AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) " + 
+                " AND StartTime >= {2} AND StartTime <= {3}", filterId, filterId, startDate, endDate);
             return table.Select().Select(row => DataContext.Table<DisturbanceView>().LoadRecord(row));
         }
 
