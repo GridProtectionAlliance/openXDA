@@ -2458,16 +2458,16 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
 
-            DataTable table = DataContext.Connection.RetrieveData(" SELECT temp.MeterID, SUM(Completeness) / DATEDIFF(day, '01/01/2008', '1/31/2016') as Completeness, " +
-                                                                  " SUM(Correctness) / DATEDIFF(day, '01/01/2008', '1/31/2016') as Correctness, " +
-                                                                  " (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = temp.MeterID) AS Events, " +
-                                                                  " (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = temp.MeterID) AS Disturbances " +
-                                                                  " FROM(" +
-                                                                        " SELECT MeterID, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness " +
-                                                                        " FROM MeterDataQualitySummary " +
-                                                                        " WHERE Date BETWEEN {0} AND {1} AND MeterID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
-                                                                       " ) as temp " +
-                                                                   " GROUP BY temp.MeterID ", startDate, endDate, filterId);
+            DataTable table = DataContext.Connection.RetrieveData(
+                " SELECT Meter.ID AS MeterID, "+
+                "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
+                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {2}, {3}), 0) as Correctness, " +
+                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {4} AND {5}) AS Events, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {6} AND {7}) AS Disturbances " +
+                " FROM Meter Left Join " +
+                "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
+                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {8}), ',')) "+
+                " GROUP BY Meter.ID ", startDate, endDate, startDate, endDate, startDate, endDate, startDate, endDate, filterId);
             return table.Select().Select(row => DataContext.Table<SiteSummary>().LoadRecord(row));
 
         }
