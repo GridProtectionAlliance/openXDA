@@ -2284,11 +2284,13 @@ CREATE PROCEDURE GetEventEmailRecipients
     @eventID INT
 )
 AS BEGIN
+    DECLARE @lineID INT
     DECLARE @startTime DATETIME2
     DECLARE @endTime DATETIME2
     DECLARE @timeTolerance FLOAT
 
     SELECT
+        @lineID = LineID,
         @startTime = StartTime,
         @endTime = EndTime,
         @timeTolerance = COALESCE(Value, 0.5)
@@ -2326,48 +2328,60 @@ AS BEGIN
             EmailType.EmailCategoryID = EmailCategory.ID AND
             EmailCategory.Name = 'Event'
     WHERE
-    (
-        NOT EXISTS
+        Event.LineID = @lineID AND
         (
-            SELECT *
-            FROM FaultEmailCriterion
-            WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
-        )
-        OR EXISTS
-        (
-            SELECT *
-            FROM FaultGroup
-            WHERE
-                EventID = Event.ID AND
-                (
-                    COALESCE(FaultDetectionLogicResult, 1) <> 0 AND
+            NOT EXISTS
+            (
+                SELECT *
+                FROM FaultEmailCriterion
+                WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+            )
+            OR EXISTS
+            (
+                SELECT *
+                FROM FaultGroup
+                WHERE
+                    EventID = Event.ID AND
                     (
-                        (SELECT COALESCE(Value, 1) FROM Setting WHERE Name = 'UseDefaultFaultDetectionLogic') = 0 OR
-                        FaultValidationLogicResult <> 0
+                        (
+                            FaultDetectionLogicResult IS NOT NULL AND
+                            FaultDetectionLogicResult <> 0
+                        )
+                        OR
+                        (
+                            FaultDetectionLogicResult IS NULL AND
+                            FaultValidationLogicResult <> 0 AND
+                            (
+                                SELECT COALESCE(Value, 1)
+                                FROM
+                                    (VALUES('UseDefaultFaultDetectionLogic')) SettingName(Name) LEFT OUTER JOIN
+                                    Setting ON SettingName.Name = Setting.Name
+                                WHERE SettingName.Name = 'UseDefaultFaultDetectionLogic'
+                            ) <> 0
+                        )
                     )
-                )
+            )
         )
-    )
-    AND
-    (
-        NOT EXISTS
+        AND
         (
-            SELECT *
-            FROM DisturbanceEmailCriterion
-            WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+            NOT EXISTS
+            (
+                SELECT *
+                FROM DisturbanceEmailCriterion
+                WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+            )
+            OR EXISTS
+            (
+                SELECT *
+                FROM
+                    Disturbance JOIN
+                    DisturbanceSeverity ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
+                    DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
+                WHERE
+                    Disturbance.EventID = Event.ID AND
+                    DisturbanceEmailCriterion.EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+            )
         )
-        OR EXISTS
-        (
-            SELECT *
-            FROM
-                Disturbance JOIN
-                DisturbanceSeverity ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-                DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
-            WHERE
-                Disturbance.EventID = Event.ID AND
-                DisturbanceEmailCriterion.EmailGroupID = EmailGroupMeterGroup.EmailGroupID
-        )
-    )
 END
 GO
 
