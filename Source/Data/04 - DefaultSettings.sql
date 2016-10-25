@@ -115,6 +115,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('TimeTolerance', '0.5', '0.5')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('UseDefaultFaultDetectionLogic', '1', '1')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WatchDirectories', 'Watch', 'Watch')
 GO
 
