@@ -65,7 +65,7 @@
 {
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: lookupEmailCategoryName(EmailCategoryID), click: $parent.viewPageRecord"></button></td>
     <td width="25%" class="text-left valign-middle" data-bind="text: lookupXSLTemplateName(XSLTemplateID)"></td>
-    <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data)">View Template</button></td>
+    <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data), enable: checkID()">View Template</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -192,5 +192,19 @@
         function viewTemplate(data) {
             window.open("@Url.Content("~/Config/EmailTemplateHandler.ashx")?EventID=" + $("#eventID").val() + "&TemplateID=" + data.XSLTemplateID);
         }
+        
+        function checkID() {
+            if ($('#eventID').val().length > 0)
+                return true;
+            else
+                return false;
+        }
+        
+        $('#eventID').on('keyup', function (event) {
+            if (checkID() && !isNaN(parseInt($('#eventID').val())))
+                $('.btn.btn-primary:contains("View Template")').prop('disabled', false);
+            else
+                $('.btn.btn-primary:contains("View Template")').prop('disabled', true);
+        });
     </script>
 }
