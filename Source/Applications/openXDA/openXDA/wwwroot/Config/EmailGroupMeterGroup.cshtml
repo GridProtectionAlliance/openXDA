@@ -82,7 +82,7 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     @Raw(dataContext.AddSelectField<EmailGroupMeterGroup, EmailGroup>("EmailGroupID", "ID", "Name"))
-    @Raw(dataContext.AddSelectField<EmailGroupMeterGroup, MeterGroup>("MeterGroupID", "ID", "GroupName"))
+    @Raw(dataContext.AddSelectField<EmailGroupMeterGroup, MeterGroup>("MeterGroupID", "ID", "Name"))
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
@@ -96,6 +96,15 @@
         $(function () {
             viewModel.filterText = '@ViewBag.EmailGroupID' + ';' + '@ViewBag.MeterGroupID';
             viewModel.queryPageRecords();
+        });
+
+        $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+            $('#selectEmailGroupID').val('@ViewBag.EmailGroupID');
+            $('#selectEmailGroupID').prop('disabled', true);
+        });
+
+        $(viewModel).on('beforeSave', function (event, record) {
+            record.EmailGroupID = '@ViewBag.EmailGroupID';
         });
 
     </script>

@@ -87,5 +87,14 @@
             viewModel.queryPageRecords();
         });
 
+        $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+            $('#selectEmailGroupID').val('@ViewBag.GroupID');
+            $('#selectEmailGroupID').prop('disabled', true);
+        });
+
+        $(viewModel).on('beforeSave', function (event, record) {
+            record.EmailGroupID = '@ViewBag.GroupID';
+        });
+
     </script>
 }
