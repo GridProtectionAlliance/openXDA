@@ -87,7 +87,9 @@
             <input id="templateName" class="form-control" type="text"/>
         </div>
         <div class="form-group">
-            <textarea id="template" class="form-control"></textarea>
+            @*<textarea id="template" class="form-control"></textarea>*@
+            <div id="template" class="form-control"></div>
+
         </div>
         <button id="saveNew" class="btn btn-primary pull-right" data-bind="visible: false, click: saveXSLTemplateNew">Save XSL Template</button>
         <button id="saveEdit" class="btn btn-primary pull-right" data-bind="visible: false, click: saveXSLTemplateEdit">Save XSL Template</button>
@@ -97,6 +99,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
+    <script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailType, DataHub>(ViewBag))
         @Raw(Model.RenderAbstract<EmailCategory>("Name", "ID", "lookupEmailCategoryName", "emailCategoryName"))
@@ -105,7 +108,6 @@
         $(function () {
             viewModel.filterText = '@ViewBag.EmailTypeID';
             viewModel.queryPageRecords();
-
         });
 
         function createXSLTemplate() {
@@ -114,6 +116,10 @@
             $('#template').height($(window).height() / 3);
             $('#saveNew').show();
             $('#saveEdit').hide();
+            var editor = ace.edit("template");
+            editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/xml");
+            editor.setFontSize("14px");
 
             if ($('#textArea').css('display') === 'none')
                 $('#textArea').slideToggle();
@@ -122,11 +128,16 @@
         function editXSLTemplate() {
             dataHub.queryXSLTemplateByID($('#selectXSLTemplateID').val()).done(function (data) {
                 $('#templateName').val(data.Name);
-                $('#template').val(data.Template);
+                $('#template').text(data.Template);
                 $('#template').height($(window).height() / 3);
                 $('#xslID').html(data.ID);
                 $('#saveEdit').show();
                 $('#saveNew').hide();
+                var editor = ace.edit("template");
+                editor.setTheme("ace/theme/monokai");
+                editor.getSession().setMode("ace/mode/xml");
+                editor.setFontSize("14px");
+
                 if ($('#textArea').css('display') === 'none')
                     $('#textArea').slideToggle();
 
@@ -135,7 +146,7 @@
         }
 
         function saveXSLTemplateNew() {
-            var record = { Name: $('#templateName').val(), Template: $('#template').val() };
+            var record = { Name: $('#templateName').text(), Template: $('#template').val() };
 
             dataHub.addNewXSLTemplate(record).done(function (data) {
                 dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
@@ -152,7 +163,7 @@
         }
 
         function saveXSLTemplateEdit() {
-            var record = { ID: $('#xslID').html(), Name: $('#templateName').val(), Template: $('#template').val() };
+            var record = { ID: $('#xslID').html(), Name: $('#templateName').text(), Template: $('#template').val() };
             dataHub.updateXSLTemplate(record).done(function (data) {
                 dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
                     $('#selectXSLTemplateID').children().remove();
@@ -169,6 +180,7 @@
         }
 
         $('#addNewEditDialog').on('shown.bs.modal', function () {
+
             dataHub.queryXSLTemplate("Name", true, 1, 1000000000000, '%').done(function (data2) {
                 $('#selectXSLTemplateID').children().remove();
                 $.each(data2, function (i, d) {
