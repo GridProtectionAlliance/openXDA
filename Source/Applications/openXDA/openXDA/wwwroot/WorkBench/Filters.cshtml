@@ -168,7 +168,11 @@
             $(window).one('hubConnected', function () {
                 $('#toDate').val((new Date('@toDateTime')).formatDate(DateFormat));
                 $('#toDate').datepicker({
-                    format: 'mm/dd/yyyy'
+                    format: 'mm/dd/yyyy',
+                    orientation: "bottom auto",
+                    autoclose: true,
+                    todayHighlight: true
+
                 });
 
                 dataHub.getWorkbenchFiltersForSelect().done(function (data) {
@@ -182,7 +186,10 @@
                     fromDateCached = (new Date(data)).formatDate(DateFormat)
                     $('#fromDate').val(fromDateCached);
                     $('#fromDate').datepicker({
-                        format: 'mm/dd/yyyy'
+                        format: 'mm/dd/yyyy',
+                        orientation: "bottom auto",
+                        autoclose: true,
+                        todayHighlight: true
                     });
                 });
 
@@ -208,15 +215,6 @@
                         }
                     });
 
-                    //$('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                    //$('#typesFrame .btn-mobileSelect-gen').off('click');
-                    //$('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
-                    //    event.preventDefault();
-                    //    $('#types').mobileSelect('refresh');
-                    //    $('#types').mobileSelect('show');
-                    //});
-
                 });
 
                 dataHub.getMetersForSelect().done(function (data) {
@@ -240,18 +238,6 @@
                             });
                         }
                     });
-
-                    //$('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                    //$('#metersFrame .btn-mobileSelect-gen').off('click');
-                    //$('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
-                    //    event.preventDefault();
-                    //    $('#meters').mobileSelect('refresh');
-                    //    $('#meters').mobileSelect('show');
-                    //});
-
-
-
                 });
             });
 
