@@ -413,6 +413,7 @@
     <Content Include="wwwroot\Config\EmailGroupUserAccount.cshtml" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
     <None Include="Properties\PublishProfiles\Desktop Folder.pubxml" />
+    <Content Include="wwwroot\Config\EmailRMarkdownViewer.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
