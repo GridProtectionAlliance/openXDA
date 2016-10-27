@@ -35,6 +35,8 @@ SET source2="\\GPAWEB\NightlyBuilds\openHistorian\Beta\Library\openHistorian.Tim
 SET target2="Source\Dependencies\openHistorian"
 SET source3="\\GPAWEB\NightlyBuilds\openHistorian\Beta\Library\openHistorian.SqlClr\*.*"
 SET target3="Source\Dependencies\openHistorian"
+SET sourcelogviewer="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Tools\Log Viewer\Log Viewer.exe"
+SET targetlogviewer="Source\Applications\openXDA\openXDASetup"
 SET sourcemasterbuild="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Build Scripts\MasterBuild.buildproj"
 SET targetmasterbuild="Build\Scripts"
 
@@ -62,6 +64,7 @@ ECHO Updating dependencies...
 XCOPY %source1% %target1% /E /U /Y
 XCOPY %source2% %target2% /E /U /Y
 XCOPY %source3% %target3% /E /U /Y
+XCOPY %sourcelogviewer% %targetlogviewer% /Y
 XCOPY %sourcemasterbuild% %targetmasterbuild% /Y
 
 ECHO.
