@@ -99,27 +99,11 @@
                     <td>{{item.Completeness | number: 3}}%</td>
                     <td>{{item.Correctness | number: 3}}%</td>
                     <td><a href="EventsForMeter.cshtml?MeterID={{item.MeterID}}&Filter={{getFilter()}}" target="_blank">{{item.Events}}</a></td>
-                    <td>{{item.Disturbances}}</td>
+                    <td><a href="DisturbancesForMeter.cshtml?MeterID={{item.MeterID}}&Filter={{getFilter()}}" target="_blank">{{item.Disturbances}}</a></td>
                 </tr>
             </tbody>
         </table>
-        @*<ul class="pagination pagination-md pull-left">
-            <li ng-class="{active:0}">
-                <a href="#" ng-click="firstPage()"><<</a>
-            </li>
-            <li ng-class="{active:0}">
-                <a href="#" ng-if="getAbsDiff(0, currentPage) > 5" ng-click="minusPage()"><</a>
-            </li>
-            <li ng-repeat="n in [] | range:pageCount" ng-class="{active: n == (currentPage + 1)}" >
-                <a href="#" ng-if="n > 0 && n <= pageCount && getAbsDiff(n, currentPage) <= 5" ng-click="setPage(n, this)" ng-bind="n"></a>
-            </li>
-            <li ng-class="{active:0}">
-                <a href="#" ng-if="getAbsDiff(pageCount, currentPage) > 5" ng-click="plusPage()">></a>
-            </li>
-            <li>
-                <a href="#" ng-click="lastPage()">>></a>
-            </li>
-        </ul>*@
+
         <div class="pull-left">
             <div class="btn-group btn-group-sm">
                 <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="firstPage()"><span class="glyphicon glyphicon-backward"></span></button>
