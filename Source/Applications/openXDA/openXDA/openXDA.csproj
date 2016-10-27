@@ -307,6 +307,7 @@
     <Compile Include="Model\EventType.cs" />
     <Compile Include="Model\FaultEmailCriterion.cs" />
     <Compile Include="Model\FaultView.cs" />
+    <Compile Include="Model\SiteSummary.cs" />
     <Compile Include="Model\TrendingData.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserAccountMeterGroup.cs" />

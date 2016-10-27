@@ -282,9 +282,9 @@
             };
 
             $scope.lastPage = function () {
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.pageCount, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                     $scope.events = data;
-                    $scope.currentPage = $scope.count;
+                    $scope.currentPage = $scope.pageCount;
 
                     $scope.$apply();
 

@@ -1778,7 +1778,7 @@ namespace openXDA
 
         #endregion
 
-        #region [Event Operations]
+        #region [Events Operations]
         public int GetEventCounts(int filterId, string filterString)
         {
             string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
@@ -1847,9 +1847,12 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
             return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3} AND (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8})", filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString));
-        }  
+        }
 
+        #endregion
 
+        #region [EventsForDate Operations]
+    
         public IEnumerable<EventView> GetAllEventsForDate(DateTime date, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             DateTime startTime = date.AddMinutes(-5);
@@ -1865,6 +1868,9 @@ namespace openXDA
             return DataContext.Table<EventView>().QueryRecordCount( new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
         }
 
+        #endregion
+
+        #region [EventsForDay Operations]  
         public IEnumerable<EventView> GetAllEventsForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
@@ -1882,6 +1888,10 @@ namespace openXDA
             eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime, filterString, filterString, filterString, filterString, filterString));
         }
+
+        #endregion
+
+        #region [EventsForMeter Operations]
 
         public IEnumerable<EventView> GetEventsForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
@@ -1951,7 +1961,9 @@ namespace openXDA
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND (ID LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6} OR EventTypeName LIKE {7})", meterId, startDate, endDate, filterId, filterString, filterString, filterString, filterString));
         }
 
+        #endregion
 
+        #region [DisturbancesForDay Operations]
         public IEnumerable<DisturbanceView> GetDisturbancesForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
@@ -1982,6 +1994,9 @@ namespace openXDA
                 $" SeverityCode IN({eventTypeList}) ", 
                 filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString));
         }
+        #endregion
+
+        #region [DisturbancesForMeter Operations]
 
         public IEnumerable<DisturbanceView> GetDisturbancesForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
@@ -2051,6 +2066,10 @@ namespace openXDA
             return DataContext.Table<DisturbanceView>().QueryRecordCount(new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND (ID LIKE {3} OR MeterName LIKE {4} OR PhaseName LIKE {5})", meterId, startDate, endDate, filterString, filterString, filterString));
         }
 
+        #endregion
+
+        #region [BreakersForDay Operations]
+
         public IEnumerable<BreakerView> GetBreakersForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
@@ -2084,6 +2103,10 @@ namespace openXDA
                 filterId, date, endTime, filterId, filterString, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
         }
 
+        #endregion
+
+        #region [FaultsForDay Operations]
+
         public IEnumerable<FaultView> GetFaultsForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
@@ -2114,7 +2137,6 @@ namespace openXDA
                 $" Voltage IN({eventTypeList}) ",
                 filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
         }
-
 
         #endregion
 
@@ -2552,15 +2574,6 @@ namespace openXDA
         #endregion
 
         #region [Site Summary]
-        public class SiteSummary
-        {
-            [PrimaryKey]
-            public int MeterID { get; set; }
-            public double Completeness { get; set; }
-            public double Correctness { get; set; }
-            public int Events { get; set; }
-            public int Disturbances { get; set; }
-        }
 
         public IEnumerable<SiteSummary> GetSiteSummaries(int filterId)
         {
@@ -2609,6 +2622,7 @@ namespace openXDA
             return table.Select().Select(row => DataContext.Table<SiteSummary>().LoadRecord(row));
 
         }
+        
         #endregion
 
         #endregion
