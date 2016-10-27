@@ -1962,10 +1962,9 @@ namespace openXDA
             return DataContext.Table<DisturbanceView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
                 " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                 " StartTime >= {1} AND StartTime <= {2} AND " +
-                " EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND " +
-                " (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR EventID LIKE {8} OR PhaseName Like {9}) AND " +
+                " (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR EventID LIKE {7} OR PhaseName Like {8}) AND " +
                 $" SeverityCode IN({eventTypeList}) ",
-                filterId, date, endTime, filterId,filterString, filterString, filterString, filterString, filterString,filterString));
+                filterId, date, endTime, filterString, filterString, filterString, filterString, filterString,filterString));
         }
 
         public int GetCountDisturbancesForDay(DateTime date, string eventTypes, string filterString, int filterId)
@@ -1978,11 +1977,10 @@ namespace openXDA
 
             return DataContext.Table<DisturbanceView>().QueryRecordCount(new RecordRestriction(
                 " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
-                " StartTime >= {1} AND StartTime <= {2} AND "+ 
-                " EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND "+
-                " (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR EventID LIKE {8} OR PhaseName Like {9}) AND " +
+                " StartTime >= {1} AND StartTime <= {2} AND "+
+                " (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR EventID LIKE {7} OR PhaseName Like {8}) AND " +
                 $" SeverityCode IN({eventTypeList}) ", 
-                filterId, date, endTime, filterId,filterString, filterString, filterString, filterString, filterString, filterString));
+                filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString));
         }
 
         public IEnumerable<BreakerView> GetBreakersForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
@@ -2026,7 +2024,7 @@ namespace openXDA
             eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
             filterString += '%';
             return DataContext.Table<FaultView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
-                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " RK = 1 AND MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                 " InceptionTime >= {1} AND InceptionTime <= {2} AND " +
                 " (MeterName LIKE {3} OR EventID LIKE {4} OR LineName LIKE {5} OR Voltage LIKE {6} OR FaultType Like {7} OR CurrentDistance LIKE {8} OR InceptionTime LIKE {9}) AND " +
                 $" Voltage IN({eventTypeList}) ",
@@ -2042,7 +2040,7 @@ namespace openXDA
             filterString += '%';
 
             return DataContext.Table<FaultView>().QueryRecordCount(new RecordRestriction(
-                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " RK = 1 AND MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                 " InceptionTime >= {1} AND InceptionTime <= {2} AND " +
                 " (MeterName LIKE {3} OR EventID LIKE {4} OR LineName LIKE {5} OR Voltage LIKE {6} OR FaultType Like {7} OR CurrentDistance LIKE {8} OR InceptionTime LIKE {9}) AND " +
                 $" Voltage IN({eventTypeList}) ",
@@ -2222,7 +2220,7 @@ namespace openXDA
             try
             {
                 conn = (SqlConnection)DataContext.Connection.Connection;
-                SqlCommand cmd = new SqlCommand("dbo.selectDisturbancesForMeterIDByDateRange", conn);
+                SqlCommand cmd = new SqlCommand("dbo.dDSelectDisturbancesForMeterIDByDateRange", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
                 cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
