@@ -96,9 +96,9 @@
             <tbody>
                 <tr ng-repeat="item in pagedSiteSummaries[currentPage-1] | orderBy: sortBy:reverse">
                     <td>{{getMeterName(item.MeterID)}}</td>
-                    <td>{{item.Completeness + '%'}}</td>
-                    <td>{{item.Correctness + '%'}}</td>
-                    <td>{{item.Events}}</td>
+                    <td>{{item.Completeness | number: 3}}%</td>
+                    <td>{{item.Correctness | number: 3}}%</td>
+                    <td><a href="EventsForMeter.cshtml?MeterID={{item.MeterID}}&Filter={{getFilter()}}" target="_blank">{{item.Events}}</a></td>
                     <td>{{item.Disturbances}}</td>
                 </tr>
             </tbody>
@@ -198,7 +198,9 @@
                 return lookupMeterName(id);
             }
              
-        
+            $scope.getFilter = function () {
+                return $('#globalFilter').val()
+            }
             $scope.search = function () {
                 if ($scope.searchText === "") {
                     var page = 0;

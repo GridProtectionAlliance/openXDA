@@ -1501,6 +1501,7 @@
     <Content Include="wwwroot\Workbench\DisturbancesForDay.cshtml" />
     <Content Include="wwwroot\Workbench\BreakersForDay.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsForDay.cshtml" />
+    <Content Include="wwwroot\Workbench\EventsForMeter.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
