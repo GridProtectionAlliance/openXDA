@@ -192,6 +192,10 @@
 @section Scripts {
     <script>
         @Raw(Model.RenderAbstract<EventType>("Name", "ID", "lookupEventTypeName", "eventTypeName"))
+        
+        $(function () {
+            $('#pageHeader h3').append("<small class='pull-right' style='margin-top: 8px' >Breaker Events: <span id='recordCount'></span></small>")
+        });
 
          var myApp = angular.module('myApp', []);
 
@@ -222,6 +226,8 @@
                  });
 
                  dataHub.getCountBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                     $('#recordCount').text(count);
+
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -242,6 +248,8 @@
                  });
 
                  dataHub.getCountBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                     $('#recordCount').text(count);
+
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -345,6 +353,8 @@
                  });
 
                  dataHub.getCountBreakersForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                     $('#recordCount').text(count);
+
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });

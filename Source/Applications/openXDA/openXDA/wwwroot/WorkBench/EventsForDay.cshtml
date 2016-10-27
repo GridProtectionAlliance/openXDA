@@ -163,8 +163,12 @@
 @section Scripts {
     <script>
         @Raw(Model.RenderAbstract<EventType>("Name", "ID", "lookupEventTypeName", "eventTypeName"))
+        
+        $(function () {
+            $('#pageHeader h3').append("<small class='pull-right' style='margin-top: 8px' >Events: <span id='recordCount'></span></small>")
+        });
 
-         //Demo of Searching Sorting and Pagination of Table with AngularJS - Advance Example
+        //Demo of Searching Sorting and Pagination of Table with AngularJS - Advance Example
 
          var myApp = angular.module('myApp', []);
 
@@ -194,6 +198,8 @@
                  });
 
                  dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                     $('#recordCount').text(count);
+
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -217,6 +223,8 @@
                  });
 
                  dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                     $('#recordCount').text(count);
+
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
@@ -312,6 +320,8 @@
                  });
 
                  dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
+                     $('#recordCount').text(count);
+
                      $scope.count = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });

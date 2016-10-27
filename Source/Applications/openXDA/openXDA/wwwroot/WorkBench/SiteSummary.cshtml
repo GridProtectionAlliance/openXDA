@@ -94,7 +94,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="item in pagedSiteSummaries[currentPage] | orderBy: sortBy:reverse">
+                <tr ng-repeat="item in pagedSiteSummaries[currentPage-1] | orderBy: sortBy:reverse">
                     <td>{{getMeterName(item.MeterID)}}</td>
                     <td>{{item.Completeness + '%'}}</td>
                     <td>{{item.Correctness + '%'}}</td>
@@ -103,7 +103,7 @@
                 </tr>
             </tbody>
         </table>
-        <ul class="pagination pagination-md pull-left">
+        @*<ul class="pagination pagination-md pull-left">
             <li ng-class="{active:0}">
                 <a href="#" ng-click="firstPage()"><<</a>
             </li>
@@ -119,7 +119,22 @@
             <li>
                 <a href="#" ng-click="lastPage()">>></a>
             </li>
-        </ul>
+        </ul>*@
+        <div class="pull-left">
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="firstPage()"><span class="glyphicon glyphicon-backward"></span></button>
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="minusPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
+            </div>
+            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" ng-model="currentPage">
+            <em class="validationMessage small" style="display: none;"></em>
+            &nbsp;of&nbsp;
+            <span ng-bind="pageCount"></span>
+            &nbsp;
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="plusPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="lastPage()"><span class="glyphicon glyphicon-forward"></span></button>
+            </div>
+        </div>
         <div class="pull-right">
             Rows:
             <div class="btn-group">
@@ -129,6 +144,8 @@
                 <button ng-class="{active: pageSize == 100}" class="btn btn-default" ng-click="setPageSize(100)">100</button>
             </div>
         </div>
+
+
     </div>
     <!-- Ends Controller -->
 </div>
@@ -137,6 +154,10 @@
     <script>
         @Raw(Model.RenderAbstract<Meter>("Name", "ID", "lookupMeterName", "meterName"))
         
+        $(function () {
+            $('#pageHeader h3').append("<small class='pull-right' style='margin-top: 8px' >Meters: <span id='recordCount'></span></small>")
+        });
+
         //Demo of Searching Sorting and Pagination of Table with AngularJS - Advance Example
 
         var myApp = angular.module('myApp', []);
@@ -158,7 +179,7 @@
             $scope.searchText = '';
             $scope.pageSize = 10;
             $scope.pagedSiteSummaries = [];
-            $scope.currentPage = 0;
+            $scope.currentPage = 1;
             $scope.siteSummary;
             $scope.pageCount = 0;
 
@@ -169,7 +190,8 @@
                     $scope.pageCount = Math.ceil(data.length / $scope.pageSize);
                     $scope.setPages();
                     $scope.$apply();
-                });                 
+                    $('#recordCount').text(data.length);
+                });
             });
 
             $scope.getMeterName = function (id) {
@@ -183,10 +205,14 @@
                     $scope.pagedSiteSummaries = [];
                     $scope.pagedSiteSummaries.push([]);
                     $.each($scope.siteSummary, function (index, data) {
-                        if (index !== 0 && index % $scope.pageSize === 0)
+                        if (index !== 0 && index % $scope.pageSize === 0) {
                             page++
+                            $scope.pagedSiteSummaries.push([]);
+                        }
                         $scope.pagedSiteSummaries[page].push(data);
                     });
+                    $('#recordCount').text($scope.siteSummary.length);
+
                 }
                 else {
                     var page = 0;
@@ -196,24 +222,31 @@
                         if (lookupMeterName(data.MeterID).toLowerCase().indexOf($scope.searchText) > -1 /*|| data.Completeness.indexOf($scope.searchText) > -1 || data.Correctness.indexOf($scope.searchText) > -1 || data.Events.indexOf($scope.searchText) > -1 || data.Disturbances.indexOf($scope.searchText) > -1*/)
                             return true;
                         }), function (index, data) {
-                        if (index !== 0 && index % $scope.pageSize === 0)
-                            page++
-                        $scope.pagedSiteSummaries[page].push(data);
-                    });
+                            if (index !== 0 && index % $scope.pageSize === 0) {
+                                page++
+                                $scope.pagedSiteSummaries.push([]);
+                            }
+                            $scope.pagedSiteSummaries[page].push(data);
+                        });
+                    $('#recordCount').text($scope.siteSummary.filter(function (data) {
+                        if (lookupMeterName(data.MeterID).toLowerCase().indexOf($scope.searchText) > -1 /*|| data.Completeness.indexOf($scope.searchText) > -1 || data.Correctness.indexOf($scope.searchText) > -1 || data.Events.indexOf($scope.searchText) > -1 || data.Disturbances.indexOf($scope.searchText) > -1*/)
+                            return true;
+                    }).length);
+
                 }
             }
 
 
             $scope.setPage = function (pageNumber) {
-                $scope.currentPage = pageNumber - 1;
+                $scope.currentPage = pageNumber;
             };
 
             $scope.firstPage = function () {
-                $scope.currentPage = 0;
+                $scope.currentPage = 1;
             };
 
             $scope.lastPage = function () {
-                $scope.currentPage = $scope.pageCount - 1;
+                $scope.currentPage = $scope.pageCount;
             };
             
             $scope.plusPage = function () {
@@ -273,7 +306,7 @@
                     $scope.pagedSiteSummaries[page].push(data);
                 });
                 $scope.pageCount = page + 1;
-                $scope.currentPage = 0;
+                $scope.currentPage = 1;
             };
         });
 
