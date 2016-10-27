@@ -30,7 +30,7 @@
 @inherits TemplateBase<AppModel>
 @{
     Layout = "Workbench/Layout.cshtml";
-    ViewBag.ShowMenu = false;
+    //ViewBag.ShowMenu = false;
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
@@ -39,7 +39,15 @@
     {
         ViewBag.Date = parameters["Date"];
     }
-    ViewBag.Title = "All Events for date: " + ViewBag.Date;
+    if (parameters.ContainsKey("EventID"))
+    {
+        ViewBag.EventID = parameters["EventID"];
+    }
+
+
+    int seconds = Model.DataContext.Connection.ExecuteScalar<int>("Select Value FROM Setting WHERE Name = 'WorkbenchTimeRangeInSeconds'");
+    DateTime date = Convert.ToDateTime(ViewBag.Date);
+    ViewBag.Title = "All Events for: " + date.ToUniversalTime().ToString() + " +/- " + seconds.ToString() + " seconds";
 }
 
 @section StyleSheets{
@@ -56,6 +64,10 @@
 
     table tr:nth-child(even) {
         background-color: #ffffff;
+    }
+
+    .rowhighlight {
+        background-color: yellow;
     }
 </style>
 }
@@ -111,7 +123,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="item in events">
+                <tr ng-repeat="item in events" ng-style="{'background-color': item.ID == @ViewBag.EventID ? 'yellow': '' }">
                     <td><a href="~/OpenSEE.cshtml?ID={{item.ID.toString()}}&faultcurves=1" target="_blank">{{item.ID}}</a></td>
                     <td>{{item.MeterName}}</td>
                     <td>{{item.LineName}}</td>

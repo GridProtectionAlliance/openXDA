@@ -30,7 +30,7 @@
 @inherits TemplateBase<AppModel>
 @{
     Layout = "Workbench/Layout.cshtml";
-    ViewBag.ShowMenu = false;
+    ViewBag.ShowMenu = true;
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();

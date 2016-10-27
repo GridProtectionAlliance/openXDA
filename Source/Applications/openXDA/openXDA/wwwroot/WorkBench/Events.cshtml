@@ -109,8 +109,8 @@
                     <td>{{item.MeterName}}</td>
                     <td>{{item.LineName}}</td>
                     <td>{{getEventTypeName(item.EventTypeID)}}</td>
-                    <td><a href="EventsForDate.cshtml?Date={{item.StartTime.toString()}}"  target="_blank">{{getDateTimeFormat(item.StartTime)}}</a></td>
-                    <td><a href="EventsForDate.cshtml?Date={{item.EndTime.toString()}}" target="_blank">{{getDateTimeFormat(item.EndTime)}}</a></td>
+                    <td><a href="EventsForDate.cshtml?Date={{item.StartTime.toString()}}&EventID={{item.ID}}"  target="_blank">{{getDateTimeFormat(item.StartTime)}}</a></td>
+                    <td><a href="EventsForDate.cshtml?Date={{item.EndTime.toString()}}&EventID={{item.ID}}" target="_blank">{{getDateTimeFormat(item.EndTime)}}</a></td>
                 </tr>
             </tbody>
         </table>

@@ -1859,8 +1859,9 @@ namespace openXDA
 
         public int GetCountAllEventsForDate(DateTime date, string filterString)
         {
-            DateTime startTime = date.AddMinutes(-5);
-            DateTime endTime = date.AddMinutes(5);
+            int seconds = DataContext.Connection.ExecuteScalar<int>("Select Value FROM Setting WHERE Name = 'WorkbenchTimeRangeInSeconds'");
+            DateTime startTime = date.AddSeconds(-1*seconds);
+            DateTime endTime = date.AddSeconds(seconds);
             return DataContext.Table<EventView>().QueryRecordCount( new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
         }
 

@@ -37,6 +37,10 @@ namespace openXDA.Model
     /// </remarks>
     public class AppModel
     {
+        #region [Members]
+        private DataContext m_dataContext;
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -59,7 +63,18 @@ namespace openXDA.Model
             get;
         }
 
+        // Gets reference to MiPlan context, creating it if needed
+        public DataContext DataContext => m_dataContext ?? (m_dataContext = new DataContext("systemSettings"));
+
+
         #endregion
+
+        #region [Methods]
+        protected void Dispose()
+        {
+            m_dataContext?.Dispose();
+        }
+
         /// <summary>
         /// Renders client-side Javascript function for looking up single values from a table.
         /// </summary>
@@ -96,7 +111,7 @@ namespace openXDA.Model
             return javascript.ToString();
         }
 
-
+        #endregion
 
     }
 }
