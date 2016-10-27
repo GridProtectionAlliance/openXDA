@@ -156,69 +156,81 @@
     <CustomAction Id="DefaultContours.sql.SetProperty" Property="DefaultContours.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultContours.sql]" />
     <CustomAction Id="DefaultContours.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
 
+    <CustomAction Id="UpgradeValidationAction.SetProperty" Property="UpgradeValidationAction" Value="ProcessStartInfo=FileName=[#XDAUpgradeValidation.exe]" />
+    <CustomAction Id="UpgradeValidationAction" BinaryKey="InstallerActions" DllEntry="StartProcessAction" Execute="deferred" Impersonate="no" />
+
     <UI>
-      <ProgressText Action="CreateDatabase">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="AlterDatabase">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="CreateDBLogin">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="AlterDBLogin">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="CreateDBUser">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="GrantDBPermissions">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="CreateDatabase">Creating database [DATABASENAME]...</ProgressText>
+      <ProgressText Action="AlterDatabase">Setting database as trustworthy...</ProgressText>
+      <ProgressText Action="CreateDBLogin">Creating login [XDASERVICELOGIN]...</ProgressText>
+      <ProgressText Action="AlterDBLogin">Setting password for login [XDASERVICELOGIN]...</ProgressText>
+      <ProgressText Action="CreateDBUser">Granting privileges to login [XDASERVICELOGIN]...</ProgressText>
+      <ProgressText Action="GrantDBPermissions">Granting privileges to login [XDASERVICELOGIN]...</ProgressText>
 
-      <ProgressText Action="openXDA.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="DashSprocs.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="EnableHistorianSqlClr.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="DefaultSettings.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="DefaultChannelTypes.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="DefaultTrendingAlarms.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
-      <ProgressText Action="DefaultContours.sql">Executing scripts to create the [DATABASENAME] database...</ProgressText>
+      <ProgressText Action="GSF.SortedTreeStore.SqlClr">Creating assemblies to support openSTE...</ProgressText>
+      <ProgressText Action="openHistorian.Core.SqlClr">Creating assemblies to support openSTE...</ProgressText>
+      <ProgressText Action="openHistorian.SqlClr">Creating assemblies to support openSTE...</ProgressText>
+      <ProgressText Action="openHistorian.XDALink.SqlClr">Creating assemblies to support openSTE...</ProgressText>
+      <ProgressText Action="openXDA.SqlClr">Creating assembly to query event data...</ProgressText>
+
+      <ProgressText Action="openXDA.sql">Setting up initial schema...</ProgressText>
+      <ProgressText Action="DashSprocs.sql">Creating procedures to support PQ Dashboard...</ProgressText>
+      <ProgressText Action="EnableHistorianSqlClr.sql">Enabling SqlClr interface to the openHistorian...</ProgressText>
+      <ProgressText Action="DefaultSettings.sql">Adding default settings...</ProgressText>
+      <ProgressText Action="DefaultChannelTypes.sql">Defining default channel types...</ProgressText>
+      <ProgressText Action="DefaultTrendingAlarms.sql">Defining default trending alarms...</ProgressText>
+      <ProgressText Action="DefaultContours.sql">Adding default contour color scales...</ProgressText>
     </UI>
-    
-    <InstallExecuteSequence>
-      <Custom Action="UpdateConfigFileAction.SetProperty" After="InstallFiles"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
-      <Custom Action="UpdateConfigFileAction" After="UpdateConfigFileAction.SetProperty"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
-      <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices"><![CDATA[NOT REMOVE AND &ServiceFeature=3]]></Custom>
-      <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[NOT REMOVE AND &ServiceFeature=3]]></Custom>
-      <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
-      <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty"><![CDATA[NOT REMOVE AND (&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1))]]></Custom>
-      
-      <Custom Action="CreateDatabase.SetProperty" After="InstallFiles"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="CreateDBLogin.SetProperty" After="AlterDatabase"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="CreateDBLogin" After="CreateDBLogin.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="AlterDBLogin.SetProperty" After="CreateDBLogin"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="AlterDBLogin" After="AlterDBLogin.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="CreateDBUser.SetProperty" After="AlterDBLogin"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
 
-      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openXDA.SqlClr.SetProperty" After="openHistorian.XDALink.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+    <InstallExecuteSequence>
+      <Custom Action="UpdateConfigFileAction.SetProperty" After="InstallFiles"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
+      <Custom Action="UpdateConfigFileAction" After="UpdateConfigFileAction.SetProperty"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
+      <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices"><![CDATA[&ServiceFeature=3]]></Custom>
+      <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[&ServiceFeature=3]]></Custom>
+      <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
+      <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
       
-      <Custom Action="openXDA.sql.SetProperty" After="openXDA.SqlClr"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultSettings.sql.SetProperty" After="EnableHistorianSqlClr.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultSettings.sql" After="DefaultSettings.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultChannelTypes.sql.SetProperty" After="DefaultSettings.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultChannelTypes.sql" After="DefaultChannelTypes.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="DefaultChannelTypes.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
-      <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty"><![CDATA[NOT REMOVE AND (&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))]]></Custom>
+      <Custom Action="CreateDatabase.SetProperty" After="InstallFiles"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="AlterDatabase.SetProperty" After="CreateDatabase"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="AlterDatabase" After="AlterDatabase.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="CreateDBLogin.SetProperty" After="AlterDatabase"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="CreateDBLogin" After="CreateDBLogin.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="AlterDBLogin.SetProperty" After="CreateDBLogin"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="AlterDBLogin" After="AlterDBLogin.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="CreateDBUser.SetProperty" After="AlterDBLogin"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="CreateDBUser" After="CreateDBUser.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+
+      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openXDA.SqlClr.SetProperty" After="openHistorian.XDALink.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      
+      <Custom Action="openXDA.sql.SetProperty" After="openXDA.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultSettings.sql.SetProperty" After="EnableHistorianSqlClr.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultSettings.sql" After="DefaultSettings.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultChannelTypes.sql.SetProperty" After="DefaultSettings.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultChannelTypes.sql" After="DefaultChannelTypes.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql.SetProperty" After="DefaultChannelTypes.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultTrendingAlarms.sql" After="DefaultTrendingAlarms.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultContours.sql.SetProperty" After="DefaultTrendingAlarms.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DefaultContours.sql" After="DefaultContours.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+
+      <Custom Action="UpgradeValidationAction.SetProperty" After="InstallFiles"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
+      <Custom Action="UpgradeValidationAction" After="UpgradeValidationAction.SetProperty"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
     </InstallExecuteSequence>
   </Product>
 
@@ -314,6 +326,9 @@
       </Component>
       <Component Id="ldconfig.ps1">
         <File Id="ldconfig.ps1" Name="ldconfig.ps1" Source="$(var.DeviceDefinitionsMigrator.ProjectDir)\ldconfig.ps1" />
+      </Component>
+      <Component Id="XDAUpgradeValidation">
+        <File Id="XDAUpgradeValidation.exe" Name="$(var.XDAUpgradeValidation.TargetFileName)" Source="$(var.XDAUpgradeValidation.TargetPath)" />
       </Component>
       
       <!-- Database Scripts -->
@@ -735,7 +750,7 @@
           <Publish Property="DBEXISTS">NOT DATABASECONNECTED</Publish>
           <Publish Property="DBEXISTS" Value="1">DATABASECONNECTED</Publish>
           <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] already exists on the server. Enter a different database name or drop the existing database, then try again. If you do not wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND DBSERVERCONNECTS AND DBEXISTS]]></Publish>
-          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again. If you wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[NOT((&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1))) AND DBSERVERCONNECTS AND NOT DBEXISTS]]></Publish>
+          <Publish Property="ERRORMESSAGE" Value="Database [DATABASENAME] does not exist on the server. Enter the name of an existing database, then try again. If you wish to install the database, return to the Custom Setup screen and modify your feature selections."><![CDATA[NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND DBSERVERCONNECTS AND NOT DBEXISTS]]></Publish>
           <Publish Event="SpawnDialog" Value="ModalErrorDialog"><![CDATA[DBSERVERCONNECTS AND (((&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND DBEXISTS) OR (NOT(&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)) AND NOT DBEXISTS))]]></Publish>
 
           <!-- Move to the next dialog if the validation checks out. -->
