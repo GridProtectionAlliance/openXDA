@@ -130,7 +130,7 @@
                 </tr>
             </tbody>
         </table>
-        <ul class="pagination pagination-md pull-left">
+        @*<ul class="pagination pagination-md pull-left">
             <li ng-class="{active:0}">
                 <a href="#" ng-click="firstPage()"><<</a>
             </li>
@@ -146,7 +146,24 @@
             <li>
                 <a href="#" ng-click="lastPage()">>></a>
             </li>
-        </ul>
+        </ul>*@
+
+        <div class="pull-left">
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="firstPage()"><span class="glyphicon glyphicon-backward"></span></button>
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="minusPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
+            </div>
+            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" ng-model="currentPage" ng-change="setPage(currentPage)">
+            <em class="validationMessage small" style="display: none;"></em>
+            &nbsp;of&nbsp;
+            <span ng-bind="pageCount"></span>
+            &nbsp;
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="plusPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="lastPage()"><span class="glyphicon glyphicon-forward"></span></button>
+            </div>
+        </div>
+
         <div class="pull-right">
             Rows:
             <div class="btn-group">
@@ -189,6 +206,7 @@
              $scope.searchText = '';
              $scope.pageSize = 10;
              $scope.currentPage = 1;
+             $scope.pageCount;
 
              $(window).one('globalFilterDone', function (event) {
                  dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
@@ -200,7 +218,7 @@
                  dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $('#recordCount').text(count);
 
-                     $scope.count = Math.ceil(count / $scope.pageSize);
+                     $scope.pageCount = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
              });
@@ -225,7 +243,7 @@
                  dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $('#recordCount').text(count);
 
-                     $scope.count = Math.ceil(count / $scope.pageSize);
+                     $scope.pageCount = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
 
@@ -255,9 +273,9 @@
              };
 
              $scope.lastPage = function () {
-                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.count, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
+                 dataHub.getAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.pageCount, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
                      $scope.events = data;
-                     $scope.currentPage = $scope.count;
+                     $scope.currentPage = $scope.pageCount;
 
                      $scope.$apply();
 
@@ -265,12 +283,12 @@
              };
 
              $scope.plusPage = function () {
-                 $scope.currentPage++;
+                 $scope.setPage(++$scope.currentPage);
+
              }
              $scope.minusPage = function () {
-                 $scope.currentPage--;
+                 $scope.setPage(--$scope.currentPage);
              }
-
 
              $scope.sort = function (sortBy) {
                  if (sortBy === $scope.sortBy) {
@@ -322,7 +340,7 @@
                  dataHub.getCountAllEventsForDay(new Date('@ViewBag.Date 00:00Z'), '@ViewBag.Types', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%'), '@ViewBag.Filter').done(function (count) {
                      $('#recordCount').text(count);
 
-                     $scope.count = Math.ceil(count / $scope.pageSize);
+                     $scope.pageCount = Math.ceil(count / $scope.pageSize);
                      $scope.$apply();
                  });
              };

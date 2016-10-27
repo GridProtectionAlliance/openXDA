@@ -148,7 +148,7 @@
                 <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="firstPage()"><span class="glyphicon glyphicon-backward"></span></button>
                 <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="minusPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
             </div>
-            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" ng-model="currentPage">
+            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" ng-model="currentPage" ng-change="setPage(currentPage)">
             <em class="validationMessage small" style="display: none;"></em>
             &nbsp;of&nbsp;
             <span ng-bind="pageCount"></span>
@@ -279,10 +279,11 @@
             };
 
             $scope.plusPage = function () {
-                $scope.currentPage++;
+                $scope.setPage(++$scope.currentPage);
+
             }
             $scope.minusPage = function () {
-                $scope.currentPage--;
+                $scope.setPage(--$scope.currentPage);
             }
 
 
