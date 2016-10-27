@@ -55,51 +55,12 @@ Traditional disturbance analytic processes typically require manual retrieval of
 
 
 # Documentation and Support
-* Documentation for openXDA can be found [here](https://github.com/GridProtectionAlliance/openXDA/tree/master/Source/Documentation).
+* Documentation for openXDA can be found on the [openXDA wiki](../../wiki).
+* Documentation on all GPA products can be found on the [GPA wiki](https://gridprotectionalliance.org/wiki/doku.php).
 * Get in contact with our development team on our new [discussion boards](http://discussions.gridprotectionalliance.org/c/gpa-products/openxda).
-* Check out the [wiki](https://gridprotectionalliance.org/wiki/doku.php?id=openxda:overview).
 
 # Deployment
-
-1. Make sure your system meets all the [requirements](#requirements) below.
-* [Download](#downloads) a version below.
-* Unzip if necessary.
-* Run "openXDASetup.msi".
-* Follow the wizard.
-* [Configure the database with your devices](#device-configuration)
-* Enjoy.
-
-## Requirements
-### Operating System
-* 64-bit Windows 7 or Windows Server 2008 R2 (or newer).
-
-### Minimum Hardware
-* 2.0 GHz CPU.
-* 2.0 GB RAM.
-* 10 GB of available disk space for installation and testing. Operational disk space requirements will be proportional to the volume of input data.
-
-### Software
-* openHistorian 2.0
-* .NET 3.5 SP1 (required by SQL Server 2012).
-* .NET 4.6.
-* SQL Server 2012 with management tools.
-  * Free Express version is fine, but has a 10GB limit.
-  * Mixed mode authentication must be enable on the SQL Server.
-
-### Device Configuration
-The openXDA database needs to be configured with information on the devices that provide it data. 
-The steps to do this are:
-
-1. Create the DeviceDefinitions.xml file. This is done by:
- * Filling out the Excel template for [DFRs](https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/Device%20Definitions%20Examples%20&%20Templates/openXDA%20Configuration%20Template%20-%20DFR.xlsx?raw=true) or [PQ Monitors and Relays](https://github.com/GridProtectionAlliance/openXDA/blob/master/Source/Documentation/Device%20Definitions%20Examples%20&%20Templates/openXDA%20Configuration%20Template%20-%20PQ.xlsx?raw=true) and using the [DeviceDefinitionParser](https://github.com/GridProtectionAlliance/DeviceDefinitionParser/releases) to convert the template(s) to the DeviceDefinitions.xml file.
- * **OR**
- * Manually creating the DeviceDefinitions.xml file. Check out the example xml files for      [DFRs](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates/DeviceDefinitionsExample-DFR.xml) and [PQ Monitors and Relays](https://raw.githubusercontent.com/GridProtectionAlliance/openXDA/master/Source/Documentation/Device%20Definitions%20Examples%20%26%20Templates/DeviceDefinitionsExample-PQ.xml) to see what fields are necessary.
-* Save the DeviceDefinitions.xml file in the folder where openXDA is installed. (rename the existing file or replace it)
-* To configure the database from the DeviceDefinitions.xml file, run the ldconfig.bat script included with openXDA and found in the folder where openXDA is installed.
-
-## Downloads
-* Download a stable release from the releases page [here](https://github.com/GridProtectionAlliance/openXDA/releases).
-* Download the nightly build [here](http://www.gridprotectionalliance.org/nightlybuilds/openXDA/Beta/Applications/openXDA/openXDASetup.msi).
+Instructions on how to deploy openXDA can be found in the [openXDA wiki](../../wiki)
 
 # Contributing
 If you would like to contribute please:
