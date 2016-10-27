@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GSF.Core.SqlClr">
+      <HintPath>..\..\Dependencies\openHistorian\GSF.Core.SqlClr.dll</HintPath>
+    </Reference>
     <Reference Include="GSF.SortedTreeStore.SqlClr">
       <HintPath>..\..\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll</HintPath>
     </Reference>

@@ -130,6 +130,8 @@
     <CustomAction Id="GrantDBPermissions" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
 
     <?include obj\SqlClr.wxi ?>
+    <CustomAction Id="GSF.Core.SqlClr.SetProperty" Property="GSF.Core.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]GSF.Core.SqlClr[\]] AUTHORIZATION dbo FROM [GSF.Core.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
+    <CustomAction Id="GSF.Core.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="GSF.SortedTreeStore.SqlClr.SetProperty" Property="GSF.SortedTreeStore.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]GSF.SortedTreeStore.SqlClr[\]] AUTHORIZATION dbo FROM [GSF.SortedTreeStore.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
     <CustomAction Id="GSF.SortedTreeStore.SqlClr" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="openHistorian.Core.SqlClr.SetProperty" Property="openHistorian.Core.SqlClr" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=CREATE ASSEMBLY [\[]openHistorian.Core.SqlClr[\]] AUTHORIZATION dbo FROM [openHistorian.Core.SqlClr.dll] WITH PERMISSION_SET = UNSAFE" />
@@ -167,6 +169,7 @@
       <ProgressText Action="CreateDBUser">Granting privileges to login [XDASERVICELOGIN]...</ProgressText>
       <ProgressText Action="GrantDBPermissions">Granting privileges to login [XDASERVICELOGIN]...</ProgressText>
 
+      <ProgressText Action="GSF.Core.SqlClr">Creating assemblies to support openSTE...</ProgressText>
       <ProgressText Action="GSF.SortedTreeStore.SqlClr">Creating assemblies to support openSTE...</ProgressText>
       <ProgressText Action="openHistorian.Core.SqlClr">Creating assemblies to support openSTE...</ProgressText>
       <ProgressText Action="openHistorian.SqlClr">Creating assemblies to support openSTE...</ProgressText>
@@ -203,7 +206,9 @@
       <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
 
-      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="GSF.Core.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="GSF.Core.SqlClr" After="GSF.Core.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GSF.Core.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
