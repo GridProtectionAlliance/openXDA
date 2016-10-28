@@ -7,9 +7,16 @@ namespace openXDA.Model
 {
     public class TrendingDataSet
     {
-        public TrendingDataPoint[] ChannelData;
-        public TrendingAlarmLimit[] AlarmLimits;
-        public TrendingAlarmLimit[] OffNormalLimits;
+        public List<TrendingDataPoint> ChannelData;
+        public List<TrendingAlarmLimit> AlarmLimits;
+        public List<TrendingAlarmLimit> OffNormalLimits;
+
+        public TrendingDataSet()
+        {
+            ChannelData = new List<TrendingDataPoint>();
+            AlarmLimits = new List<TrendingAlarmLimit>();
+            OffNormalLimits = new List<TrendingAlarmLimit>();
+        }
     }
 
     public class TrendingDataPoint
