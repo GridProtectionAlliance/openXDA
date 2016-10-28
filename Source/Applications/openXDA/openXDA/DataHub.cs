@@ -1670,7 +1670,7 @@ namespace openXDA
             
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                foreach (TrendingDataPoint point in historian.Read(channelIDs, startDate, endDate))
+                foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIDs, startDate, endDate))
                 {
                     TrendingData obj = new TrendingData();
 
@@ -2633,6 +2633,66 @@ namespace openXDA
             SignalCode sc = new SignalCode();
             return sc.GetFlotData(eventID, seriesIndexes);
         }
+        #endregion
+
+        #region [OpenSTE Operations]
+
+        public TrendingDataSet GetTrendsForChannelIDDate(string ChannelID, string targetDate)
+        {
+            DateTime epoch = new DateTime(1970, 1, 1);
+            string theSproc = "dbo.selectTrendingDataByChannelIDDate2";
+            DataSet dataSet = new DataSet();
+            TrendingDataSet trendingDataSet = new TrendingDataSet();
+
+            SqlConnection connection = (SqlConnection)DataContext.Connection.Connection;
+            using (SqlCommand command = connection.CreateCommand())
+            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+            {
+                command.CommandText = theSproc;
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@EventDate", targetDate);
+                command.Parameters.AddWithValue("@ChannelID", ChannelID);
+                command.CommandTimeout = 300;
+
+                adapter.Fill(dataSet);
+
+                trendingDataSet.ChannelData = dataSet.Tables[0].Rows
+                    .Cast<DataRow>()
+                    .Select(row => new openXDA.Model.TrendingDataPoint()
+                    {
+                        Time = row.Field<DateTime>("thedate").Subtract(epoch).TotalMilliseconds,
+                        Maximum = row.Field<double>("themaximum"),
+                        Minimum = row.Field<double>("theminimum"),
+                        Average = row.Field<double>("theaverage")
+                    })
+                    .ToArray();
+
+                trendingDataSet.AlarmLimits = dataSet.Tables[1].Rows
+                    .Cast<DataRow>()
+                    .Select(row => new TrendingAlarmLimit()
+                    {
+                        TimeStart = row.Field<DateTime>("thedatefrom").Subtract(epoch).TotalMilliseconds,
+                        TimeEnd = row.Field<DateTime>("thedateto").Subtract(epoch).TotalMilliseconds,
+                        High = row.Field<double?>("alarmlimithigh"),
+                        Low = row.Field<double?>("alarmlimitlow")
+                    })
+                    .ToArray();
+
+                trendingDataSet.OffNormalLimits = dataSet.Tables[2].Rows
+                    .Cast<DataRow>()
+                    .Select(row => new TrendingAlarmLimit()
+                    {
+                        TimeStart = row.Field<DateTime>("thedatefrom").Subtract(epoch).TotalMilliseconds,
+                        TimeEnd = row.Field<DateTime>("thedateto").Subtract(epoch).TotalMilliseconds,
+                        High = row.Field<double?>("offlimithigh"),
+                        Low = row.Field<double?>("offlimitlow")
+                    })
+                    .ToArray();
+            }
+
+            return trendingDataSet;
+        }
+
         #endregion
 
         #region [ Misc ]

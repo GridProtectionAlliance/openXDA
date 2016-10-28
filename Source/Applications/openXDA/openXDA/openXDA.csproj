@@ -309,6 +309,7 @@
     <Compile Include="Model\FaultView.cs" />
     <Compile Include="Model\SiteSummary.cs" />
     <Compile Include="Model\TrendingData.cs" />
+    <Compile Include="Model\TrendingDataSet.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserAccountMeterGroup.cs" />
     <Compile Include="Model\VoltageCurvePoint.cs" />
@@ -452,6 +453,7 @@
     <Content Include="wwwroot\Content\jquery.multiselect.css" />
     <Content Include="wwwroot\Content\jquery.multiselect.filter.css" />
     <Content Include="wwwroot\Content\OpenSEE.css" />
+    <Content Include="wwwroot\Content\OpenSTE.css" />
     <Content Include="wwwroot\Content\themes\redmond\images\animated-overlay.gif" />
     <Content Include="wwwroot\Content\themes\redmond\images\ui-bg_flat_0_aaaaaa_40x100.png" />
     <Content Include="wwwroot\Content\themes\redmond\images\ui-bg_flat_55_fbec88_40x100.png" />
@@ -478,9 +480,11 @@
     <Content Include="wwwroot\Images\GPA-Logo.png" />
     <Content Include="wwwroot\Images\openSEELogo.png" />
     <Content Include="wwwroot\Images\openSEET.png" />
+    <Content Include="wwwroot\Images\openSTE.png" />
     <Content Include="wwwroot\index.cshtml" />
     <Content Include="wwwroot\OpenSEE.cshtml" />
     <Content Include="wwwroot\Scripts\D3\LICENSE" />
+    <Content Include="wwwroot\OpenSTE.cshtml" />
     <None Include="wwwroot\Scripts\flot\API.md" />
     <None Include="wwwroot\Scripts\flot\CONTRIBUTING.md" />
     <None Include="wwwroot\Scripts\flot\examples\.DS_Store" />
@@ -543,6 +547,7 @@
     <Content Include="wwwroot\Scripts\jquery.multiselect.filter.js" />
     <Content Include="wwwroot\Scripts\jquery.multiselect.js" />
     <Content Include="wwwroot\Scripts\OpenSEE.js" />
+    <Content Include="wwwroot\Scripts\OpenSTE.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\css\font-awesome.css" />
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\css\font-awesome.min.css" />
