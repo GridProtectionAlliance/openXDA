@@ -231,9 +231,18 @@ namespace XDAWaveformDataParser
                 parsedFile = EventFile.Parse(dialog.FileName);
 
                 // Convert to common channel format
-                m_channels = parsedFile.EventReports
-                    .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
-                    .ToList();
+                if(parsedFile.EventReports.Count > 0)
+                {
+                    m_channels = parsedFile.EventReports
+                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
+                        .ToList();
+                }
+                else if( parsedFile.CommaSeparatedEventReports.Count > 0)
+                {
+                    m_channels = parsedFile.CommaSeparatedEventReports
+                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
+                        .ToList();
+                }
 
                 // Clear the list box and data chart
                 ChannelListBox.Items.Clear();
@@ -516,6 +525,29 @@ namespace XDAWaveformDataParser
 
             return parsedChannel;
         }
+
+        private ParsedChannel MakeParsedChannel(CommaSeparatedEventReport report, Channel<double> channel)
+        {
+            List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples.ToList();
+
+            List<object> xValues = timeSamples
+                .Select(time => time - timeSamples[0])
+                .Select(timeSpan => timeSpan.TotalSeconds)
+                .Cast<object>()
+                .ToList();
+
+            ParsedChannel parsedChannel = new ParsedChannel()
+            {
+                Name = string.Format("({0}) {1}", report.Command, channel.Name),
+                TimeValues = timeSamples,
+                XValues = xValues,
+                YValues = channel.Samples.Cast<object>().ToList()
+            };
+
+            return parsedChannel;
+        }
+
+
 
         private void ExportToCSV(string location)
         {
