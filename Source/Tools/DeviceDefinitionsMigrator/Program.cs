@@ -573,7 +573,9 @@ namespace DeviceDefinitionsMigrator
 
         private static void LoadMeterAttributes(Meter meter, XElement deviceAttributes)
         {
-            string meterName = (string)deviceAttributes.Element("name") ?? (string)deviceAttributes.Element("stationName");
+            string meterName = (string)deviceAttributes.Element("name")
+                ?? (string)deviceAttributes.Parent?.Attribute("id")
+                ?? (string)deviceAttributes.Element("stationName");
 
             if (meter.Name != meterName)
             {
