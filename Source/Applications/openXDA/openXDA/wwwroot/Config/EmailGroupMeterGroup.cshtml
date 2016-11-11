@@ -100,11 +100,12 @@
 
         $('#addNewEditDialog').on('shown.bs.modal', function (event) {
             $('#selectEmailGroupID').val('@ViewBag.EmailGroupID');
-            $('#selectEmailGroupID').prop('disabled', true);
+            //$('#selectEmailGroupID').prop('disabled', true);
         });
 
         $(viewModel).on('beforeSave', function (event, record) {
-            record.EmailGroupID = '@ViewBag.EmailGroupID';
+            record.EmailGroupID = $('#selectEmailGroupID').val();
+;
         });
 
     </script>
