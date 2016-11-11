@@ -343,9 +343,6 @@ GO
 INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter', 1)
 GO
 
-INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.COMTRADEWriter', 1)
-GO
-
 INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.EventEmailWriter', 1)
 GO
 
