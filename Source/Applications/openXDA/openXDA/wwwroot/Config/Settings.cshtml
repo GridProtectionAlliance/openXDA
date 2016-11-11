@@ -49,13 +49,13 @@
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-    ViewBag.HideAddNewButton = true;
+    ViewBag.HideAddNewButton = false;
 }
 @helper BodyRows()
 {
     <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: truncate(Value)"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>
+    <td width="30%" class="text-left valign-middle" data-bind="text: truncate($data, Value)"></td>
+    <td width="30%" class="text-left valign-middle" data-bind="text: truncate($data, DefaultValue)"></td>
 
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -63,9 +63,9 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<Setting>("Name", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<Setting>("Name"))
     @Raw(dataContext.AddInputField<Setting>("Value"))
-    @Raw(dataContext.AddInputField<Setting>("DefaultValue", customDataBinding: "enable: false", fieldLabel: "Default Value"))
+    @Raw(dataContext.AddInputField<Setting>("DefaultValue", fieldLabel: "Default Value"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
@@ -73,10 +73,25 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Setting, DataHub>(ViewBag, "Name"))
         
-        function truncate(string) {
+        function truncate(data, value) {
+            var string = value == null ? '' : value;
+            if (data.Name.indexOf('Password') > -1)
+                string = string.replace(/./g, '*' );
             if (string != null && string.length > 40)
                 string = string.slice(0, 37) + '...';
             return string;
         }
+        
+        $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+            
+            $('#inputName').on('keyup', function () {
+                if ($('#inputName').val().indexOf('Password') > -1)
+                    $('#inputValue').attr('type', 'password');
+                else
+                    $('#inputValue').attr('type', 'text');
+            });
+
+        });
+        
     </script>
 }
