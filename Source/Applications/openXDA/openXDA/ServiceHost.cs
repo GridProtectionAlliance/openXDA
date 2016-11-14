@@ -180,10 +180,6 @@ namespace openXDA
 
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
-            const int RetryDelay = 1000;
-            const int SleepTime = 200;
-            const int LoopCount = RetryDelay / SleepTime;
-
             ServiceHelperAppender serviceHelperAppender;
             RollingFileAppender fileAppender;
 
@@ -239,20 +235,21 @@ namespace openXDA
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
-                while (!TryStartEngine())
-                {
-                    for (int i = 0; i < LoopCount; i++)
-                    {
-                        if (m_serviceStopping)
-                            return;
+                const int RetryDelay = 1000;
+                const int SleepTime = 200;
+                const int LoopCount = RetryDelay / SleepTime;
 
-                        Thread.Sleep(SleepTime);
-                    }
-                }
+                bool engineStarted = false;
+                bool webUIStarted = false;
 
-                // Set up separate thread to start the Web UI
-                while (!TryStartWebUI())
+                while (true)
                 {
+                    engineStarted = engineStarted || TryStartEngine();
+                    webUIStarted = webUIStarted || TryStartWebUI();
+
+                    if (engineStarted && webUIStarted)
+                        break;
+
                     for (int i = 0; i < LoopCount; i++)
                     {
                         if (m_serviceStopping)
