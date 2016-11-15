@@ -89,7 +89,10 @@ namespace openXDA
             if (request.Url.PathAndQuery.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
                 return AuthenticationSchemes.Anonymous;
 
-            return AuthenticationSchemes.IntegratedWindowsAuthentication;
+            // Explicitly select NTLM, since Negotiate seems to fail
+            // when accessing the page using the system's domain name
+            // while the application is running as a domain account
+            return AuthenticationSchemes.Ntlm;
         }
     }
 }
