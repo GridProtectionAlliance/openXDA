@@ -818,6 +818,24 @@ CREATE NONCLUSTERED INDEX IX_EventSentEmail_EventID
 ON EventSentEmail(ID ASC)
 GO
 
+INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('Sag', 'Sag')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('Swell', 'Swell')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('Transient', 'Transient')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('Other', 'Other')
+GO
+
 INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
 GO
 
