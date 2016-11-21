@@ -63,8 +63,8 @@
 
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), attr: { href: '/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
-    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: EmailTypeID, attr: { href: '/EmailTypes.cshtml?EmailTypeID=' + EmailTypeID }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), attr: { href: '/Config/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: EmailTypeID, attr: { href: '/Config/EmailTypes.cshtml?EmailTypeID=' + EmailTypeID }"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
