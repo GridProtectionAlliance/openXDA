@@ -170,8 +170,8 @@ namespace FaultData.DataResources
 
             List<DataSeries> perUnitRMS = rms
                 .Where(dataSeries => (object)dataSeries != null)
-                .Where(dataSeries => dataSeries.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault() != 0.0D)
-                .Select(dataSeries => dataSeries.Multiply(1.0D / dataSeries.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault()))
+                .Where(dataSeries => GetPerUnitValue(dataSeries) != 0.0D)
+                .Select(dataSeries => dataSeries.Multiply(1.0D / GetPerUnitValue(dataSeries)))
                 .ToList();
 
             if (HasInterruption(perUnitRMS))
@@ -229,6 +229,44 @@ namespace FaultData.DataResources
             }
 
             return false;
+        }
+
+        private double GetPerUnitValue(DataSeries dataSeries)
+        {
+            if ((object)dataSeries.SeriesInfo.Channel.PerUnitValue != null)
+                return dataSeries.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault();
+
+            if (dataSeries.SeriesInfo.Channel.MeasurementType.Name != "Voltage")
+                return 0.0D;
+
+            if (!IsLineToLine(dataSeries.SeriesInfo.Channel) && !IsLineToLine(dataSeries.SeriesInfo.Channel))
+                return 0.0D;
+
+            double voltageKV = dataSeries.SeriesInfo.Channel.Line.VoltageKV;
+
+            double divisor = IsLineToNeutral(dataSeries.SeriesInfo.Channel)
+                ? Math.Sqrt(3.0D)
+                : 1.0D;
+
+            return voltageKV / divisor;
+        }
+
+        private static bool IsLineToNeutral(Channel channel)
+        {
+            return channel.Phase.Name == "AN" ||
+                   channel.Phase.Name == "BN" ||
+                   channel.Phase.Name == "CN" ||
+                   channel.Phase.Name == "RES" ||
+                   channel.Phase.Name == "NG" ||
+                   channel.Phase.Name == "LineToNeutralAverage";
+        }
+
+        private static bool IsLineToLine(Channel channel)
+        {
+            return channel.Phase.Name == "AB" ||
+                   channel.Phase.Name == "BC" ||
+                   channel.Phase.Name == "CA" ||
+                   channel.Phase.Name == "LineToLineAverage";
         }
 
         #endregion
