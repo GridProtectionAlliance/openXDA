@@ -36,7 +36,6 @@ using System.Threading;
 using System.Xml.Linq;
 using FaultData.Configuration;
 using FaultData.Database;
-using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataSets;
 using GSF;
@@ -300,6 +299,9 @@ namespace FaultData.DataWriters
             EventTableAdapter eventAdapter;
             EventTypeTableAdapter eventTypeAdapter;
 
+            EventRow eventRow;
+            EventDataTable systemEvent;
+
             int faultTypeID;
             string eventDetail;
             XDocument htmlDocument;
@@ -307,6 +309,7 @@ namespace FaultData.DataWriters
             List<Attachment> attachments;
             string subject;
             string html;
+            bool alreadySent;
 
             systemInfo = s_dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
             meterInfo = s_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
@@ -319,6 +322,9 @@ namespace FaultData.DataWriters
                 .Select(eventType => eventType.ID)
                 .FirstOrDefault();
 
+            // Load the system event before the eventDetail record to avoid race conditions causing missed emails
+            eventRow = eventAdapter.GetDataByID(eventID)[0];
+            systemEvent = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance);
             eventDetail = eventAdapter.GetEventDetail(eventID);
 
             List<IGrouping<int, Guid>> templateGroups;
@@ -372,10 +378,34 @@ namespace FaultData.DataWriters
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
                     html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
+                    alreadySent = false;
 
                     try
                     {
-                        LoadEmail(eventID, recipients, subject, html);
+                        int sentEmailID;
+
+                        using (AdoDataConnection connection = new AdoDataConnection(s_dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+                        {
+                            string systemEventIDs = string.Join(",", systemEvent.Where(row => row.LineID == eventRow.LineID).Select(row => row.ID));
+
+                            string query =
+                                $"SELECT SentEmail.ID " +
+                                $"FROM " +
+                                $"    SentEmail JOIN " +
+                                $"    EventSentEmail ON EventSentEmail.SentEmailID = SentEmail.ID " +
+                                $"WHERE " +
+                                $"    EventSentEmail.EventID IN ({systemEventIDs}) AND " +
+                                $"    SentEmail.Message = {{0}}";
+
+                            sentEmailID = connection.ExecuteScalar(-1, DataExtensions.DefaultTimeoutDuration, query, html);
+                        }
+
+                        alreadySent = (sentEmailID != -1);
+
+                        if (!alreadySent)
+                            sentEmailID = LoadSentEmail(recipients, subject, html);
+
+                        LoadEventSentEmail(eventRow, systemEvent, sentEmailID);
                     }
                     catch (Exception ex)
                     {
@@ -384,7 +414,8 @@ namespace FaultData.DataWriters
                         Log.Error(ex.Message, ex);
                     }
 
-                    SendEmail(recipients, subject, html, attachments);
+                    if (!alreadySent)
+                        SendEmail(recipients, subject, html, attachments);
                 }
                 finally
                 {
@@ -397,24 +428,25 @@ namespace FaultData.DataWriters
                 Log.Info($"All emails sent for event ID {eventID}.");
         }
 
-        private static void LoadEmail(int eventID, List<string> recipients, string subject, string body)
+        private static int LoadSentEmail(List<string> recipients, string subject, string body)
         {
-            EventTableAdapter eventAdapter = s_dbAdapterContainer.GetAdapter<EventTableAdapter>();
-            MeterData.EventRow eventRow = eventAdapter.GetDataByID(eventID)[0];
-            MeterData.EventDataTable systemEvent = eventAdapter.GetSystemEvent(eventRow.StartTime, eventRow.EndTime, s_timeTolerance);
-
             DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, s_timeZone);
             string toLine = string.Join("; ", recipients.Select(recipient => recipient.Trim()));
-
-            BulkLoader bulkLoader;
-            DataTable eventSentEmailTable;
-            int sentEmailID;
 
             using (AdoDataConnection connection = new AdoDataConnection(s_dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
             {
                 connection.ExecuteNonQuery("INSERT INTO SentEmail VALUES({0}, {1}, {2}, {3})", now, toLine, subject, body);
-                sentEmailID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            }
+        }
 
+        private static void LoadEventSentEmail(EventRow eventRow, EventDataTable systemEvent, int sentEmailID)
+        {
+            BulkLoader bulkLoader;
+            DataTable eventSentEmailTable;
+
+            using (AdoDataConnection connection = new AdoDataConnection(s_dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+            {
                 // Query an empty table with matching schema --
                 // union table to itself to eliminate unique key constraints
                 eventSentEmailTable = connection.RetrieveData("SELECT * FROM EventSentEmail WHERE 1 IS NULL UNION ALL SELECT * FROM EventSentEmail WHERE 1 IS NULL");
