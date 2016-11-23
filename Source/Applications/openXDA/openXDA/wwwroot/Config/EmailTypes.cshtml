@@ -128,7 +128,7 @@
         function editXSLTemplate() {
             dataHub.queryXSLTemplateByID($('#selectXSLTemplateID').val()).done(function (data) {
                 $('#templateName').val(data.Name);
-                $('#template').text(data.Template);
+                //$('#template').text(data.Template);
                 $('#template').height($(window).height() / 3);
                 $('#xslID').html(data.ID);
                 $('#saveEdit').show();
@@ -137,7 +137,7 @@
                 editor.setTheme("ace/theme/monokai");
                 editor.getSession().setMode("ace/mode/xml");
                 editor.setFontSize("14px");
-
+                editor.setValue(data.Template);
                 if ($('#textArea').css('display') === 'none')
                     $('#textArea').slideToggle();
 
@@ -146,7 +146,7 @@
         }
 
         function saveXSLTemplateNew() {
-            var record = { Name: $('#templateName').text(), Template: $('#template').val() };
+            var record = { Name: $('#templateName').val(), Template: ace.edit('template').getValue() };
 
             dataHub.addNewXSLTemplate(record).done(function (data) {
                 dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
@@ -163,7 +163,7 @@
         }
 
         function saveXSLTemplateEdit() {
-            var record = { ID: $('#xslID').html(), Name: $('#templateName').text(), Template: $('#template').val() };
+            var record = { ID: $('#xslID').html(), Name: $('#templateName').val(), Template: ace.edit('template').getValue() };
             dataHub.updateXSLTemplate(record).done(function (data) {
                 dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
                     $('#selectXSLTemplateID').children().remove();
