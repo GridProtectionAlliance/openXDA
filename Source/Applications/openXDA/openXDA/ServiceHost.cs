@@ -382,6 +382,9 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupMeterGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupMeterGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupUserAccount.cshtml", new Tuple<Type, Type>(typeof(EmailGroupUserAccount), typeof(DataHub)));
 
+                // Create new web application hosting environment
+                m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
+
                 // Initiate pre-compile of base templates
                 if (AssemblyInfo.EntryAssembly.Debuggable)
                 {
@@ -393,9 +396,6 @@ namespace openXDA
                     RazorEngine<CSharp>.Default.PreCompile(HandleException);
                     RazorEngine<VisualBasic>.Default.PreCompile(HandleException);
                 }
-
-                // Create new web application hosting environment
-                m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
 
                 return true;
             }
