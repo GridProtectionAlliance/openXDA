@@ -481,6 +481,8 @@
     <Content Include="wwwroot\Content\themes\redmond\jquery-ui.css" />
     <Content Include="wwwroot\Content\themes\redmond\jquery-ui.min.css" />
     <Content Include="wwwroot\Content\themes\redmond\theme.css" />
+    <Content Include="wwwroot\Images\Analytics Coming Soon.png" />
+    <Content Include="wwwroot\Images\dD Analytics.png" />
     <Content Include="wwwroot\Images\dD Assets.png" />
     <Content Include="wwwroot\Images\dD Config.png" />
     <Content Include="wwwroot\Images\dD Workbench.png" />
