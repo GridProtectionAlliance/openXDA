@@ -8,12 +8,14 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-
+        
         [Label("Channel ID")]
         public int ChannelID { get; set; }
         public int MeterID { get; set; }
         public int LineID { get; set; }
 
+        [Label("Meter Name")]
+        public string MeterName { get; set; }
         [Label("Channel Name")]
         public string Name { get; set; }
 

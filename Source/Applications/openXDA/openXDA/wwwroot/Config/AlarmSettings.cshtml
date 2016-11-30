@@ -94,6 +94,7 @@
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
         new[] { "ChannelID", "Channel ID", "text-left"},
+        new[] { "MeterName", "Meter Name", "text-left"},
         new[] { "Name", "Channel Name", "text-left" },
         new[] { "MeasurementType", "Meas Type", "text-left"},
         new[] { "MeasurementCharacteristic", "Meas Char", "text-left"},
@@ -116,30 +117,39 @@
 @helper Filters()
 {
     <div class='row'>
-        <div class='col-md-4'>
+        <div class='col-md-3'>
+            <div class='form-group'>
+                <label for='meterfilter'>Meter Name Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='meterfilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+        <div class='col-md-3'>
             <div class='form-group'>
                 <label for='channelfilter'>Channel Name Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='channelfilter' placeholder='Search' />
+                    <input class='form-control' type='search' id='channelfilter' placeholder='Search'/>
                 </div>
             </div>
         </div>
-        <div class='col-md-4'>
+        <div class='col-md-3'>
             <div class='form-group'>
                 <label for='typefilter'>Measurement Type Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='typefilter' placeholder='Search' />
+                    <input class='form-control' type='search' id='typefilter' placeholder='Search'/>
                 </div>
             </div>
         </div>
-        <div class='col-md-4'>
+        <div class='col-md-3'>
             <div class='form-group'>
                 <label for='characteristicfilter'>Measurement Characteristic Filter:</label>
                 <div class='right-inner-addon'>
                     <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='characteristicfilter' placeholder='Search' />
+                    <input class='form-control' type='search' id='characteristicfilter' placeholder='Search'/>
                 </div>
             </div>
         </div>
@@ -150,17 +160,15 @@
 @helper BodyRows()
 {
     <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: ChannelID, click: $parent.viewPageRecord"></button></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: truncate(Name)"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: MeterName"></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: truncate(Name, 20)"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementType"></td>
     <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: Phase"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: High"></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: Low"></td>
-
     <td width="5%" class="text-left valign-middle" style="text-align: center"><span data-bind="visible: !(IsDefault)" class="glyphicon glyphicon-check"></span></td>
-    @*<td width="30%" class="text-left valign-middle" data-bind="text: truncate(DefaultValue)"></td>*@
-
     <td width="15%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" title="Generate Smart Alarm Limits" data-bind="click: smartLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-stats"></span></button>
         <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
@@ -172,6 +180,7 @@
 {
     <div class="col-md-6" data-bind="visible: $parent.recordMode()==RecordMode.View || $parent.recordMode()==RecordMode.Edit">
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("ChannelID", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeterName", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Name", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeasurementType", customDataBinding: "enable: false"))
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("MeasurementCharacteristic", customDataBinding: "enable: false"))
@@ -183,6 +192,7 @@
         @Raw(dataContext.AddInputField<AlarmRangeLimitView>("Name", customDataBinding: "enable: false"))*@
         <label for="channelid">Channel ID:</label>
         <div id="channelid" class="form-control readonly inputtext"></div>
+        @Raw(dataContext.AddSelectField<AlarmRangeLimitView, Meter>("MeterID", "ID", "Name"))
         <label for="channelname">Channel Name:</label>
         <div id="channelnamediv" class="form-control">
             @*<button type="button" class="ui-autocomplete-dropdown ui-button ui-widget ui-state-default ui-corner-right ui-button-icon-only">
@@ -334,9 +344,9 @@
         @Raw(Model.RenderAbstract<Phase>("Name", "ID", "renderPhaseName", "phaseName"))
         var plot;
 
-        function truncate(string) {
-            if (string != null && string.length > 40)
-                string = string.slice(0, 37) + '...';
+        function truncate(string, num) {
+            if (string != null && string.length > num)
+                string = string.slice(0, num - 3) + '...';
             return string;
         }
 
@@ -533,41 +543,17 @@
             });
 
 
-            $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>')
-            $('#channelfilter').on('keyup', function (e) {
-                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
+            $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>');
+                        
+            $("input[id*=filter]").on('keyup', function (e) {
+                if ($('#meterfilter').val().length + $('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
                     viewModel.filterText = '%';
                     viewModel.queryPageRecords();
                 } else {
-                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
+                    viewModel.filterText = $('#meterfilter').val() + ';' + $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
                     viewModel.queryPageRecords();
 
                 }
-
-            });
-
-            $('#typefilter').on('keyup', function (e) {
-                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
-                    viewModel.filterText = '%';
-                    viewModel.queryPageRecords();
-                } else {
-                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                    viewModel.queryPageRecords();
-
-                }
-
-            });
-
-            $('#characteristicfilter').on('keyup', function (e) {
-                if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
-                    viewModel.filterText = '%';
-                    viewModel.queryPageRecords();
-                } else {
-                    viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                    viewModel.queryPageRecords();
-
-                }
-
             });
 
 
@@ -591,15 +577,14 @@
                         dropdown: true,
                         completeSource: function (request, response) {
                             var that = this;
-                            console.log();
-                            dataHub.queryChannelsForDropDown($("#channelname").val() + '%').done(function (data) {
+                            dataHub.queryChannelsForDropDown($("#channelname").val() + '%', $('#selectMeterID').val()).done(function (data) {
                                 response.call(that, data);
                             });
                         },
                         content: function (data) {
                             return '<span id="' + data.ID + '" title="MT: ' + renderMeasurementTypeName(data.MeasurementTypeID) + ', MC: ' + renderMeasurementCharacteristicName(data.MeasurementCharacteristicID) + ', PH: ' + renderPhaseName(data.PhaseID) + ', HG: ' + data.HarmonicGroup + '" value="' + data.MeasurementTypeID + ';' + data.MeasurementCharacteristicID + ';' + data.PhaseID + ';' + data.HarmonicGroup + '">' + data.Name + '</span>';
                         },
-                        select: function (event, item, d) {
+                        select: function (event, item) {
                             $('#channelname').val(item[0].innerText);
                             $('#channelid').text($(item[0].innerHTML)[0].attributes.id.value);
                             var list = $(item[0].innerHTML)[0].attributes.value.value.split(';');
@@ -612,10 +597,15 @@
 
                     $('.ui-autocomplete button').removeClass("ui-button ui-widget ui-state-default ui-corner-right");
                     $('.ui-autocomplete button').addClass("ui-state-hover");
+                    
+                    $('#selectMeterID').on("change", function (event) {
+                        $('#channelname').val("");
+                    });
 
                 }
             });
-        
+            
+
             $("#importCSVFile").on("change", function (event) {
                 $("#uploadCSVFile").submit();
             });

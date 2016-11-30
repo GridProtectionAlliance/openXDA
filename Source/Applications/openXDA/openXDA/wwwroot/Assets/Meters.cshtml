@@ -1,0 +1,177 @@
+﻿@*******************************************************************************************************
+//  Meters.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/15/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@inherits ExtendedTemplateBase<AppModel>
+@section StyleSheets {
+    <style>
+        html, body {
+            height: 100%;
+        }
+    </style>
+}
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    int meterLocationID = -1;
+    string meterLocationName = null;
+
+    ViewBag.Title = "Meters";
+
+    if (parameters.ContainsKey("Meter"))
+    {
+        ViewBag.meter = parameters["Meter"];
+    }
+
+    if (parameters.ContainsKey("LocationID"))
+    {
+        meterLocationID = int.Parse(parameters["LocationID"] ?? "-1");
+        meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", meterLocationID);
+        ViewBag.CustomHeader = "Meters at <a href=\"/Assets/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
+        ViewBag.Title = "Meters at " + meterLocationName;
+
+    }
+
+    Layout = "Assets/Layout.cshtml";
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-Left" },
+        new[] { "MeterLocationID", "Site", "text-left"},
+        new[] { "Make", "Make", "text-left" },
+        new[] { "Model", "Model", "text-left" },
+        new[] { null, "Meter-to-Line", "text-center valign-middle"}
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+
+}
+@helper MeterFilter()
+{
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='form-group'>
+                <label for='meterfilter'>Meter Name Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='meterfilter' placeholder='Search'/>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@helper BodyRows()
+{
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" ><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Assets/Sites.cshtml?Site=' + Location }"></a></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Meter>("Name"))
+        @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Site"))
+        @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
+        @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
+    </div>
+
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<Meter>("Make"))
+        @Raw(dataContext.AddInputField<Meter>("Model"))
+        @Raw(dataContext.AddInputField<Meter>("TimeZoneLabel", fieldLabel: "Time Zone"))
+        @Raw(dataContext.AddTextAreaField<Meter>("Description"))
+    </div>
+
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts 
+{
+    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, meterLocationID))
+        
+        $(function () {
+            $("#pageHeader").append("@Raw(Regex.Replace(MeterFilter().ToString(), @"\r|\n", ""))");
+            
+            $('#meterfilter').on('keyup', function (e) {
+                if ($('#meterfilter').val().length == 0) {
+                    viewModel.filterText = '';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#meterfilter').val();
+                    viewModel.queryPageRecords();
+                }
+            });
+
+            $('#meterfilter').val('@ViewBag.meter');
+            $('#meterfilter').trigger('keyup');
+
+            $('#addNewEditDialog').on('shown.bs.modal', function () {
+                if (viewModel.dataHubIsConnected()) {
+                    initializeAutoCompleteLookupField("Location", dataHub.searchMeterLocations, false);
+
+                    $('#inputLocation').puiautocomplete({
+                        select: function (event, item) {
+                            var id = Number(item.data("id"));
+                            viewModel.currentRecord().MeterLocationID(id);
+                        }
+                    });
+                    
+                    initializeAutoCompleteLookupField("TimeZoneLabel", dataHub.searchTimeZones, false, undefined, undefined, -1);
+                    
+                    $('#inputTimeZoneLabel').puiautocomplete({
+                        select: function (event, item) {
+                            var id = item.data("id");
+                            viewModel.currentRecord().TimeZone(id);
+                        }
+                    });
+                }
+            });
+        });
+        
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+    </script>
+}

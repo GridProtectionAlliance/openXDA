@@ -1,0 +1,138 @@
+﻿@*******************************************************************************************************
+//  Settings.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/15/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@inherits ExtendedTemplateBase<AppModel>
+@section StyleSheets {
+    <style>
+        html, body {
+            height: 100%;
+        }
+    </style>
+}
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Assets/Layout.cshtml";
+    ViewBag.Title = "Sites";
+    ViewBag.AddNewEditTitle = "Site";
+
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+    if (parameters.ContainsKey("Site"))
+    {
+        ViewBag.site = parameters["Site"];
+    }
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-Left" },
+        new[] { "Latitude", "Latitude", "text-left" },
+        new[] { "Longitude", "Longitude", "text-left" },
+        new[] { null, "Meters", "text-center valign-middle" }
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+}
+@helper SiteFilter()
+{
+    <div class='row'>
+        <div class='col-md-12'>
+            <div class='form-group'>
+                <label for='sitefilter'>Site Name Filter:</label>
+                <div class='right-inner-addon'>
+                    <i class='glyphicon glyphicon-search'></i>
+                    <input class='form-control' type='search' id='sitefilter' placeholder='Search' />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@helper BodyRows()
+{
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Latitude"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Longitude"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/Meters.cshtml?LocationID=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="10%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<MeterLocation>("Name"))
+        @Raw(dataContext.AddInputField<MeterLocation>("AssetKey", fieldLabel: "Asset Key"))
+        @Raw(dataContext.AddInputField<MeterLocation>("ShortName", fieldLabel: "Short Name"))
+        @Raw(dataContext.AddInputField<MeterLocation>("Alias"))
+    </div>
+
+    <div class="col-md-6">
+        @Raw(dataContext.AddInputField<MeterLocation>("Latitude"))
+        @Raw(dataContext.AddInputField<MeterLocation>("Longitude"))
+        @Raw(dataContext.AddTextAreaField<MeterLocation>("Description"))
+    </div>
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts 
+{
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<MeterLocation, DataHub>(ViewBag))       
+        
+        $(function () {
+            $("#pageHeader").append("@Raw(Regex.Replace(SiteFilter().ToString(), @"\r|\n", ""))");
+            
+            $('#sitefilter').on('keyup', function (e) {
+                if ($('#sitefilter').val().length == 0) {
+                    viewModel.filterText = '';
+                    viewModel.queryPageRecords();
+                } else {
+                    viewModel.filterText = $('#sitefilter').val();
+                    viewModel.queryPageRecords();
+
+                }
+
+            });
+
+            $('#sitefilter').val('@ViewBag.site');
+            $('#sitefilter').trigger('keyup');
+        });
+
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMeterCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+    </script>
+}

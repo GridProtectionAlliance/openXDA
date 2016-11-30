@@ -416,6 +416,14 @@
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
     <None Include="Properties\PublishProfiles\Desktop Folder.pubxml" />
     <Content Include="wwwroot\Config\EmailRMarkdownViewer.cshtml" />
+    <Content Include="wwwroot\Assets\index.cshtml" />
+    <Content Include="wwwroot\Assets\Layout.cshtml" />
+    <Content Include="wwwroot\Assets\Channels.cshtml" />
+    <Content Include="wwwroot\Assets\Help.cshtml" />
+    <Content Include="wwwroot\Assets\Lines.cshtml" />
+    <Content Include="wwwroot\Assets\MeterLines.cshtml" />
+    <Content Include="wwwroot\Assets\Meters.cshtml" />
+    <Content Include="wwwroot\Assets\Sites.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
@@ -473,6 +481,7 @@
     <Content Include="wwwroot\Content\themes\redmond\jquery-ui.css" />
     <Content Include="wwwroot\Content\themes\redmond\jquery-ui.min.css" />
     <Content Include="wwwroot\Content\themes\redmond\theme.css" />
+    <Content Include="wwwroot\Images\dD Assets.png" />
     <Content Include="wwwroot\Images\dD Config.png" />
     <Content Include="wwwroot\Images\dD Workbench.png" />
     <Content Include="wwwroot\Images\dDSplashBackground.png" />

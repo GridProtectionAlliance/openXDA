@@ -38,7 +38,7 @@
     // Define ViewBag.CustomTitle in page code for custom page titles
     string pageTitle = ViewBag.CustomTitle ?? ViewBag.Title;
     string pageHeader = ViewBag.CustomHeader ?? pageTitle;
-    string programName = "dD Config";
+    string programName = "dD Assets";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -149,35 +149,9 @@
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li @Raw(pageTitle == "Home" ? "class=\"active\"" : "")><a href="Index.cshtml">Home</a></li>
-                    @*<li><a href="Sites.cshtml">Sites</a></li>
+                    <li><a href="Sites.cshtml">Sites</a></li>
                     <li><a href="Meters.cshtml">Meters</a></li>
-                    <li><a href="Lines.cshtml">Lines</a></li>*@
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings <span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="Users.cshtml">Users</a></li>
-                            <li><a href="Groups.cshtml">Groups</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="Settings.cshtml">XDA Settings</a></li>
-                            <li><a href="DashSettings.cshtml">PQDash Settings</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="MeterGroups.cshtml">Meter Groups</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Alarms<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="AlarmSettings.cshtml">Alarm Limit Settings</a></li>
-                            <li><a href="DefaultAlarmSettings.cshtml">Default Settings</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Emails<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="EmailTypes.cshtml">Email Types</a></li>
-                            <li><a href="EmailGroups.cshtml">Email Groups</a></li>
-                        </ul>
-                    </li>
+                    <li><a href="Lines.cshtml">Lines</a></li>
                     <li @Raw(pageTitle == "Help" ? "class=\"active\"" : "")><a href="Help.cshtml">Help</a></li>
                 </ul>
                 <p class="nav navbar-text navbar-right">
