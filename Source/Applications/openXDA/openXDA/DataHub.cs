@@ -659,19 +659,21 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
-            IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
-            foreach (MeterMeterGroup gm in table)
-            {
-                DataContext.Table<MeterMeterGroup>().DeleteRecord(gm.ID);
-            }
+            //IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
+            //foreach (MeterMeterGroup gm in table)
+            //{
+            //    DataContext.Table<MeterMeterGroup>().DeleteRecord(gm.ID);
+            //}
 
-            IEnumerable<UserAccountMeterGroup> users = DataContext.Table<UserAccountMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
-            foreach (UserAccountMeterGroup gm in users)
-            {
-                DataContext.Table<UserAccountMeterGroup>().DeleteRecord(gm.ID);
-            }
+            //IEnumerable<UserAccountMeterGroup> users = DataContext.Table<UserAccountMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
+            //foreach (UserAccountMeterGroup gm in users)
+            //{
+            //    DataContext.Table<UserAccountMeterGroup>().DeleteRecord(gm.ID);
+            //}
 
-            DataContext.Table<MeterGroup>().DeleteRecord(id);
+            //DataContext.Table<MeterGroup>().DeleteRecord(id);
+
+            CascadeDelete("MeterGroup", $"ID={id}");
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1282,7 +1284,8 @@ namespace openXDA
         [RecordOperation(typeof(EmailGroup), RecordOperation.DeleteRecord)]
         public void DeleteEmailGroup(int id)
         {
-            DataContext.Table<EmailGroup>().DeleteRecord(id);
+            //DataContext.Table<EmailGroup>().DeleteRecord(id);
+            CascadeDelete("EmailGroup", $"ID={id}");
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1629,6 +1632,24 @@ namespace openXDA
            
         }
 
+        private void CascadeDelete(string tableName, string criterion)
+        {
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
+            {
+                sc.CommandText = "dbo.UniversalCascadeDelete";
+                sc.CommandType = CommandType.StoredProcedure;
+                IDbDataParameter param1 = sc.CreateParameter();
+                param1.ParameterName = "@tableName";
+                param1.Value = tableName;
+                IDbDataParameter param2 = sc.CreateParameter();
+                param2.ParameterName = "@baseCriteria";
+                param2.Value = criterion;
+                sc.Parameters.Add(param1);
+                sc.Parameters.Add(param2);
+                sc.ExecuteNonQuery();
+            }
+        }
+
         #endregion
 
         #endregion
@@ -1636,7 +1657,7 @@ namespace openXDA
         #region [Workbench Page]
 
         #region [Filters Operations]
- 
+
         public IEnumerable<WorkbenchFilter> GetWorkbenchFiltersForSelect()
         {
             return DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
