@@ -127,7 +127,7 @@ namespace FaultData.DataReaders
             {
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
-                    channel = MakeParsedChannel(report, i);
+                    channel = MakeParsedAnalog(report, i);
                     series = new DataSeries();
 
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
@@ -139,32 +139,295 @@ namespace FaultData.DataReaders
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
-                    if (new string[] { "VA", "VB", "VC" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
+                    if (new string[] { "VA", "VB", "VC", "VS" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
                         m_meterDataSet.DataSeries.Add(series.Multiply(1000.0));
                     else
                         m_meterDataSet.DataSeries.Add(series);
                 }
+
+                for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
+                {
+                    channel = MakeParsedDigital(report, i);
+                    series = new DataSeries();
+
+                    timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
+
+                    series.SeriesInfo = channel.Series[0];
+
+                    series.DataPoints = timeSamples
+                        .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
+                        .ToList();
+
+                    m_meterDataSet.Digitals.Add(series);
+                }
+            }
+
+            foreach (CommaSeparatedEventReport report in m_eventFile.CommaSeparatedEventReports)
+            {
+                for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
+                {
+                    channel = MakeParsedAnalog(report, i);
+                    series = new DataSeries();
+
+                    timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
+
+                    series.SeriesInfo = channel.Series[0];
+
+                    series.DataPoints = timeSamples
+                        .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
+                        .ToList();
+
+                    if (new string[] { "VA", "VB", "VC", "VS" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
+                        m_meterDataSet.DataSeries.Add(series.Multiply(1000.0));
+                    else
+                        m_meterDataSet.DataSeries.Add(series);
+                }
+
+                for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
+                {
+                    channel = MakeParsedDigital(report, i);
+                    series = new DataSeries();
+
+                    timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
+
+                    series.SeriesInfo = channel.Series[0];
+
+                    series.DataPoints = timeSamples
+                        .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
+                        .ToList();
+
+                    m_meterDataSet.Digitals.Add(series);
+                }
             }
         }
 
-        private Channel MakeParsedChannel(EventReport report, int channelIndex)
+        private Channel MakeParsedAnalog(EventReport report, int channelIndex)
         {
             Channel channel = new Channel();
             Series series = new Series();
+            Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
 
-            channel.Name = $"({report.Command}) {channel.Name}";
+            channel.Name = $"({report.Command}) {analogChannel.Name}";
             channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Unknown";
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Unknown";
+            channel.MeasurementCharacteristic.Name = "Instantaneous";
             channel.Phase = new Phase();
-            channel.Phase.Name = "Unknown";
 
             series.Channel = channel;
             series.SeriesType = new SeriesType();
             series.SeriesType.Name = "Values";
             series.SourceIndexes = channelIndex.ToString();
+
+            switch (analogChannel.Name)
+            {
+                case "VA": case "VB": case "VC":
+                case "VS": case "VDC": case "Freq":
+                    channel.MeasurementType.Name = "Voltage";
+                    break;
+
+                case "IA": case "IB": case "IC":
+                case "IN": case "IG": case "IR":
+                    channel.MeasurementType.Name = "Current";
+                    break;
+
+                default:
+                    channel.MeasurementType.Name = "Unknown";
+                    break;
+            }
+
+            switch (analogChannel.Name)
+            {
+                case "VA": case "IA": case "Freq":
+                    channel.Phase.Name = "AN";
+                    channel.Phase.Description = "A-phase to neutral";
+                    break;
+
+                case "VB": case "IB":
+                    channel.Phase.Name = "BN";
+                    channel.Phase.Description = "B-phase to neutral";
+                    break;
+
+                case "VC": case "IC":
+                    channel.Phase.Name = "CN";
+                    channel.Phase.Description = "C-phase to neutral";
+                    break;
+
+                case "IN":
+                    channel.Phase.Name = "NG";
+                    channel.Phase.Description = "Neutral to ground";
+                    break;
+
+                case "IG":
+                    channel.Phase.Name = "Ground";
+                    channel.Phase.Description = "Ground";
+                    break;
+
+                case "IR":
+                    channel.Phase.Name = "RES";
+                    channel.Phase.Description = "Residual";
+                    break;
+
+                default: case "VS": case "VDC":
+                    channel.Phase.Name = "Unknown";
+                    break;
+            }
+
+            channel.MeasurementType.Description = channel.MeasurementType.Name;
+            channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
+            series.SeriesType.Description = series.SeriesType.Name;
+
+            return channel;
+        }
+
+        private Channel MakeParsedDigital(EventReport report, int channelIndex)
+        {
+            Channel channel = new Channel();
+            Series series = new Series();
+            Channel<bool> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
+
+            channel.Name = $"({report.Command}) {digitalChannel.Name}";
+            channel.HarmonicGroup = 0;
+            channel.MeasurementType = new MeasurementType();
+            channel.MeasurementType.Name = "Digital";
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
+            channel.MeasurementCharacteristic.Name = "Instantaneous";
+            channel.Phase = new Phase();
+            channel.Phase.Name = "None";
+
+            series.Channel = channel;
+            series.SeriesType = new SeriesType();
+            series.SeriesType.Name = "Values";
+            series.SourceIndexes = channelIndex.ToString();
+
+            channel.MeasurementType.Description = channel.MeasurementType.Name;
+            channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
+            channel.Phase.Description = "No phase";
+            series.SeriesType.Description = series.SeriesType.Name;
+
+            return channel;
+        }
+
+        private Channel MakeParsedAnalog(CommaSeparatedEventReport report, int channelIndex)
+        {
+            Channel channel = new Channel();
+            Series series = new Series();
+            Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
+
+            channel.Name = $"({report.Command}) {analogChannel.Name}";
+            channel.HarmonicGroup = 0;
+            channel.MeasurementType = new MeasurementType();
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
+            channel.MeasurementCharacteristic.Name = "Instantaneous";
+            channel.Phase = new Phase();
+
+            series.Channel = channel;
+            series.SeriesType = new SeriesType();
+            series.SeriesType.Name = "Values";
+            series.SourceIndexes = channelIndex.ToString();
+
+            switch (analogChannel.Name)
+            {
+                case "VA":
+                case "VB":
+                case "VC":
+                case "VS":
+                case "VDC":
+                case "Freq":
+                    channel.MeasurementType.Name = "Voltage";
+                    break;
+
+                case "IA":
+                case "IB":
+                case "IC":
+                case "IN":
+                case "IG":
+                case "IR":
+                    channel.MeasurementType.Name = "Current";
+                    break;
+
+                default:
+                    channel.MeasurementType.Name = "Unknown";
+                    break;
+            }
+
+            switch (analogChannel.Name)
+            {
+                case "VA":
+                case "IA":
+                case "Freq":
+                    channel.Phase.Name = "AN";
+                    channel.Phase.Description = "A-phase to neutral";
+                    break;
+
+                case "VB":
+                case "IB":
+                    channel.Phase.Name = "BN";
+                    channel.Phase.Description = "B-phase to neutral";
+                    break;
+
+                case "VC":
+                case "IC":
+                    channel.Phase.Name = "CN";
+                    channel.Phase.Description = "C-phase to neutral";
+                    break;
+
+                case "IN":
+                    channel.Phase.Name = "NG";
+                    channel.Phase.Description = "Neutral to ground";
+                    break;
+
+                case "IG":
+                    channel.Phase.Name = "Ground";
+                    channel.Phase.Description = "Ground";
+                    break;
+
+                case "IR":
+                    channel.Phase.Name = "RES";
+                    channel.Phase.Description = "Residual";
+                    break;
+
+                default:
+                case "VS":
+                case "VDC":
+                    channel.Phase.Name = "Unknown";
+                    break;
+            }
+
+            channel.MeasurementType.Description = channel.MeasurementType.Name;
+            channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
+            series.SeriesType.Description = series.SeriesType.Name;
+
+            return channel;
+        }
+
+        private Channel MakeParsedDigital(CommaSeparatedEventReport report, int channelIndex)
+        {
+            Channel channel = new Channel();
+            Series series = new Series();
+            Channel<bool> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
+
+            channel.Name = $"({report.Command}) {digitalChannel.Name}";
+            channel.HarmonicGroup = 0;
+            channel.MeasurementType = new MeasurementType();
+            channel.MeasurementType.Name = "Digital";
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
+            channel.MeasurementCharacteristic.Name = "Instantaneous";
+            channel.Phase = new Phase();
+            channel.Phase.Name = "None";
+
+            series.Channel = channel;
+            series.SeriesType = new SeriesType();
+            series.SeriesType.Name = "Values";
+            series.SourceIndexes = channelIndex.ToString();
+
+            channel.MeasurementType.Description = channel.MeasurementType.Name;
+            channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
+            channel.Phase.Description = "No phase";
+            series.SeriesType.Description = series.SeriesType.Name;
 
             return channel;
         }
