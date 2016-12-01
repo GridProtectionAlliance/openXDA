@@ -2569,7 +2569,53 @@ as begin
 end
 GO
 
+-- =============================================
+-- Author:		<Author, William Ernest/ Stephen Wills>
+-- Create date: <Create Date,12/1/2016>
+-- Description:	<Description, Calls usp_delete_cascade to perform cascading deletes for a table>
+-- =============================================
+CREATE PROCEDURE [dbo].[UniversalCascadeDelete]
+	-- Add the parameters for the stored procedure here
+	@tableName VARCHAR(200),
+	@baseCriteria NVARCHAR(1000)
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	DECLARE @deleteSQL NVARCHAR(900)
 
+	CREATE TABLE #DeleteCascade
+	(
+		DeleteSQL NVARCHAR(900)
+	)
+
+	INSERT INTO #DeleteCascade
+	EXEC usp_delete_cascade @tableName, @baseCriteria
+
+	DECLARE DeleteCursor CURSOR FOR
+	SELECT *
+	FROM #DeleteCascade
+
+	OPEN DeleteCursor
+
+	FETCH NEXT FROM DeleteCursor
+	INTO @deleteSQL
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		EXEC sp_executesql @deleteSQL
+
+		FETCH NEXT FROM DeleteCursor
+		INTO @deleteSQL
+	END
+
+	CLOSE DeleteCursor
+	DEALLOCATE DeleteCursor
+
+	DROP TABLE #DeleteCascade
+END
+GO
 
 ----- PQInvestigator Integration -----
 
