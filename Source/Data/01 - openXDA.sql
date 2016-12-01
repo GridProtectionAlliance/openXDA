@@ -757,6 +757,18 @@ CREATE TABLE VoltageEnvelopeCurve
 )
 GO
 
+CREATE TABLE [dbo].[WorkbenchFilter](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [varchar](50) NOT NULL,
+	[UserID] [uniqueidentifier] NOT NULL,
+	[TimeRange] [varchar](512) NOT NULL,
+	[Meters] [varchar](max) NOT NULL,
+	[EventTypes] [varchar](50) NOT NULL,
+	[IsDefault] [bit] NOT NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
 CREATE TABLE DisturbanceSeverity
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1943,13 +1955,15 @@ SELECT
     Channel.MeasurementTypeID,
     Channel.MeasurementCharacteristicID,
     Channel.PhaseID,
-    AlarmRangeLimit.IsDefault
+    AlarmRangeLimit.IsDefault,
+	Meter.Name AS MeterName
 FROM
     AlarmRangeLimit JOIN
     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
-    Phase ON Channel.PhaseID = Phase.ID
+    Phase ON Channel.PhaseID = Phase.ID JOIN
+	Meter ON Channel.MeterID = Meter.ID
 GO
 
 CREATE VIEW MeterMeterGroupView
