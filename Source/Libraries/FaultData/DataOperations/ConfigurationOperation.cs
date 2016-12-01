@@ -158,8 +158,8 @@ namespace FaultData.DataOperations
                 // throw an exception to indicate the operation could not be executed
                 throw new InvalidOperationException("Cannot process meter - configuration does not exist");
             }
-
-            if (meterDataSet.FilePath.EndsWith(".pqd", StringComparison.OrdinalIgnoreCase))
+            
+            if (new string[] { ".pqd", ".sel", ".eve", ".cev" }.Any(ext => meterDataSet.FilePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
             {
                 // Add channels that are not already defined in the
                 // configuration by assuming the meter monitors only one line
