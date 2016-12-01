@@ -273,6 +273,7 @@ namespace FaultData.DataReaders
 
                 default: case "VS": case "VDC":
                     channel.Phase.Name = "Unknown";
+                    channel.Phase.Description = "Unknown";
                     break;
             }
 
@@ -331,21 +332,13 @@ namespace FaultData.DataReaders
 
             switch (analogChannel.Name)
             {
-                case "VA":
-                case "VB":
-                case "VC":
-                case "VS":
-                case "VDC":
-                case "Freq":
+                case "VA": case "VB": case "VC":
+                case "VS": case "VDC": case "Freq":
                     channel.MeasurementType.Name = "Voltage";
                     break;
 
-                case "IA":
-                case "IB":
-                case "IC":
-                case "IN":
-                case "IG":
-                case "IR":
+                case "IA": case "IB": case "IC":
+                case "IN": case "IG": case "IR":
                     channel.MeasurementType.Name = "Current";
                     break;
 
@@ -356,21 +349,17 @@ namespace FaultData.DataReaders
 
             switch (analogChannel.Name)
             {
-                case "VA":
-                case "IA":
-                case "Freq":
+                case "VA": case "IA": case "Freq":
                     channel.Phase.Name = "AN";
                     channel.Phase.Description = "A-phase to neutral";
                     break;
 
-                case "VB":
-                case "IB":
+                case "VB": case "IB":
                     channel.Phase.Name = "BN";
                     channel.Phase.Description = "B-phase to neutral";
                     break;
 
-                case "VC":
-                case "IC":
+                case "VC": case "IC":
                     channel.Phase.Name = "CN";
                     channel.Phase.Description = "C-phase to neutral";
                     break;
@@ -390,10 +379,9 @@ namespace FaultData.DataReaders
                     channel.Phase.Description = "Residual";
                     break;
 
-                default:
-                case "VS":
-                case "VDC":
+                default: case "VS": case "VDC":
                     channel.Phase.Name = "Unknown";
+                    channel.Phase.Description = "Unknown";
                     break;
             }
 
