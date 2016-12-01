@@ -1658,17 +1658,47 @@ namespace openXDA
 
         #region [Filters Operations]
 
-        public IEnumerable<WorkbenchFilter> GetWorkbenchFiltersForSelect()
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(WorkbenchFilter), RecordOperation.QueryRecordCount)]
+        public int QueryWorkbenchFilterCount(string filterString)
         {
-            return DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
-        } 
-
-        public WorkbenchFilter GetWorkbenchFilterForEdit(int id)
-        {
-            return DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("ID = {0}", id)).First();
+            return DataContext.Table<WorkbenchFilter>().QueryRecordCount(new RecordRestriction("UserID = {0}", GetCurrentUserID()));
         }
 
-        public void AddWorkbenchFilter(WorkbenchFilter record)
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(WorkbenchFilter), RecordOperation.QueryRecords)]
+        public IEnumerable<WorkbenchFilter> QueryWorkbenchFilters(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<WorkbenchFilter>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(WorkbenchFilter), RecordOperation.DeleteRecord)]
+        public void DeleteWorkbenchFilter(int id)
+        {
+            WorkbenchFilter record = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("ID = {0}", id)).First();
+
+            DataContext.Table<WorkbenchFilter>().DeleteRecord(id);
+            if (record.IsDefault)
+            {
+                WorkbenchFilter wbf = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID())).First();
+
+                wbf.IsDefault = !wbf.IsDefault;
+                DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
+
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(WorkbenchFilter), RecordOperation.CreateNewRecord)]
+        public WorkbenchFilter NewWorkbenchFilter()
+        {
+            return new WorkbenchFilter();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(WorkbenchFilter), RecordOperation.AddNewRecord)]
+        public void AddNewWorkbenchFilter(WorkbenchFilter record)
         {
             if (record.IsDefault)
             {
@@ -1685,14 +1715,12 @@ namespace openXDA
             }
 
             record.UserID = GetCurrentUserID();
-
-            if(record.ID == 0)
-                DataContext.Table<WorkbenchFilter>().AddNewRecord(record);
-            else
-                DataContext.Table<WorkbenchFilter>().UpdateRecord(record);
+            DataContext.Table<WorkbenchFilter>().AddNewRecord(record);
         }
 
-        public void EditWorkbenchFilter(WorkbenchFilter record)
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(WorkbenchFilter), RecordOperation.UpdateRecord)]
+        public void UpdateWorkbenchFilter(WorkbenchFilter record)
         {
             if (record.IsDefault)
             {
@@ -1711,17 +1739,10 @@ namespace openXDA
             DataContext.Table<WorkbenchFilter>().UpdateRecord(record);
         }
 
-        public void DeleteWorkbenchFilter(WorkbenchFilter record)
+        public IEnumerable<WorkbenchFilter> GetWorkbenchFiltersForSelect()
         {
-            DataContext.Table<WorkbenchFilter>().DeleteRecord(record.ID);
-            if (record.IsDefault)
-            {
-                WorkbenchFilter wbf = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID())).First();
-
-                wbf.IsDefault = !wbf.IsDefault;
-                DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
-            }
-        }
+            return DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+        } 
 
 
         public IEnumerable<EventType> GetEventTypesForSelect()

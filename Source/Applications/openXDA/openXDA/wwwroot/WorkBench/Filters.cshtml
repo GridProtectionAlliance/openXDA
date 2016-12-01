@@ -20,17 +20,33 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
-@using System.Threading
-@using RazorEngine.Templating
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
 @using GSF.Web
+@using GSF.Web.Model
+@using openXDA
 @using openXDA.Model
-@using RazorEngine.Templating
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @{
+    DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
     ViewBag.Title = "Filters";
     DateTime toDateTime = DateTime.Now;
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-left"},
+        new[] { "TimeRange", "Time Range", "text-left"},
+        new[] { null, "Meter Count", "text-center valign-middle"},
+        new[] { null, "Event Types Count", "text-center valign-middle"},
+        new[] { "IsDefault", "Default", "text-center" }
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+
 }
 @section StyleSheets{
 <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
@@ -45,105 +61,78 @@
         }
     </style>
 }
-<br/>
-<div>
-    <div class="row">
-        <div class="col-md-2">
-            <select id="filters" class="form-control">
-                <option value="0">Add New Filter:</option>
-            </select>
-        </div>
-        <button class="btn btn-primary" onclick="saveFilter()">Save</button>
-        <button class="btn btn-primary" onclick="editFilter()">Edit</button>
-        <button class="btn btn-primary" onclick="deleteFilter()">Delete</button>
-    </div>
-    <br />
-    <div class="row">
-        <div class="col-md-2">
-            <span>1. Name filter: </span>
-        </div>
-        <div class="col-md-2">
-            <input id="filterName" class="form-control" />
-        </div>
-    </div>
+@helper BodyRows()
+{
+    <td width="20%" class="text-left valign-middle"data-bind="text: Name"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: parseTimeRange(TimeRange)"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: commaCount(Meters)"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: commaCount(EventTypes)"></td>
+    <td width="5%" class="text-center valign-middle" data-bind="text: IsDefault"></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
 
-    <div class="row">
-        <div class="col-md-2">
-            <span>2. Pick time range: </span>
-        </div>
-        <div class="col-md-2">
-            <select id="preDefinedTimeRange" class="form-control">
-                <option value="0">Pick a period:</option>
-                <option value="1">1 day</option>
-                <option value="2">3 days</option>
-                <option value="3">1 week</option>
-            </select>
-        </div>
-        <div class="col-md-1" style="text-align: center">
-            <span>or</span>
-        </div>
-        <div class="col-md-2">
-            @*<input id="fromDate" class="form-control">*@
-            <div class="input-group date" >
-                <input id="fromDate" type="text" class="form-control">
-                <div class="input-group-addon">
-                    <span class="glyphicon glyphicon-th"></span>
+}
+
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddInputField<WorkbenchFilter>("Name"))
+    <div class="form-group">
+        <label>Time Range:</label>
+        <div class="col-md-12">
+            <div class="col-md-3">
+                <select id="preDefinedTimeRange" class="form-control">
+                    <option value="0">Pick a period:</option>
+                    <option value="1">1 day</option>
+                    <option value="2">3 days</option>
+                    <option value="3">1 week</option>
+                </select>
+            </div>
+            <div class="col-md-1" style="text-align: center">
+                <span>or</span>
+            </div>
+            <div class="col-md-3">
+                @*<input id="fromDate" class="form-control">*@
+                <div class="input-group date">
+                    <input id="fromDate" type="text" class="form-control">
+                    <div class="input-group-addon">
+                        <span class="glyphicon glyphicon-th"></span>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-1" style="text-align: center">
-            <span>to</span>
-        </div>
-        <div class="col-md-2">
-            @*<input id="toDate" class="form-control">*@
-            <div class="input-group date" >
-                <input id="toDate" type="text" class="form-control">
-                <div class="input-group-addon">
-                    <span class="glyphicon glyphicon-th"></span>
-                </div>
+            <div class="col-md-1" style="text-align: center">
+                <span>to</span>
             </div>
+            <div class="col-md-3">
+                @*<input id="toDate" class="form-control">*@
+                <div class="input-group date">
+                    <input id="toDate" type="text" class="form-control">
+                    <div class="input-group-addon">
+                        <span class="glyphicon glyphicon-th"></span>
+                    </div>
+                </div>
 
+            </div>
         </div>
-
     </div>
-</div>
-
-<div class="row">
-    <div class="col-md-2">
-        <span>3. Pick meters: </span>
+    <div id="metersFrame" class="form-group">
+        <label>Meters:</label>
+        <select id="meters" class="form-control mobileSelect" multiple></select>
     </div>
-    <div class="col-md-2">
-        <select id="meters" class="form-control mobileSelect" multiple>
-        </select>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-2">
-        <span>4. Pick event types: </span>
-    </div>
-    <div class="col-md-2">
+    <div id="typesFrame" class="form-group">
+        <label>Event Types:</label>
         <select id="types" class="form-control mobileSelect" multiple></select>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-2">
-        <span>5. Choose if default: </span>
-    </div>
-    <div class="col-md-2">
-        <select id="isDefault" class="form-control">
-            <option value="1">Default</option>
-            <option value="0">Not Default</option>
-        </select>
-    </div>
-</div>
+    @Raw(dataContext.AddCheckBoxField<WorkbenchFilter>("IsDefault"))
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.min.js"></script>
 
     <script>
-        var fromDateCached;
-
+        @Raw(dataContext.RenderViewModelConfiguration<WorkbenchFilter, DataHub>(ViewBag))
         $(function () {
             var mobileSelectOptions = {
                 padding: {
@@ -159,14 +148,14 @@
                         $('.mobileSelect-container :visible .list-container').children().addClass('selected');
                     });
 
+
                 },
                 onClose: function () {
                     $('.selectAllBtn').remove();
                 }
             };
 
-            $(window).one('hubConnected', function () {
-                $('#toDate').val((new Date('@toDateTime')).formatDate(DateFormat));
+            $('#addNewEditDialog').on('shown.bs.modal', function (event) {
                 $('#toDate').datepicker({
                     format: 'mm/dd/yyyy',
                     orientation: "bottom auto",
@@ -175,30 +164,65 @@
 
                 });
 
-                dataHub.getWorkbenchFiltersForSelect().done(function (data) {
-                    $.each(data, function (index, type) {
-                        $('#filters').append($(new Option(type.Name, type.ID)));
-                    });
-
+                $('#fromDate').datepicker({
+                    format: 'mm/dd/yyyy',
+                    orientation: "bottom auto",
+                    autoclose: true,
+                    todayHighlight: true
                 });
 
-                dataHub.getOldestEventDateTime().done(function (data) {
-                    fromDateCached = (new Date(data)).formatDate(DateFormat)
-                    $('#fromDate').val(fromDateCached);
-                    $('#fromDate').datepicker({
-                        format: 'mm/dd/yyyy',
-                        orientation: "bottom auto",
-                        autoclose: true,
-                        todayHighlight: true
+                if (viewModel.recordMode() === RecordMode.AddNew) {
+                    $('#toDate').datepicker('update', new Date('@toDateTime').formatDate(DateFormat));
+                    dataHub.getOldestEventDateTime().done(function (data) {
+                        $('#fromDate').datepicker('update', new Date(data).formatDate(DateFormat));
                     });
+                }
+                else {
+                    $('#preDefinedTimeRange').val(viewModel.currentRecord().TimeRange().split(';')[0]);
+                    $('#toDate').datepicker('update', new Date(viewModel.currentRecord().TimeRange().split(';')[2]).formatDate(DateFormat));
+                    $('#fromDate').datepicker('update', new Date(viewModel.currentRecord().TimeRange().split(';')[1]).formatDate(DateFormat));
+                    if ($('#preDefinedTimeRange').val() != 0) {
+                        $('#fromDate').prop('disabled', true);
+                        $('#toDate').prop('disabled', true);
+                    }
+                    else {
+                        $('#fromDate').prop('disabled', false);
+                        $('#toDate').prop('disabled', false);
+                    }
+
+                }
+
+                $('#preDefinedTimeRange').on('change', function (event) {
+                    if ($(this).val() != 0) {
+                        $('#fromDate').prop('disabled', true);
+                        $('#toDate').prop('disabled', true);
+                    }
+                    else {
+                        $('#fromDate').prop('disabled', false);
+                        $('#toDate').prop('disabled', false);
+                    }
                 });
+
 
                 dataHub.getEventTypesForSelect().done(function (data) {
                     $.each(data, function (index, type) {
                         $('#types').append($(new Option(type.Name, type.ID)));
                     });
+                    if (viewModel.recordMode() !== RecordMode.AddNew) {
+                        $.each(viewModel.currentRecord().EventTypes().split(','), function (i, val) {
+                            $('#types').find('option[value="' + val + '"]').attr('selected', true);
+                        });
+                    }
                     mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
                     $('#types').mobileSelect(mobileSelectOptions);
+                    $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    $('#typesFrame .btn-mobileSelect-gen').off('click');
+                    $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#types').mobileSelect('show');
+                    });
+
 
                     $('#typefilter').on('keyup', function () {
                         var string = $('#typefilter').val();
@@ -221,8 +245,21 @@
                     $.each(data, function (index, type) {
                         $('#meters').append($(new Option(type.Name, type.ID)));
                     });
+                    if (viewModel.recordMode() !== RecordMode.AddNew) {
+                        $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
+                            $('#meters').find('option[value="' + val + '"]').attr('selected', true);
+                        });
+                    }
+
                     mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
                     $('#meters').mobileSelect(mobileSelectOptions);
+                    $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    $('#metersFrame .btn-mobileSelect-gen').off('click');
+                    $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#meters').mobileSelect('show');
+                    });
 
                     $('#meterfilter').on('keyup', function () {
                         var string = $('#meterfilter').val();
@@ -241,148 +278,25 @@
                 });
             });
 
+
         });
+        
 
-        $('#preDefinedTimeRange').on('change', function (event) {
-            if($(this).val() != 0)
-            {
-                $('#fromDate').prop('disabled', true);
-                $('#toDate').prop('disabled', true);
-            }
-            else {
-                $('#fromDate').prop('disabled', false);
-                $('#toDate').prop('disabled', false);
-            }
+        $(viewModel).on('beforeSave', function (event, observableRecord) {
+            observableRecord.TimeRange($('#preDefinedTimeRange').val() + ';' + $('#fromDate').val().toString() + ';' + $('#toDate').val().toString());
+            observableRecord.Meters($('#meters').val().toString());
+            observableRecord.EventTypes($('#types').val().toString());
         });
-
-        $('#filters').on('change', function (event) {
-            if ($(this).val() == 0) {
-                $('#filterName').val('');
-                $('#preDefinedTimeRange').val('0');
-                $('#fromDate').val(fromDateCached);
-                $('#toDate').val((new Date('@toDateTime')).formatDate(DateFormat));
-
-                $('#meters').find('option').attr('selected', false);
-                $('#meters').mobileSelect('sync');
-
-                $('#types').find('option').attr('selected', false);
-                $('#types').mobileSelect('sync');
-                $('#isDefault').val('1');
-            }
-        });
-
-
-        function saveFilter() {
-            var record;
-
-            if ($('#filters').val() == 0) {
-                record = {
-                    Name: $('#filterName').val().toString(),
-                    TimeRange: $('#preDefinedTimeRange').val() + ';' + $('#fromDate').val().toString() + ';' + $('#toDate').val().toString(),
-                    Meters: $('#meters').val().toString(),
-                    EventTypes: $('#types').val().toString(),
-                    IsDefault: Boolean(parseInt($('#isDefault').val())),
-                    UserID: '00000000-0000-0000-0000-000000000000'
-                };
-            }
-            else {
-                record = {
-                    ID : parseInt( $('#filters').val()),
-                    Name: $('#filterName').val().toString(),
-                    TimeRange: $('#preDefinedTimeRange').val() + ';' + $('#fromDate').val().toString() + ';' + $('#toDate').val().toString(),
-                    Meters: $('#meters').val().toString(),
-                    EventTypes: $('#types').val().toString(),
-                    IsDefault: Boolean(parseInt($('#isDefault').val())),
-                    UserID: '00000000-0000-0000-0000-000000000000'
-                };
-            }
-
-
-            dataHub.addWorkbenchFilter(record).done(function () {
-                $('#filters option[value!=0]').remove();
-
-                dataHub.getWorkbenchFiltersForSelect().done(function (data) {
-                    $.each(data, function (index, type) {
-                        $('#filters').append($(new Option(type.Name, type.ID)));
-                    });
-                    
-                    $('#filterName').val('');
-                    $('#preDefinedTimeRange').val('0');
-                    $('#fromDate').val(fromDateCached);
-                    $('#toDate').val((new Date('@toDateTime')).formatDate(DateFormat));
-
-                    $('#meters').find('option').attr('selected', false);
-                    $('#meters').mobileSelect('sync');
-
-                    $('#types').find('option').attr('selected', false);
-                    $('#types').mobileSelect('sync');
-                    $('#isDefault').val('1');
-
-
-                });
-            });
+        
+        function parseTimeRange(string) {
+            if (string.split(';')[0] != 0)
+                return $('#preDefinedTimeRange option[value=' + string.split(';')[0] + ']').text();
+            else 
+                return string.split(';')[1] + ' - ' + string.split(';')[2]
         }
-
-        function editFilter() {
-            dataHub.getWorkbenchFilterForEdit($('#filters').val()).done(function (data) {
-                $('#filterName').val(data.Name);
-                $('#preDefinedTimeRange').val(data.TimeRange.split(';')[0]);
-                $('#fromDate').val(data.TimeRange.split(';')[1]);
-                $('#toDate').val(data.TimeRange.split(';')[2]);
-
-                $('#meters').find('option').attr('selected', false);
-                $.each(data.Meters.split(','), function (index, meterid) {
-                    $('#meters').find('option[value="' + meterid + '"]').prop('selected', true);
-                });
-                $('#meters').mobileSelect('sync');
-
-                $('#types').find('option').attr('selected', false);
-                $.each(data.EventTypes.split(','), function (index, eventTypeId) {
-                    $('#types').find('option[value="' + eventTypeId + '"]').prop('selected', true);
-                });
-                $('#types').mobileSelect('sync');
-                $('#isDefault').val((data.IsDefault ? '1' : '0'));
-            });
+        
+        function commaCount(string) {
+            return string.split(',').length
         }
-
-        function deleteFilter() {
-            record = {
-                ID: parseInt($('#filters').val()),
-                Name: $('#filterName').val().toString(),
-                TimeRange: $('#preDefinedTimeRange').val() + ';' + $('#fromDate').val().toString() + ';' + $('#toDate').val().toString(),
-                Meters: $('#meters').val().toString(),
-                EventTypes: $('#types').val().toString(),
-                IsDefault: Boolean(parseInt($('#isDefault').val())),
-                UserID: '00000000-0000-0000-0000-000000000000'
-            };
-
-            dataHub.deleteWorkbenchFilter(record).done(function () {
-                dataHub.getWorkbenchFiltersForSelect().done(function (data) {
-                    $('#filters option[value!=0]').remove();
-                    $.each(data, function (index, type) {
-                        $('#filters').append($(new Option(type.Name, type.ID)));
-                    });
-
-                    $('#filterName').val('');
-                    $('#preDefinedTimeRange').val('0');
-                    $('#fromDate').val(fromDateCached);
-                    $('#toDate').val((new Date('@toDateTime')).formatDate(DateFormat));
-
-                    $('#meters').find('option').attr('selected', false);
-                    $('#meters').mobileSelect('sync');
-
-                    $('#types').find('option').attr('selected', false);
-                    $('#types').mobileSelect('sync');
-                    $('#isDefault').val('1');
-
-
-
-                });
-
-
-            });
-        }
-
-
     </script>
 }
