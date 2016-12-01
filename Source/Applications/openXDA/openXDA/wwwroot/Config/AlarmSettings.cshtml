@@ -376,8 +376,10 @@
             $('#graphViewer').toggle(false);
             $('#startDate').val("");
             $('#endDate').val("");
-            if (plot)
+            if (plot !== undefined) {
                 plot.destroy();
+                plot = undefined;
+            }
             $('#alert').css('display', 'none');
             $('#upperLimit').val("");
             $('#lowerLimit').val("");
