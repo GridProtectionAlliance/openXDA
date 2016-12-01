@@ -481,10 +481,12 @@
     <Content Include="wwwroot\Images\dD Analytics.png" />
     <Content Include="wwwroot\Images\dD Assets.png" />
     <Content Include="wwwroot\Images\dD Config.png" />
+    <Content Include="wwwroot\Images\dD Impact.png" />
     <Content Include="wwwroot\Images\dD Workbench.png" />
     <Content Include="wwwroot\Images\dDSplashBackground.png" />
     <Content Include="wwwroot\Images\GPA-Logo---30-pix%28on-white%29.png" />
     <Content Include="wwwroot\Images\GPA-Logo.png" />
+    <Content Include="wwwroot\Images\Impact Coming Soon.png" />
     <Content Include="wwwroot\Images\openSEELogo.png" />
     <Content Include="wwwroot\Images\openSEET.png" />
     <Content Include="wwwroot\Images\openSTE.png" />
