@@ -759,7 +759,13 @@ namespace openXDA
             }
             catch (FileSkippedException ex)
             {
-                Log.Warn(ex.Message);
+                // This method may be called if the file was deleted,
+                // in which case the user almost certainly doesn't care
+                // why it was skipped for processing and logging the
+                // error would only cause confusion
+                if (File.Exists(filePath))
+                    Log.Warn(ex.Message);
+
                 return false;
             }
         }
@@ -1425,6 +1431,12 @@ namespace openXDA
 
             // Determine whether file creation time validation is disabled
             if (maxFileCreationTimeOffset <= 0.0D)
+                return;
+
+            // This method may be called if the file was deleted,
+            // in which case it should be impossible to get the
+            // creation time of the file
+            if (!File.Exists(filePath))
                 return;
 
             // Determine the number of hours that have passed since the file was created
