@@ -291,7 +291,7 @@
                             </div>
                         </div>
                         <div class="checkbox" style="margin-left: 60%">
-                            <label><input type="checkbox" id="zeroValues" class="" checked="checked" />Ignore Zero Values</label>
+                            <label><input type="checkbox" id="zeroValues" class="" checked="checked"/>Ignore Zero Values</label>
                         </div>
 
                     </div>
@@ -301,28 +301,32 @@
                     </div>
 
                 </div>
-                <div class="row">
-                    <div id="alert" class="alert alert-danger fade in" style="margin: 5px; display: none" >
-                        @*<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>*@
-                        <strong>Warning!!!</strong> No records found...
-                    </div>
-                    <div id="smartAlarmsWindow" style="display: block">
-                        <div id="flotchart" style="height: 200px"></div>
-                    </div>
-                    <div class="col-md-5">
-                        <label>Upper Limit</label>
-                        <input id="upperLimit" type="text" class="form-control">
-                    </div>
+                <div id="alert" class="alert alert-danger fade in" style="margin: 5px; display: none">
+                    @*<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>*@
+                    <strong>Warning!!!</strong> No records found...
+                </div>
 
-                    <div class="col-md-5">
-                        <label>Lower Limit</label>
-                        <input id="lowerLimit" type="text" class="form-control">
-                    </div>
-                    <div class="col-md-1">
-                        <br/>
-                        <button class="btn btn-primary" data-dismiss="modal" onclick="applyLimits()">Apply Limits</button>
-                    </div>
+                <div id="graphViewer" class="collapse">
+                    <div class="row">
+                        <div id="smartAlarmsWindow" style="display: block">
+                            <div id="flotchart" style="height: 200px"></div>
+                        </div>
+                        <div class="col-md-5">
+                            <label>Upper Limit</label>
+                            <input id="upperLimit" type="text" class="form-control">
+                        </div>
 
+                        <div class="col-md-5">
+                            <label>Lower Limit</label>
+                            <input id="lowerLimit" type="text" class="form-control">
+                        </div>
+                        <div class="col-md-1">
+                            <br />
+                            <button class="btn btn-primary" data-dismiss="modal" onclick="applyLimits()">Apply Limits</button>
+                        </div>
+
+
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -369,6 +373,7 @@
         var currentRecord;
         function smartLimits(record) {
             $('#sigmaValue').val("1");
+            $('#graphViewer').toggle(false);
             $('#startDate').val("");
             $('#endDate').val("");
             if (plot)
@@ -378,7 +383,7 @@
             $('#lowerLimit').val("");
             $('#zeroValues').prop('checked', true);
             $('#smartAlarmsModal').modal('show');
-            $('#smartAlarmsModal .modal-title').text($('#smartAlarmsModal .modal-title').text() + ' - Channel: ' + record.ChannelID + ' - ' + record.Name);
+            $('#smartAlarmsModal .modal-title').text( 'Smart Alarm Settings - Channel: ' + record.ChannelID + ' - ' + record.Name);
             currentRecord = record;
         }
         
@@ -509,8 +514,10 @@
                         }
 
                     }
+                    $('#graphViewer').toggle(true);
 
                 }
+                
             });
         }
         
