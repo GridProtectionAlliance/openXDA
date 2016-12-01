@@ -109,7 +109,7 @@ namespace FaultData.DataReaders
             if ((object)m_eventFile == null)
                 m_eventFile = EventFile.Parse(filePath);
 
-            if (!m_eventFile.EventReports.Any())
+            if (!m_eventFile.EventReports.Any() && !m_eventFile.CommaSeparatedEventReports.Any())
                 return;
 
             m_meterDataSet.Meter = new Meter();
@@ -210,7 +210,7 @@ namespace FaultData.DataReaders
             Series series = new Series();
             Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
 
-            channel.Name = $"({report.Command}) {analogChannel.Name}";
+            channel.Name = analogChannel.Name;
             channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
@@ -290,7 +290,7 @@ namespace FaultData.DataReaders
             Series series = new Series();
             Channel<bool> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
 
-            channel.Name = $"({report.Command}) {digitalChannel.Name}";
+            channel.Name = digitalChannel.Name;
             channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementType.Name = "Digital";
@@ -318,7 +318,7 @@ namespace FaultData.DataReaders
             Series series = new Series();
             Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
 
-            channel.Name = $"({report.Command}) {analogChannel.Name}";
+            channel.Name = analogChannel.Name;
             channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
@@ -398,7 +398,7 @@ namespace FaultData.DataReaders
             Series series = new Series();
             Channel<bool> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
 
-            channel.Name = $"({report.Command}) {digitalChannel.Name}";
+            channel.Name = digitalChannel.Name;
             channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementType.Name = "Digital";
