@@ -91,7 +91,7 @@
 @section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EmailGroupUserAccount, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<EmailGroupUserAccount, DataHub>(ViewBag, null, null, int.Parse(ViewBag.EmailGroupID)))
         @Raw(Model.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
         @Raw(Model.RenderAbstract<UserAccount>("Name", "ID", "lookupUserAccountName", "userAccountName"))
 

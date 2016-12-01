@@ -80,7 +80,7 @@
 @section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EmailGroupType, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<EmailGroupType, DataHub>(ViewBag,null, null,int.Parse(ViewBag.GroupID)))
         @Raw(Model.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
         $(function () {
             viewModel.filterText = '@ViewBag.GroupID';

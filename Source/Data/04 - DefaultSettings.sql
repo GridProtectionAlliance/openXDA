@@ -121,5 +121,8 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WatchDirectories', 'Watch', 'Watch')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WorkbenchTimeRangeInSeconds', '60', '60')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
 GO
