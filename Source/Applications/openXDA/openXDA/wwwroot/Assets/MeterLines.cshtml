@@ -74,6 +74,7 @@
         };
     }
 
+    ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.lineID;
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }

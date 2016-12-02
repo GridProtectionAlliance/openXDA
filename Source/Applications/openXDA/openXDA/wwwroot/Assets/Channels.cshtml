@@ -54,6 +54,8 @@
         new[] { "HarmonicGroup", "HG", "text-center"}
     };
 
+    ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.lineID;
+
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
@@ -105,9 +107,9 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Channel>("Mapping", fieldLabel: "Channel Number"))
-        @Raw(dataContext.AddInputField<Channel>("Name", customDataBinding: "enable: false"))
-        @Raw(dataContext.AddInputField<Channel>("MeterName", customDataBinding: "enable: false"))
-        @Raw(dataContext.AddInputField<Channel>("LineName", customDataBinding: "enable: false"))
+        @Raw(dataContext.AddInputField<Channel>("Name"))
+        @Raw(dataContext.AddSelectField<Channel, Meter>("MeterID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<Channel, Line>("LineID", "ID", "AssetKey"))
         @Raw(dataContext.AddInputField<Channel>("MeasurementType"))
         @Raw(dataContext.AddInputField<Channel>("MeasurementCharacteristic"))
     </div>
