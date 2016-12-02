@@ -2552,7 +2552,7 @@ namespace openXDA
 
         public IEnumerable<VoltageCurvePoint> GetCurves()
         {
-            return DataContext.Table<VoltageCurvePoint>().QueryRecords("VoltageCurveID, LoadOrder", restriction: new RecordRestriction("VoltageCurveID IN (SELECT ID FROM VoltageCurve WHERE Name ='ITIC UPPER' OR Name = 'ITIC Lower' OR Name = 'SEMI')"));
+            return DataContext.Table<VoltageCurvePoint>().QueryRecords("VoltageCurveID, LoadOrder");
         }
 
         #endregion
