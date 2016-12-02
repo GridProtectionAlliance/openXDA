@@ -281,6 +281,9 @@ namespace FaultData.DataReaders
                     break;
             }
 
+            if (analogChannel.Name == "Freq")
+                channel.MeasurementCharacteristic.Name = "Frequency";
+
             channel.MeasurementType.Description = channel.MeasurementType.Name;
             channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
             series.SeriesType.Description = series.SeriesType.Name;
