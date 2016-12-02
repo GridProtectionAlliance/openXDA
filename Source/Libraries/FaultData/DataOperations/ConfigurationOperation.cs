@@ -27,11 +27,8 @@ using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.Database;
-using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
-using ChannelKey = System.Tuple<int, int, string, string, string, string>;
-using SeriesKey = System.Tuple<int, int, string, string, string, string, string>;
 
 namespace FaultData.DataOperations
 {
@@ -111,14 +108,14 @@ namespace FaultData.DataOperations
                 // Match the parsed series with the ones associated with the meter in the database
                 seriesLookup = seriesList
                     .Where(series => string.IsNullOrEmpty(series.SourceIndexes))
-                    .ToDictionary(GetSeriesKey);
+                    .ToDictionary(series => new SeriesKey(series));
 
                 foreach (DataSeries series in meterDataSet.DataSeries)
                 {
                     if ((object)series.SeriesInfo == null)
                         continue;
 
-                    if (seriesLookup.TryGetValue(GetSeriesKey(series.SeriesInfo), out seriesInfo))
+                    if (seriesLookup.TryGetValue(GetGenericSeriesKey(series.SeriesInfo), out seriesInfo))
                         series.SeriesInfo = seriesInfo;
                 }
 
@@ -232,6 +229,7 @@ namespace FaultData.DataOperations
             Line line;
 
             undefinedDataSeries = meterDataSet.DataSeries
+                .Concat(meterDataSet.Digitals)
                 .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Line == null)
                 .ToList();
 
@@ -243,13 +241,13 @@ namespace FaultData.DataOperations
                 .Single();
 
             foreach (DataSeries series in undefinedDataSeries)
-                series.SeriesInfo.Channel.LineID = line.ID;
+                series.SeriesInfo.Channel.Line = new Line() { ID = line.ID };
 
-            seriesLookup = new DataContextLookup<SeriesKey, Series>(m_meterInfo, GetSeriesKey)
+            seriesLookup = new DataContextLookup<SeriesKey, Series>(m_meterInfo, series => new SeriesKey(series))
                 .WithFilterExpression(series => series.Channel.MeterID == meterDataSet.Meter.ID)
                 .WithFilterExpression(series => series.SourceIndexes == "");
 
-            channelLookup = new DataContextLookup<ChannelKey, Channel>(m_meterInfo, GetChannelKey)
+            channelLookup = new DataContextLookup<ChannelKey, Channel>(m_meterInfo, channel => new ChannelKey(channel))
                 .WithFilterExpression(channel => channel.MeterID == meterDataSet.Meter.ID);
 
             measurementTypeLookup = new DataContextLookup<string, MeasurementType>(m_meterInfo, type => type.Name);
@@ -262,7 +260,7 @@ namespace FaultData.DataOperations
                 DataSeries dataSeries = undefinedDataSeries[i];
 
                 // Search for an existing series info object
-                dataSeries.SeriesInfo = seriesLookup.GetOrAdd(GetSeriesKey(dataSeries.SeriesInfo), seriesKey =>
+                dataSeries.SeriesInfo = seriesLookup.GetOrAdd(new SeriesKey(dataSeries.SeriesInfo), seriesKey =>
                 {
                     Series clonedSeries = dataSeries.SeriesInfo.Clone();
 
@@ -270,7 +268,7 @@ namespace FaultData.DataOperations
                     SeriesType seriesType = seriesTypeLookup.GetOrAdd(dataSeries.SeriesInfo.SeriesType.Name, name => dataSeries.SeriesInfo.SeriesType.Clone());
 
                     // Search for an existing channel object to associate with the new series
-                    Channel channel = channelLookup.GetOrAdd(GetChannelKey(dataSeries.SeriesInfo.Channel), channelKey =>
+                    Channel channel = channelLookup.GetOrAdd(seriesKey.ChannelKey, channelKey =>
                     {
                         Channel clonedChannel = dataSeries.SeriesInfo.Channel.Clone();
 
@@ -313,6 +311,10 @@ namespace FaultData.DataOperations
                     // to reference the objects from the lookup
                     clonedSeries.SeriesType = seriesType;
                     clonedSeries.Channel = channel;
+
+                    // The filter expression for this DataContextLookup only
+                    // looks at series that do not have source indexes
+                    clonedSeries.SourceIndexes = "";
 
                     return clonedSeries;
                 });
@@ -369,38 +371,12 @@ namespace FaultData.DataOperations
         // Static Methods
         private static ChannelKey GetGenericChannelKey(Channel channel)
         {
-            return Tuple.Create(
-                0,
-                0,
-                channel.Name,
-                channel.MeasurementType.Name,
-                channel.MeasurementCharacteristic.Name,
-                channel.Phase.Name);
+            return new ChannelKey(0, 0, channel.Name, channel.MeasurementType.Name, channel.MeasurementCharacteristic.Name, channel.Phase.Name);
         }
 
-        private static ChannelKey GetChannelKey(Channel channel)
+        private static SeriesKey GetGenericSeriesKey(Series series)
         {
-            return Tuple.Create(
-                channel.LineID,
-                channel.HarmonicGroup,
-                channel.Name,
-                channel.MeasurementType.Name,
-                channel.MeasurementCharacteristic.Name,
-                channel.Phase.Name);
-        }
-
-        private static SeriesKey GetSeriesKey(Series series)
-        {
-            Channel channel = series.Channel;
-
-            return Tuple.Create(
-                channel.LineID,
-                channel.HarmonicGroup,
-                channel.Name,
-                channel.MeasurementType.Name,
-                channel.MeasurementCharacteristic.Name,
-                channel.Phase.Name,
-                series.SeriesType.Name);
+            return new SeriesKey(GetGenericChannelKey(series.Channel), series.SeriesType.Name);
         }
 
         private static bool IsVoltage(Channel channel)

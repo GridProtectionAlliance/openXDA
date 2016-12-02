@@ -101,6 +101,7 @@ namespace FaultData.DataReaders
         /// <returns>List of meter data sets, one per meter.</returns>
         public void Parse(string filePath)
         {
+            Header header;
             Channel channel;
             DataSeries series;
             List<DateTime> timeSamples;
@@ -112,16 +113,19 @@ namespace FaultData.DataReaders
             if (!m_eventFile.EventReports.Any() && !m_eventFile.CommaSeparatedEventReports.Any())
                 return;
 
+            header = m_eventFile.EventReports.FirstOrDefault()?.Header
+                ?? m_eventFile.CommaSeparatedEventReports[0].Header;
+
             m_meterDataSet.Meter = new Meter();
-            m_meterDataSet.Meter.AssetKey = m_eventFile.EventReports[0].Header.RelayID;
-            m_meterDataSet.Meter.Name = m_eventFile.EventReports[0].Header.RelayID;
-            m_meterDataSet.Meter.ShortName = new string(m_eventFile.EventReports[0].Header.RelayID.ToNonNullString().Take(50).ToArray());
+            m_meterDataSet.Meter.AssetKey = header.RelayID;
+            m_meterDataSet.Meter.Name = header.RelayID;
+            m_meterDataSet.Meter.ShortName = new string(header.RelayID.ToNonNullString().Take(50).ToArray());
 
             m_meterDataSet.Meter.MeterLocation = new MeterLocation();
-            m_meterDataSet.Meter.MeterLocation.AssetKey = m_eventFile.EventReports[0].Header.StationID;
-            m_meterDataSet.Meter.MeterLocation.Name = m_eventFile.EventReports[0].Header.StationID;
-            m_meterDataSet.Meter.MeterLocation.ShortName = new string(m_eventFile.EventReports[0].Header.StationID.ToNonNullString().Take(50).ToArray());
-            m_meterDataSet.Meter.MeterLocation.Description = m_eventFile.EventReports[0].Header.StationID;
+            m_meterDataSet.Meter.MeterLocation.AssetKey = header.StationID;
+            m_meterDataSet.Meter.MeterLocation.Name = header.StationID;
+            m_meterDataSet.Meter.MeterLocation.ShortName = new string(header.StationID.ToNonNullString().Take(50).ToArray());
+            m_meterDataSet.Meter.MeterLocation.Description = header.StationID;
 
             foreach (EventReport report in m_eventFile.EventReports)
             {

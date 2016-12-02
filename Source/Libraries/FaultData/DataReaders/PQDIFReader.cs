@@ -221,6 +221,9 @@ namespace FaultData.DataReaders
 
         #region [ Static ]
 
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQDIFReader));
+
         // Static Methods
 
         private static bool AreEquivalent(DataSourceRecord dataSource1, DataSourceRecord dataSource2)
@@ -381,13 +384,6 @@ namespace FaultData.DataReaders
                 return null;
             }
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(PQDIFReader));
 
         #endregion
     }
