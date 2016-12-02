@@ -47,7 +47,7 @@
             $('#graphSelection').append(new Option("Voltage Disturbances by Date", 2));
             $('#graphSelection').append(new Option("Faults by Date", 3));
             $('#graphSelection').append(new Option("Breaker Events by Date", 4));
-            $('#graphSelection').append(new Option("Disturbance/Magnitude SARFI", 5));
+            $('#graphSelection').append(new Option("Disturbance Magnitude Duration Plot", 5));
             
             $(window).one('globalFilterDone', function () {
                 $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
