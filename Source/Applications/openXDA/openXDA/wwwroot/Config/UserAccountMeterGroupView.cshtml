@@ -37,10 +37,10 @@
     Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Users in " + title;
     ViewBag.ShowMenu = false;
-
+    ViewBag.ParentKeys = groupID;
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-    {   //    { "Field", "Label", "Classes" }
+{   //    { "Field", "Label", "Classes" }
         new[] { "Username", "Username", "text-Left" },
     };
 

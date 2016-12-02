@@ -88,7 +88,7 @@
         lineKey = parameters["Title"];
     }
 
-
+    ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.lineID;
     ViewBag.CustomHeader = (lineKey == "" ? null :"Alarms for <a href=\"/Config/Lines.cshtml?LineID=" + ViewBag.lineID + "\">" + lineKey + "</a>");
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]

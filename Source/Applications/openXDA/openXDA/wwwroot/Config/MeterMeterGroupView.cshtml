@@ -39,6 +39,7 @@
     Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Meters in " + title;
     ViewBag.ShowMenu = false;
+    ViewBag.ParentKeys = groupID;
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
