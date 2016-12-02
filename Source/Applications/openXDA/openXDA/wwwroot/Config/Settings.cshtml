@@ -83,9 +83,13 @@
         }
         
         $('#addNewEditDialog').on('shown.bs.modal', function (event) {
-            
+            if ($('#inputName').val().toLowerCase().indexOf('password') > -1)
+                $('#inputValue').attr('type', 'password');
+            else
+                $('#inputValue').attr('type', 'text');
+
             $('#inputName').on('keyup', function () {
-                if ($('#inputName').val().indexOf('Password') > -1)
+                if ($('#inputName').val().toLowerCase().indexOf('password') > -1)
                     $('#inputValue').attr('type', 'password');
                 else
                     $('#inputValue').attr('type', 'text');
