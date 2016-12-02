@@ -1550,42 +1550,6 @@ CREATE NONCLUSTERED INDEX IX_ContourAnimationFrame_ContourAnimationID
 ON ContourAnimationFrame(ContourAnimationID ASC)
 GO
 
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsOverviewToday', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsOverviewYesterday', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsDisturbances', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsTrending', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsTrendingData', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsFaults', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsBreakers', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsCompleteness', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsCorrectness', 1)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsModbusData', 0)
-GO
-
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsHistorianData', 0)
-GO
-
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash
