@@ -63,7 +63,7 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<Setting>("Name", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<Setting>("Name"))
     @Raw(dataContext.AddInputField<Setting>("Value"))
     @Raw(dataContext.AddCheckBoxField<Setting>("Enabled", "Enable?"))
 
