@@ -154,6 +154,9 @@ namespace FaultData.DataReaders
                     channel = MakeParsedDigital(report, i);
                     series = new DataSeries();
 
+                    if (channel.Name == "*")
+                        continue;
+
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
                     valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
 
@@ -193,6 +196,9 @@ namespace FaultData.DataReaders
                 {
                     channel = MakeParsedDigital(report, i);
                     series = new DataSeries();
+
+                    if (channel.Name == "*")
+                        continue;
 
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
                     valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
