@@ -137,16 +137,15 @@ namespace FaultData.DataReaders
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
                     valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
 
-                    series.SeriesInfo = channel.Series[0];
-
                     series.DataPoints = timeSamples
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
                     if (new string[] { "VA", "VB", "VC", "VS" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
-                        m_meterDataSet.DataSeries.Add(series.Multiply(1000.0));
-                    else
-                        m_meterDataSet.DataSeries.Add(series);
+                        series = series.Multiply(1000.0D);
+
+                    series.SeriesInfo = channel.Series[0];
+                    m_meterDataSet.DataSeries.Add(series);
                 }
 
                 for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
@@ -180,16 +179,12 @@ namespace FaultData.DataReaders
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
                     valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
 
-                    series.SeriesInfo = channel.Series[0];
-
                     series.DataPoints = timeSamples
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
-                    if (new string[] { "VA", "VB", "VC", "VS" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
-                        m_meterDataSet.DataSeries.Add(series.Multiply(1000.0));
-                    else
-                        m_meterDataSet.DataSeries.Add(series);
+                    series.SeriesInfo = channel.Series[0];
+                    m_meterDataSet.DataSeries.Add(series);
                 }
 
                 for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
