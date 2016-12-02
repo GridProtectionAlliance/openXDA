@@ -154,6 +154,9 @@ namespace FaultData.DataReaders
                     channel = MakeParsedDigital(report, i);
                     series = new DataSeries();
 
+                    if (channel.Name == "*")
+                        continue;
+
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
                     valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
 
@@ -193,6 +196,9 @@ namespace FaultData.DataReaders
                 {
                     channel = MakeParsedDigital(report, i);
                     series = new DataSeries();
+
+                    if (channel.Name == "*")
+                        continue;
 
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
                     valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
@@ -280,6 +286,9 @@ namespace FaultData.DataReaders
                     channel.Phase.Description = "Unknown";
                     break;
             }
+
+            if (analogChannel.Name == "Freq")
+                channel.MeasurementCharacteristic.Name = "Frequency";
 
             channel.MeasurementType.Description = channel.MeasurementType.Name;
             channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
