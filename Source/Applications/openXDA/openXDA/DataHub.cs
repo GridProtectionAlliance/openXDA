@@ -176,7 +176,9 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.DeleteRecord)]
         public void DeleteMeter(int id)
         {
-            DataContext.Table<Meter>().DeleteRecord(id);
+            //DataContext.Table<Meter>().DeleteRecord(id);
+            CascadeDelete("Meter", $"ID = {id}");
+
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -242,7 +244,8 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
         public void DeleteMeterLocation(int id)
         {
-            DataContext.Table<MeterLocation>().DeleteRecord(id);
+            //DataContext.Table<MeterLocation>().DeleteRecord(id);
+            CascadeDelete("MeterLocation", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -299,7 +302,9 @@ namespace openXDA
         [RecordOperation(typeof(Line), RecordOperation.DeleteRecord)]
         public void DeleteLines(int id)
         {
-            DataContext.Table<Line>().DeleteRecord(id);
+            //DataContext.Table<Line>().DeleteRecord(id);
+            CascadeDelete("Line", $"ID = {id}");
+
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -356,9 +361,11 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
         public void DeleteLineView(int id)
         {
-            int index = DataContext.Connection.ExecuteScalar<int>("Select ID FROM LineImpedance WHERE LineID = {0}", id);
-            DataContext.Table<LineImpedance>().DeleteRecord(index);
-            DataContext.Table<Line>().DeleteRecord(id);
+            //int index = DataContext.Connection.ExecuteScalar<int>("Select ID FROM LineImpedance WHERE LineID = {0}", id);
+            //DataContext.Table<LineImpedance>().DeleteRecord(index);
+            //DataContext.Table<Line>().DeleteRecord(id);
+            CascadeDelete("Line", $"ID = {id}");
+
         }
 
         [AuthorizeHubRole("Administrator")]

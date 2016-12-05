@@ -138,12 +138,12 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
 
-        @*$(viewModel).on("beforeSave", function (event, observableRecord) {
+        $(viewModel).on("beforeSave", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
                 observableRecord.LineID = @ViewBag.lineID;
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
-        });*@
+        });
         
         $(viewModel).on("newRecord", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
@@ -151,7 +151,7 @@
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
-
+        
         function getChannelCount(lineID, meterID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryChannelCount(meterID, lineID, null).done(function (count) {
