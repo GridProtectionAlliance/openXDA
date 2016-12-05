@@ -6,8 +6,37 @@
   <Component Id="OpenSEE_cshtml">
     <File Id="OpenSEE.cshtml" Name="OpenSEE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEE.cshtml" />
   </Component>
+  <Component Id="OpenSTE_cshtml">
+    <File Id="OpenSTE.cshtml" Name="OpenSTE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSTE.cshtml" />
+  </Component>
   <Component Id="SignalCode_cs">
     <File Id="SignalCode.cs" Name="SignalCode.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SignalCode.cs" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Assets_Components" Directory="ASSETSFOLDER">
+  <Component Id="Assets_Channels_cshtml">
+    <File Id="Assets_Channels.cshtml" Name="Channels.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Channels.cshtml" />
+  </Component>
+  <Component Id="Assets_Help_cshtml">
+    <File Id="Assets_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Help.cshtml" />
+  </Component>
+  <Component Id="Assets_index_cshtml">
+    <File Id="Assets_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\index.cshtml" />
+  </Component>
+  <Component Id="Assets_Layout_cshtml">
+    <File Id="Assets_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Layout.cshtml" />
+  </Component>
+  <Component Id="Assets_Lines_cshtml">
+    <File Id="Assets_Lines.cshtml" Name="Lines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Lines.cshtml" />
+  </Component>
+  <Component Id="Assets_MeterLines_cshtml">
+    <File Id="Assets_MeterLines.cshtml" Name="MeterLines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\MeterLines.cshtml" />
+  </Component>
+  <Component Id="Assets_Meters_cshtml">
+    <File Id="Assets_Meters.cshtml" Name="Meters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Meters.cshtml" />
+  </Component>
+  <Component Id="Assets_Sites_cshtml">
+    <File Id="Assets_Sites.cshtml" Name="Sites.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Assets\Sites.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Config_Components" Directory="CONFIGFOLDER">
@@ -40,6 +69,9 @@
   </Component>
   <Component Id="Config_EmailGroupUserAccount_cshtml">
     <File Id="Config_EmailGroupUserAccount.cshtml" Name="EmailGroupUserAccount.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupUserAccount.cshtml" />
+  </Component>
+  <Component Id="Config_EmailRMarkdownViewer_cshtml">
+    <File Id="Config_EmailRMarkdownViewer.cshtml" Name="EmailRMarkdownViewer.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailRMarkdownViewer.cshtml" />
   </Component>
   <Component Id="Config_EmailTemplateHandler_ashx">
     <File Id="Config_EmailTemplateHandler.ashx" Name="EmailTemplateHandler.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailTemplateHandler.ashx" />
@@ -180,6 +212,9 @@
   </Component>
   <Component Id="Content_OpenSEE_css">
     <File Id="Content_OpenSEE.css" Name="OpenSEE.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\OpenSEE.css" />
+  </Component>
+  <Component Id="Content_OpenSTE_css">
+    <File Id="Content_OpenSTE.css" Name="OpenSTE.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\OpenSTE.css" />
   </Component>
   <Component Id="Content_Popup_css">
     <File Id="Content_Popup.css" Name="Popup.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\Popup.css" />
@@ -356,8 +391,20 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Images_Components" Directory="IMAGESFOLDER">
+  <Component Id="Images_AnalyticsComingSoon_png">
+    <File Id="Images_AnalyticsComingSoon.png" Name="Analytics Coming Soon.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Analytics Coming Soon.png" />
+  </Component>
+  <Component Id="Images_dDAnalytics_png">
+    <File Id="Images_dDAnalytics.png" Name="dD Analytics.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Analytics.png" />
+  </Component>
+  <Component Id="Images_dDAssets_png">
+    <File Id="Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
+  </Component>
   <Component Id="Images_dDConfig_png">
     <File Id="Images_dDConfig.png" Name="dD Config.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config.png" />
+  </Component>
+  <Component Id="Images_dDImpact_png">
+    <File Id="Images_dDImpact.png" Name="dD Impact.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Impact.png" />
   </Component>
   <Component Id="Images_dDWorkbench_png">
     <File Id="Images_dDWorkbench.png" Name="dD Workbench.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Workbench.png" />
@@ -374,6 +421,9 @@
   <Component Id="Images_gpa_smalllock_png">
     <File Id="Images_gpa_smalllock.png" Name="gpa-smalllock.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\gpa-smalllock.png" />
   </Component>
+  <Component Id="Images_ImpactComingSoon_png">
+    <File Id="Images_ImpactComingSoon.png" Name="Impact Coming Soon.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Impact Coming Soon.png" />
+  </Component>
   <Component Id="Images_openMIC_png">
     <File Id="Images_openMIC.png" Name="openMIC.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openMIC.png" />
   </Component>
@@ -385,6 +435,9 @@
   </Component>
   <Component Id="Images_openSEET_png">
     <File Id="Images_openSEET.png" Name="openSEET.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openSEET.png" />
+  </Component>
+  <Component Id="Images_openSTE_png">
+    <File Id="Images_openSTE.png" Name="openSTE.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openSTE.png" />
   </Component>
   <Component Id="Images_openXDA_png">
     <File Id="Images_openXDA.png" Name="openXDA.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openXDA.png" />
@@ -563,6 +616,9 @@
   </Component>
   <Component Id="Scripts_OpenSEE_js">
     <File Id="Scripts_OpenSEE.js" Name="OpenSEE.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\OpenSEE.js" />
+  </Component>
+  <Component Id="Scripts_OpenSTE_js">
+    <File Id="Scripts_OpenSTE.js" Name="OpenSTE.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\OpenSTE.js" />
   </Component>
   <Component Id="Scripts_plotly_latest_min_js">
     <File Id="Scripts_plotly_latest.min.js" Name="plotly-latest.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\plotly-latest.min.js" />
@@ -3016,6 +3072,1048 @@
     <File Id="Scripts_PrimeUI_themes_vader_images_ui_icons_f29a00_256x240.png" Name="ui-icons_f29a00_256x240.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PrimeUI\themes\vader\images\ui-icons_f29a00_256x240.png" />
   </Component>
 </ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_src_noconflict_Components" Directory="SCRIPTSSRCNOCONFLICTFOLDER">
+  <Component Id="Scripts_src_noconflict_ace_js">
+    <File Id="Scripts_src_noconflict_ace.js" Name="ace.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ace.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_beautify_js">
+    <File Id="Scripts_src_noconflict_ext_beautify.js" Name="ext-beautify.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-beautify.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_chromevox_js">
+    <File Id="Scripts_src_noconflict_ext_chromevox.js" Name="ext-chromevox.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-chromevox.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_elastic_tabstops_lite_js">
+    <File Id="Scripts_src_noconflict_ext_elastic_tabstops_lite.js" Name="ext-elastic_tabstops_lite.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-elastic_tabstops_lite.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_emmet_js">
+    <File Id="Scripts_src_noconflict_ext_emmet.js" Name="ext-emmet.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-emmet.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_error_marker_js">
+    <File Id="Scripts_src_noconflict_ext_error_marker.js" Name="ext-error_marker.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-error_marker.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_keybinding_menu_js">
+    <File Id="Scripts_src_noconflict_ext_keybinding_menu.js" Name="ext-keybinding_menu.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-keybinding_menu.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_language_tools_js">
+    <File Id="Scripts_src_noconflict_ext_language_tools.js" Name="ext-language_tools.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-language_tools.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_linking_js">
+    <File Id="Scripts_src_noconflict_ext_linking.js" Name="ext-linking.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-linking.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_modelist_js">
+    <File Id="Scripts_src_noconflict_ext_modelist.js" Name="ext-modelist.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-modelist.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_old_ie_js">
+    <File Id="Scripts_src_noconflict_ext_old_ie.js" Name="ext-old_ie.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-old_ie.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_searchbox_js">
+    <File Id="Scripts_src_noconflict_ext_searchbox.js" Name="ext-searchbox.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-searchbox.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_settings_menu_js">
+    <File Id="Scripts_src_noconflict_ext_settings_menu.js" Name="ext-settings_menu.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-settings_menu.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_spellcheck_js">
+    <File Id="Scripts_src_noconflict_ext_spellcheck.js" Name="ext-spellcheck.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-spellcheck.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_split_js">
+    <File Id="Scripts_src_noconflict_ext_split.js" Name="ext-split.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-split.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_static_highlight_js">
+    <File Id="Scripts_src_noconflict_ext_static_highlight.js" Name="ext-static_highlight.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-static_highlight.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_statusbar_js">
+    <File Id="Scripts_src_noconflict_ext_statusbar.js" Name="ext-statusbar.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-statusbar.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_textarea_js">
+    <File Id="Scripts_src_noconflict_ext_textarea.js" Name="ext-textarea.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-textarea.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_themelist_js">
+    <File Id="Scripts_src_noconflict_ext_themelist.js" Name="ext-themelist.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-themelist.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_ext_whitespace_js">
+    <File Id="Scripts_src_noconflict_ext_whitespace.js" Name="ext-whitespace.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\ext-whitespace.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_keybinding_emacs_js">
+    <File Id="Scripts_src_noconflict_keybinding_emacs.js" Name="keybinding-emacs.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\keybinding-emacs.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_keybinding_vim_js">
+    <File Id="Scripts_src_noconflict_keybinding_vim.js" Name="keybinding-vim.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\keybinding-vim.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_abap_js">
+    <File Id="Scripts_src_noconflict_mode_abap.js" Name="mode-abap.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-abap.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_abc_js">
+    <File Id="Scripts_src_noconflict_mode_abc.js" Name="mode-abc.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-abc.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_actionscript_js">
+    <File Id="Scripts_src_noconflict_mode_actionscript.js" Name="mode-actionscript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-actionscript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_ada_js">
+    <File Id="Scripts_src_noconflict_mode_ada.js" Name="mode-ada.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-ada.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_apache_conf_js">
+    <File Id="Scripts_src_noconflict_mode_apache_conf.js" Name="mode-apache_conf.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-apache_conf.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_applescript_js">
+    <File Id="Scripts_src_noconflict_mode_applescript.js" Name="mode-applescript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-applescript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_asciidoc_js">
+    <File Id="Scripts_src_noconflict_mode_asciidoc.js" Name="mode-asciidoc.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-asciidoc.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_assembly_x86_js">
+    <File Id="Scripts_src_noconflict_mode_assembly_x86.js" Name="mode-assembly_x86.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-assembly_x86.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_autohotkey_js">
+    <File Id="Scripts_src_noconflict_mode_autohotkey.js" Name="mode-autohotkey.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-autohotkey.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_batchfile_js">
+    <File Id="Scripts_src_noconflict_mode_batchfile.js" Name="mode-batchfile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-batchfile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_c9search_js">
+    <File Id="Scripts_src_noconflict_mode_c9search.js" Name="mode-c9search.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-c9search.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_cirru_js">
+    <File Id="Scripts_src_noconflict_mode_cirru.js" Name="mode-cirru.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-cirru.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_clojure_js">
+    <File Id="Scripts_src_noconflict_mode_clojure.js" Name="mode-clojure.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-clojure.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_cobol_js">
+    <File Id="Scripts_src_noconflict_mode_cobol.js" Name="mode-cobol.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-cobol.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_coffee_js">
+    <File Id="Scripts_src_noconflict_mode_coffee.js" Name="mode-coffee.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-coffee.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_coldfusion_js">
+    <File Id="Scripts_src_noconflict_mode_coldfusion.js" Name="mode-coldfusion.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-coldfusion.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_csharp_js">
+    <File Id="Scripts_src_noconflict_mode_csharp.js" Name="mode-csharp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-csharp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_css_js">
+    <File Id="Scripts_src_noconflict_mode_css.js" Name="mode-css.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-css.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_curly_js">
+    <File Id="Scripts_src_noconflict_mode_curly.js" Name="mode-curly.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-curly.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_c_cpp_js">
+    <File Id="Scripts_src_noconflict_mode_c_cpp.js" Name="mode-c_cpp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-c_cpp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_d_js">
+    <File Id="Scripts_src_noconflict_mode_d.js" Name="mode-d.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-d.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_dart_js">
+    <File Id="Scripts_src_noconflict_mode_dart.js" Name="mode-dart.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-dart.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_diff_js">
+    <File Id="Scripts_src_noconflict_mode_diff.js" Name="mode-diff.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-diff.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_django_js">
+    <File Id="Scripts_src_noconflict_mode_django.js" Name="mode-django.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-django.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_dockerfile_js">
+    <File Id="Scripts_src_noconflict_mode_dockerfile.js" Name="mode-dockerfile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-dockerfile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_dot_js">
+    <File Id="Scripts_src_noconflict_mode_dot.js" Name="mode-dot.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-dot.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_drools_js">
+    <File Id="Scripts_src_noconflict_mode_drools.js" Name="mode-drools.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-drools.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_eiffel_js">
+    <File Id="Scripts_src_noconflict_mode_eiffel.js" Name="mode-eiffel.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-eiffel.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_ejs_js">
+    <File Id="Scripts_src_noconflict_mode_ejs.js" Name="mode-ejs.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-ejs.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_elixir_js">
+    <File Id="Scripts_src_noconflict_mode_elixir.js" Name="mode-elixir.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-elixir.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_elm_js">
+    <File Id="Scripts_src_noconflict_mode_elm.js" Name="mode-elm.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-elm.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_erlang_js">
+    <File Id="Scripts_src_noconflict_mode_erlang.js" Name="mode-erlang.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-erlang.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_forth_js">
+    <File Id="Scripts_src_noconflict_mode_forth.js" Name="mode-forth.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-forth.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_fortran_js">
+    <File Id="Scripts_src_noconflict_mode_fortran.js" Name="mode-fortran.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-fortran.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_ftl_js">
+    <File Id="Scripts_src_noconflict_mode_ftl.js" Name="mode-ftl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-ftl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_gcode_js">
+    <File Id="Scripts_src_noconflict_mode_gcode.js" Name="mode-gcode.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-gcode.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_gherkin_js">
+    <File Id="Scripts_src_noconflict_mode_gherkin.js" Name="mode-gherkin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-gherkin.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_gitignore_js">
+    <File Id="Scripts_src_noconflict_mode_gitignore.js" Name="mode-gitignore.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-gitignore.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_glsl_js">
+    <File Id="Scripts_src_noconflict_mode_glsl.js" Name="mode-glsl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-glsl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_gobstones_js">
+    <File Id="Scripts_src_noconflict_mode_gobstones.js" Name="mode-gobstones.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-gobstones.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_golang_js">
+    <File Id="Scripts_src_noconflict_mode_golang.js" Name="mode-golang.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-golang.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_groovy_js">
+    <File Id="Scripts_src_noconflict_mode_groovy.js" Name="mode-groovy.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-groovy.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_haml_js">
+    <File Id="Scripts_src_noconflict_mode_haml.js" Name="mode-haml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-haml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_handlebars_js">
+    <File Id="Scripts_src_noconflict_mode_handlebars.js" Name="mode-handlebars.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-handlebars.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_haskell_js">
+    <File Id="Scripts_src_noconflict_mode_haskell.js" Name="mode-haskell.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-haskell.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_haskell_cabal_js">
+    <File Id="Scripts_src_noconflict_mode_haskell_cabal.js" Name="mode-haskell_cabal.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-haskell_cabal.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_haxe_js">
+    <File Id="Scripts_src_noconflict_mode_haxe.js" Name="mode-haxe.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-haxe.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_html_js">
+    <File Id="Scripts_src_noconflict_mode_html.js" Name="mode-html.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-html.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_html_elixir_js">
+    <File Id="Scripts_src_noconflict_mode_html_elixir.js" Name="mode-html_elixir.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-html_elixir.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_html_ruby_js">
+    <File Id="Scripts_src_noconflict_mode_html_ruby.js" Name="mode-html_ruby.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-html_ruby.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_ini_js">
+    <File Id="Scripts_src_noconflict_mode_ini.js" Name="mode-ini.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-ini.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_io_js">
+    <File Id="Scripts_src_noconflict_mode_io.js" Name="mode-io.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-io.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_jack_js">
+    <File Id="Scripts_src_noconflict_mode_jack.js" Name="mode-jack.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-jack.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_jade_js">
+    <File Id="Scripts_src_noconflict_mode_jade.js" Name="mode-jade.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-jade.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_java_js">
+    <File Id="Scripts_src_noconflict_mode_java.js" Name="mode-java.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-java.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_javascript_js">
+    <File Id="Scripts_src_noconflict_mode_javascript.js" Name="mode-javascript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-javascript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_json_js">
+    <File Id="Scripts_src_noconflict_mode_json.js" Name="mode-json.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-json.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_jsoniq_js">
+    <File Id="Scripts_src_noconflict_mode_jsoniq.js" Name="mode-jsoniq.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-jsoniq.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_jsp_js">
+    <File Id="Scripts_src_noconflict_mode_jsp.js" Name="mode-jsp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-jsp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_jsx_js">
+    <File Id="Scripts_src_noconflict_mode_jsx.js" Name="mode-jsx.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-jsx.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_julia_js">
+    <File Id="Scripts_src_noconflict_mode_julia.js" Name="mode-julia.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-julia.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_kotlin_js">
+    <File Id="Scripts_src_noconflict_mode_kotlin.js" Name="mode-kotlin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-kotlin.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_latex_js">
+    <File Id="Scripts_src_noconflict_mode_latex.js" Name="mode-latex.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-latex.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_lean_js">
+    <File Id="Scripts_src_noconflict_mode_lean.js" Name="mode-lean.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-lean.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_less_js">
+    <File Id="Scripts_src_noconflict_mode_less.js" Name="mode-less.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-less.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_liquid_js">
+    <File Id="Scripts_src_noconflict_mode_liquid.js" Name="mode-liquid.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-liquid.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_lisp_js">
+    <File Id="Scripts_src_noconflict_mode_lisp.js" Name="mode-lisp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-lisp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_livescript_js">
+    <File Id="Scripts_src_noconflict_mode_livescript.js" Name="mode-livescript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-livescript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_live_script_js">
+    <File Id="Scripts_src_noconflict_mode_live_script.js" Name="mode-live_script.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-live_script.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_logiql_js">
+    <File Id="Scripts_src_noconflict_mode_logiql.js" Name="mode-logiql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-logiql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_lsl_js">
+    <File Id="Scripts_src_noconflict_mode_lsl.js" Name="mode-lsl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-lsl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_lua_js">
+    <File Id="Scripts_src_noconflict_mode_lua.js" Name="mode-lua.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-lua.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_luapage_js">
+    <File Id="Scripts_src_noconflict_mode_luapage.js" Name="mode-luapage.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-luapage.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_lucene_js">
+    <File Id="Scripts_src_noconflict_mode_lucene.js" Name="mode-lucene.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-lucene.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_makefile_js">
+    <File Id="Scripts_src_noconflict_mode_makefile.js" Name="mode-makefile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-makefile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_markdown_js">
+    <File Id="Scripts_src_noconflict_mode_markdown.js" Name="mode-markdown.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-markdown.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mask_js">
+    <File Id="Scripts_src_noconflict_mode_mask.js" Name="mode-mask.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mask.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_matlab_js">
+    <File Id="Scripts_src_noconflict_mode_matlab.js" Name="mode-matlab.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-matlab.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mavens_mate_log_js">
+    <File Id="Scripts_src_noconflict_mode_mavens_mate_log.js" Name="mode-mavens_mate_log.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mavens_mate_log.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_maze_js">
+    <File Id="Scripts_src_noconflict_mode_maze.js" Name="mode-maze.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-maze.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mel_js">
+    <File Id="Scripts_src_noconflict_mode_mel.js" Name="mode-mel.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mel.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mipsassembler_js">
+    <File Id="Scripts_src_noconflict_mode_mipsassembler.js" Name="mode-mipsassembler.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mipsassembler.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mips_assembler_js">
+    <File Id="Scripts_src_noconflict_mode_mips_assembler.js" Name="mode-mips_assembler.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mips_assembler.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mushcode_js">
+    <File Id="Scripts_src_noconflict_mode_mushcode.js" Name="mode-mushcode.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mushcode.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_mysql_js">
+    <File Id="Scripts_src_noconflict_mode_mysql.js" Name="mode-mysql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-mysql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_nix_js">
+    <File Id="Scripts_src_noconflict_mode_nix.js" Name="mode-nix.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-nix.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_nsis_js">
+    <File Id="Scripts_src_noconflict_mode_nsis.js" Name="mode-nsis.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-nsis.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_objectivec_js">
+    <File Id="Scripts_src_noconflict_mode_objectivec.js" Name="mode-objectivec.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-objectivec.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_ocaml_js">
+    <File Id="Scripts_src_noconflict_mode_ocaml.js" Name="mode-ocaml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-ocaml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_pascal_js">
+    <File Id="Scripts_src_noconflict_mode_pascal.js" Name="mode-pascal.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-pascal.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_perl_js">
+    <File Id="Scripts_src_noconflict_mode_perl.js" Name="mode-perl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-perl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_pgsql_js">
+    <File Id="Scripts_src_noconflict_mode_pgsql.js" Name="mode-pgsql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-pgsql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_php_js">
+    <File Id="Scripts_src_noconflict_mode_php.js" Name="mode-php.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-php.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_plain_text_js">
+    <File Id="Scripts_src_noconflict_mode_plain_text.js" Name="mode-plain_text.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-plain_text.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_powershell_js">
+    <File Id="Scripts_src_noconflict_mode_powershell.js" Name="mode-powershell.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-powershell.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_praat_js">
+    <File Id="Scripts_src_noconflict_mode_praat.js" Name="mode-praat.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-praat.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_prolog_js">
+    <File Id="Scripts_src_noconflict_mode_prolog.js" Name="mode-prolog.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-prolog.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_properties_js">
+    <File Id="Scripts_src_noconflict_mode_properties.js" Name="mode-properties.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-properties.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_protobuf_js">
+    <File Id="Scripts_src_noconflict_mode_protobuf.js" Name="mode-protobuf.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-protobuf.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_python_js">
+    <File Id="Scripts_src_noconflict_mode_python.js" Name="mode-python.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-python.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_r_js">
+    <File Id="Scripts_src_noconflict_mode_r.js" Name="mode-r.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-r.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_razor_js">
+    <File Id="Scripts_src_noconflict_mode_razor.js" Name="mode-razor.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-razor.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_rdoc_js">
+    <File Id="Scripts_src_noconflict_mode_rdoc.js" Name="mode-rdoc.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-rdoc.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_rhtml_js">
+    <File Id="Scripts_src_noconflict_mode_rhtml.js" Name="mode-rhtml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-rhtml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_rst_js">
+    <File Id="Scripts_src_noconflict_mode_rst.js" Name="mode-rst.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-rst.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_ruby_js">
+    <File Id="Scripts_src_noconflict_mode_ruby.js" Name="mode-ruby.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-ruby.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_rust_js">
+    <File Id="Scripts_src_noconflict_mode_rust.js" Name="mode-rust.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-rust.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_sass_js">
+    <File Id="Scripts_src_noconflict_mode_sass.js" Name="mode-sass.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-sass.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_scad_js">
+    <File Id="Scripts_src_noconflict_mode_scad.js" Name="mode-scad.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-scad.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_scala_js">
+    <File Id="Scripts_src_noconflict_mode_scala.js" Name="mode-scala.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-scala.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_scheme_js">
+    <File Id="Scripts_src_noconflict_mode_scheme.js" Name="mode-scheme.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-scheme.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_scss_js">
+    <File Id="Scripts_src_noconflict_mode_scss.js" Name="mode-scss.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-scss.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_sh_js">
+    <File Id="Scripts_src_noconflict_mode_sh.js" Name="mode-sh.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-sh.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_sjs_js">
+    <File Id="Scripts_src_noconflict_mode_sjs.js" Name="mode-sjs.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-sjs.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_smarty_js">
+    <File Id="Scripts_src_noconflict_mode_smarty.js" Name="mode-smarty.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-smarty.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_snippets_js">
+    <File Id="Scripts_src_noconflict_mode_snippets.js" Name="mode-snippets.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-snippets.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_soy_template_js">
+    <File Id="Scripts_src_noconflict_mode_soy_template.js" Name="mode-soy_template.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-soy_template.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_space_js">
+    <File Id="Scripts_src_noconflict_mode_space.js" Name="mode-space.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-space.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_sql_js">
+    <File Id="Scripts_src_noconflict_mode_sql.js" Name="mode-sql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-sql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_sqlserver_js">
+    <File Id="Scripts_src_noconflict_mode_sqlserver.js" Name="mode-sqlserver.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-sqlserver.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_stylus_js">
+    <File Id="Scripts_src_noconflict_mode_stylus.js" Name="mode-stylus.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-stylus.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_svg_js">
+    <File Id="Scripts_src_noconflict_mode_svg.js" Name="mode-svg.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-svg.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_swift_js">
+    <File Id="Scripts_src_noconflict_mode_swift.js" Name="mode-swift.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-swift.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_swig_js">
+    <File Id="Scripts_src_noconflict_mode_swig.js" Name="mode-swig.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-swig.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_tcl_js">
+    <File Id="Scripts_src_noconflict_mode_tcl.js" Name="mode-tcl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-tcl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_tex_js">
+    <File Id="Scripts_src_noconflict_mode_tex.js" Name="mode-tex.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-tex.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_text_js">
+    <File Id="Scripts_src_noconflict_mode_text.js" Name="mode-text.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-text.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_textile_js">
+    <File Id="Scripts_src_noconflict_mode_textile.js" Name="mode-textile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-textile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_toml_js">
+    <File Id="Scripts_src_noconflict_mode_toml.js" Name="mode-toml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-toml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_tsx_js">
+    <File Id="Scripts_src_noconflict_mode_tsx.js" Name="mode-tsx.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-tsx.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_twig_js">
+    <File Id="Scripts_src_noconflict_mode_twig.js" Name="mode-twig.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-twig.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_typescript_js">
+    <File Id="Scripts_src_noconflict_mode_typescript.js" Name="mode-typescript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-typescript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_vala_js">
+    <File Id="Scripts_src_noconflict_mode_vala.js" Name="mode-vala.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-vala.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_vbscript_js">
+    <File Id="Scripts_src_noconflict_mode_vbscript.js" Name="mode-vbscript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-vbscript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_velocity_js">
+    <File Id="Scripts_src_noconflict_mode_velocity.js" Name="mode-velocity.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-velocity.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_verilog_js">
+    <File Id="Scripts_src_noconflict_mode_verilog.js" Name="mode-verilog.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-verilog.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_vhdl_js">
+    <File Id="Scripts_src_noconflict_mode_vhdl.js" Name="mode-vhdl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-vhdl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_wollok_js">
+    <File Id="Scripts_src_noconflict_mode_wollok.js" Name="mode-wollok.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-wollok.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_xml_js">
+    <File Id="Scripts_src_noconflict_mode_xml.js" Name="mode-xml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-xml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_xquery_js">
+    <File Id="Scripts_src_noconflict_mode_xquery.js" Name="mode-xquery.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-xquery.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_mode_yaml_js">
+    <File Id="Scripts_src_noconflict_mode_yaml.js" Name="mode-yaml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\mode-yaml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_ambiance_js">
+    <File Id="Scripts_src_noconflict_theme_ambiance.js" Name="theme-ambiance.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-ambiance.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_chaos_js">
+    <File Id="Scripts_src_noconflict_theme_chaos.js" Name="theme-chaos.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-chaos.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_chrome_js">
+    <File Id="Scripts_src_noconflict_theme_chrome.js" Name="theme-chrome.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-chrome.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_clouds_js">
+    <File Id="Scripts_src_noconflict_theme_clouds.js" Name="theme-clouds.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-clouds.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_clouds_midnight_js">
+    <File Id="Scripts_src_noconflict_theme_clouds_midnight.js" Name="theme-clouds_midnight.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-clouds_midnight.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_cobalt_js">
+    <File Id="Scripts_src_noconflict_theme_cobalt.js" Name="theme-cobalt.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-cobalt.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_crimson_editor_js">
+    <File Id="Scripts_src_noconflict_theme_crimson_editor.js" Name="theme-crimson_editor.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-crimson_editor.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_dawn_js">
+    <File Id="Scripts_src_noconflict_theme_dawn.js" Name="theme-dawn.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-dawn.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_dreamweaver_js">
+    <File Id="Scripts_src_noconflict_theme_dreamweaver.js" Name="theme-dreamweaver.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-dreamweaver.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_eclipse_js">
+    <File Id="Scripts_src_noconflict_theme_eclipse.js" Name="theme-eclipse.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-eclipse.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_github_js">
+    <File Id="Scripts_src_noconflict_theme_github.js" Name="theme-github.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-github.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_idle_fingers_js">
+    <File Id="Scripts_src_noconflict_theme_idle_fingers.js" Name="theme-idle_fingers.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-idle_fingers.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_iplastic_js">
+    <File Id="Scripts_src_noconflict_theme_iplastic.js" Name="theme-iplastic.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-iplastic.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_katzenmilch_js">
+    <File Id="Scripts_src_noconflict_theme_katzenmilch.js" Name="theme-katzenmilch.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-katzenmilch.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_kr_theme_js">
+    <File Id="Scripts_src_noconflict_theme_kr_theme.js" Name="theme-kr_theme.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-kr_theme.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_kuroir_js">
+    <File Id="Scripts_src_noconflict_theme_kuroir.js" Name="theme-kuroir.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-kuroir.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_merbivore_js">
+    <File Id="Scripts_src_noconflict_theme_merbivore.js" Name="theme-merbivore.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-merbivore.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_merbivore_soft_js">
+    <File Id="Scripts_src_noconflict_theme_merbivore_soft.js" Name="theme-merbivore_soft.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-merbivore_soft.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_monokai_js">
+    <File Id="Scripts_src_noconflict_theme_monokai.js" Name="theme-monokai.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-monokai.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_mono_industrial_js">
+    <File Id="Scripts_src_noconflict_theme_mono_industrial.js" Name="theme-mono_industrial.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-mono_industrial.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_pastel_on_dark_js">
+    <File Id="Scripts_src_noconflict_theme_pastel_on_dark.js" Name="theme-pastel_on_dark.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-pastel_on_dark.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_solarized_dark_js">
+    <File Id="Scripts_src_noconflict_theme_solarized_dark.js" Name="theme-solarized_dark.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-solarized_dark.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_solarized_light_js">
+    <File Id="Scripts_src_noconflict_theme_solarized_light.js" Name="theme-solarized_light.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-solarized_light.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_sqlserver_js">
+    <File Id="Scripts_src_noconflict_theme_sqlserver.js" Name="theme-sqlserver.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-sqlserver.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_terminal_js">
+    <File Id="Scripts_src_noconflict_theme_terminal.js" Name="theme-terminal.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-terminal.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_textmate_js">
+    <File Id="Scripts_src_noconflict_theme_textmate.js" Name="theme-textmate.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-textmate.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_tomorrow_js">
+    <File Id="Scripts_src_noconflict_theme_tomorrow.js" Name="theme-tomorrow.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-tomorrow.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_tomorrow_night_js">
+    <File Id="Scripts_src_noconflict_theme_tomorrow_night.js" Name="theme-tomorrow_night.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-tomorrow_night.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_tomorrow_night_blue_js">
+    <File Id="Scripts_src_noconflict_theme_tomorrow_night_blue.js" Name="theme-tomorrow_night_blue.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-tomorrow_night_blue.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_tomorrow_night_bright_js">
+    <File Id="Scripts_src_noconflict_theme_tomorrow_night_bright.js" Name="theme-tomorrow_night_bright.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-tomorrow_night_bright.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_tomorrow_night_eighties_js">
+    <File Id="Scripts_src_noconflict_theme_tomorrow_night_eighties.js" Name="theme-tomorrow_night_eighties.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-tomorrow_night_eighties.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_twilight_js">
+    <File Id="Scripts_src_noconflict_theme_twilight.js" Name="theme-twilight.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-twilight.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_vibrant_ink_js">
+    <File Id="Scripts_src_noconflict_theme_vibrant_ink.js" Name="theme-vibrant_ink.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-vibrant_ink.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_theme_xcode_js">
+    <File Id="Scripts_src_noconflict_theme_xcode.js" Name="theme-xcode.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\theme-xcode.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_coffee_js">
+    <File Id="Scripts_src_noconflict_worker_coffee.js" Name="worker-coffee.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-coffee.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_css_js">
+    <File Id="Scripts_src_noconflict_worker_css.js" Name="worker-css.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-css.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_html_js">
+    <File Id="Scripts_src_noconflict_worker_html.js" Name="worker-html.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-html.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_javascript_js">
+    <File Id="Scripts_src_noconflict_worker_javascript.js" Name="worker-javascript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-javascript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_json_js">
+    <File Id="Scripts_src_noconflict_worker_json.js" Name="worker-json.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-json.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_lua_js">
+    <File Id="Scripts_src_noconflict_worker_lua.js" Name="worker-lua.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-lua.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_php_js">
+    <File Id="Scripts_src_noconflict_worker_php.js" Name="worker-php.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-php.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_xml_js">
+    <File Id="Scripts_src_noconflict_worker_xml.js" Name="worker-xml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-xml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_worker_xquery_js">
+    <File Id="Scripts_src_noconflict_worker_xquery.js" Name="worker-xquery.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\worker-xquery.js" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_src_noconflict_snippets_Components" Directory="SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER">
+  <Component Id="Scripts_src_noconflict_snippets_abap_js">
+    <File Id="Scripts_src_noconflict_snippets_abap.js" Name="abap.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\abap.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_abc_js">
+    <File Id="Scripts_src_noconflict_snippets_abc.js" Name="abc.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\abc.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_actionscript_js">
+    <File Id="Scripts_src_noconflict_snippets_actionscript.js" Name="actionscript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\actionscript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_ada_js">
+    <File Id="Scripts_src_noconflict_snippets_ada.js" Name="ada.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\ada.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_apache_conf_js">
+    <File Id="Scripts_src_noconflict_snippets_apache_conf.js" Name="apache_conf.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\apache_conf.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_applescript_js">
+    <File Id="Scripts_src_noconflict_snippets_applescript.js" Name="applescript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\applescript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_asciidoc_js">
+    <File Id="Scripts_src_noconflict_snippets_asciidoc.js" Name="asciidoc.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\asciidoc.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_assembly_x86_js">
+    <File Id="Scripts_src_noconflict_snippets_assembly_x86.js" Name="assembly_x86.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\assembly_x86.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_autohotkey_js">
+    <File Id="Scripts_src_noconflict_snippets_autohotkey.js" Name="autohotkey.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\autohotkey.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_batchfile_js">
+    <File Id="Scripts_src_noconflict_snippets_batchfile.js" Name="batchfile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\batchfile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_c9search_js">
+    <File Id="Scripts_src_noconflict_snippets_c9search.js" Name="c9search.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\c9search.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_cirru_js">
+    <File Id="Scripts_src_noconflict_snippets_cirru.js" Name="cirru.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\cirru.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_clojure_js">
+    <File Id="Scripts_src_noconflict_snippets_clojure.js" Name="clojure.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\clojure.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_cobol_js">
+    <File Id="Scripts_src_noconflict_snippets_cobol.js" Name="cobol.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\cobol.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_coffee_js">
+    <File Id="Scripts_src_noconflict_snippets_coffee.js" Name="coffee.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\coffee.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_coldfusion_js">
+    <File Id="Scripts_src_noconflict_snippets_coldfusion.js" Name="coldfusion.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\coldfusion.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_csharp_js">
+    <File Id="Scripts_src_noconflict_snippets_csharp.js" Name="csharp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\csharp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_css_js">
+    <File Id="Scripts_src_noconflict_snippets_css.js" Name="css.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\css.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_curly_js">
+    <File Id="Scripts_src_noconflict_snippets_curly.js" Name="curly.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\curly.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_c_cpp_js">
+    <File Id="Scripts_src_noconflict_snippets_c_cpp.js" Name="c_cpp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\c_cpp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_d_js">
+    <File Id="Scripts_src_noconflict_snippets_d.js" Name="d.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\d.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_dart_js">
+    <File Id="Scripts_src_noconflict_snippets_dart.js" Name="dart.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\dart.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_diff_js">
+    <File Id="Scripts_src_noconflict_snippets_diff.js" Name="diff.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\diff.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_django_js">
+    <File Id="Scripts_src_noconflict_snippets_django.js" Name="django.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\django.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_dockerfile_js">
+    <File Id="Scripts_src_noconflict_snippets_dockerfile.js" Name="dockerfile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\dockerfile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_dot_js">
+    <File Id="Scripts_src_noconflict_snippets_dot.js" Name="dot.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\dot.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_drools_js">
+    <File Id="Scripts_src_noconflict_snippets_drools.js" Name="drools.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\drools.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_eiffel_js">
+    <File Id="Scripts_src_noconflict_snippets_eiffel.js" Name="eiffel.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\eiffel.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_ejs_js">
+    <File Id="Scripts_src_noconflict_snippets_ejs.js" Name="ejs.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\ejs.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_elixir_js">
+    <File Id="Scripts_src_noconflict_snippets_elixir.js" Name="elixir.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\elixir.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_elm_js">
+    <File Id="Scripts_src_noconflict_snippets_elm.js" Name="elm.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\elm.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_erlang_js">
+    <File Id="Scripts_src_noconflict_snippets_erlang.js" Name="erlang.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\erlang.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_forth_js">
+    <File Id="Scripts_src_noconflict_snippets_forth.js" Name="forth.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\forth.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_fortran_js">
+    <File Id="Scripts_src_noconflict_snippets_fortran.js" Name="fortran.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\fortran.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_ftl_js">
+    <File Id="Scripts_src_noconflict_snippets_ftl.js" Name="ftl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\ftl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_gcode_js">
+    <File Id="Scripts_src_noconflict_snippets_gcode.js" Name="gcode.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\gcode.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_gherkin_js">
+    <File Id="Scripts_src_noconflict_snippets_gherkin.js" Name="gherkin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\gherkin.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_gitignore_js">
+    <File Id="Scripts_src_noconflict_snippets_gitignore.js" Name="gitignore.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\gitignore.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_glsl_js">
+    <File Id="Scripts_src_noconflict_snippets_glsl.js" Name="glsl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\glsl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_gobstones_js">
+    <File Id="Scripts_src_noconflict_snippets_gobstones.js" Name="gobstones.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\gobstones.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_golang_js">
+    <File Id="Scripts_src_noconflict_snippets_golang.js" Name="golang.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\golang.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_groovy_js">
+    <File Id="Scripts_src_noconflict_snippets_groovy.js" Name="groovy.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\groovy.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_haml_js">
+    <File Id="Scripts_src_noconflict_snippets_haml.js" Name="haml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\haml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_handlebars_js">
+    <File Id="Scripts_src_noconflict_snippets_handlebars.js" Name="handlebars.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\handlebars.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_haskell_js">
+    <File Id="Scripts_src_noconflict_snippets_haskell.js" Name="haskell.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\haskell.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_haskell_cabal_js">
+    <File Id="Scripts_src_noconflict_snippets_haskell_cabal.js" Name="haskell_cabal.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\haskell_cabal.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_haxe_js">
+    <File Id="Scripts_src_noconflict_snippets_haxe.js" Name="haxe.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\haxe.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_html_js">
+    <File Id="Scripts_src_noconflict_snippets_html.js" Name="html.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\html.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_html_elixir_js">
+    <File Id="Scripts_src_noconflict_snippets_html_elixir.js" Name="html_elixir.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\html_elixir.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_html_ruby_js">
+    <File Id="Scripts_src_noconflict_snippets_html_ruby.js" Name="html_ruby.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\html_ruby.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_ini_js">
+    <File Id="Scripts_src_noconflict_snippets_ini.js" Name="ini.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\ini.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_io_js">
+    <File Id="Scripts_src_noconflict_snippets_io.js" Name="io.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\io.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_jack_js">
+    <File Id="Scripts_src_noconflict_snippets_jack.js" Name="jack.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\jack.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_jade_js">
+    <File Id="Scripts_src_noconflict_snippets_jade.js" Name="jade.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\jade.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_java_js">
+    <File Id="Scripts_src_noconflict_snippets_java.js" Name="java.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\java.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_javascript_js">
+    <File Id="Scripts_src_noconflict_snippets_javascript.js" Name="javascript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\javascript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_json_js">
+    <File Id="Scripts_src_noconflict_snippets_json.js" Name="json.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\json.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_jsoniq_js">
+    <File Id="Scripts_src_noconflict_snippets_jsoniq.js" Name="jsoniq.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\jsoniq.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_jsp_js">
+    <File Id="Scripts_src_noconflict_snippets_jsp.js" Name="jsp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\jsp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_jsx_js">
+    <File Id="Scripts_src_noconflict_snippets_jsx.js" Name="jsx.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\jsx.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_julia_js">
+    <File Id="Scripts_src_noconflict_snippets_julia.js" Name="julia.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\julia.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_kotlin_js">
+    <File Id="Scripts_src_noconflict_snippets_kotlin.js" Name="kotlin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\kotlin.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_latex_js">
+    <File Id="Scripts_src_noconflict_snippets_latex.js" Name="latex.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\latex.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_lean_js">
+    <File Id="Scripts_src_noconflict_snippets_lean.js" Name="lean.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\lean.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_less_js">
+    <File Id="Scripts_src_noconflict_snippets_less.js" Name="less.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\less.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_liquid_js">
+    <File Id="Scripts_src_noconflict_snippets_liquid.js" Name="liquid.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\liquid.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_lisp_js">
+    <File Id="Scripts_src_noconflict_snippets_lisp.js" Name="lisp.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\lisp.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_livescript_js">
+    <File Id="Scripts_src_noconflict_snippets_livescript.js" Name="livescript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\livescript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_live_script_js">
+    <File Id="Scripts_src_noconflict_snippets_live_script.js" Name="live_script.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\live_script.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_logiql_js">
+    <File Id="Scripts_src_noconflict_snippets_logiql.js" Name="logiql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\logiql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_lsl_js">
+    <File Id="Scripts_src_noconflict_snippets_lsl.js" Name="lsl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\lsl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_lua_js">
+    <File Id="Scripts_src_noconflict_snippets_lua.js" Name="lua.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\lua.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_luapage_js">
+    <File Id="Scripts_src_noconflict_snippets_luapage.js" Name="luapage.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\luapage.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_lucene_js">
+    <File Id="Scripts_src_noconflict_snippets_lucene.js" Name="lucene.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\lucene.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_makefile_js">
+    <File Id="Scripts_src_noconflict_snippets_makefile.js" Name="makefile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\makefile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_markdown_js">
+    <File Id="Scripts_src_noconflict_snippets_markdown.js" Name="markdown.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\markdown.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_mask_js">
+    <File Id="Scripts_src_noconflict_snippets_mask.js" Name="mask.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\mask.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_matlab_js">
+    <File Id="Scripts_src_noconflict_snippets_matlab.js" Name="matlab.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\matlab.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_maze_js">
+    <File Id="Scripts_src_noconflict_snippets_maze.js" Name="maze.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\maze.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_mel_js">
+    <File Id="Scripts_src_noconflict_snippets_mel.js" Name="mel.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\mel.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_mipsassembler_js">
+    <File Id="Scripts_src_noconflict_snippets_mipsassembler.js" Name="mipsassembler.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\mipsassembler.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_mips_assembler_js">
+    <File Id="Scripts_src_noconflict_snippets_mips_assembler.js" Name="mips_assembler.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\mips_assembler.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_mushcode_js">
+    <File Id="Scripts_src_noconflict_snippets_mushcode.js" Name="mushcode.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\mushcode.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_mysql_js">
+    <File Id="Scripts_src_noconflict_snippets_mysql.js" Name="mysql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\mysql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_nix_js">
+    <File Id="Scripts_src_noconflict_snippets_nix.js" Name="nix.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\nix.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_nsis_js">
+    <File Id="Scripts_src_noconflict_snippets_nsis.js" Name="nsis.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\nsis.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_objectivec_js">
+    <File Id="Scripts_src_noconflict_snippets_objectivec.js" Name="objectivec.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\objectivec.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_ocaml_js">
+    <File Id="Scripts_src_noconflict_snippets_ocaml.js" Name="ocaml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\ocaml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_pascal_js">
+    <File Id="Scripts_src_noconflict_snippets_pascal.js" Name="pascal.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\pascal.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_perl_js">
+    <File Id="Scripts_src_noconflict_snippets_perl.js" Name="perl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\perl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_pgsql_js">
+    <File Id="Scripts_src_noconflict_snippets_pgsql.js" Name="pgsql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\pgsql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_php_js">
+    <File Id="Scripts_src_noconflict_snippets_php.js" Name="php.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\php.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_plain_text_js">
+    <File Id="Scripts_src_noconflict_snippets_plain_text.js" Name="plain_text.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\plain_text.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_powershell_js">
+    <File Id="Scripts_src_noconflict_snippets_powershell.js" Name="powershell.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\powershell.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_praat_js">
+    <File Id="Scripts_src_noconflict_snippets_praat.js" Name="praat.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\praat.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_prolog_js">
+    <File Id="Scripts_src_noconflict_snippets_prolog.js" Name="prolog.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\prolog.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_properties_js">
+    <File Id="Scripts_src_noconflict_snippets_properties.js" Name="properties.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\properties.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_protobuf_js">
+    <File Id="Scripts_src_noconflict_snippets_protobuf.js" Name="protobuf.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\protobuf.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_python_js">
+    <File Id="Scripts_src_noconflict_snippets_python.js" Name="python.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\python.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_r_js">
+    <File Id="Scripts_src_noconflict_snippets_r.js" Name="r.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\r.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_razor_js">
+    <File Id="Scripts_src_noconflict_snippets_razor.js" Name="razor.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\razor.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_rdoc_js">
+    <File Id="Scripts_src_noconflict_snippets_rdoc.js" Name="rdoc.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\rdoc.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_rhtml_js">
+    <File Id="Scripts_src_noconflict_snippets_rhtml.js" Name="rhtml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\rhtml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_rst_js">
+    <File Id="Scripts_src_noconflict_snippets_rst.js" Name="rst.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\rst.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_ruby_js">
+    <File Id="Scripts_src_noconflict_snippets_ruby.js" Name="ruby.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\ruby.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_rust_js">
+    <File Id="Scripts_src_noconflict_snippets_rust.js" Name="rust.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\rust.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_sass_js">
+    <File Id="Scripts_src_noconflict_snippets_sass.js" Name="sass.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\sass.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_scad_js">
+    <File Id="Scripts_src_noconflict_snippets_scad.js" Name="scad.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\scad.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_scala_js">
+    <File Id="Scripts_src_noconflict_snippets_scala.js" Name="scala.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\scala.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_scheme_js">
+    <File Id="Scripts_src_noconflict_snippets_scheme.js" Name="scheme.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\scheme.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_scss_js">
+    <File Id="Scripts_src_noconflict_snippets_scss.js" Name="scss.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\scss.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_sh_js">
+    <File Id="Scripts_src_noconflict_snippets_sh.js" Name="sh.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\sh.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_sjs_js">
+    <File Id="Scripts_src_noconflict_snippets_sjs.js" Name="sjs.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\sjs.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_smarty_js">
+    <File Id="Scripts_src_noconflict_snippets_smarty.js" Name="smarty.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\smarty.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_snippets_js">
+    <File Id="Scripts_src_noconflict_snippets_snippets.js" Name="snippets.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\snippets.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_soy_template_js">
+    <File Id="Scripts_src_noconflict_snippets_soy_template.js" Name="soy_template.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\soy_template.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_space_js">
+    <File Id="Scripts_src_noconflict_snippets_space.js" Name="space.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\space.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_sql_js">
+    <File Id="Scripts_src_noconflict_snippets_sql.js" Name="sql.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\sql.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_sqlserver_js">
+    <File Id="Scripts_src_noconflict_snippets_sqlserver.js" Name="sqlserver.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\sqlserver.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_stylus_js">
+    <File Id="Scripts_src_noconflict_snippets_stylus.js" Name="stylus.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\stylus.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_svg_js">
+    <File Id="Scripts_src_noconflict_snippets_svg.js" Name="svg.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\svg.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_swift_js">
+    <File Id="Scripts_src_noconflict_snippets_swift.js" Name="swift.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\swift.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_swig_js">
+    <File Id="Scripts_src_noconflict_snippets_swig.js" Name="swig.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\swig.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_tcl_js">
+    <File Id="Scripts_src_noconflict_snippets_tcl.js" Name="tcl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\tcl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_tex_js">
+    <File Id="Scripts_src_noconflict_snippets_tex.js" Name="tex.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\tex.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_text_js">
+    <File Id="Scripts_src_noconflict_snippets_text.js" Name="text.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\text.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_textile_js">
+    <File Id="Scripts_src_noconflict_snippets_textile.js" Name="textile.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\textile.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_toml_js">
+    <File Id="Scripts_src_noconflict_snippets_toml.js" Name="toml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\toml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_tsx_js">
+    <File Id="Scripts_src_noconflict_snippets_tsx.js" Name="tsx.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\tsx.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_twig_js">
+    <File Id="Scripts_src_noconflict_snippets_twig.js" Name="twig.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\twig.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_typescript_js">
+    <File Id="Scripts_src_noconflict_snippets_typescript.js" Name="typescript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\typescript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_vala_js">
+    <File Id="Scripts_src_noconflict_snippets_vala.js" Name="vala.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\vala.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_vbscript_js">
+    <File Id="Scripts_src_noconflict_snippets_vbscript.js" Name="vbscript.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\vbscript.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_velocity_js">
+    <File Id="Scripts_src_noconflict_snippets_velocity.js" Name="velocity.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\velocity.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_verilog_js">
+    <File Id="Scripts_src_noconflict_snippets_verilog.js" Name="verilog.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\verilog.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_vhdl_js">
+    <File Id="Scripts_src_noconflict_snippets_vhdl.js" Name="vhdl.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\vhdl.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_wollok_js">
+    <File Id="Scripts_src_noconflict_snippets_wollok.js" Name="wollok.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\wollok.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_xml_js">
+    <File Id="Scripts_src_noconflict_snippets_xml.js" Name="xml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\xml.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_xquery_js">
+    <File Id="Scripts_src_noconflict_snippets_xquery.js" Name="xquery.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\xquery.js" />
+  </Component>
+  <Component Id="Scripts_src_noconflict_snippets_yaml_js">
+    <File Id="Scripts_src_noconflict_snippets_yaml.js" Name="yaml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\yaml.js" />
+  </Component>
+</ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="WORKBENCHFOLDER">
   <Component Id="WorkBench_BreakersForDay_cshtml">
     <File Id="WorkBench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\BreakersForDay.cshtml" />
@@ -3026,6 +4124,9 @@
   <Component Id="WorkBench_DisturbancesForDay_cshtml">
     <File Id="WorkBench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDay.cshtml" />
   </Component>
+  <Component Id="WorkBench_DisturbancesForMeter_cshtml">
+    <File Id="WorkBench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForMeter.cshtml" />
+  </Component>
   <Component Id="WorkBench_Events_cshtml">
     <File Id="WorkBench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Events.cshtml" />
   </Component>
@@ -3034,6 +4135,9 @@
   </Component>
   <Component Id="WorkBench_EventsForDay_cshtml">
     <File Id="WorkBench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDay.cshtml" />
+  </Component>
+  <Component Id="WorkBench_EventsForMeter_cshtml">
+    <File Id="WorkBench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForMeter.cshtml" />
   </Component>
   <Component Id="WorkBench_FaultsForDay_cshtml">
     <File Id="WorkBench_FaultsForDay.cshtml" Name="FaultsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\FaultsForDay.cshtml" />

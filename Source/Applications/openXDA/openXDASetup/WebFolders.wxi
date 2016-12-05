@@ -1,5 +1,6 @@
 <Include>
 <Directory Id="WWWROOTFOLDER" Name="wwwroot">
+  <Directory Id="ASSETSFOLDER" Name="Assets" />
   <Directory Id="CONFIGFOLDER" Name="Config" />
   <Directory Id="CONTENTFOLDER" Name="Content">
     <Directory Id="CONTENTFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
@@ -180,6 +181,9 @@
           <Directory Id="SCRIPTSPRIMEUITHEMESVADERIMAGESFOLDER" Name="images" />
         </Directory>
       </Directory>
+    </Directory>
+    <Directory Id="SCRIPTSSRCNOCONFLICTFOLDER" Name="src-noconflict">
+      <Directory Id="SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER" Name="snippets" />
     </Directory>
   </Directory>
   <Directory Id="WORKBENCHFOLDER" Name="WorkBench" />
