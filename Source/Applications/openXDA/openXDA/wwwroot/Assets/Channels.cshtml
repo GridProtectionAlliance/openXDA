@@ -128,7 +128,7 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Channel, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))
 
-        $(viewModel).on("beforeSave", function (event, observableRecord) {
+        $(viewModel).on("newRecord", function (event, observableRecord) {
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
 

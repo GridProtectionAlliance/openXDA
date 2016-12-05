@@ -100,22 +100,22 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    if (ViewBag.lineID == -1)
+    if (ViewBag.lineID != -1)
     {
-        @Raw(dataContext.AddInputField<MeterLine>("LineKey", fieldLabel: "Line Key"))
+            @Raw(dataContext.AddSelectField<MeterLine, Line>("LineID", "ID", "AssetKey", fieldLabel: "Line Key"))
     }
     else
     {
-        @Raw(dataContext.AddInputField<MeterLine>("LineKey", customDataBinding: "enable: false", fieldLabel: "Line Key"))
+            @Raw(dataContext.AddInputField<MeterLine>("LineKey", fieldLabel: "Line Key"))
     }
 
-    if (ViewBag.meterID == -1)
+    if (ViewBag.meterID != -1)
     {
-        @Raw(dataContext.AddInputField<MeterLine>("MeterName", fieldLabel: "Meter Name"))
+            @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
     }
     else
     {
-        @Raw(dataContext.AddInputField<MeterLine>("MeterName", customDataBinding: "enable: false", fieldLabel: "Meter Name"))
+            @Raw(dataContext.AddInputField<MeterLine>("MeterName", fieldLabel: "Meter Name"))
     }
 
     @Raw(dataContext.AddInputField<MeterLine>("LineName"))
@@ -138,7 +138,14 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterLine, DataHub>(ViewBag, "ID", null, ViewBag.lineID, ViewBag.meterID))
 
-        $(viewModel).on("beforeSave", function (event, observableRecord) {
+        @*$(viewModel).on("beforeSave", function (event, observableRecord) {
+            if (@ViewBag.lineID !== -1)
+                observableRecord.LineID = @ViewBag.lineID;
+            if (@ViewBag.meterID !== -1)
+                observableRecord.MeterID = @ViewBag.meterID;
+        });*@
+        
+        $(viewModel).on("newRecord", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
                 observableRecord.LineID = @ViewBag.lineID;
             if (@ViewBag.meterID !== -1)

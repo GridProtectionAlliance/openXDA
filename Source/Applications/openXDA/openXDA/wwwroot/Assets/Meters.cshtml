@@ -27,6 +27,7 @@
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
+@using RazorEngine.Templating
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
     <style>
@@ -40,7 +41,7 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    int meterLocationID = -1;
+    ViewBag.MeterLocationID = -1;
     string meterLocationName = null;
 
     ViewBag.Title = "Meters";
@@ -52,14 +53,14 @@
 
     if (parameters.ContainsKey("LocationID"))
     {
-        meterLocationID = int.Parse(parameters["LocationID"] ?? "-1");
-        meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", meterLocationID);
+        ViewBag.MeterLocationID = int.Parse(parameters["LocationID"] ?? "-1");
+        meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", ViewBag.MeterLocationID);
         ViewBag.CustomHeader = "Meters at <a href=\"/Assets/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
         ViewBag.Title = "Meters at " + meterLocationName;
 
     }
 
-    ViewBag.ParentKeys = meterLocationID;
+    ViewBag.ParentKeys = ViewBag.MeterLocationID;
     Layout = "Assets/Layout.cshtml";
 
     // Define column headers, use null for field name to make column non-sortable
@@ -106,7 +107,12 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Name"))
-        @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Site"))
+        @if(ViewBag.MeterLocationID == -1){
+            @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Site"))
+        }
+        else{
+            @Raw(dataContext.AddSelectField<Meter,MeterLocation>("MeterLocationID", "ID", "Alias", fieldLabel: "Site"))
+        }
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
     </div>
@@ -124,11 +130,11 @@
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, meterLocationID))
-        
+        @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, ViewBag.MeterLocationID))
+
         $(function () {
             $("#pageHeader").append("@Raw(Regex.Replace(MeterFilter().ToString(), @"\r|\n", ""))");
-            
+
             $('#meterfilter').on('keyup', function (e) {
                 if ($('#meterfilter').val().length == 0) {
                     viewModel.filterText = '';
@@ -152,9 +158,9 @@
                             viewModel.currentRecord().MeterLocationID(id);
                         }
                     });
-                    
+
                     initializeAutoCompleteLookupField("TimeZoneLabel", dataHub.searchTimeZones, false, undefined, undefined, -1);
-                    
+
                     $('#inputTimeZoneLabel').puiautocomplete({
                         select: function (event, item) {
                             var id = item.data("id");
@@ -164,7 +170,11 @@
                 }
             });
         });
-        
+
+        $(viewModel).on('newRecord', function (event, newRecord) {
+            newRecord.MeterLocationID = @ViewBag.MeterLocationID;
+        });
+
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeterLineCount(-1, sourceID, null).done(function (count) {
