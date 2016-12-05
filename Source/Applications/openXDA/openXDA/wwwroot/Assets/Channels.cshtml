@@ -33,8 +33,23 @@
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    ViewBag.meterID = int.Parse(parameters["MeterID"] ?? "-1");
-    ViewBag.lineID = int.Parse(parameters["LineID"] ?? "-1");
+    if (parameters.ContainsKey("MeterID"))
+    {
+        ViewBag.meterID = int.Parse(parameters["MeterID"]);
+    }
+    else
+    {
+        ViewBag.meterID = -1;
+    }
+
+    if (parameters.ContainsKey("LineID"))
+    {
+        ViewBag.lineID = int.Parse(parameters["LineID"]);
+    }
+    else
+    {
+        ViewBag.lineID = -1;
+    }
 
     string meterName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM Meter WHERE ID = {0}", ViewBag.meterID);
     string lineKey = dataContext.Connection.ExecuteScalar<string>("SELECT AssetKey FROM Line WHERE ID = {0}", ViewBag.lineID);
