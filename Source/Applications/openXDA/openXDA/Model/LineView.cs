@@ -11,6 +11,7 @@ namespace openXDA.Model
     public class LineView: Line
     {
         public string TopName { get; set; }
+        [PrimaryKey(true)]
         public int LineImpedanceID { get; set; }
         public float R0 { get; set; }
         public float R1 { get; set; }
