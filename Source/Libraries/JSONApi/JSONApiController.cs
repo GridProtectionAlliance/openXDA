@@ -49,10 +49,10 @@ namespace JSONApi
             using(DataContext dataContext = new DataContext("systemSettings"))
             {
                 string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
-                string id = (json != null ? (json.ID ?? "%") : "%");
+                int id = (json != null ? (json.ID == null ? -1: int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Meter WHERE AssetKey LIKE {0} OR ID LIKE {1} OR NAME LIKE {2}", assetKey, id, name);
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Meter WHERE AssetKey LIKE {0} AND "+ (id != -1? "ID LIKE {1} AND ": "" )+ "NAME LIKE {2}", assetKey, id, name);
                 return table.Select().Select(row => dataContext.Table<Meter>().LoadRecord(row)).ToList();
             }
         }
@@ -63,9 +63,9 @@ namespace JSONApi
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
-                string id = (json != null ? (json.ID ?? "%") : "%");
+                int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Line WHERE AssetKey LIKE {0} OR ID LIKE {1} ", assetKey, id);
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Line WHERE AssetKey LIKE {0} " + (id != -1 ? "AND ID LIKE {1}" : "") , assetKey, id);
                 return table.Select().Select(row => dataContext.Table<Line>().LoadRecord(row)).ToList();
             }
         }
@@ -76,10 +76,10 @@ namespace JSONApi
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
-                string id = (json != null ? (json.ID ?? "%") : "%");
+                int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM MeterLocation WHERE AssetKey LIKE {0} OR ID LIKE {1} OR NAME LIKE {2} ", assetKey, id, name);
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM MeterLocation WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2} ", assetKey, id, name);
                 return table.Select().Select(row => dataContext.Table<MeterLocation>().LoadRecord(row)).ToList();
             }
         }
@@ -90,10 +90,10 @@ namespace JSONApi
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 string assetKey = (json != null ? (json.AssetKey ?? "%") : "%");
-                string id = (json != null ? (json.ID ?? "%") : "%");
+                int id = (json != null ? (json.ID == null ? -1 : int.Parse(json.ID)) : -1);
                 string name = (json != null ? (json.Name ?? "%") : "%");
 
-                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Channel WHERE MeterID IN (Select ID FROM Meter WHERE AssetKey LIKE {0} OR ID LIKE {1} OR NAME LIKE {2})", assetKey, id, name);
+                DataTable table = dataContext.Connection.RetrieveData("Select * FROM Channel WHERE MeterID IN (Select ID FROM Meter WHERE AssetKey LIKE {0} AND " + (id != -1 ? "ID LIKE {1} AND " : "") + "NAME LIKE {2})", assetKey, id, name);
                 return table.Select().Select(row => dataContext.Table<Channel>().LoadRecord(row)).ToList();
             }
         }
