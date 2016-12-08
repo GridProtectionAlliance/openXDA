@@ -1472,6 +1472,7 @@ GO
 INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
 GO
 
+
 -- ------------ --
 -- PQ Dashboard --
 -- ------------ --
@@ -2278,6 +2279,82 @@ SELECT
     ) AS EventDetail
 FROM Event
 GO
+
+CREATE VIEW [dbo].[EventView]
+AS
+SELECT	dbo.Event.ID, dbo.Event.FileGroupID, dbo.Event.MeterID, dbo.Event.LineID, dbo.Event.EventTypeID, dbo.Event.EventDataID, dbo.Event.Name, dbo.Event.Alias, dbo.Event.ShortName, dbo.Event.StartTime, 
+		dbo.Event.EndTime, dbo.Event.Samples, dbo.Event.TimeZoneOffset, dbo.Event.SamplesPerSecond, dbo.Event.SamplesPerCycle, dbo.Event.Description,
+		    (SELECT        TOP (1) LineName
+		      FROM            dbo.MeterLine
+		      WHERE        (LineID = dbo.Line.ID)) AS LineName, dbo.Meter.Name AS MeterName, dbo.Line.Length, dbo.EventType.Name AS EventTypeName
+FROM	dbo.Event INNER JOIN
+		dbo.Line ON dbo.Event.LineID = dbo.Line.ID INNER JOIN
+		dbo.Meter ON dbo.Event.MeterID = dbo.Meter.ID INNER JOIN
+		dbo.EventType ON dbo.Event.EventTypeID = dbo.EventType.ID
+
+GO
+
+CREATE VIEW [dbo].[DisturbanceView]
+AS
+SELECT dbo.Disturbance.ID, dbo.Disturbance.EventID, dbo.Disturbance.EventTypeID, dbo.Disturbance.PhaseID, dbo.Disturbance.Magnitude, dbo.Disturbance.PerUnitMagnitude, dbo.Disturbance.StartTime, 
+       dbo.Disturbance.EndTime, dbo.Disturbance.DurationSeconds, dbo.Disturbance.DurationCycles, dbo.Disturbance.StartIndex, dbo.Disturbance.EndIndex, dbo.Event.MeterID,
+           (SELECT        MAX(SeverityCode) AS Expr1
+             FROM            dbo.DisturbanceSeverity
+             WHERE        (DisturbanceID = dbo.Disturbance.ID)) AS SeverityCode, dbo.Meter.Name AS MeterName, dbo.Phase.Name AS PhaseName
+FROM   dbo.Disturbance INNER JOIN
+       dbo.Event ON dbo.Disturbance.EventID = dbo.Event.ID INNER JOIN
+       dbo.Meter ON dbo.Event.MeterID = dbo.Meter.ID INNER JOIN
+       dbo.Phase ON dbo.Disturbance.PhaseID = dbo.Phase.ID
+
+GO
+
+CREATE VIEW [dbo].[BreakerView]
+AS
+SELECT dbo.BreakerOperation.ID, dbo.Meter.ID AS MeterID, dbo.Event.ID AS EventID, dbo.EventType.Name AS EventType, dbo.BreakerOperation.TripCoilEnergized AS Energized, dbo.BreakerOperation.BreakerNumber, 
+       dbo.MeterLine.LineName, dbo.Phase.Name AS PhaseName, CAST(dbo.BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing, dbo.BreakerOperation.BreakerSpeed AS Speed, 
+       dbo.BreakerOperationType.Name AS OperationType
+FROM   dbo.BreakerOperation INNER JOIN
+       dbo.Event ON dbo.BreakerOperation.EventID = dbo.Event.ID INNER JOIN
+       dbo.EventType ON dbo.EventType.ID = dbo.Event.EventTypeID INNER JOIN
+       dbo.Meter ON dbo.Meter.ID = dbo.Event.MeterID INNER JOIN
+       dbo.Line ON dbo.Line.ID = dbo.Event.LineID INNER JOIN
+       dbo.MeterLine ON dbo.MeterLine.LineID = dbo.Event.LineID AND dbo.MeterLine.MeterID = dbo.Meter.ID INNER JOIN
+       dbo.BreakerOperationType ON dbo.BreakerOperation.BreakerOperationTypeID = dbo.BreakerOperationType.ID INNER JOIN
+       dbo.Phase ON dbo.BreakerOperation.PhaseID = dbo.Phase.ID
+
+GO
+
+CREATE VIEW [dbo].[FaultView]
+AS
+SELECT
+    FaultSummary.ID AS ID,
+    Meter.Name AS MeterName,
+    Meter.ShortName AS ShortName,
+    MeterLocation.ShortName AS LocationName,
+    Meter.ID AS MeterID,
+    Line.ID AS LineID,
+    Event.ID AS EventID,
+    MeterLine.LineName AS LineName,
+    Line.VoltageKV AS Voltage,
+    Event.StartTime AS InceptionTime,
+    FaultSummary.FaultType AS FaultType,
+    CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19)) END AS CurrentDistance,
+    ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS RK
+FROM
+    FaultSummary JOIN
+    Event ON FaultSummary.EventID = Event.ID JOIN
+    EventType ON Event.EventTypeID = EventType.ID JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
+    Line ON Event.LineID = Line.ID JOIN
+    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID
+WHERE
+    EventType.Name = 'Fault'
+
+
+GO
+
+
 
 ----- PROCEDURES -----
 
