@@ -15,8 +15,14 @@ namespace openXDA.Model
         public int MeterGroupID { get; set; }
     }
 
-    public class MeterMeterGroupView : MeterMeterGroup
+    [PrimaryLabel("MeterName")]
+    public class MeterMeterGroupView
     {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public int MeterID { get; set; }
+        public int MeterGroupID { get; set; }
+
         public string MeterName { get; set; }
         public string Location { get; set; }
     }

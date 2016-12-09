@@ -812,7 +812,7 @@ namespace openXDA
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroupView), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.DeleteRecord)]
         public void DeleteUserAccountMeterGroup(int id)
         {
             DataContext.Table<UserAccountMeterGroup>().DeleteRecord(id);
