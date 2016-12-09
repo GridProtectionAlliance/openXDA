@@ -167,6 +167,33 @@ namespace FaultData.DataReaders
 
                     m_meterDataSet.Digitals.Add(series);
                 }
+
+                ComplexNumber z1 = new ComplexNumber(0.0D, 0.0D);
+                ComplexNumber z0 = new ComplexNumber(0.0D, 0.0D);
+                double groupSetting;
+
+                if (double.TryParse(report.GetGroupSettings("Z1MAG"), out groupSetting))
+                    z1.Magnitude = groupSetting;
+
+                if (double.TryParse(report.GetGroupSettings("Z1ANG"), out groupSetting))
+                    z1.Angle = groupSetting;
+
+                if (double.TryParse(report.GetGroupSettings("Z0MAG"), out groupSetting))
+                    z0.Magnitude = groupSetting;
+
+                if (double.TryParse(report.GetGroupSettings("Z0ANG"), out groupSetting))
+                    z0.Angle = groupSetting;
+
+                if (z1 != z0)
+                {
+                    m_meterDataSet.Configuration.R1 = z1.Real;
+                    m_meterDataSet.Configuration.X1 = z1.Imaginary;
+                    m_meterDataSet.Configuration.R0 = z0.Real;
+                    m_meterDataSet.Configuration.X0 = z0.Imaginary;
+
+                    if (double.TryParse(report.GetGroupSettings("LL"), out groupSetting))
+                        m_meterDataSet.Configuration.LineLength = groupSetting;
+                }
             }
 
             foreach (CommaSeparatedEventReport report in m_eventFile.CommaSeparatedEventReports)
