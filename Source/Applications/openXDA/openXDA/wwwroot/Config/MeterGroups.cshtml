@@ -198,7 +198,7 @@
 
         $(viewModel).on('recordSaved', function (event, record) {
             if (viewModel.dataHubIsConnected()) {
-                if (record.id == 0) {
+                if (record.ID == 0) {
                     dataHub.getLastMeterGroupID().done(function (id) {
                         dataHub.updateMeters(meters, id);
                         dataHub.updateUsers(users, id).done(function () {
