@@ -920,55 +920,6 @@ GO
 
 INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Upper',1)
 GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Lower',1)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('SEMI',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type I & II',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type III',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 1.0 Transients',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.1 Instantaneous Sag',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.2 Instantaneous Swell',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.1 Mom. Interruption',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.2 Momentary Sag',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.3 Momentary Swell',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.1 Temp. Interruption',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.2 Temporary Sag',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.3 Temporary Swell',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.1 Sustained Int.',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.2 Undervoltage',0)
-GO
-
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.3 Overvoltage',0)
-GO
-
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 2, 0.001, 1)
 GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.4, 0.003, 2)
@@ -978,6 +929,14 @@ GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.2, 0.5, 4)
 GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.1, 0.5, 5)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 5, 0.0001667, 0)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.1, 1000000, 6)
+GO
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Lower',1)
 GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0, 0.02, 1)
 GO
@@ -990,6 +949,12 @@ GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.8, 10, 5)
 GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.9, 10, 6)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.9, 1000000, 7)
+GO
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('SEMI',0)
 GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0, 0.02, 1)
 GO
@@ -1007,169 +972,214 @@ INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude],
 GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.9, 10, 8)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 5, 0.0001667, 0)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.1, 1000000, 6)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.9, 1000000, 7)
-GO
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.9, 1000000, 9)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.5, 0.01, 1)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type I & II',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.5, 0.2, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.5, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.7, 0.2, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.5, 0.2, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.7, 0.5, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.7, 0.2, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.8, 0.5, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.7, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.8, 2, 6)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.8, 0.5, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1, 2, 7)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.8, 2, 6)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1, 0.01, 8)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 1, 2, 7)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.5, 0.01, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 1, 0.01, 8)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.5, 0.05, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.5, 0.01, 9)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.7, 0.05, 3)
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type III',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.7, 0.1, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.5, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.8, 0.1, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.5, 0.05, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.8, 2, 6)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.7, 0.05, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 1, 2, 7)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.7, 0.1, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 1, 0.01, 8)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.8, 0.1, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.5, 0.01, 9)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.8, 2, 6)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 0.5, 0.01, 9)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 1, 2, 7)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0, 1E-06, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 1, 0.01, 8)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0, 0.01, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.5, 0.01, 9)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 5, 0.01, 3)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 1.0 Transients',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 5, 1E-06, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 0, 1E-06, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0, 1E-06, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 0, 0.01, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 0.1, 0.01, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 5, 0.01, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 0.1, 0.5, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 5, 1E-06, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 0.9, 0.5, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 0, 1E-06, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 0.9, 0.01, 4)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.1 Instantaneous Sag',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 0.1, 0.01, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.1, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 1.1, 0.01, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.1, 0.5, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 1.1, 0.5, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.9, 0.5, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 1.8, 0.5, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.9, 0.01, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 1.8, 0.01, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.1, 0.01, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 1.1, 0.01, 5)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.2 Instantaneous Swell',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0, 0.01, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.1, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0, 3, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.1, 0.5, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 3, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.8, 0.5, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 0.01, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.8, 0.01, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0, 0.01, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.1, 0.01, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 0.1, 0.5, 1)
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.1 Mom. Interruption',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 0.1, 3, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 0.9, 3, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0, 3, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 0.9, 0.5, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.1, 3, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 0.1, 0.5, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.1, 0.01, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 1.1, 0.5, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0, 0.01, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 1.1, 3, 2)
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.2 Momentary Sag',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 1.4, 3, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.1, 0.5, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 1.4, 0.5, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.1, 3, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 1.1, 0.5, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.9, 3, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0, 3, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.9, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0, 60, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.1, 0.5, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.1, 60, 3)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.3 Momentary Swell',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.1, 3, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.1, 0.5, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0, 3, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.1, 3, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 0.1, 3, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.4, 3, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 0.1, 60, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.4, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 0.9, 60, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.1, 0.5, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 0.9, 3, 4)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.1 Temp. Interruption',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 0.1, 3, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0, 3, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (18, 1.1, 3, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0, 60, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (18, 1.1, 60, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0.1, 60, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (18, 1.2, 60, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0.1, 3, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (18, 1.2, 3, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0, 3, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (18, 1.1, 3, 5)
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.2 Temporary Sag',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (19, 0, 60, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 3, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (19, 0, 1000000, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 60, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (19, 0.1, 1000000, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.9, 60, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (19, 0.1, 60, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.9, 3, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (19, 0, 60, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 3, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (20, 0.8, 60, 1)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.3 Temporary Swell',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (20, 0.8, 1000000, 2)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.1, 3, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (20, 0.9, 1000000, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.1, 60, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (20, 0.9, 60, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.2, 60, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (20, 0.8, 60, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.2, 3, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (21, 1.1, 60, 1)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.1, 3, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (21, 1.1, 1000000, 2)
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.1 Sustained Int.',0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (21, 1.2, 1000000, 3)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0, 60, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (21, 1.2, 60, 4)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0, 1000000, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (21, 1.1, 60, 5)
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0.1, 1000000, 3)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0.1, 60, 4)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0, 60, 5)
+GO
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.2 Undervoltage',0)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.8, 60, 1)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.8, 1000000, 2)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.9, 1000000, 3)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.9, 60, 4)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.8, 60, 5)
+GO
+
+
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.3 Overvoltage',0)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.1, 60, 1)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.1, 1000000, 2)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.2, 1000000, 3)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.2, 60, 4)
+GO
+INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.1, 60, 5)
 GO
 
 INSERT INTO VoltageEnvelopeCurve(VoltageEnvelopeID, VoltageCurveID) VALUES(1, 1)
