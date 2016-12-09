@@ -310,6 +310,7 @@
     <Compile Include="Model\UserAccountMeterGroup.cs" />
     <Compile Include="Model\VoltageCurvePoint.cs" />
     <Compile Include="Model\WorkbenchFilter.cs" />
+    <Compile Include="Model\WorkbenchVoltageCurveView.cs" />
     <Compile Include="Model\XSLTemplate.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />

@@ -2557,9 +2557,9 @@ namespace openXDA
             return table.Select().Select(row => DataContext.Table<DisturbanceView>().LoadRecord(row));
         }
 
-        public IEnumerable<VoltageCurvePoint> GetCurves()
+        public IEnumerable<WorkbenchVoltageCurveView> GetCurves()
         {
-            return DataContext.Table<VoltageCurvePoint>().QueryRecords("VoltageCurveID, LoadOrder");
+            return DataContext.Table<WorkbenchVoltageCurveView>().QueryRecords("ID, LoadOrder");
         }
 
         #endregion
