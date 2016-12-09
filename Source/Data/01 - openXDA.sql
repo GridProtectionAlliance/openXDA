@@ -918,55 +918,55 @@ GO
 INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.9, 10.0, 5)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('ITIC Upper',1)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Upper',1)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('ITIC Lower',1)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Lower',1)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('SEMI',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('SEMI',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1668 Recommended Type I & II',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type I & II',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1668 Recommended Type III',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type III',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 1.0 Transients',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 1.0 Transients',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.1.1 Instantaneous Sag',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.1 Instantaneous Sag',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.1.2 Instantaneous Swell',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.2 Instantaneous Swell',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.2.1 Mom. Interruption',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.1 Mom. Interruption',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.2.2 Momentary Sag',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.2 Momentary Sag',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.2.3 Momentary Swell',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.3 Momentary Swell',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.3.1 Temp. Interruption',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.1 Temp. Interruption',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.3.2 Temporary Sag',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.2 Temporary Sag',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 2.3.3 Temporary Swell',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.3 Temporary Swell',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 3.1 Sustained Int.',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.1 Sustained Int.',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 3.2 Undervoltage',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.2 Undervoltage',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Names],[Visible]) VALUES ('IEEE 1159 3.3 Overvoltage',0)
+INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.3 Overvoltage',0)
 GO
 
 INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 2, 0.001, 1)
