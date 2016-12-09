@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Transactions;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
@@ -44,6 +45,7 @@ namespace FaultData.DataOperations
         private double m_systemFrequency;
 
         private MeterInfoDataContext m_meterInfo;
+        private FaultLocationInfoDataContext m_faultLocationInfo;
 
         #endregion
 
@@ -82,6 +84,7 @@ namespace FaultData.DataOperations
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_meterInfo = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+            m_faultLocationInfo = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
         }
 
         public override void Execute(MeterDataSet meterDataSet)
@@ -168,6 +171,9 @@ namespace FaultData.DataOperations
                 // since configuration information cannot be added for it
                 RemoveUndefinedDataSeries(meterDataSet);
             }
+
+            // Update line parameters pulled from the input data
+            UpdateConfigurationData(meterDataSet);
         }
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
@@ -321,6 +327,47 @@ namespace FaultData.DataOperations
             }
         }
 
+        private void UpdateConfigurationData(MeterDataSet meterDataSet)
+        {
+            using (TransactionScope transaction = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+            {
+                if (meterDataSet.Meter.MeterLines.Count != 1)
+                    return;
+
+                Line line = meterDataSet.Meter.MeterLines
+                    .Select(meterLine => meterLine.Line)
+                    .Single();
+
+                if (meterDataSet.Configuration.LineLength.HasValue)
+                {
+                    line.Length = meterDataSet.Configuration.LineLength.GetValueOrDefault();
+                    m_meterInfo.SubmitChanges();
+                }
+
+                if (meterDataSet.Configuration.R1.HasValue && meterDataSet.Configuration.X1.HasValue && meterDataSet.Configuration.R0.HasValue && meterDataSet.Configuration.X0.HasValue)
+                {
+                    DataContextLookup<int, LineImpedance> lookup = new DataContextLookup<int, LineImpedance>(m_faultLocationInfo, impedance => impedance.LineID);
+                    LineImpedance lineImpedance = lookup.GetOrAdd(line.ID, id => new LineImpedance() { LineID = id });
+
+                    if (meterDataSet.Configuration.R1.HasValue)
+                        lineImpedance.R1 = meterDataSet.Configuration.R1.GetValueOrDefault();
+
+                    if (meterDataSet.Configuration.X1.HasValue)
+                        lineImpedance.X1 = meterDataSet.Configuration.X1.GetValueOrDefault();
+
+                    if (meterDataSet.Configuration.R0.HasValue)
+                        lineImpedance.R0 = meterDataSet.Configuration.R0.GetValueOrDefault();
+
+                    if (meterDataSet.Configuration.X0.HasValue)
+                        lineImpedance.X0 = meterDataSet.Configuration.X0.GetValueOrDefault();
+
+                    m_faultLocationInfo.SubmitChanges();
+                }
+
+                transaction.Complete();
+            }
+        }
+
         private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter dbMeter)
         {
             HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(meterDataSet.Meter.Channels.Select(GetGenericChannelKey));
@@ -402,6 +449,16 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "BC" ||
                    channel.Phase.Name == "CA" ||
                    channel.Phase.Name == "LineToLineAverage";
+        }
+
+        // Gets the default set of transaction options used for data operation transactions.
+        private static TransactionOptions GetTransactionOptions()
+        {
+            return new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
         }
 
         #endregion

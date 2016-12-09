@@ -43,6 +43,7 @@ namespace FaultData.DataSets
         private string m_filePath;
         private FileGroup m_fileGroup;
         private Meter m_meter;
+        private ConfigurationDataSet m_configuration;
         private List<DataSeries> m_dataSeries;
         private List<DataSeries> m_digitals;
 
@@ -53,6 +54,7 @@ namespace FaultData.DataSets
         public MeterDataSet()
         {
             m_resources = new Dictionary<Type, object>();
+            m_configuration = new ConfigurationDataSet();
             m_dataSeries = new List<DataSeries>();
             m_digitals = new List<DataSeries>();
         }
@@ -106,6 +108,14 @@ namespace FaultData.DataSets
             set
             {
                 m_meter = value;
+            }
+        }
+
+        public ConfigurationDataSet Configuration
+        {
+            get
+            {
+                return m_configuration;
             }
         }
 
