@@ -391,6 +391,12 @@ namespace FaultData.DataOperations
             loader.CommandTimeout = dbAdapterContainer.CommandTimeout;
             loader.Load(m_doubleEndedFaultDistanceTable);
             loader.Load(m_faultCurveTable);
+
+            lock (FaultSummaryIDLock)
+            {
+                foreach (DoubleEndedFaultDistanceRow row in m_doubleEndedFaultDistanceTable)
+                    FaultSummaryIDs.Remove(row.LocalFaultSummaryID);
+            }
         }
 
         public void Dispose()
