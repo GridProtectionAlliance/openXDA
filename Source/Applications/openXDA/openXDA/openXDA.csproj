@@ -428,6 +428,7 @@
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />
+    <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />

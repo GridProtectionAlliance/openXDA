@@ -82,12 +82,12 @@ FROM
 (
     SELECT
         #temp.Date,
-        SeverityCodes.SeverityCo
+        SeverityCodes.SeverityCode AS SeverityCode,
+        COALESCE(DisturbanceCount, 0) AS DisturbanceCount
+    FROM
         #temp CROSS JOIN
 		( Select 5 AS SeverityCode UNION 
-		  SELECT 4 AS SeverityCodde AS SeverityCode,
-        COALESCE(DisturbanceCount, 0) AS DisturbanceCount
-    FROMe UNION 
+		  SELECT 4 AS SeverityCode UNION 
 		  SELECT 3 AS SeverityCode UNION 
 		  SELECT 2 AS SeverityCode UNION 
 		  SELECT 1 AS SeverityCode UNION 
@@ -130,6 +130,8 @@ DROP TABLE #temp
 END
 
 GO
+
+
 
 
 -- =============================================
