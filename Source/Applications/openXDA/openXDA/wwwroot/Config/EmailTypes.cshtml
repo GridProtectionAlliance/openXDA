@@ -75,26 +75,6 @@
 {
     @Raw(dataContext.AddSelectField<EmailType,EmailCategory>("EmailCategoryID", "ID", "Name"))
     @Raw(dataContext.AddSelectField<EmailType, XSLTemplate>("XSLTemplateID", "ID", "Name"))
-    @*<div class="form-group">
-        <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: createXSLTemplate">Create New XSL Template</button>
-        <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: editXSLTemplate">Edit XSL Template</button>
-    </div>*@
-
-    <div id="textArea" class="form-group" data-bind="visible: false">
-        <div class="form-group">
-            <div id="xslID" style="display: none"></div>
-            <label>XSL Template Name:</label>
-            <input id="templateName" class="form-control" type="text"/>
-        </div>
-        <div class="form-group">
-            @*<textarea id="template" class="form-control"></textarea>*@
-            <div id="template" class="form-control"></div>
-
-        </div>
-        <button id="saveNew" class="btn btn-primary pull-right" data-bind="visible: false, click: saveXSLTemplateNew">Save XSL Template</button>
-        <button id="saveEdit" class="btn btn-primary pull-right" data-bind="visible: false, click: saveXSLTemplateEdit">Save XSL Template</button>
-    </div>
-        
  }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
@@ -110,83 +90,8 @@
             viewModel.queryPageRecords();
         });
 
-        function createXSLTemplate() {
-            $('#templateName').val('');
-            $('#template').val('');
-            $('#template').height($(window).height() / 3);
-            $('#saveNew').show();
-            $('#saveEdit').hide();
-            var editor = ace.edit("template");
-            editor.setTheme("ace/theme/monokai");
-            editor.getSession().setMode("ace/mode/xml");
-            editor.setFontSize("14px");
-
-            if ($('#textArea').css('display') === 'none')
-                $('#textArea').slideToggle();
-        }
-
-        function editXSLTemplate() {
-            dataHub.queryXSLTemplateByID($('#selectXSLTemplateID').val()).done(function (data) {
-                $('#templateName').val(data.Name);
-                //$('#template').text(data.Template);
-                $('#template').height($(window).height() / 3);
-                $('#xslID').html(data.ID);
-                $('#saveEdit').show();
-                $('#saveNew').hide();
-                var editor = ace.edit("template");
-                editor.setTheme("ace/theme/monokai");
-                editor.getSession().setMode("ace/mode/xml");
-                editor.setFontSize("14px");
-                editor.setValue(data.Template);
-                if ($('#textArea').css('display') === 'none')
-                    $('#textArea').slideToggle();
-
-
-            });
-        }
-
-        function saveXSLTemplateNew() {
-            var record = { Name: $('#templateName').val(), Template: ace.edit('template').getValue() };
-
-            dataHub.addNewXSLTemplate(record).done(function (data) {
-                dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
-                    $('#selectXSLTemplateID').children().remove();
-                    $.each(data2, function (i, d) {
-                        $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
-                    });
-                });
-
-                $('#templateName').val('');
-                $('#template').val('');
-                $('#textArea').slideToggle();
-            });
-        }
-
-        function saveXSLTemplateEdit() {
-            var record = { ID: $('#xslID').html(), Name: $('#templateName').val(), Template: ace.edit('template').getValue() };
-            dataHub.updateXSLTemplate(record).done(function (data) {
-                dataHub.queryXSLTemplate("Name", true, 1, 10000000000, '%').done(function (data2) {
-                    $('#selectXSLTemplateID').children().remove();
-                    $.each(data2, function (i, d) {
-                        $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
-                    });
-                });
-
-                $('#templateName').val('');
-                $('#template').val('');
-                $('#textArea').slideToggle();
-
-            });
-        }
-
         $('#addNewEditDialog').on('shown.bs.modal', function () {
 
-            dataHub.queryXSLTemplate("Name", true, 1, 1000000000000, '%').done(function (data2) {
-                $('#selectXSLTemplateID').children().remove();
-                $.each(data2, function (i, d) {
-                    $('#selectXSLTemplateID').append(new Option(d.Name, d.ID));
-                });
-            });
         });
 
         function viewTemplate(data) {
