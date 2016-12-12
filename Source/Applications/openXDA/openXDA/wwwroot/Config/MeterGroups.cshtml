@@ -368,8 +368,10 @@
         });
         
         $('#addNewEditDialog').on('hidden.bs.modal', function () {
-            $('#userSelect').mobileSelect('destroy');
-            $('#meterSelect').mobileSelect('destroy');
+            if($('#userSelect').mobileSelect('exists'))
+                $('#userSelect').mobileSelect('destroy');
+            if ($('#meterSelect').mobileSelect('exists'))
+                $('#meterSelect').mobileSelect('destroy');
         });
 
         $(function () {

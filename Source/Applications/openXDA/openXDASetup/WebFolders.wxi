@@ -186,6 +186,6 @@
       <Directory Id="SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER" Name="snippets" />
     </Directory>
   </Directory>
-  <Directory Id="WORKBENCHFOLDER" Name="WorkBench" />
+  <Directory Id="WORKBENCHFOLDER" Name="Workbench" />
 </Directory>
 </Include>

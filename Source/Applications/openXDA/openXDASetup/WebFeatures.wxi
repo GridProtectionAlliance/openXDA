@@ -136,6 +136,6 @@
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_themes_vader_images_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_snippets_Components" />
-  <ComponentGroupRef Id="wwwroot_WorkBench_Components" />
+  <ComponentGroupRef Id="wwwroot_Workbench_Components" />
 </Feature>
 </Include>

@@ -60,6 +60,15 @@ if (typeof jQuery === 'undefined') {
                     $.mobileSelect.elements[id].show();
                 });
             }
+			if(options === 'exists'){
+				// test for existance of mobileSelect 
+				var truthyVar = false;
+				$.each($.mobileSelect.elements, function(i,e){ 
+					if(e.$e[0] === $this[0]) 
+						truthyVar = true;
+				});
+				return truthyVar;
+			}
             return;
         }
         // if user defaults provided overwrite with mobileSelect defaults.
