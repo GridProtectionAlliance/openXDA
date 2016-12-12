@@ -75,10 +75,10 @@
 {
     @Raw(dataContext.AddSelectField<EmailType,EmailCategory>("EmailCategoryID", "ID", "Name"))
     @Raw(dataContext.AddSelectField<EmailType, XSLTemplate>("XSLTemplateID", "ID", "Name"))
-    <div class="form-group">
+    @*<div class="form-group">
         <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: createXSLTemplate">Create New XSL Template</button>
         <button class="btn btn-primary" data-bind="visible: $parent.recordMode()!==RecordMode.View, click: editXSLTemplate">Edit XSL Template</button>
-    </div>
+    </div>*@
 
     <div id="textArea" class="form-group" data-bind="visible: false">
         <div class="form-group">
