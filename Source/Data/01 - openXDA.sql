@@ -798,7 +798,8 @@ CREATE TABLE [dbo].[WorkbenchFilter](
 	[Name] [varchar](50) NOT NULL,
 	[UserID] [uniqueidentifier] NOT NULL,
 	[TimeRange] [varchar](512) NOT NULL,
-	[Meters] [varchar](max) NOT NULL,
+	[Meters] [varchar](max) NULL,
+	[Lines] [varchar](max) NULL,
 	[EventTypes] [varchar](50) NOT NULL,
 	[IsDefault] [bit] NOT NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
