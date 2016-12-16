@@ -470,6 +470,14 @@ GO
 INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
 GO
 
+INSERT INTO ApplicationRole(Name, Description) VALUES('Engineer', 'Admin Role')
+GO
+
+INSERT INTO ApplicationRole(Name, Description) VALUES('Viewer', 'Admin Role')
+GO
+
+
+
 INSERT INTO SecurityGroup(Name, Description) VALUES('BUILTIN\Users', 'All Windows authenticated users')
 GO
 

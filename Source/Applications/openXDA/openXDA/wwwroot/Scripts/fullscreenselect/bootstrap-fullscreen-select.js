@@ -189,41 +189,20 @@ if (typeof jQuery === 'undefined') {
             /*
              * Update generated button count.
              */
-            if (this.$triggerElement.is('button') && this.$triggerElement.hasClass('btn-mobileSelect-gen')) {
-                var a = this.$triggerElement.find('.text'),
-                    b = this.$triggerElement.next().find('option:selected').text() || this.$e.val(),
-                    c = this.$e.attr('data-btntitle'),
-                    d = this.$e.attr('data-selected');
+            var d = this.$triggerElement.find(".text"), c = this.$e.val();
+            if (c === null) {
+                d.html("Nothing selected");
+                return false
+            }
 
-                if (b === null && c === undefined) {
-                    a.html("Nothing selected");
-                    return false;
-                }
-                if (b === null) {
-                    a.html(c);
-                    return false;
-                }
-
-
-                if (this.isMultiple) {
-                    if (b.length === 1) {
-                        a.html(b);
-                    } else {
-                        if (d === undefined) {
-                            a.html(b.length + ' items selected');
-                        } else {
-                            a.html(b.length + ' ' + d);
-                        }
-                    }
+            if (this.isMultiple) {
+                if (c.length === 1) {
+                    d.html(c)
                 } else {
-
-                    if (c === undefined) {
-                        a.html(b);
-                    } else {
-                        a.html(c);
-                    }
-
+                    d.html(c.length + " items selected")
                 }
+            } else {
+                d.html(c)
             }
         },
         _bindEvents: function () {
@@ -239,16 +218,19 @@ if (typeof jQuery === 'undefined') {
                 e.preventDefault();
                 that.syncR();
                 that.hide();
+                $(window).trigger('mobileSelectSave');
             });
             this.$c.find('.mobileSelect-clearbtn').on('click', function (e) {
                 e.preventDefault();
                 that.$listcontainer.find('.selected').removeClass('selected');
                 that.syncR();
                 that.hide();
+                $(window).trigger('mobileSelectClear');
             });
             this.$c.find('.mobileSelect-cancelbtn').on('click', function (e) {
                 e.preventDefault();
                 that.hide();
+                $(window).trigger('mobileSelectCancel');
             });
             this.$c.find('.mobileSelect-control').on('click', function (e) {
                 e.preventDefault();

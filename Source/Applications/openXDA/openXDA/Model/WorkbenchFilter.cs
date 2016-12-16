@@ -14,6 +14,7 @@ namespace openXDA.Model
         public Guid? UserID { get; set; }
         public string TimeRange { get; set; }
         public string Meters { get; set; }
+        public string Lines { get; set; }
         public string EventTypes { get; set; }
         public bool IsDefault { get; set; }
     }
