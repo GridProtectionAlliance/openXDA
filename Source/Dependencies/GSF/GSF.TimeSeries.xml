@@ -6616,6 +6616,16 @@
             <param name="source">Sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values over which to run calculation.</param>
             <returns>Majority value of the specified sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values.</returns>
         </member>
+        <member name="M:GSF.TimeSeries.Measurement.AverageAngleValueFilter(System.Collections.Generic.IEnumerable{GSF.TimeSeries.IMeasurement})">
+            <summary>
+            Calculates an average of the specified sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> phase angle values.
+            </summary>
+            <param name="source">Sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> values over which to run calculation.</param>
+            <returns>Average of the specified sequence of <see cref="T:GSF.TimeSeries.IMeasurement"/> phase angle values.</returns>
+            <remarks>
+            Phase angles wrap, so this algorithm takes the wrapping into account when calculating the average.
+            </remarks>
+        </member>
         <member name="T:GSF.TimeSeries.MeasurementKey">
             <summary>
             Represents a primary key for a measurement.
@@ -6657,16 +6667,17 @@
             </summary>
             <remarks>
             This is to be considered the reference value. Adapters are free to change this inside specific <see cref="T:GSF.TimeSeries.IMeasurement"/> instances
-            This value should only be updated upon change in the primary data source using <see cref="M:GSF.TimeSeries.MeasurementKey.SetMeasurementMetadata(System.String,System.Double,System.Double)"/>.
+            This value should only be updated upon change in the primary data source using <see cref="M:GSF.TimeSeries.MeasurementKey.SetMeasurementMetadata(System.String,System.Double,System.Double,GSF.TimeSeries.MeasurementValueFilterFunction)"/>.
             </remarks>
         </member>
-        <member name="M:GSF.TimeSeries.MeasurementKey.SetMeasurementMetadata(System.String,System.Double,System.Double)">
+        <member name="M:GSF.TimeSeries.MeasurementKey.SetMeasurementMetadata(System.String,System.Double,System.Double,GSF.TimeSeries.MeasurementValueFilterFunction)">
             <summary>
             Updates the values of the <see cref="P:GSF.TimeSeries.MeasurementKey.Metadata"/>.
             </summary>
-            <param name="tagName">Gets or sets the text based tag name</param>
-            <param name="adder">Defines an offset to add to the <see cref="T:GSF.TimeSeries.IMeasurement"/> value</param>
-            <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="T:GSF.TimeSeries.IMeasurement"/> value</param>
+            <param name="tagName">Gets or sets the text based tag name.</param>
+            <param name="adder">Defines an offset to add to the <see cref="T:GSF.TimeSeries.IMeasurement"/> value.</param>
+            <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="T:GSF.TimeSeries.IMeasurement"/> value.</param>
+            <param name="valueFilter">Defines the <see cref="T:GSF.TimeSeries.MeasurementValueFilterFunction"/> to use when downsampling this type of <see cref="T:GSF.TimeSeries.IMeasurement"/> value.</param>
         </member>
         <member name="M:GSF.TimeSeries.MeasurementKey.ToString">
             <summary>
@@ -9353,9 +9364,21 @@
             Gets the flag indicating if this adapter supports temporal processing.
             </summary>
             <remarks>
+            <para>
             Although the data subscriber provisions support for temporal processing by receiving historical data from a remote source,
             the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="T:GSF.TimeSeries.Adapters.IaonSession"/>, therefore
-            this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+            this method normally returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+            </para>
+            <para>
+            Setting this to <c>true</c> means that a subscriber will be initialized within a temporal session to provide historical
+            data from a remote source - this should only be enabled in cases where (1) there is no locally defined, e.g., in-process,
+            historian that can already provide historical data for temporal sessions, and (2) a remote subscriber should be allowed
+            to proxy temporal requests, e.g., those requested for data gap recovery, to an up-stream subscription. This is useful in
+            cases where a primary data subscriber that has data gap recovery enabled can also allow a remote subscription to proxy in
+            data gap recovery requests. It is recommended that remote data gap recovery request parameters be (1) either slightly
+            looser than those of local system to reduce the possibility of duplicated recovery sessions for the same data loss, or
+            (2) only enabled in the end-most system that most needs the recovered data, like a historian.
+            </para>
             </remarks>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.ProcessingInterval">

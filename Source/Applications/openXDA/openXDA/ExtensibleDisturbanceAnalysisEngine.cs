@@ -1067,8 +1067,8 @@ namespace openXDA
         private void ProcessMeterDataSet(MeterDataSet meterDataSet, SystemSettings systemSettings, DbAdapterContainer dbAdapterContainer)
         {
             SystemInfoDataContext systemInfo;
-            List<DataOperationWrapper> dataOperations;
-            List<DataWriterWrapper> dataWriters;
+            List<DataOperationWrapper> dataOperations = null;
+            List<DataWriterWrapper> dataWriters = null;
 
             // Get the SystemInfoDataContext from the dbAdapterContainer
             systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
@@ -1100,6 +1100,7 @@ namespace openXDA
                     // Log the error and remove the data operation from the list
                     string message = $"An error occurred while preparing data from meter '{meterDataSet.Meter.AssetKey}' for data operation of type '{dataOperations[i].DataObject.GetType().FullName}': {ex.Message}";
                     OnProcessException(new Exception(message, ex));
+                    dataOperations[i].Dispose();
                     dataOperations.RemoveAt(i);
                 }
             }
@@ -1144,6 +1145,10 @@ namespace openXDA
                 }
             }
 
+            // All data operations are complete, but we still need to clean up
+            for (int i = dataOperations.Count - 1; i >= 0; i--)
+                dataOperations[i].Dispose();
+
             // Load the data writers from the database
             dataWriters = systemInfo.DataWriters
                 .OrderBy(dataWriter => dataWriter.LoadOrder)
@@ -1172,6 +1177,10 @@ namespace openXDA
                     OnProcessException(new Exception(message, ex));
                 }
             }
+
+            // All data writers are complete, but we still need to clean up
+            foreach (DataWriterWrapper dataWriter in dataWriters)
+                dataWriter.Dispose();
         }
 
         // Updates the Filter property of the FileProcessor with the
