@@ -210,6 +210,84 @@
                     }
                 });
 
+                mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
+                $('#types').mobileSelect(mobileSelectOptions);
+                $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                $('#typesFrame .btn-mobileSelect-gen').off('click');
+                $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
+                    event.preventDefault();
+                    $('#types').mobileSelect('show');
+                });
+
+
+                $('#typefilter').on('keyup', function () {
+                    var string = $('#typefilter').val();
+                    if (string === "") {
+                        $('.mobileSelect-container :visible .list-container').children().show();
+
+                    }
+                    else {
+                        $('.mobileSelect-container :visible .list-container').children().hide();
+                        $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                            if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
+                                $(item).show();
+                        });
+                    }
+                });
+                
+                mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+                $('#meters').mobileSelect(mobileSelectOptions);
+                $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                $('#metersFrame .btn-mobileSelect-gen').off('click');
+                $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+                    event.preventDefault();
+                    $('#meters').mobileSelect('show');
+                });
+
+                $('#meterfilter').on('keyup', function () {
+                    var string = $('#meterfilter').val();
+                    if (string === "") {
+                        $('.mobileSelect-container :visible .list-container').children().show();
+
+                    }
+                    else {
+                        $('.mobileSelect-container :visible .list-container').children().hide();
+                        $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                            if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                                $(item).show();
+                        });
+                    }
+                });
+                
+                mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='linefilter' placeholder='Search Lines' /></div>";
+                $('#lines').mobileSelect(mobileSelectOptions);
+                $('#linesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                $('#linesFrame .btn-mobileSelect-gen').off('click');
+                $('#linesFrame .btn-mobileSelect-gen').on('click', function (event) {
+                    event.preventDefault();
+                    $('#lines').mobileSelect('show');
+                });
+
+
+
+                $('#linefilter').on('keyup', function () {
+                    var string = $('#linefilter').val();
+                    if (string === "") {
+                        $('.mobileSelect-container :visible .list-container').children().show();
+
+                    }
+                    else {
+                        $('.mobileSelect-container :visible .list-container').children().hide();
+                        $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                            if ($(item).text().toLowerCase().indexOf($('#linefilter').val()) >= 0)
+                                $(item).show();
+                        });
+                    }
+                });
+
 
                 dataHub.getEventTypesForSelect().done(function (data) {
                     $.each(data, function (index, type) {
@@ -220,31 +298,7 @@
                             $('#types').find('option[value="' + val + '"]').attr('selected', true);
                         });
                     }
-                    mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
-                    $('#types').mobileSelect(mobileSelectOptions);
-                    $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                    $('#typesFrame .btn-mobileSelect-gen').off('click');
-                    $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
-                        event.preventDefault();
-                        $('#types').mobileSelect('show');
-                    });
-
-
-                    $('#typefilter').on('keyup', function () {
-                        var string = $('#typefilter').val();
-                        if (string === "") {
-                            $('.mobileSelect-container :visible .list-container').children().show();
-
-                        }
-                        else {
-                            $('.mobileSelect-container :visible .list-container').children().hide();
-                            $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                                if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
-                                    $(item).show();
-                            });
-                        }
-                    });
+                    $('#types').mobileSelect('refresh');
 
                 });
 
@@ -257,34 +311,11 @@
                             $('#meters').find('option[value="' + val + '"]').attr('selected', true);
                         });
                     }
-
-                    mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
-                    $('#meters').mobileSelect(mobileSelectOptions);
-                    $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                    $('#metersFrame .btn-mobileSelect-gen').off('click');
-                    $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
-                        event.preventDefault();
-                        $('#meters').mobileSelect('show');
-                    });
                     
+                    $('#meters').mobileSelect('refresh');
+
                     if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
                     else $('#linesFrame button').prop("disabled", false);
-
-                    $('#meterfilter').on('keyup', function () {
-                        var string = $('#meterfilter').val();
-                        if (string === "") {
-                            $('.mobileSelect-container :visible .list-container').children().show();
-
-                        }
-                        else {
-                            $('.mobileSelect-container :visible .list-container').children().hide();
-                            $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                                if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
-                                    $(item).show();
-                            });
-                        }
-                    });
                 });
                 
                 dataHub.getLinesForSelect().done(function (data) {
@@ -295,36 +326,13 @@
                         $.each(viewModel.currentRecord().Lines().split(','), function (i, val) {
                             $('#lines').find('option[value="' + val + '"]').attr('selected', true);
                         });
+
                     }
-
-                    mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='linefilter' placeholder='Search Lines' /></div>";
-                    $('#lines').mobileSelect(mobileSelectOptions);
-                    $('#linesFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                    $('#linesFrame .btn-mobileSelect-gen').off('click');
-                    $('#linesFrame .btn-mobileSelect-gen').on('click', function (event) {
-                        event.preventDefault();
-                        $('#lines').mobileSelect('show');
-                    });
                     
+                    $('#lines').mobileSelect('refresh');
+
                     if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
                     else $('#metersFrame button').prop("disabled", false);
-
-
-                    $('#linefilter').on('keyup', function () {
-                        var string = $('#linefilter').val();
-                        if (string === "") {
-                            $('.mobileSelect-container :visible .list-container').children().show();
-
-                        }
-                        else {
-                            $('.mobileSelect-container :visible .list-container').children().hide();
-                            $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                                if ($(item).text().toLowerCase().indexOf($('#linefilter').val()) >= 0)
-                                    $(item).show();
-                            });
-                        }
-                    });
                 });
                 
                 
