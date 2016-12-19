@@ -1880,14 +1880,65 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
 
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3} AND (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8})", filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString));
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                                                                         "StartTime >= {2} AND " +
+                                                                                         "StartTime <= {3} AND " +
+                                                                                         "(ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8} OR EventTypeName LIKE {9})", 
+                                                                                         filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString, filterString));
         }
 
         [AuthorizeHubRole("*")]
         [RecordOperation(typeof(Event), RecordOperation.QueryRecords)]
-        public IEnumerable<EventView> QueryEvents(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<EventView> QueryEvents(int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize);
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            return DataContext.Table<EventView>().QueryRecords(sortField, 
+                                                               ascending, 
+                                                               page, 
+                                                               pageSize, 
+                                                               new RecordRestriction(
+                                                                   "MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                                                                   "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                                                   "StartTime >= {2} AND " +
+                                                                   "StartTime <= {3} AND " +
+                                                                   "(ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8} OR EventTypeName LIKE {9})", 
+                                                                   filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString, filterString));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
@@ -1906,18 +1957,39 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator, Engineer")]
         [RecordOperation(typeof(Event), RecordOperation.AddNewRecord)]
-        public void AddNewSetting(Event record)
+        public void AddNewEvent(Event record)
         {
             DataContext.Table<Event>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
         [RecordOperation(typeof(Event), RecordOperation.UpdateRecord)]
-        public void UpdateSetting(EventView record)
+        public void UpdateEvent(EventView record)
         {
-            DataContext.Table<Event>().UpdateRecord(record);
+            DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }
 
+        private Event MakeEventFromEventView(EventView record)
+        {
+            Event newEvent = new Event();
+            newEvent.ID = record.ID;
+            newEvent.FileGroupID = record.FileGroupID;
+            newEvent.MeterID = record.MeterID;
+            newEvent.LineID = record.LineID;
+            newEvent.EventTypeID = record.EventTypeID;
+            newEvent.EventDataID = record.EventDataID;
+            newEvent.Name = record.Name;
+            newEvent.Alias = record.Alias;
+            newEvent.ShortName = record.ShortName;
+            newEvent.StartTime = record.StartTime;
+            newEvent.EndTime = record.EndTime;
+            newEvent.Samples = record.Samples;
+            newEvent.TimeZoneOffset = record.TimeZoneOffset;
+            newEvent.SamplesPerSecond = record.SamplesPerSecond;
+            newEvent.SamplesPerCycle = record.SamplesPerCycle;
+            newEvent.Description = record.Description;
+            return newEvent;
+        }
 
         #endregion
 
@@ -2802,7 +2874,7 @@ namespace openXDA
         /// Gets UserAccount table ID for current user.
         /// </summary>
         /// <returns>UserAccount.ID for current user.</returns>
-        public Guid GetCurrentUserID()
+        public static Guid GetCurrentUserID()
         {
             Guid userID;
             AuthorizationCache.UserIDs.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out userID);
@@ -2813,7 +2885,7 @@ namespace openXDA
         /// Gets UserAccount table SID for current user.
         /// </summary>
         /// <returns>UserAccount.ID for current user.</returns>
-        public string GetCurrentUserSID()
+        public static string GetCurrentUserSID()
         {
             return UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name);
         }
