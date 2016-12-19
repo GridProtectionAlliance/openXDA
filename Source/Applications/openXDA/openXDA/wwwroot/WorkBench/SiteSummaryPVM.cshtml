@@ -31,18 +31,17 @@
 @inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
-    Layout = "Workbench/Layout.cshtml";
-    ViewBag.Title = "Events";
 
-    // Define column headers, use null for field name to make column non-sortable
+    Layout = "Workbench/Layout.cshtml";
+    ViewBag.Title = "Site Summary";
+
     ViewBag.HeaderColumns = new[]
-    {   //    { "Field", "Label", "Classes" }
-        new[] { "ID", "Event ID", "text-left"},
-        new[] { "MeterName", "Meter Name", "text-left"},
-        new[] { "LineName", "Line Name", "text-left"},
-        new[] { "EventTypeName", "Event Type" , "text-center"},
-        new[] { "StartTime", "Start Time", "text-center"},
-        new[] { "EndTime", "End Time", "text-center" }
+{   //    { "Field", "Label", "Classes" }
+        new[] { "MeterID", "Meter ID", "text-left"},
+        new[] { "Completeness", "Completeness", "text-left"},
+        new[] { "Correctness", "Correctness", "text-left"},
+        new[] { null, "Events" , "text-center"},
+        new[] { null, "Disturbances", "text-center"},
     };
     ViewBag.ShowSearchFilter = true;
 
@@ -52,11 +51,12 @@
     ViewBag.HideAddNewButton = true;
     ViewBag.ParentKeys = ViewBag.defaultFilter;
 
+
 }
 
 @section StyleSheets{
-<style>
-</style>
+    <style>
+    </style>
 }
 
 @helper BodyRows()
@@ -65,23 +65,17 @@
     <td width="20%" class="text-left valign-middle" data-bind="text: MeterName"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: LineName"></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: EventTypeName"></td>
-    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
-    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
-    <td width="5%" class="text-center valign-middle" nowrap>
+    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID }, text: StartTime.formatDate(DateTimeFormat)"></a></td>
+    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
+    @*<td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
-    </td>
+    </td>*@
 
 }
 
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<EventView>("ID", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddInputField<EventView>("MeterName", "string", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddInputField<EventView>("LineName", "string", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddSelectField<EventView, EventType>("EventTypeID", "ID", "Name"))
-    @Raw(dataContext.AddInputField<EventView>("StartTime", "string", customDataBinding: "type: text, enable: true"))
-    @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: true"))
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
@@ -89,21 +83,6 @@
 
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Event, DataHub>(ViewBag, "ID", null, ViewBag.defaultFilter))
-        
-        $('#addNewEditDialog').on('shown.bs.modal', function () {
-        });
-        
-        $('#globalFilter').change(function (event) {
-            viewModel.setQueryRecordCount(function (filterText) {
-                return dataHub.queryEventCount($('#globalFilter').val(), filterText);
-            });
-
-            viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {
-                return dataHub.queryEvents($('#globalFilter').val(), sortField, ascending, page, pageSize, filterText);
-            });
-            
-            viewModel.queryPageRecords();
-        });
+        @Raw(dataContext.RenderViewModelConfiguration<SiteSummary, DataHub>(ViewBag, "ID", null, ViewBag.defaultFilter))
     </script>
 }

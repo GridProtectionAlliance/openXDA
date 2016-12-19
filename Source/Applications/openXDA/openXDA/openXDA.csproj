@@ -1481,7 +1481,7 @@
     <Content Include="wwwroot\Workbench\Filters.cshtml" />
     <Content Include="wwwroot\Workbench\EventsAngular.cshtml" />
     <Content Include="wwwroot\Workbench\Charts.cshtml" />
-    <Content Include="wwwroot\Workbench\SiteSummary.cshtml" />
+    <Content Include="wwwroot\Workbench\SiteSummaryPVM.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForDate.cshtml" />
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\fonts\fontawesome-webfont.eot" />
     <Content Include="wwwroot\Scripts\PrimeUI\Font-Awesome\fonts\fontawesome-webfont.ttf" />
@@ -1521,6 +1521,8 @@
     <Content Include="wwwroot\Workbench\EventsForMeter.cshtml" />
     <Content Include="wwwroot\Workbench\DisturbancesForMeter.cshtml" />
     <Content Include="wwwroot\Workbench\Events.cshtml" />
+    <Content Include="wwwroot\Workbench\SiteSummary.cshtml" />
+    <Content Include="wwwroot\Workbench\EventsForDateAngular.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

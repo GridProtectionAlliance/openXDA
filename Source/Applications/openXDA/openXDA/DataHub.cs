@@ -31,6 +31,7 @@ using System.Linq;
 using System.Security.Policy;
 using System.Threading;
 using System.Transactions;
+using System.Windows.Forms;
 using GSF;
 using GSF.Collections;
 using GSF.Data.Model;
@@ -1988,6 +1989,7 @@ namespace openXDA
             newEvent.SamplesPerSecond = record.SamplesPerSecond;
             newEvent.SamplesPerCycle = record.SamplesPerCycle;
             newEvent.Description = record.Description;
+            newEvent.UpdatedBy = GetCurrentUserID();
             return newEvent;
         }
 
@@ -1995,20 +1997,94 @@ namespace openXDA
 
         #region [EventsForDate Operations]
 
-        public IEnumerable<EventView> GetAllEventsForDate(DateTime date, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<EventView> GetAllEventsForDate(int eventId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
+            DateTime date = DataContext.Connection.ExecuteScalar<DateTime>("Select StartTime FROM Event WHERE ID = {0}", eventId);
             DateTime startTime = date.AddMinutes(-5);
             DateTime endTime = date.AddMinutes(5);
-            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
+
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+
+            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR MeterName LIKE {3} OR LineName LIKE {4} OR EventTypeName LIKE {5})", startTime, endTime, filterString, filterString, filterString, filterString));
         }
 
-        public int GetCountAllEventsForDate(DateTime date, string filterString)
+        public int GetCountAllEventsForDate(int eventId, string filterString)
         {
             int seconds = DataContext.Connection.ExecuteScalar<int>("Select Value FROM Setting WHERE Name = 'WorkbenchTimeRangeInSeconds'");
+            DateTime date = DataContext.Connection.ExecuteScalar<DateTime>("Select StartTime FROM Event WHERE ID = {0}", eventId);
             DateTime startTime = date.AddSeconds(-1*seconds);
             DateTime endTime = date.AddSeconds(seconds);
-            return DataContext.Table<EventView>().QueryRecordCount( new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
+
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+
+            return DataContext.Table<EventView>().QueryRecordCount( new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR MeterName LIKE {3} OR LineName LIKE {4} OR EventTypeName Like {5})", startTime, endTime, filterString, filterString, filterString, filterString));
         }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventForDate), RecordOperation.QueryRecordCount)]
+        public int QueryEventForDateCount(int eventId, int time, string filterString)
+        {
+            int seconds = DataContext.Connection.ExecuteScalar<int>("Select Value FROM Setting WHERE Name = 'WorkbenchTimeRangeInSeconds'");
+            DateTime date = DataContext.Connection.ExecuteScalar<DateTime>("Select "+ (time == 1 ? "StartTime" : "EndTime") + " FROM Event WHERE ID = {0}", eventId);
+            DateTime startTime = date.AddSeconds(-1 * seconds);
+            DateTime endTime = date.AddSeconds(seconds);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+
+            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventForDate), RecordOperation.QueryRecords)]
+        public IEnumerable<EventView> QueryEventForDate(int eventId, int time, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string timeWord = (time == 1 ? "StartTime" : "EndTime");
+            int seconds = DataContext.Connection.ExecuteScalar<int>("Select Value FROM Setting WHERE Name = 'WorkbenchTimeRangeInSeconds'");
+            DateTime date = DataContext.Connection.ExecuteScalar<DateTime>("Select " + (time == 1 ? "StartTime" : "EndTime") + " FROM Event WHERE ID = {0}", eventId);
+            DateTime startTime = date.AddSeconds(-1 * seconds);
+            DateTime endTime = date.AddSeconds(seconds);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+
+            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("StartTime >= {0} AND StartTime <= {1} AND (ID LIKE {2} OR StartTime LIKE {3} OR EndTime LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6})", startTime, endTime, filterString, filterString, filterString, filterString, filterString));
+
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDate), RecordOperation.DeleteRecord)]
+        public void DeleteEventForDate(int id)
+        {
+            CascadeDelete("Event", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDate), RecordOperation.CreateNewRecord)]
+        public Event NewEventForDate()
+        {
+            return new Event();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDate), RecordOperation.AddNewRecord)]
+        public void AddNewEventforDate(Event record)
+        {
+            DataContext.Table<Event>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDate), RecordOperation.UpdateRecord)]
+        public void UpdateEventForRecord(EventView record)
+        {
+            DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
+        }
+
+
 
         #endregion
 
@@ -2764,7 +2840,147 @@ namespace openXDA
             return table.Select().Select(row => DataContext.Table<SiteSummary>().LoadRecord(row));
 
         }
-        
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(SiteSummary), RecordOperation.QueryRecordCount)]
+        public int QuerySiteSummaryCount(int filterId, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            DataTable table = DataContext.Connection.RetrieveData(
+                " SELECT Meter.ID AS MeterID, " +
+                "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
+                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {2}, {3}), 0) as Correctness, " +
+                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {4} AND {5} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {6}), ','))) AS Events, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {7} AND {8}) AS Disturbances " +
+                " FROM Meter Left Join " +
+                "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
+                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {9}), ',')) " +
+                " GROUP BY Meter.ID ", startDate, endDate, startDate, endDate, startDate, endDate, filterId, startDate, endDate, filterId);
+
+            TableOperations<SiteSummary> ss = new TableOperations<SiteSummary>(DataContext.Connection);
+            foreach (DataRow row in table.Select())
+            {
+                ss.LoadRecord(row);
+            }
+
+            return ss.QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(SiteSummary), RecordOperation.QueryRecords)]
+        public IEnumerable<SiteSummary> QuerySiteSummaries(int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            DataTable table = DataContext.Connection.RetrieveData(
+                " SELECT Meter.ID AS MeterID, " +
+                "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
+                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {2}, {3}), 0) as Correctness, " +
+                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {4} AND {5} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {6}), ','))) AS Events, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {7} AND {8}) AS Disturbances " +
+                " FROM Meter Left Join " +
+                "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
+                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {9}), ',')) " +
+                " GROUP BY Meter.ID ", startDate, endDate, startDate, endDate, startDate, endDate, filterId, startDate, endDate, filterId);
+
+            TableOperations<SiteSummary> ss = new TableOperations<SiteSummary>(DataContext.Connection);
+            foreach (DataRow row in table.Select())
+            {
+                ss.LoadRecord(row);
+            }
+
+            return ss.QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SiteSummary), RecordOperation.DeleteRecord)]
+        public void DeleteSiteSummary(int id)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SiteSummary), RecordOperation.CreateNewRecord)]
+        public Event NewSummary()
+        {
+            return new Event();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SiteSummary), RecordOperation.AddNewRecord)]
+        public void AddNewSiteSummary(SiteSummary record)
+        {
+            DataContext.Table<SiteSummary>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SiteSummary), RecordOperation.UpdateRecord)]
+        public void UpdateSiteSummary(SiteSummary record)
+        {
+            DataContext.Table<SiteSummary>().UpdateRecord(record);
+        }
+
+
         #endregion
 
         #endregion

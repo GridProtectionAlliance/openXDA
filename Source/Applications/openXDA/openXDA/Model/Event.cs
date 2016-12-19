@@ -26,7 +26,11 @@ namespace openXDA.Model
         public int SamplesPerSecond { get; set; }
         public int SamplesPerCycle { get; set; }
         public string Description { get; set; }
+        public Guid UpdatedBy { get; set; }
     }
+
+    [TableName("EventView")]
+    public class EventForDate: EventView { }
 
     [TableName("EventView")]
     public class EventView

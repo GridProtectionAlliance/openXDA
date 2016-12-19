@@ -677,6 +677,7 @@ CREATE TABLE Event
     SamplesPerSecond INT NOT NULL,
     SamplesPerCycle INT NOT NULL,
     Description VARCHAR(MAX) NULL,
+	UpdatedBy UNIQUEIDENTIFIER NULL,
 )
 GO
 
