@@ -50,6 +50,8 @@
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.defaultFilter = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM WorkbenchFilter WHERE UserID = {0} AND IsDefault = 1", DataHub.GetCurrentUserID());
     ViewBag.HideAddNewButton = true;
+    ViewBag.ParentKeys = ViewBag.defaultFilter;
+
 }
 
 @section StyleSheets{
@@ -90,6 +92,18 @@
         @Raw(dataContext.RenderViewModelConfiguration<Event, DataHub>(ViewBag, "ID", null, ViewBag.defaultFilter))
         
         $('#addNewEditDialog').on('shown.bs.modal', function () {
+        });
+        
+        $('#globalFilter').change(function (event) {
+            viewModel.setQueryRecordCount(function (filterText) {
+                return dataHub.queryEventCount($('#globalFilter').val(), filterText);
+            });
+
+            viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {
+                return dataHub.queryEvents($('#globalFilter').val(), sortField, ascending, page, pageSize, filterText);
+            });
+            
+            viewModel.queryPageRecords();
         });
     </script>
 }
