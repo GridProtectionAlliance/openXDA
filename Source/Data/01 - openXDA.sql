@@ -2593,7 +2593,7 @@ SELECT dbo.Disturbance.ID, dbo.Disturbance.EventID, dbo.Disturbance.EventTypeID,
        dbo.Disturbance.EndTime, dbo.Disturbance.DurationSeconds, dbo.Disturbance.DurationCycles, dbo.Disturbance.StartIndex, dbo.Disturbance.EndIndex, dbo.Event.MeterID,
            (SELECT        MAX(SeverityCode) AS Expr1
              FROM            dbo.DisturbanceSeverity
-             WHERE        (DisturbanceID = dbo.Disturbance.ID)) AS SeverityCode, dbo.Meter.Name AS MeterName, dbo.Phase.Name AS PhaseName
+             WHERE        (DisturbanceID = dbo.Disturbance.ID)) AS SeverityCode, dbo.Meter.Name AS MeterName, dbo.Phase.Name AS PhaseName, dbo.Event.LineID
 FROM   dbo.Disturbance INNER JOIN
        dbo.Event ON dbo.Disturbance.EventID = dbo.Event.ID INNER JOIN
        dbo.Meter ON dbo.Event.MeterID = dbo.Meter.ID INNER JOIN

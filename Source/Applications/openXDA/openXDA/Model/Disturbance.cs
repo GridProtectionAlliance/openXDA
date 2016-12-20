@@ -39,6 +39,7 @@ namespace openXDA.Model
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }
         public int MeterID { get; set; }
+        public int LineID { get; set; }
         public int? SeverityCode { get; set; }
         public string MeterName { get; set; }
         public string PhaseName { get; set; }
