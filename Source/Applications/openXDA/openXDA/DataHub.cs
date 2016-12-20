@@ -1642,8 +1642,19 @@ namespace openXDA
 
         private void CascadeDelete(string tableName, string criterion)
         {
+
             using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
+
+                sc.CommandText = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
+                IDbDataParameter param = sc.CreateParameter();
+                param.ParameterName = "@userName";
+                param.Value = GetCurrentUserID();
+                sc.Parameters.Add(param);
+                sc.ExecuteNonQuery();
+                sc.Parameters.Clear();
+
+
                 sc.CommandText = "dbo.UniversalCascadeDelete";
                 sc.CommandType = CommandType.StoredProcedure;
                 IDbDataParameter param1 = sc.CreateParameter();
@@ -1883,13 +1894,14 @@ namespace openXDA
 
             if (!filterString.EndsWith("%"))
                 filterString += "%";
-
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+            TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                          "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
                                                                                          "StartTime >= {2} AND " +
-                                                                                         "StartTime <= {3} AND " +
-                                                                                         "(ID LIKE {4} OR MeterName LIKE {4} OR LineName LIKE {4} OR EventTypeName LIKE {4})", 
-                                                                                         filterId, filterId, startDate, endDate, filterString));
+                                                                                         "StartTime <= {3} ",
+                                                                                         filterId, filterId, startDate, endDate);
+
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("*")]
@@ -1929,17 +1941,14 @@ namespace openXDA
             if (!filterString.EndsWith("%"))
                 filterString += "%";
 
-            return DataContext.Table<EventView>().QueryRecords(sortField, 
-                                                               ascending, 
-                                                               page, 
-                                                               pageSize,
-                                                               new RecordRestriction(
-                                                                   "(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+            TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                          "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
                                                                                          "StartTime >= {2} AND " +
-                                                                                         "StartTime <= {3} AND " +
-                                                                                         "(ID LIKE {4} OR MeterName LIKE {4} OR LineName LIKE {4} OR EventTypeName LIKE {4})",
-                                                                                         filterId, filterId, startDate, endDate, filterString));
+                                                                                         "StartTime <= {3} ",
+                                                                                         filterId, filterId, startDate, endDate);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
@@ -2351,6 +2360,7 @@ namespace openXDA
             nd.DurationCycles = record.DurationCycles;
             nd.StartIndex = record.StartIndex;
             nd.EndIndex = record.EndIndex;
+            nd.UpdatedBy = GetCurrentUserID();
             return nd;
         }
 

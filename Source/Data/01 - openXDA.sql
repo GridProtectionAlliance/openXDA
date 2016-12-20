@@ -294,6 +294,38 @@ CREATE TABLE MeterMeterGroup
 )
 GO
 
+CREATE TABLE [dbo].[AuditLog](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[TableName] [varchar](200) NOT NULL,
+	[PrimaryKeyColumn] [varchar](200) NOT NULL,
+	[PrimaryKeyValue] [varchar](max) NOT NULL,
+	[ColumnName] [varchar](200) NOT NULL,
+	[OriginalValue] [varchar](max) NULL,
+	[NewValue] [varchar](max) NULL,
+	[Deleted] [bit] NOT NULL,
+	[UpdatedBy] [varchar](200) NOT NULL,
+	[UpdatedOn] [datetime] NOT NULL,
+ CONSTRAINT [PK_AuditLog] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+ALTER TABLE [dbo].[AuditLog] ADD  CONSTRAINT [DF_AuditLog_Deleted]  DEFAULT ((0)) FOR [Deleted]
+GO
+
+ALTER TABLE [dbo].[AuditLog] ADD  CONSTRAINT [DF_AuditLog_UpdatedBy]  DEFAULT (suser_name()) FOR [UpdatedBy]
+GO
+
+ALTER TABLE [dbo].[AuditLog] ADD  CONSTRAINT [DF_AuditLog_UpdatedOn]  DEFAULT (getutcdate()) FOR [UpdatedOn]
+GO
+
+
 CREATE NONCLUSTERED INDEX IX_MeterMeterGroup_MeterID
 ON MeterMeterGroup(MeterID ASC)
 GO
@@ -2969,6 +3001,209 @@ BEGIN
 END
 GO
 
+CREATE PROCEDURE [dbo].[InsertIntoAuditLog] (@tableName VARCHAR(128), @primaryKeyColumn VARCHAR(128), @primaryKeyValue NVARCHAR(MAX), @deleted BIT = '0', @inserted BIT = '0') AS	
+BEGIN
+
+	DECLARE @columnName varchar(100) 
+	DECLARE @cursorColumnNames CURSOR 
+	
+	SET @cursorColumnNames = CURSOR FOR 
+	SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @tableName AND TABLE_CATALOG = db_name()
+
+	OPEN @cursorColumnNames 
+
+	FETCH NEXT FROM @cursorColumnNames INTO @columnName 
+	WHILE @@FETCH_STATUS = 0 
+	BEGIN 
+
+		DECLARE @sql VARCHAR(MAX)
+		
+		IF @deleted = '0' AND @inserted = '1'
+			SET @sql = 'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
+					'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', ''' + @primaryKeyValue + ''', ''' + @columnName + ''', ' +
+					'NULL, CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + '), ''0'', #inserted.UpdatedBy FROM #inserted'
+		ELSE IF @deleted = '1' AND @inserted = '0'
+			BEGIN
+				DECLARE @context VARCHAR(128)
+				SELECT @context = CASE WHEN CONTEXT_INFO() IS NULL THEN SUSER_NAME() ELSE CAST(CONTEXT_INFO() AS VARCHAR(128)) END
+				SET @sql = 'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
+						'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', ''' + @primaryKeyValue + ''', ''' + @columnName + ''', ' +
+						'CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), NULL, ''1'', ''' + @context + ''' FROM #deleted'
+			END
+		ELSE
+			SET @sql = 'DECLARE @oldVal NVARCHAR(MAX) ' +
+					'DECLARE @newVal NVARCHAR(MAX) ' +
+					'SELECT @oldVal = CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), @newVal = CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + ') FROM #deleted, #inserted ' +
+					'IF @oldVal <> @newVal BEGIN ' +			
+					'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
+					'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', ''' + @primaryKeyValue + ''', ''' + @columnName + ''', ' +
+					'CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + '), ''0'', #inserted.UpdatedBy ' +
+					'FROM #inserted, #deleted ' +
+					'END'
+
+		EXECUTE (@sql)
+		
+		FETCH NEXT FROM @cursorColumnNames INTO @columnName 
+	END 
+
+	CLOSE @cursorColumnNames 
+	DEALLOCATE @cursorColumnNames
+	
+END
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER Event_AuditInsert 
+   ON  Event
+   AFTER INSERT
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #inserted FROM inserted
+	
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #inserted	
+
+	EXEC InsertIntoAuditLog 'Event', 'ID', @id, '0', '1'
+	
+	DROP TABLE #inserted
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER Event_AuditUpdate 
+   ON  Event
+   AFTER UPDATE
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #deleted  FROM deleted
+	SELECT * INTO #inserted FROM inserted
+	
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
+
+	EXEC InsertIntoAuditLog 'Event', 'ID', @id
+	
+	DROP TABLE #inserted
+	DROP TABLE #deleted
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER Event_AuditDelete
+   ON  Event
+   AFTER DELETE
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #deleted FROM deleted
+		
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
+
+	EXEC InsertIntoAuditLog 'Event', 'ID', @id, '1'
+		
+	DROP TABLE #deleted
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER Disturbance_AuditInsert 
+   ON  Disturbance
+   AFTER INSERT
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #inserted FROM inserted
+
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #inserted
+	
+	EXEC InsertIntoAuditLog 'Disturbance', 'ID', @id, '0', '1'
+	
+	DROP TABLE #inserted
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER Disturbance_AuditUpdate 
+   ON  Disturbance
+   AFTER UPDATE
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #deleted  FROM deleted
+	SELECT * INTO #inserted FROM inserted
+
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
+	
+	EXEC InsertIntoAuditLog 'Disturbance', 'ID', @id
+	
+	DROP TABLE #inserted
+	DROP TABLE #deleted
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER Disturbance_AuditDelete
+   ON  Disturbance
+   AFTER DELETE
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #deleted FROM deleted
+		
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
+
+	EXEC InsertIntoAuditLog 'Disturbance', 'ID', @id, '1'
+		
+	DROP TABLE #deleted
+
+END
+GO
 ----- PQInvestigator Integration -----
 
 -- The following commented statements are used to create a link to the PQInvestigator database server.
