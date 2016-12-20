@@ -1884,12 +1884,12 @@ namespace openXDA
             if (!filterString.EndsWith("%"))
                 filterString += "%";
 
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                          "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
                                                                                          "StartTime >= {2} AND " +
                                                                                          "StartTime <= {3} AND " +
-                                                                                         "(ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8} OR EventTypeName LIKE {9})", 
-                                                                                         filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString, filterString));
+                                                                                         "(ID LIKE {4} OR MeterName LIKE {4} OR LineName LIKE {4} OR EventTypeName LIKE {4})", 
+                                                                                         filterId, filterId, startDate, endDate, filterString));
         }
 
         [AuthorizeHubRole("*")]
@@ -1932,14 +1932,14 @@ namespace openXDA
             return DataContext.Table<EventView>().QueryRecords(sortField, 
                                                                ascending, 
                                                                page, 
-                                                               pageSize, 
+                                                               pageSize,
                                                                new RecordRestriction(
-                                                                   "MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
-                                                                   "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
-                                                                   "StartTime >= {2} AND " +
-                                                                   "StartTime <= {3} AND " +
-                                                                   "(ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8} OR EventTypeName LIKE {9})", 
-                                                                   filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString, filterString));
+                                                                   "(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                                                                         "StartTime >= {2} AND " +
+                                                                                         "StartTime <= {3} AND " +
+                                                                                         "(ID LIKE {4} OR MeterName LIKE {4} OR LineName LIKE {4} OR EventTypeName LIKE {4})",
+                                                                                         filterId, filterId, startDate, endDate, filterString));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
@@ -2118,7 +2118,7 @@ namespace openXDA
             if (!filterString.EndsWith("%"))
                 filterString += "%";
 
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
+            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
         }
 
         [AuthorizeHubRole("*")]
@@ -2132,7 +2132,7 @@ namespace openXDA
             if (!filterString.EndsWith("%"))
                 filterString += "%";
 
-            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
+            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
@@ -2549,7 +2549,14 @@ namespace openXDA
         {
             string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
-
+            if (meters.IsNullOrWhiteSpace())
+            {
+                meters = DataContext.Connection.ExecuteScalar<string>("Select * into #temp FROM (SELECT MeterID FROM MeterLine WHERE MeterID IN (Select * From String_To_Int_Table((Select Lines from WorkbenchFilter WHERE ID = {0}), ','))) As T " +
+                                                                      "declare @results varchar(max) " +
+                                                                      "Select @results = coalesce(@results + ',', '') + convert(varchar(12), MeterID) from #temp order by MeterID " +
+                                                                      "select @results as results " +
+                                                                      "DROP TABLE #temp ", filterId);
+            }
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
