@@ -405,6 +405,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\Content\daterangepicker.css" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
     <Content Include="wwwroot\Config\EmailGroups.cshtml" />
     <Content Include="wwwroot\Config\EmailGroupType.cshtml" />
@@ -550,6 +551,7 @@
     <Content Include="wwwroot\Scripts\D3\marchingsquares-isocontours.js" />
     <Content Include="wwwroot\Scripts\D3\marchingsquares-isocontours.min.js" />
     <Content Include="wwwroot\Scripts\D3\turf.custom.js" />
+    <Content Include="wwwroot\Scripts\daterangepicker.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />
@@ -557,6 +559,7 @@
     <Content Include="wwwroot\Scripts\jquery.blockUI.js" />
     <Content Include="wwwroot\Scripts\jquery.multiselect.filter.js" />
     <Content Include="wwwroot\Scripts\jquery.multiselect.js" />
+    <Content Include="wwwroot\Scripts\moment.min.js" />
     <Content Include="wwwroot\Scripts\OpenSEE.js" />
     <Content Include="wwwroot\Scripts\OpenSTE.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />

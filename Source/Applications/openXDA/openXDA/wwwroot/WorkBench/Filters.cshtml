@@ -82,7 +82,8 @@
     @Raw(dataContext.AddInputField<WorkbenchFilter>("Name"))
     <div class="form-group">
         <label>Time Range:</label>
-        <div class="col-md-12">
+        <input id="dateRange" type="text" class="form-control"/>
+        @*<div class="col-md-12">
             <div class="col-md-3">
                 <select id="preDefinedTimeRange" class="form-control">
                     <option value="0">Pick a period:</option>
@@ -95,7 +96,6 @@
                 <span>or</span>
             </div>
             <div class="col-md-3">
-                @*<input id="fromDate" class="form-control">*@
                 <div class="input-group date">
                     <input id="fromDate" type="text" class="form-control">
                     <div class="input-group-addon">
@@ -107,7 +107,6 @@
                 <span>to</span>
             </div>
             <div class="col-md-3">
-                @*<input id="toDate" class="form-control">*@
                 <div class="input-group date">
                     <input id="toDate" type="text" class="form-control">
                     <div class="input-group-addon">
@@ -116,7 +115,7 @@
                 </div>
 
             </div>
-        </div>
+        </div>*@
     </div>
     <div id="metersFrame" class="form-group">
         <label>Meters:</label>
@@ -140,75 +139,72 @@
 
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<WorkbenchFilter, DataHub>(ViewBag))
+        
+        var mobileSelectOptions = {
+            padding: {
+                top: '5%',
+                left: '15%',
+                right: '15%',
+                bottom: '5%'
+            },
+            title: "",
+            onOpen: function () {
+                $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+                $('.selectAllBtn').click(function () {
+                    $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+                });
+
+
+            },
+            onClose: function () {
+                $('.selectAllBtn').remove();
+            }
+        };
+        var dateRangeOptions = {
+            "timePicker": true,
+            "timePicker24Hour": true,
+            "timePickerSeconds": true,
+            "locale": {
+                "format": 'MM/DD/YYYY HH:mm:ss '
+            },
+            "autoApply": true,
+            "ranges": {
+                '1 Day': [moment().utc().startOf('day'), moment().utc().endOf('day')],
+                'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
+                'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
+                'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
+                //'This Month': [moment().utc().startOf('month'), moment().utc().endOf('month')],
+                //'Last Month': [moment().utc().subtract(1, 'month').startOf('month'), moment().utc().subtract(1, 'month').endOf('month')]
+            },
+            "startDate": moment().utc().subtract(29, 'days').startOf('day'),
+            "endDate": moment.utc().endOf('day')
+        };
+
         $(function () {
-            var mobileSelectOptions = {
-                padding: {
-                    top: '5%',
-                    left: '15%',
-                    right: '15%',
-                    bottom: '5%'
-                },
-                title: "",
-                onOpen: function () {
-                    $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
-                    $('.selectAllBtn').click(function () {
-                        $('.mobileSelect-container :visible .list-container').children().addClass('selected');
-                    });
-
-
-                },
-                onClose: function () {
-                    $('.selectAllBtn').remove();
-                }
-            };
 
             $('#addNewEditDialog').on('shown.bs.modal', function (event) {
-                $('#toDate').datepicker({
-                    format: 'mm/dd/yyyy',
-                    orientation: "bottom auto",
-                    autoclose: true,
-                    todayHighlight: true
 
-                });
-
-                $('#fromDate').datepicker({
-                    format: 'mm/dd/yyyy',
-                    orientation: "bottom auto",
-                    autoclose: true,
-                    todayHighlight: true
-                });
+                
 
                 if (viewModel.recordMode() === RecordMode.AddNew) {
-                    $('#toDate').datepicker('update', new Date('@toDateTime').formatDate(DateFormat));
                     dataHub.getOldestEventDateTime().done(function (data) {
-                        $('#fromDate').datepicker('update', new Date(data).formatDate(DateFormat));
+                        dateRangeOptions.startDate = data.formatDate(DateTimeFormat);
+                        $('#dateRange').daterangepicker(dateRangeOptions);
                     });
                 }
                 else {
-                    $('#preDefinedTimeRange').val(viewModel.currentRecord().TimeRange().split(';')[0]);
-                    $('#toDate').datepicker('update', new Date(viewModel.currentRecord().TimeRange().split(';')[2]).formatDate(DateFormat));
-                    $('#fromDate').datepicker('update', new Date(viewModel.currentRecord().TimeRange().split(';')[1]).formatDate(DateFormat));
-                    if ($('#preDefinedTimeRange').val() != 0) {
-                        $('#fromDate').prop('disabled', true);
-                        $('#toDate').prop('disabled', true);
+                    if (viewModel.currentRecord().TimeRange().split(';')[0] == "0") {
+                        dateRangeOptions.startDate = moment(viewModel.currentRecord().TimeRange().split(';')[1] + (viewModel.currentRecord().TimeRange().split(';')[1].indexOf('Z') < 0 ? ' Z' : '')).utc();
+                        dateRangeOptions.endDate = moment(viewModel.currentRecord().TimeRange().split(';')[2] + (viewModel.currentRecord().TimeRange().split(';')[1].indexOf('Z') < 0 ? ' Z' : '')).utc();
                     }
                     else {
-                        $('#fromDate').prop('disabled', false);
-                        $('#toDate').prop('disabled', false);
+                        var keys = Object.keys(dateRangeOptions.ranges);
+                        dateRangeOptions.startDate = dateRangeOptions.ranges[keys[viewModel.currentRecord().TimeRange().split(';')[0]]][0]._d;
+                        dateRangeOptions.endDate = dateRangeOptions.ranges[keys[viewModel.currentRecord().TimeRange().split(';')[0]]][1]._d;
+                        dateRangeOptions.chosenLabel = keys[viewModel.currentRecord().TimeRange().split(';')[0]];
                     }
-
+                    $('#dateRange').daterangepicker(dateRangeOptions);
                 }
-
-                $('#preDefinedTimeRange').on('change', function (event) {
-                    if ($(this).val() != 0) {
-                        $('#fromDate').prop('disabled', true);
-                        $('#toDate').prop('disabled', true);
-                    }
-                    else {
-                        $('#fromDate').prop('disabled', false);
-                        $('#toDate').prop('disabled', false);
-                    }
-                });
 
                 mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
                 $('#types').mobileSelect(mobileSelectOptions);
@@ -350,7 +346,9 @@
         
 
         $(viewModel).on('beforeSave', function (event, observableRecord) {
-            observableRecord.TimeRange($('#preDefinedTimeRange').val() + ';' + $('#fromDate').val().toString() + ';' + $('#toDate').val().toString());
+            var keys = Object.keys(dateRangeOptions.ranges);
+
+            observableRecord.TimeRange((keys.indexOf($('#dateRange').data('daterangepicker').chosenLabel) == -1 ? 0 : keys.indexOf($('#dateRange').data('daterangepicker').chosenLabel)) + ';' + $('#dateRange').data('daterangepicker').startDate._d.toISOString() + ';' + $('#dateRange').data('daterangepicker').endDate._d.toISOString());
             observableRecord.Meters(($('#meters').val()?$('#meters').val(): '' ).toString());
             observableRecord.EventTypes(($('#types').val()?$('#types').val(): '' ).toString());
             observableRecord.Lines(($('#lines').val()?$('#lines').val(): '' ).toString());
@@ -358,10 +356,11 @@
         });
         
         function parseTimeRange(string) {
+            var keys = Object.keys(dateRangeOptions.ranges);
             if (string.split(';')[0] != 0)
-                return $('#preDefinedTimeRange option[value=' + string.split(';')[0] + ']').text();
+                return dateRangeOptions.ranges[keys[string.split(';')[0] - 1]][0]._d.formatDate(DateTimeFormat) + ' - ' + dateRangeOptions.ranges[keys[string.split(';')[0] - 1]][1]._d.formatDate(DateTimeFormat);
             else 
-                return string.split(';')[1] + ' - ' + string.split(';')[2]
+                return new Date(string.split(';')[1]).formatDate(DateTimeFormat) + ' - ' + new Date(string.split(';')[2]).formatDate(DateTimeFormat)
         }
         
         function commaCount(string) {
