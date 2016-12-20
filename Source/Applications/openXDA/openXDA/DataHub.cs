@@ -2107,6 +2107,64 @@ namespace openXDA
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime, filterString, filterString, filterString, filterString, filterString));
         }
 
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventForDay), RecordOperation.QueryRecordCount)]
+        public int QueryEventForDayCount(DateTime date, string eventTypes, int filterId, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventForDay), RecordOperation.QueryRecords)]
+        public IEnumerable<EventView> QueryEventForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDay), RecordOperation.DeleteRecord)]
+        public void DeleteEventForDay(int id)
+        {
+            CascadeDelete("Event", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDay), RecordOperation.CreateNewRecord)]
+        public Event NewEventForDay()
+        {
+            return new Event();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDay), RecordOperation.AddNewRecord)]
+        public void AddNewEventForDay(Event record)
+        {
+            DataContext.Table<Event>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForDay), RecordOperation.UpdateRecord)]
+        public void UpdateEventForDayRecord(EventView record)
+        {
+            DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
+        }
+
+
+
         #endregion
 
         #region [EventsForMeter Operations]

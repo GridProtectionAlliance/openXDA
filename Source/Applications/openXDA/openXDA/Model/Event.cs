@@ -33,6 +33,9 @@ namespace openXDA.Model
     public class EventForDate: EventView { }
 
     [TableName("EventView")]
+    public class EventForDay : EventView { }
+
+    [TableName("EventView")]
     public class EventView
     {
         [Searchable]
