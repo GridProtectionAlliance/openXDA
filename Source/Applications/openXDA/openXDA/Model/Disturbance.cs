@@ -44,4 +44,6 @@ namespace openXDA.Model
         public string PhaseName { get; set; }
 
     }
+
+    public class DisturbancesForDay: DisturbanceView { }
 }

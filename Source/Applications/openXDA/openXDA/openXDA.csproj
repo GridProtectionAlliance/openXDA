@@ -1524,6 +1524,7 @@
     <Content Include="wwwroot\Workbench\SiteSummary.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForDateAngular.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForDayAngular.cshtml" />
+    <Content Include="wwwroot\Workbench\DisturbancesForDayAngular.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

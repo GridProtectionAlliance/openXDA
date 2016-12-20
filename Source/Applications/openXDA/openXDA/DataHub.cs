@@ -2270,6 +2270,90 @@ namespace openXDA
                 $" SeverityCode IN({eventTypeList}) ", 
                 filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString));
         }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(DisturbancesForDay), RecordOperation.QueryRecordCount)]
+        public int QueryDisturbancesForDayCount(DateTime date, string eventTypes, int filterId, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("5") ? "'5'," : "") + (eventTypes.Contains("4") ? "'4'," : "") + (eventTypes.Contains("3") ? "'3'," : "") + (eventTypes.Contains("2") ? "'2'," : "") + (eventTypes.Contains("1") ? "'1'," : "") + (eventTypes.Contains("0") ? "'0'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            filterString += '%';
+
+            return DataContext.Table<DisturbanceView>().QueryRecordCount(new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " StartTime >= {1} AND StartTime <= {2} AND " +
+                " (ID LIKE {3} OR MeterName LIKE {3} OR EventID LIKE {3} OR PhaseName Like {3}) AND " +
+                $" SeverityCode IN({eventTypeList}) ",
+                filterId, date, endTime, filterString));
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(DisturbancesForDay), RecordOperation.QueryRecords)]
+        public IEnumerable<DisturbanceView> QueryDisturbancesForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DateTime startTime = new DateTime(date.Date.Ticks);
+            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
+            string eventTypeList = "" + (eventTypes.Contains("5") ? "'5'," : "") + (eventTypes.Contains("4") ? "'4'," : "") + (eventTypes.Contains("3") ? "'3'," : "") + (eventTypes.Contains("2") ? "'2'," : "") + (eventTypes.Contains("1") ? "'1'," : "") + (eventTypes.Contains("0") ? "'0'," : "");
+            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            return DataContext.Table<DisturbanceView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
+                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                " StartTime >= {1} AND StartTime <= {2} AND " +
+                " (ID LIKE {3} OR MeterName LIKE {3} OR EventID LIKE {3} OR PhaseName Like {3}) AND " +
+                $" SeverityCode IN({eventTypeList}) ",
+                filterId, date, endTime, filterString));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForDay), RecordOperation.DeleteRecord)]
+        public void DeleteDisturbancesForDay(int id)
+        {
+            CascadeDelete("Distrubance", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForDay), RecordOperation.CreateNewRecord)]
+        public DisturbanceView NewDisturbancesForDay()
+        {
+            return new DisturbanceView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForDay), RecordOperation.AddNewRecord)]
+        public void AddNewDisturbancesForDay(DisturbanceView record)
+        {
+            DataContext.Table<Disturbance>().AddNewRecord(MakeDisturbanceFromDisturbanceView(record));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForDay), RecordOperation.UpdateRecord)]
+        public void UpdateDisturbancesForDayRecord(DisturbanceView record)
+        {
+            DataContext.Table<Disturbance>().UpdateRecord(MakeDisturbanceFromDisturbanceView(record));
+        }
+
+        private Disturbance MakeDisturbanceFromDisturbanceView(DisturbanceView record)
+        {
+            Disturbance nd = new Disturbance();
+            nd.ID = record.ID;
+            nd.EventID = record.EventID;
+            nd.EventTypeID = record.EventTypeID;
+            nd.PhaseID = record.PhaseID;
+            nd.Magnitude = record.Magnitude;
+            nd.PerUnitMagnitude = record.PerUnitMagnitude;
+            nd.StartTime = record.StartTime;
+            nd.EndTime = record.EndTime;
+            nd.DurationSeconds = record.DurationSeconds;
+            nd.DurationCycles = record.DurationCycles;
+            nd.StartIndex = record.StartIndex;
+            nd.EndIndex = record.EndIndex;
+            return nd;
+        }
+
         #endregion
 
         #region [DisturbancesForMeter Operations]
