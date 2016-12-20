@@ -25,57 +25,72 @@
 
 SETLOCAL
 
-SET pwd="%CD%"
-SET gwd="%LOCALAPPDATA%\Temp\openXDA"
-SET git="%PROGRAMFILES(X86)%\Git\cmd\git.exe"
-SET remote="git@github.com:GridProtectionAlliance/openXDA.git"
-SET source1="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Libraries\*.*"
-SET target1="Source\Dependencies\GSF"
-SET source2="\\GPAWEB\NightlyBuilds\openHistorian\Beta\Library\openHistorian.TimeSeries\*.*"
-SET target2="Source\Dependencies\openHistorian"
-SET source3="\\GPAWEB\NightlyBuilds\openHistorian\Beta\Library\openHistorian.SqlClr\*.*"
-SET target3="Source\Dependencies\openHistorian"
-SET sourcelogviewer="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Tools\LogFileViewer\LogFileViewer.exe"
-SET targetlogviewer="Source\Applications\openXDA\openXDASetup"
-SET sourcemasterbuild="\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta\Build Scripts\MasterBuild.buildproj"
-SET targetmasterbuild="Build\Scripts"
+SET pwd=%CD%
+IF "%git%" == "" SET git=%PROGRAMFILES(X86)%\Git\cmd\git.exe
+IF "%replace%" == "" SET replace=\\GPAWEB\NightlyBuilds\Tools\ReplaceInFiles\ReplaceInFiles.exe
+
+SET defaulttarget=%LOCALAPPDATA%\Temp\openXDA
+IF "%remote%" == "" SET remote=git@github.com:GridProtectionAlliance/openXDA.git
+IF "%gsf%" == "" SET gsf=\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Beta
+IF "%historian%" == "" SET historian=\\GPAWEB\NightlyBuilds\openHistorian\Beta
+IF "%target%" == "" SET target=%defaulttarget%
+
+SET gsflibraries=%gsf%\Libraries\*.*
+SET gsfdependencies=%target%\Source\Dependencies\GSF
+SET historiants=%historian%\Library\openHistorian.TimeSeries\*.*
+SET historiansqlclr=%historian%\Library\openHistorian.SqlClr\*.*
+SET historiandependencies=%target%\Source\Dependencies\openHistorian
+SET sourcemasterbuild=%gsf%\Build Scripts\MasterBuild.buildproj
+SET targetmasterbuild=%target%\Build\Scripts
+SET sourcelogviewer=%gsf%\Tools\LogFileViewer\LogFileViewer.exe
+SET targetlogviewer=%target%\Source\Data
 
 ECHO.
 ECHO Entering working directory...
-IF EXIST %gwd% IF NOT EXIST %gwd%\.git RMDIR /S /Q %gwd%
-IF NOT EXIST %gwd% MKDIR %gwd%
-CD /D %gwd%
+IF EXIST "%target%" IF NOT EXIST "%target%"\.git RMDIR /S /Q "%target%"
+IF NOT EXIST "%target%" MKDIR "%target%"
+CD /D %target%
 
-IF EXIST .git GOTO UpdateRepository
+IF NOT EXIST .git GOTO CloneRepository
+IF NOT "%target%" == "%defaulttarget%" GOTO UpdateDependencies
+GOTO UpdateRepository
 
+:CloneRepository
 ECHO.
 ECHO Getting latest version...
-%git% clone %remote% .
+"%git%" clone "%remote%" .
+GOTO UpdateDependencies
 
 :UpdateRepository
 ECHO.
 ECHO Updating to latest version...
-%git% fetch
-%git% reset --hard origin/master
-%git% clean -f -d -x
+"%git%" fetch
+"%git%" reset --hard origin/master
+"%git%" clean -f -d -x
+GOTO UpdateDependencies
 
+:UpdateDependencies
 ECHO.
 ECHO Updating dependencies...
-XCOPY %source1% %target1% /E /U /Y
-XCOPY %source2% %target2% /E /U /Y
-XCOPY %source3% %target3% /E /U /Y
-XCOPY %sourcelogviewer% %targetlogviewer% /Y
-XCOPY %sourcemasterbuild% %targetmasterbuild% /Y
+XCOPY "%gsflibraries%" "%gsfdependencies%\" /E /U /Y
+XCOPY "%historiants%" "%historiandependencies%\" /E /U /Y
+XCOPY "%historiansqlclr%" "%historiandependencies%\" /E /U /Y
+XCOPY "%sourcemasterbuild%" "%targetmasterbuild%\" /Y
+XCOPY "%sourcelogviewer%" "%targetlogviewer%\" /Y
 
+:CommitChanges
 ECHO.
 ECHO Committing updates to local repository...
-%git% add .
-%git% commit -m "Updated GSF dependencies."
+"%git%" add .
+"%git%" commit -m "Updated GSF dependencies."
+IF NOT "%donotpush%" == "" GOTO Finish
 
+:PushChanges
 ECHO.
 ECHO Pushing changes to remote repository...
-%git% push
+"%git%" push
 CD /D %pwd%
 
+:Finish
 ECHO.
 ECHO Update complete
