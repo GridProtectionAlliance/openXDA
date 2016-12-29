@@ -1897,14 +1897,12 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
 
-            if (!filterString.EndsWith("%"))
-                filterString += "%";
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
-                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
-                                                                                         "StartTime >= {2} AND " +
-                                                                                         "StartTime <= {3} ",
-                                                                                         filterId, filterId, startDate, endDate);
+                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                                                                                         "StartTime >= {1} AND " +
+                                                                                         "StartTime <= {2} ",
+                                                                                         filterId, startDate, endDate);
 
             return tableOperations.QueryRecordCount(restriction);
         }
@@ -1948,15 +1946,13 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
 
-            if (!filterString.EndsWith("%"))
-                filterString += "%";
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
-                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
-                                                                                         "StartTime >= {2} AND " +
-                                                                                         "StartTime <= {3} ",
-                                                                                         filterId, filterId, startDate, endDate);
+                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
+                                                                                         "StartTime >= {1} AND " +
+                                                                                         "StartTime <= {2} ",
+                                                                                         filterId, startDate, endDate);
 
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
