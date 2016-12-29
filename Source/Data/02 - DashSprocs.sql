@@ -1805,9 +1805,10 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsBreakers]
     @EventDateFrom DATETIME,
     @EventDateTo DATETIME,
-    @username AS NVARCHAR(4000)
+    @meterGroup AS int
 AS
 BEGIN
+
     SET NOCOUNT ON;
     
     DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
@@ -1850,7 +1851,7 @@ BEGIN
 			    FOR EventStuff.TypeName IN (normal, late, indeterminate)
 		    ) AS pvt	 
 	    ) AS pvttable ON Meter.ID = pvttable.MeterID
-    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+		WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
 END
 GO
 
@@ -1861,13 +1862,13 @@ GO
 -- =============================================
 
 --[selectMeterLocationsCompleteness] '05/07/2014' , '05/07/2014', 'jwalker'
-
 CREATE PROCEDURE [dbo].[selectMeterLocationsCompleteness]
     @EventDateFrom DateTime,
     @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @meterGroup AS int
 AS
 BEGIN
+
     SET NOCOUNT ON;
     
     DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
@@ -1916,7 +1917,7 @@ BEGIN
         FROM
             Meter JOIN
             MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
-        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+		WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
         ORDER BY Meter.Name
 END
 GO
@@ -1931,7 +1932,7 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsCorrectness]
     @EventDateFrom DATETIME,
     @EventDateTo DATETIME,
-    @username AS NVARCHAR(4000)
+    @meterGroup AS int
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1982,7 +1983,7 @@ BEGIN
         FROM
             Meter JOIN
             MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
-        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+		WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
         ORDER BY Meter.Name
 END
 GO
@@ -1998,7 +1999,7 @@ CREATE PROCEDURE [dbo].[selectMeterLocationsDisturbances]
     -- Add the parameters for the stored procedure here
     @EventDateFrom as DateTime,
     @EventDateTo as DateTime,
-    @username as nvarchar(4000)
+    @meterGroup as int
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2056,7 +2057,7 @@ BEGIN
         Meter JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
         SeverityCount ON SeverityCount.MeterID = Meter.ID
-    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
     ORDER BY Meter.Name
 
     DROP TABLE #MeterSeverityCode
@@ -2073,7 +2074,7 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsEvents]
     @EventDateFrom DATETIME,
     @EventDateTo DATETIME,
-    @username AS NVARCHAR(4000)
+    @meterGroup AS INT
 AS
 BEGIN
 
@@ -2087,47 +2088,47 @@ BEGIN
         Meter.Name,
         MeterLocation.Longitude,
         MeterLocation.Latitude,
-        COALESCE(Event_Count, 0) AS Event_Count,
-        COALESCE(Interruption, 0) AS Interruption,
-        COALESCE(Fault, 0) AS Fault,
-        COALESCE(Sag, 0) AS Sag,
-        COALESCE(Transient, 0) AS Transient,
-        COALESCE(Swell, 0) AS Swell,
-        COALESCE(Other, 0) AS Other
+		COALESCE(Event_Count, 0) AS Event_Count,
+		COALESCE(Interruption, 0) AS Interruption,
+		COALESCE(Fault, 0) AS Fault,
+		COALESCE(Sag, 0) AS Sag,
+		COALESCE(Transient, 0) AS Transient,
+		COALESCE(Swell, 0) AS Swell,
+		COALESCE(Other, 0) AS Other
 
         FROM
             Meter JOIN
             MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-            (
-                SELECT 
-                    6*Interruption + 5*Fault + 4*Sag + 3*Transient + 2*Swell + 1*Other AS Event_Count, 
-                    MeterID,
-                    Interruption,
-                    Fault,
-                    Sag,
-                    Transient,
-                    Swell,
-                    Other
-                FROM
-                (
-                    SELECT 
-                        Event.MeterID,
-                        EventType.Name
-                    FROM
-                        Event JOIN
-                        EventType ON EventType.ID = Event.EventTypeID 
-                    WHERE
-                        CAST([StartTime] AS DATE) between @startDate AND @endDate
-                )AS EventCode
-                PIVOT
-                (
-                    COUNT(Name)
-                    FOR Name IN (Interruption, Fault, Sag, Transient, Swell, Other)
-                ) AS PivotTable
-                
-            )AS Event_Count ON Event_Count.MeterID = Meter.ID
+			(
+				SELECT 
+					6*Interruption + 5*Fault + 4*Sag + 3*Transient + 2*Swell + 1*Other AS Event_Count, 
+					MeterID,
+					Interruption,
+					Fault,
+					Sag,
+					Transient,
+					Swell,
+					Other
+				FROM
+				(
+					SELECT 
+						Event.MeterID,
+						EventType.Name
+					FROM
+						Event JOIN
+						EventType ON EventType.ID = Event.EventTypeID 
+					WHERE
+						CAST([StartTime] AS DATE) between @startDate AND @endDate
+				)AS EventCode
+				PIVOT
+				(
+					COUNT(Name)
+					FOR Name IN (Interruption, Fault, Sag, Transient, Swell, Other)
+				) AS PivotTable
+				
+			)AS Event_Count ON Event_Count.MeterID = Meter.ID
 
-        WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+        WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
         ORDER BY Meter.Name
 END
 GO
@@ -2141,7 +2142,7 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsFaults]
     @EventDateFrom DateTime,
     @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @meterGroup AS int
 AS
 BEGIN
 
@@ -2163,7 +2164,7 @@ BEGIN
 
         from [dbo].[Meter] 
         inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID]
-        where [dbo].[Meter].[ID] in (select * from authMeters(@username))
+		WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
 
         order by [dbo].[Meter].[Name] asc
 
@@ -2269,7 +2270,7 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsTrending]
     @EventDateFrom DateTime,
     @EventDateTo DateTime,
-    @username as nvarchar(4000)
+    @meterGroup as int
 AS
 BEGIN
 
@@ -2282,42 +2283,41 @@ BEGIN
         set @thedateto = CAST(@EventDateTo as Date);
 
         SELECT 
-            [dbo].[Meter].[ID], 
-            [dbo].[Meter].[Name], 
-            [dbo].[MeterLocation].[Longitude], 
-            [dbo].[MeterLocation].[Latitude],
-            COALESCE(Alarm, 0) as Alarm,
-            COALESCE(Offnormal, 0) As Offnormal,
-            COALESCE(AlarmCount, 0) As AlarmCount
-        FROM
-            Meter JOIN
-            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-            (
-                SELECT 
-                    MeterID,
-                    Alarm + Offnormal as AlarmCount,
-                    Alarm,
-                    Offnormal
-                FROM
-                    (
-                        SELECT
-                            Channel.MeterID,
-                            AlarmType.Name
-                        FROM
-                            AlarmType JOIN
-                            ChannelAlarmSummary ON ChannelAlarmSummary.AlarmTypeID = AlarmType.ID JOIN
-                            Channel ON Channel.ID = ChannelAlarmSummary.ChannelID
-                        WHERE ChannelAlarmSummary.Date BETWEEN @thedatefrom AND @thedateto
-                    
-                    ) AS AlarmCodes
-                    PIVOT
-                    (
-                        COUNT(Name)
-                        FOR Name IN (Alarm, Offnormal)
-                    ) AS PivotTable            
-        ) AS AlarmCount ON AlarmCount.MeterID = Meter.ID
-            
-       WHERE [dbo].[Meter].[ID] in (SELECT * FROM authMeters(@username))
+			[dbo].[Meter].[ID], 
+			[dbo].[Meter].[Name], 
+			[dbo].[MeterLocation].[Longitude], 
+			[dbo].[MeterLocation].[Latitude],
+			COALESCE(Alarm, 0) as Alarm,
+			COALESCE(Offnormal, 0) As Offnormal,
+			COALESCE(AlarmCount, 0) As AlarmCount
+		FROM
+			Meter JOIN
+			MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+			(
+				SELECT 
+					MeterID,
+					Alarm + Offnormal as AlarmCount,
+					Alarm,
+					Offnormal
+				FROM
+					(
+						SELECT
+							Channel.MeterID,
+							AlarmType.Name
+						FROM
+							AlarmType JOIN
+							ChannelAlarmSummary ON ChannelAlarmSummary.AlarmTypeID = AlarmType.ID JOIN
+							Channel ON Channel.ID = ChannelAlarmSummary.ChannelID
+						WHERE ChannelAlarmSummary.Date BETWEEN @thedatefrom AND @thedateto
+					
+					) AS AlarmCodes
+					PIVOT
+					(
+						COUNT(Name)
+						FOR Name IN (Alarm, Offnormal)
+					) AS PivotTable            
+		) AS AlarmCount ON AlarmCount.MeterID = Meter.ID     
+	   WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
        ORDER BY Meter.Name
 
 END
@@ -2333,7 +2333,7 @@ CREATE PROCEDURE [dbo].[selectMeterLocationsTrendingData]
     @EventDateFrom DATETIME,
     @EventDateTo DATETIME,
     @colorScaleName VARCHAR(200),
-    @username AS NVARCHAR(4000)
+    @meterGroup AS int
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2367,7 +2367,7 @@ BEGIN
 			GROUP BY ContourChannel.MeterID
 		) AS Data ON Data.MID = Meter.ID JOIN
 		MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
-    WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
+    WHERE Meter.ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = @meterGroup)
     ORDER BY Meter.Name
 END
 GO
