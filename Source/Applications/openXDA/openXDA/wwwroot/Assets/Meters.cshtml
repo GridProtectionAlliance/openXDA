@@ -70,26 +70,14 @@
         new[] { "MeterLocationID", "Site", "text-left"},
         new[] { "Make", "Make", "text-left" },
         new[] { "Model", "Model", "text-left" },
+        new[] { "MeterType", "Meter Type", "text-left"},
         new[] { null, "Meter-to-Line", "text-center valign-middle"}
     };
+    ViewBag.ShowSearchFilter = true;
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 
-}
-@helper MeterFilter()
-{
-    <div class='row'>
-        <div class='col-md-12'>
-            <div class='form-group'>
-                <label for='meterfilter'>Meter Name Filter:</label>
-                <div class='right-inner-addon'>
-                    <i class='glyphicon glyphicon-search'></i>
-                    <input class='form-control' type='search' id='meterfilter' placeholder='Search'/>
-                </div>
-            </div>
-        </div>
-    </div>
 }
 @helper BodyRows()
 {
@@ -97,6 +85,7 @@
     <td width="20%" class="text-left valign-middle" ><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Assets/Sites.cshtml?Site=' + Location }"></a></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
+    <td width="10%" class="text-left valign-middle" data-bind="text: MeterType"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -115,6 +104,7 @@
         }
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
+        @Raw(dataContext.AddSelectField<Meter, MeterType>("MeterTypeID", "ID", "Name", "ID"))
     </div>
 
     <div class="col-md-6">
@@ -133,21 +123,6 @@
         @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, ViewBag.MeterLocationID))
 
         $(function () {
-            $("#pageHeader").append("@Raw(Regex.Replace(MeterFilter().ToString(), @"\r|\n", ""))");
-
-            $('#meterfilter').on('keyup', function (e) {
-                if ($('#meterfilter').val().length == 0) {
-                    viewModel.filterText = '';
-                    viewModel.queryPageRecords();
-                } else {
-                    viewModel.filterText = $('#meterfilter').val();
-                    viewModel.queryPageRecords();
-                }
-            });
-
-            $('#meterfilter').val('@ViewBag.meter');
-            $('#meterfilter').trigger('keyup');
-
             $('#addNewEditDialog').on('shown.bs.modal', function () {
                 if (viewModel.dataHubIsConnected()) {
                     initializeAutoCompleteLookupField("Location", dataHub.searchMeterLocations, false);

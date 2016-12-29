@@ -83,7 +83,7 @@ namespace openXDA.Model
         /// <param name="lookupFunctionName">Name of lookup function, defaults to lookup + <paramref name="groupName"/>.ToTitleCase() + Value.</param>
         /// <param name="arrayName">Name of lookup function, defaults to lookup + <paramref name="groupName"/>.ToTitleCase() + Value.</param>
         /// <returns>Client-side Javascript lookup function.</returns>
-        public string RenderAbstract<T>(string valueFieldName, string idFieldName = "ID", string lookupFunctionName = null, string arrayName = null) where T : class, new()
+        public static string RenderAbstract<T>(string valueFieldName, string idFieldName = "ID", string lookupFunctionName = null, string arrayName = null) where T : class, new()
         {
             StringBuilder javascript = new StringBuilder();
             DataContext dataContext = new DataContext();

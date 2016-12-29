@@ -133,6 +133,7 @@ CREATE TABLE Meter
     ShortName VARCHAR(50) NULL,
     Make VARCHAR(200) NOT NULL,
     Model VARCHAR(200) NOT NULL,
+	MeterTypeID INT NULL,
     TimeZone VARCHAR(200) NULL,
     Description VARCHAR(MAX) NULL
 )
@@ -153,6 +154,14 @@ CREATE TABLE MeterFacility
     FacilityID INT NOT NULL
 )
 GO
+
+CREATE TABLE MeterType
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name VARCHAR(25) NOT NULL
+)
+GO
+
 
 CREATE TABLE Line
 (
@@ -388,6 +397,21 @@ INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll'
 GO
 
 INSERT INTO MeterGroup(Name) VALUES('AllMeters')
+GO
+
+INSERT MeterType (Name) VALUES (N'Breaker')
+GO
+
+INSERT MeterType (Name) VALUES (N'Capacitor')
+GO
+
+INSERT MeterType (Name) VALUES (N'Line')
+GO
+
+INSERT MeterType (Name) VALUES (N'Reactor')
+GO
+
+INSERT MeterType (Name) VALUES (N'Other')
 GO
 
 CREATE TRIGGER Meter_AugmentAllMetersGroup
@@ -2125,11 +2149,14 @@ SELECT
         WHEN '' THEN COALESCE(Setting.Value, 'UTC')
         ELSE Meter.TimeZone
     END AS TimeZone,
-    Meter.Description
+    Meter.Description, 
+	MeterType.Name AS MeterType, 
+	Meter.MeterTypeID
 FROM
     Meter JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-    Setting ON Setting.Name = 'DefaultMeterTimeZone'
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID  INNER JOIN
+    dbo.MeterType ON dbo.Meter.MeterTypeID = dbo.MeterType.ID LEFT OUTER JOIN
+	Setting ON Setting.Name = 'DefaultMeterTimeZone'
 GO
 
 CREATE VIEW LineView
