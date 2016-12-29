@@ -172,13 +172,17 @@ if (typeof jQuery === 'undefined') {
                     if (a.groupDisabled) {
                         var b = 'disabled';
                     }
-                    that.$listcontainer.append('<span class="mobileSelect-group" ' + b + '>' + a.group + '</span>');
+                    that.$listcontainer.append('<div><button class="btn-link" data-toggle="collapse" style="width: 100%" data-target="#group' + a.group + '"><span class="mobileSelect-group" ' + b + '>' + a.group + '</span></button><div id="group' + a.group + '" class="collapse"></div></div>');
                     prevGroup = a.group;
                 }
                 if (a.groupDisabled || a.disabled) {
                     var b = 'disabled';
                 }
-                that.$listcontainer.append('<a href="#" class="mobileSelect-control" ' + b + ' data-value="' + a.value + '">' + a.text + '</a>');
+
+                if (a.group)
+                    that.$listcontainer.filter($('#group' + a.group).append('<a href="#" class="mobileSelect-control" ' + b + ' data-value="' + a.value + '">' + a.text + '</a>'))
+                else
+                    that.$listcontainer.append('<a href="#" class="mobileSelect-control" ' + b + ' data-value="' + a.value + '">' + a.text + '</a>');
 
             });
             this.sync();
