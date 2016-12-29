@@ -239,36 +239,12 @@
                     });
 
                     var mobileSelectOptions = {
+                        filterable: true,
                         padding: {
                             top: '5%',
                             left: '15%',
                             right: '15%',
                             bottom: '5%'
-                        },
-                        title: "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>",
-                        onOpen: function () {
-                            $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
-                            $('.selectAllBtn').click(function () {
-                                $('.mobileSelect-container :visible .list-container .mobileSelect-control').filter(':visible').addClass('selected');
-                            });
-                            
-                            $('#meterfilter').on('keyup', function () {
-                                var string = $('#meterfilter').val();
-                                if (string === "") {
-                                    $('.mobileSelect-container :visible .list-container').children().show();
-
-                                }
-                                else {
-                                    $('.mobileSelect-container :visible .list-container').children().hide();
-                                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                                        if ($(item).text().indexOf($('#meterfilter').val()) >= 0)
-                                            $(item).show();
-                                    });
-                                }
-                            });
-                        },
-                        onClose: function () {
-                            $('.selectAllBtn').remove();
                         }
                     };
 
@@ -307,37 +283,12 @@
                     $('#userSelect').children().remove();
 
                     var mobileSelectOptions = {
+                        filterable: true,
                         padding: {
                             top: '5%',
                             left: '15%',
                             right: '15%',
                             bottom: '5%'
-                        },
-                        title: "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='userfilter' placeholder='Search Users' /></div>",
-                        onOpen: function () {
-                            $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
-                            $('.selectAllBtn').click(function () {
-                                $('.mobileSelect-container :visible .list-container').children().addClass('selected');
-                            });
-                            
-                            $('#userfilter').on('keyup', function () {
-                                var string = $('#userfilter').val();
-                                if (string === "") {
-                                    $('.mobileSelect-container :visible .list-container').children().show();
-
-                                }
-                                else {
-                                    $('.mobileSelect-container :visible .list-container').children().hide();
-                                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                                        if ($(item).text().indexOf($('#userfilter').val()) >= 0)
-                                            $(item).show();
-                                    });
-                                }
-                            });
-
-                        },
-                        onClose: function () {
-                            $('.selectAllBtn').remove();
                         }
                     };
                     

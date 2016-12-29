@@ -138,7 +138,7 @@ if (typeof jQuery === 'undefined') {
             this.$c = $('<div class="mobileSelect-container"></div>').addClass(this.theme).appendTo('body');
 
             //appending the container template
-            this.$c.html($.fn.mobileSelect.defaults.template);
+            this.$c.html((!this.filterable ? $.fn.mobileSelect.defaults.template : $.fn.mobileSelect.defaults.templateFilterable));
 
             //settings container animations.
             this.$c.children('div').css({
@@ -149,7 +149,10 @@ if (typeof jQuery === 'undefined') {
             /*
              * set title buttons text.
              */
-            this.$c.find('.mobileSelect-title').html(this.title).end().find('.mobileSelect-savebtn').html(this.buttonSave).end().find('.mobileSelect-clearbtn').html(this.buttonClear).end().find('.mobileSelect-cancelbtn').html(this.buttonCancel).end();
+            if(!this.filterable)
+                this.$c.find('.mobileSelect-title').html(this.title).end().find('.mobileSelect-selectallbtn').html(this.buttonSelectAll).end().find('.mobileSelect-savebtn').html(this.buttonSave).end().find('.mobileSelect-clearbtn').html(this.buttonClear).end().find('.mobileSelect-cancelbtn').html(this.buttonCancel).end();
+            else
+                this.$c.find('.mobileSelect-selectallbtn').html(this.buttonSelectAll).end().find('.mobileSelect-savebtn').html(this.buttonSave).end().find('.mobileSelect-clearbtn').html(this.buttonClear).end().find('.mobileSelect-cancelbtn').html(this.buttonCancel).end();
             this.$listcontainer = this.$c.find('.list-container');
             if (!this.isMultiple) {
                 this.$c.find('.mobileSelect-clearbtn').remove();
@@ -172,7 +175,7 @@ if (typeof jQuery === 'undefined') {
                     if (a.groupDisabled) {
                         var b = 'disabled';
                     }
-                    that.$listcontainer.append('<div><button class="btn-link" data-toggle="collapse" style="width: 100%" data-target="#group' + a.group + '"><span class="mobileSelect-group" ' + b + '>' + a.group + '</span></button><div id="group' + a.group + '" class="collapse"></div></div>');
+                    that.$listcontainer.append('<div><button class="btn-link" data-toggle="collapse" style="width: 100%" data-target="#group' + a.group + '"><span class="mobileSelect-group" ' + b + '>' + a.group + '</span></button><div id="group' + a.group + '" class="collapse in"></div></div>');
                     prevGroup = a.group;
                 }
                 if (a.groupDisabled || a.disabled) {
@@ -218,6 +221,12 @@ if (typeof jQuery === 'undefined') {
                 e.preventDefault();
                 that.show();
             });
+            this.$c.find('.mobileSelect-selectallbtn').on('click', function (e) {
+                e.preventDefault();
+                that.$listcontainer.find($('.mobileSelect-control')).filter(':visible').addClass('selected')
+                that.syncR();
+                $(window).trigger('mobileSelectAll');
+            });
             this.$c.find('.mobileSelect-savebtn').on('click', function (e) {
                 e.preventDefault();
                 that.syncR();
@@ -228,13 +237,26 @@ if (typeof jQuery === 'undefined') {
                 e.preventDefault();
                 that.$listcontainer.find('.selected').removeClass('selected');
                 that.syncR();
-                that.hide();
                 $(window).trigger('mobileSelectClear');
             });
             this.$c.find('.mobileSelect-cancelbtn').on('click', function (e) {
                 e.preventDefault();
                 that.hide();
                 $(window).trigger('mobileSelectCancel');
+            });
+            this.$c.find('.mobileSelect-filter').on('keyup', function (e) {
+                var string = $(this).val().toLowerCase()
+                if (string === "") {
+                    that.$listcontainer.find($('.mobileSelect-control')).show();
+
+                }
+                else {
+                    that.$listcontainer.find($('.mobileSelect-control')).hide();
+                    $.each(that.$listcontainer.find($('.mobileSelect-control')), function (i, item) {
+                        if ($(item).text().toLowerCase().indexOf(string) >= 0)
+                            $(item).show();
+                    });
+                }
             });
             this.$c.find('.mobileSelect-control').on('click', function (e) {
                 e.preventDefault();
@@ -249,6 +271,7 @@ if (typeof jQuery === 'undefined') {
                     $this.siblings().removeClass('selected').end().addClass('selected');
                 }
             });
+           
         },
         _unbindEvents: function () {
 
@@ -417,8 +440,10 @@ if (typeof jQuery === 'undefined') {
      * plugin defaults
      */
     $.fn.mobileSelect.defaults = {
-        template: '<div><div class="mobileSelect-title"></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
+        template: '<div><div class="mobileSelect-title"></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
+        templateFilterable:'<div><div class="mobileSelect-title"><div class="right-inner-addon"><i class="glyphicon glyphicon-search"></i><input class="form-control mobileSelect-filter" type="search" placeholder="Search Options" /></div></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
         title: 'Select an option',
+        buttonSelectAll: 'Select All Visible',
         buttonSave: 'Save',
         buttonClear: 'Clear',
         buttonCancel: 'Cancel',
@@ -435,6 +460,7 @@ if (typeof jQuery === 'undefined') {
         },
         onClose: function () {
         },
-        style: 'btn-default'
+        style: 'btn-default',
+        filterable: false
     };
 })(jQuery);
