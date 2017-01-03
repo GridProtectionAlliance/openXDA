@@ -39,6 +39,29 @@ BEGIN
 END
 GO
 
+CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIdsNonMeter]
+    @EventID as INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE @currentTime DATETIME2
+
+	SELECT @currentTime = StartTime
+	FROM Event
+	WHERE ID = @EventID
+
+	SELECT evt2.ID as previd, evt3.ID as nextid
+	FROM Event evt1 LEFT OUTER JOIN 
+		 Event evt2 ON evt2.StartTime = 
+			 (SELECT MAX(StartTime)
+			 FROM Event
+			 WHERE StartTime < @currentTime ) LEFT OUTER JOIN 
+		 Event evt3 ON evt3.StartTime = (SELECT MIN(StartTime)
+			 FROM Event
+			 WHERE StartTime > @currentTime )
+	WHERE evt1.ID = @EventID
+END
 -- =============================================
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, March 25, 2015>
