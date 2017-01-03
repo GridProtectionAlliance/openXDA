@@ -3113,21 +3113,15 @@ namespace openXDA
             DataTable table = DataContext.Connection.RetrieveData(
                 " SELECT Meter.ID AS MeterID, " +
                 "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
-                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {2}, {3}), 0) as Correctness, " +
-                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {4} AND {5} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {6}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {7} AND {8}) AS Disturbances " +
+                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
+                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances " +
                 " FROM Meter Left Join " +
                 "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
-                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {9}), ',')) " +
-                " GROUP BY Meter.ID ", startDate, endDate, startDate, endDate, startDate, endDate, filterId, startDate, endDate, filterId);
+                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
+                " GROUP BY Meter.ID ", startDate, endDate, filterId);
 
-            TableOperations<SiteSummary> ss = new TableOperations<SiteSummary>(DataContext.Connection);
-            foreach (DataRow row in table.Select())
-            {
-                ss.LoadRecord(row);
-            }
-
-            return ss.QueryRecordCount();
+            return table.Select().Select(x => DataContext.Table<SiteSummary>().LoadRecord(x)).Count();
         }
 
         [AuthorizeHubRole("*")]
@@ -3174,13 +3168,14 @@ namespace openXDA
             DataTable table = DataContext.Connection.RetrieveData(
                 " SELECT Meter.ID AS MeterID, " +
                 "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
-                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {2}, {3}), 0) as Correctness, " +
-                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {4} AND {5} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {6}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {7} AND {8}) AS Disturbances " +
+                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
+                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances " +
                 " FROM Meter Left Join " +
                 "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
-                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {9}), ',')) " +
-                " GROUP BY Meter.ID ", startDate, endDate, startDate, endDate, startDate, endDate, filterId, startDate, endDate, filterId);
+                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
+                " GROUP BY Meter.ID ", startDate, endDate, filterId);
+
 
             TableOperations<SiteSummary> ss = new TableOperations<SiteSummary>(DataContext.Connection);
             foreach (DataRow row in table.Select())
@@ -3188,7 +3183,7 @@ namespace openXDA
                 ss.LoadRecord(row);
             }
 
-            return ss.QueryRecords(sortField, ascending, page, pageSize);
+            return table.Select(null, sortField + (ascending ? " ASC" : " DESC")).Skip(pageSize*page).Take(pageSize).Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]

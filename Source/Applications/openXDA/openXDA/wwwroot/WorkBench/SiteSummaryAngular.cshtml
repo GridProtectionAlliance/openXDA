@@ -1,0 +1,301 @@
+﻿@*******************************************************************************************************
+//  Index.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/15/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System
+@using System.Threading
+@using RazorEngine.Templating
+@using GSF.Web
+@using openXDA.Model
+@using RazorEngine.Templating
+@inherits TemplateBase<AppModel>
+@{
+    Layout = "Workbench/Layout.cshtml";
+    ViewBag.Title = "Site Summary";
+}
+
+@section StyleSheets{
+    <style>
+        table, th, td {
+            border: 1px solid grey;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+
+            table tr:nth-child(odd) {
+                background-color: #f1f1f1;
+            }
+
+            table tr:nth-child(even) {
+                background-color: #ffffff;
+            }
+    </style>
+}
+
+<div ng-app="myApp">
+    <div ng-controller="TableCtrl">
+        <div class="input-group">
+            <input class="form-control" ng-model="searchText" placeholder="Search" type="search" ng-change="search()" /> <span class="input-group-addon">
+                <span class="glyphicon glyphicon-search"></span>
+            </span>
+        </div>
+        <table class="table  table-hover data-table myTable">
+            <thead>
+                <tr>
+                    <th class="EmpId">
+                        <a href="#" ng-click="sort('MeterID')">
+                            Meter ID
+                            <span class="{{Header[0]}}"></span>
+                        </a>
+
+                    </th>
+                    <th class="name">
+                        <a ng-click="sort('Completeness')" href="#">
+                            Completeness
+                            <span class="{{Header[1]}}"></span>
+                        </a>
+                    </th>
+                    <th class="Email">
+                        <a ng-click="sort('Correctness')" href="#">
+                            Correctness
+                            <span class="{{Header[2]}}"></span>
+                        </a>
+                    </th>
+                    <th class="Email">
+                        <a ng-click="sort('Events')" href="#">
+                            Events
+                            <span class="{{Header[3]}}"></span>
+                        </a>
+                    </th>
+                    <th class="Email">
+                        <a ng-click="sort('Disturbances')" href="#">
+                            Disturbances
+                            <span class="{{Header[4]}}"></span>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in pagedSiteSummaries[currentPage-1] | orderBy: sortBy:reverse">
+                    <td>{{getMeterName(item.MeterID)}}</td>
+                    <td>{{item.Completeness | number: 3}}%</td>
+                    <td>{{item.Correctness | number: 3}}%</td>
+                    <td><a href="EventsForMeter.cshtml?MeterID={{item.MeterID}}&Filter={{getFilter()}}" target="_blank">{{item.Events}}</a></td>
+                    <td><a href="DisturbancesForMeter.cshtml?MeterID={{item.MeterID}}&Filter={{getFilter()}}" target="_blank">{{item.Disturbances}}</a></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="pull-left">
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="firstPage()"><span class="glyphicon glyphicon-backward"></span></button>
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="minusPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
+            </div>
+            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" ng-model="currentPage">
+            <em class="validationMessage small" style="display: none;"></em>
+            &nbsp;of&nbsp;
+            <span ng-bind="pageCount"></span>
+            &nbsp;
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="plusPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
+                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="lastPage()"><span class="glyphicon glyphicon-forward"></span></button>
+            </div>
+        </div>
+        <div class="pull-right">
+            Rows:
+            <div class="btn-group">
+                <button ng-class="{active: pageSize == 10}" class="btn btn-default" ng-click="setPageSize(10)">10</button>
+                <button ng-class="{active: pageSize == 25}" class="btn btn-default" ng-click="setPageSize(25)">25</button>
+                <button ng-class="{active: pageSize == 50}" class="btn btn-default" ng-click="setPageSize(50)">50</button>
+                <button ng-class="{active: pageSize == 100}" class="btn btn-default" ng-click="setPageSize(100)">100</button>
+            </div>
+        </div>
+
+
+    </div>
+    <!-- Ends Controller -->
+</div>
+
+@section Scripts {
+    <script>
+        @Raw(AppModel.RenderAbstract<Meter>("Name", "ID", "lookupMeterName", "meterName"))
+        
+        $(function () {
+            $('#pageHeader h3').append("<small class='pull-right' style='margin-top: 8px' >Meters: <span id='recordCount'></span></small>")
+        });
+
+        //Demo of Searching Sorting and Pagination of Table with AngularJS - Advance Example
+
+        var myApp = angular.module('myApp', []);
+         
+        myApp.filter('range', function () {
+            return function (input, total) {
+                total = parseInt(total);
+                for (var i = 0; i <= total; ++i) {
+                    input.push(i);
+                }
+                return input;
+            }
+        });
+
+        var TableCtrl = myApp.controller('TableCtrl', function ($scope) {
+            $scope.sortBy = 'MeterID';
+            $scope.reverse = false;
+            $scope.Header = ['glyphicon glyphicon-chevron-up', '', '', '', ''];
+            $scope.searchText = '';
+            $scope.pageSize = 10;
+            $scope.pagedSiteSummaries = [];
+            $scope.currentPage = 1;
+            $scope.siteSummary;
+            $scope.pageCount = 0;
+
+
+            $(window).one('globalFilterDone', function (event) {
+                dataHub.getSiteSummaries($('#globalFilter').val()).done(function (data) {
+                    $scope.siteSummary = data;
+                    $scope.pageCount = Math.ceil(data.length / $scope.pageSize);
+                    $scope.setPages();
+                    $scope.$apply();
+                    $('#recordCount').text(data.length);
+                });
+            });
+
+            $scope.getMeterName = function (id) {
+                return lookupMeterName(id);
+            }
+             
+            $scope.getFilter = function () {
+                return $('#globalFilter').val()
+            }
+            $scope.search = function () {
+                if ($scope.searchText === "") {
+                    var page = 0;
+                    $scope.pagedSiteSummaries = [];
+                    $scope.pagedSiteSummaries.push([]);
+                    $.each($scope.siteSummary, function (index, data) {
+                        if (index !== 0 && index % $scope.pageSize === 0) {
+                            page++
+                            $scope.pagedSiteSummaries.push([]);
+                        }
+                        $scope.pagedSiteSummaries[page].push(data);
+                    });
+                    $('#recordCount').text($scope.siteSummary.length);
+
+                }
+                else {
+                    var page = 0;
+                    $scope.pagedSiteSummaries = [];
+                    $scope.pagedSiteSummaries.push([]);
+                    $.each($scope.siteSummary.filter(function (data) { 
+                        if (lookupMeterName(data.MeterID).toLowerCase().indexOf($scope.searchText) > -1 /*|| data.Completeness.indexOf($scope.searchText) > -1 || data.Correctness.indexOf($scope.searchText) > -1 || data.Events.indexOf($scope.searchText) > -1 || data.Disturbances.indexOf($scope.searchText) > -1*/)
+                            return true;
+                        }), function (index, data) {
+                            if (index !== 0 && index % $scope.pageSize === 0) {
+                                page++
+                                $scope.pagedSiteSummaries.push([]);
+                            }
+                            $scope.pagedSiteSummaries[page].push(data);
+                        });
+                    $('#recordCount').text($scope.siteSummary.filter(function (data) {
+                        if (lookupMeterName(data.MeterID).toLowerCase().indexOf($scope.searchText) > -1 /*|| data.Completeness.indexOf($scope.searchText) > -1 || data.Correctness.indexOf($scope.searchText) > -1 || data.Events.indexOf($scope.searchText) > -1 || data.Disturbances.indexOf($scope.searchText) > -1*/)
+                            return true;
+                    }).length);
+
+                }
+            }
+
+
+            $scope.setPage = function (pageNumber) {
+                $scope.currentPage = pageNumber;
+            };
+
+            $scope.firstPage = function () {
+                $scope.currentPage = 1;
+            };
+
+            $scope.lastPage = function () {
+                $scope.currentPage = $scope.pageCount;
+            };
+            
+            $scope.plusPage = function () {
+                $scope.currentPage++;
+            }
+            $scope.minusPage = function () {
+                $scope.currentPage--;
+            }
+
+
+            $scope.sort = function (sortBy) {
+                if (sortBy === $scope.sortBy) {
+                    $scope.reverse = !$scope.reverse;                 
+                }
+                $scope.sortBy = sortBy;
+                $scope.Header = ['', '', '', '', '', ''];
+
+                if ($scope.reverse)
+                    iconName = 'glyphicon glyphicon-chevron-down';
+                else
+                    iconName = 'glyphicon glyphicon-chevron-up';
+                 
+                if (sortBy === 'MeterID') {
+                    $scope.Header[0] = iconName;
+                }
+                else if (sortBy === 'Completeness') {
+                    $scope.Header[1] = iconName;
+                } else if (sortBy === 'Correctness') {
+                    $scope.Header[2] = iconName;
+                }
+                else if (sortBy === 'Events') {
+                    $scope.Header[3] = iconName;
+                } else if (sortBy === 'Disturbances') {
+                    $scope.Header[4] = iconName;
+                } 
+            };
+            
+            $scope.setPageSize = function (size) {
+                $scope.pageSize = size;
+                $scope.setPages();
+            };
+            
+                         
+            $scope.getAbsDiff = function (a, b) {
+                return Math.abs(a - b);
+            };
+
+            $scope.setPages = function () {
+                var page = 0;
+                $scope.pagedSiteSummaries = [];
+                $scope.pagedSiteSummaries.push([]);
+                $.each($scope.siteSummary, function (index, data) {
+                    if (index !== 0 && index % $scope.pageSize === 0) {
+                        $scope.pagedSiteSummaries.push([]);
+                        page++
+                    }
+                    $scope.pagedSiteSummaries[page].push(data);
+                });
+                $scope.pageCount = page + 1;
+                $scope.currentPage = 1;
+            };
+        });
+
+    
+    </script>
+}
