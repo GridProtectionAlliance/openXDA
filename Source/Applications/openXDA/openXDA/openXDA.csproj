@@ -309,6 +309,7 @@
     <Compile Include="Model\TrendingDataSet.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserAccountMeterGroup.cs" />
+    <Compile Include="Model\UserDashSettings.cs" />
     <Compile Include="Model\VoltageCurvePoint.cs" />
     <Compile Include="Model\WorkbenchFilter.cs" />
     <Compile Include="Model\WorkbenchVoltageCurveView.cs" />
@@ -423,6 +424,7 @@
     <Content Include="wwwroot\Assets\MeterLines.cshtml" />
     <Content Include="wwwroot\Assets\Meters.cshtml" />
     <Content Include="wwwroot\Assets\Sites.cshtml" />
+    <Content Include="wwwroot\Config\UserDashSettings.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />

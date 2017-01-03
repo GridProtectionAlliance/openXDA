@@ -147,6 +147,53 @@ namespace openXDA
 
         #endregion
 
+        #region [ UserDashSettings Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecordCount)]
+        public int QueryUserDashSettingsCount(string filterString)
+        {
+            return DataContext.Table<UserDashSettings>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecords)]
+        public IEnumerable<UserDashSettings> QueryUserDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<UserDashSettings>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserDashSettings), RecordOperation.DeleteRecord)]
+        public void DeleteUserDashSettings(int id)
+        {
+            DataContext.Table<UserDashSettings>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserDashSettings), RecordOperation.CreateNewRecord)]
+        public UserDashSettings NewUserDashSettings()
+        {
+            return new UserDashSettings();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserDashSettings), RecordOperation.AddNewRecord)]
+        public void AddNewUSerDashSetting(UserDashSettings record)
+        {
+            DataContext.Table<UserDashSettings>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(UserDashSettings), RecordOperation.UpdateRecord)]
+        public void UpdateUserDashSetting(UserDashSettings record)
+        {
+            DataContext.Table<UserDashSettings>().UpdateRecord(record);
+        }
+
+        #endregion
+
+
         #region [ Meter Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -3115,7 +3162,10 @@ namespace openXDA
                 "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
                 "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
                 "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances, " +
+                "   (SELECT COUNT(FaultSummary.ID) FROM FaultSummary JOIN Event ON FaultSummary.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Faults, " +
+                "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
+                "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
                 " FROM Meter Left Join " +
                 "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
                 " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
@@ -3170,11 +3220,15 @@ namespace openXDA
                 "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
                 "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
                 "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances, " +
+                "   (SELECT COUNT(FaultSummary.ID) FROM FaultSummary JOIN Event ON FaultSummary.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Faults, " +
+                "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
+                "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
                 " FROM Meter Left Join " +
                 "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
                 " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
                 " GROUP BY Meter.ID ", startDate, endDate, filterId);
+
 
 
             TableOperations<SiteSummary> ss = new TableOperations<SiteSummary>(DataContext.Connection);
@@ -3183,7 +3237,7 @@ namespace openXDA
                 ss.LoadRecord(row);
             }
 
-            return table.Select(null, sortField + (ascending ? " ASC" : " DESC")).Skip(pageSize*page).Take(pageSize).Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
+            return table.Select(null, sortField + (ascending ? " ASC" : " DESC")).Skip(pageSize*(page - 1)).Take(pageSize).Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
