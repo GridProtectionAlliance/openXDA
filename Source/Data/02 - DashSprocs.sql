@@ -62,11 +62,11 @@ BEGIN
 			 WHERE StartTime > @currentTime )
 	WHERE evt1.ID = @EventID
 END
+GO
 -- =============================================
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, March 25, 2015>
 -- Description: <Description, Selects Events for a MeterID by Date for date range>
--- selectEventsForMeterIDByDateRange '01/10/2013', '05/10/2015', '0'
 -- dDSelectDisturbancesForMeterIDByDateRange '01/05/2014', '03/06/2015', '199,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,200,201,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125', 'External'
 -- =============================================
 CREATE PROCEDURE [dbo].[dDSelectDisturbancesForMeterIDByDateRange]
@@ -957,73 +957,41 @@ CREATE PROCEDURE [dbo].[selectDisturbancesForMeterIDByDateRange]
     @username as nvarchar(4000)
 AS
 BEGIN
+
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-    DECLARE @counter INT = 0
-    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
-    DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
-    DECLARE @numberOfDays INT = DATEDIFF(DAY, @startDate, @endDate)
+Select DisturbanceDate AS thedate, COALESCE([5],0) AS [5], COALESCE([4],0) AS [4], COALESCE([3],0) AS [3], COALESCE([2],0) AS [2], COALESCE([1],0) AS [1], COALESCE([0],0) AS [0]
+FROM (
+	SELECT
+		CAST(Disturbance.StartTime AS DATE) AS DisturbanceDate,
+		SeverityCode,
+		COUNT(*) AS DisturbanceCount
+	FROM
+		DisturbanceSeverity JOIN
+		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
+		Event ON Event.ID = Disturbance.EventID JOIN
+		Phase ON Disturbance.PhaseID = Phase.ID
+	WHERE
+		(
+			@MeterID = '0' OR
+			MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ','))
+		) AND
+		MeterID IN (SELECT * FROM authMeters(@username)) AND
+		Phase.Name = 'Worst' AND
+		Disturbance.StartTime BETWEEN @startDate AND @endDate AND
+		Disturbance.StartTime <> @endDate
+	GROUP BY CAST(Disturbance.StartTime AS DATE), SeverityCode 	
+	) As DisturbanceDate
+PIVOT
+(
+    SUM(DisturbanceDate.DisturbanceCount)
+    FOR DisturbanceDate.SeverityCode IN ([5], [4], [3], [2], [1], [0])
+) as pvt
+ORDER BY DisturbanceDate
 
-    DECLARE @eventDate DATE = @startDate
-
-    CREATE TABLE #temp(Date DATE)
-
-    WHILE (@counter < @numberOfDays)
-    BEGIN
-        INSERT INTO #temp VALUES(@eventDate)
-        SET @eventDate = DATEADD(DAY, 1, @eventDate)
-        SET @counter = @counter + 1
-    END
-
-    SELECT Date AS thedate, [5], [4], [3], [2], [1], [0]
-    FROM
-    (
-        SELECT
-            #temp.Date,
-            SeverityCodes.SeverityCode AS SeverityCode,
-            COALESCE(DisturbanceCount, 0) AS DisturbanceCount
-        FROM
-            #temp CROSS JOIN
-		    ( Select 5 AS SeverityCode UNION 
-		      SELECT 4 AS SeverityCode UNION 
-		      SELECT 3 AS SeverityCode UNION 
-		      SELECT 2 AS SeverityCode UNION 
-		      SELECT 1 AS SeverityCode UNION 
-		      SELECT 0 AS SeverityCode
-		    ) AS SeverityCodes LEFT OUTER JOIN
-            (
-                SELECT
-                    CAST(Disturbance.StartTime AS DATE) AS DisturbanceDate,
-                    SeverityCode,
-                    COUNT(*) AS DisturbanceCount
-                FROM
-                    DisturbanceSeverity JOIN
-				    Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
-				    Event ON Event.ID = Disturbance.EventID JOIN
-                    Phase ON Disturbance.PhaseID = Phase.ID
-			    WHERE
-                    (
-                        @MeterID = '0' OR
-                        MeterID IN (SELECT * FROM @MeterIDs)
-                    ) AND
-                    MeterID IN (SELECT * FROM authMeters(@username)) AND
-                    Phase.Name = 'Worst' AND
-                    Disturbance.StartTime BETWEEN @startDate AND @endDate AND
-                    Disturbance.StartTime <> @endDate
-                GROUP BY CAST(Disturbance.StartTime AS DATE), SeverityCode
-            ) AS Disturbances ON #temp.Date = Disturbances.DisturbanceDate AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
-    ) AS DisturbanceDate
-    PIVOT
-    (
-        SUM(DisturbanceDate.DisturbanceCount)
-        FOR DisturbanceDate.SeverityCode IN ([5], [4], [3], [2], [1], [0])
-    ) as pvt
-    ORDER BY Date
-
-    DROP TABLE #temp
 END
 GO
 
@@ -1210,46 +1178,23 @@ BEGIN
 
     SET NOCOUNT ON;
 
-declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-DECLARE @counter INT = 0
-DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
-DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eventDate)
+SELECT Date as thedate, COALESCE(Fault,0) as faults, COALESCE(Interruption,0) as interruptions, COALESCE(Sag,0) as sags, COALESCE(Swell,0) as swells, COALESCE(Other,0) as others, COALESCE(Transient,0) as transients 
+FROM(
+	SELECT CAST(StartTime AS Date) as Date, COUNT(*) AS EventCount, EventType.Name as Name
+	FROM Event JOIN
+		 EventType ON Event.EventTypeID = EventType.ID
+    WHERE MeterID in (select * from authMeters(@username)) AND StartTime >= @startDate AND StartTime < @endDate
 
-SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
-
-CREATE TABLE #temp(Date DATE)
-
-WHILE (@counter <= @numberOfDays)
-BEGIN
-    INSERT INTO #temp VALUES(@eventDate)
-    SET @eventDate = DATEADD(DAY, 1, @eventDate)
-    SET @counter = @counter + 1
-END
-
-SELECT Date as thedate, Fault as faults, Interruption as interruptions, Sag as sags, Swell as swells, Other as others, Transient as transients
-FROM
-(
-    SELECT #temp.Date, EventType.Name AS EventTypeName, COALESCE(EventCount, 0) AS EventCount
-    FROM
-        #temp CROSS JOIN
-        EventType LEFT OUTER JOIN
-        (
-            SELECT CAST(StartTime AS Date) AS EventDate, EventTypeID, COUNT(*) AS EventCount
-            FROM Event where ( (@MeterID = '0' and MeterID = MeterID) or (MeterID in ( Select * from @MeterIDs) ) )
-            and MeterID in (select * from authMeters(@username))
-            GROUP BY CAST(StartTime AS Date), EventTypeID
-        ) AS Event ON #temp.Date = Event.EventDate AND EventType.ID = Event.EventTypeID
-) AS EventDate
-PIVOT
-(
-    SUM(EventCount)
-    FOR EventDate.EventTypeName IN (Fault, Interruption, Sag, Swell, Other, Transient)
-) as pvt
+	GROUP BY CAST(StartTime AS Date), EventType.Name
+) AS ed
+PIVOT(
+	Sum(ed.EventCount)
+	FOR ed.Name IN (Interruption, Fault, Sag, Swell, Other, Transient)
+)as pvt
 ORDER BY Date
-
-DROP TABLE #temp
 
 END
 GO
