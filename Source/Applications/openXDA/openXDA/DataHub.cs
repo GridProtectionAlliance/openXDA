@@ -204,7 +204,7 @@ namespace openXDA
             TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
             RecordRestriction restriction = new RecordRestriction();
             if (meterLocationID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}");
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -218,7 +218,7 @@ namespace openXDA
             TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
             RecordRestriction restriction = new RecordRestriction();
             if (meterLocationID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}");
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
