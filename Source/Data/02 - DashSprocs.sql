@@ -345,51 +345,22 @@ BEGIN
 
     SET NOCOUNT ON;
 
-declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-DECLARE @counter INT = 0
-DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
-DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eventDate)
-
-SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
-
-CREATE TABLE #temp(Date DATE)
-
-WHILE (@counter <= @numberOfDays)
-BEGIN
-    INSERT INTO #temp VALUES(@eventDate)
-    SET @eventDate = DATEADD(DAY, 1, @eventDate)
-    SET @counter = @counter + 1
-END
-
-SELECT 
-Date as thedate, 
-COALESCE(Normal,0) as normal, 
-COALESCE(late,0) as late, 
-COALESCE(indeterminate,0) as indeterminate
-FROM
-(
-    SELECT #temp.Date, [BreakerOperationType].Name AS EventTypeName, COALESCE(EventCount, 0) AS EventCount
-    FROM
-        #temp CROSS JOIN
-        [BreakerOperationType] LEFT OUTER JOIN
-        (
-            SELECT CAST([TripCoilEnergized] AS Date) AS EventDate, [BreakerOperationTypeID] as EventTypeID, COUNT(*) AS EventCount
-            FROM [BreakerOperation] join [Event] on [BreakerOperation].[EventID] = [Event].[ID]
-            
-             where MeterID in ( Select * from @MeterIDs)
-            GROUP BY CAST([TripCoilEnergized] AS Date), [BreakerOperationTypeID]
-        ) AS Event ON #temp.Date = Event.EventDate AND [BreakerOperationType].ID = Event.EventTypeID
-) AS EventDate
-PIVOT
-(
-    SUM(EventCount)
-    FOR EventDate.EventTypeName IN ( normal , late , indeterminate )
-) as pvt
-ORDER BY Date
-
-DROP TABLE #temp
+SELECT Date as thedate, COALESCE(Normal, 0) as normal, COALESCE(Late, 0) as late, COALESCE(Indeterminate, 0) as indeterminate
+FROM (
+	SELECT CAST(TripCoilEnergized AS Date) AS Date, BreakerOperationType.Name, COUNT(*) AS thecount
+	FROM BreakerOperation JOIN
+		 BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
+		 Event ON Event.ID = BreakerOperation.EventID
+	WHERE MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate
+	GROUP BY CAST(TripCoilEnergized AS Date), BreakerOperationType.Name
+) as table1
+PIVOT(
+	SUM(table1.thecount)
+	FOR table1.Name IN (Late, Indeterminate, Normal)
+) AS pvt
 
 END
 GO
@@ -470,69 +441,39 @@ BEGIN
 
     SET NOCOUNT ON;
 
-declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-DECLARE @counter INT = 0
-DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
-DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eventDate)
-
-SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
-
-CREATE TABLE #temp(Date DATE)
-
-WHILE (@counter <= @numberOfDays)
-BEGIN
-    INSERT INTO #temp VALUES(@eventDate)
-    SET @eventDate = DATEADD(DAY, 1, @eventDate)
-    SET @counter = @counter + 1
-END
-
-SELECT
-    Date,
-    COALESCE(First, 0) AS First,
-    COALESCE(Second, 0) AS Second,
-    COALESCE(Third, 0) AS Third,
-    COALESCE(Fourth, 0) AS Fourth,
-    COALESCE(Fifth, 0) AS Fifth,
-    COALESCE(Sixth, 0) AS Sixth
+SELECT	Date, COALESCE(First, 0) AS First, COALESCE(Second, 0) AS Second, COALESCE(Third, 0) AS Third, COALESCE(Fourth, 0) AS Fourth, COALESCE(Fifth, 0) AS Fifth, COALESCE(Sixth, 0) AS Sixth
 FROM
-(
-    SELECT #temp.Date, CompletenessLevel, COALESCE(MeterCount, 0) AS MeterCount
-    FROM
-        #temp LEFT OUTER JOIN
+    (
+        SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
+        FROM
         (
-            SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
+            SELECT Date,
+					CASE
+						WHEN Completeness >= 100.0 THEN 'First'
+						WHEN 98.0 <= Completeness AND Completeness < 100.0 THEN 'Second'
+						WHEN 90.0 <= Completeness AND Completeness < 98.0 THEN 'Third'
+						WHEN 70.0 <= Completeness AND Completeness < 90.0 THEN 'Fourth'
+						WHEN 50.0 <= Completeness AND Completeness < 70.0 THEN 'Fifth'
+						WHEN 0.0 < Completeness AND Completeness < 50.0 THEN 'Sixth'
+					END AS CompletenessLevel
             FROM
             (
-                SELECT
-                    Date,
-                    CASE
-                        WHEN Completeness >= 100.0 THEN 'First'
-                        WHEN 98.0 <= Completeness AND Completeness < 100.0 THEN 'Second'
-                        WHEN 90.0 <= Completeness AND Completeness < 98.0 THEN 'Third'
-                        WHEN 70.0 <= Completeness AND Completeness < 90.0 THEN 'Fourth'
-                        WHEN 50.0 <= Completeness AND Completeness < 70.0 THEN 'Fifth'
-                        WHEN 0.0 < Completeness AND Completeness < 50.0 THEN 'Sixth'
-                    END AS CompletenessLevel
-                FROM
-                (
-                    SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
-                    FROM MeterDataQualitySummary
-                    WHERE Date BETWEEN @EventDateFrom AND @EventDateTo AND MeterID IN (SELECT * FROM @MeterIDs)
-                ) MeterDataQualitySummary
+                SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
+                FROM MeterDataQualitySummary
+                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND MeterID IN (SELECT * FROM authMeters(@username))
             ) MeterDataQualitySummary
-            GROUP BY Date, CompletenessLevel
-        ) MeterDataQualitySummary ON #temp.Date = MeterDataQualitySummary.Date
+        ) MeterDataQualitySummary
+        GROUP BY Date, CompletenessLevel
 ) MeterDataQualitySummary
 PIVOT
 (
-    SUM(MeterCount)
+    SUM(MeterDataQualitySummary.MeterCount)
     FOR MeterDataQualitySummary.CompletenessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
 ) as pvt
 ORDER BY Date
-
-DROP TABLE #temp
 
 END
 GO
@@ -639,69 +580,39 @@ BEGIN
 
     SET NOCOUNT ON;
 
-declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-DECLARE @counter INT = 0
-DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
-DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eventDate)
-
-SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
-
-CREATE TABLE #temp(Date DATE)
-
-WHILE (@counter <= @numberOfDays)
-BEGIN
-    INSERT INTO #temp VALUES(@eventDate)
-    SET @eventDate = DATEADD(DAY, 1, @eventDate)
-    SET @counter = @counter + 1
-END
-
-SELECT
-    Date,
-    COALESCE(First, 0) AS First,
-    COALESCE(Second, 0) AS Second,
-    COALESCE(Third, 0) AS Third,
-    COALESCE(Fourth, 0) AS Fourth,
-    COALESCE(Fifth, 0) AS Fifth,
-    COALESCE(Sixth, 0) AS Sixth
+SELECT	Date, COALESCE(First, 0) AS First, COALESCE(Second, 0) AS Second, COALESCE(Third, 0) AS Third, COALESCE(Fourth, 0) AS Fourth, COALESCE(Fifth, 0) AS Fifth, COALESCE(Sixth, 0) AS Sixth
 FROM
-(
-    SELECT #temp.Date, CorrectnessLevel, COALESCE(MeterCount, 0) AS MeterCount
-    FROM
-        #temp LEFT OUTER JOIN
+    (
+        SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
+        FROM
         (
-            SELECT Date, CorrectnessLevel, COUNT(*) AS MeterCount
+            SELECT Date,
+					CASE
+						WHEN Correctness >= 100.0 THEN 'First'
+						WHEN 98.0 <= Correctness AND Correctness < 100.0 THEN 'Second'
+						WHEN 90.0 <= Correctness AND Correctness < 98.0 THEN 'Third'
+						WHEN 70.0 <= Correctness AND Correctness < 90.0 THEN 'Fourth'
+						WHEN 50.0 <= Correctness AND Correctness < 70.0 THEN 'Fifth'
+						WHEN 0.0 < Correctness AND Correctness < 50.0 THEN 'Sixth'
+					END AS CompletenessLevel
             FROM
             (
-                SELECT
-                    Date,
-                    CASE
-                        WHEN Correctness >= 100.0 THEN 'First'
-                        WHEN 98.0 <= Correctness AND Correctness < 100.0 THEN 'Second'
-                        WHEN 90.0 <= Correctness AND Correctness < 98.0 THEN 'Third'
-                        WHEN 70.0 <= Correctness AND Correctness < 90.0 THEN 'Fourth'
-                        WHEN 50.0 <= Correctness AND Correctness < 70.0 THEN 'Fifth'
-                        WHEN 0.0 < Correctness AND Correctness < 50.0 THEN 'Sixth'
-                    END AS CorrectnessLevel
-                FROM
-                (
-                    SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness
-                    FROM MeterDataQualitySummary
-                    WHERE Date BETWEEN @EventDateFrom AND @EventDateTo AND MeterID IN (SELECT * FROM @MeterIDs)
-                ) MeterDataQualitySummary
+				SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness                
+				FROM MeterDataQualitySummary
+                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND MeterID IN (SELECT * FROM authMeters(@username))
             ) MeterDataQualitySummary
-            GROUP BY Date, CorrectnessLevel
-        ) MeterDataQualitySummary ON #temp.Date = MeterDataQualitySummary.Date
+        ) MeterDataQualitySummary
+        GROUP BY Date, CompletenessLevel
 ) MeterDataQualitySummary
 PIVOT
 (
-    SUM(MeterCount)
-    FOR MeterDataQualitySummary.CorrectnessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
+    SUM(MeterDataQualitySummary.MeterCount)
+    FOR MeterDataQualitySummary.CompletenessLevel IN (First, Second, Third, Fourth, Fifth, Sixth)
 ) as pvt
 ORDER BY Date
-
-DROP TABLE #temp
 
 END
 GO
@@ -1186,8 +1097,7 @@ FROM(
 	SELECT CAST(StartTime AS Date) as Date, COUNT(*) AS EventCount, EventType.Name as Name
 	FROM Event JOIN
 		 EventType ON Event.EventTypeID = EventType.ID
-    WHERE MeterID in (select * from authMeters(@username)) AND StartTime >= @startDate AND StartTime < @endDate
-
+    WHERE MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND StartTime >= @startDate AND StartTime < @endDate
 	GROUP BY CAST(StartTime AS Date), EventType.Name
 ) AS ed
 PIVOT(
@@ -1368,63 +1278,26 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    declare  @MeterIDs TABLE (ID int);
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+SELECT Date as thedate, COALESCE([500], 0) as [500],COALESCE([300], 0) as [300],COALESCE([230], 0) as [230], COALESCE([135], 0) as [135], 
+	   COALESCE([115], 0) as [115], COALESCE([69], 0) as [69], COALESCE([46], 0) as [46], COALESCE([0], 0) as [0]
+FROM(
+	SELECT CAST(Event.StartTime AS DATE) AS Date, Line.VoltageKV, COUNT(*) AS thecount
+	FROM Event JOIN
+		 EventType ON Event.EventTypeID = EventType.ID JOIN
+		 Line ON Event.LineID = Line.ID
+	WHERE EventType.Name = 'Fault' AND
+		  MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND StartTime >= @startDate AND StartTime < @endDate
+	GROUP BY CAST(Event.StartTime AS DATE), EventType.Name, Line.VoltageKV
+) as eventtable
+PIVOT(
+	SUM(eventtable.thecount)
+	FOR eventtable.VoltageKV IN ([500],[300],[230],[135],[115],[69], [46],[0])
+) as pvt
+ORDER BY Date
 
-    declare @counter int = 0
-    declare @EventDate as DateTime
-    declare @NumberOfDays as INT
-
-    set @NumberOfDays = DateDiff ( day  , @EventDateFrom , @EventDateTo )
-
-    set @EventDate = @EventDateFrom
-
-    PRINT @NumberOfDays
-    PRINT @EventDate
-
-    CREATE TABLE #temp(Date DATE)
-
-    WHILE (@counter <= @numberOfDays)
-    BEGIN
-        INSERT INTO #temp VALUES(@eventDate)
-        SET @eventDate = DATEADD(DAY, 1, @eventDate)
-        SET @counter = @counter + 1
-    END
-
-    SELECT
-        #temp.Date AS thedate,
-        COALESCE(Event.FaultCount, 0) AS thecount,
-        Line.VoltageKV AS theclass
-    FROM
-        #temp CROSS JOIN
-        (
-            SELECT DISTINCT VoltageKV
-            FROM
-                Line JOIN
-                Channel ON Channel.LineID = Line.ID JOIN
-                Meter ON Channel.MeterID = Meter.ID
-            WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
-        ) Line LEFT OUTER JOIN
-        (
-            SELECT
-                CAST(Event.StartTime AS Date) AS Date,
-                Line.VoltageKV,
-                COUNT(*) AS FaultCount
-            FROM
-                Event JOIN
-                EventType ON Event.EventTypeID = EventType.ID JOIN
-                Line ON Event.LineID = Line.ID
-            WHERE
-                EventType.Name = 'Fault' AND
-                Event.MeterID IN (SELECT * FROM @MeterIDs)
-            GROUP BY
-                CAST(Event.StartTime AS Date),
-                Line.VoltageKV
-        ) Event ON Event.Date = #temp.Date AND Event.VoltageKV = Line.VoltageKV
-    ORDER BY
-        #temp.Date,
-        Line.VoltageKV DESC
 END
 GO
 
@@ -3761,48 +3634,22 @@ BEGIN
 
     SET NOCOUNT ON;
 
-declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
+DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
+DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-DECLARE @counter INT = 0
-DECLARE @eventDate DATE = CAST(@EventDateTo AS Date)
-DECLARE @numberOfDays INT = DATEDIFF ( day , CAST(@EventDateFrom AS Date) , @eventDate)
-
-SET @eventDate = DATEADD(DAY, -@numberOfDays, @eventDate)
-
-CREATE TABLE #temp(Thedate DATE)
-
-WHILE (@counter <= @numberOfDays)
-BEGIN
-    INSERT INTO #temp VALUES(@eventDate)
-    SET @eventDate = DATEADD(DAY, 1, @eventDate)
-    SET @counter = @counter + 1
-END
-
-SELECT 
-Thedate as thedate, 
-COALESCE(OffNormal,0) as offnormal, 
-COALESCE(Alarm,0) as alarm
-FROM
-(
-    SELECT #temp.Thedate, AlarmType.Name AS AlarmTypeName, AlarmPoints AS AlarmCount
-    FROM
-        #temp CROSS JOIN
-        AlarmType LEFT OUTER JOIN
-        (
-            SELECT Date AS AlarmDate, AlarmTypeID, AlarmPoints
-            FROM ChannelAlarmSummary join Channel on ChannelAlarmSummary.ChannelID = Channel.ID
-            where MeterID in ( Select * from @MeterIDs)
-        ) AS Alarm ON #temp.Thedate = AlarmDate AND [AlarmType].[ID] = AlarmTypeID
-) AS AlarmDate
-PIVOT
-(
-    SUM(AlarmCount)
-    FOR AlarmDate.AlarmTypeName IN (alarm, offnormal )
+SELECT AlarmDate as thedate, COALESCE(OffNormal,0) as offnormal, COALESCE(Alarm,0) as alarm
+FROM(
+	SELECT Date AS AlarmDate, AlarmType.Name, SUM(AlarmPoints) as AlarmPoints
+	FROM ChannelAlarmSummary JOIN
+		 Channel ON ChannelAlarmSummary.ChannelID = Channel.ID JOIN
+		 AlarmType ON AlarmType.ID = ChannelAlarmSummary.AlarmTypeID
+    WHERE MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND Date >= @startDate AND Date < @endDate
+	GROUP BY Date, AlarmType.Name
+) AS table1
+PIVOT(
+	SUM(table1.AlarmPoints)
+	FOR table1.Name IN(Alarm, OffNormal)
 ) as pvt
-ORDER BY thedate
-
-DROP TABLE #temp
 
 END
 GO
