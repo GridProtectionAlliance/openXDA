@@ -526,18 +526,16 @@ GO
 INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
 GO
 
-INSERT INTO ApplicationRole(Name, Description) VALUES('Engineer', 'Admin Role')
-GO
-
-INSERT INTO ApplicationRole(Name, Description) VALUES('Viewer', 'Admin Role')
-GO
-
-
-
 INSERT INTO SecurityGroup(Name, Description) VALUES('BUILTIN\Users', 'All Windows authenticated users')
 GO
 
 INSERT INTO ApplicationRoleSecurityGroup(ApplicationRoleID, SecurityGroupID) VALUES((SELECT ID FROM ApplicationRole), (SELECT ID FROM SecurityGroup))
+GO
+
+INSERT INTO ApplicationRole(Name, Description) VALUES('Engineer', 'Admin Role')
+GO
+
+INSERT INTO ApplicationRole(Name, Description) VALUES('Viewer', 'Admin Role')
 GO
 
 
@@ -2164,7 +2162,7 @@ SELECT
 	Meter.MeterTypeID
 FROM
     Meter JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID  INNER JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID  LEFT OUTER JOIN
     dbo.MeterType ON dbo.Meter.MeterTypeID = dbo.MeterType.ID LEFT OUTER JOIN
 	Setting ON Setting.Name = 'DefaultMeterTimeZone'
 GO

@@ -118,8 +118,14 @@
   <Component Id="Config_UserAccountMeterGroupView_cshtml">
     <File Id="Config_UserAccountMeterGroupView.cshtml" Name="UserAccountMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UserAccountMeterGroupView.cshtml" />
   </Component>
+  <Component Id="Config_UserDashSettings_cshtml">
+    <File Id="Config_UserDashSettings.cshtml" Name="UserDashSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UserDashSettings.cshtml" />
+  </Component>
   <Component Id="Config_Users_cshtml">
     <File Id="Config_Users.cshtml" Name="Users.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Users.cshtml" />
+  </Component>
+  <Component Id="Config_XSLTemplate_cshtml">
+    <File Id="Config_XSLTemplate.cshtml" Name="XSLTemplate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\XSLTemplate.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Content_Components" Directory="CONTENTFOLDER">
@@ -176,6 +182,9 @@
   </Component>
   <Component Id="Content_bootstrap_min_css_map">
     <File Id="Content_bootstrap.min.css.map" Name="bootstrap.min.css.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\bootstrap.min.css.map" />
+  </Component>
+  <Component Id="Content_daterangepicker_css">
+    <File Id="Content_daterangepicker.css" Name="daterangepicker.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\daterangepicker.css" />
   </Component>
   <Component Id="Content_fileinput_css">
     <File Id="Content_fileinput.css" Name="fileinput.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\fileinput.css" />
@@ -530,6 +539,9 @@
   <Component Id="Scripts_bootstrap_min_js">
     <File Id="Scripts_bootstrap.min.js" Name="bootstrap.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\bootstrap.min.js" />
   </Component>
+  <Component Id="Scripts_daterangepicker_js">
+    <File Id="Scripts_daterangepicker.js" Name="daterangepicker.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\daterangepicker.js" />
+  </Component>
   <Component Id="Scripts_fileinput_js">
     <File Id="Scripts_fileinput.js" Name="fileinput.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fileinput.js" />
   </Component>
@@ -610,6 +622,9 @@
   </Component>
   <Component Id="Scripts_modernizr_2_8_3_js">
     <File Id="Scripts_modernizr_2.8.3.js" Name="modernizr-2.8.3.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\modernizr-2.8.3.js" />
+  </Component>
+  <Component Id="Scripts_moment_min_js">
+    <File Id="Scripts_moment.min.js" Name="moment.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\moment.min.js" />
   </Component>
   <Component Id="Scripts_mustache_min_js">
     <File Id="Scripts_mustache.min.js" Name="mustache.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\mustache.min.js" />
@@ -4124,17 +4139,29 @@
   <Component Id="Workbench_DisturbancesForDay_cshtml">
     <File Id="Workbench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDay.cshtml" />
   </Component>
+  <Component Id="Workbench_DisturbancesForDayAngular_cshtml">
+    <File Id="Workbench_DisturbancesForDayAngular.cshtml" Name="DisturbancesForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDayAngular.cshtml" />
+  </Component>
   <Component Id="Workbench_DisturbancesForMeter_cshtml">
     <File Id="Workbench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForMeter.cshtml" />
   </Component>
   <Component Id="Workbench_Events_cshtml">
     <File Id="Workbench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Events.cshtml" />
   </Component>
+  <Component Id="Workbench_EventsAngular_cshtml">
+    <File Id="Workbench_EventsAngular.cshtml" Name="EventsAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsAngular.cshtml" />
+  </Component>
   <Component Id="Workbench_EventsForDate_cshtml">
     <File Id="Workbench_EventsForDate.cshtml" Name="EventsForDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDate.cshtml" />
   </Component>
+  <Component Id="Workbench_EventsForDateAngular_cshtml">
+    <File Id="Workbench_EventsForDateAngular.cshtml" Name="EventsForDateAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDateAngular.cshtml" />
+  </Component>
   <Component Id="Workbench_EventsForDay_cshtml">
     <File Id="Workbench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDay.cshtml" />
+  </Component>
+  <Component Id="Workbench_EventsForDayAngular_cshtml">
+    <File Id="Workbench_EventsForDayAngular.cshtml" Name="EventsForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDayAngular.cshtml" />
   </Component>
   <Component Id="Workbench_EventsForMeter_cshtml">
     <File Id="Workbench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForMeter.cshtml" />
@@ -4156,6 +4183,9 @@
   </Component>
   <Component Id="Workbench_SiteSummary_cshtml">
     <File Id="Workbench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummary.cshtml" />
+  </Component>
+  <Component Id="Workbench_SiteSummaryAngular_cshtml">
+    <File Id="Workbench_SiteSummaryAngular.cshtml" Name="SiteSummaryAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummaryAngular.cshtml" />
   </Component>
 </ComponentGroup>
 </Include>
