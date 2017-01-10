@@ -1774,7 +1774,10 @@ namespace openXDA
             if (record.IsDefault)
             {
                 IEnumerable<WorkbenchFilter> wbfs = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
-
+                if (wbfs.Count() == 0)
+                    record.IsDefault = true;
+                    
+                
                 foreach (WorkbenchFilter wbf in wbfs)
                 {
                     if (wbf.IsDefault)

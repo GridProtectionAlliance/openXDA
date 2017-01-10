@@ -312,8 +312,8 @@ CREATE TABLE [dbo].[AuditLog](
 	[OriginalValue] [varchar](max) NULL,
 	[NewValue] [varchar](max) NULL,
 	[Deleted] [bit] NOT NULL,
-	[UpdatedBy] [varchar](200) NOT NULL,
-	[UpdatedOn] [datetime] NOT NULL,
+	[UpdatedBy] [varchar](200) NULL,
+	[UpdatedOn] [datetime] NULL,
  CONSTRAINT [PK_AuditLog] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
