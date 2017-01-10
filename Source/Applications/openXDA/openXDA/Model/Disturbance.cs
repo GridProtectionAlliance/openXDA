@@ -21,7 +21,7 @@ namespace openXDA.Model
         public float DurationCycles { get; set; }
         public int StartIndex { get; set; }
         public int EndIndex { get; set; }
-        public Guid UpdatedBy { get; set; }
+        public string UpdatedBy { get; set; }
     }
 
     public class DisturbanceView

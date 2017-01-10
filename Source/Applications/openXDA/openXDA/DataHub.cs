@@ -1701,7 +1701,7 @@ namespace openXDA
                 sc.CommandText = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
                 IDbDataParameter param = sc.CreateParameter();
                 param.ParameterName = "@userName";
-                param.Value = GetCurrentUserID();
+                param.Value = GetCurrentUserName();
                 sc.Parameters.Add(param);
                 sc.ExecuteNonQuery();
                 sc.Parameters.Clear();
@@ -2059,7 +2059,7 @@ namespace openXDA
             newEvent.SamplesPerSecond = record.SamplesPerSecond;
             newEvent.SamplesPerCycle = record.SamplesPerCycle;
             newEvent.Description = record.Description;
-            newEvent.UpdatedBy = GetCurrentUserID();
+            newEvent.UpdatedBy = GetCurrentUserName();
             return newEvent;
         }
 
@@ -2431,7 +2431,7 @@ namespace openXDA
             nd.DurationCycles = record.DurationCycles;
             nd.StartIndex = record.StartIndex;
             nd.EndIndex = record.EndIndex;
-            nd.UpdatedBy = GetCurrentUserID();
+            nd.UpdatedBy = GetCurrentUserName();
             return nd;
         }
 
@@ -3396,6 +3396,14 @@ namespace openXDA
             return UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name);
         }
 
+        /// <summary>
+        /// Gets UserAccount table name for current user.
+        /// </summary>
+        /// <returns>User name for current user.</returns>
+        public static string GetCurrentUserName()
+        {
+            return Thread.CurrentPrincipal.Identity.Name;
+        }
 
         #endregion
     }

@@ -731,7 +731,7 @@ CREATE TABLE Event
     SamplesPerSecond INT NOT NULL,
     SamplesPerCycle INT NOT NULL,
     Description VARCHAR(MAX) NULL,
-	UpdatedBy UNIQUEIDENTIFIER NULL,
+	UpdatedBy VARCHAR(200) NULL
 )
 GO
 
@@ -776,7 +776,8 @@ CREATE TABLE Disturbance
     DurationSeconds FLOAT NOT NULL,
     DurationCycles FLOAT NOT NULL,
     StartIndex INT NOT NULL,
-    EndIndex INT NOT NULL
+    EndIndex INT NOT NULL,
+	UpdatedBy VARCHAR(200) NULL
 )
 GO
 
