@@ -37,6 +37,39 @@ namespace FaultData.DataOperations
     {
         #region [ Members ]
 
+        // Nested Types
+        private class SourceIndex
+        {
+            public double Multiplier;
+            public int ChannelIndex;
+
+            public static SourceIndex Parse(string text)
+            {
+                SourceIndex sourceIndex = new SourceIndex();
+
+                string[] parts = text.Split('*');
+                string multiplier = (parts.Length > 1) ? parts[0].Trim() : "1";
+                string channelIndex = (parts.Length > 1) ? parts[1].Trim() : parts[0].Trim();
+
+                if (parts.Length > 2)
+                    throw new FormatException($"Too many asterisks found in source index {text}.");
+
+                if (!double.TryParse(multiplier, out sourceIndex.Multiplier))
+                    throw new FormatException($"Incorrect format for multiplier {multiplier} found in source index {text}.");
+
+                if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
+                    throw new FormatException($"Incorrect format for channel index {channelIndex} found in source index {text}.");
+
+                if (channelIndex[0] == '-')
+                {
+                    sourceIndex.Multiplier *= -1.0D;
+                    sourceIndex.ChannelIndex *= -1;
+                }
+
+                return sourceIndex;
+            }
+        }
+
         // Constants
         private const double Sqrt3 = 1.7320508075688772935274463415059D;
 
@@ -182,15 +215,11 @@ namespace FaultData.DataOperations
 
         private void AddCalculatedDataSeries(MeterDataSet meterDataSet, Series series)
         {
-            int sourceIndex;
-            List<Tuple<char, int>> sourceIndexes;
+            List<SourceIndex> sourceIndexes;
             DataSeries dataSeries;
 
-            sourceIndex = 0;
-
             sourceIndexes = series.SourceIndexes.Split(',')
-                .Where(str => int.TryParse(str, out sourceIndex))
-                .Select(str => Tuple.Create(str[0], sourceIndex))
+                .Select(SourceIndex.Parse)
                 .ToList();
 
             if (sourceIndexes.Count == 0)
@@ -198,20 +227,20 @@ namespace FaultData.DataOperations
 
             if (series.Channel.MeasurementType.Name == "Digital")
             {
-                if (sourceIndexes.Any(tuple => Math.Abs(tuple.Item2) >= meterDataSet.Digitals.Count))
+                if (sourceIndexes.Any(sourceIndex => Math.Abs(sourceIndex.ChannelIndex) >= meterDataSet.Digitals.Count))
                     return;
 
                 dataSeries = sourceIndexes
-                    .Select(tuple => (tuple.Item1 != '-') ? meterDataSet.Digitals[tuple.Item2].Copy() : meterDataSet.Digitals[Math.Abs(tuple.Item2)].Negate())
+                    .Select(sourceIndex => meterDataSet.Digitals[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
                     .Aggregate((series1, series2) => series1.Add(series2));
             }
             else
             {
-                if (sourceIndexes.Any(tuple => Math.Abs(tuple.Item2) >= meterDataSet.DataSeries.Count))
+                if (sourceIndexes.Any(sourceIndex => sourceIndex.ChannelIndex >= meterDataSet.DataSeries.Count))
                     return;
 
                 dataSeries = sourceIndexes
-                    .Select(tuple => (tuple.Item1 != '-') ? meterDataSet.DataSeries[tuple.Item2].Copy() : meterDataSet.DataSeries[Math.Abs(tuple.Item2)].Negate())
+                    .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
                     .Aggregate((series1, series2) => series1.Add(series2));
             }
 
