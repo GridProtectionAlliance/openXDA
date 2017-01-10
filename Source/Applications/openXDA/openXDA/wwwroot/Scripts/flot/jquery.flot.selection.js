@@ -83,7 +83,8 @@ The plugin allso adds the following methods to the plot object:
         var selection = {
                 first: { x: -1, y: -1}, second: { x: -1, y: -1},
                 show: false,
-                active: false
+                active: false,
+                suspended: false
             };
 
         // FIXME: The drag handling implemented here should be
@@ -122,7 +123,7 @@ The plugin allso adds the following methods to the plot object:
 
             setSelectionPos(selection.first, e);
 
-            selection.active = true;
+            selection.active = !selection.suspended;
 
             // this is a bit silly, but we have to use a closure to be
             // able to whack the same handler again
@@ -293,9 +294,30 @@ The plugin allso adds the following methods to the plot object:
                 Math.abs(selection.second.y - selection.first.y) >= minSize;
         }
 
+        function suspendSelection() {
+            selection.active = false;
+            selection.suspended = true;
+
+            if (mouseUpHandler) {
+                $(document).unbind("mouseup", mouseUpHandler);
+
+                // revert drag stuff for old-school browsers
+                if (document.onselectstart !== undefined)
+                    document.onselectstart = savedhandlers.onselectstart;
+                if (document.ondrag !== undefined)
+                    document.ondrag = savedhandlers.ondrag;
+            }
+        }
+
+        function resumeSelection() {
+            selection.suspended = false;
+        }
+
         plot.clearSelection = clearSelection;
         plot.setSelection = setSelection;
         plot.getSelection = getSelection;
+        plot.suspendSelection = suspendSelection;
+        plot.resumeSelection = resumeSelection;
 
         plot.hooks.bindEvents.push(function(plot, eventHolder) {
             var o = plot.getOptions();
