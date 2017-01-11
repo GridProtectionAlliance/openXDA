@@ -735,6 +735,9 @@
   <Component Id="Scripts_flot_jquery_colorhelpers_min_js">
     <File Id="Scripts_flot_jquery.colorhelpers.min.js" Name="jquery.colorhelpers.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.colorhelpers.min.js" />
   </Component>
+  <Component Id="Scripts_flot_jquery_flot_axislabels_js">
+    <File Id="Scripts_flot_jquery.flot.axislabels.js" Name="jquery.flot.axislabels.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.axislabels.js" />
+  </Component>
   <Component Id="Scripts_flot_jquery_flot_canvas_js">
     <File Id="Scripts_flot_jquery.flot.canvas.js" Name="jquery.flot.canvas.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.canvas.js" />
   </Component>
@@ -848,266 +851,8 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_flot_examples_Components" Directory="SCRIPTSFLOTEXAMPLESFOLDER">
-  <Component Id="Scripts_flot_examples_DS_Store">
-    <File Id="Scripts_flot_examples.DS_Store" Name=".DS_Store" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\.DS_Store" />
-  </Component>
-  <Component Id="Scripts_flot_examples_background_png">
-    <File Id="Scripts_flot_examples_background.png" Name="background.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\background.png" />
-  </Component>
-  <Component Id="Scripts_flot_examples_examples_css">
-    <File Id="Scripts_flot_examples_examples.css" Name="examples.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\examples.css" />
-  </Component>
-  <Component Id="Scripts_flot_examples_index_html">
-    <File Id="Scripts_flot_examples_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_ajax_Components" Directory="SCRIPTSFLOTEXAMPLESAJAXFOLDER">
-  <Component Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_1_json">
-    <File Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_1.json" Name="data-eu-gdp-growth-1.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-1.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_2_json">
-    <File Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_2.json" Name="data-eu-gdp-growth-2.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-2.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_3_json">
-    <File Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_3.json" Name="data-eu-gdp-growth-3.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-3.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_4_json">
-    <File Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_4.json" Name="data-eu-gdp-growth-4.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-4.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_5_json">
-    <File Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_5.json" Name="data-eu-gdp-growth-5.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth-5.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_eu_gdp_growth_json">
-    <File Id="Scripts_flot_examples_ajax_data_eu_gdp_growth.json" Name="data-eu-gdp-growth.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-eu-gdp-growth.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_japan_gdp_growth_json">
-    <File Id="Scripts_flot_examples_ajax_data_japan_gdp_growth.json" Name="data-japan-gdp-growth.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-japan-gdp-growth.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_data_usa_gdp_growth_json">
-    <File Id="Scripts_flot_examples_ajax_data_usa_gdp_growth.json" Name="data-usa-gdp-growth.json" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\data-usa-gdp-growth.json" />
-  </Component>
-  <Component Id="Scripts_flot_examples_ajax_index_html">
-    <File Id="Scripts_flot_examples_ajax_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\ajax\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_annotating_Components" Directory="SCRIPTSFLOTEXAMPLESANNOTATINGFOLDER">
-  <Component Id="Scripts_flot_examples_annotating_index_html">
-    <File Id="Scripts_flot_examples_annotating_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\annotating\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_axes_interacting_Components" Directory="SCRIPTSFLOTEXAMPLESAXESINTERACTINGFOLDER">
-  <Component Id="Scripts_flot_examples_axes_interacting_index_html">
-    <File Id="Scripts_flot_examples_axes_interacting_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-interacting\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_axes_multiple_Components" Directory="SCRIPTSFLOTEXAMPLESAXESMULTIPLEFOLDER">
-  <Component Id="Scripts_flot_examples_axes_multiple_index_html">
-    <File Id="Scripts_flot_examples_axes_multiple_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-multiple\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_axes_time_Components" Directory="SCRIPTSFLOTEXAMPLESAXESTIMEFOLDER">
-  <Component Id="Scripts_flot_examples_axes_time_index_html">
-    <File Id="Scripts_flot_examples_axes_time_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_axes_time_zones_Components" Directory="SCRIPTSFLOTEXAMPLESAXESTIMEZONESFOLDER">
-  <Component Id="Scripts_flot_examples_axes_time_zones_date_js">
-    <File Id="Scripts_flot_examples_axes_time_zones_date.js" Name="date.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\date.js" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_index_html">
-    <File Id="Scripts_flot_examples_axes_time_zones_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_axes_time_zones_tz_Components" Directory="SCRIPTSFLOTEXAMPLESAXESTIMEZONESTZFOLDER">
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_africa">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_africa" Name="africa" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\africa" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_antarctica">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_antarctica" Name="antarctica" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\antarctica" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_asia">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_asia" Name="asia" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\asia" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_australasia">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_australasia" Name="australasia" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\australasia" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_backward">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_backward" Name="backward" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\backward" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_etcetera">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_etcetera" Name="etcetera" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\etcetera" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_europe">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_europe" Name="europe" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\europe" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_factory">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_factory" Name="factory" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\factory" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_iso3166_tab">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_iso3166.tab" Name="iso3166.tab" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\iso3166.tab" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_leapseconds">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_leapseconds" Name="leapseconds" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\leapseconds" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_northamerica">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_northamerica" Name="northamerica" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\northamerica" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_pacificnew">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_pacificnew" Name="pacificnew" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\pacificnew" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_solar87">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_solar87" Name="solar87" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\solar87" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_solar88">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_solar88" Name="solar88" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\solar88" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_solar89">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_solar89" Name="solar89" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\solar89" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_southamerica">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_southamerica" Name="southamerica" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\southamerica" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_systemv">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_systemv" Name="systemv" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\systemv" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_yearistype_sh">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_yearistype.sh" Name="yearistype.sh" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\yearistype.sh" />
-  </Component>
-  <Component Id="Scripts_flot_examples_axes_time_zones_tz_zone_tab">
-    <File Id="Scripts_flot_examples_axes_time_zones_tz_zone.tab" Name="zone.tab" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\axes-time-zones\tz\zone.tab" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_basic_options_Components" Directory="SCRIPTSFLOTEXAMPLESBASICOPTIONSFOLDER">
-  <Component Id="Scripts_flot_examples_basic_options_index_html">
-    <File Id="Scripts_flot_examples_basic_options_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\basic-options\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_basic_usage_Components" Directory="SCRIPTSFLOTEXAMPLESBASICUSAGEFOLDER">
-  <Component Id="Scripts_flot_examples_basic_usage_index_html">
-    <File Id="Scripts_flot_examples_basic_usage_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\basic-usage\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_canvas_Components" Directory="SCRIPTSFLOTEXAMPLESCANVASFOLDER">
-  <Component Id="Scripts_flot_examples_canvas_index_html">
-    <File Id="Scripts_flot_examples_canvas_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\canvas\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_categories_Components" Directory="SCRIPTSFLOTEXAMPLESCATEGORIESFOLDER">
-  <Component Id="Scripts_flot_examples_categories_index_html">
-    <File Id="Scripts_flot_examples_categories_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\categories\index.html" />
-  </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_flot_examples_gauge_Components" Directory="SCRIPTSFLOTEXAMPLESGAUGEFOLDER">
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_image_Components" Directory="SCRIPTSFLOTEXAMPLESIMAGEFOLDER">
-  <Component Id="Scripts_flot_examples_image_hs_2004_27_a_large_web_jpg">
-    <File Id="Scripts_flot_examples_image_hs_2004_27_a_large_web.jpg" Name="hs-2004-27-a-large-web.jpg" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\image\hs-2004-27-a-large-web.jpg" />
-  </Component>
-  <Component Id="Scripts_flot_examples_image_index_html">
-    <File Id="Scripts_flot_examples_image_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\image\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_interacting_Components" Directory="SCRIPTSFLOTEXAMPLESINTERACTINGFOLDER">
-  <Component Id="Scripts_flot_examples_interacting_index_html">
-    <File Id="Scripts_flot_examples_interacting_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\interacting\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_navigate_Components" Directory="SCRIPTSFLOTEXAMPLESNAVIGATEFOLDER">
-  <Component Id="Scripts_flot_examples_navigate_arrow_down_gif">
-    <File Id="Scripts_flot_examples_navigate_arrow_down.gif" Name="arrow-down.gif" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\navigate\arrow-down.gif" />
-  </Component>
-  <Component Id="Scripts_flot_examples_navigate_arrow_left_gif">
-    <File Id="Scripts_flot_examples_navigate_arrow_left.gif" Name="arrow-left.gif" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\navigate\arrow-left.gif" />
-  </Component>
-  <Component Id="Scripts_flot_examples_navigate_arrow_right_gif">
-    <File Id="Scripts_flot_examples_navigate_arrow_right.gif" Name="arrow-right.gif" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\navigate\arrow-right.gif" />
-  </Component>
-  <Component Id="Scripts_flot_examples_navigate_arrow_up_gif">
-    <File Id="Scripts_flot_examples_navigate_arrow_up.gif" Name="arrow-up.gif" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\navigate\arrow-up.gif" />
-  </Component>
-  <Component Id="Scripts_flot_examples_navigate_index_html">
-    <File Id="Scripts_flot_examples_navigate_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\navigate\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_percentiles_Components" Directory="SCRIPTSFLOTEXAMPLESPERCENTILESFOLDER">
-  <Component Id="Scripts_flot_examples_percentiles_index_html">
-    <File Id="Scripts_flot_examples_percentiles_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\percentiles\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_realtime_Components" Directory="SCRIPTSFLOTEXAMPLESREALTIMEFOLDER">
-  <Component Id="Scripts_flot_examples_realtime_index_html">
-    <File Id="Scripts_flot_examples_realtime_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\realtime\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_resize_Components" Directory="SCRIPTSFLOTEXAMPLESRESIZEFOLDER">
-  <Component Id="Scripts_flot_examples_resize_index_html">
-    <File Id="Scripts_flot_examples_resize_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\resize\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_selection_Components" Directory="SCRIPTSFLOTEXAMPLESSELECTIONFOLDER">
-  <Component Id="Scripts_flot_examples_selection_index_html">
-    <File Id="Scripts_flot_examples_selection_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\selection\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_series_errorbars_Components" Directory="SCRIPTSFLOTEXAMPLESSERIESERRORBARSFOLDER">
-  <Component Id="Scripts_flot_examples_series_errorbars_index_html">
-    <File Id="Scripts_flot_examples_series_errorbars_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\series-errorbars\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_series_pie_Components" Directory="SCRIPTSFLOTEXAMPLESSERIESPIEFOLDER">
-  <Component Id="Scripts_flot_examples_series_pie_index_html">
-    <File Id="Scripts_flot_examples_series_pie_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\series-pie\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_series_toggle_Components" Directory="SCRIPTSFLOTEXAMPLESSERIESTOGGLEFOLDER">
-  <Component Id="Scripts_flot_examples_series_toggle_index_html">
-    <File Id="Scripts_flot_examples_series_toggle_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\series-toggle\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_series_types_Components" Directory="SCRIPTSFLOTEXAMPLESSERIESTYPESFOLDER">
-  <Component Id="Scripts_flot_examples_series_types_index_html">
-    <File Id="Scripts_flot_examples_series_types_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\series-types\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_shared_Components" Directory="SCRIPTSFLOTEXAMPLESSHAREDFOLDER">
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_shared_jquery_ui_Components" Directory="SCRIPTSFLOTEXAMPLESSHAREDJQUERYUIFOLDER">
-  <Component Id="Scripts_flot_examples_shared_jquery_ui_jquery_ui_min_css">
-    <File Id="Scripts_flot_examples_shared_jquery_ui_jquery_ui.min.css" Name="jquery-ui.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\shared\jquery-ui\jquery-ui.min.css" />
-  </Component>
-  <Component Id="Scripts_flot_examples_shared_jquery_ui_jquery_ui_min_js">
-    <File Id="Scripts_flot_examples_shared_jquery_ui_jquery_ui.min.js" Name="jquery-ui.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\shared\jquery-ui\jquery-ui.min.js" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_stacking_Components" Directory="SCRIPTSFLOTEXAMPLESSTACKINGFOLDER">
-  <Component Id="Scripts_flot_examples_stacking_index_html">
-    <File Id="Scripts_flot_examples_stacking_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\stacking\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_symbols_Components" Directory="SCRIPTSFLOTEXAMPLESSYMBOLSFOLDER">
-  <Component Id="Scripts_flot_examples_symbols_index_html">
-    <File Id="Scripts_flot_examples_symbols_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\symbols\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_threshold_Components" Directory="SCRIPTSFLOTEXAMPLESTHRESHOLDFOLDER">
-  <Component Id="Scripts_flot_examples_threshold_index_html">
-    <File Id="Scripts_flot_examples_threshold_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\threshold\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_tracking_Components" Directory="SCRIPTSFLOTEXAMPLESTRACKINGFOLDER">
-  <Component Id="Scripts_flot_examples_tracking_index_html">
-    <File Id="Scripts_flot_examples_tracking_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\tracking\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_visitors_Components" Directory="SCRIPTSFLOTEXAMPLESVISITORSFOLDER">
-  <Component Id="Scripts_flot_examples_visitors_index_html">
-    <File Id="Scripts_flot_examples_visitors_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\visitors\index.html" />
-  </Component>
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_zooming_Components" Directory="SCRIPTSFLOTEXAMPLESZOOMINGFOLDER">
-  <Component Id="Scripts_flot_examples_zooming_index_html">
-    <File Id="Scripts_flot_examples_zooming_index.html" Name="index.html" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\examples\zooming\index.html" />
-  </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_fullscreenselect_Components" Directory="SCRIPTSFULLSCREENSELECTFOLDER">
   <Component Id="Scripts_fullscreenselect_bootstrap_fullscreen_select_js">
@@ -4129,63 +3874,63 @@
     <File Id="Scripts_src_noconflict_snippets_yaml.js" Name="yaml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\yaml.js" />
   </Component>
 </ComponentGroup>
-<ComponentGroup Id="wwwroot_Workbench_Components" Directory="WORKBENCHFOLDER">
-  <Component Id="Workbench_BreakersForDay_cshtml">
-    <File Id="Workbench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\BreakersForDay.cshtml" />
+<ComponentGroup Id="wwwroot_WorkBench_Components" Directory="WORKBENCHFOLDER">
+  <Component Id="WorkBench_BreakersForDay_cshtml">
+    <File Id="WorkBench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\BreakersForDay.cshtml" />
   </Component>
-  <Component Id="Workbench_Charts_cshtml">
-    <File Id="Workbench_Charts.cshtml" Name="Charts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Charts.cshtml" />
+  <Component Id="WorkBench_Charts_cshtml">
+    <File Id="WorkBench_Charts.cshtml" Name="Charts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Charts.cshtml" />
   </Component>
-  <Component Id="Workbench_DisturbancesForDay_cshtml">
-    <File Id="Workbench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDay.cshtml" />
+  <Component Id="WorkBench_DisturbancesForDay_cshtml">
+    <File Id="WorkBench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDay.cshtml" />
   </Component>
-  <Component Id="Workbench_DisturbancesForDayAngular_cshtml">
-    <File Id="Workbench_DisturbancesForDayAngular.cshtml" Name="DisturbancesForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDayAngular.cshtml" />
+  <Component Id="WorkBench_DisturbancesForDayAngular_cshtml">
+    <File Id="WorkBench_DisturbancesForDayAngular.cshtml" Name="DisturbancesForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDayAngular.cshtml" />
   </Component>
-  <Component Id="Workbench_DisturbancesForMeter_cshtml">
-    <File Id="Workbench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForMeter.cshtml" />
+  <Component Id="WorkBench_DisturbancesForMeter_cshtml">
+    <File Id="WorkBench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForMeter.cshtml" />
   </Component>
-  <Component Id="Workbench_Events_cshtml">
-    <File Id="Workbench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Events.cshtml" />
+  <Component Id="WorkBench_Events_cshtml">
+    <File Id="WorkBench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Events.cshtml" />
   </Component>
-  <Component Id="Workbench_EventsAngular_cshtml">
-    <File Id="Workbench_EventsAngular.cshtml" Name="EventsAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsAngular.cshtml" />
+  <Component Id="WorkBench_EventsAngular_cshtml">
+    <File Id="WorkBench_EventsAngular.cshtml" Name="EventsAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsAngular.cshtml" />
   </Component>
-  <Component Id="Workbench_EventsForDate_cshtml">
-    <File Id="Workbench_EventsForDate.cshtml" Name="EventsForDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDate.cshtml" />
+  <Component Id="WorkBench_EventsForDate_cshtml">
+    <File Id="WorkBench_EventsForDate.cshtml" Name="EventsForDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDate.cshtml" />
   </Component>
-  <Component Id="Workbench_EventsForDateAngular_cshtml">
-    <File Id="Workbench_EventsForDateAngular.cshtml" Name="EventsForDateAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDateAngular.cshtml" />
+  <Component Id="WorkBench_EventsForDateAngular_cshtml">
+    <File Id="WorkBench_EventsForDateAngular.cshtml" Name="EventsForDateAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDateAngular.cshtml" />
   </Component>
-  <Component Id="Workbench_EventsForDay_cshtml">
-    <File Id="Workbench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDay.cshtml" />
+  <Component Id="WorkBench_EventsForDay_cshtml">
+    <File Id="WorkBench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDay.cshtml" />
   </Component>
-  <Component Id="Workbench_EventsForDayAngular_cshtml">
-    <File Id="Workbench_EventsForDayAngular.cshtml" Name="EventsForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDayAngular.cshtml" />
+  <Component Id="WorkBench_EventsForDayAngular_cshtml">
+    <File Id="WorkBench_EventsForDayAngular.cshtml" Name="EventsForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDayAngular.cshtml" />
   </Component>
-  <Component Id="Workbench_EventsForMeter_cshtml">
-    <File Id="Workbench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForMeter.cshtml" />
+  <Component Id="WorkBench_EventsForMeter_cshtml">
+    <File Id="WorkBench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForMeter.cshtml" />
   </Component>
-  <Component Id="Workbench_FaultsForDay_cshtml">
-    <File Id="Workbench_FaultsForDay.cshtml" Name="FaultsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\FaultsForDay.cshtml" />
+  <Component Id="WorkBench_FaultsForDay_cshtml">
+    <File Id="WorkBench_FaultsForDay.cshtml" Name="FaultsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\FaultsForDay.cshtml" />
   </Component>
-  <Component Id="Workbench_Filters_cshtml">
-    <File Id="Workbench_Filters.cshtml" Name="Filters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Filters.cshtml" />
+  <Component Id="WorkBench_Filters_cshtml">
+    <File Id="WorkBench_Filters.cshtml" Name="Filters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Filters.cshtml" />
   </Component>
-  <Component Id="Workbench_Help_cshtml">
-    <File Id="Workbench_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Help.cshtml" />
+  <Component Id="WorkBench_Help_cshtml">
+    <File Id="WorkBench_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Help.cshtml" />
   </Component>
-  <Component Id="Workbench_index_cshtml">
-    <File Id="Workbench_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\index.cshtml" />
+  <Component Id="WorkBench_index_cshtml">
+    <File Id="WorkBench_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\index.cshtml" />
   </Component>
-  <Component Id="Workbench_Layout_cshtml">
-    <File Id="Workbench_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Layout.cshtml" />
+  <Component Id="WorkBench_Layout_cshtml">
+    <File Id="WorkBench_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Layout.cshtml" />
   </Component>
-  <Component Id="Workbench_SiteSummary_cshtml">
-    <File Id="Workbench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummary.cshtml" />
+  <Component Id="WorkBench_SiteSummary_cshtml">
+    <File Id="WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />
   </Component>
-  <Component Id="Workbench_SiteSummaryAngular_cshtml">
-    <File Id="Workbench_SiteSummaryAngular.cshtml" Name="SiteSummaryAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummaryAngular.cshtml" />
+  <Component Id="WorkBench_SiteSummaryAngular_cshtml">
+    <File Id="WorkBench_SiteSummaryAngular.cshtml" Name="SiteSummaryAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummaryAngular.cshtml" />
   </Component>
 </ComponentGroup>
 </Include>

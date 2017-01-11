@@ -20,39 +20,7 @@
     <Directory Id="SCRIPTSD3FOLDER" Name="D3" />
     <Directory Id="SCRIPTSFLOTFOLDER" Name="flot">
       <Directory Id="SCRIPTSFLOTEXAMPLESFOLDER" Name="examples">
-        <Directory Id="SCRIPTSFLOTEXAMPLESAJAXFOLDER" Name="ajax" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESANNOTATINGFOLDER" Name="annotating" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESAXESINTERACTINGFOLDER" Name="axes-interacting" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESAXESMULTIPLEFOLDER" Name="axes-multiple" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESAXESTIMEFOLDER" Name="axes-time" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESAXESTIMEZONESFOLDER" Name="axes-time-zones">
-          <Directory Id="SCRIPTSFLOTEXAMPLESAXESTIMEZONESTZFOLDER" Name="tz" />
-        </Directory>
-        <Directory Id="SCRIPTSFLOTEXAMPLESBASICOPTIONSFOLDER" Name="basic-options" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESBASICUSAGEFOLDER" Name="basic-usage" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESCANVASFOLDER" Name="canvas" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESCATEGORIESFOLDER" Name="categories" />
         <Directory Id="SCRIPTSFLOTEXAMPLESGAUGEFOLDER" Name="gauge" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESIMAGEFOLDER" Name="image" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESINTERACTINGFOLDER" Name="interacting" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESNAVIGATEFOLDER" Name="navigate" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESPERCENTILESFOLDER" Name="percentiles" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESREALTIMEFOLDER" Name="realtime" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESRESIZEFOLDER" Name="resize" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSELECTIONFOLDER" Name="selection" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSERIESERRORBARSFOLDER" Name="series-errorbars" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSERIESPIEFOLDER" Name="series-pie" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSERIESTOGGLEFOLDER" Name="series-toggle" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSERIESTYPESFOLDER" Name="series-types" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSHAREDFOLDER" Name="shared">
-          <Directory Id="SCRIPTSFLOTEXAMPLESSHAREDJQUERYUIFOLDER" Name="jquery-ui" />
-        </Directory>
-        <Directory Id="SCRIPTSFLOTEXAMPLESSTACKINGFOLDER" Name="stacking" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESSYMBOLSFOLDER" Name="symbols" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESTHRESHOLDFOLDER" Name="threshold" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESTRACKINGFOLDER" Name="tracking" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESVISITORSFOLDER" Name="visitors" />
-        <Directory Id="SCRIPTSFLOTEXAMPLESZOOMINGFOLDER" Name="zooming" />
       </Directory>
     </Directory>
     <Directory Id="SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
@@ -186,6 +154,6 @@
       <Directory Id="SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER" Name="snippets" />
     </Directory>
   </Directory>
-  <Directory Id="WORKBENCHFOLDER" Name="Workbench" />
+  <Directory Id="WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
 </Include>

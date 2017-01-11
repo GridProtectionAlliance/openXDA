@@ -10,10 +10,6 @@
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-    <SccProjectName>SAK</SccProjectName>
-    <SccProvider>SAK</SccProvider>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccLocalPath>SAK</SccLocalPath>
     <Name>openXDASetup</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -154,6 +150,15 @@
     <WixTasksPath>$(WixToolPath)WixTasks.dll</WixTasksPath>
   </PropertyGroup>
   <Import Project="$(WixTargetsPath)" Condition="Exists($(WixTargetsPath))" />
+  <Target Name="BeforeBuild">
+    <PropertyGroup>
+      <VersionFile>$(SolutionDir)\..\Build\Scripts\openXDA.version</VersionFile>
+    </PropertyGroup>
+    <ReadLinesFromFile File="$(VersionFile)">
+      <Output TaskParameter="Lines" ItemName="VersionNumber"/>
+    </ReadLinesFromFile>
+    <Exec Command="Powershell -ExecutionPolicy ByPass -File &quot;$(ProjectDir)\VersionBitmap.ps1&quot; &quot;$(ProjectDir)\openXDASetupDialog.bmp&quot; &quot;@(VersionNumber)&quot;" />
+  </Target>
   <Target Name="AfterBuild">
     <ItemGroup>
       <CopyFiles Include="LICENSE.txt" />
@@ -161,6 +166,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(CopyFiles)" DestinationFolder="$(OutDir)" />
     <CallTarget Targets="SignBuild" />
+    <Exec Command="Powershell -ExecutionPolicy ByPass -File &quot;$(ProjectDir)\RestoreBitmap.ps1&quot; &quot;$(ProjectDir)\openXDASetupDialog.bmp&quot;" />
   </Target>
   <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
     <PropertyGroup>
@@ -174,9 +180,5 @@
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
 	-->
 </Project>
