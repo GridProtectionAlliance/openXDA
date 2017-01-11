@@ -126,6 +126,8 @@
     <Content Include="README.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="RestoreBitmap.ps1" />
+    <Content Include="VersionBitmap.ps1" />
     <Content Include="WebFeatures.wxi" />
     <Content Include="WebFiles.wxi" />
     <Content Include="WebFolders.wxi" />
@@ -155,7 +157,7 @@
       <VersionFile>$(SolutionDir)\..\Build\Scripts\openXDA.version</VersionFile>
     </PropertyGroup>
     <ReadLinesFromFile File="$(VersionFile)">
-      <Output TaskParameter="Lines" ItemName="VersionNumber"/>
+      <Output TaskParameter="Lines" ItemName="VersionNumber" />
     </ReadLinesFromFile>
     <Exec Command="Powershell -ExecutionPolicy ByPass -File &quot;$(ProjectDir)\VersionBitmap.ps1&quot; &quot;$(ProjectDir)\openXDASetupDialog.bmp&quot; &quot;@(VersionNumber)&quot;" />
   </Target>
