@@ -441,7 +441,7 @@ if (typeof jQuery === 'undefined') {
      */
     $.fn.mobileSelect.defaults = {
         template: '<div><div class="mobileSelect-title"></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
-        templateFilterable:'<div><div class="mobileSelect-title"><div class="right-inner-addon"><i class="glyphicon glyphicon-search"></i><input class="form-control mobileSelect-filter" type="search" placeholder="Search Options" /></div></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
+        templateFilterable:'<div><div class="mobileSelect-title"><div class="right-inner-addon"><i class="glyphicon glyphicon-search"></i><input class="form-control mobileSelect-filter" type="search" /></div></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
         title: 'Select an option',
         buttonSelectAll: 'Select All Visible',
         buttonSave: 'Save',

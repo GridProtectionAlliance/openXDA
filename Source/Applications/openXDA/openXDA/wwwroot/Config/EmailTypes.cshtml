@@ -82,8 +82,8 @@
     <script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailType, DataHub>(ViewBag))
-        @Raw(Model.RenderAbstract<EmailCategory>("Name", "ID", "lookupEmailCategoryName", "emailCategoryName"))
-        @Raw(Model.RenderAbstract<XSLTemplate>("Name", "ID", "lookupXSLTemplateName", "xslTemplateName"))
+        @Raw(AppModel.RenderAbstract<EmailCategory>("Name", "ID", "lookupEmailCategoryName", "emailCategoryName"))
+        @Raw(AppModel.RenderAbstract<XSLTemplate>("Name", "ID", "lookupXSLTemplateName", "xslTemplateName"))
 
         $(function () {
             viewModel.filterText = '@ViewBag.EmailTypeID';

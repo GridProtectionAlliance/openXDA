@@ -92,8 +92,8 @@
 {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailGroupUserAccount, DataHub>(ViewBag, null, null, int.Parse(ViewBag.EmailGroupID)))
-        @Raw(Model.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
-        @Raw(Model.RenderAbstract<UserAccount>("Name", "ID", "lookupUserAccountName", "userAccountName"))
+        @Raw(AppModel.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
+        @Raw(AppModel.RenderAbstract<UserAccount>("Name", "ID", "lookupUserAccountName", "userAccountName"))
 
         $(function () {
             viewModel.filterText = '@ViewBag.EmailGroupID' + ';' + '@ViewBag.UserAccountID';

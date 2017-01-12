@@ -209,7 +209,7 @@
 
 @section Scripts {
     <script>
-        @Raw(Model.RenderAbstract<EventType>("Name", "ID", "lookupEventTypeName", "eventTypeName"))
+        @Raw(AppModel.RenderAbstract<EventType>("Name", "ID", "lookupEventTypeName", "eventTypeName"))
         
         $(function () {
             $('#pageHeader h3').append("<small class='pull-right' style='margin-top: 8px' >Breaker Events: <span id='recordCount'></span></small>")

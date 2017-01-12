@@ -343,9 +343,9 @@
     <script language="javascript" type="text/javascript" src="/Scripts/spin.js"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))
-        @Raw(Model.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))
-        @Raw(Model.RenderAbstract<MeasurementCharacteristic>("Name", "ID", "renderMeasurementCharacteristicName", "measurementCharacteristicName"))
-        @Raw(Model.RenderAbstract<Phase>("Name", "ID", "renderPhaseName", "phaseName"))
+        @Raw(AppModel.RenderAbstract<MeasurementType>("Name", "ID", "renderMeasurementTypeName", "measurementTypeName"))
+        @Raw(AppModel.RenderAbstract<MeasurementCharacteristic>("Name", "ID", "renderMeasurementCharacteristicName", "measurementCharacteristicName"))
+        @Raw(AppModel.RenderAbstract<Phase>("Name", "ID", "renderPhaseName", "phaseName"))
         var plot;
 
         function truncate(string, num) {
