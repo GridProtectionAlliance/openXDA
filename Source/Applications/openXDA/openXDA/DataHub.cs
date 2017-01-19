@@ -2021,9 +2021,9 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator, Engineer")]
         [RecordOperation(typeof(Event), RecordOperation.CreateNewRecord)]
-        public Event NewEvent()
+        public EventView NewEvent()
         {
-            return new Event();
+            return new EventView();
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
