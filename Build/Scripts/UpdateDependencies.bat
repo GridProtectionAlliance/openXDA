@@ -43,7 +43,7 @@ SET historiandependencies=%target%\Source\Dependencies\openHistorian
 SET sourcemasterbuild=%gsf%\Build Scripts\MasterBuild.buildproj
 SET targetmasterbuild=%target%\Build\Scripts
 SET sourcelogviewer=%gsf%\Tools\LogFileViewer\LogFileViewer.exe
-SET targetlogviewer=%target%\Source\Data
+SET targetlogviewer=%target%\Source\Applications\openXDA\openXDASetup
 
 ECHO.
 ECHO Entering working directory...
