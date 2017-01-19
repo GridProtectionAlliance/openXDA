@@ -55,11 +55,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C
 	ProjectSection(SolutionItems) = preProject
 		Data\01 - openXDA.sql = Data\01 - openXDA.sql
 		Data\02 - DashSprocs.sql = Data\02 - DashSprocs.sql
-		Data\03 - EnableHistorianSqlClr.sql = Data\03 - EnableHistorianSqlClr.sql
-		Data\04 - DefaultSettings.sql = Data\04 - DefaultSettings.sql
-		Data\05 - DefaultChannelTypes.sql = Data\05 - DefaultChannelTypes.sql
-		Data\06 - DefaultTrendingAlarms.sql = Data\06 - DefaultTrendingAlarms.sql
-		Data\07 - DefaultContours.sql = Data\07 - DefaultContours.sql
+		Data\03 - EnableEventDataSqlClr.sql = Data\03 - EnableEventDataSqlClr.sql
+		Data\04 - EnableHistorianSqlClr.sql = Data\04 - EnableHistorianSqlClr.sql
+		Data\05 - DefaultSettings.sql = Data\05 - DefaultSettings.sql
+		Data\06 - DefaultChannelTypes.sql = Data\06 - DefaultChannelTypes.sql
+		Data\07 - DefaultTrendingAlarms.sql = Data\07 - DefaultTrendingAlarms.sql
+		Data\08 - DefaultContours.sql = Data\08 - DefaultContours.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{9DA625F5-5D02-4855-A891-5E059AE2BD83}"

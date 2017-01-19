@@ -14,7 +14,21 @@
     <Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
       <!-- openXDA Database-->
       <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
-        <ComponentGroupRef Id="DatabaseComponents" />
+        <Feature Id="DashScriptFeature" Title="DashSprocs.sql" AllowAdvertise="no" Description="Installs the stored procedures required for PQ Dashboard integration.">
+          <ComponentRef Id="DashScript" />
+        </Feature>
+        <Feature Id="EnableEventDataSqlClrFeature" Title="EnableEventDataSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying event data from the openXDA database (requires installation of SAFE assemblies).">
+          <ComponentRef Id="EnableEventDataSqlClr" />
+        </Feature>
+        <Feature Id="EnableHistorianSqlClrFeature" Title="EnableHistorianSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying trending data from the openHistorian (requires installation of UNSAFE assemblies)." Level="2">
+          <ComponentRef Id="EnableHistorianSqlClr" />
+        </Feature>
+
+        <ComponentRef Id="DBScript" />
+        <ComponentRef Id="DefaultSettings" />
+        <ComponentRef Id="DefaultChannelTypes" />
+        <ComponentRef Id="DefaultTrendingAlarms" />
+        <ComponentRef Id="DefaultContours" />
       </Feature>
       
       <!-- openXDA Service -->
@@ -147,6 +161,8 @@
     <CustomAction Id="openXDA.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DashSprocs.sql.SetProperty" Property="DashSprocs.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DashSprocs.sql]" />
     <CustomAction Id="DashSprocs.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
+    <CustomAction Id="EnableEventDataSqlClr.sql.SetProperty" Property="EnableEventDataSqlClr.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#EnableEventDataSqlClr.sql]" />
+    <CustomAction Id="EnableEventDataSqlClr.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="EnableHistorianSqlClr.sql.SetProperty" Property="EnableHistorianSqlClr.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#EnableHistorianSqlClr.sql]" />
     <CustomAction Id="EnableHistorianSqlClr.sql" BinaryKey="InstallerActions" DllEntry="DatabaseScriptAction" Execute="deferred" Impersonate="yes" />
     <CustomAction Id="DefaultSettings.sql.SetProperty" Property="DefaultSettings.sql" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[DBCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];SCRIPTPATH=[#DefaultSettings.sql]" />
@@ -178,6 +194,7 @@
 
       <ProgressText Action="openXDA.sql">Setting up initial schema...</ProgressText>
       <ProgressText Action="DashSprocs.sql">Creating procedures to support PQ Dashboard...</ProgressText>
+      <ProgressText Action="EnableEventDataSqlClr.sql">Enabling SqlClr interface to event data...</ProgressText>
       <ProgressText Action="EnableHistorianSqlClr.sql">Enabling SqlClr interface to the openHistorian...</ProgressText>
       <ProgressText Action="DefaultSettings.sql">Adding default settings...</ProgressText>
       <ProgressText Action="DefaultChannelTypes.sql">Defining default channel types...</ProgressText>
@@ -206,25 +223,27 @@
       <Custom Action="GrantDBPermissions.SetProperty" After="CreateDBUser"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="GrantDBPermissions" After="GrantDBPermissions.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
 
-      <Custom Action="GSF.Core.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="GSF.Core.SqlClr" After="GSF.Core.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GSF.Core.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openXDA.SqlClr.SetProperty" After="openHistorian.XDALink.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openXDA.SqlClr.SetProperty" After="GrantDBPermissions"><![CDATA[&EnableEventDataSqlClrFeature=3 OR (!EnableEventDataSqlClrFeature=3 AND &EnableEventDataSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openXDA.SqlClr" After="openXDA.SqlClr.SetProperty"><![CDATA[&EnableEventDataSqlClrFeature=3 OR (!EnableEventDataSqlClrFeature=3 AND &EnableEventDataSqlClrFeature=-1)]]></Custom>
+      <Custom Action="GSF.Core.SqlClr.SetProperty" After="openXDA.SqlClr"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="GSF.Core.SqlClr" After="GSF.Core.SqlClr.SetProperty"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr.SetProperty" After="GSF.Core.SqlClr"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="GSF.SortedTreeStore.SqlClr" After="GSF.SortedTreeStore.SqlClr.SetProperty"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr.SetProperty" After="GSF.SortedTreeStore.SqlClr"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.Core.SqlClr" After="openHistorian.Core.SqlClr.SetProperty"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.SqlClr.SetProperty" After="openHistorian.Core.SqlClr"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.SqlClr" After="openHistorian.SqlClr.SetProperty"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr.SetProperty" After="openHistorian.SqlClr"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="openHistorian.XDALink.SqlClr" After="openHistorian.XDALink.SqlClr.SetProperty"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
       
-      <Custom Action="openXDA.sql.SetProperty" After="openXDA.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="openXDA.sql.SetProperty" After="openHistorian.XDALink.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="DashSprocs.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[&DashScriptFeature=3 OR (!DashScriptFeature=3 AND &DashScriptFeature=-1)]]></Custom>
+      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[&DashScriptFeature=3 OR (!DashScriptFeature=3 AND &DashScriptFeature=-1)]]></Custom>
+      <Custom Action="EnableEventDataSqlClr.sql.SetProperty" After="DashSprocs.sql"><![CDATA[&EnableEventDataSqlClrFeature=3 OR (!EnableEventDataSqlClrFeature=3 AND &EnableEventDataSqlClrFeature=-1)]]></Custom>
+      <Custom Action="EnableEventDataSqlClr.sql" After="EnableEventDataSqlClr.sql.SetProperty"><![CDATA[&EnableEventDataSqlClrFeature=3 OR (!EnableEventDataSqlClrFeature=3 AND &EnableEventDataSqlClrFeature=-1)]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="EnableEventDataSqlClr.sql"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
+      <Custom Action="EnableHistorianSqlClr.sql" After="EnableHistorianSqlClr.sql.SetProperty"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
       <Custom Action="DefaultSettings.sql.SetProperty" After="EnableHistorianSqlClr.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="DefaultSettings.sql" After="DefaultSettings.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="DefaultChannelTypes.sql.SetProperty" After="DefaultSettings.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
@@ -295,20 +314,23 @@
       <Component Id="DashScript">
         <File Id="DashSprocs.sql" Name="DashSprocs.sql" Source="$(var.SolutionDir)\Data\02 - DashSprocs.sql" />
       </Component>
+      <Component Id="EnableEventDataSqlClr">
+        <File Id="EnableEventDataSqlClr.sql" Name="EnableEventDataSqlClr.sql" Source="$(var.SolutionDir)\Data\03 - EnableEventDataSqlClr.sql" />
+      </Component>
       <Component Id="EnableHistorianSqlClr">
-        <File Id="EnableHistorianSqlClr.sql" Name="EnableHistorianSqlClr.sql" Source="$(var.SolutionDir)\Data\03 - EnableHistorianSqlClr.sql" />
+        <File Id="EnableHistorianSqlClr.sql" Name="EnableHistorianSqlClr.sql" Source="$(var.SolutionDir)\Data\04 - EnableHistorianSqlClr.sql" />
       </Component>
       <Component Id="DefaultSettings">
-        <File Id="DefaultSettings.sql" Name="DefaultSettings.sql" Source="$(var.SolutionDir)\Data\04 - DefaultSettings.sql" />
+        <File Id="DefaultSettings.sql" Name="DefaultSettings.sql" Source="$(var.SolutionDir)\Data\05 - DefaultSettings.sql" />
       </Component>
       <Component Id="DefaultChannelTypes">
-        <File Id="DefaultChannelTypes.sql" Name="DefaultChannelTypes.sql" Source="$(var.SolutionDir)\Data\05 - DefaultChannelTypes.sql" />
+        <File Id="DefaultChannelTypes.sql" Name="DefaultChannelTypes.sql" Source="$(var.SolutionDir)\Data\06 - DefaultChannelTypes.sql" />
       </Component>
       <Component Id="DefaultTrendingAlarms">
-        <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\06 - DefaultTrendingAlarms.sql" />
+        <File Id="DefaultTrendingAlarms.sql" Name="DefaultTrendingAlarms.sql" Source="$(var.SolutionDir)\Data\07 - DefaultTrendingAlarms.sql" />
       </Component>
       <Component Id="DefaultContours">
-        <File Id="DefaultContours.sql" Name="DefaultContours.sql" Source="$(var.SolutionDir)\Data\07 - DefaultContours.sql" />
+        <File Id="DefaultContours.sql" Name="DefaultContours.sql" Source="$(var.SolutionDir)\Data\08 - DefaultContours.sql" />
       </Component>
     </ComponentGroup>
     
