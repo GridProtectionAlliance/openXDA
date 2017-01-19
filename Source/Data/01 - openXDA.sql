@@ -532,10 +532,10 @@ GO
 INSERT INTO ApplicationRoleSecurityGroup(ApplicationRoleID, SecurityGroupID) VALUES((SELECT ID FROM ApplicationRole), (SELECT ID FROM SecurityGroup))
 GO
 
-INSERT INTO ApplicationRole(Name, Description) VALUES('Engineer', 'Admin Role')
+INSERT INTO ApplicationRole(Name, Description) VALUES('Engineer', 'Engineer Role')
 GO
 
-INSERT INTO ApplicationRole(Name, Description) VALUES('Viewer', 'Admin Role')
+INSERT INTO ApplicationRole(Name, Description) VALUES('Viewer', 'Viewer Role')
 GO
 
 
