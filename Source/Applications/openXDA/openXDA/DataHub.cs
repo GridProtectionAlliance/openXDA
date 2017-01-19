@@ -1752,11 +1752,14 @@ namespace openXDA
             DataContext.Table<WorkbenchFilter>().DeleteRecord(id);
             if (record.IsDefault)
             {
-                WorkbenchFilter wbf = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID())).First();
+                IEnumerable<WorkbenchFilter> wbfs = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+                if (wbfs.Any())
+                {
+                    WorkbenchFilter wbf = wbfs.First();
+                    wbf.IsDefault = !wbf.IsDefault;
+                    DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
 
-                wbf.IsDefault = !wbf.IsDefault;
-                DataContext.Table<WorkbenchFilter>().UpdateRecord(wbf);
-
+                }
             }
         }
 
@@ -1771,12 +1774,18 @@ namespace openXDA
         [RecordOperation(typeof(WorkbenchFilter), RecordOperation.AddNewRecord)]
         public void AddNewWorkbenchFilter(WorkbenchFilter record)
         {
+            record.UserID = GetCurrentUserID();
+            IEnumerable<WorkbenchFilter> wbfs = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
+            if (!wbfs.Any())
+            {
+                record.IsDefault = true;
+                DataContext.Table<WorkbenchFilter>().AddNewRecord(record);
+                return;
+            }
+
             if (record.IsDefault)
             {
-                IEnumerable<WorkbenchFilter> wbfs = DataContext.Table<WorkbenchFilter>().QueryRecords(restriction: new RecordRestriction("UserID = {0}", GetCurrentUserID()));
-                if (wbfs.Count() == 0)
-                    record.IsDefault = true;
-                    
+                 
                 
                 foreach (WorkbenchFilter wbf in wbfs)
                 {
@@ -1788,7 +1797,6 @@ namespace openXDA
                 }
             }
 
-            record.UserID = GetCurrentUserID();
             DataContext.Table<WorkbenchFilter>().AddNewRecord(record);
         }
 
