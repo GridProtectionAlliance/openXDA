@@ -164,7 +164,7 @@
         
         function  getAlarmCount(meterID, lineID, element){
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryChannelCount(meterID, lineID, null).done(function (count) {
+                dataHub.queryAlarmRangeLimitViewCount(meterID, lineID, '%').done(function (count) {
                     $(element).text(count.toString());
                 });
             }
