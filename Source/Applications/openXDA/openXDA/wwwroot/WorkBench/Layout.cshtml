@@ -99,7 +99,14 @@
             .collapse.in{
                 display:block !important;
             }
+        }  
+        
+        @@media (min-width: 1600px) {
+            .container {
+                width: 1550px;
+            }
         }       
+     
     </style>
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -155,7 +162,6 @@
                     <li @Raw(pageTitle == "Events" ? "class=\"active\"" : "")><a href="Events.cshtml">Events</a></li>
                     <li @Raw(pageTitle == "Charts" ? "class=\"active\"" : "")><a href="Charts.cshtml">Charts</a></li>
                     <li @Raw(pageTitle == "Site Summary" ? "class=\"active\"" : "")><a href="SiteSummary.cshtml">Site Summary</a></li>
-                    <li @Raw(pageTitle == "Help" ? "class=\"active\"" : "")><a href="Help.cshtml">Help</a></li>
                 </ul>
                 <p class="nav navbar-text navbar-right">
                     Selected Filter:

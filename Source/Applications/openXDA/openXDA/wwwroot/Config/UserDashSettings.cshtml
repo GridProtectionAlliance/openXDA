@@ -61,13 +61,14 @@
     <td width="10%" class="text-center valign-middle" data-bind="text: (Enabled? 'True': 'False')"></td>
     <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
     @Raw(dataContext.AddSelectField<UserDashSettings,UserAccount>("UserAccountID", "ID", "Name"))
-    @Raw(dataContext.AddInputField<UserDashSettings>("Name"))
-    @Raw(dataContext.AddInputField<UserDashSettings>("Value"))
+    @Raw(dataContext.AddSelectField<UserDashSettings, DashSettings>("Name", "ID", "Name"))
+    @Raw(dataContext.AddSelectField<UserDashSettings, DashSettings>("Value", "ID", "Value"))
     @Raw(dataContext.AddCheckBoxField<UserDashSettings>("Enabled", "Enable?"))
 
 }
@@ -96,6 +97,23 @@
             $.each($('#selectUserAccountID option'), function (i, o) {
                 lookupAccountName($(o).text(), $(o))
             });
+            
+            var array = $.unique($.map($('#selectName option'), function (d) { return $(d).text() }));
+            $('#selectName option').remove();
+            $.each(array, function (i, o) {
+                $('#selectName').append(new Option(o, o));
+            });
+            
+            $.each($('#selectValue option'), function (i, o) {
+                $(o).val($(o).text());
+            });
+
+
+        });
+        
+        $(viewModel).on('beforeSave', function (event, record) {
+            record.Name($('#selectName').val());
+            record.Value($('#selectValue').val());
         });
     </script>
 }

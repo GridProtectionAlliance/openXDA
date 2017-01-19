@@ -53,24 +53,6 @@ function buildPage() {
     $(window).on('resize', function () {
         resizecontents();
     });
-
-    //$("#MeasurementType").multiselect({ minWidth: 200, noneSelectedText: "Type", selectedList: 1, multiple: false });
-    //$("#MeasurementCharacteristic").multiselect({ minWidth: 200, noneSelectedText: "Characteristic", selectedList: 1, multiple: false });
-    //$("#Phase").multiselect({ minWidth: 200, noneSelectedText: "Phase", selectedList: 1, multiple: false });
-    //$("#Period").multiselect({ minWidth: 70, noneSelectedText: "Period", selectedList: 1, multiple: false });
-
-    //$("#MeasurementType")[0].change = function (event, ui) {
-    //    selectMeasure(this);
-    //};
-    //$("#MeasurementCharacteristic")[0].change = function (event, ui) {
-    //    selectMeasure(this);
-    //};
-    //$("#Phase")[0].change = function (event, ui) {
-    //    selectMeasure(this);
-    //};
-    //$("#Period")[0].change = function (event, ui) {
-    //    selectMeasure(this);
-    //};
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
