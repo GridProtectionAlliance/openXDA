@@ -433,6 +433,7 @@
     <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
+    <Content Include="wwwroot\Config\MeterLines.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
@@ -459,7 +460,6 @@
     <None Include="wwwroot\Config\Layout.cshtml" />
     <None Include="wwwroot\Config\Lines.cshtml" />
     <None Include="wwwroot\Config\MeterGroups.cshtml" />
-    <None Include="wwwroot\Config\MeterLines.cshtml" />
     <Content Include="wwwroot\Content\jquery.multiselect.css" />
     <Content Include="wwwroot\Content\jquery.multiselect.filter.css" />
     <Content Include="wwwroot\Content\OpenSEE.css" />
