@@ -91,7 +91,7 @@
             dataHub.getEventsForPeriod($('#globalFilter').val()).done(function (data) {
                 
                 var faults = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat);}),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate);}),
                     y: data.map(function (obj) { return obj.Faults }),
                     name: 'Faults',
                     marker: {
@@ -101,7 +101,7 @@
                 };
 
                 var interruptions = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Interruptions }),
                     name: 'Interruptions',
                     marker: {
@@ -111,7 +111,7 @@
                 };
                 
                 var sags = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Sags }),
                     name: 'Sags',
                     marker: {
@@ -121,7 +121,7 @@
                 };
 
                 var swells = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Swells }),
                     name: 'Swells',
                     marker: {
@@ -131,7 +131,7 @@
                 };
                 
                 var transients = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Transients }),
                     name: 'Transients',
                     marker: {
@@ -141,7 +141,7 @@
                 };
 
                 var others = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Others }),
                     name: 'Others',
                     marker: {
@@ -156,7 +156,8 @@
                     title: "Event Type by Date",
                     xaxis: {
                         title: 'Date',
-                        nticks: 7,
+                        type: 'date',
+                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
                     },
                     yaxis: {
                         title: 'Event Counts'
@@ -178,7 +179,7 @@
             dataHub.getDisturbancesForPeriod($('#globalFilter').val()).done(function (data) {
 
                 var Five = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Five }),
                     name: '5',
                     marker: {
@@ -188,7 +189,7 @@
                 };
 
                 var Four = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Four }),
                     name: '4',
                     marker: {
@@ -198,7 +199,7 @@
                 };
 
                 var Three = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Three }),
                     name: '3',
                     marker: {
@@ -208,7 +209,7 @@
                 };
 
                 var Two = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Two }),
                     name: '2',
                     marker: {
@@ -218,7 +219,7 @@
                 };
 
                 var One = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.One }),
                     name: '1',
                     marker: {
@@ -228,7 +229,7 @@
                 };
 
                 var Zero = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Zero }),
                     name: '0',
                     marker: {
@@ -242,6 +243,8 @@
                 var layout = {
                     title: "Voltage Disturbances by Date",
                     xaxis: {
+                        type: 'date',
+                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
                         title: 'Date',
                         nticks: 7,
                     },
@@ -264,7 +267,7 @@
             dataHub.getFaultsForPeriod($('#globalFilter').val()).done(function (data) {
 
                 var FiveHundred = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.FiveHundred }),
                     name: '500 kV',
                     marker: {
@@ -274,7 +277,7 @@
                 };
 
                 var ThreeHundred = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.ThreeHundred }),
                     name: '300 kV',
                     marker: {
@@ -284,7 +287,7 @@
                 };
 
                 var TwoThirty = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.TwoThirty }),
                     name: '230 kV',
                     marker: {
@@ -294,7 +297,7 @@
                 };
 
                 var OneThrityFive = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.OneThrityFive }),
                     name: '135 kV',
                     marker: {
@@ -304,7 +307,7 @@
                 };
 
                 var OneFifteen = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.OneFifteen }),
                     name: '115 kV',
                     marker: {
@@ -314,7 +317,7 @@
                 };
                 
                 var SixtyNine = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.SixtyNine }),
                     name: '69 kV',
                     marker: {
@@ -324,7 +327,7 @@
                 };
 
                 var FourtySix = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.FourtySix }),
                     name: '46 kV',
                     marker: {
@@ -335,7 +338,7 @@
 
 
                 var Zero = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Zero }),
                     name: '0',
                     marker: {
@@ -349,6 +352,8 @@
                 var layout = {
                     title: "Faults by Date",
                     xaxis: {
+                        type: 'date',
+                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
                         title: 'Date',
                         nticks: 7,
                     },
@@ -373,7 +378,7 @@
             dataHub.getBreakersForPeriod($('#globalFilter').val()).done(function (data) {
 
                 var Normal = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Normal }),
                     name: 'Normal',
                     marker: {
@@ -383,7 +388,7 @@
                 };
 
                 var Late = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Late }),
                     name: 'Late',
                     marker: {
@@ -393,7 +398,7 @@
                 };
 
                 var Indeterminate = {
-                    x: data.map(function (obj) { return new Date(obj.TheDate).formatDate(DateFormat); }),
+                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
                     y: data.map(function (obj) { return obj.Indeterminate }),
                     name: 'Indeterminate',
                     marker: {
@@ -407,6 +412,8 @@
                 var layout = {
                     title: "Breaker Events by Date",
                     xaxis: {
+                        type: 'date',
+                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
                         title: 'Date',
                         nticks: 7,
                     },

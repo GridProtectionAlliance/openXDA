@@ -2794,7 +2794,7 @@ namespace openXDA
             try
             {
                 conn = (SqlConnection)DataContext.Connection.Connection;
-                SqlCommand cmd = new SqlCommand("dbo.dDSelectDisturbancesForMeterIDByDateRange", conn);
+                SqlCommand cmd = new SqlCommand("dbo.selectDisturbancesForMeterIDByDateRange", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
                 cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
@@ -2884,7 +2884,7 @@ namespace openXDA
             try
             {
                 conn = (SqlConnection)DataContext.Connection.Connection;
-                SqlCommand cmd = new SqlCommand("dbo.pivotedSelectFaultsForMeterIDByDateRange", conn);
+                SqlCommand cmd = new SqlCommand("dbo.selectFaultsForMeterIDByDateRange", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EventDateFrom", startDate));
                 cmd.Parameters.Add(new SqlParameter("@EventDateTo", endDate));
