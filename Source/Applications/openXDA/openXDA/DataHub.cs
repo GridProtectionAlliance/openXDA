@@ -2325,6 +2325,133 @@ namespace openXDA
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND (ID LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6} OR EventTypeName LIKE {7})", meterId, startDate, endDate, filterId, filterString, filterString, filterString, filterString));
         }
 
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventForMeter), RecordOperation.QueryRecordCount)]
+        public int QueryEventsForMeterCount(int meterId, int filterId, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "4") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND " +
+                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                                                                         "StartTime >= {2} AND " +
+                                                                                         "StartTime <= {3} ",
+                                                                                         meterId,filterId, startDate, endDate);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventForMeter), RecordOperation.QueryRecords)]
+        public IEnumerable<EventView> QueryEventsForMeters(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "4") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+
+            TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND " +
+                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                                                                         "StartTime >= {2} AND " +
+                                                                                         "StartTime <= {3} ",
+                                                                                         meterId, filterId, startDate, endDate);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForMeter), RecordOperation.DeleteRecord)]
+        public void DeleteEventForMeter(int id)
+        {
+            CascadeDelete("Event", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForMeter), RecordOperation.CreateNewRecord)]
+        public EventView NewEventForMeter()
+        {
+            return new EventView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForMeter), RecordOperation.AddNewRecord)]
+        public void AddNewEventForMeter(Event record)
+        {
+            DataContext.Table<Event>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventForMeter), RecordOperation.UpdateRecord)]
+        public void UpdateEventForMeter(EventView record)
+        {
+            DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
+        }
+
         #endregion
 
         #region [DisturbancesForDay Operations]
@@ -2525,6 +2652,126 @@ namespace openXDA
             return DataContext.Table<DisturbanceView>().QueryRecordCount(new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND (ID LIKE {3} OR MeterName LIKE {4} OR PhaseName LIKE {5})", meterId, startDate, endDate, filterString, filterString, filterString));
         }
 
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.QueryRecordCount)]
+        public int QueryDisturbancesForMeterCount(int meterId, int filterId, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "4") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            TableOperations<DisturbanceView> tableOperations = DataContext.Table<DisturbanceView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND PhaseName='Worst'",
+                                                                                         meterId, startDate, endDate);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.QueryRecords)]
+        public IEnumerable<DisturbanceView> QueryDisturbancesForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "4") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            TableOperations<DisturbanceView> tableOperations = DataContext.Table<DisturbanceView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND PhaseName='Worst'",
+                                                                                         meterId, startDate, endDate);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.DeleteRecord)]
+        public void DeleteDisturbancesForMeter(int id)
+        {
+            CascadeDelete("Distrubance", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.CreateNewRecord)]
+        public DisturbanceView NewDisturbancesForMeter()
+        {
+            return new DisturbanceView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.AddNewRecord)]
+        public void AddNewDisturbancesForMeter(DisturbanceView record)
+        {
+            DataContext.Table<Disturbance>().AddNewRecord(MakeDisturbanceFromDisturbanceView(record));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.UpdateRecord)]
+        public void UpdateDisturbancesForMeterRecord(DisturbanceView record)
+        {
+            DataContext.Table<Disturbance>().UpdateRecord(MakeDisturbanceFromDisturbanceView(record));
+        }
+
         #endregion
 
         #region [BreakersForDay Operations]
@@ -2596,6 +2843,152 @@ namespace openXDA
                 $" Voltage IN({eventTypeList}) ",
                 filterId, date, endTime, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
         }
+
+        #endregion
+
+        #region [FaultForMeter Operations]
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(FaultForMeter), RecordOperation.QueryRecordCount)]
+        public int QueryFaultorMeterCount(int meterId, int filterId, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "4") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            TableOperations<FaultForMeter> tableOperations = DataContext.Table<FaultForMeter>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND InceptionTime >= {1} AND InceptionTime <= {2} AND RK=1",
+                                                                                         meterId, startDate.Date, endDate.Date);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(FaultForMeter), RecordOperation.QueryRecords)]
+        public IEnumerable<FaultForMeter> QueryFaultsForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "0")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "1") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "2") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "3") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "4") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            TableOperations<FaultForMeter> tableOperations = DataContext.Table<FaultForMeter>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND InceptionTime >= {1} AND InceptionTime <= {2} AND RK=1",
+                                                                                         meterId, startDate.Date, endDate.Date);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(FaultForMeter), RecordOperation.DeleteRecord)]
+        public void DeleteFaultsForMeter(int id)
+        {
+            CascadeDelete("FaultSummary", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(FaultForMeter), RecordOperation.CreateNewRecord)]
+        public DisturbanceView NewFaultsForMeter()
+        {
+            return new DisturbanceView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(FaultForMeter), RecordOperation.AddNewRecord)]
+        public void AddNewFaultsForMeter(FaultView record)
+        {
+            DataContext.Table<Fault>().AddNewRecord(MakeFaultFromFaultView(record));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(FaultForMeter), RecordOperation.UpdateRecord)]
+        public void UpdateFaultsForMeterRecord(FaultView record)
+        {
+            DataContext.Table<Fault>().UpdateRecord(MakeFaultFromFaultView(record));
+        }
+
+        public Fault MakeFaultFromFaultView(FaultView record)
+        {
+            Fault fault = new Fault();
+            fault.ID = record.ID;
+            fault.EventID = record.EventID;
+            fault.Algorithm = record.Algorithm;
+            fault.CalculationCycle = record.CalculationCycle;
+            fault.Distance = record.Distance;
+            fault.CurrentMagnitude = record.CurrentMagnitude;
+            fault.CurrentLag = record.CurrentLag;
+            fault.PrefaultCurrent = record.PrefaultCurrent;
+            fault.PostfaultCurrent = record.PostfaultCurrent;
+            fault.Inception = record.InceptionTime;
+            fault.DurationSeconds = record.DurationSeconds;
+            fault.DurationCycles = record.DurationCycles;
+            fault.FaultType = record.FaultType;
+            fault.IsSelectedAlgorithm = record.IsSelectedAlgorithm;
+            fault.IsValid = record.IsSelectedAlgorithm;
+            fault.IsSuppressed = record.IsSuppressed;
+            return fault;
+        }
+
 
         #endregion
 
@@ -3114,15 +3507,18 @@ namespace openXDA
             }
 
             DataTable table = DataContext.Connection.RetrieveData(
-                " SELECT Meter.ID AS MeterID, "+
+                " SELECT Meter.ID AS MeterID, " +
                 "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
-                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {2}, {3}), 0) as Correctness, " +
-                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {4} AND {5} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {6}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {7} AND {8}) AS Disturbances " +
+                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
+                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances, " +
+                "   (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN {0} AND {1} AND RK = 1) AS Faults, " +
+                "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
+                "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
                 " FROM Meter Left Join " +
                 "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
-                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {9}), ',')) "+
-                " GROUP BY Meter.ID ", startDate, endDate, startDate, endDate, startDate, endDate, filterId,startDate, endDate, filterId);
+                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
+                " GROUP BY Meter.ID ", startDate, endDate, filterId);
             return table.Select().Select(row => DataContext.Table<SiteSummary>().LoadRecord(row));
 
         }
@@ -3174,7 +3570,7 @@ namespace openXDA
                 "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
                 "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
                 "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances, " +
-                "   (SELECT COUNT(FaultSummary.ID) FROM FaultSummary JOIN Event ON FaultSummary.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Faults, " +
+                "   (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN {0} AND {1} AND RK = 1) AS Faults, " +
                 "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
                 "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
                 " FROM Meter Left Join " +
@@ -3231,8 +3627,8 @@ namespace openXDA
                 "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
                 "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
                 "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1} AND Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst')) AS Disturbances, " +
-                "   (SELECT COUNT(FaultSummary.ID) FROM FaultSummary JOIN Event ON FaultSummary.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1} AND IsSelectedAlgorithm <> 0) AS Faults, " +
+                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1} AND PhaseID=13) AS Disturbances, " +
+                "   (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN {0} AND {1} AND RK = 1) AS Faults, " +
                 "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
                 "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
                 " FROM Meter Left Join " +

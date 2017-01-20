@@ -1496,13 +1496,16 @@
     <Content Include="wwwroot\Workbench\DisturbancesForDay.cshtml" />
     <Content Include="wwwroot\Workbench\BreakersForDay.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsForDay.cshtml" />
-    <Content Include="wwwroot\Workbench\EventsForMeter.cshtml" />
+    <Content Include="wwwroot\Workbench\EventsForMeterAngular.cshtml" />
     <Content Include="wwwroot\Workbench\DisturbancesForMeter.cshtml" />
     <Content Include="wwwroot\Workbench\Events.cshtml" />
     <Content Include="wwwroot\Workbench\SiteSummaryAngular.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForDateAngular.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForDayAngular.cshtml" />
     <Content Include="wwwroot\Workbench\DisturbancesForDayAngular.cshtml" />
+    <Content Include="wwwroot\Workbench\EventsForMeter.cshtml" />
+    <Content Include="wwwroot\Workbench\DisturbancesForMeterAngular.cshtml" />
+    <Content Include="wwwroot\Workbench\FaultsForMeter.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

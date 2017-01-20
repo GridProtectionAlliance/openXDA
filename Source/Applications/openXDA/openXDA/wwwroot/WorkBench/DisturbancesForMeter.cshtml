@@ -20,15 +20,18 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
+@using System.Collections.Generic
 @using System.Net.Http
-@using System.Threading
-@using RazorEngine.Templating
+@using System.Security.AccessControl
+@using System.Text.RegularExpressions
 @using GSF.Web
+@using GSF.Web.Model
+@using openXDA
 @using openXDA.Model
 @using RazorEngine.Templating
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @{
+    DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
     ViewBag.ShowMenu = true;
 
@@ -45,339 +48,81 @@
     }
     string meter = Model.DataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", Convert.ToInt32(ViewBag.MeterID));
     ViewBag.Title = "Disturbances for " + meter;
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+{   //    { "Field", "Label", "Classes" }
+        new[] { "ID", "Disturbance ID", "text-left"},
+        new[] { "EventID", "Event ID", "text-left"},
+        new[] { "MeterName", "Meter Name", "text-left"},
+        new[] { "SeverityCode", "Severity", "text-left"},
+        new[] { "PerUnitMagnitude", "Per Unit Mag.", "text-left"},
+        new[] { "DurationSeconds", "Duration(s)", "text-left"},
+        new[] { "StartTime", "Start Time", "text-center"},
+        new[] { "EndTime", "End Time", "text-center" }
+    };
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.HideAddNewButton = true;
+
+
+    ViewBag.ParentKeys = ViewBag.EventID;
+
+
 }
 
 @section StyleSheets{
-<style>
-    table, th, td {
-        border: 1px solid grey;
-        border-collapse: collapse;
-        padding: 5px;
-    }
+    <style>
+    </style>
+}
+@helper BodyRows()
+{
+    <td width="5%" class="text-left valign-middle" data-bind="text: ID"></td>
+    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + EventID + '&faultcurves=1' }, text: EventID"></a></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: MeterName"></td>
+    <td width="5%" class="text-center valign-middle" data-bind="text: SeverityCode"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: PerUnitMagnitude"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: DurationSeconds"></td>
+    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
+    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
 
-    table tr:nth-child(odd) {
-        background-color: #f1f1f1;
-    }
-
-    table tr:nth-child(even) {
-        background-color: #ffffff;
-    }
-</style>
 }
 
-<div ng-app="myApp">
-    <div ng-controller="TableCtrl">
-        <div class="input-group">
-            <input class="form-control" ng-model="searchText" placeholder="Search" type="search" ng-change="search()" /> <span class="input-group-addon">
-                <span class="glyphicon glyphicon-search"></span>
-            </span>
-        </div>
-        <table class="table  table-hover data-table myTable">
-            <thead>
-                <tr>
-                    <th class="EmpId">
-                        <a href="#" ng-click="sort('ID')">
-                            Disturbance ID
-                            <span class="{{Header[0]}}"></span>
-                        </a>
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddInputField<DisturbancesForMeter>("ID", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<DisturbancesForMeter>("MeterName", "string", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<DisturbancesForMeter>("StartTime", "string", customDataBinding: "type: text, enable: true"))
+    @Raw(dataContext.AddInputField<DisturbancesForMeter>("EndTime", "string", customDataBinding: "enable: true"))
 
-                    </th>
-                    <th class="name">
-                        <a ng-click="sort('EventID')" href="#">
-                            Event ID
-                            <span class="{{Header[1]}}"></span>
-                        </a>
-                    </th>
-                    <th class="name">
-                        <a ng-click="sort('MeterName')" href="#">
-                            Meter ID
-                            <span class="{{Header[2]}}"></span>
-                        </a>
-                    </th>
-                    <th class="Email">
-                        <a ng-click="sort('EventTypeID')" href="#">
-                            Event Type
-                            <span class="{{Header[3]}}"></span>
-                        </a>
-                    </th>
-                    <th class="Email">
-                        <a ng-click="sort('SeverityCode')" href="#">
-                            Severity
-                            <span class="{{Header[9]}}"></span>
-                        </a>
-                    </th>
-
-                    <th class="Email">
-                        <a ng-click="sort('PhaseName')" href="#">
-                            Phase
-                            <span class="{{Header[4]}}"></span>
-                        </a>
-                    </th>
-                    <th class="Email">
-                        <a ng-click="sort('PerUnitMagnitude')" href="#">
-                            Per Unit Magnitude
-                            <span class="{{Header[5]}}"></span>
-                        </a>
-                    </th>
-                    <th class="Email">
-                        <a ng-click="sort('DurationSeconds')" href="#">
-                            Duration (s)
-                            <span class="{{Header[6]}}"></span>
-                        </a>
-                    </th>
-                    <th class="Email">
-                        <a ng-click="sort('StartTime')" href="#">
-                            Start Time
-                            <span class="{{Header[7]}}"></span>
-                        </a>
-                    </th>
-                    <th class="Email">
-                        <a ng-click="sort('EndTime')" href="#">
-                            End Time
-                            <span class="{{Header[8]}}"></span>
-                        </a>
-                    </th>
-
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="item in events">
-                    <td>{{item.ID}}</td>
-                    <td><a href="~/OpenSEE.cshtml?ID={{item.EventID.toString()}}&faultcurves=1" target="_blank">{{item.EventID}}</a></td>
-                    <td>{{item.MeterName}}</td>
-                    <td>{{getEventTypeName(item.EventTypeID)}}</td>
-                    <td>{{item.SeverityCode}}</td>
-                    <td>{{item.PhaseName}}</td>
-                    <td>{{item.PerUnitMagnitude}}</td>
-                    <td>{{item.DurationSeconds}}</td>
-                    <td><a href="EventsForDate.cshtml?Date={{item.StartTime.toString()}}" target="_blank">{{getDateTimeFormat(item.StartTime)}}</a></td>
-                    <td><a href="EventsForDate.cshtml?Date={{item.EndTime.toString()}}" target="_blank">{{getDateTimeFormat(item.EndTime)}}</a></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="pull-left">
-            <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="firstPage()"><span class="glyphicon glyphicon-backward"></span></button>
-                <button type="button" class="btn btn-default" ng-disabled="currentPage == 1" ng-click="minusPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
-            </div>
-            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" ng-model="currentPage" ng-change="setPage(currentPage)">
-            <em class="validationMessage small" style="display: none;"></em>
-            &nbsp;of&nbsp;
-            <span ng-bind="pageCount"></span>
-            &nbsp;
-            <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="plusPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
-                <button type="button" class="btn btn-default" ng-disabled="currentPage == pageCount" ng-click="lastPage()"><span class="glyphicon glyphicon-forward"></span></button>
-            </div>
-        </div>
-
-        <div class="pull-right">
-            Rows:
-            <div class="btn-group">
-                <button ng-class="{active: pageSize == 10}" class="btn btn-default" ng-click="setPageSize(10)">10</button>
-                <button ng-class="{active: pageSize == 25}" class="btn btn-default" ng-click="setPageSize(25)">25</button>
-                <button ng-class="{active: pageSize == 50}" class="btn btn-default" ng-click="setPageSize(50)">50</button>
-                <button ng-class="{active: pageSize == 100}" class="btn btn-default" ng-click="setPageSize(100)">100</button>
-            </div>
-        </div>
-    </div>
-    <!-- Ends Controller -->
-</div>
-
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(AppModel.RenderAbstract<EventType>("Name", "ID", "lookupEventTypeName", "eventTypeName"))
+        @Raw(dataContext.RenderViewModelConfiguration<DisturbancesForMeter, DataHub>(ViewBag, "ID", null, "\'" + ViewBag.MeterID + "\'", ViewBag.Filter))
 
-        $(function () {
-            $('#pageHeader h3').append("<small class='pull-right' style='margin-top: 8px' >Disturbances: <span id='recordCount'></span></small>")
-
+        $('#addNewEditDialog').on('shown.bs.modal', function () {
         });
 
-        //Demo of Searching Sorting and Pagination of Table with AngularJS - Advance Example
-
-        var myApp = angular.module('myApp', []);
-
-        myApp.filter('range', function () {
-            return function (input, total) {
-                total = parseInt(total);
-                for (var i = 0; i <= total; ++i) {
-                    input.push(i);
-                }
-                return input;
-            }
-        });
-
-        var TableCtrl = myApp.controller('TableCtrl', function ($scope) {
-            $scope.sortBy = 'ID';
-            $scope.sortDirection = true;  // true for ascending and false for descending
-            $scope.Header = ['glyphicon glyphicon-chevron-up', '', '', '', '', ''];
-            $scope.searchText = '';
-            $scope.pageSize = 10;
-            $scope.currentPage = 1;
-            $scope.pageCount;
-
-            $(window).one('globalFilterDone', function (event) {
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.$apply();
-
-                });
-
-                dataHub.getCountDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
-                    $('#recordCount').text(count);
-
-                    $scope.pageCount = Math.ceil(count / $scope.pageSize);
-                    $scope.$apply();
-                });
+        $('#globalFilter').change(function (event) {
+            viewModel.setQueryRecordCount(function (filterText) {
+                return dataHub.queryEventCount($('#globalFilter').val(), filterText);
             });
 
-            $scope.getEventTypeName = function (id) {
-                return lookupEventTypeName(id);
-            }
+            viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {
+                return dataHub.queryEvents($('#globalFilter').val(), sortField, ascending, page, pageSize, filterText);
+            });
 
-            $scope.getDateTimeFormat = function (date) {
-                return new Date(date).formatDate(DateTimeFormat);
-            }
-
-
-            $scope.search = function () {
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.currentPage = 1;
-                    $scope.$apply();
-
-                });
-
-                dataHub.getCountDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
-                    $('#recordCount').text(count);
-
-                    $scope.pageCount = Math.ceil(count / $scope.pageSize);
-                    $scope.$apply();
-                });
-
-
-
-            }
-
-
-            $scope.setPage = function (pageNumber) {
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, pageNumber, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.currentPage = pageNumber;
-
-                    $scope.$apply();
-
-                });
-            };
-
-            $scope.firstPage = function () {
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.currentPage = 1;
-
-                    $scope.$apply();
-
-                });
-            };
-
-            $scope.lastPage = function () {
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, $scope.pageCount, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.currentPage = $scope.pageCount;
-
-                    $scope.$apply();
-
-                });
-            };
-
-            $scope.plusPage = function () {
-                $scope.setPage(++$scope.currentPage);
-
-            }
-            $scope.minusPage = function () {
-                $scope.setPage(--$scope.currentPage);
-            }
-
-
-            $scope.sort = function (sortBy) {
-                if (sortBy === $scope.sortBy) {
-                    $scope.sortDirection = !$scope.sortDirection;
-                }
-                $scope.sortBy = sortBy;
-                $scope.Header = ['', '', '', '', '', ''];
-
-                if ($scope.sortDirection)
-                    iconName = 'glyphicon glyphicon-chevron-up';
-                else
-                    iconName = 'glyphicon glyphicon-chevron-down';
-
-                if (sortBy === 'ID') {
-                    $scope.Header[0] = iconName;
-                }
-                else if (sortBy === 'EventID') {
-                    $scope.Header[1] = iconName;
-                } else if (sortBy === 'MeterName') {
-                    $scope.Header[2] = iconName;
-                }
-                else if (sortBy === 'EventTypeID') {
-                    $scope.Header[3] = iconName;
-                } else if (sortBy === 'PhaseName') {
-                    $scope.Header[4] = iconName;
-                } else if (sortBy === 'PerUnitMagnitude') {
-                    $scope.Header[5] = iconName;
-                } else if (sortBy === 'DurationSeconds') {
-                    $scope.Header[6] = iconName;
-                } else if (sortBy === 'StartTime') {
-                    $scope.Header[7] = iconName;
-                } else if (sortBy === 'EndTime') {
-                    $scope.Header[8] = iconName;
-                } else {
-                    $scope.Header[9] = iconName;
-                }
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.currentPage = 1;
-
-                    $scope.$apply();
-
-                });
-
-
-            };
-
-            $scope.setPageSize = function (size) {
-                $scope.pageSize = size;
-                dataHub.getDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter', $scope.sortBy, $scope.sortDirection, 1, $scope.pageSize, ($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (data) {
-                    $scope.events = data;
-                    $scope.currentPage = 1;
-                    $scope.$apply();
-
-                });
-
-                dataHub.getCountDisturbancesForMeter('@ViewBag.MeterID', '@ViewBag.Filter',($scope.searchText === '' ? '%' : '%' + $scope.searchText + '%')).done(function (count) {
-                    $('#recordCount').text(count);
-
-                    $scope.pageCount = Math.ceil(count / $scope.pageSize);
-                    $scope.$apply();
-                });
-            };
-
-
-
-            $scope.getAbsDiff = function (a, b) {
-                return Math.abs(a - b);
-            };
-
-
+            viewModel.queryPageRecords();
         });
 
+        $(viewModel).on('pageRecordsQueried', function (event) {
 
-
-        //Inject Services for DI
-        //$scope is standard service provided by framework
-        TableCtrl.$inject = ['$scope'];
-
-
+        });
     </script>
 }

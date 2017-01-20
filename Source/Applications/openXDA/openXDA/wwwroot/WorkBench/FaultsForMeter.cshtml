@@ -20,16 +20,16 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
+@using System.Collections.Generic
 @using System.Net.Http
-@using System.Threading
-@using RazorEngine.Templating
+@using System.Security.AccessControl
+@using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
 @using openXDA.Model
 @using RazorEngine.Templating
-@inherits  ExtendedTemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
@@ -47,42 +47,41 @@
         ViewBag.Filter = parameters["Filter"];
     }
     string meter = Model.DataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", Convert.ToInt32(ViewBag.MeterID));
-    ViewBag.Title = "Events for " + meter;
+    ViewBag.Title = "Faults for " + meter;
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "ID", "Event ID", "text-left"},
+        new[] { "ID", "Fault ID", "text-left"},
         new[] { "MeterName", "Meter Name", "text-left"},
-        new[] { "LineName", "Line Name", "text-left"},
-        new[] { "EventTypeName", "Event Type" , "text-center"},
-        new[] { "StartTime", "Start Time", "text-center"},
-        new[] { "EndTime", "End Time", "text-center" }
+        new[] { "LineName", "Line", "text-left"},
+        new[] { "Voltage", "Voltage", "text-left"},
+        new[] { "FaultType", "Fault Type", "text-left"},
+        new[] { "CurrentDistance", "Distance", "text-center"},
+        new[] { "InceptionTime", "Inception Time", "text-center" }
     };
     ViewBag.ShowSearchFilter = true;
-
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.HideAddNewButton = true;
 
 
-    ViewBag.ParentKeys = ViewBag.EventID;
-
+    ViewBag.ParentKeys = ViewBag.MeterID;
 }
 
 @section StyleSheets{
     <style>
     </style>
 }
-
 @helper BodyRows()
 {
-    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + ID + '&faultcurves=1' }, text: ID"></a></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: MeterName"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: LineName"></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: EventTypeName"></td>
-    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
-    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
+    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + EventID + '&faultcurves=1' }, text: ID"></a></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: MeterName"></td>
+    <td width="5%" class="text-center valign-middle" data-bind="text: LineName"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: Voltage"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: FaultType"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: CurrentDistance"></td>
+    <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + InceptionTime + '&EventID=' + ID + '&time=1'}, text: InceptionTime.formatDate(DateTimeFormat)"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -92,18 +91,15 @@
 
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<EventView>("ID", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddInputField<EventView>("MeterName", "string", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddInputField<EventView>("LineName", "string", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddSelectField<EventView, EventType>("EventTypeID", "ID", "Name"))
-    @Raw(dataContext.AddInputField<EventView>("StartTime", "string", customDataBinding: "type: text, enable: true"))
-    @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: true"))
+    @Raw(dataContext.AddInputField<FaultView>("ID", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<FaultView>("MeterName", "string", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<FaultView>("InceptionTime", "string", customDataBinding: "type: text, enable: true"))
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EventForMeter, DataHub>(ViewBag, "ID", null, "\'" + ViewBag.MeterID + "\'", ViewBag.Filter))
+        @Raw(dataContext.RenderViewModelConfiguration<FaultForMeter, DataHub>(ViewBag, "ID", null, "\'" + ViewBag.MeterID + "\'", ViewBag.Filter))
 
         $('#addNewEditDialog').on('shown.bs.modal', function () {
         });

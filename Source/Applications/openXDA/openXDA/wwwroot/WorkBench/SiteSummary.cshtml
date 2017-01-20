@@ -70,7 +70,7 @@
     <td width="20%" class="text-left valign-middle" data-bind="text: Correctness.toFixed(2)"></td>
     <td width="10%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForMeter.cshtml?MeterID=' + MeterID + '&Filter='+ getFilter() }, text: Events"></a></td>
     <td width="10%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'DisturbancesForMeter.cshtml?MeterID=' + MeterID + '&Filter='+ getFilter() }, text: Disturbances"></a></td>
-    <td width="10%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: '' }, text: Faults"></a></td>
+    <td width="10%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'FaultsForMeter.cshtml?MeterID=' + MeterID + '&Filter='+ getFilter() }, text: Faults"></a></td>
     <td width="20%" class="text-center valign-middle" data-bind="text: MaxCurrent.toFixed(2)"></td>
     <td width="20%" class="text-center valign-middle" data-bind="text: MinVoltage.toFixed(2)"></td>
 }
