@@ -10,6 +10,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DbTimeout', '120', '120')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DefaultDisturbanceEnvelope', '1', '1')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DefaultMeterTimeZone', 'UTC', 'UTC')
 GO
 
