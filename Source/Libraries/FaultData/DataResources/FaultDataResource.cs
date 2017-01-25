@@ -105,6 +105,9 @@ namespace FaultData.DataResources
                         .Where(impedance => impedance.MeterLocationLineID != localMeterLocationID)
                         .ToList();
 
+                    if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
+                        return false;
+
                     FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
                     FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
 

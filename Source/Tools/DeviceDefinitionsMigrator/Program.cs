@@ -495,7 +495,7 @@ namespace DeviceDefinitionsMigrator
                         lineImpedance = mapping.Item2;
                         lineImpedance.LineID = line.ID;
 
-                        if (lineImpedance.ID == 0)
+                        if (lineImpedance.ID == 0 && (lineImpedance.R0 != 0.0D || lineImpedance.X0 != 0.0D || lineImpedance.R1 != 0.0D || lineImpedance.X1 != 0.0D))
                             faultLocationInfo.LineImpedances.InsertOnSubmit(lineImpedance);
                     }
 
@@ -696,10 +696,18 @@ namespace DeviceDefinitionsMigrator
 
         private static void LoadLineImpedanceAttributes(LineImpedance lineImpedance, XElement impedancesElement)
         {
-            lineImpedance.R0 = Convert.ToDouble((string)impedancesElement.Element("R0"));
-            lineImpedance.X0 = Convert.ToDouble((string)impedancesElement.Element("X0"));
-            lineImpedance.R1 = Convert.ToDouble((string)impedancesElement.Element("R1"));
-            lineImpedance.X1 = Convert.ToDouble((string)impedancesElement.Element("X1"));
+            object r0 = (string)impedancesElement.Element("R0");
+            object x0 = (string)impedancesElement.Element("X0");
+            object r1 = (string)impedancesElement.Element("R1");
+            object x1 = (string)impedancesElement.Element("X1");
+
+            if (r0 != null && x0 != null && r0 != null && x0 != null)
+            {
+                lineImpedance.R0 = Convert.ToDouble(r0);
+                lineImpedance.X0 = Convert.ToDouble(x0);
+                lineImpedance.R1 = Convert.ToDouble(r1);
+                lineImpedance.X1 = Convert.ToDouble(x1);
+            }
         }
 
         private static void LoadLocalSourceImpedanceAttributes(SourceImpedance sourceImpedance, XElement impedancesElement)
