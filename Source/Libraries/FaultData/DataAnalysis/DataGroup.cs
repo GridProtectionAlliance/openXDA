@@ -303,7 +303,7 @@ namespace FaultData.DataAnalysis
             int seriesID;
 
             if (m_dataSeries.Count == 0)
-                throw new InvalidOperationException("Unable to serialize an empty data group");
+                return new byte[0];
 
             timeSeriesByteLength = m_samples * sizeof(long);
             dataSeriesByteLength = sizeof(int) + (m_samples * sizeof(double));
@@ -345,10 +345,14 @@ namespace FaultData.DataAnalysis
             DataSeries series;
             int seriesID;
 
+            m_dataSeries.Clear();
+
+            if (data.Length == 0)
+                return;
+
             uncompressedData = GZipStream.UncompressBuffer(data);
             offset = 0;
 
-            m_dataSeries.Clear();
             m_samples = LittleEndian.ToInt32(uncompressedData, offset);
             offset += sizeof(int);
 
