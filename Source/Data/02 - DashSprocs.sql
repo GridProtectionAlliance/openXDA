@@ -1281,23 +1281,36 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-SELECT Date as thedate, COALESCE([500], 0) as [500],COALESCE([300], 0) as [300],COALESCE([230], 0) as [230], COALESCE([135], 0) as [135], 
-	   COALESCE([115], 0) as [115], COALESCE([69], 0) as [69], COALESCE([46], 0) as [46], COALESCE([0], 0) as [0]
-FROM(
-	SELECT CAST(Event.StartTime AS DATE) AS Date, Line.VoltageKV, COUNT(*) AS thecount
-	FROM Event JOIN
-		 EventType ON Event.EventTypeID = EventType.ID JOIN
-		 Line ON Event.LineID = Line.ID
-	WHERE EventType.Name = 'Fault' AND
-		  MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND StartTime >= @startDate AND StartTime < @endDate
-	GROUP BY CAST(Event.StartTime AS DATE), EventType.Name, Line.VoltageKV
-) as eventtable
-PIVOT(
-	SUM(eventtable.thecount)
-	FOR eventtable.VoltageKV IN ([500],[300],[230],[135],[115],[69], [46],[0])
-) as pvt
-ORDER BY Date
+DECLARE @PivotColumns NVARCHAR(MAX) = N''
+DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
+FROM (Select Distinct Line.VoltageKV 
+		FROM Line) AS t
+
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
+FROM (Select Distinct Line.VoltageKV 
+		FROM Line) AS t
+
+SET @SQLStatement =
+' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
+' FROM ( ' +
+'		SELECT CAST(Event.StartTime AS DATE) AS Date, Line.VoltageKV, COUNT(*) AS thecount ' +
+'		FROM Event JOIN '+
+'		EventType ON Event.EventTypeID = EventType.ID JOIN ' +
+'       Line ON Event.LineID = Line.ID ' +
+'       WHERE EventType.Name = ''Fault'' AND ' +
+'		MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND StartTime >= @startDate AND StartTime < @endDate  ' +
+'       GROUP BY CAST(Event.StartTime AS DATE), EventType.Name, Line.VoltageKV ' +
+'       ) as eventtable ' +
+' PIVOT( ' +
+'		SUM(eventtable.thecount) ' +
+'		FOR eventtable.VoltageKV IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
+' ) as pvt ' +
+' ORDER BY Date '
+
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
 END
 GO
 
