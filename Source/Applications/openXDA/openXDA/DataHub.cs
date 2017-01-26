@@ -449,6 +449,7 @@ namespace openXDA
         public Line CreateLine(LineView record)
         {
             Line line = NewLine();
+            line.ID = record.ID;
             line.AssetKey = record.AssetKey;
             line.Description = record.Description;
             line.Length = record.Length;
@@ -460,6 +461,7 @@ namespace openXDA
         public LineImpedance CreateLineImpedance(LineView record)
         {
             LineImpedance li = new LineImpedance();
+            li.ID = record.LineImpedanceID;
             li.R0 = record.R0;
             li.R1 = record.R1;
             li.X0 = record.X0;
