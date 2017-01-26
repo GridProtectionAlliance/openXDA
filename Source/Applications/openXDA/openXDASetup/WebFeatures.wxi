@@ -16,6 +16,8 @@
   <ComponentGroupRef Id="wwwroot_Scripts_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_D3_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_flot_Components" />
+  <ComponentGroupRef Id="wwwroot_Scripts_flot_examples_Components" />
+  <ComponentGroupRef Id="wwwroot_Scripts_flot_examples_gauge_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_fullscreenselect_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_Font_Awesome_Components" />
@@ -104,6 +106,6 @@
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_themes_vader_images_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_snippets_Components" />
-  <ComponentGroupRef Id="wwwroot_Workbench_Components" />
+  <ComponentGroupRef Id="wwwroot_WorkBench_Components" />
 </Feature>
 </Include>

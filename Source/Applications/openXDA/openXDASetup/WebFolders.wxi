@@ -18,7 +18,11 @@
   </Directory>
   <Directory Id="SCRIPTSFOLDER" Name="Scripts">
     <Directory Id="SCRIPTSD3FOLDER" Name="D3" />
-    <Directory Id="SCRIPTSFLOTFOLDER" Name="flot" />
+    <Directory Id="SCRIPTSFLOTFOLDER" Name="flot">
+      <Directory Id="SCRIPTSFLOTEXAMPLESFOLDER" Name="examples">
+        <Directory Id="SCRIPTSFLOTEXAMPLESGAUGEFOLDER" Name="gauge" />
+      </Directory>
+    </Directory>
     <Directory Id="SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="SCRIPTSPRIMEUIFOLDER" Name="PrimeUI">
       <Directory Id="SCRIPTSPRIMEUIFONTAWESOMEFOLDER" Name="Font-Awesome">
@@ -150,6 +154,6 @@
       <Directory Id="SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER" Name="snippets" />
     </Directory>
   </Directory>
-  <Directory Id="WORKBENCHFOLDER" Name="Workbench" />
+  <Directory Id="WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>
 </Include>
