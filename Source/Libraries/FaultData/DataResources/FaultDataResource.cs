@@ -29,7 +29,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Windows.Forms;
 using FaultAlgorithms;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -1272,7 +1271,7 @@ namespace FaultData.DataResources
         private bool CheckThreePhaseFFT(Fault fault, VIDataGroup viDataGroup)
         {
             bool returnValue = true;
-            double samplesPerCycle = Math.Round(viDataGroup.IA.SampleRate / 60);
+            double samplesPerCycle = Math.Round(viDataGroup.IA.SampleRate / m_systemFrequency);
             int cycles = (int)Math.Ceiling(viDataGroup.IA.DataPoints.Count / samplesPerCycle);
             int arraySize = cycles*(int)samplesPerCycle;
 
