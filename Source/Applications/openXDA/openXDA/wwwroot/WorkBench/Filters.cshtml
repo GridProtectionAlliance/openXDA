@@ -182,173 +182,173 @@
 
         $(function () {
 
-            $('#addNewEditDialog').on('shown.bs.modal', function (event) {
-
-                
-
-                if (viewModel.recordMode() === RecordMode.AddNew) {
-                    dataHub.getOldestEventDateTime().done(function (data) {
-                        dateRangeOptions.startDate = data.formatDate(DateTimeFormat);
-                        $('#dateRange').daterangepicker(dateRangeOptions);
-                    });
-                }
-                else {
-                    if (viewModel.currentRecord().TimeRange().split(';')[0] == "0") {
-                        dateRangeOptions.startDate = moment(viewModel.currentRecord().TimeRange().split(';')[1] + (viewModel.currentRecord().TimeRange().split(';')[1].indexOf('Z') < 0 ? ' Z' : '')).utc();
-                        dateRangeOptions.endDate = moment(viewModel.currentRecord().TimeRange().split(';')[2] + (viewModel.currentRecord().TimeRange().split(';')[1].indexOf('Z') < 0 ? ' Z' : '')).utc();
-                    }
-                    else {
-                        var keys = Object.keys(dateRangeOptions.ranges);
-                        dateRangeOptions.startDate = dateRangeOptions.ranges[keys[viewModel.currentRecord().TimeRange().split(';')[0]]][0]._d;
-                        dateRangeOptions.endDate = dateRangeOptions.ranges[keys[viewModel.currentRecord().TimeRange().split(';')[0]]][1]._d;
-                        dateRangeOptions.chosenLabel = keys[viewModel.currentRecord().TimeRange().split(';')[0]];
-                    }
-                    $('#dateRange').daterangepicker(dateRangeOptions);
-                }
-
-                mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
-                $('#types').mobileSelect(mobileSelectOptions);
-                $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                $('#typesFrame .btn-mobileSelect-gen').off('click');
-                $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
-                    event.preventDefault();
-                    $('#types').mobileSelect('show');
-                });
-
-
-                $('#typefilter').on('keyup', function () {
-                    var string = $('#typefilter').val();
-                    if (string === "") {
-                        $('.mobileSelect-container :visible .list-container').children().show();
-
-                    }
-                    else {
-                        $('.mobileSelect-container :visible .list-container').children().hide();
-                        $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                            if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
-                                $(item).show();
-                        });
-                    }
-                });
-                
-                mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
-                $('#meters').mobileSelect(mobileSelectOptions);
-                $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                $('#metersFrame .btn-mobileSelect-gen').off('click');
-                $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
-                    event.preventDefault();
-                    $('#meters').mobileSelect('show');
-                });
-
-                $('#meterfilter').on('keyup', function () {
-                    var string = $('#meterfilter').val();
-                    if (string === "") {
-                        $('.mobileSelect-container :visible .list-container').children().show();
-
-                    }
-                    else {
-                        $('.mobileSelect-container :visible .list-container').children().hide();
-                        $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                            if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
-                                $(item).show();
-                        });
-                    }
-                });
-                
-                mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='linefilter' placeholder='Search Lines' /></div>";
-                $('#lines').mobileSelect(mobileSelectOptions);
-                $('#linesFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                $('#linesFrame .btn-mobileSelect-gen').off('click');
-                $('#linesFrame .btn-mobileSelect-gen').on('click', function (event) {
-                    event.preventDefault();
-                    $('#lines').mobileSelect('show');
-                });
-
-
-
-                $('#linefilter').on('keyup', function () {
-                    var string = $('#linefilter').val();
-                    if (string === "") {
-                        $('.mobileSelect-container :visible .list-container').children().show();
-
-                    }
-                    else {
-                        $('.mobileSelect-container :visible .list-container').children().hide();
-                        $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                            if ($(item).text().toLowerCase().indexOf($('#linefilter').val()) >= 0)
-                                $(item).show();
-                        });
-                    }
-                });
-
-
-                dataHub.getEventTypesForSelect().done(function (data) {
-                    $.each(data, function (index, type) {
-                        $('#types').append($(new Option(type.Name, type.ID)));
-                    });
-                    if (viewModel.recordMode() !== RecordMode.AddNew) {
-                        $.each(viewModel.currentRecord().EventTypes().split(','), function (i, val) {
-                            $('#types').find('option[value="' + val + '"]').attr('selected', true);
-                        });
-                    }
-                    $('#types').mobileSelect('refresh');
-
-                });
-
-                dataHub.getMetersForSelect().done(function (data) {
-                    $.each(data, function (index, type) {
-                        $('#meters').append($(new Option(type.Name, type.ID)));
-                    });
-                    if (viewModel.recordMode() !== RecordMode.AddNew) {
-                        $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
-                            $('#meters').find('option[value="' + val + '"]').attr('selected', true);
-                        });
-                    }
-                    
-                    $('#meters').mobileSelect('refresh');
-
-                    if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
-                    else $('#linesFrame button').prop("disabled", false);
-                });
-                
-                dataHub.getLinesForSelect().done(function (data) {
-                    $.each(data, function (index, type) {
-                        $('#lines').append($(new Option(type.AssetKey, type.ID)));
-                    });
-                    if (viewModel.recordMode() !== RecordMode.AddNew) {
-                        $.each(viewModel.currentRecord().Lines().split(','), function (i, val) {
-                            $('#lines').find('option[value="' + val + '"]').attr('selected', true);
-                        });
-
-                    }
-                    
-                    $('#lines').mobileSelect('refresh');
-
-                    if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
-                    else $('#metersFrame button').prop("disabled", false);
-                });
-                
-                
-                $(window).on('mobileSelectSave mobileSelectClear', function () {
-                    if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
-                    else $('#linesFrame button').prop("disabled", false);
-                    if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
-                    else $('#metersFrame button').prop("disabled", false);
-
-                });
-            });
 
 
         });
         
+        $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+
+
+
+            if (viewModel.recordMode() === RecordMode.AddNew) {
+                dataHub.getOldestEventDateTime().done(function (data) {
+                    dateRangeOptions.startDate = data.formatDate(DateTimeFormat);
+                    $('#dateRange').daterangepicker(dateRangeOptions);
+                });
+            }
+            else {
+                if (viewModel.currentRecord().TimeRange().split(';')[0] == "-1") {
+                    dateRangeOptions.startDate = moment(viewModel.currentRecord().TimeRange().split(';')[1] + (viewModel.currentRecord().TimeRange().split(';')[1].indexOf('Z') < 0 ? ' Z' : '')).utc();
+                    dateRangeOptions.endDate = moment(viewModel.currentRecord().TimeRange().split(';')[2] + (viewModel.currentRecord().TimeRange().split(';')[1].indexOf('Z') < 0 ? ' Z' : '')).utc();
+                }
+                else {
+                    var keys = Object.keys(dateRangeOptions.ranges);
+                    dateRangeOptions.startDate = moment(dateRangeOptions.ranges[keys[viewModel.currentRecord().TimeRange().split(';')[0]]][0]._d).utc();
+                    dateRangeOptions.endDate = moment(dateRangeOptions.ranges[keys[viewModel.currentRecord().TimeRange().split(';')[0]]][1]._d).utc();
+                    dateRangeOptions.chosenLabel = keys[viewModel.currentRecord().TimeRange().split(';')[0]];
+                }
+                $('#dateRange').daterangepicker(dateRangeOptions);
+            }
+
+            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
+            $('#types').mobileSelect(mobileSelectOptions);
+            $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+            $('#typesFrame .btn-mobileSelect-gen').off('click');
+            $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
+                event.preventDefault();
+                $('#types').mobileSelect('show');
+            });
+
+
+            $('#typefilter').on('keyup', function () {
+                var string = $('#typefilter').val();
+                if (string === "") {
+                    $('.mobileSelect-container :visible .list-container').children().show();
+
+                }
+                else {
+                    $('.mobileSelect-container :visible .list-container').children().hide();
+                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                        if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
+                            $(item).show();
+                    });
+                }
+            });
+
+            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+            $('#meters').mobileSelect(mobileSelectOptions);
+            $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+            $('#metersFrame .btn-mobileSelect-gen').off('click');
+            $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+                event.preventDefault();
+                $('#meters').mobileSelect('show');
+            });
+
+            $('#meterfilter').on('keyup', function () {
+                var string = $('#meterfilter').val();
+                if (string === "") {
+                    $('.mobileSelect-container :visible .list-container').children().show();
+
+                }
+                else {
+                    $('.mobileSelect-container :visible .list-container').children().hide();
+                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                        if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                            $(item).show();
+                    });
+                }
+            });
+
+            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='linefilter' placeholder='Search Lines' /></div>";
+            $('#lines').mobileSelect(mobileSelectOptions);
+            $('#linesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+            $('#linesFrame .btn-mobileSelect-gen').off('click');
+            $('#linesFrame .btn-mobileSelect-gen').on('click', function (event) {
+                event.preventDefault();
+                $('#lines').mobileSelect('show');
+            });
+
+
+
+            $('#linefilter').on('keyup', function () {
+                var string = $('#linefilter').val();
+                if (string === "") {
+                    $('.mobileSelect-container :visible .list-container').children().show();
+
+                }
+                else {
+                    $('.mobileSelect-container :visible .list-container').children().hide();
+                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                        if ($(item).text().toLowerCase().indexOf($('#linefilter').val()) >= 0)
+                            $(item).show();
+                    });
+                }
+            });
+
+
+            dataHub.getEventTypesForSelect().done(function (data) {
+                $.each(data, function (index, type) {
+                    $('#types').append($(new Option(type.Name, type.ID)));
+                });
+                if (viewModel.recordMode() !== RecordMode.AddNew) {
+                    $.each(viewModel.currentRecord().EventTypes().split(','), function (i, val) {
+                        $('#types').find('option[value="' + val + '"]').attr('selected', true);
+                    });
+                }
+                $('#types').mobileSelect('refresh');
+
+            });
+
+            dataHub.getMetersForSelect().done(function (data) {
+                $.each(data, function (index, type) {
+                    $('#meters').append($(new Option(type.Name, type.ID)));
+                });
+                if (viewModel.recordMode() !== RecordMode.AddNew) {
+                    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
+                        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
+                    });
+                }
+
+                $('#meters').mobileSelect('refresh');
+
+                if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
+                else $('#linesFrame button').prop("disabled", false);
+            });
+
+            dataHub.getLinesForSelect().done(function (data) {
+                $.each(data, function (index, type) {
+                    $('#lines').append($(new Option(type.AssetKey, type.ID)));
+                });
+                if (viewModel.recordMode() !== RecordMode.AddNew) {
+                    $.each(viewModel.currentRecord().Lines().split(','), function (i, val) {
+                        $('#lines').find('option[value="' + val + '"]').attr('selected', true);
+                    });
+
+                }
+
+                $('#lines').mobileSelect('refresh');
+
+                if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
+                else $('#metersFrame button').prop("disabled", false);
+            });
+
+
+            $(window).on('mobileSelectSave mobileSelectClear', function () {
+                if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
+                else $('#linesFrame button').prop("disabled", false);
+                if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
+                else $('#metersFrame button').prop("disabled", false);
+
+            });
+        });
 
         $(viewModel).on('beforeSave', function (event, observableRecord) {
             var keys = Object.keys(dateRangeOptions.ranges);
 
-            observableRecord.TimeRange((keys.indexOf($('#dateRange').data('daterangepicker').chosenLabel) == -1 ? 0 : keys.indexOf($('#dateRange').data('daterangepicker').chosenLabel)) + ';' + $('#dateRange').data('daterangepicker').startDate._d.toISOString() + ';' + $('#dateRange').data('daterangepicker').endDate._d.toISOString());
+            observableRecord.TimeRange(keys.indexOf($('#dateRange').data('daterangepicker').chosenLabel) + ';' + $('#dateRange').data('daterangepicker').startDate._d.toISOString() + ';' + $('#dateRange').data('daterangepicker').endDate._d.toISOString());
             observableRecord.Meters(($('#meters').val()?$('#meters').val(): '' ).toString());
             observableRecord.EventTypes(($('#types').val()?$('#types').val(): '' ).toString());
             observableRecord.Lines(($('#lines').val()?$('#lines').val(): '' ).toString());
@@ -357,8 +357,8 @@
         
         function parseTimeRange(string) {
             var keys = Object.keys(dateRangeOptions.ranges);
-            if (string.split(';')[0] != 0)
-                return dateRangeOptions.ranges[keys[string.split(';')[0] - 1]][0]._d.formatDate(DateTimeFormat) + ' - ' + dateRangeOptions.ranges[keys[string.split(';')[0] - 1]][1]._d.formatDate(DateTimeFormat);
+            if (string.split(';')[0] != '-1')
+                return dateRangeOptions.ranges[keys[string.split(';')[0]]][0]._d.formatDate(DateTimeFormat) + ' - ' + dateRangeOptions.ranges[keys[string.split(';')[0]]][1]._d.formatDate(DateTimeFormat);
             else 
                 return new Date(string.split(';')[1]).formatDate(DateTimeFormat) + ' - ' + new Date(string.split(';')[2]).formatDate(DateTimeFormat)
         }

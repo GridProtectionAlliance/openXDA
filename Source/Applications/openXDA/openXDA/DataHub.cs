@@ -1859,26 +1859,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
+            else if (timeRangeSplit[0] == "3") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -1895,26 +1901,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if(timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);   
+                endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if(timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
+            else if (timeRangeSplit[0] == "3") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -1931,31 +1943,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -1980,37 +1993,37 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
-
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
@@ -2255,31 +2268,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2294,31 +2308,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2335,31 +2350,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2384,37 +2400,37 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
-
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND " +
@@ -2582,31 +2598,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2621,31 +2638,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2662,37 +2680,37 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
-
             TableOperations<DisturbanceView> tableOperations = DataContext.Table<DisturbanceView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND PhaseName='Worst'",
                                                                                          meterId, startDate, endDate);
@@ -2708,31 +2726,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2857,31 +2876,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -2903,31 +2923,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -3054,31 +3075,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -3151,37 +3173,37 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
-
             SqlConnection conn = null;
             SqlDataReader rdr = null;
             List<DailyDisturbances> theList = new List<DailyDisturbances>();
@@ -3241,31 +3263,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
@@ -3333,37 +3356,37 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
-
             SqlConnection conn = null;
             SqlDataReader rdr = null;
             List<DailyBreakers> theList = new List<DailyBreakers>();
@@ -3420,31 +3443,32 @@ namespace openXDA
             string[] timeRangeSplit = timeRange.Split(';');
             DateTime startDate;
             DateTime endDate;
-            if (timeRangeSplit[0] == "0")
+            if (timeRangeSplit[0] == "-1")
             {
                 startDate = DateTime.Parse(timeRangeSplit[1]);
                 endDate = DateTime.Parse(timeRangeSplit[2]);
             }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
+            else if (timeRangeSplit[0] == "0") // 1 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-1);
             }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
+            else if (timeRangeSplit[0] == "1") // 3 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-3);
             }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
+            else if (timeRangeSplit[0] == "2") // 7 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-7);
             }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
+            else if (timeRangeSplit[0] == "3") // 30 day time range
             {
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+
             else // default to 2 weeks
             {
                 endDate = DateTime.UtcNow;
