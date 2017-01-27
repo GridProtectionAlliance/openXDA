@@ -19,6 +19,7 @@ namespace openXDA.Model
         public int PhaseID { get; set; }
 
         [StringLength(200)]
+        [Searchable]
         public string Name { get; set; }
 
         public float SamplesPerHour { get; set; }
@@ -40,12 +41,17 @@ namespace openXDA.Model
 
         public string LineName { get; set; }
 
+        [Searchable]
         public string MeasurementType { get; set; }
-
+        [Searchable]
         public string MeasurementCharacteristic { get; set; }
-
+        [Searchable]
         public string Phase { get; set; }
 
         public string Mapping { get; set; }
+
+        public int SeriesTypeID { get; set; }
+
+        public string SeriesType { get; set; }
     }
 }

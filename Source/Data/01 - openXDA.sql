@@ -271,6 +271,10 @@ CREATE TABLE SeriesType
 )
 GO
 
+INSERT INTO SeriesType(Name, Description) VALUES('Values', 'Instantaneous data values')
+GO
+
+
 CREATE TABLE Series
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -2230,7 +2234,9 @@ SELECT
     Channel.HarmonicGroup,
     Series.SourceIndexes AS Mapping,
     Channel.Description,
-    Channel.Enabled
+    Channel.Enabled, 
+	Series.SeriesTypeID, 
+	SeriesType.Name AS SeriesType
 FROM
     Channel JOIN
     Meter ON Channel.MeterID = Meter.ID JOIN
@@ -2243,7 +2249,8 @@ FROM
     Phase ON Channel.PhaseID = Phase.ID LEFT OUTER JOIN
     Series ON
         Series.ChannelID = Channel.ID AND
-        Series.SourceIndexes <> ''
+        Series.SourceIndexes <> '' LEFT OUTER JOIN
+	SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
 GO
 
 CREATE VIEW DefaultAlarmRangeLimitView

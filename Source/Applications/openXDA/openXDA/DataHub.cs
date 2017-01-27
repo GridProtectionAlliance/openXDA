@@ -552,34 +552,34 @@ namespace openXDA
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
         public int QueryChannelCount(int meterID, int lineID, string filterString)
         {
-            var filters = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%").ParseKeyValuePairs()
-                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.TrimEnd('%') + "%" })
-                .ToList();
+            TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
+            RecordRestriction restriction = new RecordRestriction();
 
-            filters.Add(new { Field = "MeterID", Operator = "=", Value = meterID.ToString() });
-            filters.Add(new { Field = "LineID", Operator = "=", Value = lineID.ToString() });
+            if(meterID != -1 && lineID == -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
+            else if(meterID == -1 && lineID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
 
-            string expression = string.Join(" AND ", filters.Select((filter, index) => $"{filter.Field} {filter.Operator} {{{index}}}"));
-            object[] parameters = filters.Select(filter => (object)filter.Value).ToArray();
-
-            return DataContext.Table<ChannelDetail>().QueryRecordCount(new RecordRestriction(expression, parameters));
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
         public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            var filters = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%").ParseKeyValuePairs()
-                .Select(kvp => new { Field = kvp.Key, Operator = "LIKE", Value = kvp.Value.TrimEnd('%') + "%" })
-                .ToList();
+            TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
+            RecordRestriction restriction = new RecordRestriction();
 
-            filters.Add(new { Field = "MeterID", Operator = "=", Value = meterID.ToString() });
-            filters.Add(new { Field = "LineID", Operator = "=", Value = lineID.ToString() });
+            if (meterID != -1 && lineID == -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
+            else if (meterID == -1 && lineID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
 
-            string expression = string.Join(" AND ", filters.Select((filter, index) => $"{filter.Field} {filter.Operator} {{{index}}}"));
-            object[] parameters = filters.Select(filter => (object)filter.Value).ToArray();
-
-            return DataContext.Table<ChannelDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(expression, parameters));
+            return DataContext.Table<ChannelDetail>().QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         public IEnumerable<Channel> QueryChannelsForDropDown(string filterString, int meterID)
@@ -591,7 +591,7 @@ namespace openXDA
         [RecordOperation(typeof(Channel), RecordOperation.DeleteRecord)]
         public void DeleteChannel(int id)
         {
-            DataContext.Table<Channel>().DeleteRecord(id);
+            CascadeDelete("Channel", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -610,18 +610,7 @@ namespace openXDA
 
             if (!string.IsNullOrEmpty(record.Mapping))
             {
-                using (TransactionScope transaction = new TransactionScope())
-                {
-                    bool seriesTypeExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM SeriesType WHERE Name = 'Values'") > 0;
-
-                    if (!seriesTypeExists)
-                        DataContext.Connection.ExecuteNonQuery("INSERT INTO SeriesType VALUES('Values', 'Values')");
-
-                    transaction.Complete();
-                }
-
-                int seriesTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = 'Values'");
-                DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, seriesTypeID, record.Mapping);
+                DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
             }
         }
 
@@ -635,32 +624,19 @@ namespace openXDA
             {
                 using (TransactionScope transaction = new TransactionScope())
                 {
-                    bool seriesTypeExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM SeriesType WHERE Name = 'Values'") > 0;
-
-                    if (!seriesTypeExists)
-                        DataContext.Connection.ExecuteNonQuery("INSERT INTO SeriesType VALUES('Values', 'Values')");
-
-                    transaction.Complete();
-                }
-
-                int seriesTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = 'Values'");
-
-                using (TransactionScope transaction = new TransactionScope())
-                {
-                    bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, seriesTypeID) > 0;
+                    bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID) > 0;
 
                     if (seriesExists)
-                        DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, seriesTypeID);
+                        DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, record.SeriesTypeID);
                     else
-                        DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, seriesTypeID, record.Mapping);
+                        DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
 
                     transaction.Complete();
                 }
             }
             else
             {
-                int seriesTypeID = DataContext.Connection.ExecuteScalar(defaultValue: -1, sqlFormat: "SELECT ID FROM SeriesType WHERE Name = 'Values'");
-                DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = '' WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, seriesTypeID);
+                DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = '' WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID);
             }
         }
 
