@@ -759,8 +759,8 @@
           <Publish Property="XDAAUTHSTRING" Value="User Id=[XDASERVICELOGIN];;Password=[XDASERVICEPASSWORD]"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Publish>
           
           <!-- Set up connection strings for connecting to server and database. -->
-          <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING]">1</Publish>
-          <Publish Property="DBCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING]">1</Publish>
+          <Publish Property="SERVERCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;[AUTHSTRING];;Pooling=false">1</Publish>
+          <Publish Property="DBCONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[AUTHSTRING];;Pooling=false">1</Publish>
           <Publish Property="XDACONNECTIONSTRING" Value="Data Source=[SERVERNAME];;Initial Catalog=[DATABASENAME];;[XDAAUTHSTRING]">1</Publish>
           
           <!-- Determine whether we can connect to the database server. -->
