@@ -850,10 +850,6 @@
     <File Id="Scripts_flot_README.md" Name="README.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\README.md" />
   </Component>
 </ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_Components" Directory="SCRIPTSFLOTEXAMPLESFOLDER">
-</ComponentGroup>
-<ComponentGroup Id="wwwroot_Scripts_flot_examples_gauge_Components" Directory="SCRIPTSFLOTEXAMPLESGAUGEFOLDER">
-</ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_fullscreenselect_Components" Directory="SCRIPTSFULLSCREENSELECTFOLDER">
   <Component Id="Scripts_fullscreenselect_bootstrap_fullscreen_select_js">
     <File Id="Scripts_fullscreenselect_bootstrap_fullscreen_select.js" Name="bootstrap-fullscreen-select.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
@@ -3874,72 +3870,72 @@
     <File Id="Scripts_src_noconflict_snippets_yaml.js" Name="yaml.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\src-noconflict\snippets\yaml.js" />
   </Component>
 </ComponentGroup>
-<ComponentGroup Id="wwwroot_WorkBench_Components" Directory="WORKBENCHFOLDER">
-  <Component Id="WorkBench_BreakersForDay_cshtml">
-    <File Id="WorkBench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\BreakersForDay.cshtml" />
+<ComponentGroup Id="wwwroot_Workbench_Components" Directory="WORKBENCHFOLDER">
+  <Component Id="Workbench_BreakersForDay_cshtml">
+    <File Id="Workbench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\BreakersForDay.cshtml" />
   </Component>
-  <Component Id="WorkBench_Charts_cshtml">
-    <File Id="WorkBench_Charts.cshtml" Name="Charts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Charts.cshtml" />
+  <Component Id="Workbench_Charts_cshtml">
+    <File Id="Workbench_Charts.cshtml" Name="Charts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Charts.cshtml" />
   </Component>
-  <Component Id="WorkBench_DisturbancesForDay_cshtml">
-    <File Id="WorkBench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDay.cshtml" />
+  <Component Id="Workbench_DisturbancesForDay_cshtml">
+    <File Id="Workbench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDay.cshtml" />
   </Component>
-  <Component Id="WorkBench_DisturbancesForDayAngular_cshtml">
-    <File Id="WorkBench_DisturbancesForDayAngular.cshtml" Name="DisturbancesForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDayAngular.cshtml" />
+  <Component Id="Workbench_DisturbancesForDayAngular_cshtml">
+    <File Id="Workbench_DisturbancesForDayAngular.cshtml" Name="DisturbancesForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDayAngular.cshtml" />
   </Component>
-  <Component Id="WorkBench_DisturbancesForMeter_cshtml">
-    <File Id="WorkBench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForMeter.cshtml" />
+  <Component Id="Workbench_DisturbancesForMeter_cshtml">
+    <File Id="Workbench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForMeter.cshtml" />
   </Component>
-  <Component Id="WorkBench_DisturbancesForMeterAngular_cshtml">
-    <File Id="WorkBench_DisturbancesForMeterAngular.cshtml" Name="DisturbancesForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForMeterAngular.cshtml" />
+  <Component Id="Workbench_DisturbancesForMeterAngular_cshtml">
+    <File Id="Workbench_DisturbancesForMeterAngular.cshtml" Name="DisturbancesForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForMeterAngular.cshtml" />
   </Component>
-  <Component Id="WorkBench_Events_cshtml">
-    <File Id="WorkBench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Events.cshtml" />
+  <Component Id="Workbench_Events_cshtml">
+    <File Id="Workbench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Events.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsAngular_cshtml">
-    <File Id="WorkBench_EventsAngular.cshtml" Name="EventsAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsAngular.cshtml" />
+  <Component Id="Workbench_EventsAngular_cshtml">
+    <File Id="Workbench_EventsAngular.cshtml" Name="EventsAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsAngular.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsForDate_cshtml">
-    <File Id="WorkBench_EventsForDate.cshtml" Name="EventsForDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDate.cshtml" />
+  <Component Id="Workbench_EventsForDate_cshtml">
+    <File Id="Workbench_EventsForDate.cshtml" Name="EventsForDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDate.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsForDateAngular_cshtml">
-    <File Id="WorkBench_EventsForDateAngular.cshtml" Name="EventsForDateAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDateAngular.cshtml" />
+  <Component Id="Workbench_EventsForDateAngular_cshtml">
+    <File Id="Workbench_EventsForDateAngular.cshtml" Name="EventsForDateAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDateAngular.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsForDay_cshtml">
-    <File Id="WorkBench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDay.cshtml" />
+  <Component Id="Workbench_EventsForDay_cshtml">
+    <File Id="Workbench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDay.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsForDayAngular_cshtml">
-    <File Id="WorkBench_EventsForDayAngular.cshtml" Name="EventsForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDayAngular.cshtml" />
+  <Component Id="Workbench_EventsForDayAngular_cshtml">
+    <File Id="Workbench_EventsForDayAngular.cshtml" Name="EventsForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForDayAngular.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsForMeter_cshtml">
-    <File Id="WorkBench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForMeter.cshtml" />
+  <Component Id="Workbench_EventsForMeter_cshtml">
+    <File Id="Workbench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForMeter.cshtml" />
   </Component>
-  <Component Id="WorkBench_EventsForMeterAngular_cshtml">
-    <File Id="WorkBench_EventsForMeterAngular.cshtml" Name="EventsForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForMeterAngular.cshtml" />
+  <Component Id="Workbench_EventsForMeterAngular_cshtml">
+    <File Id="Workbench_EventsForMeterAngular.cshtml" Name="EventsForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForMeterAngular.cshtml" />
   </Component>
-  <Component Id="WorkBench_FaultsForDay_cshtml">
-    <File Id="WorkBench_FaultsForDay.cshtml" Name="FaultsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\FaultsForDay.cshtml" />
+  <Component Id="Workbench_FaultsForDay_cshtml">
+    <File Id="Workbench_FaultsForDay.cshtml" Name="FaultsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\FaultsForDay.cshtml" />
   </Component>
-  <Component Id="WorkBench_FaultsForMeter_cshtml">
-    <File Id="WorkBench_FaultsForMeter.cshtml" Name="FaultsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\FaultsForMeter.cshtml" />
+  <Component Id="Workbench_FaultsForMeter_cshtml">
+    <File Id="Workbench_FaultsForMeter.cshtml" Name="FaultsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\FaultsForMeter.cshtml" />
   </Component>
-  <Component Id="WorkBench_Filters_cshtml">
-    <File Id="WorkBench_Filters.cshtml" Name="Filters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Filters.cshtml" />
+  <Component Id="Workbench_Filters_cshtml">
+    <File Id="Workbench_Filters.cshtml" Name="Filters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Filters.cshtml" />
   </Component>
-  <Component Id="WorkBench_Help_cshtml">
-    <File Id="WorkBench_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Help.cshtml" />
+  <Component Id="Workbench_Help_cshtml">
+    <File Id="Workbench_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Help.cshtml" />
   </Component>
-  <Component Id="WorkBench_index_cshtml">
-    <File Id="WorkBench_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\index.cshtml" />
+  <Component Id="Workbench_index_cshtml">
+    <File Id="Workbench_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\index.cshtml" />
   </Component>
-  <Component Id="WorkBench_Layout_cshtml">
-    <File Id="WorkBench_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Layout.cshtml" />
+  <Component Id="Workbench_Layout_cshtml">
+    <File Id="Workbench_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Layout.cshtml" />
   </Component>
-  <Component Id="WorkBench_SiteSummary_cshtml">
-    <File Id="WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />
+  <Component Id="Workbench_SiteSummary_cshtml">
+    <File Id="Workbench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummary.cshtml" />
   </Component>
-  <Component Id="WorkBench_SiteSummaryAngular_cshtml">
-    <File Id="WorkBench_SiteSummaryAngular.cshtml" Name="SiteSummaryAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummaryAngular.cshtml" />
+  <Component Id="Workbench_SiteSummaryAngular_cshtml">
+    <File Id="Workbench_SiteSummaryAngular.cshtml" Name="SiteSummaryAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummaryAngular.cshtml" />
   </Component>
 </ComponentGroup>
 </Include>

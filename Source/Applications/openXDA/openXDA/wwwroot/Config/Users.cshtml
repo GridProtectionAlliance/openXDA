@@ -26,4 +26,12 @@
 @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
 @{Layout = "Config/Layout.cshtml";}
 @Html.RenderResource("GSF.Web.Security.Views.Users.cshtml")
-@section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
+@section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())
+    <script>
+        $(function () {
+            viewModel.deleteRecord = function (keyValues) {
+                return dataHub.deleteUserAccount(keyValues[0]);
+            }
+        });
+    </script>
+}

@@ -193,6 +193,13 @@ namespace openXDA
 
         #endregion
 
+        #region [UserAccount Operations]
+        public void DeleteUserAccount(Guid id)
+        {
+            CascadeDelete("UserAccount", $"ID = '{id}'");
+        }
+
+        #endregion
 
         #region [ Meter Table Operations ]
 
