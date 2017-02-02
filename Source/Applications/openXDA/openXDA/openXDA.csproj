@@ -429,6 +429,7 @@
     <Content Include="wwwroot\Assets\Meters.cshtml" />
     <Content Include="wwwroot\Assets\Sites.cshtml" />
     <Content Include="wwwroot\Config\UserDashSettings.cshtml" />
+    <Content Include="wwwroot\Config\EmailGroupLineGroup.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />

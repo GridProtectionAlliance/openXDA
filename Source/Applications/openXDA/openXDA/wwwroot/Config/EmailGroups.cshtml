@@ -52,6 +52,7 @@
         new[] { "Name", "Group Name", "text-Left" },
         new[] { null, "Email Types", "text-center valign-middle"},
         new[] { null, "Meter Groups", "text-center valign-middle"},
+        new[] { null, "Line Groups", "text-center valign-middle"},
         new[] { null, "User Accounts", "text-center valign-middle"},
         new[] { null, "Event Criteria", "text-center valign-middle"},
 
@@ -67,6 +68,7 @@
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupType.cshtml?GroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Email Types&nbsp;&nbsp;<span class="badge" data-bind="text: getTypesCount(ID, $($element)), attr: {id: 'typesCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupMeterGroup.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meter Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterGroupCount(ID, $($element)), attr: {id: 'meterGroupCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupLineGroup.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Line Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getLineGroupCount(ID, $($element)), attr: {id: 'lineGroupCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/EmailGroupUserAccount.cshtml?EmailGroupID=' + ID}, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">User Accounts&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle"><button data-bind="click: openEventCriterionModal.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Event Criteria</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
@@ -149,6 +151,17 @@
 
             return element.text();
         }
+        
+        function getLineGroupCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryEmailGroupLineGroupCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
         
         function getUserCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
