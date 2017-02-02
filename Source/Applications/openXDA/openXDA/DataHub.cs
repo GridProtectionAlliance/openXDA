@@ -397,6 +397,16 @@ namespace openXDA
                 .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
         }
 
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchLinesByGroup(int groupID, string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineLineGroup WHERE LineGroupID = {1})", $"%{searchText}%", groupID);
+
+            return DataContext.Table<Meter>().QueryRecords("AssetKey", restriction, limit)
+                .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
+        }
+
+
         #endregion
 
         #region [ LineView Table Operations ]
@@ -704,20 +714,6 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
-            //IEnumerable<MeterMeterGroup> table = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
-            //foreach (MeterMeterGroup gm in table)
-            //{
-            //    DataContext.Table<MeterMeterGroup>().DeleteRecord(gm.ID);
-            //}
-
-            //IEnumerable<UserAccountMeterGroup> users = DataContext.Table<UserAccountMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", id));
-            //foreach (UserAccountMeterGroup gm in users)
-            //{
-            //    DataContext.Table<UserAccountMeterGroup>().DeleteRecord(gm.ID);
-            //}
-
-            //DataContext.Table<MeterGroup>().DeleteRecord(id);
-
             CascadeDelete("MeterGroup", $"ID={id}");
         }
 
@@ -787,6 +783,84 @@ namespace openXDA
 
         #endregion
 
+        #region [ LineGroup Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineGroup), RecordOperation.QueryRecordCount)]
+        public int QueryLineGroupCount(string filterString)
+        {
+            TableOperations<LineGroup> tableOperations = DataContext.Table<LineGroup>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<LineGroup> QueryLineGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            TableOperations<LineGroup> tableOperations = DataContext.Table<LineGroup>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineGroup), RecordOperation.DeleteRecord)]
+        public void DeleteLineGroup(int id)
+        {
+            CascadeDelete("LineGroup", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineGroup), RecordOperation.CreateNewRecord)]
+        public LineGroup NewLineGroup()
+        {
+            return new LineGroup();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineGroup), RecordOperation.AddNewRecord)]
+        public void AddNewLineGroup(LineGroup record)
+        {
+            DataContext.Table<LineGroup>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(LineGroup), RecordOperation.UpdateRecord)]
+        public void UpdateLineGroup(LineGroup record)
+        {
+            DataContext.Table<LineGroup>().UpdateRecord(record);
+        }
+
+        public int GetLastLineGroupID()
+        {
+            return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('LineGroup')") ?? 0;
+        }
+
+        public void UpdateLines(List<string> lines, int groupID)
+        {
+            IEnumerable<LineLineGroup> records = DataContext.Table<LineLineGroup>().QueryRecords(restriction: new RecordRestriction("LineGroupID = {0}", groupID));
+            foreach (LineLineGroup record in records)
+            {
+                if (!lines.Contains(record.LineID.ToString()))
+                    DataContext.Table<LineLineGroup>().DeleteRecord(record.ID);
+            }
+
+            foreach (string line in lines)
+            {
+                if (!records.Any(record => record.LineID == int.Parse(line)))
+                {
+                    DataContext.Table<LineLineGroup>().AddNewRecord(new LineLineGroup() { LineGroupID = groupID, LineID = int.Parse(line) });
+                }
+            }
+        }
+
+
+        #endregion
+
         #region [ MeterMeterGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -829,6 +903,52 @@ namespace openXDA
         public void UpdateGroupMeterView(MeterMeterGroup record)
         {
             DataContext.Table<MeterMeterGroup>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ LineLineGroup Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineLineGroup), RecordOperation.QueryRecordCount)]
+        public int QueryLineLineGroupViewCount(int groupID, string filterString)
+        {
+            return DataContext.Table<LineLineGroupView>().QueryRecordCount(new RecordRestriction("LineGroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineLineGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<LineLineGroupView> QueryLineLineGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<LineLineGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("LineGroupID = {0}", groupID));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineLineGroup), RecordOperation.DeleteRecord)]
+        public void DeleteLineLineGroupView(int id)
+        {
+            DataContext.Table<LineLineGroup>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineLineGroup), RecordOperation.CreateNewRecord)]
+        public LineLineGroupView NewLineLineGroupView()
+        {
+            return new LineLineGroupView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineLineGroup), RecordOperation.AddNewRecord)]
+        public void AddNewLineLineGroupView(LineLineGroup record)
+        {
+            DataContext.Table<LineLineGroup>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineLineGroup), RecordOperation.UpdateRecord)]
+        public void UpdateLineLineGroupView(LineLineGroup record)
+        {
+            DataContext.Table<LineLineGroup>().UpdateRecord(record);
         }
 
         #endregion
@@ -1399,6 +1519,53 @@ namespace openXDA
         public void UpdateEmailGroupMeterGroup(EmailGroupMeterGroup record)
         {
             DataContext.Table<EmailGroupMeterGroup>().UpdateRecord(record);
+        }
+
+
+        #endregion
+
+        #region [ EmailGroupLineGroup Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.QueryRecordCount)]
+        public int QueryEmailGroupLineGroupCount(int emailGroupId, string filterString)
+        {
+            return DataContext.Table<EmailGroupLineGroup>().QueryRecordCount(new RecordRestriction("EmailGroupID = {0}", emailGroupId));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailGroupLineGroup> QueryEmailGroupLineGroup(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<EmailGroupLineGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("EmailGroupID = {0}", emailGroupId));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.DeleteRecord)]
+        public void DeleteEmailGroupLineGroup(int id)
+        {
+            DataContext.Table<EmailGroupLineGroup>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.CreateNewRecord)]
+        public EmailGroupLineGroup NewEmailGroupLineGroup()
+        {
+            return new EmailGroupLineGroup();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.AddNewRecord)]
+        public void AddNewEmailGroupLineGroup(EmailGroupLineGroup record)
+        {
+            DataContext.Table<EmailGroupLineGroup>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.UpdateRecord)]
+        public void UpdateEmailGroupLineGroup(EmailGroupLineGroup record)
+        {
+            DataContext.Table<EmailGroupLineGroup>().UpdateRecord(record);
         }
 
 

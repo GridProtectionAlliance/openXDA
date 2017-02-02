@@ -293,6 +293,7 @@
     <Compile Include="Model\DisturbanceEmailCriterion.cs" />
     <Compile Include="Model\EmailCategory.cs" />
     <Compile Include="Model\EmailGroup.cs" />
+    <Compile Include="Model\EmailGroupLineGroup.cs" />
     <Compile Include="Model\EmailGroupMeterGroup.cs" />
     <Compile Include="Model\EmailGroupSecurityGroup.cs" />
     <Compile Include="Model\EmailGroupType.cs" />
@@ -303,6 +304,8 @@
     <Compile Include="Model\EventType.cs" />
     <Compile Include="Model\FaultEmailCriterion.cs" />
     <Compile Include="Model\FaultView.cs" />
+    <Compile Include="Model\LineGroup.cs" />
+    <Compile Include="Model\LineLineGroup.cs" />
     <Compile Include="Model\MeterType.cs" />
     <Compile Include="Model\SeriesType.cs" />
     <Compile Include="Model\SiteSummary.cs" />
@@ -435,6 +438,8 @@
     <None Include="Web.config" />
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
     <Content Include="wwwroot\Config\MeterLines.cshtml" />
+    <Content Include="wwwroot\Config\LineGroups.cshtml" />
+    <Content Include="wwwroot\Config\LineLineGroupView.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />

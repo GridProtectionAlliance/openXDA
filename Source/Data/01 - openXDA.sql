@@ -2379,6 +2379,18 @@ FROM
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
 GO
 
+CREATE VIEW [dbo].[LineLineGroupView]
+AS
+SELECT
+    LineLineGroup.ID,
+    Line.AssetKey AS LineName,
+    Line.ID AS LineID,
+    LineGroupID
+FROM
+    LineLineGroup JOIN
+    Line ON LineLineGroup.LineID = Line.ID
+GO
+
 CREATE VIEW UserAccountMeterGroupView
 AS
 SELECT
