@@ -2818,7 +2818,7 @@ GO
 
 ----- PROCEDURES -----
 
-CREATE PROCEDURE GetEventEmailRecipients
+CREATE PROCEDURE [dbo].[GetEventEmailRecipients]
 (
     @eventID INT
 )
@@ -2844,9 +2844,11 @@ AS BEGIN
     FROM
         GetSystemEventIDs(@startTime, @endTime, @timeTolerance) SystemEventID JOIN
         Event ON SystemEventID.EventID = Event.ID JOIN
-        Meter ON Event.MeterID = Meter.ID JOIN
-        MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
-        EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID JOIN
+        Meter ON Event.MeterID = Meter.ID left JOIN
+        MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID left JOIN
+		LineLineGroup ON LineLineGroup.LineID = Event.LineID Left JOIN
+        EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID Left JOIN
+		EmailGroupLineGroup ON LineLineGroup.LineGroupID = EmailGroupLineGroup.LineGroupID JOIN
         (
             SELECT
                 EmailGroupID,
@@ -2860,7 +2862,7 @@ AS BEGIN
                 EmailGroupSecurityGroup JOIN
                 SecurityGroupUserAccount ON EmailGroupSecurityGroup.SecurityGroupID = SecurityGroupUserAccount.SecurityGroupID JOIN
                 UserAccount on SecurityGroupUserAccount.UserAccountID = UserAccount.ID
-        ) EmailGroupUserAccount ON EmailGroupMeterGroup.EmailGroupID = EmailGroupUserAccount.EmailGroupID JOIN
+        ) EmailGroupUserAccount ON EmailGroupMeterGroup.EmailGroupID = EmailGroupUserAccount.EmailGroupID OR EmailGroupLineGroup.EmailGroupID = EmailGroupUserAccount.EmailGroupID JOIN
         EmailGroupType ON EmailGroupMeterGroup.EmailGroupID = EmailGroupType.EmailGroupID JOIN
         EmailType ON EmailGroupType.EmailTypeID = EmailType.ID JOIN
         EmailCategory ON
