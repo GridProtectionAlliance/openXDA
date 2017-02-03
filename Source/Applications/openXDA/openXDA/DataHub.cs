@@ -842,6 +842,11 @@ namespace openXDA
 
         public void UpdateLines(List<string> lines, int groupID)
         {
+            if(lines == null)
+            {
+                lines = new List<string>();
+            }
+
             IEnumerable<LineLineGroup> records = DataContext.Table<LineLineGroup>().QueryRecords(restriction: new RecordRestriction("LineGroupID = {0}", groupID));
             foreach (LineLineGroup record in records)
             {
