@@ -554,7 +554,7 @@ namespace DeviceDefinitionsMigrator
 
             int index = method.LastIndexOf('.');
             string typeName = method.Substring(0, index);
-            string methodName = method.Substring(index + 1);
+            string methodName = method.Substring(index + 1).Replace("NovoselEtAl", "Novosel");
 
             return new FaultLocationAlgorithm()
             {
