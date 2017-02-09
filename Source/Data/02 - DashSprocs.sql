@@ -3266,9 +3266,9 @@ BEGIN
     -- Trending Data
     SELECT
         Date,
-        MIN(Minimum/Channel.PerUnitValue) as Minimum,
-        MAX(Maximum/Channel.PerUnitValue) as Maximum,
-        AVG(Average/Channel.PerUnitValue) as Average
+        MIN(Minimum/COALESCE(Channel.PerUnitValue, 1)) as Minimum,
+        MAX(Maximum/COALESCE(Channel.PerUnitValue,1)) as Maximum,
+        AVG(Average/COALESCE(Channel.PerUnitValue,1)) as Average
     FROM
         DailyTrendingSummary JOIN 
         Channel ON DailyTrendingSummary.ChannelID = Channel.ID JOIN
