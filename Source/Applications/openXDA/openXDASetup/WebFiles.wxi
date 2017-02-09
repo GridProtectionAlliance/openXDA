@@ -58,6 +58,9 @@
   <Component Id="Config_DefaultAlarmSettings_cshtml">
     <File Id="Config_DefaultAlarmSettings.cshtml" Name="DefaultAlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\DefaultAlarmSettings.cshtml" />
   </Component>
+  <Component Id="Config_EmailGroupLineGroup_cshtml">
+    <File Id="Config_EmailGroupLineGroup.cshtml" Name="EmailGroupLineGroup.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupLineGroup.cshtml" />
+  </Component>
   <Component Id="Config_EmailGroupMeterGroup_cshtml">
     <File Id="Config_EmailGroupMeterGroup.cshtml" Name="EmailGroupMeterGroup.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupMeterGroup.cshtml" />
   </Component>
@@ -93,6 +96,12 @@
   </Component>
   <Component Id="Config_Layout_cshtml">
     <File Id="Config_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Layout.cshtml" />
+  </Component>
+  <Component Id="Config_LineGroups_cshtml">
+    <File Id="Config_LineGroups.cshtml" Name="LineGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineGroups.cshtml" />
+  </Component>
+  <Component Id="Config_LineLineGroupView_cshtml">
+    <File Id="Config_LineLineGroupView.cshtml" Name="LineLineGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineLineGroupView.cshtml" />
   </Component>
   <Component Id="Config_Lines_cshtml">
     <File Id="Config_Lines.cshtml" Name="Lines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Lines.cshtml" />
