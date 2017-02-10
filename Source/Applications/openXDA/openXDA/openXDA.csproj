@@ -147,10 +147,6 @@
     <Reference Include="log4net">
       <HintPath>..\..\..\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.AspNet.Razor, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Razor.4.0.0-beta7\lib\net45\Microsoft.AspNet.Razor.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
       <Private>True</Private>
@@ -194,6 +190,10 @@
     </Reference>
     <Reference Include="RazorEngine, Version=3.7.7.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\RazorEngine.3.7.7\lib\net45\RazorEngine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Supremes, Version=0.2.0.18776, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\dcsoup.0.2.0\lib\net45\Supremes.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -246,8 +246,9 @@
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Web.Razor">
-      <HintPath>..\..\..\Dependencies\Microsoft\System.Web.Razor.dll</HintPath>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
