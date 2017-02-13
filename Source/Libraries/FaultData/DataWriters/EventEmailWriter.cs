@@ -44,6 +44,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Xml;
 using log4net;
+using Supremes;
 using static FaultData.Database.MeterData;
 
 namespace FaultData.DataWriters
@@ -360,6 +361,28 @@ namespace FaultData.DataWriters
 
                 htmlDocument = XDocument.Parse(eventDetail.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
                 htmlDocument.TransformAll("format", element => element.Format());
+                htmlDocument.TransformAll("structure", element =>
+                {
+                    string structureString = "";
+                    string lat = "0";
+                    string lng = "0";
+                    try
+                    {
+                        var doc = Dcsoup.Parse(new Uri(element.Attribute("url").Value + $"?id={element.Value}"), 5000);
+                        structureString = doc.Select("span[id=strno]").Text;
+                        lat = structureString.Split('(', ',', ')')[1];
+                        lng = structureString.Split('(', ',', ')')[2];
+
+                    }
+                    catch (Exception ex)
+                    {
+                        structureString = "Structure and location unavailable...";
+                        return new XElement("span", structureString);
+                    }
+                    return new XElement(new XElement("a", new XAttribute("href", $"http://www.google.com/maps/place/{lat},{lng}"), new XElement("span", structureString)));
+
+                });
+
                 attachments = new List<Attachment>();
 
                 try

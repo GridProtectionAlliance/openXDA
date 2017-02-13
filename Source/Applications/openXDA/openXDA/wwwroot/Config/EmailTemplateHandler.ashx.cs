@@ -25,10 +25,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -39,6 +41,7 @@ using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
 using GSF.Xml;
+using Supremes;
 
 namespace openXDA
 {
@@ -253,6 +256,7 @@ namespace openXDA
             XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
             doc.TransformAll("format", element => element.Format());
             doc.TransformAll("chart", (element, index) => ToImgTag(element, index));
+            doc.TransformAll("structure", element => GetStructureNumber(element));
 
             string html = doc.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
             response.Content = new StringContent(html);
@@ -333,6 +337,28 @@ namespace openXDA
 
             string url = $"EmailTemplateHandler.ashx?EventID={m_eventID}&TemplateID={m_templateID}&ChartID={chartID}";
             return new XElement("img", new XAttribute("src", url));
+        }
+
+        private XElement GetStructureNumber(XElement chartElement)
+        {
+            string structureString = "";
+            string lat = "0";
+            string lng = "0";
+            try
+            {
+                var doc = Dcsoup.Parse(new Uri(chartElement.Attribute("url").Value + $"?id={chartElement.Value}"), 5000);
+                structureString = doc.Select("span[id=strno]").Text;
+                lat = structureString.Split('(', ',', ')')[1];
+                lng = structureString.Split('(', ',', ')')[2];
+
+            }
+            catch (Exception ex)
+            {
+                structureString = "Structure and location unavailable...";
+                return new XElement("span", structureString);
+
+            }
+            return new XElement(new XElement("a", new XAttribute("href", $"http://www.google.com/maps/place/{lat},{lng}"), new XElement("span", structureString)));
         }
 
         #endregion
