@@ -100,7 +100,7 @@
     <Property Id="DBPERMISSIONSQUERY" Secure="yes" />
     
     <Property Id="DBCONNECTIONSTRINGMAPPINGS" Value="SERVERNAME=Data Source;DATABASENAME=Initial Catalog;INTEGRATEDSECURITY=Integrated Security;DBUSERNAME=User Id;DBPASSWORD=Password" />
-    <Property Id="CONNECTIONSTRINGMAPPING" Value="XDACONNECTIONSTRING={//add[@name='ConnectionString']/@value}" />
+    <Property Id="CONNECTIONSTRINGMAPPING" Value="XDACONNECTIONSTRING={//systemSettings/add[@name='ConnectionString']/@value}" />
     <Property Id="COMPANYNAMEMAPPING" Value="COMPANYNAME={//add[@name='CompanyName']/@value}" />
     <Property Id="COMPANYACRONYMMAPPING" Value="COMPANYACRONYM={//add[@name='CompanyAcronym']/@value}" />
     
