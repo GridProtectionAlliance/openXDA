@@ -3181,6 +3181,7 @@ BEGIN
 	DEALLOCATE @cursorColumnNames
 	
 END
+GO
 
 SET ANSI_NULLS ON
 GO
