@@ -2543,7 +2543,9 @@ SummaryData AS
         RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
         SelectedSummary.EventID,
         Event.StartTime AS EventStartTime,
-        Event.EndTime AS EventEndTime
+        Event.EndTime AS EventEndTime,
+		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Simple' AND fs.EventID = SelectedSummary.EventID) as Simple,
+		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Reactance' AND fs.EventID = SelectedSummary.EventID) as Reactance
     FROM
         SelectedSummary JOIN
         Event ON SelectedSummary.EventID = Event.ID JOIN
@@ -2647,7 +2649,8 @@ SELECT
                             EventEndTime,
                             FileName,
                             EventID,
-                            FaultSummaryID AS FaultID
+                            FaultSummaryID AS FaultID,
+							ABS(Reactance/Simple) AS Ratio
                         FROM SummaryData
                         WHERE FaultSummaryID IN
                         (
