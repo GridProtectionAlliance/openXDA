@@ -62,14 +62,22 @@ namespace openXDA
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecordCount)]
         public int QuerySettingCount(string filterString)
         {
-            return DataContext.Table<Setting>().QueryRecordCount();
+            TableOperations<Setting> tableOperations = DataContext.Table<Setting>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecords)]
         public IEnumerable<Setting> QuerySettings(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<Setting>().QueryRecords(sortField, ascending, page, pageSize);
+            TableOperations<Setting> tableOperations = DataContext.Table<Setting>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -194,501 +202,10 @@ namespace openXDA
 
         #endregion
 
-        #region [UserAccount Operations]
+        #region [ UserAccount Operations]
         public void DeleteUserAccount(Guid id)
         {
             CascadeDelete("UserAccount", $"ID = '{id}'");
-        }
-
-        #endregion
-
-        #region [ Meter Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
-        public int QueryMeterCount(int meterLocationID, string filterString)
-        {
-            //filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
-            RecordRestriction restriction = new RecordRestriction();
-            if (meterLocationID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterDetail> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
-            RecordRestriction restriction = new RecordRestriction();
-            if (meterLocationID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Meter), RecordOperation.DeleteRecord)]
-        public void DeleteMeter(int id)
-        {
-            //DataContext.Table<Meter>().DeleteRecord(id);
-            CascadeDelete("Meter", $"ID = {id}");
-
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Meter), RecordOperation.CreateNewRecord)]
-        public MeterDetail NewMeter()
-        {
-            return new MeterDetail();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Meter), RecordOperation.AddNewRecord)]
-        public void AddNewMeter(Meter record)
-        {
-            DataContext.Table<Meter>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(Meter), RecordOperation.UpdateRecord)]
-        public void UpdateMeter(Meter record)
-        {
-            DataContext.Table<Meter>().UpdateRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchMeters(string searchText, int limit = -1)
-        {
-            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
-
-            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
-                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchMetersByGroup(int groupID, string searchText, int limit = -1)
-        {
-            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT MeterID FROM GroupMeter WHERE GroupID = {1})", $"%{searchText}%", groupID);
-
-            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
-                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
-        }
-
-        #endregion
-
-        #region [ MeterLocation Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
-        public int QueryMeterLocationCount(string filterString)
-        {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<MeterLocation>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
-        public void DeleteMeterLocation(int id)
-        {
-            //DataContext.Table<MeterLocation>().DeleteRecord(id);
-            CascadeDelete("MeterLocation", $"ID = {id}");
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.CreateNewRecord)]
-        public MeterLocation NewMeterLocation()
-        {
-            return new MeterLocation();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
-        public void AddNewMeterLocation(MeterLocation record)
-        {
-            DataContext.Table<MeterLocation>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
-        public void UpdateMeterLocation(MeterLocation record)
-        {
-            DataContext.Table<MeterLocation>().UpdateRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchMeterLocations(string searchText, int limit = -1)
-        {
-            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
-
-            return DataContext.Table<MeterLocation>().QueryRecords("Name", restriction, limit)
-                .Select(meterLocation => new IDLabel(meterLocation.ID.ToString(), meterLocation.Name));
-        }
-
-        #endregion
-
-        #region [ Lines Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
-        public int QueryLinesCount(string filterString)
-        {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<Line>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
-        public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.DeleteRecord)]
-        public void DeleteLines(int id)
-        {
-            //DataContext.Table<Line>().DeleteRecord(id);
-            CascadeDelete("Line", $"ID = {id}");
-
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.CreateNewRecord)]
-        public Line NewLine()
-        {
-            return new Line();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Line), RecordOperation.AddNewRecord)]
-        public void AddNewLines(Line record)
-        {
-            DataContext.Table<Line>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(Line), RecordOperation.UpdateRecord)]
-        public void UpdateLines(Line record)
-        {
-            DataContext.Table<Line>().UpdateRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchLines(string searchText, int limit = -1)
-        {
-            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0}", $"%{searchText}%");
-
-            return DataContext.Table<Line>().QueryRecords("AssetKey", restriction, limit)
-                .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchLinesByGroup(int groupID, string searchText, int limit = -1)
-        {
-            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineLineGroup WHERE LineGroupID = {1})", $"%{searchText}%", groupID);
-
-            return DataContext.Table<Meter>().QueryRecords("AssetKey", restriction, limit)
-                .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
-        }
-
-
-        #endregion
-
-        #region [ LineView Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
-        public int QueryLineViewCount(string filterString)
-        {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%")+ "%";
-            return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
-        public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
-        public void DeleteLineView(int id)
-        {
-            //int index = DataContext.Connection.ExecuteScalar<int>("Select ID FROM LineImpedance WHERE LineID = {0}", id);
-            //DataContext.Table<LineImpedance>().DeleteRecord(index);
-            //DataContext.Table<Line>().DeleteRecord(id);
-            CascadeDelete("Line", $"ID = {id}");
-
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.CreateNewRecord)]
-        public LineView NewLineView()
-        {
-            return new LineView();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
-        public void AddNewLineView(LineView record)
-        {
-            DataContext.Table<Line>().AddNewRecord(CreateLine(record));
-            int index = DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
-            record.ID = index;
-            DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
-        public void UpdateLineView(LineView record)
-        {
-            DataContext.Table<Line>().UpdateRecord(CreateLine(record));
-            DataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
-        }
-
-        public Line CreateLine(LineView record)
-        {
-            Line line = NewLine();
-            line.ID = record.ID;
-            line.AssetKey = record.AssetKey;
-            line.Description = record.Description;
-            line.Length = record.Length;
-            line.ThermalRating = record.ThermalRating;
-            line.VoltageKV = record.VoltageKV;
-            return line;
-        }
-
-        public LineImpedance CreateLineImpedance(LineView record)
-        {
-            LineImpedance li = new LineImpedance();
-            li.ID = record.LineImpedanceID;
-            li.R0 = record.R0;
-            li.R1 = record.R1;
-            li.X0 = record.X0;
-            li.X1 = record.X1;
-            li.LineID = record.ID;
-            return li;
-        }
-
-        #endregion
-
-        #region [ MeterLine Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
-        public int QueryMeterLineCount(int lineID, int meterID, string filterString)
-        {
-            string restrictionString = "";
-            if(lineID == -1 && meterID != -1)
-            {
-                restrictionString = $"MeterID = {meterID}";
-            }
-            else if (meterID == -1 && lineID != -1)
-            {
-                restrictionString = $"LineID = {lineID}";
-            }
-            else if(meterID != -1 && lineID != -1)
-            {
-                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
-            }
-
-            return DataContext.Table<MeterLine>().QueryRecordCount(new RecordRestriction(restrictionString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            string restrictionString = "";
-            if (lineID == -1 && meterID != -1)
-            {
-                restrictionString = $"MeterID = {meterID}";
-            }
-            else if (meterID == -1 && lineID != -1)
-            {
-                restrictionString = $"LineID = {lineID}";
-            }
-            else if (meterID != -1 && lineID != -1)
-            {
-                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
-            }
-
-            return DataContext.Table<MeterLineDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
-        public void DeleteMeterLine(int id)
-        {
-            DataContext.Table<MeterLine>().DeleteRecord(id);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
-        public MeterLineDetail NewMeterLine()
-        {
-            return new MeterLineDetail();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
-        public void AddNewMeterLine(MeterLine record)
-        {
-            DataContext.Table<MeterLine>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
-        public void UpdateMeterLine(MeterLine record)
-        {
-            DataContext.Table<MeterLine>().UpdateRecord(record);
-        }
-
-        #endregion
-
-        #region [ Channel Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
-        public int QueryChannelCount(int meterID, int lineID, string filterString)
-        {
-            TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
-            RecordRestriction restriction = new RecordRestriction();
-
-            if(meterID != -1 && lineID == -1)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
-            else if(meterID == -1 && lineID != -1)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
-        public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
-            RecordRestriction restriction = new RecordRestriction();
-
-            if (meterID != -1 && lineID == -1)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
-            else if (meterID == -1 && lineID != -1)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
-
-            return DataContext.Table<ChannelDetail>().QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        public IEnumerable<Channel> QueryChannelsForDropDown(string filterString, int meterID)
-        {
-            return DataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0} AND MeterID = {1}", filterString, meterID), limit: 50);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Channel), RecordOperation.DeleteRecord)]
-        public void DeleteChannel(int id)
-        {
-            CascadeDelete("Channel", $"ID = {id}");
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Channel), RecordOperation.CreateNewRecord)]
-        public ChannelDetail NewChannel()
-        {
-            return new ChannelDetail();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(Channel), RecordOperation.AddNewRecord)]
-        public void AddNewChannel(ChannelDetail record)
-        {
-            DataContext.Table<Channel>().AddNewRecord(record);
-            record.ID = DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-
-            if (!string.IsNullOrEmpty(record.Mapping))
-            {
-                DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
-            }
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(Channel), RecordOperation.UpdateRecord)]
-        public void UpdateChannel(ChannelDetail record)
-        {
-            DataContext.Table<Channel>().UpdateRecord(record);
-
-            if (!string.IsNullOrEmpty(record.Mapping))
-            {
-                using (TransactionScope transaction = new TransactionScope())
-                {
-                    bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID) > 0;
-
-                    if (seriesExists)
-                        DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, record.SeriesTypeID);
-                    else
-                        DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
-
-                    transaction.Complete();
-                }
-            }
-            else
-            {
-                DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = '' WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID);
-            }
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchMeasurementTypes(string searchText, int limit = -1)
-        {
-            string limitText = (limit > 0) ? $"TOP {limit}" : "";
-
-            return DataContext.Connection
-                .RetrieveData($"SELECT {limitText} ID, Name FROM MeasurementType WHERE Name LIKE {{0}}", $"%{searchText}%")
-                .Select()
-                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchMeasurementCharacteristics(string searchText, int limit = -1)
-        {
-            string limitText = (limit > 0) ? $"TOP {limit}" : "";
-
-            return DataContext.Connection
-                .RetrieveData($"SELECT {limitText} ID, Name FROM MeasurementCharacteristic WHERE Name LIKE {{0}}", $"%{searchText}%")
-                .Select()
-                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchPhases(string searchText, int limit = -1)
-        {
-            string limitText = (limit > 0) ? $"TOP {limit}" : "";
-
-            return DataContext.Connection
-                .RetrieveData($"SELECT {limitText} ID, Name FROM Phase WHERE Name LIKE {{0}}", $"%{searchText}%")
-                .Select()
-                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
         }
 
         #endregion
@@ -1972,6 +1489,502 @@ namespace openXDA
         }
 
         #endregion
+
+        #endregion
+
+        #region [Assets Operations]
+
+        #region [ Meter Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
+        public int QueryMeterCount(int meterLocationID, string filterString)
+        {
+            //filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
+            RecordRestriction restriction = new RecordRestriction();
+            if (meterLocationID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterDetail> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
+            RecordRestriction restriction = new RecordRestriction();
+            if (meterLocationID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.DeleteRecord)]
+        public void DeleteMeter(int id)
+        {
+            //DataContext.Table<Meter>().DeleteRecord(id);
+            CascadeDelete("Meter", $"ID = {id}");
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.CreateNewRecord)]
+        public MeterDetail NewMeter()
+        {
+            return new MeterDetail();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Meter), RecordOperation.AddNewRecord)]
+        public void AddNewMeter(Meter record)
+        {
+            DataContext.Table<Meter>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Meter), RecordOperation.UpdateRecord)]
+        public void UpdateMeter(Meter record)
+        {
+            DataContext.Table<Meter>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMeters(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMetersByGroup(int groupID, string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT MeterID FROM GroupMeter WHERE GroupID = {1})", $"%{searchText}%", groupID);
+
+            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+        }
+
+        #endregion
+
+        #region [ MeterLocation Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
+        public int QueryMeterLocationCount(string filterString)
+        {
+            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            return DataContext.Table<MeterLocation>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
+        public void DeleteMeterLocation(int id)
+        {
+            //DataContext.Table<MeterLocation>().DeleteRecord(id);
+            CascadeDelete("MeterLocation", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.CreateNewRecord)]
+        public MeterLocation NewMeterLocation()
+        {
+            return new MeterLocation();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.AddNewRecord)]
+        public void AddNewMeterLocation(MeterLocation record)
+        {
+            DataContext.Table<MeterLocation>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(MeterLocation), RecordOperation.UpdateRecord)]
+        public void UpdateMeterLocation(MeterLocation record)
+        {
+            DataContext.Table<MeterLocation>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMeterLocations(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<MeterLocation>().QueryRecords("Name", restriction, limit)
+                .Select(meterLocation => new IDLabel(meterLocation.ID.ToString(), meterLocation.Name));
+        }
+
+        #endregion
+
+        #region [ Lines Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
+        public int QueryLinesCount(string filterString)
+        {
+            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            return DataContext.Table<Line>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
+        public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Line), RecordOperation.DeleteRecord)]
+        public void DeleteLines(int id)
+        {
+            //DataContext.Table<Line>().DeleteRecord(id);
+            CascadeDelete("Line", $"ID = {id}");
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Line), RecordOperation.CreateNewRecord)]
+        public Line NewLine()
+        {
+            return new Line();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Line), RecordOperation.AddNewRecord)]
+        public void AddNewLines(Line record)
+        {
+            DataContext.Table<Line>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Line), RecordOperation.UpdateRecord)]
+        public void UpdateLines(Line record)
+        {
+            DataContext.Table<Line>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchLines(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<Line>().QueryRecords("AssetKey", restriction, limit)
+                .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchLinesByGroup(int groupID, string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineLineGroup WHERE LineGroupID = {1})", $"%{searchText}%", groupID);
+
+            return DataContext.Table<Meter>().QueryRecords("AssetKey", restriction, limit)
+                .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
+        }
+
+
+        #endregion
+
+        #region [ LineView Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
+        public int QueryLineViewCount(string filterString)
+        {
+            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
+        public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
+            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
+        public void DeleteLineView(int id)
+        {
+            //int index = DataContext.Connection.ExecuteScalar<int>("Select ID FROM LineImpedance WHERE LineID = {0}", id);
+            //DataContext.Table<LineImpedance>().DeleteRecord(index);
+            //DataContext.Table<Line>().DeleteRecord(id);
+            CascadeDelete("Line", $"ID = {id}");
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.CreateNewRecord)]
+        public LineView NewLineView()
+        {
+            return new LineView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(LineView), RecordOperation.AddNewRecord)]
+        public void AddNewLineView(LineView record)
+        {
+            DataContext.Table<Line>().AddNewRecord(CreateLine(record));
+            int index = DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('Line')") ?? 0;
+            record.ID = index;
+            DataContext.Table<LineImpedance>().AddNewRecord(CreateLineImpedance(record));
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(LineView), RecordOperation.UpdateRecord)]
+        public void UpdateLineView(LineView record)
+        {
+            DataContext.Table<Line>().UpdateRecord(CreateLine(record));
+            DataContext.Table<LineImpedance>().UpdateRecord(CreateLineImpedance(record));
+        }
+
+        public Line CreateLine(LineView record)
+        {
+            Line line = NewLine();
+            line.ID = record.ID;
+            line.AssetKey = record.AssetKey;
+            line.Description = record.Description;
+            line.Length = record.Length;
+            line.ThermalRating = record.ThermalRating;
+            line.VoltageKV = record.VoltageKV;
+            return line;
+        }
+
+        public LineImpedance CreateLineImpedance(LineView record)
+        {
+            LineImpedance li = new LineImpedance();
+            li.ID = record.LineImpedanceID;
+            li.R0 = record.R0;
+            li.R1 = record.R1;
+            li.X0 = record.X0;
+            li.X1 = record.X1;
+            li.LineID = record.ID;
+            return li;
+        }
+
+        #endregion
+
+        #region [ MeterLine Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
+        public int QueryMeterLineCount(int lineID, int meterID, string filterString)
+        {
+            string restrictionString = "";
+            if (lineID == -1 && meterID != -1)
+            {
+                restrictionString = $"MeterID = {meterID}";
+            }
+            else if (meterID == -1 && lineID != -1)
+            {
+                restrictionString = $"LineID = {lineID}";
+            }
+            else if (meterID != -1 && lineID != -1)
+            {
+                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
+            }
+
+            return DataContext.Table<MeterLine>().QueryRecordCount(new RecordRestriction(restrictionString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            string restrictionString = "";
+            if (lineID == -1 && meterID != -1)
+            {
+                restrictionString = $"MeterID = {meterID}";
+            }
+            else if (meterID == -1 && lineID != -1)
+            {
+                restrictionString = $"LineID = {lineID}";
+            }
+            else if (meterID != -1 && lineID != -1)
+            {
+                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
+            }
+
+            return DataContext.Table<MeterLineDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
+        public void DeleteMeterLine(int id)
+        {
+            DataContext.Table<MeterLine>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
+        public MeterLineDetail NewMeterLine()
+        {
+            return new MeterLineDetail();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
+        public void AddNewMeterLine(MeterLine record)
+        {
+            DataContext.Table<MeterLine>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
+        public void UpdateMeterLine(MeterLine record)
+        {
+            DataContext.Table<MeterLine>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ Channel Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.QueryRecordCount)]
+        public int QueryChannelCount(int meterID, int lineID, string filterString)
+        {
+            TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
+            RecordRestriction restriction = new RecordRestriction();
+
+            if (meterID != -1 && lineID == -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
+            else if (meterID == -1 && lineID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.QueryRecords)]
+        public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
+            RecordRestriction restriction = new RecordRestriction();
+
+            if (meterID != -1 && lineID == -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
+            else if (meterID == -1 && lineID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
+
+            return DataContext.Table<ChannelDetail>().QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        public IEnumerable<Channel> QueryChannelsForDropDown(string filterString, int meterID)
+        {
+            return DataContext.Table<Channel>().QueryRecords(restriction: new RecordRestriction("Name LIKE {0} AND MeterID = {1}", filterString, meterID), limit: 50);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.DeleteRecord)]
+        public void DeleteChannel(int id)
+        {
+            CascadeDelete("Channel", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.CreateNewRecord)]
+        public ChannelDetail NewChannel()
+        {
+            return new ChannelDetail();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(Channel), RecordOperation.AddNewRecord)]
+        public void AddNewChannel(ChannelDetail record)
+        {
+            DataContext.Table<Channel>().AddNewRecord(record);
+            record.ID = DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
+            if (!string.IsNullOrEmpty(record.Mapping))
+            {
+                DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(Channel), RecordOperation.UpdateRecord)]
+        public void UpdateChannel(ChannelDetail record)
+        {
+            DataContext.Table<Channel>().UpdateRecord(record);
+
+            if (!string.IsNullOrEmpty(record.Mapping))
+            {
+                using (TransactionScope transaction = new TransactionScope())
+                {
+                    bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID) > 0;
+
+                    if (seriesExists)
+                        DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, record.SeriesTypeID);
+                    else
+                        DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
+
+                    transaction.Complete();
+                }
+            }
+            else
+            {
+                DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = '' WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID);
+            }
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMeasurementTypes(string searchText, int limit = -1)
+        {
+            string limitText = (limit > 0) ? $"TOP {limit}" : "";
+
+            return DataContext.Connection
+                .RetrieveData($"SELECT {limitText} ID, Name FROM MeasurementType WHERE Name LIKE {{0}}", $"%{searchText}%")
+                .Select()
+                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMeasurementCharacteristics(string searchText, int limit = -1)
+        {
+            string limitText = (limit > 0) ? $"TOP {limit}" : "";
+
+            return DataContext.Connection
+                .RetrieveData($"SELECT {limitText} ID, Name FROM MeasurementCharacteristic WHERE Name LIKE {{0}}", $"%{searchText}%")
+                .Select()
+                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchPhases(string searchText, int limit = -1)
+        {
+            string limitText = (limit > 0) ? $"TOP {limit}" : "";
+
+            return DataContext.Connection
+                .RetrieveData($"SELECT {limitText} ID, Name FROM Phase WHERE Name LIKE {{0}}", $"%{searchText}%")
+                .Select()
+                .Select(row => new IDLabel(row["ID"].ToString(), row["Name"].ToString()));
+        }
+
+        #endregion
+
 
         #endregion
 
