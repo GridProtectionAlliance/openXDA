@@ -2650,7 +2650,10 @@ SELECT
                             FileName,
                             EventID,
                             FaultSummaryID AS FaultID,
-							ABS(Reactance/Simple) AS Ratio
+							CASE WHEN ABS(Reactance/COALESCE(Simple,1)) > 0.6 THEN 'LOW'
+								 WHEN ABS(Reactance/COALESCE(Simple,1)) < 0.4 THEN 'HIGH'
+								 ELSE 'MEDIUM'
+							END AS Ratio
                         FROM SummaryData
                         WHERE FaultSummaryID IN
                         (
