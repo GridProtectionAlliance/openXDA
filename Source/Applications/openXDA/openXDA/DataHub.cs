@@ -34,6 +34,7 @@ using System.Transactions;
 using System.Windows.Forms;
 using GSF;
 using GSF.Collections;
+using GSF.Data;
 using GSF.Data.Model;
 using GSF.Identity;
 using GSF.PhasorProtocols.BPAPDCstream;
@@ -2215,6 +2216,10 @@ namespace openXDA
         [RecordOperation(typeof(Event), RecordOperation.UpdateRecord)]
         public void UpdateEvent(EventView record)
         {
+            if(record.EventTypeID != 1)
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery("UPDATE FaultSummary SET IsSuppressed = 1 WHERE EventID = {0}", record.ID);
+            }
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }
 
