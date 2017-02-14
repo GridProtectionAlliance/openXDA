@@ -60,19 +60,21 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "EmailGroupID", "Email Group", "text-Left" },
-        new[] { "LineGroupID", "Line Group", "text-left valign-middle"},
+        new[] { "EmailGroup", "Email Group", "text-Left" },
+        new[] { "LineGroup", "Line Group", "text-left valign-middle"},
 
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.ShowSearchFilter = true;
+
 }
 
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), attr: { href: '/Config/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
-    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupGroupName(LineGroupID), attr: { href: '/Config/LineGroups.cshtml?LineGroupID=' + LineGroupID }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: EmailGroup, attr: { href: '/Config/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: LineGroup, attr: { href: '/Config/LineGroups.cshtml?LineGroupID=' + LineGroupID }"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -89,13 +91,6 @@
 {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailGroupLineGroup, DataHub>(ViewBag,null,null,int.Parse(ViewBag.EmailGroupID)))
-        @Raw(AppModel.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
-        @Raw(AppModel.RenderAbstract<LineGroup>("Name", "ID", "lookupGroupName", "groupName"))
-
-        $(function () {
-            viewModel.filterText = '@ViewBag.EmailGroupID' + ';' + '@ViewBag.LineGroupID';
-            viewModel.queryPageRecords();
-        });
 
         $('#addNewEditDialog').on('shown.bs.modal', function (event) {
             $('#selectEmailGroupID').val('@ViewBag.EmailGroupID');

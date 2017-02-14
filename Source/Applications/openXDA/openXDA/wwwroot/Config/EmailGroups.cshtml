@@ -61,6 +61,8 @@
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.AddNewEditTitle = "Email Group Type";
+    ViewBag.ShowSearchFilter = true;
+
 }
 
 @helper BodyRows()
@@ -207,14 +209,6 @@
             }
         }
         
-        //$(viewModel).on('recordSaved', function (record) {
-        //    if (viewModel.dataHubIsConnected()) {
-        //        dataHub.getLatMeterGroupID().done(function (MeterGroupID) {
-        //            dataHub.UpdateMeters($('#'))
-        //        });
-        //    }
-        //});
-
         $(function () {
             viewModel.filterText = '@ViewBag.GroupID';
             viewModel.queryPageRecords();

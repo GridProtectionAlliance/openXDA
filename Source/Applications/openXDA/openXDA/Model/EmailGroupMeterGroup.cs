@@ -13,4 +13,12 @@ namespace openXDA.Model
         public int EmailGroupID { get; set; }
         public int MeterGroupID { get; set; }
     }
+
+    public class EmailGroupMeterGroupView: EmailGroupMeterGroup
+    {
+        [Searchable]
+        public string EmailGroup { get; set; }
+        [Searchable]
+        public string MeterGroup { get; set; }
+    }
 }

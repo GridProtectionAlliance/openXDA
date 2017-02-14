@@ -2821,6 +2821,56 @@ FROM	dbo.WorkbenchVoltageCurve INNER JOIN
 
 GO
 
+CREATE VIEW [dbo].[EmailTypeView]
+AS
+SELECT        dbo.EmailType.EmailCategoryID, dbo.EmailType.XSLTemplateID, dbo.EmailType.ID, dbo.EmailCategory.Name AS EmailCategory, dbo.XSLTemplate.Name AS XSLTemplate, 
+                         dbo.EmailCategory.Name + ' - ' + dbo.XSLTemplate.Name AS Name
+FROM            dbo.EmailType INNER JOIN
+                         dbo.EmailCategory ON dbo.EmailType.EmailCategoryID = dbo.EmailCategory.ID INNER JOIN
+                         dbo.XSLTemplate ON dbo.EmailType.XSLTemplateID = dbo.XSLTemplate.ID
+
+GO
+
+CREATE VIEW [dbo].[EmailGroupTypeView]
+AS
+SELECT        dbo.EmailGroupType.ID, dbo.EmailGroupType.EmailGroupID, dbo.EmailGroupType.EmailTypeID, dbo.EmailGroup.Name AS GroupName, 
+                         dbo.EmailCategory.Name + ' - ' + dbo.XSLTemplate.Name AS TypeName
+FROM            dbo.EmailGroupType INNER JOIN
+                         dbo.EmailGroup ON dbo.EmailGroupType.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
+                         dbo.EmailType ON dbo.EmailGroupType.EmailTypeID = dbo.EmailType.ID INNER JOIN
+                         dbo.XSLTemplate ON dbo.XSLTemplate.ID = dbo.EmailType.XSLTemplateID INNER JOIN
+                         dbo.EmailCategory ON dbo.EmailCategory.ID = dbo.EmailType.EmailCategoryID
+
+GO
+
+CREATE VIEW [dbo].[EmailGroupMeterGroupView]
+AS
+SELECT        dbo.EmailGroupMeterGroup.ID, dbo.EmailGroupMeterGroup.EmailGroupID, dbo.EmailGroupMeterGroup.MeterGroupID, dbo.EmailGroup.Name AS EmailGroup, dbo.MeterGroup.Name AS MeterGroup
+FROM            dbo.EmailGroupMeterGroup INNER JOIN
+                         dbo.EmailGroup ON dbo.EmailGroupMeterGroup.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
+                         dbo.MeterGroup ON dbo.EmailGroupMeterGroup.MeterGroupID = dbo.MeterGroup.ID
+
+GO
+
+CREATE VIEW [dbo].[EmailGroupLineGroupView]
+AS
+SELECT        dbo.EmailGroupLineGroup.ID, dbo.EmailGroupLineGroup.EmailGroupID, dbo.EmailGroupLineGroup.LineGroupID, dbo.EmailGroup.Name AS EmailGroup, dbo.LineGroup.Name AS LineGroup
+FROM            dbo.EmailGroupLineGroup INNER JOIN
+                         dbo.EmailGroup ON dbo.EmailGroupLineGroup.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
+                         dbo.LineGroup ON dbo.EmailGroupLineGroup.LineGroupID = dbo.LineGroup.ID
+
+GO
+
+CREATE VIEW [dbo].[EmailGroupUserAccountView]
+AS
+SELECT        dbo.EmailGroupUserAccount.ID, dbo.EmailGroupUserAccount.EmailGroupID, dbo.EmailGroupUserAccount.UserAccountID, dbo.EmailGroup.Name AS EmailGroup, 
+                         dbo.UserAccount.FirstName + ' ' + dbo.UserAccount.LastName AS UserName
+FROM            dbo.EmailGroupUserAccount INNER JOIN
+                         dbo.EmailGroup ON dbo.EmailGroupUserAccount.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
+                         dbo.UserAccount ON dbo.EmailGroupUserAccount.UserAccountID = dbo.UserAccount.ID
+
+GO
+
 
 ----- PROCEDURES -----
 

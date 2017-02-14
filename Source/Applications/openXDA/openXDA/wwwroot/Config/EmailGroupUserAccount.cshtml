@@ -62,20 +62,22 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "EmailGroupID", "Group Name", "text-Left" },
-        new[] { "UserAccountID", "User Account", "text-left valign-middle"},
+        new[] { "EmailGroup", "Group Name", "text-Left" },
+        new[] { "UserName", "User Account", "text-left valign-middle"},
 
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.AddNewEditTitle = "Email Group Type";
+    ViewBag.ShowSearchFilter = true;
+
 }
 
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: lookupEmailGroupName(EmailGroupID), attr: { href: '/Config/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
-    <td width="25%" class="text-left valign-middle" nowrap><a id="accountNameLink" class="btn btn-link" data-bind="text: lookupAccountName(UserAccountID, $($element)), attr: { href: '/Config/Users.cshtml' }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a class="btn btn-link" data-bind="text: EmailGroup, attr: { href: '/Config/EmailGroups.cshtml?GroupID=' + EmailGroupID }"></a></td>
+    <td width="25%" class="text-left valign-middle" nowrap><a id="accountNameLink" class="btn btn-link" data-bind="text: UserName, $($element)), attr: { href: '/Config/Users.cshtml' }"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -92,13 +94,6 @@
 {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailGroupUserAccount, DataHub>(ViewBag, null, null, int.Parse(ViewBag.EmailGroupID)))
-        @Raw(AppModel.RenderAbstract<EmailGroup>("Name", "ID", "lookupEmailGroupName", "emailGroupName"))
-        @Raw(AppModel.RenderAbstract<UserAccount>("Name", "ID", "lookupUserAccountName", "userAccountName"))
-
-        $(function () {
-            viewModel.filterText = '@ViewBag.EmailGroupID' + ';' + '@ViewBag.UserAccountID';
-            viewModel.queryPageRecords();
-        });
 
         function lookupAccountName(UserAccountID, element) {
             if (viewModel.dataHubIsConnected()) {

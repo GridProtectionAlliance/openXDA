@@ -13,4 +13,14 @@ namespace openXDA.Model
         public int EmailCategoryID { get; set; }
         public int XSLTemplateID { get; set; }
     }
+
+    public class EmailTypeView: EmailType
+    {
+        [Searchable]
+        public string EmailCategory { get; set; }
+        [Searchable]
+        public string XSLTemplate { get; set; }
+        [Searchable]
+        public string Name { get; set; }
+    }
 }

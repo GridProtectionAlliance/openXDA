@@ -13,4 +13,12 @@ namespace openXDA.Model
         public int EmailGroupID { get; set; }
         public Guid UserAccountID { get; set; }
     }
+
+    public class EmailGroupUserAccountView: EmailGroupUserAccount
+    {
+        [Searchable]
+        public string EmailGroup { get; set; }
+        [Searchable]
+        public string UserName { get; set; } 
+    }
 }

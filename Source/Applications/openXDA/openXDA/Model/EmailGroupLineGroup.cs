@@ -13,4 +13,13 @@ namespace openXDA.Model
         public int EmailGroupID { get; set; }
         public int LineGroupID { get; set; }
     }
+
+    public class EmailGroupLineGroupView : EmailGroupLineGroup
+    {
+        [Searchable]
+        public string EmailGroup { get; set; }
+        [Searchable]
+        public string LineGroup { get; set; }
+    }
+
 }

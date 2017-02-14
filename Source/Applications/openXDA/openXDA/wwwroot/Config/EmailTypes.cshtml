@@ -23,6 +23,7 @@
 
 @using System.Collections.Generic
 @using System.Net.Http
+@using System.Security.Policy
 @using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
@@ -59,12 +60,14 @@
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.AddNewEditTitle = "Email Type";
+    ViewBag.ShowSearchFilter = true;
+
 }
 
 @helper BodyRows()
 {
-    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: lookupEmailCategoryName(EmailCategoryID), click: $parent.viewPageRecord"></button></td>
-    <td width="25%" class="text-left valign-middle" data-bind="text: lookupXSLTemplateName(XSLTemplateID)"></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: EmailCategory, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" data-bind="text: XSLTemplate"></td>
     <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data), enable: checkID()">View Template</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -82,8 +85,6 @@
     <script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailType, DataHub>(ViewBag))
-        @Raw(AppModel.RenderAbstract<EmailCategory>("Name", "ID", "lookupEmailCategoryName", "emailCategoryName"))
-        @Raw(AppModel.RenderAbstract<XSLTemplate>("Name", "ID", "lookupXSLTemplateName", "xslTemplateName"))
 
         $(function () {
             viewModel.filterText = '@ViewBag.EmailTypeID';
