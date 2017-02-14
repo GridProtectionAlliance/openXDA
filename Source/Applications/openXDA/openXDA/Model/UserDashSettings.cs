@@ -14,7 +14,9 @@ namespace openXDA.Model
         public int ID { get; set; }
         [Label("User Account")]
         public Guid UserAccountID { get; set; }
+        [Searchable]
         public string Name { get; set; }
+        [Searchable]
         public string Value { get; set; }
         public bool Enabled { get; set; }
     }

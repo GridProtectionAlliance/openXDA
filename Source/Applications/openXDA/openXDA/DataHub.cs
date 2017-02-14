@@ -170,14 +170,22 @@ namespace openXDA
         [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecordCount)]
         public int QueryUserDashSettingsCount(string filterString)
         {
-            return DataContext.Table<UserDashSettings>().QueryRecordCount();
+            TableOperations<UserDashSettings> tableOperations = DataContext.Table<UserDashSettings>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecords)]
         public IEnumerable<UserDashSettings> QueryUserDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<UserDashSettings>().QueryRecords(sortField, ascending, page, pageSize);
+            TableOperations<UserDashSettings> tableOperations = DataContext.Table<UserDashSettings>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
