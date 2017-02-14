@@ -373,11 +373,18 @@ namespace FaultData.DataAnalysis
 
             channelLookup = new DataContextLookup<ChannelKey, Channel>(meterInfo, channel => new ChannelKey(channel))
                 .WithFilterExpression(channel => channel.MeterID == meter.ID)
-                .WithFilterExpression(channel => channel.LineID == dataGroup.Line.ID);
+                .WithFilterExpression(channel => channel.LineID == dataGroup.Line.ID)
+                .WithFilterExpression(channel => channel.MeasurementType.Name == measurementTypeName)
+                .WithFilterExpression(channel => channel.MeasurementCharacteristic.Name == measurementCharacteristicName)
+                .WithFilterExpression(channel => channel.Phase.Name == phaseName);
 
             seriesLookup = new DataContextLookup<SeriesKey, Series>(meterInfo, series => new SeriesKey(series))
                 .WithFilterExpression(series => series.Channel.Meter.ID == meter.ID)
-                .WithFilterExpression(series => series.Channel.Line.ID == dataGroup.Line.ID);
+                .WithFilterExpression(series => series.Channel.Line.ID == dataGroup.Line.ID)
+                .WithFilterExpression(series => series.Channel.MeasurementType.Name == measurementTypeName)
+                .WithFilterExpression(series => series.Channel.MeasurementCharacteristic.Name == measurementCharacteristicName)
+                .WithFilterExpression(series => series.Channel.Phase.Name == phaseName)
+                .WithFilterExpression(series => series.SeriesType.Name == seriesTypeName);
 
             measurementTypeLookup = new DataContextLookup<string, MeasurementType>(meterInfo, measurementType => measurementType.Name);
             measurementCharacteristicLookup = new DataContextLookup<string, MeasurementCharacteristic>(meterInfo, measurementCharacteristic => measurementCharacteristic.Name);
