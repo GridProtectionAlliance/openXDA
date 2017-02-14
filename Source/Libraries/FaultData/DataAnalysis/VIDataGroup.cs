@@ -281,7 +281,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IA = IR - IB - IC
                 missingSeries = IR.Add(IB.Negate()).Add(IC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meterInfo, meter, m_dataGroup, "Current", "General1");
+                missingSeries.SeriesInfo = GetSeriesInfo(meterInfo, meter, m_dataGroup, "Current", "AN");
                 m_iaIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }
@@ -289,7 +289,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IB = IR - IA - IC
                 missingSeries = IR.Add(IA.Negate()).Add(IC.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meterInfo, meter, m_dataGroup, "Current", "General2");
+                missingSeries.SeriesInfo = GetSeriesInfo(meterInfo, meter, m_dataGroup, "Current", "BN");
                 m_ibIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }
@@ -297,7 +297,7 @@ namespace FaultData.DataAnalysis
             {
                 // Calculate IC = IR - IA - IB
                 missingSeries = IR.Add(IA.Negate()).Add(IB.Negate());
-                missingSeries.SeriesInfo = GetSeriesInfo(meterInfo, meter, m_dataGroup, "Current", "General3");
+                missingSeries.SeriesInfo = GetSeriesInfo(meterInfo, meter, m_dataGroup, "Current", "CN");
                 m_icIndex = m_dataGroup.DataSeries.Count;
                 m_dataGroup.Add(missingSeries);
             }

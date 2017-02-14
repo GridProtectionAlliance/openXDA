@@ -325,6 +325,8 @@ namespace openXDA
         {
             try
             {
+                ConfigurationFile.Current.Reload();
+
                 CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
                 CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];
 

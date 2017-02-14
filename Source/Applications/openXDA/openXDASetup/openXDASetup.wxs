@@ -100,7 +100,7 @@
     <Property Id="DBPERMISSIONSQUERY" Secure="yes" />
     
     <Property Id="DBCONNECTIONSTRINGMAPPINGS" Value="SERVERNAME=Data Source;DATABASENAME=Initial Catalog;INTEGRATEDSECURITY=Integrated Security;DBUSERNAME=User Id;DBPASSWORD=Password" />
-    <Property Id="CONNECTIONSTRINGMAPPING" Value="XDACONNECTIONSTRING={//add[@name='ConnectionString']/@value}" />
+    <Property Id="CONNECTIONSTRINGMAPPING" Value="XDACONNECTIONSTRING={//systemSettings/add[@name='ConnectionString']/@value}" />
     <Property Id="COMPANYNAMEMAPPING" Value="COMPANYNAME={//add[@name='CompanyName']/@value}" />
     <Property Id="COMPANYACRONYMMAPPING" Value="COMPANYACRONYM={//add[@name='CompanyAcronym']/@value}" />
     
@@ -395,7 +395,6 @@
       <ComponentRef Id="openHistorian.Core" />
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
-      <ComponentRef Id="Microsoft.AspNet.Razor" />
       <ComponentRef Id="Microsoft.AspNet.SignalR.Core" />
       <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Web.Http" />
@@ -536,9 +535,6 @@
       </Component>
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
-      <Component Id="Microsoft.AspNet.Razor">
-        <File Id="Microsoft.AspNet.Razor.dll" Name="Microsoft.AspNet.Razor.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.Razor.4.0.0-beta7\lib\net45\Microsoft.AspNet.Razor.dll" />
-      </Component>
       <Component Id="Microsoft.AspNet.SignalR.Core">
         <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll" />
       </Component>
@@ -579,7 +575,7 @@
         <File Id="RazorEngine.dll" Name="RazorEngine.dll" Source="$(var.SolutionDir)Dependencies\NuGet\RazorEngine.3.7.7\lib\net45\RazorEngine.dll" />
       </Component>
       <Component Id="System.Web.Razor">
-        <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)Dependencies\Microsoft\System.Web.Razor.dll" />
+        <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll" />
       </Component>
       <Component Id="AjaxMin">
         <File Id="AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll" />
