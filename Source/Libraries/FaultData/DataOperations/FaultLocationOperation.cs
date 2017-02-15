@@ -145,7 +145,17 @@ namespace FaultData.DataOperations
                 MeterData.EventRow eventRow;
 
                 eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(MeterDataSet.FileGroup.ID);
-                eventLookup = eventTable.Where(evt => evt.MeterID == MeterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+
+                eventLookup = eventTable
+                    .Where(evt => evt.MeterID == MeterDataSet.Meter.ID)
+                    .GroupBy(CreateEventKey)
+                    .ToDictionary(grouping => grouping.Key, grouping =>
+                    {
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Duplicate event found for meter {MeterDataSet.Meter.AssetKey}: {string.Join(", ", grouping.Select(evt => evt.ID))}");
+
+                        return grouping.First();
+                    });
 
                 foreach (Tuple<EventKey, FaultLocationData.FaultGroupRow> faultGroup in m_faultGroupList)
                 {
@@ -439,7 +449,15 @@ namespace FaultData.DataOperations
                 return segmentType;
             };
 
-            s_segmentTypeLookup = faultLocationInfo.SegmentTypes.ToDictionary(segmentType => segmentType.Name);
+            s_segmentTypeLookup = faultLocationInfo.SegmentTypes
+                .GroupBy(segmentType => segmentType.Name)
+                .ToDictionary(grouping => grouping.Key, grouping =>
+                {
+                    if (grouping.Count() > 1)
+                        Log.Warn($"Duplicate segment type found: {grouping.Key}");
+
+                    return grouping.First();
+                });
 
             s_segmentTypeLookup.GetOrAdd("Fault", segmentTypeFactory);
             s_segmentTypeLookup.GetOrAdd("AN Fault", segmentTypeFactory);

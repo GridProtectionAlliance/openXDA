@@ -35,6 +35,7 @@ using FaultData.Database;
 using FaultData.Database.FaultLocationDataTableAdapters;
 using FaultData.Database.MeterDataTableAdapters;
 using GSF.Data;
+using log4net;
 using DataPoint = FaultData.DataAnalysis.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
@@ -256,12 +257,23 @@ namespace FaultData.DataWriters
                 return dataGroup[0];
             };
 
-            return faultCurveTable.ToDictionary(faultCurve => faultCurve.Algorithm, toDataSeries);
+            return faultCurveTable
+                .GroupBy(faultCurve => faultCurve.Algorithm)
+                .ToDictionary(grouping => grouping.Key, grouping =>
+                {
+                    if (grouping.Count() > 1)
+                        Log.Warn($"Duplicate fault curve ({grouping.Key}) found for event {grouping.First().EventID}");
+
+                    return toDataSeries(grouping.First());
+                });
         }
 
         #endregion
 
         #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ChartGenerator));
 
         // Static Methods
         public static Stream ConvertToChartImageStream(DbAdapterContainer dbAdapterContainer, XElement chartElement)

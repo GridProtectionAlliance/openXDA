@@ -140,7 +140,16 @@ namespace FaultData.DataOperations
             // Query database for event data IDs and store them in a lookup table by waveform key
             eventDataAdapter = dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
             eventDataAdapter.FillByFileGroup(m_eventDataTable, m_meterDataSet.FileGroup.ID);
-            eventDataLookup = m_eventDataTable.ToDictionary(CreateWaveformKey);
+
+            eventDataLookup = m_eventDataTable
+                .GroupBy(CreateWaveformKey)
+                .ToDictionary(grouping => grouping.Key, grouping =>
+                {
+                    if (grouping.Count() > 1)
+                        Log.Warn($"Duplicate waveform found for meter {m_meterDataSet.Meter.AssetKey}: {string.Join(", ", grouping.Select(waveform => waveform.ID))}");
+
+                    return grouping.First();
+                });
 
             // Update the event rows with the IDs from the event data table
             foreach (Tuple<WaveformKey, MeterData.EventRow> tuple in m_eventList)
@@ -155,7 +164,16 @@ namespace FaultData.DataOperations
             // Query database for events and store them in a lookup table by event key
             eventAdapter = dbAdapterContainer.GetAdapter<EventTableAdapter>();
             eventAdapter.FillByFileGroup(m_eventTable, m_meterDataSet.FileGroup.ID);
-            eventLookup = m_eventTable.ToDictionary(CreateEventKey);
+
+            eventLookup = m_eventTable
+                .GroupBy(CreateEventKey)
+                .ToDictionary(grouping => grouping.Key, grouping =>
+                {
+                    if (grouping.Count() > 1)
+                        Log.Warn($"Duplicate event found for meter {m_meterDataSet.Meter.AssetKey}: {string.Join(", ", grouping.Select(evt => evt.ID))}");
+
+                    return grouping.First();
+                });
 
             // Update the disturbance rows with the IDs from the event table
             foreach (Tuple<EventKey, MeterData.DisturbanceRow> tuple in m_disturbanceList)
@@ -329,9 +347,18 @@ namespace FaultData.DataOperations
 
             dbAdapterContainer.GetAdapter<EventTypeTableAdapter>().Fill(eventTypeTable);
 
-            return Enumerable.Select(eventTypeTable
-                .Where(row => Enum.TryParse(row.Name, out eventClassification)), row => Tuple.Create(eventClassification, row.ID))
-                .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+            return eventTypeTable
+                .Where(row => Enum.TryParse(row.Name, out eventClassification))
+                .Select(row => new { EventClassification = eventClassification, row.ID })
+                .ToList()
+                .GroupBy(obj => obj.EventClassification)
+                .ToDictionary(grouping => grouping.Key, grouping =>
+                {
+                    if (grouping.Count() > 1)
+                        Log.Warn($"Found duplicate event type: {grouping.Key}");
+
+                    return grouping.First().ID;
+                });
         }
 
         private EventKey CreateEventKey(FileGroup fileGroup, DataGroup dataGroup)

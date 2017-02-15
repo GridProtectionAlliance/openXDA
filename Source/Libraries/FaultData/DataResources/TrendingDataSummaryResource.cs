@@ -31,6 +31,7 @@ using FaultData.Database;
 using FaultData.DataSets;
 using GSF.Collections;
 using GSF.Configuration;
+using log4net;
 using openHistorian.XDALink;
 
 namespace FaultData.DataResources
@@ -193,7 +194,16 @@ namespace FaultData.DataResources
 
                 foreach (DataGroup dataGroup in trendingGroup.Value)
                 {
-                    seriesLookup = dataGroup.DataSeries.ToDictionary(series => series.SeriesInfo.SeriesType.Name);
+                    seriesLookup = dataGroup.DataSeries
+                        .GroupBy(series => series.SeriesInfo.SeriesType.Name)
+                        .ToDictionary(grouping => grouping.Key, grouping =>
+                        {
+                            if (grouping.Count() > 1)
+                                Log.Warn($"Duplicate series type ({grouping.Key}) found while creating trending summaries for channel {trendingGroup.Key.ID}");
+
+                            return grouping.First();
+                        });
+
                     seriesLookup.TryGetValue("Minimum", out minSeries);
                     seriesLookup.TryGetValue("Maximum", out maxSeries);
                     seriesLookup.TryGetValue("Average", out avgSeries);
@@ -322,6 +332,8 @@ namespace FaultData.DataResources
         private static readonly List<SeriesID> SeriesIDs = Enum.GetValues(typeof(SeriesID))
             .Cast<SeriesID>()
             .ToList();
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(TrendingDataSummaryResource));
 
         #endregion
     }

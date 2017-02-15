@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
+using GSF.Collections;
 
 namespace FaultData.Database
 {
@@ -168,6 +169,7 @@ namespace FaultData.Database
 
             return m_filterExpressions
                 .Aggregate(table, (current, expression) => current.Where(expression))
+                .DistinctBy(m_keyFunction)
                 .ToDictionary(m_keyFunction);
         }
 

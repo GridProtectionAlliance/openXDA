@@ -33,8 +33,10 @@ using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using log4net;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
@@ -393,7 +395,17 @@ namespace FaultData.DataOperations
             BulkLoader bulkLoader;
 
             eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(m_meterDataSet.FileGroup.ID);
-            eventLookup = eventTable.Where(evt => evt.MeterID == m_meterDataSet.Meter.ID).ToDictionary(CreateEventKey);
+
+            eventLookup = eventTable
+                .Where(evt => evt.MeterID == m_meterDataSet.Meter.ID)
+                .GroupBy(CreateEventKey)
+                .ToDictionary(grouping => grouping.Key, grouping =>
+                {
+                    if (grouping.Count() > 1)
+                        Log.Warn($"Found duplicate events for meter {m_meterDataSet.Meter.AssetKey}: {string.Join(", ", grouping.Select(evt => evt.ID))}");
+
+                    return grouping.First();
+                });
 
             foreach (Tuple<EventKey, MeterData.BreakerOperationRow> breakerOperation in m_breakerOperations)
             {
@@ -626,9 +638,18 @@ namespace FaultData.DataOperations
 
             dbAdapterContainer.GetAdapter<BreakerOperationTypeTableAdapter>().Fill(breakerOperationTypeTable);
 
+            foreach (IGrouping<string, BreakerOperationType> grouping in breakerOperationTypeTable.GroupBy(row => row.Name))
+            {
+                if (grouping.Count() > 1)
+                    Log.Warn($"Found duplicate breaker operation type: {grouping.Key}");
+            }
+
             return breakerOperationTypeTable
-                .Where(row => Enum.TryParse(row.Name, out breakerOperationType)).Select(row => Tuple.Create(breakerOperationType, row.ID))
-                .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+                .Where(row => Enum.TryParse(row.Name, out breakerOperationType))
+                .Select(row => new { BreakerOperationType = breakerOperationType, row.ID })
+                .ToList()
+                .DistinctBy(obj => obj.BreakerOperationType)
+                .ToDictionary(obj => obj.BreakerOperationType, obj => obj.ID);
         }
 
         #endregion
@@ -638,6 +659,7 @@ namespace FaultData.DataOperations
         // Static Fields
         private static readonly object BreakerOperationTypeLookupLock = new object();
         private static Dictionary<BreakerOperationType, int> s_breakerOperationTypeLookup;
+        private static readonly ILog Log = LogManager.GetLogger(typeof(BreakerTimingOperation));
 
         #endregion
     }

@@ -1248,8 +1248,15 @@ namespace openXDA
         // Loads system settings from the database.
         private string LoadSystemSettings(SystemInfoDataContext systemInfo)
         {
+            foreach (IGrouping<string, Setting> grouping in systemInfo.Settings.GroupBy(setting => setting.Name))
+            {
+                if (grouping.Count() > 1)
+                    Log.Warn($"Duplicate record for setting {grouping.Key} detected.");
+            }
+
             // Convert the Setting table to a dictionary
             Dictionary<string, string> settings = systemInfo.Settings
+                .DistinctBy(setting => setting.Name)
                 .ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.OrdinalIgnoreCase);
 
             // Add the database connection string if there is not

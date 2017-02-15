@@ -140,11 +140,18 @@ namespace FaultData.DataOperations
                 seriesList = m_meterInfo.Series
                     .Where(series => series.Channel.MeterID == meter.ID)
                     .ToList();
-
+                
                 // Match the parsed series with the ones associated with the meter in the database
                 seriesLookup = seriesList
                     .Where(series => string.IsNullOrEmpty(series.SourceIndexes))
-                    .ToDictionary(series => new SeriesKey(series));
+                    .GroupBy(series => new SeriesKey(series))
+                    .ToDictionary(grouping => grouping.Key, grouping =>
+                    {
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Found duplicate series for meter {meter.AssetKey}: {string.Join(", ", grouping.Select(series => series.ID))}");
+
+                        return grouping.First();
+                    });
 
                 foreach (DataSeries series in meterDataSet.DataSeries)
                 {
@@ -270,6 +277,20 @@ namespace FaultData.DataOperations
 
             if (undefinedDataSeries.Count <= 0)
                 return;
+
+            if (meterDataSet.Meter.MeterLines.Count == 0)
+            {
+                Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are no lines associated with that meter.");
+                RemoveUndefinedDataSeries(meterDataSet);
+                return;
+            }
+
+            if (meterDataSet.Meter.MeterLines.Count > 1)
+            {
+                Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are too many lines associated with that meter.");
+                RemoveUndefinedDataSeries(meterDataSet);
+                return;
+            }
 
             line = meterDataSet.Meter.MeterLines
                 .Select(meterLine => meterLine.Line)
