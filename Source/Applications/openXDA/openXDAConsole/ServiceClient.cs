@@ -116,7 +116,7 @@ namespace openXDAConsole
 
         public void Start()
         {
-            string userInput = null;
+            string userInput = string.Empty;
             string[] args = Arguments.ToArgs(Environment.CommandLine);
             Arguments arguments = new Arguments(string.Join(" ", args.Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))));
 
@@ -138,10 +138,11 @@ namespace openXDAConsole
             // Connect to service and send commands. 
             m_clientHelper.Connect();
             while (m_clientHelper.Enabled &&
-                   string.Compare(userInput, "Exit", true) != 0)
+                   (object)userInput != null &&
+                   !string.Equals(userInput, "EXIT", StringComparison.OrdinalIgnoreCase))
             {
                 // Wait for a command from the user. 
-                userInput = Console.ReadLine();
+                userInput = Console.ReadLine()?.Trim();
                 // Write a blank line to the console.
                 Console.WriteLine();
 
