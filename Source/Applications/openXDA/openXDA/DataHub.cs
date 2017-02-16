@@ -232,16 +232,22 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<MeterGroup>().QueryRecordCount(new RecordRestriction("ID LIKE {0}", filterString));
+            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<MeterGroup> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "%").EnsureEnd("%");
-            return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction($"ID LIKE '{filterString}'"));
+            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -837,14 +843,23 @@ namespace openXDA
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecordCount)]
         public int QueryDefaultAlarmRangeLimitViewCount(string filterString)
         {
-            return DataContext.Table<DefaultAlarmRangeLimitView>().QueryRecordCount();
+            TableOperations<DefaultAlarmRangeLimitView> tableOperations = DataContext.Table<DefaultAlarmRangeLimitView>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
+
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecords)]
         public IEnumerable<DefaultAlarmRangeLimitView> QueryDefaultAlarmRangeLimitViews(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<DefaultAlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize);
+            TableOperations<DefaultAlarmRangeLimitView> tableOperations = DataContext.Table<DefaultAlarmRangeLimitView>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1516,7 +1531,6 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecordCount)]
         public int QueryMeterCount(int meterLocationID, string filterString)
         {
-            //filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
             TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
             RecordRestriction restriction = new RecordRestriction();
             if (meterLocationID > 0)
@@ -1804,42 +1818,32 @@ namespace openXDA
         [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecordCount)]
         public int QueryMeterLineCount(int lineID, int meterID, string filterString)
         {
-            string restrictionString = "";
-            if (lineID == -1 && meterID != -1)
-            {
-                restrictionString = $"MeterID = {meterID}";
-            }
-            else if (meterID == -1 && lineID != -1)
-            {
-                restrictionString = $"LineID = {lineID}";
-            }
-            else if (meterID != -1 && lineID != -1)
-            {
-                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
-            }
+            TableOperations<MeterLineDetail> tableOperations = DataContext.Table<MeterLineDetail>();
+            RecordRestriction restriction = new RecordRestriction();
 
-            return DataContext.Table<MeterLine>().QueryRecordCount(new RecordRestriction(restrictionString));
+            if (lineID == -1 && meterID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0}", meterID);
+            else if (meterID == -1 && lineID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string restrictionString = "";
-            if (lineID == -1 && meterID != -1)
-            {
-                restrictionString = $"MeterID = {meterID}";
-            }
-            else if (meterID == -1 && lineID != -1)
-            {
-                restrictionString = $"LineID = {lineID}";
-            }
-            else if (meterID != -1 && lineID != -1)
-            {
-                restrictionString = $"MeterID = {meterID} AND LineID = {lineID}";
-            }
+            TableOperations<MeterLineDetail> tableOperations = DataContext.Table<MeterLineDetail>();
+            RecordRestriction restriction = new RecordRestriction();
 
-            return DataContext.Table<MeterLineDetail>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(restrictionString));
+            if (lineID == -1 && meterID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0}", meterID);
+            else if (meterID == -1 && lineID != -1)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineID = {0}", lineID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]

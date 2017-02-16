@@ -15,6 +15,7 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         [StringLength(100)]
+        [Searchable]
         public string Name { get; set; }
 
     }

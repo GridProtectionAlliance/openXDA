@@ -434,12 +434,10 @@
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
-    <None Include="wwwroot\Config\Channels.cshtml" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
-    <Content Include="wwwroot\Config\MeterLines.cshtml" />
     <Content Include="wwwroot\Config\LineGroups.cshtml" />
     <Content Include="wwwroot\Config\LineLineGroupView.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
@@ -448,7 +446,6 @@
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
     <None Include="wwwroot\Config\DashSettings.cshtml" />
     <None Include="wwwroot\Config\DefaultAlarmSettings.cshtml" />
-    <None Include="wwwroot\Config\Meters.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <Content Include="wwwroot\Config\EmailTypes.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />
@@ -466,7 +463,6 @@
     <None Include="wwwroot\Images\Icons\Thumbs.db" />
     <None Include="wwwroot\Config\index.cshtml" />
     <None Include="wwwroot\Config\Layout.cshtml" />
-    <None Include="wwwroot\Config\Lines.cshtml" />
     <None Include="wwwroot\Config\MeterGroups.cshtml" />
     <Content Include="wwwroot\Content\jquery.multiselect.css" />
     <Content Include="wwwroot\Content\jquery.multiselect.filter.css" />
@@ -518,7 +514,6 @@
     <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Config\Settings.cshtml" />
-    <None Include="wwwroot\Config\Sites.cshtml" />
     <Content Include="wwwroot\Scripts\angular.js" />
     <Content Include="wwwroot\Scripts\D3\conrec.js" />
     <Content Include="wwwroot\Scripts\D3\d3-color.v1.min.js" />

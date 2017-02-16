@@ -18,13 +18,15 @@ namespace openXDA.Model
         public int LineID { get; set; }
 
         [StringLength(200)]
+        [Searchable]
         public string LineName { get; set; }
     }
 
     public class MeterLineDetail : MeterLine
     {
+        [Searchable]
         public string MeterName { get; set; }
-
+        [Searchable]
         public string LineKey { get; set; }
     }
 }
