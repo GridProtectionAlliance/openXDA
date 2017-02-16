@@ -2349,7 +2349,11 @@ namespace openXDA
         {
             if(record.EventTypeID != 1)
             {
-                DataContext.Connection.Connection.ExecuteNonQuery("UPDATE FaultSummary SET IsSuppressed = 1 WHERE EventID = {0}", record.ID);
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+            }
+            else
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
             }
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }

@@ -2734,7 +2734,7 @@ GO
 CREATE VIEW [dbo].[EventView]
 AS
 SELECT	dbo.Event.ID, dbo.Event.FileGroupID, dbo.Event.MeterID, dbo.Event.LineID, dbo.Event.EventTypeID, dbo.Event.EventDataID, dbo.Event.Name, dbo.Event.Alias, dbo.Event.ShortName, dbo.Event.StartTime, 
-		dbo.Event.EndTime, dbo.Event.Samples, dbo.Event.TimeZoneOffset, dbo.Event.SamplesPerSecond, dbo.Event.SamplesPerCycle, dbo.Event.Description,
+		dbo.Event.EndTime, dbo.Event.Samples, dbo.Event.TimeZoneOffset, dbo.Event.SamplesPerSecond, dbo.Event.SamplesPerCycle, dbo.Event.Description, dbo.Event.UpdatedBy,
 		    (SELECT        TOP (1) LineName
 		      FROM            dbo.MeterLine
 		      WHERE        (LineID = dbo.Line.ID)) AS LineName, dbo.Meter.Name AS MeterName, dbo.Line.Length, dbo.EventType.Name AS EventTypeName

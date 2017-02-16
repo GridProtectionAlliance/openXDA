@@ -61,7 +61,8 @@
         new[] { "LineName", "Line Name", "text-left"},
         new[] { "EventTypeName", "Event Type" , "text-center"},
         new[] { "StartTime", "Start Time", "text-center"},
-        new[] { "EndTime", "End Time", "text-center" }
+        new[] { "EndTime", "End Time", "text-center" },
+        new[] { null, "Edited", "text-center"}
     };
     ViewBag.ShowSearchFilter = true;
 
@@ -93,6 +94,7 @@
     <td width="10%" class="text-center valign-middle" data-bind="text: EventTypeName, css: ( ID == @EventId ? 'rowhighlight' : '')"></td>
     <td width="20%" class="text-center valign-middle" data-bind="css: ( ID == @EventId ? 'rowhighlight' : '')"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
     <td width="20%" class="text-center valign-middle" data-bind="css: ( ID == @EventId ? 'rowhighlight' : '')"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
+    <td width="5%" class="text-left valign-middle" style="text-align: center"><span data-bind="visible: (UpdatedBy != null)" class="glyphicon glyphicon-check"></span></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>

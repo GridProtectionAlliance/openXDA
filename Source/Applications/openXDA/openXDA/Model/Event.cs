@@ -59,6 +59,8 @@ namespace openXDA.Model
         public int SamplesPerSecond { get; set; }
         public int SamplesPerCycle { get; set; }
         public string Description { get; set; }
+        public string UpdatedBy { get; set; }
+
         [Searchable]
         public string LineName { get; set; }
         [Searchable]
