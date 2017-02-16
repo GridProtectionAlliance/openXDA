@@ -73,6 +73,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Data.Linq;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -88,11 +89,16 @@ using FaultData.DataSets;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Data;
 using GSF.IO;
 using GSF.Threading;
+using GSF.Web;
 using log4net;
 using openXDA.Configuration;
+using openXDA.Model;
+using DataContext = GSF.Web.Model.DataContext;
 using FileShare = openXDA.Configuration.FileShare;
+using Setting = FaultData.Database.Setting;
 
 namespace openXDA
 {
@@ -865,7 +871,6 @@ namespace openXDA
             DataReader dataReader;
             DataReaderWrapper dataReaderWrapper;
             FileWrapper fileWrapper;
-
             int queuedFileCount;
 
             filePath = fileProcessorArgs.FullPath;
@@ -931,7 +936,10 @@ namespace openXDA
                 }
 
                 // Get the thread used to process this data
-                GetThread(meterKey).Push(() => ParseFile(connectionString, systemSettings, filePath, meterKey, dataReaderWrapper, fileWrapper));
+                GetThread(meterKey).Push(() =>
+                {
+                    ParseFile(connectionString, systemSettings, filePath, meterKey, dataReaderWrapper, fileWrapper);
+                });
 
                 // Keep track of the number of operations in thread queues
                 queuedFileCount = Interlocked.Increment(ref m_queuedFileCount);
@@ -977,6 +985,7 @@ namespace openXDA
 
                     // Create the file group
                     fileGroup = fileWrapper.GetFileGroup(dbAdapterContainer.GetAdapter<FileInfoDataContext>(), systemSettings.XDATimeZoneInfo);
+                    LoadFileBlob(fileGroup.DataFiles.ToList());
 
                     // Parse the file to turn it into a meter data set
                     OnStatusMessage($"Parsing data from file \"{filePath}\"...");
@@ -1059,6 +1068,18 @@ namespace openXDA
                         m_activeFiles.TryRemove(meterKey, out filePath);
 
                     ThreadContext.Properties.Remove("Meter");
+                }
+            }
+        }
+
+        private void LoadFileBlob(List<DataFile> dataFiles)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                foreach (DataFile dataFile in dataFiles)
+                {
+                    FileBlob file = new FileBlob() { DataFileID = dataFile.ID, Blob = File.ReadAllBytes(dataFile.FilePath) };
+                    dataContext.Table<FileBlob>().AddNewRecord(file);
                 }
             }
         }

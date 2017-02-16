@@ -305,6 +305,7 @@
     <Compile Include="Model\EventType.cs" />
     <Compile Include="Model\FaultEmailCriterion.cs" />
     <Compile Include="Model\FaultView.cs" />
+    <Compile Include="Model\FileBlob.cs" />
     <Compile Include="Model\LineGroup.cs" />
     <Compile Include="Model\LineLineGroup.cs" />
     <Compile Include="Model\MeterType.cs" />

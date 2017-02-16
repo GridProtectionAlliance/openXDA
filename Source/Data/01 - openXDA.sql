@@ -700,6 +700,14 @@ CREATE TABLE SentEmail
 )
 GO
 
+CREATE TABLE [dbo].[FileBlob](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[Blob] [varbinary](max) NOT NULL,
+	[DataFileID] [int] NOT NULL
+)
+
+GO
+
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
 GO
 

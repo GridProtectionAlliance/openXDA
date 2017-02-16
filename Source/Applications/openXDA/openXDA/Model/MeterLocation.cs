@@ -14,15 +14,19 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         [StringLength(50)]
+        [Searchable]
         public string AssetKey { get; set; }
 
         [StringLength(200)]
+        [Searchable]
         public string Name { get; set; }
 
         [StringLength(200)]
+        [Searchable]
         public string Alias { get; set; }
 
         [StringLength(50)]
+        [Searchable]
         public string ShortName { get; set; }
 
         public float Latitude { get; set; }
