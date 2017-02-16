@@ -34,9 +34,26 @@
     Layout = "Workbench/Layout.cshtml";
     ViewBag.Title = "Events";
 
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("Date"))
+    {
+        ViewBag.Date = parameters["Date"].ToString();
+    }
+    if (parameters.ContainsKey("EventID"))
+    {
+        ViewBag.EventID = parameters["EventID"];
+    }
+    if (parameters.ContainsKey("time"))
+    {
+        ViewBag.time = parameters["time"];
+    }
+
+
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-    {   //    { "Field", "Label", "Classes" }
+{   //    { "Field", "Label", "Classes" }
         new[] { "ID", "Event ID", "text-left"},
         new[] { "MeterName", "Meter Name", "text-left"},
         new[] { "LineName", "Line Name", "text-left"},
@@ -104,6 +121,14 @@
             });
             
             viewModel.queryPageRecords();
+        });
+        
+        $(function () {
+            if ('@ViewBag.EventID'.length > 0) {
+                $('#searchFilter').val('@ViewBag.EventID');
+                viewModel.filterText = '@ViewBag.EventID';
+                viewModel.queryPageRecords();
+            }
         });
     </script>
 }
