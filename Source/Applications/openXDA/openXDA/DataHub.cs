@@ -4004,7 +4004,7 @@ namespace openXDA
         [RecordOperation(typeof(AuditLog), RecordOperation.QueryRecordCount)]
         public int QueryAuditLogCount(string filterString)
         {
-            TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
+            TableOperations<AuditLogView> tableOperations = DataContext.Table<AuditLogView>();
             RecordRestriction restriction = new RecordRestriction();
             restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy Is Not NULL"); 
 
@@ -4013,9 +4013,9 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AuditLog), RecordOperation.QueryRecords)]
-        public IEnumerable<AuditLog> QueryAuditLogs(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<AuditLogView> QueryAuditLogs(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
+            TableOperations<AuditLogView> tableOperations = DataContext.Table<AuditLogView>();
             RecordRestriction restriction = new RecordRestriction();
             restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy Is Not NULL");
 

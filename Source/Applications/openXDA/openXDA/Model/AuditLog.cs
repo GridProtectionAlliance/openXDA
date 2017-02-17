@@ -38,4 +38,5 @@ namespace openXDA.Model
         public DateTime UpdatedOn { get; set; }
 
     }
+    public class AuditLogView: AuditLog { }
 }
