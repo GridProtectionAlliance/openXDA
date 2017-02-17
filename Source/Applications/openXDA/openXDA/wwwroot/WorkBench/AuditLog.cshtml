@@ -1,0 +1,105 @@
+﻿@*//******************************************************************************************************
+//  AuditLog.cshtml - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  02/17/2017 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Security.AccessControl
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Workbench/Layout.cshtml";
+    ViewBag.Title = "Audit Logs";
+
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("Date"))
+    {
+        ViewBag.Date = parameters["Date"].ToString();
+    }
+    if (parameters.ContainsKey("EventID"))
+    {
+        ViewBag.EventID = parameters["EventID"];
+    }
+    if (parameters.ContainsKey("time"))
+    {
+        ViewBag.time = parameters["time"];
+    }
+
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+{   //    { "Field", "Label", "Classes" }
+        new[] { "TableName", "Table", "text-left"},
+        new[] { "PrimaryKeyColumn", "Table Key", "text-left"},
+        new[] { "PrimaryKeyValue", "Key Value", "text-left"},
+        new[] { "ColumnName", "Column" , "text-center"},
+        new[] { "OriginalValue", "Original Value", "text-center"},
+        new[] { "NewValue", "New Value", "text-center" },
+        new[] { "UpdatedBy", "Updated By", "text-center" },
+        new[] { "UpdatedOn", "Updated On", "text-center" }
+
+    };
+    ViewBag.ShowSearchFilter = true;
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.defaultFilter = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM WorkbenchFilter WHERE UserID = {0} AND IsDefault = 1", DataHub.GetCurrentUserID());
+    ViewBag.HideAddNewButton = true;
+
+}
+
+@section StyleSheets{
+<style>
+</style>
+}
+
+@helper BodyRows()
+{
+    <td width="12%" class="text-left valign-middle" data-bind="text: TableName"></td>
+    <td width="12%" class="text-left valign-middle" data-bind="text: PrimaryKeyColumn"></td>
+    <td width="12%" class="text-left valign-middle" data-bind="text: PrimaryKeyValue"></td>
+    <td width="12%" class="text-center valign-middle" data-bind="text: ColumnName"></td>
+    <td width="12%" class="text-left valign-middle" data-bind="text: OriginalValue"></td>
+    <td width="12%" class="text-left valign-middle" data-bind="text: NewValue"></td>
+    <td width="12%" class="text-left valign-middle" data-bind="text: UpdatedBy"></td>
+    <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedOn.formatDate(DateTimeFormat)"></td>
+
+}
+
+@helper AddNewEditDialog(DataContext dataContext)
+{
+
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+
+
+@section Scripts {
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<AuditLog, DataHub>(ViewBag))        
+    </script>
+}

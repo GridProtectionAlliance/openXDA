@@ -3998,6 +3998,62 @@ namespace openXDA
 
         #endregion
 
+        #region [ AuditLog Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.QueryRecordCount)]
+        public int QueryAuditLogCount(string filterString)
+        {
+            TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy Is Not NULL"); 
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.QueryRecords)]
+        public IEnumerable<AuditLog> QueryAuditLogs(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy Is Not NULL");
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.DeleteRecord)]
+        public void DeleteAuditLog(int id)
+        {
+            //DataContext.Table<AuditLog>().DeleteRecord(id);
+            CascadeDelete("AuditLog", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.CreateNewRecord)]
+        public AuditLog NewAuditLog()
+        {
+            return new AuditLog();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.AddNewRecord)]
+        public void AddNewAuditLog(AuditLog record)
+        {
+            DataContext.Table<AuditLog>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.UpdateRecord)]
+        public void UpdateAuditLog(AuditLog record)
+        {
+            DataContext.Table<AuditLog>().UpdateRecord(record);
+        }
+
+        #endregion
+
+
         #endregion
 
         #region [OpenSEE Operations]
