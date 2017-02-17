@@ -2883,6 +2883,7 @@ CREATE VIEW [dbo].[AuditLogView]
 AS
 SELECT        TOP (2000) ID, TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy, UpdatedOn
 FROM            dbo.AuditLog
+WHERE		  UpdateBy IS NOT NULL
 
 GO
 

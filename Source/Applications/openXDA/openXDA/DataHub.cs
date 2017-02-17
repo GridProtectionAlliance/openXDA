@@ -2383,7 +2383,7 @@ namespace openXDA
 
         #endregion
 
-        #region [Events Operations]
+        #region [SingleEvent Operations]
 
         [AuthorizeHubRole("*")]
         [RecordOperation(typeof(SingleEvent), RecordOperation.QueryRecordCount)]
@@ -4083,7 +4083,7 @@ namespace openXDA
         {
             TableOperations<AuditLogView> tableOperations = DataContext.Table<AuditLogView>();
             RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy Is Not NULL"); 
+            restriction = tableOperations.GetSearchRestriction(filterString); 
 
             return tableOperations.QueryRecordCount(restriction);
         }
@@ -4094,7 +4094,7 @@ namespace openXDA
         {
             TableOperations<AuditLogView> tableOperations = DataContext.Table<AuditLogView>();
             RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy Is Not NULL");
+            restriction = tableOperations.GetSearchRestriction(filterString);
 
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
