@@ -2383,6 +2383,83 @@ namespace openXDA
 
         #endregion
 
+        #region [Events Operations]
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(SingleEvent), RecordOperation.QueryRecordCount)]
+        public int QuerySingleEventCount(int eventId, string filterString)
+        {
+            return DataContext.Table<SingleEvent>().QueryRecordCount(new RecordRestriction("ID = {0}", eventId ));
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(SingleEvent), RecordOperation.QueryRecords)]
+        public IEnumerable<SingleEvent> QuerySingleEvents(int eventId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<SingleEvent>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ID = {0}", eventId));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SingleEvent), RecordOperation.DeleteRecord)]
+        public void DeleteSingleEvent(int id)
+        {
+            CascadeDelete("Event", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SingleEvent), RecordOperation.CreateNewRecord)]
+        public EventView NewSingleEvent()
+        {
+            return new EventView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SingleEvent), RecordOperation.AddNewRecord)]
+        public void AddNewSingleEvent(SingleEvent record)
+        {
+            DataContext.Table<SingleEvent>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(SingleEvent), RecordOperation.UpdateRecord)]
+        public void UpdateSingleEvent(SingleEvent record)
+        {
+            if (record.EventTypeID != 1)
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+            }
+            else
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+            }
+            DataContext.Table<Event>().UpdateRecord(MakeEventFromSingleEvent(record));
+        }
+
+        private Event MakeEventFromSingleEvent(SingleEvent record)
+        {
+            Event newEvent = new Event();
+            newEvent.ID = record.ID;
+            newEvent.FileGroupID = record.FileGroupID;
+            newEvent.MeterID = record.MeterID;
+            newEvent.LineID = record.LineID;
+            newEvent.EventTypeID = record.EventTypeID;
+            newEvent.EventDataID = record.EventDataID;
+            newEvent.Name = record.Name;
+            newEvent.Alias = record.Alias;
+            newEvent.ShortName = record.ShortName;
+            newEvent.StartTime = record.StartTime;
+            newEvent.EndTime = record.EndTime;
+            newEvent.Samples = record.Samples;
+            newEvent.TimeZoneOffset = record.TimeZoneOffset;
+            newEvent.SamplesPerSecond = record.SamplesPerSecond;
+            newEvent.SamplesPerCycle = record.SamplesPerCycle;
+            newEvent.Description = record.Description;
+            newEvent.UpdatedBy = GetCurrentUserName();
+            return newEvent;
+        }
+
+        #endregion
+
         #region [EventsForDate Operations]
 
         public IEnumerable<EventView> GetAllEventsForDate(int eventId, string sortField, bool ascending, int page, int pageSize, string filterString)

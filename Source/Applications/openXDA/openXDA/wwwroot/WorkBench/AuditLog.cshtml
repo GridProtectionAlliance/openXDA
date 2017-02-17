@@ -57,7 +57,7 @@
         new[] { "TableName", "Table", "text-left"},
         new[] { "PrimaryKeyColumn", "Table Key", "text-left"},
         new[] { "PrimaryKeyValue", "Key Value", "text-left"},
-        new[] { "ColumnName", "Column" , "text-center"},
+        new[] { "ColumnName", "Column" , "text-left"},
         new[] { "OriginalValue", "Original Value", "text-center"},
         new[] { "NewValue", "New Value", "text-center" },
         new[] { "UpdatedBy", "Updated By", "text-center" },
@@ -80,13 +80,13 @@
 
 @helper BodyRows()
 {
-    <td width="12%" class="text-left valign-middle" data-bind="text: TableName"></td>
-    <td width="12%" class="text-left valign-middle" data-bind="text: PrimaryKeyColumn"></td>
-    <td width="12%" class="text-left valign-middle" data-bind="text: PrimaryKeyValue"></td>
-    <td width="12%" class="text-center valign-middle" data-bind="text: ColumnName"></td>
-    <td width="12%" class="text-left valign-middle" data-bind="text: OriginalValue"></td>
-    <td width="12%" class="text-left valign-middle" data-bind="text: NewValue"></td>
-    <td width="12%" class="text-left valign-middle" data-bind="text: UpdatedBy"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: TableName"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: PrimaryKeyColumn"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: PrimaryKeyValue"></td>
+    <td width="12%" class="text-left valign-middle" data-bind="text: ColumnName"></td>
+    <td width="20%" class="text-center valign-middle" data-bind="text: OriginalValue"></td>
+    <td width="20%" class="text-center valign-middle" data-bind="text: NewValue"></td>
+    <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedBy"></td>
     <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedOn.formatDate(DateTimeFormat)"></td>
 
 }

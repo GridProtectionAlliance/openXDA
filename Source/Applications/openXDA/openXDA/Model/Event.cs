@@ -39,6 +39,9 @@ namespace openXDA.Model
     public class EventForMeter : EventView { }
 
     [TableName("EventView")]
+    public class SingleEvent: EventView { }
+
+    [TableName("EventView")]
     public class EventView
     {
         [Searchable(SearchType.LikeExpression)]
