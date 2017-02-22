@@ -71,6 +71,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -82,6 +83,7 @@ using GSF;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Identity;
 using GSF.IO;
 using GSF.Reflection;
@@ -685,6 +687,16 @@ namespace openXDA
                     DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
             }
         }
+
+        /// <summary>
+        /// Sends a command request to the service to reprocess files.
+        /// </summary>
+        /// <param name="events">List of events to reprocess files for.</param>
+        public void ReprocessFiles(IEnumerable<Event> events)
+        {
+            m_extensibleDisturbanceAnalysisEngine.ReprocessFiles(events);
+        }
+
 
         public void DisconnectClient(Guid clientID)
         {

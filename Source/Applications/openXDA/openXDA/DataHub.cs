@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Security.Policy;
 using System.Threading;
@@ -2374,12 +2375,19 @@ namespace openXDA
             newEvent.EndTime = record.EndTime;
             newEvent.Samples = record.Samples;
             newEvent.TimeZoneOffset = record.TimeZoneOffset;
-            newEvent.SamplesPerSecond = record.SamplesPerSecond;
+            newEvent.SamplesPerSecond = record.SamplesPerSecond; 
             newEvent.SamplesPerCycle = record.SamplesPerCycle;
             newEvent.Description = record.Description;
             newEvent.UpdatedBy = GetCurrentUserName();
             return newEvent;
         }
+
+        public void ReprocessFiles(List<int> meterIds, Tuple<DateTime,DateTime> dateRange  )
+        {
+            IEnumerable<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"MeterID IN ({meterIds.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + "," + s2)}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'"));
+            openXDA.Program.Host.ReprocessFiles(events);
+        }
+
 
         #endregion
 

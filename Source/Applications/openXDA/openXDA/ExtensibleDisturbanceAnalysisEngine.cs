@@ -74,6 +74,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data.Linq;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -90,6 +91,7 @@ using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.IO;
 using GSF.Threading;
 using GSF.Web;
@@ -179,20 +181,20 @@ namespace openXDA
             /// <param name="dataContext">The data context used for database lookups.</param>
             /// <param name="xdaTimeZone">The time zone used by openXDA.</param>
             /// <returns></returns>
-            public FileGroup GetFileGroup(FileInfoDataContext dataContext, TimeZoneInfo xdaTimeZone)
+            public FaultData.Database.FileGroup GetFileGroup(FileInfoDataContext dataContext, TimeZoneInfo xdaTimeZone)
             {
                 FileInfo fileInfo;
-                FileGroup fileGroup;
-                DataFile dataFile;
+                FaultData.Database.FileGroup fileGroup;
+                FaultData.Database.DataFile dataFile;
 
-                fileGroup = new FileGroup();
+                fileGroup = new FaultData.Database.FileGroup();
                 fileGroup.ProcessingStartTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone);
 
                 foreach (string file in GSF.IO.FilePath.GetFileList($"{m_filePathWithoutExtension}.*"))
                 {
                     fileInfo = new FileInfo(file);
 
-                    dataFile = new DataFile();
+                    dataFile = new FaultData.Database.DataFile();
                     dataFile.FilePath = file;
                     dataFile.FilePathHash = file.GetHashCode();
                     dataFile.FileSize = fileInfo.Length;
@@ -821,7 +823,7 @@ namespace openXDA
                             // Attempt to set the error flag on the file group
                             FileInfoDataContext fileInfo = dbAdapterContainer.GetAdapter<FileInfoDataContext>();
                             FileWrapper fileWrapper = m_fileWrapperLookup.GetOrAdd(filePath, path => new FileWrapper(path));
-                            FileGroup fileGroup = fileWrapper.GetFileGroup(fileInfo, systemSettings.XDATimeZoneInfo);
+                            FaultData.Database.FileGroup fileGroup = fileWrapper.GetFileGroup(fileInfo, systemSettings.XDATimeZoneInfo);
                             fileGroup.ProcessingEndTime = fileGroup.ProcessingStartTime;
                             fileGroup.Error = 1;
                             fileInfo.SubmitChanges();
@@ -880,7 +882,7 @@ namespace openXDA
             // processed or needs to be processed again
             if (fileProcessorArgs.AlreadyProcessed)
             {
-                DataFile dataFile = fileInfo.DataFiles
+                FaultData.Database.DataFile dataFile = fileInfo.DataFiles
                     .Where(file => file.FilePathHash == filePath.GetHashCode())
                     .Where(file => file.FilePath == filePath)
                     .MaxBy(file => file.ID);
@@ -959,7 +961,7 @@ namespace openXDA
         // Parses the file on the meter's processing thread and kicks off processing of the meter data set.
         private void ParseFile(string connectionString, SystemSettings systemSettings, string filePath, string meterKey, DataReaderWrapper dataReaderWrapper, FileWrapper fileWrapper)
         {
-            FileGroup fileGroup = null;
+            FaultData.Database.FileGroup fileGroup = null;
             MeterDataSet meterDataSet;
             int queuedFileCount;
 
@@ -1072,11 +1074,168 @@ namespace openXDA
             }
         }
 
-        private void LoadFileBlob(List<DataFile> dataFiles)
+        public void ReprocessFiles(IEnumerable<Event> events)
+        {
+            foreach (Event e in events)
+            {
+                string meterKey;
+                IEnumerable<openXDA.Model.DataFile> files;
+                using (DataContext dataContext = new DataContext(new AdoDataConnection("systemSettings")))
+                {
+                    meterKey = dataContext.Connection.ExecuteScalar<string>($"SELECT AssetKey FROM Meter WHERE ID = {e.MeterID}");
+                    files = dataContext.Table<openXDA.Model.DataFile>().QueryRecords(restriction: new RecordRestriction($"FileGroupID = {e.FileGroupID}"));
+                }
+
+                GetThread(meterKey).Push(() =>
+                {
+                    ReparseFiles(e, files, meterKey);
+                });
+            }
+
+
+        }
+
+        private void ReparseFiles(Event e, IEnumerable<openXDA.Model.DataFile> files, string meterKey)
+        {
+
+            string connectionString = LoadSystemSettings();
+            SystemSettings systemSettings = new SystemSettings(connectionString);
+
+            using (DataContext dataContext = new DataContext(new AdoDataConnection("systemSettings")))
+            {
+                foreach (openXDA.Model.DataFile dataFile in files)
+                {
+                    Byte[] blob = dataContext.Connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
+                    openXDA.Model.FileGroup fileGroup = dataContext.Table<openXDA.Model.FileGroup>().QueryRecords( "ID", new RecordRestriction("ID = {0}", e.FileGroupID)).First();
+                    DirectoryInfo directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "openXDA"));
+                    string filePath = Path.Combine(directory.FullName ,dataFile.FilePath.Split('\\')[dataFile.FilePath.Split('\\').Length - 1]);
+
+                    File.WriteAllBytes(filePath, blob);
+                    using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
+                    {
+                        try
+                        {
+
+                            SystemInfoDataContext systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
+
+                            DataReader dataReader = systemInfo.DataReaders
+                                .OrderBy(reader => reader.LoadOrder)
+                                .AsEnumerable()
+                                .FirstOrDefault(reader => FilePath.IsFilePatternMatch(reader.FilePattern, filePath, true));
+
+                            if ((object)dataReader == null)
+                            {
+                                // Because the file processor is filtering files based on the DataReader file patterns,
+                                // this should only ever occur if the configuration changes during runtime
+                                continue;
+                            }
+
+
+                            // Keep track of the meters and files currently being processed
+                            if ((object)meterKey != null)
+                                m_activeFiles[meterKey] = filePath;
+
+                            ThreadContext.Properties["Meter"] = meterKey;
+
+                            // Create the file group
+                            using (DataReaderWrapper dataReaderWrapper = Wrap(dataReader))
+                            {
+                                // Parse the file to turn it into a meter data set
+                                OnStatusMessage($"Parsing data from file \"{filePath}\"...");
+                                if (dataReaderWrapper.DataObject.CanParse(filePath, DateTime.UtcNow))
+                                    dataReaderWrapper.DataObject.Parse(filePath);
+                                OnStatusMessage($"Finished parsing data from file \"{filePath}\".");
+                                MeterDataSet meterDataSet = dataReaderWrapper.DataObject.MeterDataSet;
+
+                                // If the data reader does not return a data set,
+                                // there is nothing left to do
+                                if ((object)meterDataSet == null)
+                                    return;
+
+                                // Set file path, file group, connection string,
+                                // and meter asset key for the meter data set
+                                meterDataSet.FilePath = dataFile.FilePath;
+                                meterDataSet.FileGroup = new FaultData.Database.FileGroup()
+                                {
+                                    ID = fileGroup.ID,
+                                    Error = fileGroup.Error,
+                                    DataStartTime = fileGroup.DataStartTime,
+                                    DataEndTime = fileGroup.DataEndTime,
+                                    ProcessingStartTime = fileGroup.ProcessingStartTime,
+                                    ProcessingEndTime = fileGroup.ProcessingEndTime,
+                                };
+                                meterDataSet.Meter.ID = e.MeterID;
+                                meterDataSet.ConnectionString = connectionString;
+                                meterDataSet.Meter.AssetKey = meterKey;
+
+                                // Data reader has finally outlived its usefulness
+                                dataReaderWrapper.Dispose();
+
+                                // Shift date/time values to the configured time zone and set the start and end time values on the file group
+                                ShiftTime(meterDataSet, meterDataSet.Meter.GetTimeZoneInfo(systemSettings.DefaultMeterTimeZoneInfo), systemSettings.XDATimeZoneInfo);
+                                SetDataTimeRange(meterDataSet, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+
+                                // Determine whether the file duration is within a user-defined maximum tolerance
+                                ValidateFileDuration(meterDataSet.FilePath, systemSettings.MaxFileDuration, meterDataSet.FileGroup);
+
+                                // Determine whether the timestamps in the file extend beyond user-defined thresholds
+                                ValidateFileTimestamps(meterDataSet.FilePath, meterDataSet.FileGroup, systemSettings, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // There seems to be a problem here where the outer exception's call stack
+                            // was overwritten by the call stack of the point where it was thrown
+                            ExceptionDispatchInfo exInfo = ExceptionDispatchInfo.Capture(ex);
+
+                            try
+                            {
+                                // Attempt to set the error flag on the file group
+                                dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET Error = 1 WHERE ID = {0}", e.FileGroupID);
+                            }
+                            catch (Exception fileGroupError)
+                            {
+                                // Log any exceptions that occur when attempting to set the error flag on the file group
+                                string message = $"Exception occurred setting error flag on file group: {fileGroupError.Message}";
+                                OnProcessException(new Exception(message, fileGroupError));
+                            }
+
+                            // Throw the original exception
+                            exInfo.Throw();
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                // Attempt to set the processing end time of the file group
+                                dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET ProcessingEndTime = {0} WHERE ID = {1}",TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemSettings.XDATimeZoneInfo), e.FileGroupID);
+
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log any exceptions that occur when attempting to set processing end time on the file group
+                                string message = $"Exception occurred setting processing end time on file group: {ex.Message}";
+                                OnProcessException(new Exception(message, ex));
+                            }
+
+                            // Keep track of the meters and files currently being processed
+                            if ((object)meterKey != null)
+                                m_activeFiles.TryRemove(meterKey, out filePath);
+
+                            ThreadContext.Properties.Remove("Meter");
+                        }
+                    }
+
+                    File.Delete(filePath);
+                }
+            }
+        }
+
+        private void LoadFileBlob(List<FaultData.Database.DataFile> dataFiles)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
-                foreach (DataFile dataFile in dataFiles)
+                foreach (FaultData.Database.DataFile dataFile in dataFiles)
                 {
                     FileBlob file = new FileBlob() { DataFileID = dataFile.ID, Blob = File.ReadAllBytes(dataFile.FilePath) };
                     dataContext.Table<FileBlob>().AddNewRecord(file);
@@ -1494,7 +1653,7 @@ namespace openXDA
         }
 
         // Determines whether the duration of data in the file exceeds a user-defined threshold.
-        private static void ValidateFileDuration(string filePath, double maxFileDuration, FileGroup fileGroup)
+        private static void ValidateFileDuration(string filePath, double maxFileDuration, FaultData.Database.FileGroup fileGroup)
         {
             double timeDifference;
 
@@ -1511,7 +1670,7 @@ namespace openXDA
         }
 
         // Determines whether the timestamps in the file extend beyond user-defined thresholds.
-        private static void ValidateFileTimestamps(string filePath, FileGroup fileGroup, SystemSettings systemSettings, FileInfoDataContext fileInfo)
+        private static void ValidateFileTimestamps(string filePath, FaultData.Database.FileGroup fileGroup, SystemSettings systemSettings, FileInfoDataContext fileInfo)
         {
             DateTime now;
             double timeDifference;

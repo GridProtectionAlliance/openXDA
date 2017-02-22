@@ -84,6 +84,7 @@
     <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
     <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
@@ -100,6 +101,25 @@
     @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: true"))
 
 }
+
+<div id="reprocessModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Reprocess Event <span id="eventID"></span></h4>
+            </div>
+            <div class="modal-body">
+                Place holder for reprocessing....
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
