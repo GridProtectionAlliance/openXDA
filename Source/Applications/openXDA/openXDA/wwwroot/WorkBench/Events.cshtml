@@ -115,10 +115,17 @@
                 <h4 class="modal-title">Reprocess Event <span id="eventID"></span></h4>
             </div>
             <div class="modal-body">
-                Place holder for reprocessing....
+                <label for="meterName">Meter</label>
+                <span id="meterName" type="text" class="form-control"></span>
+                <label for="lineName">Line</label>
+                <span id="lineName" type="text" class="form-control"></span>
+                <label for="eventType">Event Type</label>
+                <span id="eventType" type="text" class="form-control"></span>
+                <label for="startTime">Start Time</label>
+                <span id="startTime" type="text" class="form-control"></span>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Reprocess</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -133,6 +140,23 @@
         
         $('#addNewEditDialog').on('shown.bs.modal', function () {
         });
+        
+        $('#reprocessModal').on('shown.bs.modal', function (event) {
+            $('#eventID').text($(event.relatedTarget).parent().parent().children().first().children().text());
+            $('#meterName').text($(event.relatedTarget).parent().parent().children().first().next().text());
+            $('#lineName').text($(event.relatedTarget).parent().parent().children().first().next().next().text());
+            $('#eventType').text($(event.relatedTarget).parent().parent().children().first().next().next().next().text());
+            $('#startTime').text($(event.relatedTarget).parent().parent().children().first().next().next().next().next().children().text());
+        });
+
+        $('#reprocessModal').on('hideen.bs.modal', function (event) {
+            $('#eventID').text('');
+            $('#meterName').text('');
+            $('#lineName').text('');
+            $('#eventType').text('');
+            $('#startTime').text('');
+        });
+
         
         $('#globalFilter').change(function (event) {
             viewModel.setQueryRecordCount(function (filterText) {
