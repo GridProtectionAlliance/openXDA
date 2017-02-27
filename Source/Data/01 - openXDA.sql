@@ -2552,8 +2552,8 @@ SummaryData AS
         SelectedSummary.EventID,
         Event.StartTime AS EventStartTime,
         Event.EndTime AS EventEndTime,
-		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Simple' AND fs.EventID = SelectedSummary.EventID) as Simple,
-		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Reactance' AND fs.EventID = SelectedSummary.EventID) as Reactance
+		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Simple' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Simple,
+		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Reactance' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Reactance
     FROM
         SelectedSummary JOIN
         Event ON SelectedSummary.EventID = Event.ID JOIN
