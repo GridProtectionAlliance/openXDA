@@ -239,8 +239,13 @@ namespace FaultData.DataWriters
             {
                 ProcessQueue.Add(() =>
                 {
-                    if ((object)s_dbAdapterContainer == null)
+                    if ((object)s_dbAdapterContainer != null && s_dbAdapterContainer.Connection.State.HasFlag(ConnectionState.Open))
+                        return;
+
+                    using (s_dbAdapterContainer)
+                    {
                         s_dbAdapterContainer = new DbAdapterContainer(writer.DbConnectionString);
+                    }
                 });
             }
         }
