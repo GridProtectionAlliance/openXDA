@@ -2731,18 +2731,36 @@ SELECT
 FROM Event
 GO
 
-CREATE VIEW [dbo].[EventView]
+CREATE VIEW EventView
 AS
-SELECT	dbo.Event.ID, dbo.Event.FileGroupID, dbo.Event.MeterID, dbo.Event.LineID, dbo.Event.EventTypeID, dbo.Event.EventDataID, dbo.Event.Name, dbo.Event.Alias, dbo.Event.ShortName, dbo.Event.StartTime, 
-		dbo.Event.EndTime, dbo.Event.Samples, dbo.Event.TimeZoneOffset, dbo.Event.SamplesPerSecond, dbo.Event.SamplesPerCycle, dbo.Event.Description, dbo.Event.UpdatedBy,
-		    (SELECT        TOP (1) LineName
-		      FROM            dbo.MeterLine
-		      WHERE        (LineID = dbo.Line.ID)) AS LineName, dbo.Meter.Name AS MeterName, dbo.Line.Length, dbo.EventType.Name AS EventTypeName
-FROM	dbo.Event INNER JOIN
-		dbo.Line ON dbo.Event.LineID = dbo.Line.ID INNER JOIN
-		dbo.Meter ON dbo.Event.MeterID = dbo.Meter.ID INNER JOIN
-		dbo.EventType ON dbo.Event.EventTypeID = dbo.EventType.ID
-
+SELECT
+    Event.ID,
+    Event.FileGroupID,
+    Event.MeterID,
+    Event.LineID,
+    Event.EventTypeID,
+    Event.EventDataID,
+    Event.Name,
+    Event.Alias,
+    Event.ShortName,
+    Event.StartTime,
+    Event.EndTime,
+    Event.Samples,
+    Event.TimeZoneOffset,
+    Event.SamplesPerSecond,
+    Event.SamplesPerCycle,
+    Event.Description,
+    Event.UpdatedBy,
+    MeterLine.LineName,
+    Meter.Name AS MeterName,
+    Line.Length,
+    EventType.Name AS EventTypeName
+FROM
+    Event JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN
+    Line ON Event.LineID = Line.ID JOIN
+    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID JOIN
+    EventType ON Event.EventTypeID = EventType.ID
 GO
 
 CREATE VIEW [dbo].[DisturbanceView]
