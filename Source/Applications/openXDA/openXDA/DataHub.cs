@@ -33,6 +33,8 @@ using System.Security.Policy;
 using System.Threading;
 using System.Transactions;
 using System.Windows.Forms;
+using FaultData.DataAnalysis;
+using FaultData.Database;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -44,8 +46,22 @@ using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using GSF.Identity;
+using JSONApi;
 using openXDA.Model;
 using openHistorian.XDALink;
+using Channel = openXDA.Model.Channel;
+using ChannelDetail = openXDA.Model.ChannelDetail;
+using Disturbance = openXDA.Model.Disturbance;
+using Event = openXDA.Model.Event;
+using Fault = openXDA.Model.Fault;
+using Line = openXDA.Model.Line;
+using LineImpedance = openXDA.Model.LineImpedance;
+using Meter = openXDA.Model.Meter;
+using MeterDetail = openXDA.Model.MeterDetail;
+using MeterLine = openXDA.Model.MeterLine;
+using MeterLocation = openXDA.Model.MeterLocation;
+using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
+using Setting = openXDA.Model.Setting;
 
 
 namespace openXDA
@@ -2348,14 +2364,126 @@ namespace openXDA
         [RecordOperation(typeof(Event), RecordOperation.UpdateRecord)]
         public void UpdateEvent(EventView record)
         {
-            if(record.EventTypeID != 1)
+            DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
+            if(oldStartTime != record.StartTime)
             {
-                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+                Ticks ticks = oldStartTime - record.StartTime;
+                IEnumerable<Disturbance> disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var disturbance in disturbances)
+                {
+                    disturbance.StartTime = disturbance.StartTime.AddTicks(ticks);
+                    disturbance.EndTime = disturbance.EndTime.AddTicks(ticks);
+                    DataContext.Table<Disturbance>().UpdateRecord(disturbance);
+                }
+
+                IEnumerable<Fault> faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var fault in faults)
+                {
+                    fault.Inception = fault.Inception.AddTicks(ticks);
+                    DataContext.Table<Fault>().UpdateRecord(fault);
+                }
+                using(MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                {
+                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
+
+                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID  == record.MeterID);
+                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                    try
+                    {
+                        if (timeSeries != null && freqSeries != null)
+                        {
+                            dataTimeGroup.FromData(meter, timeSeries);
+                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            dataFreqGroup.FromData(meter, freqSeries);
+                            foreach (var dataSeries in dataFreqGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newTimeData = dataTimeGroup.ToData();
+                            byte[] newFreqData = dataFreqGroup.ToData();
+                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
+                        }
+
+                        if (faultCurve != null)
+                        {
+                            dataFaultAlgo.FromData(meter, faultCurve);
+                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Program.Host.LogStatusMessage(ex.ToString());
+                    }
+                }
+            }
+
+            if (record.EventTypeID == 1)
+            {
+                int rowCount = DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 0 where eventid = {record.ID}");
+                if(rowCount == 0)
+                {
+                    IEnumerable<FaultLocationAlgorithm> fla = DataContext.Table<FaultLocationAlgorithm>().QueryRecords();
+                    foreach (var algo in fla)
+                    {
+                        Fault fault = new Fault()
+                        {
+                            EventID = record.ID,
+                            Algorithm = algo.MethodName,
+                            FaultNumber = 1,
+                            CalculationCycle = 0,
+                            Distance = -1E+308,
+                            CurrentMagnitude = -1E+308,
+                            CurrentLag = -1E+308,
+                            PrefaultCurrent = -1E+308,
+                            PostfaultCurrent = -1E+308,
+                            Inception = record.StartTime,
+                            DurationSeconds = (record.StartTime - record.EndTime).TotalSeconds,
+                            DurationCycles = (record.StartTime - record.EndTime).TotalSeconds/60,
+                            FaultType = "UNK",
+                            IsSelectedAlgorithm = algo.MethodName == "Simple",
+                            IsValid = true,
+                            IsSuppressed = false                         
+                        };
+
+                        DataContext.Table<Fault>().AddNewRecord(fault);
+                        
+                    }
+                }
             }
             else
             {
                 DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
             }
+
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }
 
@@ -2381,6 +2509,8 @@ namespace openXDA
             newEvent.UpdatedBy = GetCurrentUserName();
             return newEvent;
         }
+
+
 
         public void ReprocessFiles(List<int> meterIds, Tuple<DateTime,DateTime> dateRange  )
         {
@@ -2432,9 +2562,120 @@ namespace openXDA
         [RecordOperation(typeof(SingleEvent), RecordOperation.UpdateRecord)]
         public void UpdateSingleEvent(SingleEvent record)
         {
-            if (record.EventTypeID != 1)
+            DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
+            if (oldStartTime != record.StartTime)
             {
-                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+                Ticks ticks = oldStartTime - record.StartTime;
+                IEnumerable<Disturbance> disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var disturbance in disturbances)
+                {
+                    disturbance.StartTime = disturbance.StartTime.AddTicks(ticks);
+                    disturbance.EndTime = disturbance.EndTime.AddTicks(ticks);
+                    DataContext.Table<Disturbance>().UpdateRecord(disturbance);
+                }
+
+                IEnumerable<Fault> faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var fault in faults)
+                {
+                    fault.Inception = fault.Inception.AddTicks(ticks);
+                    DataContext.Table<Fault>().UpdateRecord(fault);
+                }
+                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                {
+                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
+
+                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
+                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                    try
+                    {
+                        if (timeSeries != null && freqSeries != null)
+                        {
+                            dataTimeGroup.FromData(meter, timeSeries);
+                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            dataFreqGroup.FromData(meter, freqSeries);
+                            foreach (var dataSeries in dataFreqGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newTimeData = dataTimeGroup.ToData();
+                            byte[] newFreqData = dataFreqGroup.ToData();
+                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
+                        }
+
+                        if (faultCurve != null)
+                        {
+                            dataFaultAlgo.FromData(meter, faultCurve);
+                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.Host.LogStatusMessage(ex.ToString());
+                    }
+                }
+            }
+
+            if (record.EventTypeID == 1)
+            {
+                int rowCount = DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 0 where eventid = {record.ID}");
+                if (rowCount == 0)
+                {
+                    IEnumerable<FaultLocationAlgorithm> fla = DataContext.Table<FaultLocationAlgorithm>().QueryRecords();
+                    foreach (var algo in fla)
+                    {
+                        Fault fault = new Fault()
+                        {
+                            EventID = record.ID,
+                            Algorithm = algo.MethodName,
+                            FaultNumber = 1,
+                            CalculationCycle = 0,
+                            Distance = -1E+308,
+                            CurrentMagnitude = -1E+308,
+                            CurrentLag = -1E+308,
+                            PrefaultCurrent = -1E+308,
+                            PostfaultCurrent = -1E+308,
+                            Inception = record.StartTime,
+                            DurationSeconds = (record.StartTime - record.EndTime).TotalSeconds,
+                            DurationCycles = (record.StartTime - record.EndTime).TotalSeconds / 60,
+                            FaultType = "UNK",
+                            IsSelectedAlgorithm = algo.MethodName == "Simple",
+                            IsValid = true,
+                            IsSuppressed = false
+                        };
+
+                        DataContext.Table<Fault>().AddNewRecord(fault);
+
+                    }
+                }
             }
             else
             {
@@ -2554,6 +2795,125 @@ namespace openXDA
         [RecordOperation(typeof(EventForDate), RecordOperation.UpdateRecord)]
         public void UpdateEventForRecord(EventView record)
         {
+            DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
+            if (oldStartTime != record.StartTime)
+            {
+                Ticks ticks = oldStartTime - record.StartTime;
+                IEnumerable<Disturbance> disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var disturbance in disturbances)
+                {
+                    disturbance.StartTime = disturbance.StartTime.AddTicks(ticks);
+                    disturbance.EndTime = disturbance.EndTime.AddTicks(ticks);
+                    DataContext.Table<Disturbance>().UpdateRecord(disturbance);
+                }
+
+                IEnumerable<Fault> faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var fault in faults)
+                {
+                    fault.Inception = fault.Inception.AddTicks(ticks);
+                    DataContext.Table<Fault>().UpdateRecord(fault);
+                }
+                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                {
+                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
+
+                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
+                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                    try
+                    {
+                        if (timeSeries != null && freqSeries != null)
+                        {
+                            dataTimeGroup.FromData(meter, timeSeries);
+                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            dataFreqGroup.FromData(meter, freqSeries);
+                            foreach (var dataSeries in dataFreqGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newTimeData = dataTimeGroup.ToData();
+                            byte[] newFreqData = dataFreqGroup.ToData();
+                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
+                        }
+
+                        if (faultCurve != null)
+                        {
+                            dataFaultAlgo.FromData(meter, faultCurve);
+                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.Host.LogStatusMessage(ex.ToString());
+                    }
+                }
+            }
+
+            if (record.EventTypeID == 1)
+            {
+                int rowCount = DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 0 where eventid = {record.ID}");
+                if (rowCount == 0)
+                {
+                    IEnumerable<FaultLocationAlgorithm> fla = DataContext.Table<FaultLocationAlgorithm>().QueryRecords();
+                    foreach (var algo in fla)
+                    {
+                        Fault fault = new Fault()
+                        {
+                            EventID = record.ID,
+                            Algorithm = algo.MethodName,
+                            FaultNumber = 1,
+                            CalculationCycle = 0,
+                            Distance = -1E+308,
+                            CurrentMagnitude = -1E+308,
+                            CurrentLag = -1E+308,
+                            PrefaultCurrent = -1E+308,
+                            PostfaultCurrent = -1E+308,
+                            Inception = record.StartTime,
+                            DurationSeconds = (record.StartTime - record.EndTime).TotalSeconds,
+                            DurationCycles = (record.StartTime - record.EndTime).TotalSeconds / 60,
+                            FaultType = "UNK",
+                            IsSelectedAlgorithm = algo.MethodName == "Simple",
+                            IsValid = true,
+                            IsSuppressed = false
+                        };
+
+                        DataContext.Table<Fault>().AddNewRecord(fault);
+
+                    }
+                }
+            }
+            else
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+            }
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }
 
@@ -2633,6 +2993,125 @@ namespace openXDA
         [RecordOperation(typeof(EventForDay), RecordOperation.UpdateRecord)]
         public void UpdateEventForDayRecord(EventView record)
         {
+            DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
+            if (oldStartTime != record.StartTime)
+            {
+                Ticks ticks = oldStartTime - record.StartTime;
+                IEnumerable<Disturbance> disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var disturbance in disturbances)
+                {
+                    disturbance.StartTime = disturbance.StartTime.AddTicks(ticks);
+                    disturbance.EndTime = disturbance.EndTime.AddTicks(ticks);
+                    DataContext.Table<Disturbance>().UpdateRecord(disturbance);
+                }
+
+                IEnumerable<Fault> faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var fault in faults)
+                {
+                    fault.Inception = fault.Inception.AddTicks(ticks);
+                    DataContext.Table<Fault>().UpdateRecord(fault);
+                }
+                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                {
+                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
+
+                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
+                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                    try
+                    {
+                        if (timeSeries != null && freqSeries != null)
+                        {
+                            dataTimeGroup.FromData(meter, timeSeries);
+                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            dataFreqGroup.FromData(meter, freqSeries);
+                            foreach (var dataSeries in dataFreqGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newTimeData = dataTimeGroup.ToData();
+                            byte[] newFreqData = dataFreqGroup.ToData();
+                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
+                        }
+
+                        if (faultCurve != null)
+                        {
+                            dataFaultAlgo.FromData(meter, faultCurve);
+                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.Host.LogStatusMessage(ex.ToString());
+                    }
+                }
+            }
+
+            if (record.EventTypeID == 1)
+            {
+                int rowCount = DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 0 where eventid = {record.ID}");
+                if (rowCount == 0)
+                {
+                    IEnumerable<FaultLocationAlgorithm> fla = DataContext.Table<FaultLocationAlgorithm>().QueryRecords();
+                    foreach (var algo in fla)
+                    {
+                        Fault fault = new Fault()
+                        {
+                            EventID = record.ID,
+                            Algorithm = algo.MethodName,
+                            FaultNumber = 1,
+                            CalculationCycle = 0,
+                            Distance = -1E+308,
+                            CurrentMagnitude = -1E+308,
+                            CurrentLag = -1E+308,
+                            PrefaultCurrent = -1E+308,
+                            PostfaultCurrent = -1E+308,
+                            Inception = record.StartTime,
+                            DurationSeconds = (record.StartTime - record.EndTime).TotalSeconds,
+                            DurationCycles = (record.StartTime - record.EndTime).TotalSeconds / 60,
+                            FaultType = "UNK",
+                            IsSelectedAlgorithm = algo.MethodName == "Simple",
+                            IsValid = true,
+                            IsSuppressed = false
+                        };
+
+                        DataContext.Table<Fault>().AddNewRecord(fault);
+
+                    }
+                }
+            }
+            else
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+            }
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }
 
@@ -2847,6 +3326,125 @@ namespace openXDA
         [RecordOperation(typeof(EventForMeter), RecordOperation.UpdateRecord)]
         public void UpdateEventForMeter(EventView record)
         {
+            DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
+            if (oldStartTime != record.StartTime)
+            {
+                Ticks ticks = oldStartTime - record.StartTime;
+                IEnumerable<Disturbance> disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var disturbance in disturbances)
+                {
+                    disturbance.StartTime = disturbance.StartTime.AddTicks(ticks);
+                    disturbance.EndTime = disturbance.EndTime.AddTicks(ticks);
+                    DataContext.Table<Disturbance>().UpdateRecord(disturbance);
+                }
+
+                IEnumerable<Fault> faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+
+                foreach (var fault in faults)
+                {
+                    fault.Inception = fault.Inception.AddTicks(ticks);
+                    DataContext.Table<Fault>().UpdateRecord(fault);
+                }
+                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                {
+                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
+                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
+
+                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
+                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                    try
+                    {
+                        if (timeSeries != null && freqSeries != null)
+                        {
+                            dataTimeGroup.FromData(meter, timeSeries);
+                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            dataFreqGroup.FromData(meter, freqSeries);
+                            foreach (var dataSeries in dataFreqGroup.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newTimeData = dataTimeGroup.ToData();
+                            byte[] newFreqData = dataFreqGroup.ToData();
+                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
+                        }
+
+                        if (faultCurve != null)
+                        {
+                            dataFaultAlgo.FromData(meter, faultCurve);
+                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            {
+                                foreach (var dataPoint in dataSeries.DataPoints)
+                                {
+                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                                }
+                            }
+
+                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.Host.LogStatusMessage(ex.ToString());
+                    }
+                }
+            }
+
+            if (record.EventTypeID == 1)
+            {
+                int rowCount = DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 0 where eventid = {record.ID}");
+                if (rowCount == 0)
+                {
+                    IEnumerable<FaultLocationAlgorithm> fla = DataContext.Table<FaultLocationAlgorithm>().QueryRecords();
+                    foreach (var algo in fla)
+                    {
+                        Fault fault = new Fault()
+                        {
+                            EventID = record.ID,
+                            Algorithm = algo.MethodName,
+                            FaultNumber = 1,
+                            CalculationCycle = 0,
+                            Distance = -1E+308,
+                            CurrentMagnitude = -1E+308,
+                            CurrentLag = -1E+308,
+                            PrefaultCurrent = -1E+308,
+                            PostfaultCurrent = -1E+308,
+                            Inception = record.StartTime,
+                            DurationSeconds = (record.StartTime - record.EndTime).TotalSeconds,
+                            DurationCycles = (record.StartTime - record.EndTime).TotalSeconds / 60,
+                            FaultType = "UNK",
+                            IsSelectedAlgorithm = algo.MethodName == "Simple",
+                            IsValid = true,
+                            IsSuppressed = false
+                        };
+
+                        DataContext.Table<Fault>().AddNewRecord(fault);
+
+                    }
+                }
+            }
+            else
+            {
+                DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
+            }
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
         }
 

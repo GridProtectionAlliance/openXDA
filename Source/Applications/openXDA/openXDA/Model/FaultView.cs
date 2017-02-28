@@ -9,7 +9,7 @@ namespace openXDA.Model
     [TableName("FaultSummary")]
     public class Fault
     {
-        [PrimaryKey]
+        [PrimaryKey(true)]
         public int ID { get; set; }
         public int EventID { get; set; }
         public string Algorithm { get; set; }
