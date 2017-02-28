@@ -242,6 +242,7 @@ namespace FaultData.DataAnalysis
 
         private Disturbance ToDisturbance(DataSeries rms, Range<int> range, Phase phase)
         {
+            double nominalValue = rms.SeriesInfo.Channel.PerUnitValue ?? GetLineVoltage(rms);
             Disturbance disturbance = new Disturbance();
 
             disturbance.EventType = m_eventType;
@@ -251,7 +252,7 @@ namespace FaultData.DataAnalysis
             disturbance.StartTime = rms[range.Start].Time;
             disturbance.EndTime = rms[range.End].Time;
             disturbance.Magnitude = GetMagnitude(rms.ToSubSeries(range.Start, range.End));
-            disturbance.PerUnitMagnitude = disturbance.Magnitude / rms.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault();
+            disturbance.PerUnitMagnitude = disturbance.Magnitude / nominalValue;
 
             return disturbance;
         }
