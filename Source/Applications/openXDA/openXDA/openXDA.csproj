@@ -289,18 +289,11 @@
     <Compile Include="Model\AlarmEmailCriterion.cs" />
     <Compile Include="Model\AuditLog.cs" />
     <Compile Include="Model\BreakerView.cs" />
-    <Compile Include="Model\ChannelInfo.cs" />
     <Compile Include="Model\CycleDataSOEPointView.cs" />
     <Compile Include="Model\Disturbance.cs" />
     <Compile Include="Model\DisturbanceEmailCriterion.cs" />
     <Compile Include="Model\EmailCategory.cs" />
     <Compile Include="Model\EmailGroup.cs" />
-    <Compile Include="Model\EmailGroupLineGroup.cs" />
-    <Compile Include="Model\EmailGroupMeterGroup.cs" />
-    <Compile Include="Model\EmailGroupSecurityGroup.cs" />
-    <Compile Include="Model\EmailGroupType.cs" />
-    <Compile Include="Model\EmailGroupUserAccount.cs" />
-    <Compile Include="Model\EmailType.cs" />
     <Compile Include="Model\Event.cs" />
     <Compile Include="Model\EventInfo.cs" />
     <Compile Include="Model\EventType.cs" />
@@ -313,7 +306,6 @@
     <Compile Include="Model\SeriesType.cs" />
     <Compile Include="Model\SiteSummary.cs" />
     <Compile Include="Model\TrendingData.cs" />
-    <Compile Include="Model\TrendingDataSet.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Model\UserAccountMeterGroup.cs" />
     <Compile Include="Model\UserDashSettings.cs" />
@@ -333,13 +325,10 @@
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
     <Compile Include="Model\AlarmRangeLimit.cs" />
-    <Compile Include="Model\AlarmRangeLimitView.cs" />
     <Compile Include="Model\AlarmType.cs" />
     <Compile Include="Model\AppModel.cs" />
     <Compile Include="Model\Channel.cs" />
-    <Compile Include="Model\DashSettings.cs" />
     <Compile Include="Model\DefaultAlarmRangeLimit.cs" />
-    <Compile Include="Model\DefaultAlarmRangeLimitView.cs" />
     <Compile Include="Model\MeterGroup.cs" />
     <Compile Include="Model\MeterMeterGroup.cs" />
     <Compile Include="Model\LineImpedance.cs" />
@@ -1513,7 +1502,7 @@
     <Content Include="wwwroot\Workbench\FaultsForMeter.cshtml" />
     <Content Include="wwwroot\Workbench\AuditLog.cshtml" />
     <Content Include="wwwroot\Workbench\Event.cshtml" />
-    <Content Include="wwwroot\Workbench\Reprocess.cshtml" />
+    <Content Include="wwwroot\Workbench\DataFiles.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

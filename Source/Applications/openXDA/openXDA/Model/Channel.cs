@@ -54,4 +54,25 @@ namespace openXDA.Model
 
         public string SeriesType { get; set; }
     }
+
+    [TableName("ChannelInfo")]
+    public class ChannelInfo
+    {
+        [PrimaryKey(true)]
+        public int ChannelID { get; set; }
+        public string ChannelName { get; set; }
+        public string ChannelDescription { get; set; }
+        public string MeasurementType { get; set; }
+        public string MeasurementCharacteristic { get; set; }
+        public string Phase { get; set; }
+        public string SeriesType { get; set; }
+        public string Orientation { get; set; }
+        public string Phasing { get; set; }
+    }
+
+    //public class ChannelsForEvent
+    //{
+    //    [PrimaryKey]
+
+    //}
 }

@@ -79,6 +79,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
+using FaultData.Database;
 using GSF;
 using GSF.Configuration;
 using GSF.Console;
@@ -96,8 +97,15 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Layout;
 using Microsoft.Owin.Hosting;
+using openXDA.Configuration;
 using openXDA.Logging;
 using openXDA.Model;
+using Channel = openXDA.Model.Channel;
+using Meter = openXDA.Model.Meter;
+using MeterLine = openXDA.Model.MeterLine;
+using MeterLocation = openXDA.Model.MeterLocation;
+using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
+using Setting = openXDA.Model.Setting;
 
 namespace openXDA
 {
@@ -401,6 +409,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Workbench/FaultsForMeter.cshtml", new Tuple<Type, Type>(typeof(FaultForMeter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/SiteSummaryPVM.cshtml", new Tuple<Type, Type>(typeof(SiteSummary), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/AuditLog.cshtml", new Tuple<Type, Type>(typeof(AuditLog), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Workbench/DataFiles.cshtml", new Tuple<Type, Type>(typeof(openXDA.Model.DataFile), typeof(DataHub)));
 
                 // Create new web application hosting environment
                 m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
@@ -691,12 +700,20 @@ namespace openXDA
         /// <summary>
         /// Sends a command request to the service to reprocess files.
         /// </summary>
-        /// <param name="events">List of events to reprocess files for.</param>
-        public void ReprocessFiles(IEnumerable<Event> events)
+        /// <param name="fileGroups">List of fileGroups to reprocess files for.</param>
+        public void ReprocessFiles(Dictionary<int,int> fileGroups)
         {
-            m_extensibleDisturbanceAnalysisEngine.ReprocessFiles(events);
+            m_extensibleDisturbanceAnalysisEngine.ReprocessFiles(fileGroups);
         }
 
+        /// <summary>
+        /// Sends a command request to the service to reprocess a file.
+        /// </summary>
+        /// <param name="events">List of events to reprocess files for.</param>
+        public void ReprocessFile(int dataFileId, int fileGroupId, int meterId)
+        {
+            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(dataFileId ,fileGroupId, meterId);
+        }
 
         public void DisconnectClient(Guid clientID)
         {

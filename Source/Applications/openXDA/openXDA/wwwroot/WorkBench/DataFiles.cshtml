@@ -1,0 +1,236 @@
+﻿@*******************************************************************************************************
+//  Index.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/15/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Workbench/Layout.cshtml";
+    ViewBag.Title = "Data Files";
+    DateTime toDateTime = DateTime.Now;
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+{   //    { "Field", "Label", "Classes" }
+        new[] { "FileGroupID", "File Group", "text-left"},
+        new[] { "FilePath", "File Path", "text-left"},
+        new[] { "CreationTime", "Creation", "text-left"},
+        //new[] { "ColumnName", "Column" , "text-left"},
+        //new[] { "OriginalValue", "Original Value", "text-center"},
+        //new[] { "NewValue", "New Value", "text-center" },
+        //new[] { "UpdatedBy", "Updated By", "text-center" },
+        //new[] { "UpdatedOn", "Updated On", "text-center" }
+
+    };
+    ViewBag.ShowSearchFilter = true;
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.defaultFilter = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM WorkbenchFilter WHERE UserID = {0} AND IsDefault = 1", DataHub.GetCurrentUserID());
+    ViewBag.HideAddNewButton = false;
+
+}
+
+@section StyleSheets{
+    <style>
+    </style>
+}
+
+@helper BodyRows()
+{
+    <td hidden="hidden" data-bind="text: ID"></td>
+    <td width="5%" class="text-left valign-middle" data-bind="text: FileGroupID"></td>
+    <td width="75%" class="text-left valign-middle" data-bind="text: FilePath"></td>
+    <td width="15%" class="text-left valign-middle" data-bind="text: CreationTime.formatDate(DateTimeFormat)"></td>
+    @*<td width="12%" class="text-left valign-middle" data-bind="text: ColumnName"></td>
+    <td width="20%" class="text-center valign-middle" data-bind="text: OriginalValue"></td>
+    <td width="20%" class="text-center valign-middle" data-bind="text: NewValue"></td>
+    <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedBy"></td>
+    <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedOn.formatDate(DateTimeFormat)"></td>*@
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" title="Reprocess File" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
+        @*<button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>*@
+    </td>
+
+
+}
+
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <div class="form-group">
+        <label>Time Range:</label>
+        <input id="dateRange" type="text" class="form-control" />
+    </div>
+    <div id="metersFrame" class="form-group">
+        <label>Meters:</label>
+        <select id="meters" class="form-control mobileSelect" multiple></select>
+    </div>
+}
+
+<div id="reprocessModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg modal-wide">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Reprocess File <span id="eventID"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div hidden="hidden" id="FileGroupID"></div>
+                <div hidden="hidden" id="DataFileID"></div>
+                <label for="eventList">Events in File</label>
+                <ul id="eventList"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="reprocessSingleFileGroup()">Reprocess</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+
+
+@section Scripts {
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<openXDA.Model.DataFile, DataHub>(ViewBag, "FileGroupID"))
+        
+        $(function () {
+            $('#addRecordButton').html("Advanced Reprocess");
+            $('#addNewEditDialog .modal-footer').prepend("<button class='btn btn-primary' onclick='reprocessForRange()'>Reprocess</button>")
+        });
+        
+        var mobileSelectOptions = {
+            padding: {
+                top: '5%',
+                left: '15%',
+                right: '15%',
+                bottom: '5%'
+            },
+            title: "",
+            onOpen: function () {
+                $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+                $('.selectAllBtn').click(function () {
+                    $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+                });
+
+
+            },
+            onClose: function () {
+                $('.selectAllBtn').remove();
+            }
+        };
+        var dateRangeOptions = {
+            "timePicker": true,
+            "timePicker24Hour": true,
+            "timePickerSeconds": true,
+            "locale": {
+                "format": 'MM/DD/YYYY HH:mm:ss '
+            },
+            "autoApply": true,
+            "ranges": {
+                '1 Day': [moment().utc().startOf('day'), moment().utc().endOf('day')],
+                'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
+                'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
+                'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
+                //'This Month': [moment().utc().startOf('month'), moment().utc().endOf('month')],
+                //'Last Month': [moment().utc().subtract(1, 'month').startOf('month'), moment().utc().subtract(1, 'month').endOf('month')]
+            },
+            "startDate": moment().utc().subtract(29, 'days').startOf('day'),
+            "endDate": moment.utc().endOf('day')
+        };
+
+        $('#addNewEditDialog').on('shown.bs.modal', function () {
+            $('#meters').children().remove();
+            $('#saveRecordButton').hide()
+            $('#addNewEditDialog .modal-title').text('Advanced Reprocess');
+
+            dataHub.getOldestEventDateTime().done(function (data) {
+                dateRangeOptions.startDate = moment(data).utc();
+                $('#dateRange').daterangepicker(dateRangeOptions);
+            });
+
+            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+            $('#meters').mobileSelect(mobileSelectOptions);
+            $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+            $('#metersFrame .btn-mobileSelect-gen').off('click');
+            $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+                event.preventDefault();
+                $('#meters').mobileSelect('show');
+            });
+
+            $('#meterfilter').on('keyup', function () {
+                var string = $('#meterfilter').val();
+                if (string === "") {
+                    $('.mobileSelect-container :visible .list-container').children().show();
+
+                }
+                else {
+                    $('.mobileSelect-container :visible .list-container').children().hide();
+                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                        if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                            $(item).show();
+                    });
+                }
+            });
+
+            dataHub.getMetersForSelect().done(function (data) {
+                $.each(data, function (index, type) {
+                    $('#meters').append($(new Option(type.Name, type.ID)));
+                });
+                $('#meters').mobileSelect('refresh');
+            });
+
+        });
+
+        $('#reprocessModal').on('shown.bs.modal', function (event) {
+            $('#DataFileID').text($(event.relatedTarget.parentElement.parentElement.children).first().text())
+            $('#FileGroupID').text($(event.relatedTarget.parentElement.parentElement.children).first().next().text())
+            $('#eventList').children().remove();
+            dataHub.getEventsForFileGroup($('#FileGroupID').text()).done(function (data) {
+                $.each(data, function (i, d) {
+                    $('#eventList').append('<li>EventID: '+d.ID+', MeterID: ' +d.MeterID+ '</li>')
+                });
+            });
+        });
+
+        function reprocessForRange() {
+            dataHub.reprocessFiles($('#meters').val(), {
+                Item1: $('#dateRange').data('daterangepicker').startDate._d, Item2: $('#dateRange').data('daterangepicker').endDate._d
+            });
+        }
+        
+        function reprocessSingleFileGroup(){
+            dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text(), $('#eventList').children().first().text().split(',')[1].split(':')[1].trim());
+        }
+
+    </script>
+}
+

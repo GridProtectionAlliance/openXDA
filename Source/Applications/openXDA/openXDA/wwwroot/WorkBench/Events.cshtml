@@ -108,7 +108,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 
 <div id="reprocessModal" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-wide">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -123,6 +123,14 @@
                 <span id="eventType" type="text" class="form-control"></span>
                 <label for="startTime">Start Time</label>
                 <span id="startTime" type="text" class="form-control"></span>
+                <div class="col-md-6">
+                    <label>Channels</label>
+                    <div class="well form-control"></div>
+                </div>
+                <div class="col-md-6">
+                    <label>Spares</label>
+                    <div class="well form-control"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Reprocess</button>

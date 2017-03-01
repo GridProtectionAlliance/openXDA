@@ -21,4 +21,16 @@ namespace openXDA.Model
         public int RangeInclusive { get; set; }
         public int PerUnit { get; set; }
     }
+
+    [TableName("DefaultAlarmRangeLimitView")]
+    public class DefaultAlarmRangeLimitView : DefaultAlarmRangeLimit
+    {
+        [Searchable]
+        public string AlarmType { get; set; }
+        [Searchable]
+        public string MeasurementCharacteristic { get; set; }
+        [Searchable]
+        public string MeasurementType { get; set; }
+    }
+
 }

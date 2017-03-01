@@ -14,11 +14,13 @@ namespace openXDA.Model
         public int DataFileID { get; set; }
     }
 
+    [TableName("DataFile")]
     public class DataFile
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int FileGroupID { get; set; }
+        [Searchable]
         public string FilePath { get; set; }
         public int FilePathHash { get; set; }
         public int FileSize { get; set; }
@@ -36,5 +38,16 @@ namespace openXDA.Model
         public DateTime DataEndTime { get; set; }
         public DateTime ProcessingStartTime { get; set; }
         public DateTime ProcessingEndTime { get; set; }
+    }
+
+    [TableName("DataReader")]
+    public class DataReader
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string FilePattern { get; set; }
+        public string AssemblyName { get; set; }
+        public string TypeName { get; set; }
+        public int LoadOrder { get; set; }
     }
 }

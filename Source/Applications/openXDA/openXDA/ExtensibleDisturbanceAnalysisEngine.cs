@@ -74,6 +74,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data.Linq;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -870,7 +871,7 @@ namespace openXDA
             FileInfoDataContext fileInfo;
             SystemInfoDataContext systemInfo;
 
-            DataReader dataReader;
+            FaultData.Database.DataReader dataReader;
             DataReaderWrapper dataReaderWrapper;
             FileWrapper fileWrapper;
             int queuedFileCount;
@@ -1022,7 +1023,7 @@ namespace openXDA
 
                     // Process the meter data set
                     OnStatusMessage($"Processing meter data from file \"{filePath}\"...");
-                    ProcessMeterDataSet(meterDataSet, systemSettings, dbAdapterContainer);
+                    ProcessMeterDataSet(meterDataSet, dbAdapterContainer);
                     OnStatusMessage($"Finished processing data from file \"{filePath}\".");
                 }
                 catch (Exception ex)
@@ -1074,68 +1075,86 @@ namespace openXDA
             }
         }
 
-        public void ReprocessFiles(IEnumerable<Event> events)
-        {
-            foreach (Event e in events)
-            {
-                string meterKey;
-                IEnumerable<openXDA.Model.DataFile> files;
-                using (DataContext dataContext = new DataContext(new AdoDataConnection("systemSettings")))
-                {
-                    meterKey = dataContext.Connection.ExecuteScalar<string>($"SELECT AssetKey FROM Meter WHERE ID = {e.MeterID}");
-                    files = dataContext.Table<openXDA.Model.DataFile>().QueryRecords(restriction: new RecordRestriction($"FileGroupID = {e.FileGroupID}"));
-                }
 
+        public void ReprocessFiles(Dictionary<int, int> fileGroups)
+        {
+            string connectionString = LoadSystemSettings();
+            SystemSettings systemSettings = new SystemSettings(connectionString);
+
+            foreach (var fileGroup in fileGroups)
+            {
+                string meterKey = "";
+                using (AdoDataConnection adoDataConnection = new AdoDataConnection(systemSettings.DbConnectionString, typeof(SqlConnection),typeof(SqlDataAdapter)))
+                {
+                    meterKey = adoDataConnection.ExecuteScalar<string>("SELECT AssetKey FROM Meter WHERE ID = {0}", fileGroup.Value);
+                }
                 GetThread(meterKey).Push(() =>
                 {
-                    ReparseFiles(e, files, meterKey);
+                    using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
+                    {
+
+                        ReparseFiles(fileGroup.Key, meterKey, dbAdapterContainer, systemSettings);
+                    }
                 });
             }
+            
 
 
         }
 
-        private void ReparseFiles(Event e, IEnumerable<openXDA.Model.DataFile> files, string meterKey)
+        public void ReprocessFile(int dataFileId, int fileGroupId, int meterId)
         {
-
             string connectionString = LoadSystemSettings();
             SystemSettings systemSettings = new SystemSettings(connectionString);
 
-            using (DataContext dataContext = new DataContext(new AdoDataConnection("systemSettings")))
+            string meterKey = "";
+            using (AdoDataConnection adoDataConnection = new AdoDataConnection(systemSettings.DbConnectionString, typeof(SqlConnection), typeof(SqlDataAdapter)))
             {
-                foreach (openXDA.Model.DataFile dataFile in files)
+                meterKey = adoDataConnection.ExecuteScalar<string>("SELECT AssetKey FROM METER WHERE ID = {0}", meterId);
+            }
+            GetThread(meterKey).Push(() =>
+            {
+                using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
+                {
+
+                    ReparseFile(dataFileId, meterKey, dbAdapterContainer, systemSettings);
+                }
+            });
+        }
+
+
+        private void ReparseFiles(int fileGroupID, string meterKey, DbAdapterContainer dbAdapterContainer, SystemSettings systemSettings)
+        {
+            using (DataContext dataContext = new DataContext(new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false)))
+            {
+                SystemInfoDataContext systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
+                FileInfoDataContext fileInfoDataContext = dbAdapterContainer.GetAdapter<FileInfoDataContext>();
+                MeterInfoDataContext meterInfoDataContext = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+                FaultData.Database.FileGroup fileGroup = fileInfoDataContext.FileGroups.Single(fg => fg.ID == fileGroupID);
+                FaultData.Database.Meter meter = meterInfoDataContext.Meters.Single(m => m.AssetKey == meterKey);
+                foreach (var dataFile in fileGroup.DataFiles)
                 {
                     Byte[] blob = dataContext.Connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
-                    openXDA.Model.FileGroup fileGroup = dataContext.Table<openXDA.Model.FileGroup>().QueryRecords( "ID", new RecordRestriction("ID = {0}", e.FileGroupID)).First();
-                    DirectoryInfo directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "openXDA"));
-                    string filePath = Path.Combine(directory.FullName ,dataFile.FilePath.Split('\\')[dataFile.FilePath.Split('\\').Length - 1]);
-
-                    File.WriteAllBytes(filePath, blob);
-                    using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
+                    if (blob != null)
                     {
+                        DirectoryInfo directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "openXDA"));
+                        string filePath = Path.Combine(directory.FullName, dataFile.FilePath.Split('\\')[dataFile.FilePath.Split('\\').Length - 1]);
+                        File.WriteAllBytes(filePath, blob);
                         try
                         {
 
-                            SystemInfoDataContext systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
-
-                            DataReader dataReader = systemInfo.DataReaders
+                            FaultData.Database.DataReader dataReader = systemInfo.DataReaders
                                 .OrderBy(reader => reader.LoadOrder)
                                 .AsEnumerable()
                                 .FirstOrDefault(reader => FilePath.IsFilePatternMatch(reader.FilePattern, filePath, true));
 
                             if ((object)dataReader == null)
-                            {
-                                // Because the file processor is filtering files based on the DataReader file patterns,
-                                // this should only ever occur if the configuration changes during runtime
                                 continue;
-                            }
-
-
                             // Keep track of the meters and files currently being processed
-                            if ((object)meterKey != null)
-                                m_activeFiles[meterKey] = filePath;
+                            if ((object)meter.AssetKey != null)
+                                m_activeFiles[meter.AssetKey] = filePath;
 
-                            ThreadContext.Properties["Meter"] = meterKey;
+                            ThreadContext.Properties["Meter"] = meter.AssetKey;
 
                             // Create the file group
                             using (DataReaderWrapper dataReaderWrapper = Wrap(dataReader))
@@ -1155,18 +1174,9 @@ namespace openXDA
                                 // Set file path, file group, connection string,
                                 // and meter asset key for the meter data set
                                 meterDataSet.FilePath = dataFile.FilePath;
-                                meterDataSet.FileGroup = new FaultData.Database.FileGroup()
-                                {
-                                    ID = fileGroup.ID,
-                                    Error = fileGroup.Error,
-                                    DataStartTime = fileGroup.DataStartTime,
-                                    DataEndTime = fileGroup.DataEndTime,
-                                    ProcessingStartTime = fileGroup.ProcessingStartTime,
-                                    ProcessingEndTime = fileGroup.ProcessingEndTime,
-                                };
-                                meterDataSet.Meter.ID = e.MeterID;
-                                meterDataSet.ConnectionString = connectionString;
-                                meterDataSet.Meter.AssetKey = meterKey;
+                                meterDataSet.FileGroup = fileGroup;
+                                meterDataSet.Meter = meter;
+                                meterDataSet.ConnectionString = LoadSystemSettings();
 
                                 // Data reader has finally outlived its usefulness
                                 dataReaderWrapper.Dispose();
@@ -1180,6 +1190,12 @@ namespace openXDA
 
                                 // Determine whether the timestamps in the file extend beyond user-defined thresholds
                                 ValidateFileTimestamps(meterDataSet.FilePath, meterDataSet.FileGroup, systemSettings, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+
+                                // Process the meter data set
+                                OnStatusMessage($"Processing meter data from file \"{filePath}\"...");
+                                ProcessMeterDataSet(meterDataSet, dbAdapterContainer);
+                                OnStatusMessage($"Finished processing data from file \"{filePath}\".");
+
                             }
                         }
                         catch (Exception ex)
@@ -1191,7 +1207,7 @@ namespace openXDA
                             try
                             {
                                 // Attempt to set the error flag on the file group
-                                dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET Error = 1 WHERE ID = {0}", e.FileGroupID);
+                                dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET Error = 1 WHERE ID = {0}", fileGroup.ID);
                             }
                             catch (Exception fileGroupError)
                             {
@@ -1199,6 +1215,7 @@ namespace openXDA
                                 string message = $"Exception occurred setting error flag on file group: {fileGroupError.Message}";
                                 OnProcessException(new Exception(message, fileGroupError));
                             }
+                            OnProcessException(ex);
 
                             // Throw the original exception
                             exInfo.Throw();
@@ -1208,7 +1225,7 @@ namespace openXDA
                             try
                             {
                                 // Attempt to set the processing end time of the file group
-                                dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET ProcessingEndTime = {0} WHERE ID = {1}",TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemSettings.XDATimeZoneInfo), e.FileGroupID);
+                                dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET ProcessingEndTime = {0} WHERE ID = {1}", TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemSettings.XDATimeZoneInfo), fileGroup.ID);
 
                             }
                             catch (Exception ex)
@@ -1219,15 +1236,136 @@ namespace openXDA
                             }
 
                             // Keep track of the meters and files currently being processed
-                            if ((object)meterKey != null)
-                                m_activeFiles.TryRemove(meterKey, out filePath);
+                            if ((object)meter.AssetKey != null)
+                                m_activeFiles.TryRemove(meter.AssetKey, out filePath);
 
                             ThreadContext.Properties.Remove("Meter");
                         }
+                        File.Delete(filePath);
                     }
+                }
+            }
+        }
 
+        private void ReparseFile(int dataFileID, string meterKey, DbAdapterContainer dbAdapterContainer, SystemSettings systemSettings)
+        {
+            using (DataContext dataContext = new DataContext(new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false)))
+            {
+                SystemInfoDataContext systemInfo = dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
+                FileInfoDataContext fileInfoDataContext = dbAdapterContainer.GetAdapter<FileInfoDataContext>();
+                MeterInfoDataContext meterInfoDataContext = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
+                int fileGroupID = dataContext.Connection.ExecuteScalar<int>("SELECT FileGroupID FROM DataFile WHERE ID = {0}", dataFileID);
+                FaultData.Database.FileGroup fileGroup = fileInfoDataContext.FileGroups.Single(fg => fg.ID == fileGroupID);
+                FaultData.Database.Meter meter = meterInfoDataContext.Meters.Single(m => m.AssetKey == meterKey );
+                FaultData.Database.DataFile dataFile = fileGroup.DataFiles.Single(df => df.ID == dataFileID);
+                Byte[] blob = dataContext.Connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
+                if (blob != null)
+                {
+                    DirectoryInfo directory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "openXDA"));
+                    string filePath = Path.Combine(directory.FullName, dataFile.FilePath.Split('\\')[dataFile.FilePath.Split('\\').Length - 1]);
+                    File.WriteAllBytes(filePath, blob);
+                    try
+                    {
+
+                        FaultData.Database.DataReader dataReader = systemInfo.DataReaders
+                            .OrderBy(reader => reader.LoadOrder)
+                            .AsEnumerable()
+                            .FirstOrDefault(reader => FilePath.IsFilePatternMatch(reader.FilePattern, filePath, true));
+
+                        // Keep track of the meters and files currently being processed
+                        if ((object)meter.AssetKey != null)
+                            m_activeFiles[meter.AssetKey] = filePath;
+
+                        ThreadContext.Properties["Meter"] = meter.AssetKey;
+
+                        // Create the file group
+                        using (DataReaderWrapper dataReaderWrapper = Wrap(dataReader))
+                        {
+                            // Parse the file to turn it into a meter data set
+                            OnStatusMessage($"Parsing data from file \"{filePath}\"...");
+                            if (dataReaderWrapper.DataObject.CanParse(filePath, DateTime.UtcNow))
+                                dataReaderWrapper.DataObject.Parse(filePath);
+                            OnStatusMessage($"Finished parsing data from file \"{filePath}\".");
+                            MeterDataSet meterDataSet = dataReaderWrapper.DataObject.MeterDataSet;
+
+                            // If the data reader does not return a data set,
+                            // there is nothing left to do
+                            if ((object)meterDataSet == null)
+                                return;
+
+                            // Set file path, file group, connection string,
+                            // and meter asset key for the meter data set
+                            meterDataSet.FilePath = dataFile.FilePath;
+                            meterDataSet.FileGroup = fileGroup;
+                            meterDataSet.Meter = meter;
+                            meterDataSet.ConnectionString = LoadSystemSettings();
+
+                            // Data reader has finally outlived its usefulness
+                            dataReaderWrapper.Dispose();
+
+                            // Shift date/time values to the configured time zone and set the start and end time values on the file group
+                            ShiftTime(meterDataSet, meterDataSet.Meter.GetTimeZoneInfo(systemSettings.DefaultMeterTimeZoneInfo), systemSettings.XDATimeZoneInfo);
+                            SetDataTimeRange(meterDataSet, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+
+                            // Determine whether the file duration is within a user-defined maximum tolerance
+                            ValidateFileDuration(meterDataSet.FilePath, systemSettings.MaxFileDuration, meterDataSet.FileGroup);
+
+                            // Determine whether the timestamps in the file extend beyond user-defined thresholds
+                            ValidateFileTimestamps(meterDataSet.FilePath, meterDataSet.FileGroup, systemSettings, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+
+                            // Process the meter data set
+                            OnStatusMessage($"Processing meter data from file \"{filePath}\"...");
+                            ProcessMeterDataSet(meterDataSet, dbAdapterContainer);
+                            OnStatusMessage($"Finished processing data from file \"{filePath}\".");
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // There seems to be a problem here where the outer exception's call stack
+                        // was overwritten by the call stack of the point where it was thrown
+                        ExceptionDispatchInfo exInfo = ExceptionDispatchInfo.Capture(ex);
+
+                        try
+                        {
+                            // Attempt to set the error flag on the file group
+                            dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET Error = 1 WHERE ID = {0}", fileGroup.ID);
+                        }
+                        catch (Exception fileGroupError)
+                        {
+                            // Log any exceptions that occur when attempting to set the error flag on the file group
+                            string message = $"Exception occurred setting error flag on file group: {fileGroupError.Message}";
+                            OnProcessException(new Exception(message, fileGroupError));
+                        }
+                        OnProcessException(ex);
+
+                        // Throw the original exception
+                        exInfo.Throw();
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            // Attempt to set the processing end time of the file group
+                            dataContext.Connection.ExecuteNonQuery("UPDATE FileGroup SET ProcessingEndTime = {0} WHERE ID = {1}", TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemSettings.XDATimeZoneInfo), fileGroup.ID);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log any exceptions that occur when attempting to set processing end time on the file group
+                            string message = $"Exception occurred setting processing end time on file group: {ex.Message}";
+                            OnProcessException(new Exception(message, ex));
+                        }
+
+                        // Keep track of the meters and files currently being processed
+                        if ((object)meter.AssetKey != null)
+                            m_activeFiles.TryRemove(meter.AssetKey, out filePath);
+
+                        ThreadContext.Properties.Remove("Meter");
+                    }
                     File.Delete(filePath);
                 }
+                
             }
         }
 
@@ -1244,7 +1382,7 @@ namespace openXDA
         }
 
         // Instantiates and executes data operations and data writers to process the meter data set.
-        private void ProcessMeterDataSet(MeterDataSet meterDataSet, SystemSettings systemSettings, DbAdapterContainer dbAdapterContainer)
+        private void ProcessMeterDataSet(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
         {
             SystemInfoDataContext systemInfo;
             List<DataOperationWrapper> dataOperations = null;
@@ -1572,7 +1710,7 @@ namespace openXDA
         }
 
         // Instantiates the given data reader and wraps it in a disposable wrapper object.
-        private static DataReaderWrapper Wrap(DataReader reader)
+        private static DataReaderWrapper Wrap(FaultData.Database.DataReader reader)
         {
             try
             {

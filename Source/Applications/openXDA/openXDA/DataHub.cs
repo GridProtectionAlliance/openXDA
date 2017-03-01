@@ -2512,11 +2512,6 @@ namespace openXDA
 
 
 
-        public void ReprocessFiles(List<int> meterIds, Tuple<DateTime,DateTime> dateRange  )
-        {
-            List<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"MeterID IN ({meterIds.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + "," + s2)}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'")).ToList();
-            openXDA.Program.Host.ReprocessFiles(events);
-        }
 
 
         #endregion
@@ -4738,6 +4733,103 @@ namespace openXDA
 
         #endregion
 
+        #region [ DataFile Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.QueryRecordCount)]
+        public int QueryDataFileCount(string filterString)
+        {
+            IEnumerable<openXDA.Model.DataReader> dataReaders = DataContext.Table<openXDA.Model.DataReader>().QueryRecords();
+            TableOperations<openXDA.Model.DataFile> tableOperations = DataContext.Table<openXDA.Model.DataFile>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+            RecordRestriction innerRestriction = new RecordRestriction();
+            foreach (var dataReader in dataReaders)
+            {
+                innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
+            }
+            restriction += innerRestriction;
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.QueryRecords)]
+        public IEnumerable<openXDA.Model.DataFile> QueryDataFiles(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            IEnumerable<openXDA.Model.DataReader> dataReaders = DataContext.Table<openXDA.Model.DataReader>().QueryRecords();
+            TableOperations<openXDA.Model.DataFile> tableOperations = DataContext.Table<openXDA.Model.DataFile>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = tableOperations.GetSearchRestriction(filterString);
+            RecordRestriction innerRestriction = new RecordRestriction();
+            foreach (var dataReader in dataReaders)
+            {
+                innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
+            }
+            restriction += innerRestriction;
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.DeleteRecord)]
+        public void DeleteDataFile(int id)
+        {
+            CascadeDelete("DataFile", $"ID = {id}");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.CreateNewRecord)]
+        public openXDA.Model.DataFile NewDataFile()
+        {
+            return new openXDA.Model.DataFile();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.AddNewRecord)]
+        public void AddNewDataFile(openXDA.Model.DataFile record)
+        {
+            DataContext.Table<openXDA.Model.DataFile>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.UpdateRecord)]
+        public void UpdateDataFile(openXDA.Model.DataFile record)
+        {
+            DataContext.Table<openXDA.Model.DataFile>().UpdateRecord(record);
+        }
+
+        public IEnumerable<Event> GetEventsForFileGroup(int fileGroupID)
+        {
+            return DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("FileGroupID ={0}", fileGroupID));
+        }
+
+        public void ReprocessFiles(List<int> meterIds, Tuple<DateTime, DateTime> dateRange)
+        {
+            IEnumerable<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"MeterID IN ({meterIds.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + "," + s2)}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'")).ToList();
+            Dictionary<int,int> dictionary = new Dictionary<int, int>();
+            foreach (var e in events)
+            {
+                if (dictionary.ContainsKey(e.FileGroupID))
+                    dictionary[e.FileGroupID] = e.MeterID;
+                else
+                    dictionary.Add(e.FileGroupID, e.MeterID); 
+            }
+            foreach (var kvPair in dictionary)
+            {
+                CascadeDelete("Event", $"FileGroupID = {kvPair.Key}");
+                CascadeDelete("EventData", $"FileGroupID ={kvPair.Key}");
+            }
+
+            openXDA.Program.Host.ReprocessFiles(dictionary);
+        }
+
+        public void ReprocessFile(int dataFileId, int fileGroupId, int meterId)
+        { 
+            CascadeDelete("Event", $"FileGroupID = {fileGroupId}");
+            CascadeDelete("EventData", $"FileGroupID ={fileGroupId}");
+            openXDA.Program.Host.ReprocessFile(dataFileId, fileGroupId, meterId);
+        }
+
+        #endregion
 
         #endregion
 
