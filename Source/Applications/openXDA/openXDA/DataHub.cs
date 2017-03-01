@@ -2514,7 +2514,7 @@ namespace openXDA
 
         public void ReprocessFiles(List<int> meterIds, Tuple<DateTime,DateTime> dateRange  )
         {
-            IEnumerable<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"MeterID IN ({meterIds.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + "," + s2)}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'"));
+            List<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"MeterID IN ({meterIds.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + "," + s2)}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'")).ToList();
             openXDA.Program.Host.ReprocessFiles(events);
         }
 
@@ -4687,21 +4687,23 @@ namespace openXDA
         [RecordOperation(typeof(AuditLog), RecordOperation.QueryRecordCount)]
         public int QueryAuditLogCount(string filterString)
         {
-            TableOperations<AuditLogView> tableOperations = DataContext.Table<AuditLogView>();
+            int auditLogMax = DataContext.Connection.ExecuteScalar<int>("SELECT Value FROM Setting WHERE Name = 'MaxAuditLogRecords'");
+            TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
             RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString); 
-
-            return tableOperations.QueryRecordCount(restriction);
+            restriction = tableOperations.GetSearchRestriction(filterString);
+            int count = tableOperations.QueryRecordCount(restriction);
+            return (count > auditLogMax ? auditLogMax : count);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(AuditLog), RecordOperation.QueryRecords)]
-        public IEnumerable<AuditLogView> QueryAuditLogs(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<AuditLog> QueryAuditLogs(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<AuditLogView> tableOperations = DataContext.Table<AuditLogView>();
+            int auditLogMax = DataContext.Connection.ExecuteScalar<int>("SELECT Value FROM Setting WHERE Name = 'MaxAuditLogRecords'");
+            DataContext.CustomTableOperationTokens[typeof(AuditLog)] = new[] { new KeyValuePair<string, string>("{count}", auditLogMax.ToString()) };
+            TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
             RecordRestriction restriction = new RecordRestriction();
             restriction = tableOperations.GetSearchRestriction(filterString);
-
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 

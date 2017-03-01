@@ -7,6 +7,8 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [TableName("AuditLog")]
+    [AmendExpression("Top {count}",TargetExpression = TargetExpression.FieldList,AffixPosition = AffixPosition.Prefix, StatementTypes = StatementTypes.SelectSet)]
     public class AuditLog
     {
         [PrimaryKey(true)]
@@ -38,5 +40,4 @@ namespace openXDA.Model
         public DateTime UpdatedOn { get; set; }
 
     }
-    public class AuditLogView: AuditLog { }
 }
