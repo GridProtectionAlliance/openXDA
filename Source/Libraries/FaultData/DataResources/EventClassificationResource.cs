@@ -239,10 +239,10 @@ namespace FaultData.DataResources
             if (dataSeries.SeriesInfo.Channel.MeasurementType.Name != "Voltage")
                 return 0.0D;
 
-            if (!IsLineToLine(dataSeries.SeriesInfo.Channel) && !IsLineToLine(dataSeries.SeriesInfo.Channel))
+            if (!IsLineToNeutral(dataSeries.SeriesInfo.Channel) && !IsLineToLine(dataSeries.SeriesInfo.Channel))
                 return 0.0D;
 
-            double voltageKV = dataSeries.SeriesInfo.Channel.Line.VoltageKV;
+            double voltageKV = dataSeries.SeriesInfo.Channel.Line.VoltageKV * 1000.0D;
 
             double divisor = IsLineToNeutral(dataSeries.SeriesInfo.Channel)
                 ? Math.Sqrt(3.0D)

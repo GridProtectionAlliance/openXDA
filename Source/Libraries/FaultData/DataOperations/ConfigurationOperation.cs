@@ -57,6 +57,9 @@ namespace FaultData.DataOperations
                 if (!double.TryParse(multiplier, out sourceIndex.Multiplier))
                     throw new FormatException($"Incorrect format for multiplier {multiplier} found in source index {text}.");
 
+                if (channelIndex == "NONE")
+                    return null;
+
                 if (!int.TryParse(channelIndex, out sourceIndex.ChannelIndex))
                     throw new FormatException($"Incorrect format for channel index {channelIndex} found in source index {text}.");
 
@@ -227,6 +230,7 @@ namespace FaultData.DataOperations
 
             sourceIndexes = series.SourceIndexes.Split(',')
                 .Select(SourceIndex.Parse)
+                .Where(sourceIndex => (object)sourceIndex != null)
                 .ToList();
 
             if (sourceIndexes.Count == 0)
