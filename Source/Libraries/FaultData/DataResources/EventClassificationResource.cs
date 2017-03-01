@@ -38,7 +38,8 @@ namespace FaultData.DataResources
         Sag,
         Swell,
         Transient,
-        Other
+        Other,
+        Breaker
     }
 
     public class EventClassificationResource : DataResourceBase<MeterDataSet>
@@ -139,22 +140,27 @@ namespace FaultData.DataResources
             FaultGroup faultGroup;
 
             DataGroup dataGroup;
+            VIDataGroup viDataGroup;
             VICycleDataGroup viCycleDataGroup;
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
                 dataGroup = cycleDataResource.DataGroups[i];
+                viDataGroup = cycleDataResource.VIDataGroups[i];
                 viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
                 if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
                     faultGroup = null;
 
-                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup, viCycleDataGroup, faultGroup));
+                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup, viDataGroup, viCycleDataGroup, faultGroup));
             }
         }
 
-        private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, FaultGroup faultGroup)
+        private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup, FaultGroup faultGroup)
         {
+            if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && dataGroup.DataSeries.SelectMany(series => series.SeriesInfo.Channel.BreakerChannels).Any())
+                return EventClassification.Breaker;
+
             if ((object)faultGroup != null && (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult))
                 return EventClassification.Fault;
 
