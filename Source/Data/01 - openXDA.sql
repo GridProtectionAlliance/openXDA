@@ -1013,6 +1013,9 @@ GO
 INSERT INTO EventType(Name, Description) VALUES ('Testing', 'Testing')
 GO
 
+INSERT INTO EventType(Name, Description) VALUES ('Breaker', 'Breaker')
+GO
+
 INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
 GO
 
