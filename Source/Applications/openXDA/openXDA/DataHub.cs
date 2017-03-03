@@ -2362,13 +2362,39 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator, Engineer")]
         [RecordOperation(typeof(Event), RecordOperation.UpdateRecord)]
-        public void UpdateEvent(EventView record)
+        public bool UpdateEvent(EventView record, bool propagate)
         {
             DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
             if(oldStartTime != record.StartTime)
             {
-                Ticks ticks = oldStartTime - record.StartTime;
-                IEnumerable<Disturbance> disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+                // Get Time Stamp shift
+                Ticks ticks = record.StartTime - oldStartTime;
+
+                // Update event records
+                // IF propagate is true update all associated with the file
+
+                if (propagate)
+                {
+                    IEnumerable<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("FileGroupID = {0} AND ID <> {1}", record.FileGroupID, record.ID));
+                    foreach (var e in events)
+                    {
+                        e.StartTime = e.StartTime.AddTicks(ticks);
+                        e.EndTime = e.EndTime.AddTicks(ticks);
+                        e.UpdatedBy = GetCurrentUserName();
+                        DataContext.Table<Event>().UpdateRecord(e);
+                    }
+                }
+
+
+                // Update disturbance records
+                // IF propagate is true update all associated with the file
+                // if propagate is false update all assocaited with the event id
+                IEnumerable<Disturbance> disturbances;
+
+                if (propagate)
+                    disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID IN (Select ID from Event WHERE FileGroupID = {0})", record.FileGroupID));
+                else
+                    disturbances = DataContext.Table<Disturbance>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
 
                 foreach (var disturbance in disturbances)
                 {
@@ -2377,15 +2403,25 @@ namespace openXDA
                     DataContext.Table<Disturbance>().UpdateRecord(disturbance);
                 }
 
-                IEnumerable<Fault> faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
+                // Update fault records
+                // IF propagate is true update all associated with the file
+                // if propagate is false update all assocaited with the event id
+                IEnumerable<Fault> faults;
+
+                if(propagate)
+                    faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID IN (Select ID from Event WHERE FileGroupID = {0})", record.FileGroupID));
+                else
+                    faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
 
                 foreach (var fault in faults)
                 {
                     fault.Inception = fault.Inception.AddTicks(ticks);
                     DataContext.Table<Fault>().UpdateRecord(fault);
                 }
+
                 using(MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
                 {
+
                     FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
                     FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
                     FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
@@ -2483,8 +2519,8 @@ namespace openXDA
             {
                 DataContext.Connection.Connection.ExecuteNonQuery($"UPDATE faultsummary SET IsSuppressed = 1 where eventid = {record.ID}");
             }
-
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
+            return true;
         }
 
         private Event MakeEventFromEventView(EventView record)

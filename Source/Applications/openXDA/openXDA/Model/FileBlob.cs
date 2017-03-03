@@ -50,4 +50,17 @@ namespace openXDA.Model
         public string TypeName { get; set; }
         public int LoadOrder { get; set; }
     }
+
+    [TableName("EventData")]
+    public class EventData
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public int FileGroupID { get; set; }
+        public int RunTimeID { get; set; }
+        public byte[] TimeDomainData { get; set; }
+        public byte[] FrequencyDomainData { get; set; }
+        public int MarkedForDeletion { get; set; }
+    }
+
 }
