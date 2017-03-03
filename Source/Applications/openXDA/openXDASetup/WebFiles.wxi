@@ -49,9 +49,6 @@
   <Component Id="Config_AlarmSettings_cshtml">
     <File Id="Config_AlarmSettings.cshtml" Name="AlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AlarmSettings.cshtml" />
   </Component>
-  <Component Id="Config_Channels_cshtml">
-    <File Id="Config_Channels.cshtml" Name="Channels.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Channels.cshtml" />
-  </Component>
   <Component Id="Config_DashSettings_cshtml">
     <File Id="Config_DashSettings.cshtml" Name="DashSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\DashSettings.cshtml" />
   </Component>
@@ -103,26 +100,14 @@
   <Component Id="Config_LineLineGroupView_cshtml">
     <File Id="Config_LineLineGroupView.cshtml" Name="LineLineGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineLineGroupView.cshtml" />
   </Component>
-  <Component Id="Config_Lines_cshtml">
-    <File Id="Config_Lines.cshtml" Name="Lines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Lines.cshtml" />
-  </Component>
   <Component Id="Config_MeterGroups_cshtml">
     <File Id="Config_MeterGroups.cshtml" Name="MeterGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterGroups.cshtml" />
-  </Component>
-  <Component Id="Config_MeterLines_cshtml">
-    <File Id="Config_MeterLines.cshtml" Name="MeterLines.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterLines.cshtml" />
   </Component>
   <Component Id="Config_MeterMeterGroupView_cshtml">
     <File Id="Config_MeterMeterGroupView.cshtml" Name="MeterMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterMeterGroupView.cshtml" />
   </Component>
-  <Component Id="Config_Meters_cshtml">
-    <File Id="Config_Meters.cshtml" Name="Meters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Meters.cshtml" />
-  </Component>
   <Component Id="Config_Settings_cshtml">
     <File Id="Config_Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Settings.cshtml" />
-  </Component>
-  <Component Id="Config_Sites_cshtml">
-    <File Id="Config_Sites.cshtml" Name="Sites.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Sites.cshtml" />
   </Component>
   <Component Id="Config_UserAccountMeterGroupView_cshtml">
     <File Id="Config_UserAccountMeterGroupView.cshtml" Name="UserAccountMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UserAccountMeterGroupView.cshtml" />
@@ -3880,11 +3865,17 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Workbench_Components" Directory="WORKBENCHFOLDER">
+  <Component Id="Workbench_AuditLog_cshtml">
+    <File Id="Workbench_AuditLog.cshtml" Name="AuditLog.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\AuditLog.cshtml" />
+  </Component>
   <Component Id="Workbench_BreakersForDay_cshtml">
     <File Id="Workbench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\BreakersForDay.cshtml" />
   </Component>
   <Component Id="Workbench_Charts_cshtml">
     <File Id="Workbench_Charts.cshtml" Name="Charts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Charts.cshtml" />
+  </Component>
+  <Component Id="Workbench_DataFiles_cshtml">
+    <File Id="Workbench_DataFiles.cshtml" Name="DataFiles.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DataFiles.cshtml" />
   </Component>
   <Component Id="Workbench_DisturbancesForDay_cshtml">
     <File Id="Workbench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForDay.cshtml" />
@@ -3897,6 +3888,9 @@
   </Component>
   <Component Id="Workbench_DisturbancesForMeterAngular_cshtml">
     <File Id="Workbench_DisturbancesForMeterAngular.cshtml" Name="DisturbancesForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\DisturbancesForMeterAngular.cshtml" />
+  </Component>
+  <Component Id="Workbench_Event_cshtml">
+    <File Id="Workbench_Event.cshtml" Name="Event.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Event.cshtml" />
   </Component>
   <Component Id="Workbench_Events_cshtml">
     <File Id="Workbench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Events.cshtml" />
