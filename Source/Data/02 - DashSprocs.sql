@@ -1093,20 +1093,33 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-SELECT Date as thedate, COALESCE(Fault,0) as faults, COALESCE(Interruption,0) as interruptions, COALESCE(Sag,0) as sags, COALESCE(Swell,0) as swells, COALESCE(Other,0) as others, COALESCE(Transient,0) as transients 
-FROM(
-	SELECT CAST(StartTime AS Date) as Date, COUNT(*) AS EventCount, EventType.Name as Name
-	FROM Event JOIN
-		 EventType ON Event.EventTypeID = EventType.ID
-    WHERE MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND StartTime >= @startDate AND StartTime < @endDate
-	GROUP BY CAST(StartTime AS Date), EventType.Name
-) AS ed
-PIVOT(
-	Sum(ed.EventCount)
-	FOR ed.Name IN (Interruption, Fault, Sag, Swell, Other, Transient)
-)as pvt
-ORDER BY Date
+DECLARE @PivotColumns NVARCHAR(MAX) = N''
+DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
+SELECT @PivotColumns = @PivotColumns + '[' + t.Name + '],' 
+FROM (Select Name FROM EventType) AS t
+
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + t.Name + '], 0) AS [' + t.Name + '],' 
+FROM (Select Name FROM EventType) AS t
+
+SET @SQLStatement =
+' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
+' FROM ( ' +
+'		SELECT CAST(StartTime AS Date) as Date, COUNT(*) AS EventCount, EventType.Name as Name ' +
+'		FROM Event JOIN '+
+'		EventType ON Event.EventTypeID = EventType.ID ' +
+'       WHERE ' +
+'			MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND StartTime >= @startDate AND StartTime < @endDate  ' +
+'       GROUP BY CAST(StartTime AS DATE), EventType.Name ' +
+'       ) as ed ' +
+' PIVOT( ' +
+'		SUM(ed.EventCount) ' +
+'		FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
+' ) as pvt ' +
+' ORDER BY Date '
+
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
 END
 GO
 
