@@ -1503,6 +1503,7 @@
     <Content Include="wwwroot\Workbench\AuditLog.cshtml" />
     <Content Include="wwwroot\Workbench\Event.cshtml" />
     <Content Include="wwwroot\Workbench\DataFiles.cshtml" />
+    <Content Include="wwwroot\Workbench\MeterEventsByLine.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

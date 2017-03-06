@@ -72,4 +72,18 @@ namespace openXDA.Model
         [Searchable]
         public string EventTypeName { get; set; }
     }
+
+    public class MeterEventsByLine
+    {
+        public int thelineid { get; set; }
+        public int theeventid { get; set; }
+        public string theeventtype { get; set; }
+        public DateTime theinceptiontime { get; set; }
+        public string thelinename { get; set; }
+        public int voltage { get; set; }
+        public string thefaulttype { get; set; }
+        public string thecurrentdistance { get; set; }
+        public bool pqiexists { get; set; }
+        public string UpdatedBy { get; set; }
+    }
 }

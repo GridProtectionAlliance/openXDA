@@ -3934,6 +3934,9 @@
   <Component Id="Workbench_Layout_cshtml">
     <File Id="Workbench_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Layout.cshtml" />
   </Component>
+  <Component Id="Workbench_MeterEventsByLine_cshtml">
+    <File Id="Workbench_MeterEventsByLine.cshtml" Name="MeterEventsByLine.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\MeterEventsByLine.cshtml" />
+  </Component>
   <Component Id="Workbench_SiteSummary_cshtml">
     <File Id="Workbench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\SiteSummary.cshtml" />
   </Component>

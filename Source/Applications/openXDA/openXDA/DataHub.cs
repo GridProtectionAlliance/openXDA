@@ -30,6 +30,7 @@ using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
 using System.Security.Policy;
+using System.Text;
 using System.Threading;
 using System.Transactions;
 using System.Windows.Forms;
@@ -37,6 +38,7 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using GSF;
 using GSF.Collections;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Identity;
@@ -3625,6 +3627,119 @@ namespace openXDA
             }
             DataContext.Table<Event>().UpdateRecord(MakeEventFromEventView(record));
             return true;
+        }
+
+        #endregion
+
+        #region [ MeterEventsByLine Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterEventsByLine), RecordOperation.QueryRecordCount)]
+        public int QueryMeterEventsByLineCount(int siteID, DateTime targetDate, string filterString )
+        {
+            DataTable dt;
+
+            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
+            SqlDataReader rdr = null;
+
+            try
+            {
+                SqlCommand cmd = new SqlCommand("dbo.selectSiteLinesDetailsByDate", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                dt = new DataTable();
+                dt.Load(rdr);
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+
+            return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).Count();
+        }
+    
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MeterEventsByLine), RecordOperation.QueryRecords)]
+        public IEnumerable<openXDA.Model.MeterEventsByLine> QueryMeterEventsByLines(int siteID, DateTime targetDate,string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DataTable dt;
+
+            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
+            SqlDataReader rdr = null;
+
+            try
+            {
+                SqlCommand cmd = new SqlCommand("dbo.selectSiteLinesDetailsByDate", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                dt = new DataTable();
+                dt.Load(rdr);
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+
+            return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.MeterEventsByLine), RecordOperation.DeleteRecord)]
+        public void DeleteMeterEventsByLine(int id)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.MeterEventsByLine), RecordOperation.CreateNewRecord)]
+        public openXDA.Model.MeterEventsByLine NewMeterEventsByLine()
+        {
+            return new openXDA.Model.MeterEventsByLine();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(openXDA.Model.MeterEventsByLine), RecordOperation.AddNewRecord)]
+        public void AddNewMeterEventsByLine(openXDA.Model.MeterEventsByLine record)
+        {
+            DataContext.Table<openXDA.Model.MeterEventsByLine>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(openXDA.Model.MeterEventsByLine), RecordOperation.UpdateRecord)]
+        public void UpdateMeterEventsByLine(openXDA.Model.MeterEventsByLine record)
+        {
+        }
+
+        public void UpdateAllEventTypesForRange(List<int> eventIds, string eventType)
+        {
+            foreach (var eventId in eventIds)
+            {
+                DataContext.Connection.ExecuteNonQuery("Update Event SET EventTypeID = (SELECT ID FROM EventType WHERE Name = {0}) WHERE ID ={1}", eventType, eventId);
+            }
         }
 
         #endregion

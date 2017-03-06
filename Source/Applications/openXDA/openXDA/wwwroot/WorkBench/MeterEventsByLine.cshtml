@@ -1,0 +1,116 @@
+﻿@*******************************************************************************************************
+//  Index.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  01/15/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Collections.Specialized
+@using System.Net.Http
+@using GSF.Data.Model
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Workbench/Layout.cshtml";
+    ViewBag.Title = "Events";
+
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    int eventId = 0;
+    if (parameters.ContainsKey("EventID"))
+    {
+        eventId = int.Parse(parameters["EventID"]);
+    }
+
+    Event theEvent = dataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("ID = {0}", eventId)).First();
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+{   //    { "Field", "Label", "Classes" }
+        new[] { null, "<input id='selectAll' type='checkbox' onclick='selectAll()'/> Select All", "text-left"},
+        new[] { "theeventid", "Event ID", "text-center"},
+        new[] { "theinceptiontime", "Start Time", "text-center"},
+        new[] { "theeventtype", "Event Type", "text-center"},
+        new[] { "thelinename", "Line Name", "text-center"},
+        new[] { "voltage", "Line KV" , "text-center"},
+        new[] { "thefaulttype", "Phase", "text-center"},
+        new[] { "thecurrentdistance", "Distance", "text-center" },
+
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.HideAddNewButton = false;
+
+}
+
+@section StyleSheets{
+<style>
+</style>
+}
+
+@helper BodyRows()
+{
+    <td width="5%"><input type="checkbox" data-bind="attr: {id: 'checkbox' + theeventid}"/></td>
+    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + theeventid + '&faultcurves=1' }, text: theeventid"></a></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: theinceptiontime.formatDate(DateTimeFormat)"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: theeventtype"></td>
+    <td width="20%" class="text-center valign-middle" data-bind="text: thelinename"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: voltage"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: thefaulttype"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: thecurrentdistance"></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+
+}
+
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddSelectField<MeterEventsByLine, EventType>("theeventtype", "Name"))
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts {
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "ID", null, "'" + theEvent.MeterID + "'", "'" + theEvent.StartTime + "'"))
+        
+        $(function () {
+            $('#addRecordButton').text('Update Selected');
+            
+            viewModel.setAddNewRecord(function (record) {
+                return dataHub.updateAllEventTypesForRange(IDs, record.theeventtype);
+            });
+
+        });
+        
+        var IDs;
+        $(viewModel).on('beforeSave', function (event, record) {
+            IDs = $('td input').filter('[id*="checkbox"]').filter(':checked').toArray().map(function (a) { return parseInt(a.id.split('checkbox')[1]) });
+        });
+
+        function selectAll() {
+            $('td input').filter('[id*="checkbox"]').prop('checked', $('#selectAll').prop('checked'))
+        }
+    </script>
+}
