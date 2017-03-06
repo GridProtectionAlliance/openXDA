@@ -201,19 +201,14 @@ namespace FaultData.DataOperations
                 // throw an exception to indicate the operation could not be executed
                 throw new InvalidOperationException("Cannot process meter - configuration does not exist");
             }
-            
-            if (new string[] { ".pqd", ".sel", ".eve", ".cev" }.Any(ext => meterDataSet.FilePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-            {
-                // Add channels that are not already defined in the
-                // configuration by assuming the meter monitors only one line
-                AddUndefinedChannels(meterDataSet);
-            }
-            else
-            {
-                // Remove data series that were not defined in the configuration
-                // since configuration information cannot be added for it
-                RemoveUndefinedDataSeries(meterDataSet);
-            }
+
+            // Remove data series that were not defined
+            // in the configuration or the source data
+            RemoveUnknownChannelTypes(meterDataSet);
+
+            // Add channels that are not already defined in the
+            // configuration by assuming the meter monitors only one line
+            AddUndefinedChannels(meterDataSet);
 
             // Update line parameters pulled from the input data
             UpdateConfigurationData(meterDataSet);
@@ -285,14 +280,12 @@ namespace FaultData.DataOperations
             if (meterDataSet.Meter.MeterLines.Count == 0)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are no lines associated with that meter.");
-                RemoveUndefinedDataSeries(meterDataSet);
                 return;
             }
 
             if (meterDataSet.Meter.MeterLines.Count > 1)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are too many lines associated with that meter.");
-                RemoveUndefinedDataSeries(meterDataSet);
                 return;
             }
 
@@ -447,17 +440,39 @@ namespace FaultData.DataOperations
             m_meterInfo.SubmitChanges();
         }
 
-        private void RemoveUndefinedDataSeries(MeterDataSet meterDataSet)
+        private void RemoveUnknownChannelTypes(MeterDataSet meterDataSet)
         {
             for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
             {
-                if ((object)meterDataSet.DataSeries[i].SeriesInfo.Channel.Line == null)
+                Series seriesInfo = meterDataSet.DataSeries[i].SeriesInfo;
+                Channel channel = seriesInfo.Channel;
+
+                string[] typeIdentifiers =
+                {
+                    channel.MeasurementType.Name,
+                    channel.MeasurementCharacteristic.Name,
+                    channel.Phase.Name,
+                    seriesInfo.SeriesType.Name
+                };
+
+                if (typeIdentifiers.Contains("Unknown", StringComparer.OrdinalIgnoreCase))
                     meterDataSet.DataSeries.RemoveAt(i);
             }
 
             for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
             {
-                if ((object)meterDataSet.Digitals[i].SeriesInfo.Channel.Line == null)
+                Series seriesInfo = meterDataSet.Digitals[i].SeriesInfo;
+                Channel channel = seriesInfo.Channel;
+
+                string[] typeIdentifiers =
+                {
+                    channel.MeasurementType.Name,
+                    channel.MeasurementCharacteristic.Name,
+                    channel.Phase.Name,
+                    seriesInfo.SeriesType.Name
+                };
+
+                if (typeIdentifiers.Contains("Unknown", StringComparer.OrdinalIgnoreCase))
                     meterDataSet.Digitals.RemoveAt(i);
             }
         }
