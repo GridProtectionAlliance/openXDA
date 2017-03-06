@@ -3738,7 +3738,7 @@ namespace openXDA
         {
             foreach (var eventId in eventIds)
             {
-                DataContext.Connection.ExecuteNonQuery("Update Event SET EventTypeID = (SELECT ID FROM EventType WHERE Name = {0}) WHERE ID ={1}", eventType, eventId);
+                DataContext.Connection.ExecuteNonQuery("Update Event SET EventTypeID = (SELECT ID FROM EventType WHERE Name = {0}), UpdatedBy = {1} WHERE ID ={2}", eventType, GetCurrentUserName(),eventId);
             }
         }
 
