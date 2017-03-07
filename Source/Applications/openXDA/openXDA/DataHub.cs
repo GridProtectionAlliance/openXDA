@@ -4542,8 +4542,10 @@ namespace openXDA
             return eventSet;
         }
 
-        public List<DailyDisturbances> GetDisturbancesForPeriod(int filterId)
+        public EventSet GetDisturbancesForPeriod(int filterId)
         {
+            EventSet eventSet = new EventSet();
+
             string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
             if (meters.IsNullOrWhiteSpace())
@@ -4589,6 +4591,31 @@ namespace openXDA
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
+
+            eventSet.StartDate = startDate;
+            eventSet.EndDate = endDate;
+            Dictionary<string, string> colors = new Dictionary<string, string>()
+            {
+                { "5", "#C00000" },
+                { "4", "#FF2800" },
+                { "3", "#FF9600" },
+                { "2", "#00FFF4" },
+                { "1", "#FFFF00" },
+                { "0", "#0000FF" },
+            };
+
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'DisturbanceChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'DisturbanceChartColors' AND Enabled = 1"));
+
+            foreach (var color in usersColors)
+            {
+                if (colors.ContainsKey(color.Value.Split(',')[0]))
+                    colors[color.Value.Split(',')[0]] = color.Value.Split(',')[1];
+                else
+                    colors.Add(color.Value.Split(',')[0], color.Value.Split(',')[1]);
+            }
+
+
             SqlConnection conn = null;
             SqlDataReader rdr = null;
             List<DailyDisturbances> theList = new List<DailyDisturbances>();
@@ -4605,23 +4632,89 @@ namespace openXDA
                 cmd.CommandTimeout = 300;
 
                 rdr = cmd.ExecuteReader();
-                if (rdr.HasRows)
+                DataTable table = new DataTable();
+                table.Load(rdr);
+
+
+                //if (rdr.HasRows)
+                //{
+
+                //    while (rdr.Read())
+                //    {
+                //        DailyDisturbances de = new DailyDisturbances();
+
+                //        de.Five = Convert.ToInt32(rdr["5"]);
+                //        de.Four = Convert.ToInt32(rdr["4"]);
+                //        de.Three = Convert.ToInt32(rdr["3"]);
+                //        de.Two = Convert.ToInt32(rdr["2"]);
+                //        de.One = Convert.ToInt32(rdr["1"]);
+                //        de.Zero = Convert.ToInt32(rdr["0"]);
+                //        de.TheDate = (DateTime)(rdr["thedate"]);
+                //        theList.Add(de);
+                //    }
+                //}
+
+                foreach (DataRow row in table.Rows)
                 {
-
-                    while (rdr.Read())
+                    foreach (DataColumn column in table.Columns)
                     {
-                        DailyDisturbances de = new DailyDisturbances();
-
-                        de.Five = Convert.ToInt32(rdr["5"]);
-                        de.Four = Convert.ToInt32(rdr["4"]);
-                        de.Three = Convert.ToInt32(rdr["3"]);
-                        de.Two = Convert.ToInt32(rdr["2"]);
-                        de.One = Convert.ToInt32(rdr["1"]);
-                        de.Zero = Convert.ToInt32(rdr["0"]);
-                        de.TheDate = (DateTime)(rdr["thedate"]);
-                        theList.Add(de);
+                        if (column.ColumnName != "thedate" && !disabledFields.Contains(column.ColumnName))
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "DisturbanceChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+                                }
+                            }
+                            eventSet.Types[eventSet.Types.IndexOf(x => x.Name == column.ColumnName)].Data.Add(Tuple.Create(Convert.ToDateTime(row["thedate"]), Convert.ToInt32(row[column.ColumnName])));
+                        }
                     }
                 }
+
+                if (!eventSet.Types.Any())
+                {
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        if (column.ColumnName != "thedate" && !disabledFields.Contains(column.ColumnName))
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "DisturbanceChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+
+                                }
+                            }
+                        }
+                    }
+
+                }
+
 
             }
             finally
@@ -4636,7 +4729,7 @@ namespace openXDA
                 }
             }
 
-            return (theList);
+            return eventSet;
 
         }
 

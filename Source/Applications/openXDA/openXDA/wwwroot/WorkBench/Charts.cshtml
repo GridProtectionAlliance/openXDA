@@ -132,68 +132,23 @@
         
         function makeVoltageDisturbanceByDate() {
             dataHub.getDisturbancesForPeriod($('#globalFilter').val()).done(function (data) {
+                var fields = [];
 
-                var Five = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Five }),
-                    name: '5',
-                    marker: {
-                        color: 'rgb(192,0,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var Four = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Four }),
-                    name: '4',
-                    marker: {
-                        color: 'rgb(255,40,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var Three = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Three }),
-                    name: '3',
-                    marker: {
-                        color: 'rgb(255,150,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var Two = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Two }),
-                    name: '2',
-                    marker: {
-                        color: 'rgb(0,255,244)',
-                    },
-                    type: 'bar'
-                };
-
-                var One = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.One }),
-                    name: '1',
-                    marker: {
-                        color: 'rgb(255,255,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var Zero = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Zero }),
-                    name: '0',
-                    marker: {
-                        color: 'rgb(0,0,255)',
-                    },
-                    type: 'bar'
-                };
-
-                var data = [Five, Four, Three, Two, One, Zero].reverse();
+                $.each(data.Types, function (i, types) {
+                    fields.push({
+                        x: types.Data.map(function (a) {
+                            var now = new Date(a.Item1);
+                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+                            return utc
+                        }),
+                        y: types.Data.map(function (a) { return a.Item2 }),
+                        name: types.Name,
+                        marker: {
+                            color: types.Color,
+                        },
+                        type: 'bar'
+                    });
+                });
 
                 var layout = {
                     title: "Voltage Disturbances by Date",
@@ -209,7 +164,7 @@
                     barmode: 'stack'
                 };
 
-                Plotly.newPlot('chart', data, layout);
+                Plotly.newPlot('chart', fields.reverse(), layout);
                 $('#chart').off('plotly_click');
                 $('#chart').on('plotly_click', function (event, data) {
                     window.open("DisturbancesForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());

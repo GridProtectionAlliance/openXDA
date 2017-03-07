@@ -790,7 +790,7 @@ GO
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, March 25, 2015>
 -- Description: <Description, Selects Events for a MeterID by Date for date range>
--- selectEventsForMeterIDByDateRange '01/10/2013', '05/10/2015', '0'
+-- selectDisturbancesForMeterIDByDate '01/10/2013', '05/10/2015', '0'
 -- selectDisturbancesForMeterIDByDate '03/05/2007', '03/06/2015', '13,17,46,40,6,52,15,16,28,57,19,55,53,12,58,54,8,59,18,20,9,11,21,1,41,39,23,51,14,45,47,2,50,56,30,42,32,10,22,29,48,24,43,34,4,37,26,36,25,31,44,49,3,7,27,35,33,38,5,', 'External'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectDisturbancesForMeterIDByDate]
@@ -858,7 +858,7 @@ GO
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, March 25, 2015>
 -- Description: <Description, Selects Events for a MeterID by Date for date range>
--- selectEventsForMeterIDByDateRange '01/10/2013', '05/10/2015', '0'
+-- selectDisturbancesForMeterIDByDateRange '01/10/2013', '05/10/2015', '0'
 -- selectDisturbancesForMeterIDByDateRange '03/05/2015', '03/06/2015', '0', 'External'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectDisturbancesForMeterIDByDateRange]
@@ -875,34 +875,49 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-Select DisturbanceDate AS thedate, COALESCE([5],0) AS [5], COALESCE([4],0) AS [4], COALESCE([3],0) AS [3], COALESCE([2],0) AS [2], COALESCE([1],0) AS [1], COALESCE([0],0) AS [0]
-FROM (
-	SELECT
-		CAST(Disturbance.StartTime AS DATE) AS DisturbanceDate,
-		SeverityCode,
-		COUNT(*) AS DisturbanceCount
-	FROM
-		DisturbanceSeverity JOIN
-		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
-		Event ON Event.ID = Disturbance.EventID JOIN
-		Phase ON Disturbance.PhaseID = Phase.ID
-	WHERE
-		(
-			@MeterID = '0' OR
-			MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ','))
-		) AND
-		MeterID IN (SELECT * FROM authMeters(@username)) AND
-		Phase.Name = 'Worst' AND
-		Disturbance.StartTime BETWEEN @startDate AND @endDate AND
-		Disturbance.StartTime <> @endDate
-	GROUP BY CAST(Disturbance.StartTime AS DATE), SeverityCode 	
-	) As DisturbanceDate
-PIVOT
-(
-    SUM(DisturbanceDate.DisturbanceCount)
-    FOR DisturbanceDate.SeverityCode IN ([5], [4], [3], [2], [1], [0])
-) as pvt
-ORDER BY DisturbanceDate
+DECLARE @PivotColumns NVARCHAR(MAX) = N''
+DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+DECLARE @SQLStatement NVARCHAR(MAX) = N''
+
+create table #TEMP (Name varchar(max))
+insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM DisturbanceSeverity) as t
+
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
+FROM #TEMP ORDER BY Name desc
+
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
+FROM #TEMP ORDER BY Name desc
+
+SET @SQLStatement =
+' SELECT DisturbanceDate as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
+' FROM (																		  ' +
+'	SELECT                                                                        ' + 
+'		CAST(Disturbance.StartTime AS DATE) AS DisturbanceDate,                	  ' + 
+'		SeverityCode,															  ' + 
+'		COUNT(*) AS DisturbanceCount											  ' + 
+'	FROM																		  ' + 
+'		DisturbanceSeverity JOIN												  ' + 
+'		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN	  ' + 
+'		Event ON Event.ID = Disturbance.EventID JOIN							  ' + 
+'		Phase ON Disturbance.PhaseID = Phase.ID									  ' + 
+'	WHERE																		  ' + 
+'		(																		  ' + 
+'			@MeterID = ''0'' OR													  ' + 
+'			MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, '',''))	      ' + 
+'		) AND																	  ' + 
+'		MeterID IN (SELECT * FROM authMeters(@username)) AND					  ' + 
+'		Phase.Name = ''Worst'' AND												  ' + 
+'		Disturbance.StartTime BETWEEN @startDate AND @endDate AND				  ' + 
+'		Disturbance.StartTime <> @endDate										  ' + 
+'	GROUP BY CAST(Disturbance.StartTime AS DATE), SeverityCode 					  ' + 
+'	) As DisturbanceDate														  ' + 
+' PIVOT( ' +
+'		SUM(DisturbanceDate.DisturbanceCount) ' +
+'		FOR DisturbanceDate.SeverityCode IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
+' ) as pvt ' +
+' ORDER BY DisturbanceDate '
+
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
 
 END
 GO
