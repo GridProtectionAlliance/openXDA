@@ -43,11 +43,11 @@
     <script>
         $(function () {
             $('#pageHeader').append('<select id="graphSelection" class="form-control"></select>');
-            $('#graphSelection').append(new Option("Event Type by Date", 1));
-            $('#graphSelection').append(new Option("Voltage Disturbances by Date", 2));
-            $('#graphSelection').append(new Option("Faults by Date", 3));
-            $('#graphSelection').append(new Option("Breaker Events by Date", 4));
-            $('#graphSelection').append(new Option("Disturbance Magnitude Duration Plot", 5));
+            $('#graphSelection').append(new Option("Event Type by Date", "Events"));
+            $('#graphSelection').append(new Option("Voltage Disturbances by Date", "Disturbances"));
+            $('#graphSelection').append(new Option("Faults by Date", "Faults"));
+            $('#graphSelection').append(new Option("Breaker Events by Date", "Breakers"));
+            $('#graphSelection').append(new Option("Disturbance Magnitude Duration Plot", "SARFI"));
             
             $(window).one('globalFilterDone', function () {
                 $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
@@ -73,148 +73,10 @@
         });
         
         function makeGraph(id) {
-            if (id == 1)
-                makeEventTypeByDate();
-            else if (id == 2)
-                makeVoltageDisturbanceByDate();
-            else if (id == 3)
-                makeFaultByDate();
-            else if (id == 4)
-                makeBreakerEventByDate();
-            else if (id == 5)
+            if (id == "SARFI")
                 makeSARFI();
             else
-                makeEventTypeByDate();
-        }
-        
-        function makeEventTypeByDate() {
-            dataHub.getEventsForPeriod($('#globalFilter').val()).done(function (data) {
-                var fields = [];
-
-                $.each(data.Types, function (i, types) {
-                    fields.push({
-                        x: types.Data.map(function (a) {
-                            var now = new Date(a.Item1);
-                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-                            return utc
-                        }),
-                        y: types.Data.map(function (a) { return a.Item2 }),
-                        name: types.Name,
-                        marker: {
-                            color: types.Color,
-                        },
-                        type: 'bar'
-                    });
-                });
-
-                var layout = {
-                    title: "Event Type by Date",
-                    xaxis: {
-                        title: 'Date',
-                        type: 'date',
-                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
-                    },
-                    yaxis: {
-                        title: 'Event Counts'
-                    },
-                    barmode: 'stack'
-                };
-
-                Plotly.newPlot('chart', fields.reverse(), layout);
-        
-                $('#chart').off('plotly_click');
-                $('#chart').on('plotly_click', function (event, data) {
-                    window.open("EventsForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
-                });
-
-            });
-        }
-        
-        function makeVoltageDisturbanceByDate() {
-            dataHub.getDisturbancesForPeriod($('#globalFilter').val()).done(function (data) {
-                var fields = [];
-
-                $.each(data.Types, function (i, types) {
-                    fields.push({
-                        x: types.Data.map(function (a) {
-                            var now = new Date(a.Item1);
-                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-                            return utc
-                        }),
-                        y: types.Data.map(function (a) { return a.Item2 }),
-                        name: types.Name,
-                        marker: {
-                            color: types.Color,
-                        },
-                        type: 'bar'
-                    });
-                });
-
-                var layout = {
-                    title: "Voltage Disturbances by Date",
-                    xaxis: {
-                        type: 'date',
-                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
-                        title: 'Date',
-                        nticks: 7,
-                    },
-                    yaxis: {
-                        title: 'Voltage Disturbance Counts'
-                    },
-                    barmode: 'stack'
-                };
-
-                Plotly.newPlot('chart', fields.reverse(), layout);
-                $('#chart').off('plotly_click');
-                $('#chart').on('plotly_click', function (event, data) {
-                    window.open("DisturbancesForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
-                });
-
-            });
-        }
-        
-        function makeFaultByDate() {
-            dataHub.getFaultsForPeriod($('#globalFilter').val()).done(function (data) {
-                var fields = [];
-
-                $.each(data.Types, function (i, types) {
-                    fields.push({
-                        x: types.Data.map(function (a) {
-                            var now = new Date(a.Item1);
-                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-                            return utc
-                        }),
-                        y: types.Data.map(function (a) { return a.Item2 }),
-                        name: types.Name + ' kV',
-                        marker: {
-                            color: types.Color,
-                        },
-                        type: 'bar'
-                    });
-                });
-
-
-                var layout = {
-                    title: "Faults by Date",
-                    xaxis: {
-                        type: 'date',
-                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
-                        title: 'Date',
-                        nticks: 7,
-                    },
-                    yaxis: {
-                        title: 'Fault Counts'
-                    },
-                    barmode: 'stack'
-                };
-
-                Plotly.newPlot('chart', fields, layout);
-                $('#chart').off('plotly_click');
-                $('#chart').on('plotly_click', function (event, data) {
-                    window.open("FaultsForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
-                });
-            });
-
+                makeChart(id);
         }
         
         function makeBreakerEventByDate() {
@@ -339,5 +201,48 @@
             });
         }
         
+        function makeChart(val) {
+            window['dataHub']['get'+val+'ForPeriod']($('#globalFilter').val()).done(function (data) {
+                var fields = [];
+
+                $.each(data.Types, function (i, types) {
+                    fields.push({
+                        x: types.Data.map(function (a) {
+                            var now = new Date(a.Item1);
+                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+                            return utc
+                        }),
+                        y: types.Data.map(function (a) { return a.Item2 }),
+                        name: types.Name,
+                        marker: {
+                            color: types.Color,
+                        },
+                        type: 'bar'
+                    });
+                });
+
+                var layout = {
+                    title: val.slice(0,val.length-1) + " Type by Date",
+                    xaxis: {
+                        title: 'Date',
+                        type: 'date',
+                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
+                    },
+                    yaxis: {
+                        title: val.slice(0, val.length - 1) + ' Counts'
+                    },
+                    barmode: 'stack'
+                };
+
+                Plotly.newPlot('chart', fields.reverse(), layout);
+
+                $('#chart').off('plotly_click');
+                $('#chart').on('plotly_click', function (event, data) {
+                    window.open( val + "ForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
+                });
+
+            });
+
+        }
     </script>
 }
