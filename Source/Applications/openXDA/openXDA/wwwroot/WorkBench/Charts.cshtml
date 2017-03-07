@@ -89,68 +89,23 @@
         
         function makeEventTypeByDate() {
             dataHub.getEventsForPeriod($('#globalFilter').val()).done(function (data) {
-                
-                var faults = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate);}),
-                    y: data.map(function (obj) { return obj.Faults }),
-                    name: 'Faults',
-                    marker: {
-                        color: 'rgb(192,0,0)',
-                    },
-                    type: 'bar'
-                };
+                var fields = [];
 
-                var interruptions = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Interruptions }),
-                    name: 'Interruptions',
-                    marker: {
-                        color: 'rgb(255,40,0)',
-                    },
-                    type: 'bar'
-                };
-                
-                var sags = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Sags }),
-                    name: 'Sags',
-                    marker: {
-                        color: 'rgb(255,150,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var swells = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Swells }),
-                    name: 'Swells',
-                    marker: {
-                        color: 'rgb(0,255,244)',
-                    },
-                    type: 'bar'
-                };
-                
-                var transients = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Transients }),
-                    name: 'Transients',
-                    marker: {
-                        color: 'rgb(255,255,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var others = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Others }),
-                    name: 'Others',
-                    marker: {
-                        color: 'rgb(0,0,255)',
-                    },
-                    type: 'bar'
-                };
-
-                var data = [faults, interruptions, sags, swells, transients, others].reverse();
+                $.each(data.Types, function (i, types) {
+                    fields.push({
+                        x: types.Data.map(function (a) {
+                            var now = new Date(a.Item1);
+                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+                            return utc
+                        }),
+                        y: types.Data.map(function (a) { return a.Item2 }),
+                        name: types.Name,
+                        marker: {
+                            color: types.Color,
+                        },
+                        type: 'bar'
+                    });
+                });
 
                 var layout = {
                     title: "Event Type by Date",
@@ -165,7 +120,7 @@
                     barmode: 'stack'
                 };
 
-                Plotly.newPlot('chart', data, layout);
+                Plotly.newPlot('chart', fields.reverse(), layout);
         
                 $('#chart').off('plotly_click');
                 $('#chart').on('plotly_click', function (event, data) {

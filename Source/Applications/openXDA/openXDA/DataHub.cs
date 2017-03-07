@@ -3053,7 +3053,15 @@ namespace openXDA
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
             DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
-            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
+            IEnumerable<EventType> types = DataContext.Table<EventType>().QueryRecords();
+            string eventTypeList = "";
+
+            foreach (var type in types)
+            {
+                if (eventTypes.Contains(type.Name))
+                    eventTypeList += "'" + type.Name + "',"; 
+            }
+
             eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
             if (!filterString.EndsWith("%"))
                 filterString += "%";
@@ -3067,7 +3075,14 @@ namespace openXDA
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
             DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
-            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
+            IEnumerable<EventType> types = DataContext.Table<EventType>().QueryRecords();
+            string eventTypeList = "";
+
+            foreach (var type in types)
+            {
+                if (eventTypes.Contains(type.Name))
+                    eventTypeList += "'" + type.Name + "',";
+            }
             eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
             if (!filterString.EndsWith("%"))
                 filterString += "%";
@@ -4288,6 +4303,29 @@ namespace openXDA
         #endregion
 
         #region [Chart Operations]
+
+        public class EventSet
+        {
+            public DateTime StartDate;
+            public DateTime EndDate;
+            public class EventDetail
+            {
+                public string Name;
+                public List<Tuple<DateTime, int>> Data;
+                public string Color;
+                public EventDetail()
+                {
+                    Data = new List<Tuple<DateTime, int>>();
+                }
+            }
+            public List<EventDetail> Types;
+
+            public EventSet()
+            {
+                Types = new List<EventDetail>();
+            }
+        }
+
         public class DailyEvents
         {
             public DateTime TheDate;
@@ -4332,8 +4370,10 @@ namespace openXDA
         }
 
 
-        public List<DailyEvents> GetEventsForPeriod(int filterId)
+        public EventSet GetEventsForPeriod(int filterId)
         {
+            EventSet eventSet = new EventSet();
+
             string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
             if (meters.IsNullOrWhiteSpace())
@@ -4379,9 +4419,36 @@ namespace openXDA
                 startDate = endDate.AddDays(-14);
             }
 
+            eventSet.StartDate = startDate;
+            eventSet.EndDate = endDate;
+
             SqlConnection conn = null;
             SqlDataReader rdr = null;
             List<DailyEvents> theList = new List<DailyEvents>();
+            Dictionary<string, string> colors = new Dictionary<string, string>()
+            {
+                { "Interruption", "#C00000" },
+                { "Fault", "#FF2800" },
+                { "Sag", "#FF9600" },
+                { "Swell", "#00FFF4" },
+                { "Transient", "#FFFF00" },
+                { "Other", "#0000FF" },
+                { "Test", "#A9A9A9" },
+                { "Breaker", "#A500FF" },
+            };
+
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'EventChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'EventChartColors' AND Enabled = 1"));
+            DataTable table = new DataTable();
+
+            foreach (var color in usersColors)
+            {
+                if (colors.ContainsKey(color.Value.Split(',')[0]))
+                    colors[color.Value.Split(',')[0]] = color.Value.Split(',')[1];
+                else
+                    colors.Add(color.Value.Split(',')[0], color.Value.Split(',')[1]);
+            }
+
 
             try
             {
@@ -4395,23 +4462,87 @@ namespace openXDA
                 cmd.CommandTimeout = 300;
 
                 rdr = cmd.ExecuteReader();
-                if (rdr.HasRows)
+                table.Load(rdr);
+
+                //if (rdr.HasRows)
+                //{
+
+                //    while (rdr.Read())
+                //    {
+                //        DailyEvents de = new DailyEvents();
+
+                //        de.Faults = Convert.ToInt32(rdr["faults"]);
+                //        de.Interruptions = Convert.ToInt32(rdr["interruptions"]);
+                //        de.Sags = Convert.ToInt32(rdr["sags"]);
+                //        de.Swells = Convert.ToInt32(rdr["swells"]);
+                //        de.Others = Convert.ToInt32(rdr["others"]);
+                //        de.Transients = Convert.ToInt32(rdr["transients"]);
+                //        de.TheDate = (DateTime)(rdr["thedate"]);
+                //        theList.Add(de);
+                //    }
+                //}
+
+                foreach (DataRow row in table.Rows)
                 {
-
-                    while (rdr.Read())
+                    foreach (DataColumn column in table.Columns)
                     {
-                        DailyEvents de = new DailyEvents();
-
-                        de.Faults = Convert.ToInt32(rdr["faults"]);
-                        de.Interruptions = Convert.ToInt32(rdr["interruptions"]);
-                        de.Sags = Convert.ToInt32(rdr["sags"]);
-                        de.Swells = Convert.ToInt32(rdr["swells"]);
-                        de.Others = Convert.ToInt32(rdr["others"]);
-                        de.Transients = Convert.ToInt32(rdr["transients"]);
-                        de.TheDate = (DateTime)(rdr["thedate"]);
-                        theList.Add(de);
+                        if (column.ColumnName != "thedate" && !disabledFields.Contains(column.ColumnName))
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "EventChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+                                }
+                            }
+                            eventSet.Types[eventSet.Types.IndexOf(x => x.Name == column.ColumnName)].Data.Add(Tuple.Create(Convert.ToDateTime(row["thedate"]), Convert.ToInt32(row[column.ColumnName])));
+                        }
                     }
                 }
+
+                if (!eventSet.Types.Any())
+                {
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        if (column.ColumnName != "thedate" && !disabledFields.Contains(column.ColumnName))
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "EventChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+
+                                }
+                            }
+                        }
+                    }
+
+                }
+
 
             }
             finally
@@ -4426,7 +4557,7 @@ namespace openXDA
                 }
             }
 
-            return (theList);
+            return eventSet;
         }
 
         public List<DailyDisturbances> GetDisturbancesForPeriod(int filterId)
