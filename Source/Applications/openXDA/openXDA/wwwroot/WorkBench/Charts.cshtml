@@ -220,89 +220,24 @@
         
         function makeFaultByDate() {
             dataHub.getFaultsForPeriod($('#globalFilter').val()).done(function (data) {
+                var fields = [];
 
-                var FiveHundred = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.FiveHundred }),
-                    name: '500 kV',
-                    marker: {
-                        color: 'rgb(255,0,0)',
-                    },
-                    type: 'bar'
-                };
+                $.each(data.Types, function (i, types) {
+                    fields.push({
+                        x: types.Data.map(function (a) {
+                            var now = new Date(a.Item1);
+                            var utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+                            return utc
+                        }),
+                        y: types.Data.map(function (a) { return a.Item2 }),
+                        name: types.Name + ' kV',
+                        marker: {
+                            color: types.Color,
+                        },
+                        type: 'bar'
+                    });
+                });
 
-                var ThreeHundred = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.ThreeHundred }),
-                    name: '300 kV',
-                    marker: {
-                        color: 'rgb(67,67,72)',
-                    },
-                    type: 'bar'
-                };
-
-                var TwoThirty = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.TwoThirty }),
-                    name: '230 kV',
-                    marker: {
-                        color: 'rgb(144,237,125)',
-                    },
-                    type: 'bar'
-                };
-
-                var OneThrityFive = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.OneThrityFive }),
-                    name: '135 kV',
-                    marker: {
-                        color: 'rgb(247,163,92)',
-                    },
-                    type: 'bar'
-                };
-
-                var OneFifteen = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.OneFifteen }),
-                    name: '115 kV',
-                    marker: {
-                        color: 'rgb(128,133,233)',
-                    },
-                    type: 'bar'
-                };
-                
-                var SixtyNine = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.SixtyNine }),
-                    name: '69 kV',
-                    marker: {
-                        color: 'rgb(241,92,128)',
-                    },
-                    type: 'bar'
-                };
-
-                var FourtySix = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.FourtySix }),
-                    name: '46 kV',
-                    marker: {
-                        color: 'rgb(228,211,84)',
-                    },
-                    type: 'bar'
-                };
-
-
-                var Zero = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Zero }),
-                    name: '0',
-                    marker: {
-                        color: 'rgb(43,144,143)',
-                    },
-                    type: 'bar'
-                };
-
-                var data = [FiveHundred, ThreeHundred, TwoThirty, OneThrityFive, OneFifteen,SixtyNine,FourtySix, Zero].reverse();
 
                 var layout = {
                     title: "Faults by Date",
@@ -318,13 +253,11 @@
                     barmode: 'stack'
                 };
 
-                Plotly.newPlot('chart', data, layout);
+                Plotly.newPlot('chart', fields, layout);
                 $('#chart').off('plotly_click');
                 $('#chart').on('plotly_click', function (event, data) {
                     window.open("FaultsForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
                 });
-
-
             });
 
         }

@@ -4424,7 +4424,6 @@ namespace openXDA
 
             SqlConnection conn = null;
             SqlDataReader rdr = null;
-            List<DailyEvents> theList = new List<DailyEvents>();
             Dictionary<string, string> colors = new Dictionary<string, string>()
             {
                 { "Interruption", "#C00000" },
@@ -4464,23 +4463,6 @@ namespace openXDA
                 rdr = cmd.ExecuteReader();
                 table.Load(rdr);
 
-                //if (rdr.HasRows)
-                //{
-
-                //    while (rdr.Read())
-                //    {
-                //        DailyEvents de = new DailyEvents();
-
-                //        de.Faults = Convert.ToInt32(rdr["faults"]);
-                //        de.Interruptions = Convert.ToInt32(rdr["interruptions"]);
-                //        de.Sags = Convert.ToInt32(rdr["sags"]);
-                //        de.Swells = Convert.ToInt32(rdr["swells"]);
-                //        de.Others = Convert.ToInt32(rdr["others"]);
-                //        de.Transients = Convert.ToInt32(rdr["transients"]);
-                //        de.TheDate = (DateTime)(rdr["thedate"]);
-                //        theList.Add(de);
-                //    }
-                //}
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -4658,7 +4640,7 @@ namespace openXDA
 
         }
 
-        public List<DailyFaults> GetFaultsForPeriod(int filterId)
+        public EventSet GetFaultsForPeriod(int filterId)
         {
             string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
@@ -4700,7 +4682,36 @@ namespace openXDA
 
             SqlConnection conn = null;
             SqlDataReader rdr = null;
-            List<DailyFaults> theList = new List<DailyFaults>();
+            EventSet eventSet = new EventSet();
+            eventSet.StartDate = startDate;
+            eventSet.EndDate = endDate;
+
+            Dictionary<string, string> colors = new Dictionary<string, string>()
+            {
+                { "500", "#91e8e1" },
+                { "300", "#f45b5b" },
+                { "230", "#2b908f" },
+                { "200", "#e4d354" },
+                { "161", "#f15c80" },
+                { "135", "#8085e9" },
+                { "115", "#f7a35c" },
+                { "69", "#ff0000" },
+                { "46", "#434348" },
+                { "0", "#90ed7d" },
+
+            };
+
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'FaultChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'FaultChartColors' AND Enabled = 1"));
+            DataTable table = new DataTable();
+
+            foreach (var color in usersColors)
+            {
+                if (colors.ContainsKey(color.Value.Split(',')[0]))
+                    colors[color.Value.Split(',')[0]] = color.Value.Split(',')[1];
+                else
+                    colors.Add(color.Value.Split(',')[0], color.Value.Split(',')[1]);
+            }
 
             try
             {
@@ -4714,25 +4725,87 @@ namespace openXDA
                 cmd.CommandTimeout = 300;
 
                 rdr = cmd.ExecuteReader();
-                if (rdr.HasRows)
+                table.Load(rdr);
+
+                //if (rdr.HasRows)
+                //{
+
+                //    while (rdr.Read())
+                //    {
+                //        DailyFaults de = new DailyFaults();
+
+                //        de.FiveHundred = Convert.ToInt32(rdr["500"]);
+                //        de.ThreeHundred = Convert.ToInt32(rdr["300"]);
+                //        de.TwoThirty = Convert.ToInt32(rdr["230"]);
+                //        de.OneThirtyFive = Convert.ToInt32(rdr["135"]);
+                //        de.OneFifteen = Convert.ToInt32(rdr["115"]);
+                //        de.SixtyNine = Convert.ToInt32(rdr["69"]);
+                //        de.FourtySix = Convert.ToInt32(rdr["46"]);
+                //        de.Zero = Convert.ToInt32(rdr["0"]);
+                //        de.TheDate = (DateTime)(rdr["thedate"]);
+                //        theList.Add(de);
+                //    }
+                //}
+                foreach (DataRow row in table.Rows)
                 {
-
-                    while (rdr.Read())
+                    foreach (DataColumn column in table.Columns)
                     {
-                        DailyFaults de = new DailyFaults();
-
-                        de.FiveHundred = Convert.ToInt32(rdr["500"]);
-                        de.ThreeHundred = Convert.ToInt32(rdr["300"]);
-                        de.TwoThirty = Convert.ToInt32(rdr["230"]);
-                        de.OneThirtyFive = Convert.ToInt32(rdr["135"]);
-                        de.OneFifteen = Convert.ToInt32(rdr["115"]);
-                        de.SixtyNine = Convert.ToInt32(rdr["69"]);
-                        de.FourtySix = Convert.ToInt32(rdr["46"]);
-                        de.Zero = Convert.ToInt32(rdr["0"]);
-                        de.TheDate = (DateTime)(rdr["thedate"]);
-                        theList.Add(de);
+                        if (column.ColumnName != "thedate")
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "FaultChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+                                }
+                            }
+                            eventSet.Types[eventSet.Types.IndexOf(x => x.Name == column.ColumnName)].Data.Add(Tuple.Create(Convert.ToDateTime(row["thedate"]), Convert.ToInt32(row[column.ColumnName])));
+                        }
                     }
                 }
+
+                if (!eventSet.Types.Any())
+                {
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        if (column.ColumnName != "thedate")
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "FaultChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+                                }
+                            }
+                        }
+                    }
+
+                }
+
 
             }
             finally
@@ -4747,7 +4820,7 @@ namespace openXDA
                 }
             }
 
-            return (theList);
+            return eventSet;
 
         }
 
