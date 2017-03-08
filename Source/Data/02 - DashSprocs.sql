@@ -64,184 +64,6 @@ BEGIN
 	WHERE evt1.ID = @EventID
 END
 GO
--- =============================================
--- Author:      <Author, Jeff Walker>
--- Create date: <Create Date, March 25, 2015>
--- Description: <Description, Selects Events for a MeterID by Date for date range>
--- dDSelectDisturbancesForMeterIDByDateRange '01/05/2014', '03/06/2015', '199,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,200,201,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125', 'External'
--- =============================================
-CREATE PROCEDURE [dbo].[dDSelectDisturbancesForMeterIDByDateRange]
-    -- Add the parameters for the stored procedure here
-    @EventDateFrom as DateTime, 
-    @EventDateTo as DateTime, 
-    @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
-
-AS
-BEGIN
-
-    SET NOCOUNT ON;
-
-declare  @MeterIDs TABLE (ID int);
-INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',');
-
-DECLARE @counter INT = 0
-DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
-DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
-DECLARE @numberOfDays INT = DATEDIFF(DAY, @startDate, @endDate)
-
-DECLARE @eventDate DATE = @startDate
-
-CREATE TABLE #temp(Date DATE)
-
-WHILE (@counter < @numberOfDays)
-BEGIN
-    INSERT INTO #temp VALUES(@eventDate)
-    SET @eventDate = DATEADD(DAY, 1, @eventDate)
-    SET @counter = @counter + 1
-END
-
-SELECT Date AS thedate, [5], [4], [3], [2], [1], [0]
-FROM
-(
-    SELECT
-        #temp.Date,
-        SeverityCodes.SeverityCode AS SeverityCode,
-        COALESCE(DisturbanceCount, 0) AS DisturbanceCount
-    FROM
-        #temp CROSS JOIN
-		( Select 5 AS SeverityCode UNION 
-		  SELECT 4 AS SeverityCode UNION 
-		  SELECT 3 AS SeverityCode UNION 
-		  SELECT 2 AS SeverityCode UNION 
-		  SELECT 1 AS SeverityCode UNION 
-		  SELECT 0 AS SeverityCode
-		) AS SeverityCodes LEFT OUTER JOIN
-        (
-            SELECT
-                CAST(Disturbance.StartTime AS DATE) AS DisturbanceDate,
-                SeverityCode,
-                COUNT(*) AS DisturbanceCount
-            FROM
-                (SELECT [DisturbanceID],Max([SeverityCode]) as SeverityCode
-				  FROM [DisturbanceSeverity]
-				  WHERE DisturbanceSeverity.VoltageEnvelopeID = (Select Value FROM Setting WHERE Name = 'DefaultDisturbanceEnvelope')
-				  Group By DisturbanceID) as DisturbanceSeverity JOIN
-				Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
-				Event ON Event.ID = Disturbance.EventID JOIN
-                Phase ON Disturbance.PhaseID = Phase.ID
-			WHERE
-                (
-                    @MeterID = '0' OR
-                    MeterID IN (SELECT * FROM @MeterIDs)
-                ) AND
-                MeterID IN (SELECT * FROM authMeters(@username)) AND
-                Phase.Name = 'Worst' AND
-                Disturbance.StartTime BETWEEN @startDate AND @endDate AND
-                Disturbance.StartTime <> @endDate
-            GROUP BY CAST(Disturbance.StartTime AS DATE), SeverityCode
-        ) AS Disturbances ON #temp.Date = Disturbances.DisturbanceDate AND Disturbances.SeverityCode = SeverityCodes.SeverityCode
-) AS DisturbanceDate
-PIVOT
-(
-    SUM(DisturbanceDate.DisturbanceCount)
-    FOR DisturbanceDate.SeverityCode IN ([5], [4], [3], [2], [1], [0])
-) as pvt
-ORDER BY Date
-
-DROP TABLE #temp
-
-END
-
-GO
-
-
-
-
--- =============================================
--- Author:      <Author, Jeff Walker>
--- Create date: <Create Date, Mar 2, 2015>
--- Description: <Description, Selects Events for a MeterID by Date for @NumberOfDays days back>
--- [pivotedSelectFaultsForMeterIDByDateRange] '01/06/2014', '03/06/2015', '199,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,200,201,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125', 'external'
--- =============================================
-CREATE PROCEDURE [dbo].[pivotedSelectFaultsForMeterIDByDateRange]
-    @EventDateFrom as DateTime,
-    @EventDateTo as DateTime,
-    @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    declare  @MeterIDs TABLE (ID int);
-
-    INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
-
-    declare @counter int = 0
-    declare @EventDate as DateTime
-    declare @NumberOfDays as INT
-
-    set @NumberOfDays = DateDiff ( day  , @EventDateFrom , @EventDateTo )
-
-    set @EventDate = @EventDateFrom
-
-    PRINT @NumberOfDays
-    PRINT @EventDate
-
-    CREATE TABLE #temp(Date DATE)
-
-    WHILE (@counter <= @numberOfDays)
-    BEGIN
-        INSERT INTO #temp VALUES(@eventDate)
-        SET @eventDate = DATEADD(DAY, 1, @eventDate)
-        SET @counter = @counter + 1
-    END
-
-	SELECT thedate, [500], [300], [230], [135], [115], [69], [46], [0]
-	FROM
-	(
-    SELECT
-        #temp.Date AS thedate,
-        COALESCE(Event.FaultCount, 0) AS thecount,
-        Line.VoltageKV AS theclass
-    FROM
-        #temp CROSS JOIN
-        (
-            SELECT DISTINCT VoltageKV
-            FROM
-                Line JOIN
-                Channel ON Channel.LineID = Line.ID JOIN
-                Meter ON Channel.MeterID = Meter.ID
-            WHERE Meter.ID IN (SELECT * FROM authMeters(@username))
-        ) Line LEFT OUTER JOIN
-        (
-            SELECT
-                CAST(Event.StartTime AS Date) AS Date,
-                Line.VoltageKV,
-                COUNT(*) AS FaultCount
-            FROM
-                Event JOIN
-                EventType ON Event.EventTypeID = EventType.ID JOIN
-                Line ON Event.LineID = Line.ID
-            WHERE
-                EventType.Name = 'Fault' AND
-                Event.MeterID IN (SELECT * FROM @MeterIDs)
-            GROUP BY
-                CAST(Event.StartTime AS Date),
-                Line.VoltageKV
-        ) Event ON Event.Date = #temp.Date AND Event.VoltageKV = Line.VoltageKV
-		) as ptable
-		PIVOT
-		(
-		SUM(thecount)
-		FOR theclass IN ([500], [300], [230], [135], [115], [69], [46], [0])
-		) as pvt
-		ORDER BY thedate
-END
-
-GO
-
-
 
 -- =============================================
 -- Author:      <Author, William Ernest>
@@ -903,9 +725,13 @@ insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM Di
 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
 FROM #TEMP ORDER BY Name desc
+IF @PivotColumns = ''
+	SET @PivotColumns = '[0],'
 
 SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
 FROM #TEMP ORDER BY Name desc
+IF @ReturnColumns = ''
+	SET @ReturnColumns = ' COALESCE([0],0) AS [0],'
 
 SET @SQLStatement =
 ' SELECT DisturbanceDate as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
@@ -1334,12 +1160,17 @@ DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
 FROM (Select Distinct Line.VoltageKV 
 		FROM Line) AS t
+IF @PivotColumns = ''
+	SET @PivotColumns = '[0],'
 
 SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
 FROM (Select Distinct Line.VoltageKV 
 		FROM Line) AS t
+IF @ReturnColumns = ''
+	SET @ReturnColumns = ' COALESCE([0],0) AS [0],'
 
 SET @SQLStatement =
 ' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
