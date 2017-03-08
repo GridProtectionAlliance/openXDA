@@ -74,8 +74,8 @@
     <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedOn.formatDate(DateTimeFormat)"></td>*@
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" title="Reprocess File" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
-        @*<button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>*@
+        @*<button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>*@
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 
 
@@ -123,7 +123,38 @@
         
         $(function () {
             $('#addRecordButton').html("Advanced Reprocess");
-            $('#addNewEditDialog .modal-footer').prepend("<button class='btn btn-primary' onclick='reprocessForRange()'>Reprocess</button>")
+            $('#addNewEditDialog .modal-footer').prepend("<button class='btn btn-primary' onclick='reprocessForRange()'>Reprocess</button>");
+            
+            viewModel.removePageRecord = function (record) {
+                if (!viewModel.canDelete())
+                    return;
+                if (viewModel.dataHubIsConnected()) {
+                    dataHub.getEventsByDataFile(record.ID).done(function (data) {
+                        var msg = "Are you sure you want to delete \"" + record[viewModel.labelField] + "\"?\n" + "Deleting this file will subsequently delete the following events:\n";
+                        $.each(data, function (i, d) {
+                            msg += "  Event - " + d.ID + "\n";
+                        });
+                        var truth = confirm(msg);
+                        if (truth)
+                        {
+                            const keyValues = [];
+                            for (var i = 0; i < viewModel.primaryKeyFields.length; i++) {
+                                keyValues.push(record["FileGroupID"]);
+                            }
+                            viewModel.deleteRecord(keyValues).done(function () {
+                                viewModel.pageRecords.remove(record);
+                                viewModel.initialize();
+                                $(viewModel).trigger("recordDeleted", [record]);
+                                showInfoMessage("Deleted record...");
+                            }).fail(function (error) {
+                                showErrorMessage(error);
+                            });
+
+                        }
+                    });
+
+                }
+            }
         });
         
         var mobileSelectOptions = {

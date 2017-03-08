@@ -2161,41 +2161,9 @@ namespace openXDA
         #region [Events Operations]
         public int GetEventCounts(int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate =  dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3} AND (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8})", filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString));
         }
@@ -2203,41 +2171,10 @@ namespace openXDA
 
         public IEnumerable<EventView> GetFilteredEvents(int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
             return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3} AND (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8})", filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString));
         }
 
@@ -2245,44 +2182,13 @@ namespace openXDA
         [RecordOperation(typeof(Event), RecordOperation.QueryRecordCount)]
         public int QueryEventCount(int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
-            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + 
+                new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                          "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                                                                                          "StartTime >= {1} AND " +
                                                                                          "StartTime <= {2} ",
@@ -2295,44 +2201,13 @@ namespace openXDA
         [RecordOperation(typeof(Event), RecordOperation.QueryRecords)]
         public IEnumerable<EventView> QueryEvents(int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
-            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + 
+                new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND " +
                                                                                          "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
                                                                                          "StartTime >= {1} AND " +
                                                                                          "StartTime <= {2} ",
@@ -3282,81 +3157,19 @@ namespace openXDA
 
         public IEnumerable<EventView> GetEventsForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
             return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND (ID LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6} OR EventTypeName LIKE {7})", meterId, startDate, endDate, filterId, filterString, filterString, filterString, filterString));
         }
 
         public int GetCountEventsForMeter(int meterId, int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
             return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ',')) AND (ID LIKE {4} OR MeterName LIKE {5} OR LineName LIKE {6} OR EventTypeName LIKE {7})", meterId, startDate, endDate, filterId, filterString, filterString, filterString, filterString));
         }
 
@@ -3364,48 +3177,17 @@ namespace openXDA
         [RecordOperation(typeof(EventForMeter), RecordOperation.QueryRecordCount)]
         public int QueryEventsForMeterCount(int meterId, int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
-            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND " +
-                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
-                                                                                         "StartTime >= {2} AND " +
-                                                                                         "StartTime <= {3} ",
-                                                                                         meterId,filterId, startDate, endDate);
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + 
+                new RecordRestriction("MeterID = {0} AND " +
+                                    "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                    "StartTime >= {2} AND " +
+                                    "StartTime <= {3} ",
+                                    meterId,filterId, startDate, endDate);
 
             return tableOperations.QueryRecordCount(restriction);
         }
@@ -3414,48 +3196,17 @@ namespace openXDA
         [RecordOperation(typeof(EventForMeter), RecordOperation.QueryRecords)]
         public IEnumerable<EventView> QueryEventsForMeters(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
-            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND " +
-                                                                                         "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
-                                                                                         "StartTime >= {2} AND " +
-                                                                                         "StartTime <= {3} ",
-                                                                                         meterId, filterId, startDate, endDate);
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + 
+                new RecordRestriction("MeterID = {0} AND " +
+                                    "EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND " +
+                                    "StartTime >= {2} AND " +
+                                    "StartTime <= {3} ",
+                                    meterId, filterId, startDate, endDate);
 
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
@@ -3881,81 +3632,17 @@ namespace openXDA
 
         public IEnumerable<DisturbanceView> GetDisturbancesForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
             return DataContext.Table<DisturbanceView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND (ID LIKE {3} OR MeterName LIKE {4} OR PhaseName LIKE {5})", meterId, startDate, endDate, filterString, filterString, filterString));
         }
 
         public int GetCountDisturbancesForMeter(int meterId, int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
             return DataContext.Table<DisturbanceView>().QueryRecordCount(new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND (ID LIKE {3} OR MeterName LIKE {4} OR PhaseName LIKE {5})", meterId, startDate, endDate, filterString, filterString, filterString));
         }
 
@@ -3963,41 +3650,9 @@ namespace openXDA
         [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.QueryRecordCount)]
         public int QueryDisturbancesForMeterCount(int meterId, int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
             TableOperations<DisturbanceView> tableOperations = DataContext.Table<DisturbanceView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND PhaseName='Worst'",
                                                                                          meterId, startDate, endDate);
@@ -4009,41 +3664,9 @@ namespace openXDA
         [RecordOperation(typeof(DisturbancesForMeter), RecordOperation.QueryRecords)]
         public IEnumerable<DisturbanceView> QueryDisturbancesForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<DisturbanceView> tableOperations = DataContext.Table<DisturbanceView>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND StartTime >= {1} AND StartTime <= {2} AND PhaseName='Worst'",
@@ -4159,41 +3782,9 @@ namespace openXDA
         [RecordOperation(typeof(FaultForMeter), RecordOperation.QueryRecordCount)]
         public int QueryFaultorMeterCount(int meterId, int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<FaultForMeter> tableOperations = DataContext.Table<FaultForMeter>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND InceptionTime >= {1} AND InceptionTime <= {2} AND RK=1",
@@ -4206,41 +3797,9 @@ namespace openXDA
         [RecordOperation(typeof(FaultForMeter), RecordOperation.QueryRecords)]
         public IEnumerable<FaultForMeter> QueryFaultsForMeter(int meterId, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             TableOperations<FaultForMeter> tableOperations = DataContext.Table<FaultForMeter>();
             RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND InceptionTime >= {1} AND InceptionTime <= {2} AND RK=1",
@@ -4326,21 +3885,10 @@ namespace openXDA
             }
         }
 
-
-        public class DailyBreakers
-        {
-            public DateTime TheDate;
-            public int Normal;
-            public int Late;
-            public int Indeterminate;
-        }
-
-
         public EventSet GetEventsForPeriod(int filterId)
         {
             EventSet eventSet = new EventSet();
 
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
             if (meters.IsNullOrWhiteSpace())
             {
@@ -4350,43 +3898,11 @@ namespace openXDA
                                                                       "select @results as results " +
                                                                       "DROP TABLE #temp ", filterId);
             }
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
 
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = eventSet.StartDate = dTuple.Item1;
+            DateTime endDate = eventSet.EndDate = dTuple.Item2;
 
-            eventSet.StartDate = startDate;
-            eventSet.EndDate = endDate;
 
             SqlConnection conn = null;
             SqlDataReader rdr = null;
@@ -4512,7 +4028,6 @@ namespace openXDA
         {
             EventSet eventSet = new EventSet();
 
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
             if (meters.IsNullOrWhiteSpace())
             {
@@ -4523,43 +4038,10 @@ namespace openXDA
                                                                       "DROP TABLE #temp ", filterId);
             }
 
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = eventSet.StartDate = dTuple.Item1;
+            DateTime endDate = eventSet.EndDate = dTuple.Item2;
 
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
-
-            eventSet.StartDate = startDate;
-            eventSet.EndDate = endDate;
             Dictionary<string, string> colors = new Dictionary<string, string>()
             {
                 { "5", "#C00000" },
@@ -4681,49 +4163,16 @@ namespace openXDA
 
         public EventSet GetFaultsForPeriod(int filterId)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
 
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
+            EventSet eventSet = new EventSet();
 
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = eventSet.StartDate = dTuple.Item1;
+            DateTime endDate = eventSet.EndDate = dTuple.Item2;
 
             SqlConnection conn = null;
             SqlDataReader rdr = null;
-            EventSet eventSet = new EventSet();
-            eventSet.StartDate = startDate;
-            eventSet.EndDate = endDate;
 
             Dictionary<string, string> colors = new Dictionary<string, string>()
             {
@@ -4846,47 +4295,13 @@ namespace openXDA
 
         public EventSet GetBreakersForPeriod(int filterId)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
 
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
-
             EventSet eventSet = new EventSet();
-            eventSet.StartDate = startDate;
-            eventSet.EndDate = endDate;
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = eventSet.StartDate = dTuple.Item1;
+            DateTime endDate = eventSet.EndDate = dTuple.Item2;
+
 
 
             Dictionary<string, string> colors = new Dictionary<string, string>()
@@ -5004,43 +4419,9 @@ namespace openXDA
 
         public IEnumerable<DisturbanceView> GetVoltageMagnitudeData(int filterId)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
-
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             DataTable table = DataContext.Connection.RetrieveData(
                 " SELECT * " + 
@@ -5062,42 +4443,9 @@ namespace openXDA
 
         public IEnumerable<SiteSummary> GetSiteSummaries(int filterId)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
-
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "0")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             DataTable table = DataContext.Connection.RetrieveData(
                 " SELECT Meter.ID AS MeterID, " +
@@ -5120,42 +4468,9 @@ namespace openXDA
         [RecordOperation(typeof(SiteSummary), RecordOperation.QueryRecordCount)]
         public int QuerySiteSummaryCount(int filterId, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
-
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "0")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             DataTable table = DataContext.Connection.RetrieveData(
                 " SELECT Meter.ID AS MeterID, " +
@@ -5178,42 +4493,9 @@ namespace openXDA
         [RecordOperation(typeof(SiteSummary), RecordOperation.QueryRecords)]
         public IEnumerable<SiteSummary> QuerySiteSummaries(int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-            string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
-
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "0")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "1") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "2") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "3") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "4") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
+            Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
+            DateTime startDate = dTuple.Item1;
+            DateTime endDate = dTuple.Item2;
 
             DataTable table = DataContext.Connection.RetrieveData(
                 " SELECT Meter.ID AS MeterID, " +
@@ -5363,11 +4645,16 @@ namespace openXDA
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
+        public IEnumerable<Event> GetEventsByDataFile (int dataFileId)
+        {
+            return DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("FileGroupID IN (SELECT FileGroupID FROM DataFile WHERE ID = {0})", dataFileId));
+        }
+
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.DeleteRecord)]
         public void DeleteDataFile(int id)
         {
-            CascadeDelete("DataFile", $"ID = {id}");
+            CascadeDelete("FileGroup", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -5425,6 +4712,47 @@ namespace openXDA
 
         #endregion
 
+        public  Tuple<DateTime,DateTime> GetTimeRange(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "-1")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "0") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "1") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "2") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "3") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            return Tuple.Create(startDate,endDate);
+        }
         #endregion
 
         #region [OpenSEE Operations]
