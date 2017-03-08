@@ -37,6 +37,7 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
+        new[] { null, "<input id='selectAll' type='checkbox' onclick='selectAll(this)'/> Select All", "text-left"},
         new[] { "FileGroupID", "File Group", "text-left"},
         new[] { "FilePath", "File Path", "text-left"},
         new[] { "CreationTime", "Creation", "text-left"},
@@ -64,6 +65,7 @@
 @helper BodyRows()
 {
     <td hidden="hidden" data-bind="text: ID"></td>
+    <td width="5%"><input type="checkbox" data-bind="attr: {id: 'checkbox' + FileGroupID}" onclick="checkButton(this)" /></td>
     <td width="5%" class="text-left valign-middle" data-bind="text: FileGroupID"></td>
     <td width="75%" class="text-left valign-middle" data-bind="text: FilePath"></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: CreationTime.formatDate(DateTimeFormat)"></td>
@@ -124,6 +126,7 @@
         $(function () {
             $('#addRecordButton').html("Advanced Reprocess");
             $('#addNewEditDialog .modal-footer').prepend("<button class='btn btn-primary' onclick='reprocessForRange()'>Reprocess</button>");
+            $('#pageControlsRow').prepend("<button id='deleteAllButton' class='btn btn-sm btn-primary' onclick='deleteForRange()' disabled='disabled'>Delete Selected</button>");
             
             viewModel.removePageRecord = function (record) {
                 if (!viewModel.canDelete())
@@ -260,6 +263,40 @@
         
         function reprocessSingleFileGroup(){
             dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text(), $('#eventList').children().first().text().split(',')[1].split(':')[1].trim());
+        }
+        
+        function selectAll(control) {
+            $('td input').filter('[id*="checkbox"]').prop('checked', $('#selectAll').prop('checked'));
+            if ($.grep($('input[type=checkbox]'), function (a, i) { return $(a).prop('checked') }).length > 0)
+                $('#deleteAllButton').prop('disabled', false);
+            else
+                $('#deleteAllButton').prop('disabled', true);
+
+        }
+        
+        function checkButton(control) {
+            if ($.grep($('input[type=checkbox]'), function (a, i) { return $(a).prop('checked') }).length > 0)
+                $('#deleteAllButton').prop('disabled', false);
+            else
+                $('#deleteAllButton').prop('disabled', true);
+        }
+
+        function deleteForRange() {
+            dataHub.getEventsForFileGroups($('td input').filter('[id*="checkbox"]').filter(':checked').toArray().map(function (a) { return parseInt(a.id.split('checkbox')[1]) })).done(function (data) {
+                var msg = "Deleting these files will subsequently delete the following events:\n";
+                $.each(data, function (i, d) {
+                    msg += "  Event - " + d.ID + "\n";
+                });
+                var truth = confirm(msg);
+                if (truth) {
+                    dataHub.deleteMultipleDataFiles($('td input').filter('[id*="checkbox"]').filter(':checked').toArray().map(function (a) { return parseInt(a.id.split('checkbox')[1]) })).done(function(){
+                        viewModel.initialize();
+                        $(viewModel).trigger("recordDeleted");
+                        showInfoMessage("Deleted records...");
+
+                    });
+                }
+            });
         }
 
     </script>

@@ -4657,6 +4657,13 @@ namespace openXDA
             CascadeDelete("FileGroup", $"ID = {id}");
         }
 
+        public void DeleteMultipleDataFiles(List<int> ids)
+        {
+            string idString = String.Join(",", ids);
+            CascadeDelete("FileGroup", $"ID IN({idString})");
+        }
+
+
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.CreateNewRecord)]
         public openXDA.Model.DataFile NewDataFile()
@@ -4678,10 +4685,17 @@ namespace openXDA
             DataContext.Table<openXDA.Model.DataFile>().UpdateRecord(record);
         }
 
-        public IEnumerable<Event> GetEventsForFileGroup(int fileGroupID)
+        public IEnumerable<Event> GetEventsForFileGroup(int fileGroupId)
         {
-            return DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("FileGroupID ={0}", fileGroupID));
+            return DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("FileGroupID ={0}", fileGroupId));
         }
+
+        public IEnumerable<Event> GetEventsForFileGroups(List<int> fileGroupIds)
+        {
+            string ids = String.Join(",",fileGroupIds);
+            return DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"FileGroupID IN ({ids})"));
+        }
+
 
         public void ReprocessFiles(List<int> meterIds, Tuple<DateTime, DateTime> dateRange)
         {
