@@ -204,6 +204,8 @@
         function makeChart(val) {
             window['dataHub']['get'+val+'ForPeriod']($('#globalFilter').val()).done(function (data) {
                 var fields = [];
+                var startDate = new Date(data.StartDate);
+                var endDate = new Date(data.EndDate);
 
                 $.each(data.Types, function (i, types) {
                     fields.push({
@@ -227,9 +229,11 @@
                         title: 'Date',
                         type: 'date',
                         tickFormat: Plotly.d3.time.format.utc("%m-%d"),
+                        range: [new Date(startDate.getTime() + startDate.getTimezoneOffset() * 60000).getTime(), new Date(endDate.getTime() + endDate.getTimezoneOffset() * 60000).getTime()]
                     },
                     yaxis: {
-                        title: val.slice(0, val.length - 1) + ' Counts'
+                        title: val.slice(0, val.length - 1) + ' Counts',
+                        range: [0]
                     },
                     barmode: 'stack'
                 };
