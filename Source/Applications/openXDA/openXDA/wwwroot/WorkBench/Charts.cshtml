@@ -41,6 +41,14 @@
 <script src="/Scripts/plotly-latest.min.js"></script>
 
     <script>
+        var chartData = {
+            Events: null,
+            Disturbances: null,
+            Faults: null,
+            Breakers: null,
+            SARFI: null
+        }
+
         $(function () {
             $('#pageHeader').append('<select id="graphSelection" class="form-control"></select>');
             $('#graphSelection').append(new Option("Event Type by Date", "Events"));
@@ -51,7 +59,19 @@
             
             $(window).one('globalFilterDone', function () {
                 $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
+                makeGraph($('#graphSelection').val());
+            });
+            
+            $('#globalFilter').on('change', function (event) {
+                chartData = {
+                    Events: null,
+                    Disturbances: null,
+                    Fault: null,
+                    Breakers: null,
+                    SARFI: null
+                }
 
+                Plotly.purge('chart');
                 makeGraph($('#graphSelection').val());
             });
             
@@ -59,12 +79,8 @@
                 Plotly.purge('chart');
                 makeGraph($('#graphSelection').val());
             });
-            
-            $('#globalFilter').on('change', function (event) {
-                Plotly.purge('chart');
-                makeGraph($('#graphSelection').val());
-            });
 
+            
             $(window).on('resize', function () {
                 $('#chart').height($(window).innerHeight() - $('#menuBar').outerHeight() - $('#pageHeader').outerHeight() - 50);
                 Plotly.purge('chart');
@@ -78,68 +94,19 @@
             else
                 makeChart(id);
         }
-        
-        function makeBreakerEventByDate() {
-            dataHub.getBreakersForPeriod($('#globalFilter').val()).done(function (data) {
-
-                var Normal = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Normal }),
-                    name: 'Normal',
-                    marker: {
-                        color: 'rgb(255,0,0)',
-                    },
-                    type: 'bar'
-                };
-
-                var Late = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Late }),
-                    name: 'Late',
-                    marker: {
-                        color: 'rgb(67,67,72)',
-                    },
-                    type: 'bar'
-                };
-
-                var Indeterminate = {
-                    x: data.map(function (obj) { return Date.parse(obj.TheDate); }),
-                    y: data.map(function (obj) { return obj.Indeterminate }),
-                    name: 'Indeterminate',
-                    marker: {
-                        color: 'rgb(144,237,125)',
-                    },
-                    type: 'bar'
-                };
-
-                var data = [Normal, Late, Indeterminate].reverse();
-
-                var layout = {
-                    title: "Breaker Events by Date",
-                    xaxis: {
-                        type: 'date',
-                        tickFormat: Plotly.d3.time.format.utc("%m-%d"),
-                        title: 'Date',
-                        nticks: 7,
-                    },
-                    yaxis: {
-                        title: 'Breaker Event Counts'
-                    },
-                    barmode: 'stack'
-                };
-
-                Plotly.newPlot('chart', data, layout);
-                $('#chart').off('plotly_click');
-                $('#chart').on('plotly_click', function (event, data) {
-                    window.open("BreakersForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
-                });
-
-            });
-
-        }
-        
+                
         function makeSARFI() {
-            dataHub.getVoltageMagnitudeData($('#globalFilter').val()).done(function (data) {
+
+            if (chartData.SARFI == null) {
+                dataHub.getVoltageMagnitudeData($('#globalFilter').val()).done(function (data) {
+                    chartData.SARFI = data;
+                    initializeChart(data);
+                });
+            }
+            else
+                initializeChart(chartData.SARFI);
+
+            function initializeChart(data) {
                 var companyTrace = [{
                     x: [],
                     y: [],
@@ -153,6 +120,7 @@
                     companyTrace[0].y.push(d.PerUnitMagnitude * 100);
                     companyTrace[0].text.push(d.EventID)
                 });
+
                 var layout = {
                     title: 'Disturbance Magnitude Duration Scatter Plot',
                     hovermode: 'closest',
@@ -160,7 +128,7 @@
                     //displayLogo: false,
                     //autosize: false,
                     //width: $('#viewWindow').innerWidth(),
-                    xaxis: { title: 'Duration (Seconds)', type: 'log', autorange: true, autotick: false, tickvals: [0, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]/*, range: [-3, 4] */},
+                    xaxis: { title: 'Duration (Seconds)', type: 'log', autorange: true, autotick: false, tickvals: [0, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]/*, range: [-3, 4] */ },
                     yaxis: { side: 'left', overlaying: 'y', anchor: 'x', title: 'Voltage Magnitude(% of Nominal)'/*, range: [0, 150]*/ },
                     //margin: {
                     //    l: 15,
@@ -171,11 +139,11 @@
                     //},
                     //height: $('#viewWindow').height() * 0.85,
                 };
-                
+
                 dataHub.getCurves().done(function (curves) {
-                    
+
                     var curveIds = [];
-                    $.each(curves, function (index, points) { 
+                    $.each(curves, function (index, points) {
                         if (curveIds.indexOf(points.ID) < 0)
                             curveIds.push(points.ID);
                     });
@@ -188,6 +156,7 @@
                             visible: ($.map(curves, function (curve) { if (curve.ID == id) return curve.Visible })[0] ? true : 'legendonly')
                         });
                     });
+
                     var plot = Plotly.newPlot('chart', companyTrace, layout);
 
                     $('#chart').off('plotly_click');
@@ -195,14 +164,23 @@
                         window.open("../OpenSEE.cshtml?ID=" + data.points[0].fullData.text[data.points[0].pointNumber] + "&faultcurves=1");
                     });
                 });
-                
 
 
-            });
+            }
         }
         
         function makeChart(val) {
-            window['dataHub']['get'+val+'ForPeriod']($('#globalFilter').val()).done(function (data) {
+            if (chartData[val] == null) {
+                window['dataHub']['get' + val + 'ForPeriod']($('#globalFilter').val()).done(function (data) {
+                    chartData[val] = data;
+                    initializeChart(data)
+                });
+            }
+            else 
+                initializeChart(chartData[val])
+            
+            
+            function initializeChart(data) {
                 var fields = [];
                 var startDate = new Date(data.StartDate);
                 var endDate = new Date(data.EndDate);
@@ -224,7 +202,7 @@
                 });
 
                 var layout = {
-                    title: val.slice(0,val.length-1) + " Type by Date",
+                    title: val.slice(0, val.length - 1) + " Type by Date",
                     xaxis: {
                         title: 'Date',
                         type: 'date',
@@ -242,11 +220,10 @@
 
                 $('#chart').off('plotly_click');
                 $('#chart').on('plotly_click', function (event, data) {
-                    window.open( val + "ForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
+                    window.open(val + "ForDay.cshtml?Date=" + data.points[0].x + "&Types=" + data.points.map(function (d) { return d.data.name }).join(';') + "&Filter=" + $('#globalFilter').val());
                 });
-
-            });
-
+            }
         }
+    
     </script>
 }
