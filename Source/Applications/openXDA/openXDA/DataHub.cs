@@ -4326,40 +4326,6 @@ namespace openXDA
             }
         }
 
-        public class DailyEvents
-        {
-            public DateTime TheDate;
-            public int Faults;
-            public int Interruptions;
-            public int Sags;
-            public int Swells;
-            public int Others;
-            public int Transients;
-        }
-
-        public class DailyDisturbances
-        {
-            public DateTime TheDate;
-            public int Five;
-            public int Four;
-            public int Three;
-            public int Two;
-            public int One;
-            public int Zero;
-        }
-
-        public class DailyFaults
-        {
-            public DateTime TheDate;
-            public int FiveHundred;
-            public int ThreeHundred;
-            public int TwoThirty;
-            public int OneThirtyFive;
-            public int OneFifteen;
-            public int SixtyNine;
-            public int FourtySix;
-            public int Zero;
-        }
 
         public class DailyBreakers
         {
@@ -4618,7 +4584,6 @@ namespace openXDA
 
             SqlConnection conn = null;
             SqlDataReader rdr = null;
-            List<DailyDisturbances> theList = new List<DailyDisturbances>();
 
             try
             {
@@ -4634,25 +4599,6 @@ namespace openXDA
                 rdr = cmd.ExecuteReader();
                 DataTable table = new DataTable();
                 table.Load(rdr);
-
-
-                //if (rdr.HasRows)
-                //{
-
-                //    while (rdr.Read())
-                //    {
-                //        DailyDisturbances de = new DailyDisturbances();
-
-                //        de.Five = Convert.ToInt32(rdr["5"]);
-                //        de.Four = Convert.ToInt32(rdr["4"]);
-                //        de.Three = Convert.ToInt32(rdr["3"]);
-                //        de.Two = Convert.ToInt32(rdr["2"]);
-                //        de.One = Convert.ToInt32(rdr["1"]);
-                //        de.Zero = Convert.ToInt32(rdr["0"]);
-                //        de.TheDate = (DateTime)(rdr["thedate"]);
-                //        theList.Add(de);
-                //    }
-                //}
 
                 foreach (DataRow row in table.Rows)
                 {
@@ -4820,25 +4766,6 @@ namespace openXDA
                 rdr = cmd.ExecuteReader();
                 table.Load(rdr);
 
-                //if (rdr.HasRows)
-                //{
-
-                //    while (rdr.Read())
-                //    {
-                //        DailyFaults de = new DailyFaults();
-
-                //        de.FiveHundred = Convert.ToInt32(rdr["500"]);
-                //        de.ThreeHundred = Convert.ToInt32(rdr["300"]);
-                //        de.TwoThirty = Convert.ToInt32(rdr["230"]);
-                //        de.OneThirtyFive = Convert.ToInt32(rdr["135"]);
-                //        de.OneFifteen = Convert.ToInt32(rdr["115"]);
-                //        de.SixtyNine = Convert.ToInt32(rdr["69"]);
-                //        de.FourtySix = Convert.ToInt32(rdr["46"]);
-                //        de.Zero = Convert.ToInt32(rdr["0"]);
-                //        de.TheDate = (DateTime)(rdr["thedate"]);
-                //        theList.Add(de);
-                //    }
-                //}
                 foreach (DataRow row in table.Rows)
                 {
                     foreach (DataColumn column in table.Columns)
@@ -4917,7 +4844,7 @@ namespace openXDA
 
         }
 
-        public List<DailyBreakers> GetBreakersForPeriod(int filterId)
+        public EventSet GetBreakersForPeriod(int filterId)
         {
             string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
             string meters = DataContext.Connection.ExecuteScalar<string>("SELECT Meters FROM WorkbenchFilter WHERE ID ={0}", filterId);
@@ -4956,9 +4883,33 @@ namespace openXDA
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-14);
             }
+
+            EventSet eventSet = new EventSet();
+            eventSet.StartDate = startDate;
+            eventSet.EndDate = endDate;
+
+
+            Dictionary<string, string> colors = new Dictionary<string, string>()
+            {
+                { "Normal", "#ff0000" },
+                { "Late", "#434348" },
+                { "Indeterminate", "#90ed7d" }
+            };
+
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'BreakerChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'BreakerChartColors' AND Enabled = 1"));
+            DataTable table = new DataTable();
+
+            foreach (var color in usersColors)
+            {
+                if (colors.ContainsKey(color.Value.Split(',')[0]))
+                    colors[color.Value.Split(',')[0]] = color.Value.Split(',')[1];
+                else
+                    colors.Add(color.Value.Split(',')[0], color.Value.Split(',')[1]);
+            }
+
             SqlConnection conn = null;
             SqlDataReader rdr = null;
-            List<DailyBreakers> theList = new List<DailyBreakers>();
 
             try
             {
@@ -4972,19 +4923,66 @@ namespace openXDA
                 cmd.CommandTimeout = 300;
 
                 rdr = cmd.ExecuteReader();
-                if (rdr.HasRows)
+                table.Load(rdr);
+
+                foreach (DataRow row in table.Rows)
                 {
-
-                    while (rdr.Read())
+                    foreach (DataColumn column in table.Columns)
                     {
-                        DailyBreakers de = new DailyBreakers();
-
-                        de.Normal = Convert.ToInt32(rdr["normal"]);
-                        de.Late = Convert.ToInt32(rdr["late"]);
-                        de.Indeterminate = Convert.ToInt32(rdr["indeterminate"]);
-                        de.TheDate = (DateTime)(rdr["thedate"]);
-                        theList.Add(de);
+                        if (column.ColumnName != "thedate")
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "BreakerChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+                                }
+                            }
+                            eventSet.Types[eventSet.Types.IndexOf(x => x.Name == column.ColumnName)].Data.Add(Tuple.Create(Convert.ToDateTime(row["thedate"]), Convert.ToInt32(row[column.ColumnName])));
+                        }
                     }
+                }
+
+                if (!eventSet.Types.Any())
+                {
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        if (column.ColumnName != "thedate")
+                        {
+                            if (eventSet.Types.All(x => x.Name != column.ColumnName))
+                            {
+                                eventSet.Types.Add(new EventSet.EventDetail());
+                                eventSet.Types[eventSet.Types.Count - 1].Name = column.ColumnName;
+                                if (colors.ContainsKey(column.ColumnName))
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = colors[column.ColumnName];
+                                else
+                                {
+                                    Random r = new Random();
+                                    eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
+                                    DashSettings ds = new DashSettings()
+                                    {
+                                        Name = "BreakerChartColors",
+                                        Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
+                                        Enabled = true
+                                    };
+                                    DataContext.Table<DashSettings>().AddNewRecord(ds);
+                                }
+                            }
+                        }
+                    }
+
                 }
 
             }
@@ -5000,7 +4998,7 @@ namespace openXDA
                 }
             }
 
-            return (theList);
+            return eventSet;
 
         }
 

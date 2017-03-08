@@ -349,19 +349,38 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-SELECT Date as thedate, COALESCE(Normal, 0) as normal, COALESCE(Late, 0) as late, COALESCE(Indeterminate, 0) as indeterminate
-FROM (
-	SELECT CAST(TripCoilEnergized AS Date) AS Date, BreakerOperationType.Name, COUNT(*) AS thecount
-	FROM BreakerOperation JOIN
-		 BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
-		 Event ON Event.ID = BreakerOperation.EventID
-	WHERE MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate
-	GROUP BY CAST(TripCoilEnergized AS Date), BreakerOperationType.Name
-) as table1
-PIVOT(
-	SUM(table1.thecount)
-	FOR table1.Name IN (Late, Indeterminate, Normal)
-) AS pvt
+create table #TEMP (Name varchar(max))
+insert into #TEMP SELECT Name FROM (Select Distinct Name FROM BreakerOperationType) as t
+
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(max)), '') + '],' 
+FROM #TEMP ORDER BY Name desc
+
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(max)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(max)), '') + '],' 
+FROM #TEMP ORDER BY Name desc
+
+DROP TABLE #TEMP
+
+SET @SQLStatement =
+' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
+' FROM (																									 ' +	
+'	SELECT CAST(TripCoilEnergized AS Date) AS Date,                                                          ' +
+'		   BreakerOperationType.Name, 																		 ' +
+'		   COUNT(*) AS thecount																				 ' +
+'	FROM BreakerOperation JOIN																				 ' +
+'		 BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN		 ' +
+'		 Event ON Event.ID = BreakerOperation.EventID														 ' +
+'	WHERE MeterID in (select * from authMeters(@username)) AND 												 ' +
+'		  MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, '','')) AND 								 ' +
+'		  TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate									 ' +
+'	GROUP BY CAST(TripCoilEnergized AS Date), BreakerOperationType.Name										 ' +
+') as table1																								 ' +
+' PIVOT(																									 ' +
+'		SUM(table1.thecount)																				 ' +
+'		FOR table1.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')							 ' +
+' ) as pvt																									 ' +
+' ORDER BY Date                                                                                   '
+
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
 
 END
 GO
