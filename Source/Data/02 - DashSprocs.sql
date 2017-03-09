@@ -2824,68 +2824,41 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @thedate DATE = CAST(@EventDate AS DATE)
-    DECLARE  @MeterIDs TABLE (ID INT);
+    DECLARE @startDate DATE = CAST(@EventDate AS DATE)
+	DECLARE @endDate DATE = DATEADD(DAY, 1, @startDate)
+	
+	DECLARE @PivotColumns NVARCHAR(MAX) = N''
+	DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+	DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
-    INSERT INTO @MeterIDs(ID)
-    SELECT Value
-    FROM dbo.String_to_int_table(@MeterID, ',')
-    WHERE Value IN (SELECT * FROM authMeters(@username));
+	SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.Name as varchar(max)), '') + '],' 
+	FROM (Select Name FROM EventType) AS t
 
-    DECLARE @TempTable TABLE (themeterid INT, thesite VARCHAR(100), thecount INT, thename VARCHAR(100));
+	SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.Name as varchar(max)), '') + '], 0) AS [' + COALESCE(CAST(t.Name as varchar(max)), '') + '],' 
+	FROM (Select Name FROM EventType) AS t
 
-    INSERT INTO @TempTable (themeterid, thesite , thecount , thename)
-    SELECT 
-        Meter.ID AS meterid, 
-        Meter.Name AS thesite, 
-        Event.EventTypeID AS thecount, 
-        EventType.Name AS thename 
-    FROM
-        Event JOIN
-        EventType ON EventType.ID = Event.EventTypeID JOIN
-        Meter ON Meter.ID = Event.MeterID
-    WHERE
-        MeterID IN (SELECT * FROM @MeterIDs) AND
-        CAST([StartTime] AS DATE) = @thedate
+	SET @SQLStatement =
+	' SELECT EventID, MeterID, Site, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
+	' FROM ( ' +
+	'	SELECT ' +
+	'		(SELECT TOP 1 ID FROM EVENT e WHERE e.MeterID = Event.MeterID) as EventID, Event.MeterID, COUNT(*) AS EventCount, EventType.Name, Meter.Name as Site ' +
+	'		FROM Event JOIN '+
+	'		EventType ON Event.EventTypeID = EventType.ID JOIN' +
+	'		Meter ON Event.MeterID = Meter.ID' +
+	'       WHERE ' +
+    '			MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND StartTime >= @startDate AND StartTime < @endDate  ' +
+	'       GROUP BY Event.MeterID,Meter.Name,EventType.Name ' +
+	'       ) as ed ' +
+	' PIVOT( ' +
+	'		SUM(ed.EventCount) ' +
+	'		FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
+	' ) as pvt ' +
+	' ORDER BY MeterID '
 
-    DECLARE @composite TABLE (theeventid INT, themeterid INT, thesite VARCHAR(100), faults INT, interruptions INT, sags INT, swells INT, others INT);
-
-    DECLARE @sitename VARCHAR(100)
-    DECLARE @themeterid INT
-    DECLARE @theeventid INT
-
-    DECLARE site_cursor CURSOR FOR SELECT DISTINCT themeterid, thesite FROM @TempTable
-
-    OPEN site_cursor
-
-    FETCH NEXT FROM site_cursor INTO @themeterid, @sitename
-
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        INSERT INTO @composite VALUES(
-            (
-                SELECT TOP 1 Event.ID
-                FROM Event
-                WHERE
-                    Event.MeterID = @themeterid AND
-                    CAST([StartTime] AS DATE) = @theDate
-            ),
-            @themeterid,
-            @sitename,
-            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Fault' AND thesite = @sitename),
-            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Interruption' AND thesite = @sitename),
-            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Sag' AND thesite = @sitename),
-            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Swell' AND thesite = @sitename),
-            (SELECT COUNT(thecount) FROM @TempTable WHERE thename = 'Other' AND thesite = @sitename)
-        )
-
-        FETCH NEXT FROM site_cursor into @themeterid , @sitename
-    END
- 
-    CLOSE site_cursor;
-    DEALLOCATE site_cursor;
-
-    SELECT * FROM @composite
+	print @pivotcolumns
+	print @returncolumns
+	print @sqlstatement
+	exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
 END
 GO
 
