@@ -2904,24 +2904,6 @@ namespace openXDA
         #endregion
 
         #region [EventsForDay Operations]  
-        public IEnumerable<EventView> GetAllEventsForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            DateTime startTime = new DateTime(date.Date.Ticks);
-            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
-            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
-            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
-            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) "+ " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime,filterString, filterString, filterString, filterString, filterString));
-        }
-
-        public int GetCountAllEventsForDay(DateTime date, string eventTypes, string filterString, int filterId)
-        {
-            DateTime startTime = new DateTime(date.Date.Ticks);
-            DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
-            string eventTypeList = "" + (eventTypes.Contains("Faults") ? "'Fault'," : "") + (eventTypes.Contains("Interruptions") ? "'Interruption'," : "") + (eventTypes.Contains("Sags") ? "'Sag'," : "") + (eventTypes.Contains("Swells") ? "'Swell'," : "") + (eventTypes.Contains("Transients") ? "'Transient'," : "") + (eventTypes.Contains("Others") ? "'Other'," : "");
-            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR StartTime LIKE {4} OR EndTime LIKE {5} OR MeterName LIKE {6} OR LineName LIKE {7})", filterId, date, endTime, filterString, filterString, filterString, filterString, filterString));
-        }
-
         [AuthorizeHubRole("*")]
         [RecordOperation(typeof(EventForDay), RecordOperation.QueryRecordCount)]
         public int QueryEventForDayCount(DateTime date, string eventTypes, int filterId, string filterString)
@@ -3754,40 +3736,90 @@ namespace openXDA
 
         #endregion
 
-        #region [BreakersForDay Operations]
-
-        public IEnumerable<BreakerView> GetBreakersForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        #region [BreakersForDay Operations]  
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(BreakersForDay), RecordOperation.QueryRecordCount)]
+        public int QueryBreakerForDayCount(DateTime date, string operationTypes, int filterId, string filterString)
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
             DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
-            string eventTypeList = "" + (eventTypes.Contains("Normal") ? "'Normal'," : "") + (eventTypes.Contains("Late") ? "'Late'," : "") + (eventTypes.Contains("Indeterminate") ? "'Indeterminate'," : "");
-            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
-            filterString += '%';
-            return DataContext.Table<BreakerView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction(
-                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
-                " Energized >= {1} AND Energized <= {2} AND " +
-                " EventType IN (Select Name FROM EventType WHERE ID IN (SELECT * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ','))) AND " +
-                " (MeterID LIKE {4} OR Energized LIKE {5} OR EventType LIKE {6} OR EventID LIKE {7} OR PhaseName Like {8} OR BreakerNumber LIKE {9} OR LineName LIKE {10} OR OperationType Like {11}) AND " +
-                $" OperationType IN({eventTypeList}) ",
-                filterId, date, endTime, filterId, filterString, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
+            IEnumerable<BreakerOperationType> types = DataContext.Table<BreakerOperationType>().QueryRecords();
+            string operationTypeList = "";
+
+            foreach (var type in types)
+            {
+                if (operationTypes.Contains(type.Name))
+                    operationTypeList += "'" + type.Name + "',"; 
+            }
+
+            operationTypeList = operationTypeList.Remove(operationTypeList.Length - 1, 1);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            TableOperations<BreakerView> table = DataContext.Table<BreakerView>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = table.GetSearchRestriction(filterString) + new RecordRestriction($"(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {filterId}), ','))) AND Energized >= '{startTime}' AND Energized <= '{endTime}' AND OperationType IN ({operationTypeList})");
+            return table.QueryRecordCount(restriction);
         }
 
-        public int GetCountBreakersForDay(DateTime date, string eventTypes, string filterString, int filterId)
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(BreakersForDay), RecordOperation.QueryRecords)]
+        public IEnumerable<BreakerView> QueryBreakersForDay(DateTime date, string operationTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             DateTime startTime = new DateTime(date.Date.Ticks);
             DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
-            string eventTypeList = "" + (eventTypes.Contains("Normal") ? "'Normal'," : "") + (eventTypes.Contains("Late") ? "'Late'," : "") + (eventTypes.Contains("Indeterminate") ? "'Indeterminate'," : "");
-            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
-            filterString += '%';
+            IEnumerable<BreakerOperationType> types = DataContext.Table<BreakerOperationType>().QueryRecords();
+            string operationTypeList = "";
 
-            return DataContext.Table<BreakerView>().QueryRecordCount(new RecordRestriction(
-                " MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND " +
-                " Energized >= {1} AND Energized <= {2} AND " +
-                " EventType IN (Select Name FROM EventType WHERE ID IN (SELECT * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {3}), ','))) AND " +
-                " (MeterID LIKE {4} OR Energized LIKE {5} OR EventType LIKE {6} OR EventID LIKE {7} OR PhaseName Like {8} OR BreakerNumber LIKE {9} OR LineName LIKE {10} OR OperationType Like {11}) AND " +
-                $" OperationType IN({eventTypeList}) ",
-                filterId, date, endTime, filterId, filterString, filterString, filterString, filterString, filterString, filterString, filterString, filterString));
+            foreach (var type in types)
+            {
+                if (operationTypes.Contains(type.Name))
+                    operationTypeList += "'" + type.Name + "',";
+            }
+
+            operationTypeList = operationTypeList.Remove(operationTypeList.Length - 1, 1);
+            if (!filterString.EndsWith("%"))
+                filterString += "%";
+
+            TableOperations<BreakerView> table = DataContext.Table<BreakerView>();
+            RecordRestriction restriction = new RecordRestriction();
+            restriction = table.GetSearchRestriction(filterString) + new RecordRestriction($"(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {filterId}), ','))) AND Energized >= '{startTime}' AND Energized <= '{endTime}' AND OperationType IN ({operationTypeList})");
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(BreakersForDay), RecordOperation.DeleteRecord)]
+        public void DeleteBreakersForDay(int id)
+        {
+            CascadeDelete("BreakerOperation", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(BreakersForDay), RecordOperation.CreateNewRecord)]
+        public BreakerView NewBreakersForDay()
+        {
+            return new BreakerView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(BreakersForDay), RecordOperation.AddNewRecord)]
+        public void AddNewBreakersForDay(Event record)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(BreakersForDay), RecordOperation.UpdateRecord)]
+        public void UpdateBreakersForDayRecord(BreakerView record)
+        {
+            openXDA.Model.BreakerOperation bo = DataContext.Table<openXDA.Model.BreakerOperation>().QueryRecords(restriction: new RecordRestriction("ID = {0}", record.ID)).FirstOrDefault();
+            bo.TripCoilEnergized = DateTime.Parse(record.Energized);
+            bo.BreakerOperationTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM BreakerOperationType WHERE Name = {0}", record.OperationType);
+            bo.UpdatedBy = GetCurrentUserName();
+            DataContext.Table<openXDA.Model.BreakerOperation>().UpdateRecord(bo);
+        }
+
+
 
         #endregion
 

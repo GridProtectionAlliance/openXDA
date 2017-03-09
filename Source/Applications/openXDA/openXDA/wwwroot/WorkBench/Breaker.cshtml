@@ -63,10 +63,6 @@
 
 }
 
-@section StyleSheets{
-<style>
-</style>
-}
 
 @helper BodyRows()
 {
@@ -95,24 +91,6 @@
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-
-<div id="reprocessModal" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Reprocess Event <span id="eventID"></span></h4>
-            </div>
-            <div class="modal-body">
-                Place holder for reprocessing....
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script language="javascript" type="text/javascript" src="/Scripts/spin.js"></script>

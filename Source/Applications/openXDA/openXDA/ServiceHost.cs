@@ -404,6 +404,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Breaker.cshtml", new Tuple<Type, Type>(typeof(BreakerOperation), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/EventsForDate.cshtml", new Tuple<Type, Type>(typeof(EventForDate), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/EventsForDay.cshtml", new Tuple<Type, Type>(typeof(EventForDay), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Workbench/BreakersForDay.cshtml", new Tuple<Type, Type>(typeof(BreakersForDay), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/EventsForMeter.cshtml", new Tuple<Type, Type>(typeof(EventForMeter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/MeterEventsByLine.cshtml", new Tuple<Type, Type>(typeof(MeterEventsByLine), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/DisturbancesForDay.cshtml", new Tuple<Type, Type>(typeof(DisturbancesForDay), typeof(DataHub)));

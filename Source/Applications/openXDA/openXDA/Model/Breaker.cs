@@ -27,6 +27,9 @@ namespace openXDA.Model
         public string UpdatedBy { get; set; }
     }
 
+    [TableName("BreakerOperation")]
+    public class BreakersForDay : BreakerOperation { }
+
     public class BreakerView
     {
         [PrimaryKey(true)]
@@ -35,11 +38,14 @@ namespace openXDA.Model
         public int EventID { get; set; }
         public string EventType { get; set; }
         public string Energized { get; set; }
+        [Searchable]
         public int BreakerNumber { get; set; }
+        [Searchable]
         public string LineName { get; set; }
         public string PhaseName { get; set; }
         public double Timing { get; set; }
         public int Speed { get; set; }
+        [Searchable]
         public string OperationType { get; set; }
         public string UpdatedBy { get; set; }
 

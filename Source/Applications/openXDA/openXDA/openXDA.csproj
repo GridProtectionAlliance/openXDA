@@ -1505,6 +1505,7 @@
     <Content Include="wwwroot\Workbench\DataFiles.cshtml" />
     <Content Include="wwwroot\Workbench\MeterEventsByLine.cshtml" />
     <Content Include="wwwroot\Workbench\Breaker.cshtml" />
+    <Content Include="wwwroot\Workbench\BreakersForDay - Angular.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
