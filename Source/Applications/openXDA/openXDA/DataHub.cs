@@ -3748,6 +3748,7 @@ namespace openXDA
             openXDA.Model.BreakerOperation bo = DataContext.Table<openXDA.Model.BreakerOperation>().QueryRecords(restriction: new RecordRestriction("ID = {0}", record.ID)).FirstOrDefault();
             bo.TripCoilEnergized = DateTime.Parse(record.Energized);
             bo.BreakerOperationTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM BreakerOperationType WHERE Name = {0}", record.OperationType);
+            bo.UpdatedBy = GetCurrentUserName();
             DataContext.Table<openXDA.Model.BreakerOperation>().UpdateRecord(bo);
         }
 
