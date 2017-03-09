@@ -83,39 +83,6 @@
     <div class="form-group">
         <label>Time Range:</label>
         <input id="dateRange" type="text" class="form-control"/>
-        @*<div class="col-md-12">
-            <div class="col-md-3">
-                <select id="preDefinedTimeRange" class="form-control">
-                    <option value="0">Pick a period:</option>
-                    <option value="1">1 day</option>
-                    <option value="2">3 days</option>
-                    <option value="3">1 week</option>
-                </select>
-            </div>
-            <div class="col-md-1" style="text-align: center">
-                <span>or</span>
-            </div>
-            <div class="col-md-3">
-                <div class="input-group date">
-                    <input id="fromDate" type="text" class="form-control">
-                    <div class="input-group-addon">
-                        <span class="glyphicon glyphicon-th"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-1" style="text-align: center">
-                <span>to</span>
-            </div>
-            <div class="col-md-3">
-                <div class="input-group date">
-                    <input id="toDate" type="text" class="form-control">
-                    <div class="input-group-addon">
-                        <span class="glyphicon glyphicon-th"></span>
-                    </div>
-                </div>
-
-            </div>
-        </div>*@
     </div>
     <div id="metersFrame" class="form-group">
         <label>Meters:</label>
@@ -173,8 +140,8 @@
                 'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
                 'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
                 'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
-                //'This Month': [moment().utc().startOf('month'), moment().utc().endOf('month')],
-                //'Last Month': [moment().utc().subtract(1, 'month').startOf('month'), moment().utc().subtract(1, 'month').endOf('month')]
+                'Last 90 Days': [moment().utc().startOf('day').subtract(89, 'days'), moment().utc().endOf('day')],
+                'Last 365 Days': [moment().utc().startOf('day').subtract(364, 'days'), moment().utc().endOf('day')]
             },
             "startDate": moment().utc().subtract(29, 'days').startOf('day'),
             "endDate": moment.utc().endOf('day')

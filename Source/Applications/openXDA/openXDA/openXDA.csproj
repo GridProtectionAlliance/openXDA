@@ -288,7 +288,7 @@
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="Model\AlarmEmailCriterion.cs" />
     <Compile Include="Model\AuditLog.cs" />
-    <Compile Include="Model\BreakerView.cs" />
+    <Compile Include="Model\Breaker.cs" />
     <Compile Include="Model\CycleDataSOEPointView.cs" />
     <Compile Include="Model\Disturbance.cs" />
     <Compile Include="Model\DisturbanceEmailCriterion.cs" />
@@ -1504,6 +1504,7 @@
     <Content Include="wwwroot\Workbench\Event.cshtml" />
     <Content Include="wwwroot\Workbench\DataFiles.cshtml" />
     <Content Include="wwwroot\Workbench\MeterEventsByLine.cshtml" />
+    <Content Include="wwwroot\Workbench\Breaker.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

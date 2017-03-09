@@ -93,7 +93,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "ID", null, "'" + theEvent.MeterID + "'", "'" + theEvent.StartTime + "'"))
+        @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "ID", null, theEvent.MeterID, theEvent.StartTime))
         
         $(function () {
             $('#addRecordButton').text('Update Selected');

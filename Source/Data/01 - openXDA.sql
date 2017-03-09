@@ -972,7 +972,8 @@ CREATE TABLE BreakerOperation
     APhaseBreakerTiming FLOAT NOT NULL,
     BPhaseBreakerTiming FLOAT NOT NULL,
     CPhaseBreakerTiming FLOAT NOT NULL,
-    BreakerSpeed FLOAT NOT NULL
+    BreakerSpeed FLOAT NOT NULL, 
+	UpdatedBy VARCHAR(50) NULL
 )
 GO
 
@@ -2787,7 +2788,7 @@ CREATE VIEW [dbo].[BreakerView]
 AS
 SELECT dbo.BreakerOperation.ID, dbo.Meter.ID AS MeterID, dbo.Event.ID AS EventID, dbo.EventType.Name AS EventType, dbo.BreakerOperation.TripCoilEnergized AS Energized, dbo.BreakerOperation.BreakerNumber, 
        dbo.MeterLine.LineName, dbo.Phase.Name AS PhaseName, CAST(dbo.BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing, dbo.BreakerOperation.BreakerSpeed AS Speed, 
-       dbo.BreakerOperationType.Name AS OperationType
+       dbo.BreakerOperationType.Name AS OperationType, BreakerOperation.UpdatedBy
 FROM   dbo.BreakerOperation INNER JOIN
        dbo.Event ON dbo.BreakerOperation.EventID = dbo.Event.ID INNER JOIN
        dbo.EventType ON dbo.EventType.ID = dbo.Event.EventTypeID INNER JOIN
@@ -3428,6 +3429,74 @@ BEGIN
 
 END
 GO
+
+CREATE TRIGGER BreakerOperation_AuditInsert 
+   ON  BreakerOperation
+   AFTER INSERT
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #inserted FROM inserted
+
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #inserted
+	
+	EXEC InsertIntoAuditLog 'BreakerOperation', 'ID', @id, '0', '1'
+	
+	DROP TABLE #inserted
+
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TRIGGER BreakerOperation_AuditUpdate 
+   ON  BreakerOperation
+   AFTER UPDATE
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #deleted  FROM deleted
+	SELECT * INTO #inserted FROM inserted
+
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
+	
+	EXEC InsertIntoAuditLog 'BreakerOperation', 'ID', @id
+	
+	DROP TABLE #inserted
+	DROP TABLE #deleted
+
+END
+GO
+
+CREATE TRIGGER BreakerOperation_AuditDelete
+   ON  BreakerOperation
+   AFTER DELETE
+AS 
+BEGIN
+	
+	SET NOCOUNT ON;
+	
+	SELECT * INTO #deleted FROM deleted
+		
+	DECLARE @id NVARCHAR(MAX)		
+	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
+
+	EXEC InsertIntoAuditLog 'BreakerOperation', 'ID', @id, '1'
+		
+	DROP TABLE #deleted
+
+END
+GO
+
 
 
 ----- Email Templates -----

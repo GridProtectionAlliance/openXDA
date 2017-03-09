@@ -3705,6 +3705,54 @@ namespace openXDA
 
         #endregion
 
+        #region [BreakerOperation Operations]
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(openXDA.Model.BreakerOperation), RecordOperation.QueryRecordCount)]
+        public int QueryBreakerOperationCount(int eventId, string filterString)
+        {
+            return DataContext.Table<BreakerView>().QueryRecordCount(new RecordRestriction("EventID = {0}", eventId));
+        }
+
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(openXDA.Model.BreakerOperation), RecordOperation.QueryRecords)]
+        public IEnumerable<BreakerView> QueryBreakerOperations(int eventId, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<BreakerView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("EventID = {0}", eventId));
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(openXDA.Model.BreakerOperation), RecordOperation.DeleteRecord)]
+        public void DeleteBreakerOperation(int id)
+        {
+            CascadeDelete("BreakerOperation", $"ID={id}");
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(openXDA.Model.BreakerOperation), RecordOperation.CreateNewRecord)]
+        public BreakerView NewBreakerOperation()
+        {
+            return new BreakerView();
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(openXDA.Model.BreakerOperation), RecordOperation.AddNewRecord)]
+        public void AddNewBreakerOperation(openXDA.Model.BreakerOperation record)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(openXDA.Model.BreakerOperation), RecordOperation.UpdateRecord)]
+        public void UpdateBreakerOperation(BreakerView record)
+        {
+            openXDA.Model.BreakerOperation bo = DataContext.Table<openXDA.Model.BreakerOperation>().QueryRecords(restriction: new RecordRestriction("ID = {0}", record.ID)).FirstOrDefault();
+            bo.TripCoilEnergized = DateTime.Parse(record.Energized);
+            bo.BreakerOperationTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM BreakerOperationType WHERE Name = {0}", record.OperationType);
+            DataContext.Table<openXDA.Model.BreakerOperation>().UpdateRecord(bo);
+        }
+
+        #endregion
+
         #region [BreakersForDay Operations]
 
         public IEnumerable<BreakerView> GetBreakersForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
@@ -4758,6 +4806,19 @@ namespace openXDA
                 endDate = DateTime.UtcNow;
                 startDate = endDate.AddDays(-30);
             }
+            else if (timeRangeSplit[0] == "4") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-90);
+            }
+
+            else if (timeRangeSplit[0] == "5") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-365);
+            }
+
+
 
             else // default to 2 weeks
             {
