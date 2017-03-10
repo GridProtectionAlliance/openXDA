@@ -9,7 +9,8 @@ namespace openXDA.Model
     public class SiteSummary
     {
         [PrimaryKey]
-        public int MeterID { get; set; }
+        [Searchable]
+        public string MeterID { get; set; }
         public double Completeness { get; set; }
         public double Correctness { get; set; }
         public int Events { get; set; }

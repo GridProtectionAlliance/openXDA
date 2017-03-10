@@ -4554,20 +4554,21 @@ namespace openXDA
             DateTime endDate = dTuple.Item2;
 
             DataTable table = DataContext.Connection.RetrieveData(
-                " SELECT Meter.ID AS MeterID, " +
-                "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
-                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
-                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances, " +
-                "   (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN {0} AND {1} AND RK = 1) AS Faults, " +
-                "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
-                "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
-                " FROM Meter Left Join " +
-                "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
-                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
-                " GROUP BY Meter.ID ", startDate, endDate, filterId);
+            @"SELECT
+                   Meter.Name AS MeterID,
+                   (SELECT SUM(100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}) FROM MeterDataQualitySummary WHERE MeterID = Meter.ID AND MeterDataQualitySummary.Date BETWEEN {0} AND {1}) as Completeness,
+                   (SELECT SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}) FROM MeterDataQualitySummary WHERE MeterID = Meter.ID AND MeterDataQualitySummary.Date BETWEEN {0} AND {1}) as Correctness,
+	               (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN(SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS[Events],
+                   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1}) AS Disturbances,
+                   (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN {0} AND {1} AND RK = 1) AS Faults,
+                   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN(SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2) AND Date BETWEEN {0} AND {1}) AS MaxCurrent,
 
-            return table.Select().Select(x => DataContext.Table<SiteSummary>().LoadRecord(x)).Count();
+                  (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN(SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1) AND Date BETWEEN {0} AND {1}) AS MinVoltage
+            FROM Meter
+            WHERE Meter.ID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ','))
+            ", startDate, endDate, filterId);
+
+            return table.Select($"MeterID LIKE '%{filterString}%'").Select(x => DataContext.Table<SiteSummary>().LoadRecord(x)).Count();
         }
 
         [AuthorizeHubRole("*")]
@@ -4577,30 +4578,47 @@ namespace openXDA
             Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
             DateTime startDate = dTuple.Item1;
             DateTime endDate = dTuple.Item2;
+            DataTable table = new DataTable();
 
-            DataTable table = DataContext.Connection.RetrieveData(
-                " SELECT Meter.ID AS MeterID, " +
-                "   COALESCE(SUM(100 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Completeness, " +
-                "   COALESCE(SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, {0}, {1}), 0) as Correctness, " +
-                "   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN {0} AND {1} AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = {2}), ','))) AS Events, " +
-                "   (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN {0} AND {1} AND PhaseID=13) AS Disturbances, " +
-                "   (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN {0} AND {1} AND RK = 1) AS Faults, " +
-                "   (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2)) AS MaxCurrent," +
-                "   (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1)) AS MinVoltage " +
-                " FROM Meter Left Join " +
-                "      MeterDataQualitySummary On Meter.ID = MeterDataQualitySummary.MeterID " +
-                " WHERE Meter.ID IN(Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {2}), ',')) " +
-                " GROUP BY Meter.ID ", startDate, endDate, filterId);
-
-
-
-            TableOperations<SiteSummary> ss = new TableOperations<SiteSummary>(DataContext.Connection);
-            foreach (DataRow row in table.Select())
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
-                ss.LoadRecord(row);
+                sc.CommandText = "dbo.GetSiteSummaries";
+                sc.CommandType = CommandType.StoredProcedure;
+                sc.CommandTimeout = 600;
+                IDbDataParameter param1 = sc.CreateParameter();
+                param1.ParameterName = "@startDate";
+                param1.Value = startDate;
+                IDbDataParameter param2 = sc.CreateParameter();
+                param2.ParameterName = "@endDate";
+                param2.Value = endDate;
+                IDbDataParameter param3 = sc.CreateParameter();
+                param3.ParameterName = "@filterID";
+                param3.Value = filterId;
+                IDbDataParameter param4 = sc.CreateParameter();
+                param4.ParameterName = "@Page";
+                param4.Value = page;
+                IDbDataParameter param5 = sc.CreateParameter();
+                param5.ParameterName = "@RecsPerPage";
+                param5.Value = pageSize;
+                IDbDataParameter param6 = sc.CreateParameter();
+                param6.ParameterName = "@orderBy";
+                param6.Value = $"[{sortField}] {(ascending? "ASC":"DESC")}";
+
+
+                sc.Parameters.Add(param1);
+                sc.Parameters.Add(param2);
+                sc.Parameters.Add(param3);
+                sc.Parameters.Add(param4);
+                sc.Parameters.Add(param5);
+                sc.Parameters.Add(param6);
+
+                IDataReader rdr = sc.ExecuteReader();
+                table.Load(rdr);
+
+
             }
 
-            return table.Select(null, sortField + (ascending ? " ASC" : " DESC")).Skip(pageSize*(page - 1)).Take(pageSize).Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
+            return table.Select($"MeterID LIKE '%{filterString}%'").Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]

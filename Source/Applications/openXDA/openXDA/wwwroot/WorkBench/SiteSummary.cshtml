@@ -65,7 +65,7 @@
 
 @helper BodyRows()
 {
-    <td width="20%" class="text-left valign-middle" data-bind="text: lookupMeterName(MeterID)"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: MeterID"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Completeness.toFixed(2)"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Correctness.toFixed(2)"></td>
     <td width="10%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForMeter.cshtml?MeterID=' + MeterID + '&Filter='+ getFilter() }, text: Events"></a></td>
@@ -85,7 +85,6 @@
 @section Scripts {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<SiteSummary, DataHub>(ViewBag, "MeterID", null, ViewBag.defaultFilter))
-        @Raw(AppModel.RenderAbstract<Meter>("Name", "ID", "lookupMeterName", "meterName"))
         
         $('#globalFilter').change(function (event) {
             viewModel.setQueryRecordCount(function (filterText) {

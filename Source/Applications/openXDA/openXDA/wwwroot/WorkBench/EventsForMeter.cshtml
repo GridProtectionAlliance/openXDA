@@ -123,7 +123,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EventForMeter, DataHub>(ViewBag, "ID", null, "\'" + ViewBag.MeterID + "\'", ViewBag.Filter))
+        @Raw(dataContext.RenderViewModelConfiguration<EventForMeter, DataHub>(ViewBag, "ID", null, ViewBag.MeterID, ViewBag.Filter))
 
         $('#addNewEditDialog').on('shown.bs.modal', function () {
         });
