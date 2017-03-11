@@ -514,7 +514,7 @@ namespace FaultData.DataResources
                 foreach (BooleanExpression.Variable variable in expression.Variables)
                 {
                     if (!digitalLookup.TryGetValue(variable.Identifier, out variable.Value))
-                        throw new Exception($"Channel '{variable.Identifier}' that was required for fault detection logic was missing from the meter data set.");
+                        Log.Warn($"Channel '{variable.Identifier}' that was required for fault detection logic was missing from the meter data set.");
                 }
 
                 // Evaluate the boolean expression
