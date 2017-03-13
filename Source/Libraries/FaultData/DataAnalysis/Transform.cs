@@ -106,7 +106,11 @@ namespace FaultData.DataAnalysis
                     DataPoint p1 = dataSeries[index];
                     DataPoint p2 = dataSeries[index + 1];
                     double cycleDiff = (p2.Time - p1.Time).TotalSeconds * frequency;
-                    return (cycleDiff >= 0.25);
+
+                    // Detect gaps larger than a quarter cycle.
+                    // Tolerance of 0.000062 calculated
+                    // assuming 3.999 samples per cycle
+                    return (cycleDiff > 0.250062);
                 })
                 .ToList();
 
