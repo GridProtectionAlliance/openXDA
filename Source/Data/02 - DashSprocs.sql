@@ -171,6 +171,10 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
+DECLARE @PivotColumns NVARCHAR(MAX) = N''
+DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+DECLARE @SQLStatement NVARCHAR(MAX) = N''
+
 create table #TEMP (Name varchar(max))
 insert into #TEMP SELECT Name FROM (Select Distinct Name FROM BreakerOperationType) as t
 
@@ -1159,7 +1163,6 @@ DECLARE @PivotColumns NVARCHAR(MAX) = N''
 DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
-SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
 FROM (Select Distinct Line.VoltageKV 
 		FROM Line) AS t
