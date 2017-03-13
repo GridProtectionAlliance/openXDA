@@ -37,6 +37,7 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using log4net;
+using static FaultData.Database.MeterData;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
 
 namespace FaultData.DataOperations
@@ -312,8 +313,8 @@ namespace FaultData.DataOperations
         private MeterDataSet m_meterDataSet;
 
         private DataContextLookup<string, Phase> m_phaseLookup;
-        private MeterData.BreakerOperationDataTable m_breakerOperationTable;
-        private List<Tuple<EventKey, MeterData.BreakerOperationRow>> m_breakerOperations;
+        private BreakerOperationDataTable m_breakerOperationTable;
+        private List<Tuple<EventKey, BreakerOperationRow>> m_breakerOperations;
 
         #endregion
 
@@ -360,8 +361,8 @@ namespace FaultData.DataOperations
             m_dbAdapterContainer = dbAdapterContainer;
 
             m_phaseLookup = new DataContextLookup<string, Phase>(dbAdapterContainer.GetAdapter<MeterInfoDataContext>(), phase => phase.Name);
-            m_breakerOperationTable = new MeterData.BreakerOperationDataTable();
-            m_breakerOperations = new List<Tuple<EventKey, MeterData.BreakerOperationRow>>();
+            m_breakerOperationTable = new BreakerOperationDataTable();
+            m_breakerOperations = new List<Tuple<EventKey, BreakerOperationRow>>();
 
             LoadBreakerOperationTypes(dbAdapterContainer);
         }
@@ -389,9 +390,9 @@ namespace FaultData.DataOperations
 
         public override void Load(DbAdapterContainer dbAdapterContainer)
         {
-            MeterData.EventDataTable eventTable;
-            Dictionary<EventKey, MeterData.EventRow> eventLookup;
-            MeterData.EventRow eventRow;
+            EventDataTable eventTable;
+            Dictionary<EventKey, EventRow> eventLookup;
+            EventRow eventRow;
             BulkLoader bulkLoader;
 
             eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(m_meterDataSet.FileGroup.ID);
@@ -407,7 +408,7 @@ namespace FaultData.DataOperations
                     return grouping.First();
                 });
 
-            foreach (Tuple<EventKey, MeterData.BreakerOperationRow> breakerOperation in m_breakerOperations)
+            foreach (Tuple<EventKey, BreakerOperationRow> breakerOperation in m_breakerOperations)
             {
                 if (eventLookup.TryGetValue(breakerOperation.Item1, out eventRow))
                 {
@@ -458,20 +459,20 @@ namespace FaultData.DataOperations
                     PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
                     PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
 
-                    MeterData.BreakerOperationRow breakerOperationRow = GetBreakerOperationRow(breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
+                    BreakerOperationRow breakerOperationRow = GetBreakerOperationRow(breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
 
                     m_breakerOperations.Add(Tuple.Create(CreateEventKey(dataGroup), breakerOperationRow));
                 }
             }
         }
 
-        private MeterData.BreakerOperationRow GetBreakerOperationRow(string breakerNumber, BreakerTiming breakerTiming, PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
+        private BreakerOperationRow GetBreakerOperationRow(string breakerNumber, BreakerTiming breakerTiming, PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
         {
             double maxTiming = GetMaxTiming(aPhaseTiming, bPhaseTiming, cPhaseTiming);
             string phase = GetLatestPhase(aPhaseTiming, bPhaseTiming, cPhaseTiming);
             BreakerOperationType type = GetBreakerOperationType(maxTiming, breakerTiming.Speed);
 
-            MeterData.BreakerOperationRow breakerOperationRow = m_breakerOperationTable.NewBreakerOperationRow();
+            BreakerOperationRow breakerOperationRow = m_breakerOperationTable.NewBreakerOperationRow();
 
             breakerOperationRow.PhaseID = m_phaseLookup.GetOrAdd(phase, name => new Phase() { Name = name, Description = name }).ID;
             breakerOperationRow.BreakerOperationTypeID = s_breakerOperationTypeLookup[type];
@@ -597,7 +598,7 @@ namespace FaultData.DataOperations
             return Tuple.Create(dataGroup.Line.ID, dataGroup.StartTime, dataGroup.EndTime);
         }
 
-        private EventKey CreateEventKey(MeterData.EventRow evt)
+        private EventKey CreateEventKey(EventRow evt)
         {
             return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
         }
@@ -616,7 +617,7 @@ namespace FaultData.DataOperations
 
         private Dictionary<BreakerOperationType, int> GetBreakerOperationTypeLookup(DbAdapterContainer dbAdapterContainer)
         {
-            MeterData.BreakerOperationTypeDataTable breakerOperationTypeTable = new MeterData.BreakerOperationTypeDataTable();
+            BreakerOperationTypeDataTable breakerOperationTypeTable = new BreakerOperationTypeDataTable();
             BreakerOperationType breakerOperationType = default(BreakerOperationType);
 
             foreach (BreakerOperationType operationType in Enum.GetValues(typeof(BreakerOperationType)))
@@ -638,7 +639,7 @@ namespace FaultData.DataOperations
 
             dbAdapterContainer.GetAdapter<BreakerOperationTypeTableAdapter>().Fill(breakerOperationTypeTable);
 
-            foreach (IGrouping<string, BreakerOperationType> grouping in breakerOperationTypeTable.GroupBy(row => row.Name))
+            foreach (IGrouping<string, BreakerOperationTypeRow> grouping in breakerOperationTypeTable.GroupBy(row => row.Name))
             {
                 if (grouping.Count() > 1)
                     Log.Warn($"Found duplicate breaker operation type: {grouping.Key}");
