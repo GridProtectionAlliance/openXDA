@@ -14,9 +14,6 @@
     <Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
       <!-- openXDA Database-->
       <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
-        <Feature Id="DashScriptFeature" Title="DashSprocs.sql" AllowAdvertise="no" Description="Installs the stored procedures required for PQ Dashboard integration.">
-          <ComponentRef Id="DashScript" />
-        </Feature>
         <Feature Id="EnableEventDataSqlClrFeature" Title="EnableEventDataSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying event data from the openXDA database (requires installation of SAFE assemblies).">
           <ComponentRef Id="EnableEventDataSqlClr" />
         </Feature>
@@ -25,6 +22,7 @@
         </Feature>
 
         <ComponentRef Id="DBScript" />
+        <ComponentRef Id="DashScript" />
         <ComponentRef Id="DefaultSettings" />
         <ComponentRef Id="DefaultChannelTypes" />
         <ComponentRef Id="DefaultTrendingAlarms" />
@@ -238,8 +236,8 @@
       
       <Custom Action="openXDA.sql.SetProperty" After="openHistorian.XDALink.SqlClr"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="openXDA.sql" After="openXDA.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
-      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[&DashScriptFeature=3 OR (!DashScriptFeature=3 AND &DashScriptFeature=-1)]]></Custom>
-      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[&DashScriptFeature=3 OR (!DashScriptFeature=3 AND &DashScriptFeature=-1)]]></Custom>
+      <Custom Action="DashSprocs.sql.SetProperty" After="openXDA.sql"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
+      <Custom Action="DashSprocs.sql" After="DashSprocs.sql.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="EnableEventDataSqlClr.sql.SetProperty" After="DashSprocs.sql"><![CDATA[&EnableEventDataSqlClrFeature=3 OR (!EnableEventDataSqlClrFeature=3 AND &EnableEventDataSqlClrFeature=-1)]]></Custom>
       <Custom Action="EnableEventDataSqlClr.sql" After="EnableEventDataSqlClr.sql.SetProperty"><![CDATA[&EnableEventDataSqlClrFeature=3 OR (!EnableEventDataSqlClrFeature=3 AND &EnableEventDataSqlClrFeature=-1)]]></Custom>
       <Custom Action="EnableHistorianSqlClr.sql.SetProperty" After="EnableEventDataSqlClr.sql"><![CDATA[&EnableHistorianSqlClrFeature=3 OR (!EnableHistorianSqlClrFeature=3 AND &EnableHistorianSqlClrFeature=-1)]]></Custom>
@@ -357,9 +355,6 @@
       <Component Id="XDAUpgradeValidation">
         <File Id="XDAUpgradeValidation.exe" Name="$(var.XDAUpgradeValidation.TargetFileName)" Source="$(var.XDAUpgradeValidation.TargetPath)" />
       </Component>
-      
-      <!-- Database Scripts -->
-      <ComponentRef Id="DBScript" />
       
       <!-- XDA Libraries -->
       <ComponentRef Id="FaultAlgorithms" />
