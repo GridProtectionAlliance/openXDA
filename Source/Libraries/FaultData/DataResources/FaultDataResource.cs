@@ -603,6 +603,8 @@ namespace FaultData.DataResources
             if ((object)currentFault != null)
                 currentFault.EndSample = rms.DataPoints.Count - 1;
 
+            faults.RemoveWhere(fault => fault.StartSample >= fault.EndSample);
+
             return faults;
         }
 
