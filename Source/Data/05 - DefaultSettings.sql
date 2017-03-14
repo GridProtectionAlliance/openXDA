@@ -166,3 +166,12 @@ GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsHistorianData', 0)
 GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('EventChart', 'Breaker', 0)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('EventChart', 'Test', 0)
+GO
+
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('EventChart', 'Transient', 0)
+GO

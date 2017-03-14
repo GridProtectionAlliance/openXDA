@@ -1011,7 +1011,7 @@ GO
 INSERT INTO EventType(Name, Description) VALUES ('Other', 'Other')
 GO
 
-INSERT INTO EventType(Name, Description) VALUES ('Testing', 'Testing')
+INSERT INTO EventType(Name, Description) VALUES ('Test', 'Test')
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Breaker', 'Breaker')
