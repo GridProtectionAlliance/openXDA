@@ -61,18 +61,24 @@ namespace FaultData.DataOperations
             // Fields
             private XValue m_timeEnergized;
             private XValue m_timeCleared;
+            private double m_timing;
             private double m_speed;
 
             #endregion
 
             #region [ Constructors ]
 
-            public BreakerTiming(XValue timeEnergized, DataSeries statusChannel, double speed)
+            public BreakerTiming(XValue timeEnergized, DataSeries statusChannel, double systemFrequency, double speed)
             {
                 m_timeEnergized = timeEnergized;
 
                 if ((object)statusChannel != null)
                     m_timeCleared = FindStatusBitSet(statusChannel, timeEnergized.Index);
+
+                if ((object)m_timeCleared != null)
+                    m_timing = (m_timeCleared.Time - m_timeEnergized.Time).TotalSeconds * systemFrequency;
+                else
+                    m_timing = double.NaN;
 
                 m_speed = speed;
             }
@@ -94,6 +100,14 @@ namespace FaultData.DataOperations
                 get
                 {
                     return m_timeCleared;
+                }
+            }
+
+            public double Timing
+            {
+                get
+                {
+                    return m_timing;
                 }
             }
 
@@ -195,6 +209,9 @@ namespace FaultData.DataOperations
             {
                 int cycleIndex;
                 int sampleCleared;
+
+                if ((object)m_waveform == null || (object)m_cycleDataGroup == null)
+                    return null;
 
                 cycleIndex = m_cycleDataGroup.Peak.DataPoints
                     .Skip(startIndex)
@@ -312,6 +329,7 @@ namespace FaultData.DataOperations
         private DbAdapterContainer m_dbAdapterContainer;
         private MeterDataSet m_meterDataSet;
 
+        private HashSet<string> m_breakerCurrents;
         private DataContextLookup<string, Phase> m_phaseLookup;
         private BreakerOperationDataTable m_breakerOperationTable;
         private List<Tuple<EventKey, BreakerOperationRow>> m_breakerOperations;
@@ -377,6 +395,12 @@ namespace FaultData.DataOperations
 
             cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
 
+            m_breakerCurrents = new HashSet<string>(cycleDataResource.DataGroups
+                .Where(dg => dg.Line.AssetKey.StartsWith("BR"))
+                .SelectMany(dg => dg.DataSeries)
+                .SelectMany(ds => ds.SeriesInfo.Channel.BreakerChannels)
+                .Select(ch => ch.BreakerNumber));
+
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
                 dataGroup = cycleDataResource.DataGroups[i];
@@ -431,6 +455,11 @@ namespace FaultData.DataOperations
                 .Distinct()
                 .ToList();
 
+            // If the breaker currents are defined for breaker-and-a-half or ring bus configurations,
+            // skip this data group so that timing is only applied to the breaker currents
+            if (breakerNumbers.Count > 1 && breakerNumbers.Any(num => m_breakerCurrents.Contains(num)))
+                return;
+
             foreach (string breakerNumber in breakerNumbers)
             {
                 double breakerSpeed = ConvertBreakerSpeed(m_dbAdapterContainer.Connection.ExecuteScalar("SELECT BreakerSpeed FROM MaximoBreaker WHERE BreakerNum = @breakerNumber", breakerNumber));
@@ -453,7 +482,7 @@ namespace FaultData.DataOperations
 
                 foreach (XValue breakerOperation in breakerOperations)
                 {
-                    BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, breakerSpeed);
+                    BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, m_systemFrequency, breakerSpeed);
 
                     PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
                     PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
@@ -468,7 +497,7 @@ namespace FaultData.DataOperations
 
         private BreakerOperationRow GetBreakerOperationRow(string breakerNumber, BreakerTiming breakerTiming, PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
         {
-            double maxTiming = GetMaxTiming(aPhaseTiming, bPhaseTiming, cPhaseTiming);
+            double maxTiming = GetMaxTiming(breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
             string phase = GetLatestPhase(aPhaseTiming, bPhaseTiming, cPhaseTiming);
             BreakerOperationType type = GetBreakerOperationType(maxTiming, breakerTiming.Speed);
 
@@ -520,16 +549,16 @@ namespace FaultData.DataOperations
             return ranges;
         }
 
-        private double GetMaxTiming(PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
+        private double GetMaxTiming(BreakerTiming breakerTiming, PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
         {
             if (!aPhaseTiming.IsValid)
-                return double.NaN;
+                return breakerTiming.Timing;
 
             if (!bPhaseTiming.IsValid)
-                return double.NaN;
+                return breakerTiming.Timing;
 
             if (!cPhaseTiming.IsValid)
-                return double.NaN;
+                return breakerTiming.Timing;
 
             return Common.Max(aPhaseTiming.Timing, bPhaseTiming.Timing, cPhaseTiming.Timing);
         }
