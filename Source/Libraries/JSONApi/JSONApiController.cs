@@ -5,13 +5,15 @@ using System.Data;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Web.Model;
-using JSONApi.Model;
+using openXDA.Adapters.Model;
 
-namespace JSONApi
+namespace openXDA.Adapters
 {
+    //[EnableCors(origins: "*", headers: "*", methods: "*")]
     public class JSONApiController : ApiController
     {
 

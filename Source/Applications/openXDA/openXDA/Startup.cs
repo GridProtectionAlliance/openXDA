@@ -26,13 +26,16 @@ using System.Net;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Web.Http;
+using GSF.Configuration;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
 using JSONApi;
+using openXDA.Adapters;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
 using Newtonsoft.Json;
 using Owin;
+using Microsoft.Owin;
 using openXDA.Model;
 
 namespace openXDA
@@ -51,22 +54,26 @@ namespace openXDA
             // Load security hub in application domain before establishing SignalR hub configuration
             using (new SecurityHub()) { }
             using (new JSONApiController()) { }
+            using (new GrafanaController()) { }
 
             // Configuration Windows Authentication for self-hosted web service
             HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
             listener.AuthenticationSchemeSelectorDelegate = AuthenticationSchemeForClient;
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
-
             // Setup resolver for web page controller instances
             httpConfig.DependencyResolver = WebPageController.GetDependencyResolver(WebServer.Default, Program.Host.DefaultWebPage, new AppModel(), typeof(AppModel));
 #if DEBUG
             // Enabled detailed client errors
             hubConfig.EnableDetailedErrors = true;
 #endif
+
+            httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value ?? "*", "*", "*"));
+            //app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
-
+            
             // Map custom API controllers
             httpConfig.Routes.MapHttpRoute(
                 name: "CustomAPIs",

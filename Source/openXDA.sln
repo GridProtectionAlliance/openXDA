@@ -106,7 +106,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WixFolderGen", "Application
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.SqlClr", "Libraries\openXDA.SqlClr\openXDA.SqlClr.csproj", "{48D080CC-6539-4AB0-B756-CDC5A28B3AB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONApi", "Libraries\JSONApi\JSONApi.csproj", "{EC5ADF62-C5C8-4A0A-955A-ABEB54E78816}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Adapters", "Libraries\JSONApi\openXDA.Adapters.csproj", "{EC5ADF62-C5C8-4A0A-955A-ABEB54E78816}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAUpgradeValidation", "Tools\XDAUpgradeValidation\XDAUpgradeValidation.csproj", "{9441B6B4-3BBE-4CDD-BCDF-6881B1EA02D4}"
 EndProject

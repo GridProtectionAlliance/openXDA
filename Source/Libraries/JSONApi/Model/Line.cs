@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GSF.Data.Model;
 
-namespace JSONApi
+namespace openXDA.Adapters.Model
 {
     public class Line
     {

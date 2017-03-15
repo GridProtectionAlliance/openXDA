@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JSONApi.Model
+namespace openXDA.Adapters.Model
 {
     public class EventData
     {

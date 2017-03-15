@@ -48,7 +48,7 @@ using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
 using GSF.Identity;
-using JSONApi;
+using openXDA.Adapters;
 using openXDA.Model;
 using openHistorian.XDALink;
 using Channel = openXDA.Model.Channel;

@@ -390,12 +390,17 @@
       <ComponentRef Id="openHistorian.Core" />
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
+      <ComponentRef Id="AjaxMin" />
+      <ComponentRef Id="DCSoup" />
+      <ComponentRef Id="MathNet.Numerics" />
+      <ComponentRef Id="Microsoft.AspNet.Cors" />
       <ComponentRef Id="Microsoft.AspNet.SignalR.Core" />
-      <ComponentRef Id="System.Net.Http.Formatting" />
+      <ComponentRef Id="Microsoft.AspNet.WebApi.Cors" />
       <ComponentRef Id="System.Web.Http" />
       <ComponentRef Id="System.Web.Http.Owin" />
       <ComponentRef Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform" />
       <ComponentRef Id="Microsoft.Owin" />
+      <ComponentRef Id="Microsoft.Owin.Cors" />
       <ComponentRef Id="Microsoft.Owin.Diagnostics" />
       <ComponentRef Id="Microsoft.Owin.Host.HttpListener" />
       <ComponentRef Id="Microsoft.Owin.Hosting" />
@@ -404,10 +409,10 @@
       <ComponentRef Id="Owin" />
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
-      <ComponentRef Id="AjaxMin" />
       <ComponentRef Id="Microsoft.Web.Infrastructure" />
       <ComponentRef Id="System.Net.Http" />
       <ComponentRef Id="System.Net.Http.Extensions" />
+      <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Net.Http.Primitives" />
       <ComponentRef Id="System.Net.Http.WebRequest" />
       <ComponentRef Id="System.Web.Helpers" />
@@ -530,8 +535,23 @@
       </Component>
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
+      <Component Id="AjaxMin">
+        <File Id="AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll" />
+      </Component>
+      <Component Id="DCSoup">
+        <File Id="Supremes.dll" Name="Supremes.dll" Source="$(var.SolutionDir)Dependencies\NuGet\dcsoup.0.2.0\lib\net45\Supremes.dll" />
+      </Component>
+      <Component Id="MathNet.Numerics">
+        <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\MathNet.Numerics.3.17.0\lib\net40\MathNet.Numerics.dll" />
+      </Component>
+      <Component Id="Microsoft.AspNet.Cors">
+        <File Id="System.Web.Cors.dll" Name="System.Web.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.Cors.5.2.3\lib\net45\System.Web.Cors.dll" />
+      </Component>
       <Component Id="Microsoft.AspNet.SignalR.Core">
         <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll" />
+      </Component>
+      <Component Id="Microsoft.AspNet.WebApi.Cors">
+        <File Id="System.Web.Http.Cors.dll" Name="System.Web.Http.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebApi.Cors.5.2.3\lib\net45\System.Web.Http.Cors.dll" />
       </Component>
       <Component Id="System.Net.Http.Formatting">
         <File Id="System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll" />
@@ -546,7 +566,10 @@
         <File Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Name="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
       </Component>
       <Component Id="Microsoft.Owin">
-        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.2.1.0\lib\net45\Microsoft.Owin.dll" />
+        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll" />
+      </Component>
+      <Component Id="Microsoft.Owin.Cors">
+        <File Id="Microsoft.Owin.Cors.dll" Name="Microsoft.Owin.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Diagnostics">
         <File Id="Microsoft.Owin.Diagnostics.dll" Name="Microsoft.Owin.Diagnostics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Diagnostics.2.1.0\lib\net40\Microsoft.Owin.Diagnostics.dll" />
@@ -571,9 +594,6 @@
       </Component>
       <Component Id="System.Web.Razor">
         <File Id="System.Web.Razor.dll" Name="System.Web.Razor.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll" />
-      </Component>
-      <Component Id="AjaxMin">
-        <File Id="AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll" />
       </Component>
       <Component Id="Microsoft.Web.Infrastructure">
         <File Id="Microsoft.Web.Infrastructure.dll" Name="Microsoft.Web.Infrastructure.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll" />

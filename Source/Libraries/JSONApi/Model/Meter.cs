@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
-namespace JSONApi
+namespace openXDA.Adapters.Model
 {
     public class Meter
     {

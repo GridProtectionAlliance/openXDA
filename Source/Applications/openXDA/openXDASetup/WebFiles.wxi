@@ -3868,6 +3868,12 @@
   <Component Id="Workbench_AuditLog_cshtml">
     <File Id="Workbench_AuditLog.cshtml" Name="AuditLog.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\AuditLog.cshtml" />
   </Component>
+  <Component Id="Workbench_Breaker_cshtml">
+    <File Id="Workbench_Breaker.cshtml" Name="Breaker.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\Breaker.cshtml" />
+  </Component>
+  <Component Id="Workbench_BreakersForDay_Angular_cshtml">
+    <File Id="Workbench_BreakersForDay_Angular.cshtml" Name="BreakersForDay - Angular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\BreakersForDay - Angular.cshtml" />
+  </Component>
   <Component Id="Workbench_BreakersForDay_cshtml">
     <File Id="Workbench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\BreakersForDay.cshtml" />
   </Component>
