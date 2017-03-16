@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
@@ -71,6 +72,13 @@ namespace FaultData.DataReaders
             }
         }
 
+        [Setting]
+        public double SystemFrequency
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -108,7 +116,7 @@ namespace FaultData.DataReaders
             List<double> valueSamples;
 
             if ((object)m_eventFile == null)
-                m_eventFile = EventFile.Parse(filePath);
+                m_eventFile = EventFile.Parse(filePath, SystemFrequency);
 
             if (!m_eventFile.EventReports.Any() && !m_eventFile.CommaSeparatedEventReports.Any())
                 return;
