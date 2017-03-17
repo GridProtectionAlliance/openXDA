@@ -24,16 +24,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GrafanaAdapters;
 using System.Threading;
 using System.Web.Http.Cors;
 using GSF;
+using GSF.Data;
 using GSF.Web.Model;
 
 namespace JSONApi
@@ -49,81 +52,182 @@ namespace JSONApi
 
         // Nested Types
         //[EnableCors(origins: "*", headers: "*", methods: "*")]
-        private class openXDADataSource : GrafanaDataSourceBase
+        private class openXDADataSource : GrafanaDataSourceBase, IDisposable
         {
-            private readonly ulong m_baseTicks = (ulong)UnixTimeTag.BaseTicks.Value;
+            #region [ Members ]
 
-            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, bool decimate, Dictionary<ulong, string> targetMap)
+            // Fields
+            private readonly AdoDataConnection m_database;
+            private readonly long m_baseTicks;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public openXDADataSource()
             {
-                using (DataContext dataContext = new DataContext("systemSettings"))
-                {
-                    
-
-                }
-                return null;
+                m_baseTicks = UnixTimeTag.BaseTicks.Value;
+                m_database = new AdoDataConnection("systemSettings");
+                Metadata = new DataSet();
+                DataTable table = m_database.RetrieveData("SELECT * FROM ActiveMeasurements").Copy();
+                table.TableName = "ActiveMeasurements";
+                Metadata.Tables.Add(table);
+                InstanceName = "XDA";
             }
 
+            public void Dispose()
+            {
+                try
+                {
+                    if (!m_disposed)
+                        m_database?.Dispose();
+                }
+                finally
+                {
+                    m_disposed = true;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+            /// <summary>
+            /// Search data source for a target.
+            /// </summary>
+            /// <param name="request">Search target.</param>
             public override Task<string[]> Search(Target request)
             {
                 // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders
                 // For now, just return a truncated list of tag names
-                return Task.Factory.StartNew(() => { return new []{ "Event Counts", "Fault Counts", "Alarm Counts"}; });
+                string target = (request.target == "select metric" ? "" : request.target);
+                return Task.Factory.StartNew(() =>
+                {
+                    return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                });
             }
 
+
+            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap)
+            {
+                foreach (KeyValuePair<ulong, string> kvp in targetMap)
+                {
+                    DataTable data;
+                    switch (kvp.Value.Split('_')[kvp.Value.Split('_').Length - 1])
+                    {
+                        case "Event": // GlobalEventCount
+                            data = m_database.RetrieveData("SELECT * FROM Event WHERE StartTime >= {0} AND EndTime <= {1} AND MeterID Like {2}", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+
+                            foreach (DataRow row in data.Rows)
+                            {
+                                yield return new DataSourceValue
+                                {
+                                    Target = kvp.Value,
+                                    Time = (row.ConvertField<DateTime>("StartTime").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Value = 1
+                                };
+                            }
+
+                            break;
+                        case "Fault":
+                            data = m_database.RetrieveData("SELECT * FROM FaultSummary WHERE Inception Between {0} AND {1} AND Algorithm LIKE 'Simple' AND EventID IN (Select ID FROM Event WHERE MeterID = {2})", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+
+                            foreach (DataRow row in data.Rows)
+                            {
+                                yield return new DataSourceValue
+                                {
+                                    Target = kvp.Value,
+                                    Time = (row.ConvertField<DateTime>("Inception").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Value = 1
+                                };
+                            }
+
+                            break;
+                        case "Alarm":
+                            data = m_database.RetrieveData("SELECT * FROM ChannelAlarmSummary WHERE Date Between {0} AND {1} AND ChannelID IN (Select ID FROM Channel WHERE MeterID = {2})", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+
+                            foreach (DataRow row in data.Rows)
+                            {
+                                yield return new DataSourceValue
+                                {
+                                    Target = kvp.Value,
+                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Value = 1
+                                };
+                            }
+
+
+                            break;
+                        case "Trending":
+
+                            break;
+
+                        case "GlobalEvent":
+                            var numAlpha = new Regex("(?<Numeric>[0-9]*)(?<Alpha>[a-zA-Z]*)");
+                            var match = numAlpha.Match(interval);
+                            using (IDbCommand sc = m_database.Connection.CreateCommand())
+                            {
+                                sc.CommandText = "dbo.GetGlobalEventsForGrafana";
+                                sc.CommandType = CommandType.StoredProcedure;
+                                IDbDataParameter param1 = sc.CreateParameter();
+                                param1.ParameterName = "@startDate";
+                                param1.Value = startTime;
+                                IDbDataParameter param2 = sc.CreateParameter();
+                                param2.ParameterName = "@endDate";
+                                param2.Value = stopTime;
+                                IDbDataParameter param3 = sc.CreateParameter();
+                                param3.ParameterName = "@step";
+                                param3.Value = match.Groups["Numeric"].Value;
+                                IDbDataParameter param4 = sc.CreateParameter();
+                                param4.ParameterName = "@stepUnit";
+                                param4.Value = match.Groups["Alpha"].Value;
+                                IDbDataParameter param5 = sc.CreateParameter();
+                                param5.ParameterName = "@table";
+                                param5.Value = "EventCount";
+
+                                sc.Parameters.Add(param1);
+                                sc.Parameters.Add(param2);
+                                sc.Parameters.Add(param3);
+                                sc.Parameters.Add(param4);
+                                sc.Parameters.Add(param5);
+                                IDataReader rdr = sc.ExecuteReader();
+                                try
+                                {
+                                    while (rdr.Read())
+                                    {
+                                        yield return new DataSourceValue()
+                                        {
+                                            Target = targetMap.First().Value,
+                                            Time = (DateTime.Parse(rdr["Date"].ToString()).Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                            Value = int.Parse(rdr["Count"].ToString())
+                                        };
+                                    }
+                                }
+                                finally
+                                {
+                                    if (!rdr.IsClosed)
+                                    {
+                                        rdr.Close();
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+
+            #endregion
         }
 
         // Fields
         private openXDADataSource m_dataSource;
-
+        private bool m_disposed;
         #endregion
 
         #region [ Properties ]
 
-        private openXDADataSource DataSource
-        {
-            get
-            {
-                if ((object)m_dataSource == null)
-                {
-                    string uriPath = Request.RequestUri.PathAndQuery;
-                    string instanceName;
-
-                    if (uriPath.StartsWith(DefaultApiPath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // No instance provided in URL, use default instance name
-                        //instanceName = TrendValueAPI.DefaultInstanceName;
-                    }
-                    else
-                    {
-                        string[] pathElements = uriPath.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-
-                        if (pathElements.Length > 2)
-                            instanceName = pathElements[1].Trim();
-                        else
-                            throw new InvalidOperationException($"Unexpected API URL route destination encountered: {Request.RequestUri}");
-                    }
-
-                    //if (!string.IsNullOrWhiteSpace(instanceName))
-                    //{
-                    //    //LocalOutputAdapter adapterInstance = GetAdapterInstance(instanceName);
-
-                        //if ((object)adapterInstance != null)
-                        //{
-                            m_dataSource = new openXDADataSource()
-                            {
-                                //InstanceName = instanceName,
-                                //Metadata = adapterInstance.DataSource
-                            };
-                        //}
-                    //}
-                }
-
-                return m_dataSource;
-            }
-        }
-
+        private openXDADataSource DataSource => m_dataSource ?? (m_dataSource = new openXDADataSource());
         #endregion
-
 
         #region [ Methods ]
 
@@ -169,30 +273,27 @@ namespace JSONApi
             return DataSource?.Annotations(request, cancellationToken) ?? Task.FromResult(new List<AnnotationResponse>());
         }
 
-        #endregion
-
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly string DefaultApiPath = "/api/Grafana";
-
-        // Static Methods
-
-        //private static LocalOutputAdapter GetAdapterInstance(string instanceName)
-        //{
-        //    if (!string.IsNullOrWhiteSpace(instanceName))
-        //    {
-        //        LocalOutputAdapter adapterInstance;
-
-        //        if (LocalOutputAdapter.Instances.TryGetValue(instanceName, out adapterInstance))
-        //            return adapterInstance;
-        //    }
-
-        //    return null;
-        //}
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="GrafanaController"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                        m_dataSource?.Dispose();
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
 
         #endregion
-
     }
 }
