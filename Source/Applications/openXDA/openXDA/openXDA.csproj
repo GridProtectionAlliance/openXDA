@@ -399,7 +399,7 @@
       <Project>{11ae594d-2b2b-473c-8550-6bf62914c3e2}</Project>
       <Name>FaultData</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\JSONApi\openXDA.Adapters.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Adapters\openXDA.Adapters.csproj">
       <Project>{ec5adf62-c5c8-4a0a-955a-abeb54e78816}</Project>
       <Name>openXDA.Adapters</Name>
     </ProjectReference>
