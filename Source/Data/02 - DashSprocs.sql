@@ -2819,7 +2819,6 @@ GO
 -- selectSitesEventsDetailsByDate '07/19/2014', '0','jwalker'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectSitesEventsDetailsByDate]
-    -- Add the parameters for the stored procedure here
     @EventDate as DateTime,
     @MeterID as nvarchar(MAX),
     @username as nvarchar(4000)
@@ -2841,10 +2840,10 @@ BEGIN
 	FROM (Select Name FROM EventType) AS t
 
 	SET @SQLStatement =
-	' SELECT EventID, MeterID, Site, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
+	' SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate) EventID, MeterID, Site, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
 	' FROM ( ' +
 	'	SELECT ' +
-	'		(SELECT TOP 1 ID FROM EVENT e WHERE e.MeterID = Event.MeterID) as EventID, Event.MeterID, COUNT(*) AS EventCount, EventType.Name, Meter.Name as Site ' +
+	'		Event.MeterID, COUNT(*) AS EventCount, EventType.Name, Meter.Name as Site ' +
 	'		FROM Event JOIN '+
 	'		EventType ON Event.EventTypeID = EventType.ID JOIN' +
 	'		Meter ON Event.MeterID = Meter.ID' +
