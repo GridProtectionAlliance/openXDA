@@ -7,8 +7,8 @@
     <ProjectGuid>{EC5ADF62-C5C8-4A0A-955A-ABEB54E78816}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JSONApi</RootNamespace>
-    <AssemblyName>JSONApi</AssemblyName>
+    <RootNamespace>openXDA.Adapters</RootNamespace>
+    <AssemblyName>openXDA.Adapters</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

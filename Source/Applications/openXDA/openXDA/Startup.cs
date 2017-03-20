@@ -23,19 +23,15 @@
 
 using System;
 using System.Net;
-using System.Net.Http.Formatting;
-using System.Net.Http.Headers;
 using System.Web.Http;
 using GSF.Configuration;
 using GSF.Web.Hosting;
 using GSF.Web.Security;
-using JSONApi;
 using openXDA.Adapters;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
 using Newtonsoft.Json;
 using Owin;
-using Microsoft.Owin;
 using openXDA.Model;
 
 namespace openXDA

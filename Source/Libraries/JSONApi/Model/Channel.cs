@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using GSF.Data.Model;
+﻿using GSF.Data.Model;
 
 namespace openXDA.Adapters.Model
 {

@@ -28,24 +28,21 @@ using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
 using GrafanaAdapters;
 using System.Threading;
-using System.Web.Http.Cors;
 using GSF;
 using GSF.Data;
-using GSF.Web.Model;
 
-namespace JSONApi
+namespace openXDA.Adapters
 {
     /// <summary>
     /// Represents a REST based API for a simple JSON based Grafana data source.
     /// </summary>
-    
-    
+
+
     public class GrafanaController : ApiController
     {
         #region [ Members ]
