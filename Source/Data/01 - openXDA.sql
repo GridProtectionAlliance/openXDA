@@ -969,6 +969,7 @@ CREATE TABLE BreakerOperation
     BPhaseCleared DATETIME2 NOT NULL,
     CPhaseCleared DATETIME2 NOT NULL,
     BreakerTiming FLOAT NOT NULL,
+	StatusTiming FLOAT NOT NULL,
     APhaseBreakerTiming FLOAT NOT NULL,
     BPhaseBreakerTiming FLOAT NOT NULL,
     CPhaseBreakerTiming FLOAT NOT NULL,

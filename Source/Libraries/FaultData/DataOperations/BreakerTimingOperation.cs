@@ -512,6 +512,7 @@ namespace FaultData.DataOperations
             breakerOperationRow.BPhaseCleared = bPhaseTiming.IsValid ? bPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
             breakerOperationRow.CPhaseCleared = cPhaseTiming.IsValid ? cPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
             breakerOperationRow.BreakerTiming = NotNaN(maxTiming);
+            breakerOperationRow.StatusTiming = NotNaN(breakerTiming.Timing);
             breakerOperationRow.APhaseBreakerTiming = NotNaN(aPhaseTiming.Timing);
             breakerOperationRow.BPhaseBreakerTiming = NotNaN(bPhaseTiming.Timing);
             breakerOperationRow.CPhaseBreakerTiming = NotNaN(cPhaseTiming.Timing);
