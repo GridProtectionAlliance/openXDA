@@ -2424,6 +2424,7 @@ BEGIN
         MeterLine.LineName AS linename,
         Phase.Name AS phasename,
         CAST(BreakerOperation.BreakerTiming AS DECIMAL(16,5)) AS timing,
+        CAST(BreakerOperation.StatusTiming AS DECIMAL(16,5)) AS statustiming,
         BreakerOperation.BreakerSpeed AS speed,
         BreakerOperationType.Name AS operationtype 
     FROM
