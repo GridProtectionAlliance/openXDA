@@ -2400,7 +2400,6 @@ GO
 
 -- =============================================
 CREATE PROCEDURE [dbo].[selectSitesBreakersDetailsByDate]
-    -- Add the parameters for the stored procedure here
     @EventDate AS DATETIME,
     @MeterID AS NVARCHAR(MAX),
     @username AS NVARCHAR(4000)
@@ -2419,6 +2418,7 @@ BEGIN
         Meter.ID AS meterid, 
         Event.ID AS theeventid, 
         EventType.Name AS eventtype, 
+        BreakerOperation.ID AS breakeroperationid,
         CAST(CAST(BreakerOperation.TripCoilEnergized AS TIME) AS NVARCHAR(100)) AS energized,
         BreakerOperation.BreakerNumber AS breakernumber,
         MeterLine.LineName AS linename,
@@ -2439,7 +2439,6 @@ BEGIN
     WHERE
         Meter.ID IN (SELECT * FROM @MeterIDs) AND
         CAST(TripCoilEnergized AS DATE) = @thedate
-
 END
 GO
 

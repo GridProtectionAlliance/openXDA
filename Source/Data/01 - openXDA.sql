@@ -2761,11 +2761,13 @@ SELECT
     Event.UpdatedBy,
     MeterLine.LineName,
     Meter.Name AS MeterName,
+    MeterLocation.Name AS StationName,
     Line.Length,
     EventType.Name AS EventTypeName
 FROM
     Event JOIN
     Meter ON Event.MeterID = Meter.ID JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
     Line ON Event.LineID = Line.ID JOIN
     MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID JOIN
     EventType ON Event.EventTypeID = EventType.ID
