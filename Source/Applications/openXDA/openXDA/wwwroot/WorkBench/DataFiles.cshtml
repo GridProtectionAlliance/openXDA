@@ -246,7 +246,7 @@
 
         $('#reprocessModal').on('shown.bs.modal', function (event) {
             $('#DataFileID').text($(event.relatedTarget.parentElement.parentElement.children).first().text())
-            $('#FileGroupID').text($(event.relatedTarget.parentElement.parentElement.children).first().next().text())
+            $('#FileGroupID').text($(event.relatedTarget.parentElement.parentElement.children).first().next().next().text())
             $('#eventList').children().remove();
             dataHub.getEventsForFileGroup($('#FileGroupID').text()).done(function (data) {
                 $.each(data, function (i, d) {
