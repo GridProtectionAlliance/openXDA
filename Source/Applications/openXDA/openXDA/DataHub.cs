@@ -2912,18 +2912,32 @@ namespace openXDA
             DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
             IEnumerable<EventType> types = DataContext.Table<EventType>().QueryRecords();
             string eventTypeList = "";
+            string sql = "";
 
-            foreach (var type in types)
+            if (filterId > -1)
             {
-                if (eventTypes.Contains(type.Name))
-                    eventTypeList += "'" + type.Name + "',"; 
+                sql += $"(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {filterId}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {filterId}), ',')) ) AND";
             }
 
-            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
-            if (!filterString.EndsWith("%"))
-                filterString += "%";
+            sql += $" StartTime >= '{startTime}' AND StartTime <= '{endTime}' ";
+            if (eventTypes != "")
+            {
+                foreach (var type in types)
+                {
+                    if (eventTypes.Contains(type.Name))
+                        eventTypeList += "'" + type.Name + "',";
+                }
 
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
+                eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+                if (!filterString.EndsWith("%"))
+                    filterString += "%";
+
+                sql += $" AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ({eventTypeList})) ";
+            }
+
+            TableOperations<EventView> table = DataContext.Table<EventView>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction(sql);
+            return table.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("*")]
@@ -2934,17 +2948,33 @@ namespace openXDA
             DateTime endTime = startTime.AddDays(1).AddMilliseconds(-1);
             IEnumerable<EventType> types = DataContext.Table<EventType>().QueryRecords();
             string eventTypeList = "";
+            string sql = "";
 
-            foreach (var type in types)
+            if (filterId > -1)
             {
-                if (eventTypes.Contains(type.Name))
-                    eventTypeList += "'" + type.Name + "',";
+                sql += $"(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {filterId}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {filterId}), ',')) ) AND";
             }
-            eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
-            if (!filterString.EndsWith("%"))
-                filterString += "%";
 
-            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ',')) ) AND StartTime >= {1} AND StartTime <= {2} AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN " + $"({eventTypeList})) " + " AND (ID LIKE {3} OR MeterName LIKE {3} OR LineName LIKE {3} OR EventTypeName LIKE {3})", filterId, date, endTime, filterString));
+            sql += $" StartTime >= '{startTime}' AND StartTime <= '{endTime}' ";
+            if (eventTypes != "")
+            {
+                foreach (var type in types)
+                {
+                    if (eventTypes.Contains(type.Name))
+                        eventTypeList += "'" + type.Name + "',";
+                }
+
+                eventTypeList = eventTypeList.Remove(eventTypeList.Length - 1, 1);
+                if (!filterString.EndsWith("%"))
+                    filterString += "%";
+
+                sql += $" AND EventTypeID IN (SELECT ID FROM EventType WHERE Name IN ({eventTypeList})) ";
+            }
+
+            TableOperations<EventView> table = DataContext.Table<EventView>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction(sql);
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]

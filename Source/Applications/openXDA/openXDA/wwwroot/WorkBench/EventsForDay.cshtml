@@ -46,10 +46,19 @@
     {
         ViewBag.Types = parameters["Types"];
     }
+    else
+    {
+        ViewBag.Types = "";
+    }
     if (parameters.ContainsKey("Filter"))
     {
         ViewBag.Filter = parameters["Filter"];
     }
+    else
+    {
+        ViewBag.Filter = -1;
+    }
+
 
     ViewBag.Title = "Events for date: " + ViewBag.Date;
 
