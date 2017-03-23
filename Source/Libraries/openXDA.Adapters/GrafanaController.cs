@@ -113,35 +113,7 @@ namespace openXDA.Adapters
                     switch (kvp.Value.Split('_')[kvp.Value.Split('_').Length - 1])
                     {
                         case "Event": // GlobalEventCount
-                            data = m_database.RetrieveData("SELECT * FROM Event WHERE StartTime >= {0} AND EndTime <= {1} AND MeterID Like {2}", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
-
-                            foreach (DataRow row in data.Rows)
-                            {
-                                yield return new DataSourceValue
-                                {
-                                    Target = kvp.Value,
-                                    Time = (row.ConvertField<DateTime>("StartTime").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                                    Value = 1
-                                };
-                            }
-
-                            break;
-                        case "Fault":
-                            data = m_database.RetrieveData("SELECT * FROM FaultSummary WHERE Inception Between {0} AND {1} AND Algorithm LIKE 'Simple' AND EventID IN (Select ID FROM Event WHERE MeterID = {2})", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
-
-                            foreach (DataRow row in data.Rows)
-                            {
-                                yield return new DataSourceValue
-                                {
-                                    Target = kvp.Value,
-                                    Time = (row.ConvertField<DateTime>("Inception").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                                    Value = 1
-                                };
-                            }
-
-                            break;
-                        case "Alarm":
-                            data = m_database.RetrieveData("SELECT * FROM ChannelAlarmSummary WHERE Date Between {0} AND {1} AND ChannelID IN (Select ID FROM Channel WHERE MeterID = {2})", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+                            data = m_database.RetrieveData("SELECT Count(*) as Count, Cast(StartTime as Date) as Date FROM Event WHERE StartTime >= {0} AND EndTime <= {1} AND MeterID Like {2} Group by Cast(StartTime as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
 
                             foreach (DataRow row in data.Rows)
                             {
@@ -149,7 +121,35 @@ namespace openXDA.Adapters
                                 {
                                     Target = kvp.Value,
                                     Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                                    Value = 1
+                                    Value = row.ConvertField<int>("Count")
+                                };
+                            }
+
+                            break;
+                        case "Fault":
+                            data = m_database.RetrieveData("SELECT Count(*) as Count, Cast(Inception as Date) as Date FROM FaultSummary WHERE Inception Between {0} AND {1} AND Algorithm LIKE 'Simple' AND EventID IN (Select ID FROM Event WHERE MeterID = {2}) Group by Cast(Inception as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+
+                            foreach (DataRow row in data.Rows)
+                            {
+                                yield return new DataSourceValue
+                                {
+                                    Target = kvp.Value,
+                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Value = row.ConvertField<int>("Count")
+                                };
+                            }
+
+                            break;
+                        case "Alarm":
+                            data = m_database.RetrieveData("SELECT Count(*) as Count, Cast(Date as Date) as Date FROM ChannelAlarmSummary WHERE Date Between {0} AND {1} AND ChannelID IN (Select ID FROM Channel WHERE MeterID = {2}) Group by Cast(Date as Date)", startTime, stopTime, int.Parse(kvp.Value.Split('_').First()));
+
+                            foreach (DataRow row in data.Rows)
+                            {
+                                yield return new DataSourceValue
+                                {
+                                    Target = kvp.Value,
+                                    Time = (row.ConvertField<DateTime>("Date").Date.Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                                    Value = row.ConvertField<int>("Count")
                                 };
                             }
 

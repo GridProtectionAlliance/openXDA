@@ -49,8 +49,8 @@ namespace openXDA
 
             // Load security hub in application domain before establishing SignalR hub configuration
             using (new SecurityHub()) { }
-            using (new JSONApiController()) { }
-            using (new GrafanaController()) { }
+            using (new openXDA.Adapters.JSONApiController()) { }
+            //using (new GrafanaController()) { }
 
             // Configuration Windows Authentication for self-hosted web service
             HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
@@ -64,8 +64,11 @@ namespace openXDA
             hubConfig.EnableDetailedErrors = true;
 #endif
 
-            httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value ?? "*", "*", "*"));
-            //app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+            if(ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value == "*")
+              app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+            else
+              httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value , "*", "*"));
+
 
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
