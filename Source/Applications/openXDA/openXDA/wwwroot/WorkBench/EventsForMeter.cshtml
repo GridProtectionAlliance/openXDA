@@ -79,7 +79,7 @@
 {
     <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + ID + '&faultcurves=1' }, text: ID"></a></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: MeterName"></td>
-    <td width="20%" class="text-left valign-middle" data-bind="text: LineName"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: LineName.truncate(25)"></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: EventTypeName"></td>
     <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + StartTime + '&EventID=' + ID + '&time=1'}, text: StartTime.formatDate(DateTimeFormat)"></a></td>
     <td width="20%" class="text-center valign-middle"><a target="_blank" data-bind="attr: {href: 'EventsForDate.cshtml?Date=' + EndTime + '&EventID=' + ID  + '&time=2'}, text: EndTime.formatDate(DateTimeFormat)"></a></td>
