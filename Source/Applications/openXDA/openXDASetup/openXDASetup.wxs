@@ -383,6 +383,7 @@
       <ComponentRef Id="GSF.TimeSeries" />
       <ComponentRef Id="GSF.Web" />
       <ComponentRef Id="TagDefinitions" />
+      <ComponentRef Id="GrafanaAdapters"/>
 
       <!-- openHistorian Dependencies -->
       <ComponentRef Id="crypto" />
@@ -522,6 +523,10 @@
       <Component Id="TagDefinitions">
         <File Id="TagDefinitions.xml" Name="TagDefinitions.xml" Source="$(var.SolutionDir)\Dependencies\GSF\TagDefinitions.xml" />
       </Component>
+      <Component Id="GrafanaAdapters">
+        <File Id="GrafanaAdapters.dll" Name="GrafanaAdapters.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GrafanaAdapters.dll" />
+      </Component>
+
 
       <!-- openHistorian Dependencies -->
       <Component Id="crypto">
