@@ -2165,7 +2165,10 @@ namespace openXDA
             DateTime startDate =  dTuple.Item1;
             DateTime endDate = dTuple.Item2;
 
-            return DataContext.Table<EventView>().QueryRecordCount(new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3} AND (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8})", filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString));
+            TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) + 
+                new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} ", filterId, startDate, endDate);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
 
@@ -2174,8 +2177,11 @@ namespace openXDA
             Tuple<DateTime, DateTime> dTuple = GetTimeRange(filterId);
             DateTime startDate = dTuple.Item1;
             DateTime endDate = dTuple.Item2;
+            TableOperations<EventView> tableOperations = DataContext.Table<EventView>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterString) +
+                new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) AND StartTime >= {1} AND StartTime <= {2} ", filterId, startDate, endDate);
 
-            return DataContext.Table<EventView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {1}), ',')) AND StartTime >= {2} AND StartTime <= {3} AND (ID LIKE {4} OR StartTime LIKE {5} OR EndTime LIKE {6} OR MeterName LIKE {7} OR LineName LIKE {8})", filterId, filterId, startDate, endDate, filterString, filterString, filterString, filterString, filterString));
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("*")]
@@ -4538,7 +4544,7 @@ namespace openXDA
                 " SELECT * " + 
                 " FROM DisturbanceView  " +
                 " WHERE (MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {0}), ',')) OR LineID IN (Select * FROM String_To_Int_Table((Select Lines FROM WorkbenchFilter WHERE ID = {0}), ','))) " + 
-                " AND EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ',')) " + 
+                " AND EventID IN ( SELECT ID FROM Event WHERE EventTypeID IN (Select * FROM String_To_Int_Table((Select EventTypes FROM WorkbenchFilter WHERE ID = {0}), ','))) " + 
                 " AND StartTime >= {1} AND StartTime <= {2}", filterId, startDate, endDate);
             return table.Select().Select(row => DataContext.Table<DisturbanceView>().LoadRecord(row));
         }

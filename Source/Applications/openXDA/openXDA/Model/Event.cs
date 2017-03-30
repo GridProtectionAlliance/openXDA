@@ -9,6 +9,7 @@ namespace openXDA.Model
     [TableName("Event")]
     public class Event
     {
+        [Searchable(SearchType.LikeExpression)]
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int FileGroupID { get; set; }
