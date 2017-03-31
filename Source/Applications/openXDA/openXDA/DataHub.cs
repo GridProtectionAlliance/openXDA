@@ -4035,8 +4035,8 @@ namespace openXDA
                 { "Breaker", "#A500FF" },
             };
 
-            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'EventChart' AND Enabled = 0")).Select(x => x.Value).ToList();
-            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'EventChartColors' AND Enabled = 1"));
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'EventsChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'EventsChartColors' AND Enabled = 1"));
             DataTable table = new DataTable();
 
             foreach (var color in usersColors)
@@ -4081,7 +4081,7 @@ namespace openXDA
                                     eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
                                     DashSettings ds = new DashSettings()
                                     {
-                                        Name = "EventChartColors",
+                                        Name = "EventsChartColors",
                                         Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
                                         Enabled = true
                                     };
@@ -4111,7 +4111,7 @@ namespace openXDA
                                     eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
                                     DashSettings ds = new DashSettings()
                                     {
-                                        Name = "EventChartColors",
+                                        Name = "EventsChartColors",
                                         Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
                                         Enabled = true
                                     };
@@ -4306,8 +4306,8 @@ namespace openXDA
 
             };
 
-            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'FaultChart' AND Enabled = 0")).Select(x => x.Value).ToList();
-            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'FaultChartColors' AND Enabled = 1"));
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'FaultsChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'FaultsChartColors' AND Enabled = 1"));
             DataTable table = new DataTable();
 
             foreach (var color in usersColors)
@@ -4350,7 +4350,7 @@ namespace openXDA
                                     eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
                                     DashSettings ds = new DashSettings()
                                     {
-                                        Name = "FaultChartColors",
+                                        Name = "FaultsChartColors",
                                         Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
                                         Enabled = true
                                     };
@@ -4380,7 +4380,7 @@ namespace openXDA
                                     eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
                                     DashSettings ds = new DashSettings()
                                     {
-                                        Name = "FaultChartColors",
+                                        Name = "FaultsChartColors",
                                         Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
                                         Enabled = true
                                     };
@@ -4428,8 +4428,8 @@ namespace openXDA
                 { "Indeterminate", "#90ed7d" }
             };
 
-            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'BreakerChart' AND Enabled = 0")).Select(x => x.Value).ToList();
-            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'BreakerChartColors' AND Enabled = 1"));
+            List<string> disabledFields = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'BreakersChart' AND Enabled = 0")).Select(x => x.Value).ToList();
+            IEnumerable<DashSettings> usersColors = DataContext.Table<DashSettings>().QueryRecords(restriction: new RecordRestriction("Name = 'BreakersChartColors' AND Enabled = 1"));
             DataTable table = new DataTable();
 
             foreach (var color in usersColors)
@@ -4475,7 +4475,7 @@ namespace openXDA
                                     eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
                                     DashSettings ds = new DashSettings()
                                     {
-                                        Name = "BreakerChartColors",
+                                        Name = "BreakersChartColors",
                                         Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
                                         Enabled = true
                                     };
@@ -4505,7 +4505,7 @@ namespace openXDA
                                     eventSet.Types[eventSet.Types.Count - 1].Color = "#" + r.Next(256).ToString("X2") + r.Next(256).ToString("X2") + r.Next(256).ToString("X2");
                                     DashSettings ds = new DashSettings()
                                     {
-                                        Name = "BreakerChartColors",
+                                        Name = "BreakersChartColors",
                                         Value = column.ColumnName + "," + eventSet.Types[eventSet.Types.Count - 1].Color,
                                         Enabled = true
                                     };
