@@ -1163,13 +1163,13 @@ DECLARE @PivotColumns NVARCHAR(MAX) = N''
 DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
-SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(20)), '') + '],'
 FROM (Select Distinct Line.VoltageKV 
 		FROM Line) AS t
 IF @PivotColumns = ''
 	SET @PivotColumns = '[0],'
 
-SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],' 
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(20)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(20)), '') + '],'
 FROM (Select Distinct Line.VoltageKV 
 		FROM Line) AS t
 IF @ReturnColumns = ''
