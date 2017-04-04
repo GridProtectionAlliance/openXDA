@@ -44,7 +44,9 @@ namespace openXDA
             // to date strings and browsers will select whatever timezone suits them
             JsonSerializerSettings settings = JsonUtility.CreateDefaultSerializerSettings();
             settings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+
             JsonSerializer serializer = JsonSerializer.Create(settings);
+
             GlobalHost.DependencyResolver.Register(typeof(JsonSerializer), () => serializer);
 
             // Load security hub in application domain before establishing SignalR hub configuration
@@ -55,20 +57,24 @@ namespace openXDA
             // Configuration Windows Authentication for self-hosted web service
             HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
             listener.AuthenticationSchemeSelectorDelegate = AuthenticationSchemeForClient;
+
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
+
             // Setup resolver for web page controller instances
             httpConfig.DependencyResolver = WebPageController.GetDependencyResolver(WebServer.Default, Program.Host.DefaultWebPage, new AppModel(), typeof(AppModel));
+
 #if DEBUG
             // Enabled detailed client errors
             hubConfig.EnableDetailedErrors = true;
 #endif
 
-            if(ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value == "*")
-              app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
-            else
-              httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value , "*", "*"));
+            string allowedDomainList = ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value;
 
+            if (allowedDomainList == "*")
+                app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+            else if ((object)allowedDomainList != null)
+                httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(allowedDomainList, "*", "*"));
 
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
