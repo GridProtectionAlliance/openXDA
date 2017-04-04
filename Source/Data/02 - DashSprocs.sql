@@ -290,7 +290,7 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-SELECT	Date, COALESCE(First, 0) AS First, COALESCE(Second, 0) AS Second, COALESCE(Third, 0) AS Third, COALESCE(Fourth, 0) AS Fourth, COALESCE(Fifth, 0) AS Fifth, COALESCE(Sixth, 0) AS Sixth
+SELECT	Date as thedate, COALESCE(First, 0) AS '> 100%', COALESCE(Second, 0) AS '98% - 100%', COALESCE(Third, 0) AS '90% - 97%', COALESCE(Fourth, 0) AS '70% - 89%', COALESCE(Fifth, 0) AS '50% - 69%', COALESCE(Sixth, 0) AS '>0% - 49%'
 FROM
     (
         SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
@@ -429,7 +429,7 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-SELECT	Date, COALESCE(First, 0) AS First, COALESCE(Second, 0) AS Second, COALESCE(Third, 0) AS Third, COALESCE(Fourth, 0) AS Fourth, COALESCE(Fifth, 0) AS Fifth, COALESCE(Sixth, 0) AS Sixth
+SELECT	Date as thedate, COALESCE(First, 0) AS '> 100%', COALESCE(Second, 0) AS '98% - 100%', COALESCE(Third, 0) AS '90% - 97%', COALESCE(Fourth, 0) AS '70% - 89%', COALESCE(Fifth, 0) AS '50% - 69%', COALESCE(Sixth, 0) AS '>0% - 49%'
 FROM
     (
         SELECT Date, CompletenessLevel, COUNT(*) AS MeterCount
@@ -3506,7 +3506,7 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-SELECT AlarmDate as thedate, COALESCE(OffNormal,0) as offnormal, COALESCE(Alarm,0) as alarm
+SELECT AlarmDate as thedate, COALESCE(OffNormal,0) as Offnormal, COALESCE(Alarm,0) as Alarm
 FROM(
 	SELECT Date AS AlarmDate, AlarmType.Name, SUM(AlarmPoints) as AlarmPoints
 	FROM ChannelAlarmSummary JOIN

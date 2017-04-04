@@ -1897,6 +1897,37 @@ GO
 INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
 GO
 
+CREATE TABLE [dbo].[FaultNote](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[FaultSummaryID] [int] NOT NULL,
+	[Note] [varchar](max) NOT NULL,
+	[UserAccountID] [uniqueidentifier] NOT NULL,
+	[Timestamp] [datetime] NOT NULL
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[FaultNote]  WITH CHECK ADD FOREIGN KEY([FaultSummaryID])
+REFERENCES [dbo].[FaultSummary] ([ID])
+GO
+
+ALTER TABLE [dbo].[FaultNote]  WITH CHECK ADD FOREIGN KEY([UserAccountID])
+REFERENCES [dbo].[UserAccount] ([ID])
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultNote_FaultSummaryID
+ON FaultNote(FaultSummaryID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultNote_UserAccountID
+ON FaultNote(UserAccountID ASC)
+GO
+
+
 
 -- ------------ --
 -- PQ Dashboard --
