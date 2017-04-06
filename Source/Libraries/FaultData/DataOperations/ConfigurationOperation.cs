@@ -125,81 +125,56 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            Meter meter;
+            Meter parsedMeter;
+            Meter dbMeter;
             List<Series> seriesList;
-            Dictionary<SeriesKey, Series> seriesLookup;
-            Series seriesInfo;
 
             Log.Info("Executing operation to locate meter in database...");
 
+            // Grab the parsed meter right away as we will be replacing it in the meter data set with the meter from the database
+            parsedMeter = meterDataSet.Meter;
+
             // Search the database for a meter definition that matches the parsed meter
-            meter = m_meterInfo.Meters.SingleOrDefault(m => m.AssetKey == meterDataSet.Meter.AssetKey);
+            dbMeter = m_meterInfo.Meters.SingleOrDefault(m => m.AssetKey == parsedMeter.AssetKey);
 
-            if ((object)meter != null)
+            if ((object)dbMeter == null)
             {
-                Log.Info(string.Format("Found meter {0} in database.", meter.Name));
-
-                // Get the list of series associated with the meter in the database
-                seriesList = m_meterInfo.Series
-                    .Where(series => series.Channel.MeterID == meter.ID)
-                    .ToList();
-                
-                // Match the parsed series with the ones associated with the meter in the database
-                seriesLookup = seriesList
-                    .Where(series => string.IsNullOrEmpty(series.SourceIndexes))
-                    .GroupBy(series => new SeriesKey(series))
-                    .ToDictionary(grouping => grouping.Key, grouping =>
-                    {
-                        if (grouping.Count() > 1)
-                            Log.Warn($"Found duplicate series for meter {meter.AssetKey}: {string.Join(", ", grouping.Select(series => series.ID))}");
-
-                        return grouping.First();
-                    });
-
-                foreach (DataSeries series in meterDataSet.DataSeries)
-                {
-                    if ((object)series.SeriesInfo == null)
-                        continue;
-
-                    if (seriesLookup.TryGetValue(GetGenericSeriesKey(series.SeriesInfo), out seriesInfo))
-                        series.SeriesInfo = seriesInfo;
-                }
-
-                // Create data series for series which
-                // are combinations of the parsed series
-                foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
-                    AddCalculatedDataSeries(meterDataSet, series);
-
-                // There may be some placeholder DataSeries objects with no data so that indexes
-                // would be correct for calculating data series--now that we are finished
-                // calculating data series, these need to be removed
-                for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
-                {
-                    if ((object)meterDataSet.DataSeries[i].SeriesInfo == null)
-                        meterDataSet.DataSeries.RemoveAt(i);
-                }
-
-                for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
-                {
-                    if ((object)meterDataSet.Digitals[i].SeriesInfo == null)
-                        meterDataSet.Digitals.RemoveAt(i);
-                }
-
-                // Set samples per hour and enabled flags based on
-                // the configuration obtained from the latest file
-                FixUpdatedChannelInfo(meterDataSet, meter);
-
-                // Replace the parsed meter with
-                // the one from the database
-                meterDataSet.Meter = meter;
-            }
-            else
-            {
-                Log.Info(string.Format("No existing meter found matching meter with name {0}.", meterDataSet.Meter.Name));
+                Log.Info(string.Format("No existing meter found matching meter with name {0}.", parsedMeter.Name));
 
                 // If configuration cannot be modified and existing configuration cannot be found for this meter,
                 // throw an exception to indicate the operation could not be executed
                 throw new InvalidOperationException("Cannot process meter - configuration does not exist");
+            }
+
+            Log.Info(string.Format("Found meter {0} in database.", dbMeter.Name));
+
+            // Replace the parsed meter with
+            // the one from the database
+            meterDataSet.Meter = dbMeter;
+
+            // Get the list of series associated with the meter in the database
+            seriesList = m_meterInfo.Series
+                .Where(series => series.Channel.MeterID == dbMeter.ID)
+                .ToList();
+
+            // Create data series for series which
+            // are combinations of the parsed series
+            foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
+                AddCalculatedDataSeries(meterDataSet, series);
+
+            // There may be some placeholder DataSeries objects with no data so that indexes
+            // would be correct for calculating data series--now that we are finished
+            // calculating data series, these need to be removed
+            for (int i = meterDataSet.DataSeries.Count - 1; i >= 0; i--)
+            {
+                if ((object)meterDataSet.DataSeries[i].SeriesInfo == null)
+                    meterDataSet.DataSeries.RemoveAt(i);
+            }
+
+            for (int i = meterDataSet.Digitals.Count - 1; i >= 0; i--)
+            {
+                if ((object)meterDataSet.Digitals[i].SeriesInfo == null)
+                    meterDataSet.Digitals.RemoveAt(i);
             }
 
             // Remove data series that were not defined
@@ -209,6 +184,10 @@ namespace FaultData.DataOperations
             // Add channels that are not already defined in the
             // configuration by assuming the meter monitors only one line
             AddUndefinedChannels(meterDataSet);
+
+            // Set samples per hour and enabled flags based on
+            // the configuration obtained from the latest file
+            FixUpdatedChannelInfo(meterDataSet, parsedMeter);
 
             // Update line parameters pulled from the input data
             UpdateConfigurationData(meterDataSet);
@@ -415,10 +394,8 @@ namespace FaultData.DataOperations
             }
         }
 
-        private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter dbMeter)
+        private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter parsedMeter)
         {
-            HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(meterDataSet.Meter.Channels.Select(GetGenericChannelKey));
-
             foreach (DataSeries dataSeries in meterDataSet.DataSeries)
             {
                 if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
@@ -434,8 +411,15 @@ namespace FaultData.DataOperations
                 }
             }
 
-            foreach (Channel dbChannel in dbMeter.Channels)
-                dbChannel.Enabled = parsedChannelLookup.Contains(GetGenericChannelKey(dbChannel)) ? 1 : 0;
+            IEnumerable<ChannelKey> parsedChannelKeys = parsedMeter.Channels
+                .Concat(meterDataSet.DataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
+                .Where(channel => (object)channel.Line != null)
+                .Select(channel => new ChannelKey(channel));
+
+            HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(parsedChannelKeys);
+
+            foreach (Channel dbChannel in meterDataSet.Meter.Channels)
+                dbChannel.Enabled = parsedChannelLookup.Contains(new ChannelKey(dbChannel)) ? 1 : 0;
 
             m_meterInfo.SubmitChanges();
         }
@@ -487,12 +471,7 @@ namespace FaultData.DataOperations
         // Static Methods
         private static ChannelKey GetGenericChannelKey(Channel channel)
         {
-            return new ChannelKey(0, 0, channel.Name, channel.MeasurementType.Name, channel.MeasurementCharacteristic.Name, channel.Phase.Name);
-        }
-
-        private static SeriesKey GetGenericSeriesKey(Series series)
-        {
-            return new SeriesKey(GetGenericChannelKey(series.Channel), series.SeriesType.Name);
+            return new ChannelKey(0, channel.HarmonicGroup, channel.Name, channel.MeasurementType.Name, channel.MeasurementCharacteristic.Name, channel.Phase.Name);
         }
 
         private static bool IsVoltage(Channel channel)

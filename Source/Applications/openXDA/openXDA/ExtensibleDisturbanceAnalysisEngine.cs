@@ -73,9 +73,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Data.Linq;
 using System.Data.SqlClient;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -92,10 +90,8 @@ using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.Data.Model;
 using GSF.IO;
 using GSF.Threading;
-using GSF.Web;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
@@ -267,6 +263,18 @@ namespace openXDA
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="ExtensibleDisturbanceAnalysisEngine"/> class.
+        /// </summary>
+        public ExtensibleDisturbanceAnalysisEngine()
+        {
+            m_stopped = true;
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -415,6 +423,8 @@ namespace openXDA
                 UpdateFileProcessorFilter(m_systemSettings);
             }
 
+            m_stopped = false;
+
             foreach (string path in m_systemSettings.WatchDirectoryList)
                 m_fileProcessor.AddTrackedDirectory(path);
         }
@@ -491,6 +501,7 @@ namespace openXDA
             // Reload the configuration file
             configurationFile = ConfigurationFile.Current;
             configurationFile.Reload();
+            AdoDataConnection.ReloadConfigurationSettings();
 
             // Retrieve the connection string from the config file
             category = configurationFile.Settings["systemSettings"];
