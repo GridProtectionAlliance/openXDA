@@ -69,22 +69,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using System.Xml.Linq;
-using FaultData.Database;
 using GSF;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
-using GSF.Data.Model;
 using GSF.Identity;
 using GSF.IO;
 using GSF.Reflection;
@@ -97,7 +92,6 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Layout;
 using Microsoft.Owin.Hosting;
-using openXDA.Configuration;
 using openXDA.Logging;
 using openXDA.Model;
 using Channel = openXDA.Model.Channel;
@@ -336,6 +330,7 @@ namespace openXDA
             try
             {
                 ConfigurationFile.Current.Reload();
+                AdoDataConnection.ReloadConfigurationSettings();
 
                 CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
                 CategorizedSettingsElementCollection securityProvider = ConfigurationFile.Current.Settings["securityProvider"];

@@ -491,6 +491,7 @@ namespace openXDA
             // Reload the configuration file
             configurationFile = ConfigurationFile.Current;
             configurationFile.Reload();
+            AdoDataConnection.ReloadConfigurationSettings();
 
             // Retrieve the connection string from the config file
             category = configurationFile.Settings["systemSettings"];
