@@ -267,6 +267,18 @@ namespace openXDA
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="ExtensibleDisturbanceAnalysisEngine"/> class.
+        /// </summary>
+        public ExtensibleDisturbanceAnalysisEngine()
+        {
+            m_stopped = true;
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -414,6 +426,8 @@ namespace openXDA
 
                 UpdateFileProcessorFilter(m_systemSettings);
             }
+
+            m_stopped = false;
 
             foreach (string path in m_systemSettings.WatchDirectoryList)
                 m_fileProcessor.AddTrackedDirectory(path);
