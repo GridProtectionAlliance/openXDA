@@ -1558,7 +1558,7 @@ BEGIN
 	    COALESCE(pvttable.Normal, 0) AS Normal,
         COALESCE(pvttable.Late, 0) AS Late,
         COALESCE(pvttable.Indeterminate, 0) AS Indeterminate, 
-	    (COALESCE(pvttable.Normal, 0) + COALESCE(pvttable.Late, 0) + COALESCE(pvttable.indeterminate, 0)) AS Event_Count
+	    (COALESCE(pvttable.Normal, 0) + COALESCE(pvttable.Late, 0) + COALESCE(pvttable.indeterminate, 0)) AS Count
     FROM
 	    Meter JOIN
 	    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT JOIN
@@ -1619,7 +1619,7 @@ BEGIN
             SELECT CAST(COALESCE(CAST(SUM(goodPoints) AS FLOAT) / NULLIF(CAST(SUM(expectedPoints) AS FLOAT), 0) * 100 , 0) AS INT)
             FROM MeterDataQualitySummary
             WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS Event_Count,
+        ) AS Count,
 		(
             SELECT COALESCE(SUM(MeterDataQualitySummary.ExpectedPoints), 0)
             FROM MeterDataQualitySummary
@@ -1685,7 +1685,7 @@ BEGIN
             SELECT CAST(COALESCE(CAST(SUM(goodPoints) AS FLOAT) / NULLIF(CAST(SUM(expectedPoints) AS FLOAT), 0) * 100 , 0) AS INT)
             FROM MeterDataQualitySummary
             WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS Event_Count,
+        ) AS Count,
 		(
             SELECT COALESCE(SUM(MeterDataQualitySummary.ExpectedPoints), 0)
             FROM MeterDataQualitySummary
@@ -1763,7 +1763,7 @@ BEGIN
     (
         SELECT
             MeterID,
-            6*[5] + 5*[4] + 4*[3] + 3*[2] + 2*[1] + 1*[0] AS Disturbance_Count,
+            [5] + [4] + [3] + [2] + [1] + [0] AS Disturbance_Count,
             [5],
             [4],
             [3],
@@ -1782,7 +1782,7 @@ BEGIN
         Meter.Name AS Name,
         MeterLocation.Latitude AS Latitude,
         MeterLocation.Longitude AS Longitude,
-        COALESCE(Disturbance_Count, 0) AS Disturbance_Count,
+        COALESCE(Disturbance_Count, 0) AS Count,
         COALESCE([5], 0) AS [5],
         COALESCE([4], 0) AS [4],
         COALESCE([3], 0) AS [3],
@@ -1824,7 +1824,7 @@ BEGIN
         Meter.Name,
         MeterLocation.Longitude,
         MeterLocation.Latitude,
-		COALESCE(Event_Count, 0) AS Event_Count,
+		COALESCE(Event_Count, 0) AS Count,
 		COALESCE(Interruption, 0) AS Interruption,
 		COALESCE(Fault, 0) AS Fault,
 		COALESCE(Sag, 0) AS Sag,
@@ -1896,7 +1896,7 @@ BEGIN
         inner join [dbo].[EventType] on [dbo].[EventType].[ID] = [dbo].[Event].[EventTypeID] and [dbo].[EventType].[Name] = 'Fault'
         where (CAST([StartTime] as Date) between @thedatefrom and @thedateto) and
         [dbo].[Event].[MeterID] = [dbo].[Meter].[ID] 
-        ) as Event_Count
+        ) as Count
 
         from [dbo].[Meter] 
         inner join [dbo].[Meterlocation] on [dbo].[Meter].[MeterLocationID] = [dbo].[MeterLocation].[ID]
@@ -1942,7 +1942,7 @@ BEGIN
                 Event.MeterID = Meter.ID AND
                 PerUnitMagnitude IS NOT NULL AND
                 PerUnitMagnitude >= 1.1
-        ), 0) AS INT) AS Event_Count
+        ), 0) AS INT) AS Count
     FROM
         Meter JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
@@ -1986,7 +1986,7 @@ BEGIN
                 CAST(Event.StartTime AS DATE) BETWEEN @startDate AND @endDate AND
                 Event.MeterID = Meter.ID AND 
                 PerUnitMagnitude IS NOT NULL AND PerUnitMagnitude <= 0.9
-        ), 0) AS INT) AS Event_Count
+        ), 0) AS INT) AS Count
     FROM
         Meter JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
