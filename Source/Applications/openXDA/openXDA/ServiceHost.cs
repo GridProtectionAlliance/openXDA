@@ -76,6 +76,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using GSF;
 using GSF.Configuration;
 using GSF.Console;
@@ -152,6 +153,10 @@ namespace openXDA
             private set;
         }
 
+        /// <summary>
+        /// Gets current performance statistics.
+        /// </summary>
+        public string PerformanceStatistics => m_extensibleDisturbanceAnalysisEngine.Status;
 
         #endregion
 
@@ -186,6 +191,8 @@ namespace openXDA
         {
             ServiceHelperAppender serviceHelperAppender;
             RollingFileAppender fileAppender;
+
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             // Set current working directory to fix relative paths
             Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
@@ -718,13 +725,13 @@ namespace openXDA
             m_serviceHelper.DisconnectClient(clientID);
         }
 
-        /// <summary>
-        /// Gets current performance statistics.
-        /// </summary>
-        public string PerformanceStatistics => m_extensibleDisturbanceAnalysisEngine.Status;
+        private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            foreach (Exception ex in e.Exception.Flatten().InnerExceptions)
+                HandleException(ex);
 
-
-
+            e.SetObserved();
+        }
 
         #region [ Service Monitor Handlers ]
 
