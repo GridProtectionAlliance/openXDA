@@ -701,12 +701,23 @@ CREATE TABLE SentEmail
 GO
 
 CREATE TABLE [dbo].[FileBlob](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	[Blob] [varbinary](max) NOT NULL,
 	[DataFileID] [int] NOT NULL
 )
 
 GO
+
+CREATE TABLE [dbo].[DeviceFilter](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[UserAccount] [varchar](500) NOT NULL,
+	[Name] [nvarchar](500) NOT NULL,
+	[FilterExpression] [nvarchar](max) NOT NULL,
+	[MeterGroupID] [int] NOT NULL,
+)
+
+GO
+
 
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
 GO
