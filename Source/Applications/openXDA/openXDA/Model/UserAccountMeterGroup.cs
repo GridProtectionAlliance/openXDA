@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Web;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model

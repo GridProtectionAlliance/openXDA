@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Adapters.Model
