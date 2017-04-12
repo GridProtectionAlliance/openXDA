@@ -63,6 +63,22 @@
             right: 0;
             border: 1px solid #cccccc;
         }
+
+        #recordsTable {
+            table-layout: fixed;
+            min-width: 1200px;
+        }
+
+        .channel-id-column { width: 105px; }
+        .meter-name-column { width: 120px; }
+        .channel-name-column { width: auto; }
+        .measurement-type-column { width: 150px; }
+        .measurement-characteristic-column { width: 180px; }
+        .phase-column { width: 100px; }
+        .harmonic-group-column { width: 60px; }
+        .high-column { width: 80px; }
+        .low-column { width: 80px; }
+        .is-default-column { width: 80px; }
     </style>
 }
 
@@ -93,16 +109,16 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "ChannelID", "Channel ID", "text-left"},
-        new[] { "MeterName", "Meter Name", "text-left"},
-        new[] { "Name", "Channel Name", "text-left" },
-        new[] { "MeasurementType", "Meas Type", "text-left"},
-        new[] { "MeasurementCharacteristic", "Meas Char", "text-left"},
-        new[] { "Phase", "PH", "text-left"},
-        new[] { "HarmonicGroup", "HG", "text-left"},
-        new[] { "High", "High", "text-left" },
-        new[] { "Low", "Low", "text-left" },
-        new[] { "IsDefault", "Custom Limits", "text-left" },
+        new[] { "ChannelID", "Channel ID", "text-left channel-id-column"},
+        new[] { "MeterName", "Meter Name", "text-left truncate meter-name-column"},
+        new[] { "Name", "Channel Name", "text-left channel-name-column" },
+        new[] { "MeasurementType", "Meas Type", "text-left measurement-type-column"},
+        new[] { "MeasurementCharacteristic", "Meas Char", "text-left measurement-characteristic-column"},
+        new[] { "Phase", "PH", "text-left phase-column"},
+        new[] { "HarmonicGroup", "HG", "text-left harmonic-group-column"},
+        new[] { "High", "High", "text-left high-column" },
+        new[] { "Low", "Low", "text-left low-column" },
+        new[] { "IsDefault", "Custom Limits", "text-left is-default-column" },
         //new[] { "RangeInclusive", "Severity", "text-left" },
         //new[] { "DefaultValue", "Default Value", "text-center" }
     };
@@ -159,17 +175,17 @@
 
 @helper BodyRows()
 {
-    <td width="5%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: ChannelID, click: $parent.viewPageRecord"></button></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: MeterName"></td>
-    <td width="25%" class="text-left valign-middle" data-bind="text: truncate(Name, 20)"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementType"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: MeasurementCharacteristic"></td>
-    <td width="5%" class="text-left valign-middle" data-bind="text: Phase"></td>
-    <td width="5%" class="text-left valign-middle" data-bind="text: HarmonicGroup"></td>
-    <td width="5%" class="text-left valign-middle" data-bind="text: High"></td>
-    <td width="5%" class="text-left valign-middle" data-bind="text: Low"></td>
-    <td width="5%" class="text-left valign-middle" style="text-align: center"><span data-bind="visible: !(IsDefault)" class="glyphicon glyphicon-check"></span></td>
-    <td width="15%" class="text-center valign-middle" nowrap>
+    <td class="text-left valign-middle channel-id-column" nowrap><button type="button" class="btn btn-link" data-bind="text: ChannelID, click: $parent.viewPageRecord"></button></td>
+    <td class="text-left valign-middle meter-name-column" data-bind="text: MeterName"></td>
+    <td class="text-left valign-middle truncate channel-name-column" data-bind="text: Name"></td>
+    <td class="text-left valign-middle measurement-type-column" data-bind="text: MeasurementType"></td>
+    <td class="text-left valign-middle measurement-characteristic-column" data-bind="text: MeasurementCharacteristic"></td>
+    <td class="text-left valign-middle phase-column" data-bind="text: Phase"></td>
+    <td class="text-left valign-middle harmonic-group-column" data-bind="text: HarmonicGroup"></td>
+    <td class="text-left valign-middle high-column" data-bind="text: High"></td>
+    <td class="text-left valign-middle low-column" data-bind="text: Low"></td>
+    <td class="text-left valign-middle is-default-column" style="text-align: center"><span data-bind="visible: !(IsDefault)" class="glyphicon glyphicon-check"></span></td>
+    <td class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" title="Generate Smart Alarm Limits" data-bind="click: smartLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-stats"></span></button>
         <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -618,8 +634,6 @@
             $("#importCSVFile").on("change", function (event) {
                 $("#uploadCSVFile").submit();
             });
-
-
         });
         
         function importCSV() {
