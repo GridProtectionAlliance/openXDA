@@ -119,6 +119,13 @@ label.disabled {
     vertical-align: middle;
 }
 
+.table thead>tr>th.truncate,
+.table tbody>tr>td.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .table thead>tr>th.valign-bottom,
 .table tbody>tr>td.valign-bottom {
     vertical-align: bottom;
