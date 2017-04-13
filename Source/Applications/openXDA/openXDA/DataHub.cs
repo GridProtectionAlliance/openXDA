@@ -3489,7 +3489,11 @@ namespace openXDA
                 }
             }
 
-            return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row));
+            if(ascending)
+                return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
+            else
+                return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
+
         }
 
         [AuthorizeHubRole("Administrator")]

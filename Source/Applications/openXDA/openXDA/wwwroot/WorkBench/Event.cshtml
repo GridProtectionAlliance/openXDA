@@ -145,7 +145,7 @@
                 var target = document.getElementById('contentWell');
                 var spinner = new Spinner(opts).spin(target);
 
-                return dataHub.updateSingleEvent(record, $('#allrecords').prop('checked')).done(
+                return dataHub.updateSingleEvent(record, false).done(
                     function (data) {
                         spinner.stop();
                     });
