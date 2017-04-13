@@ -31,7 +31,7 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
-    ViewBag.Title = "Events";
+    ViewBag.Title = "Meter Events by Line";
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
@@ -41,6 +41,7 @@
     {
         eventId = int.Parse(parameters["EventID"]);
     }
+    ViewBag.ShowSearchFilter = true;
 
     Event theEvent = dataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("ID = {0}", eventId)).First();
     // Define column headers, use null for field name to make column non-sortable
@@ -60,7 +61,7 @@
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.HideAddNewButton = false;
-
+    ViewBag.HidePaginationButtons = true;
 }
 
 @section StyleSheets{

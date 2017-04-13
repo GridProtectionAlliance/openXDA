@@ -3450,8 +3450,8 @@ namespace openXDA
                     rdr.Close();
                 }
             }
-
-            return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).Count();
+            string fe = $"theeventtype LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
+            return dt.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).Count();
         }
     
 
@@ -3488,11 +3488,11 @@ namespace openXDA
                     rdr.Close();
                 }
             }
-
-            if(ascending)
-                return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
+            string fe = $"theeventtype LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
+            if (ascending)
+                return dt.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
             else
-                return dt.Select().Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
+                return dt.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
 
         }
 
