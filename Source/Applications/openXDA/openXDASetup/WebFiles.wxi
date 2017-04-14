@@ -3922,6 +3922,9 @@
   <Component Id="Workbench_EventsForMeterAngular_cshtml">
     <File Id="Workbench_EventsForMeterAngular.cshtml" Name="EventsForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\EventsForMeterAngular.cshtml" />
   </Component>
+  <Component Id="Workbench_FaultsDetailsByDate_cshtml">
+    <File Id="Workbench_FaultsDetailsByDate.cshtml" Name="FaultsDetailsByDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\FaultsDetailsByDate.cshtml" />
+  </Component>
   <Component Id="Workbench_FaultsForDay_cshtml">
     <File Id="Workbench_FaultsForDay.cshtml" Name="FaultsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Workbench\FaultsForDay.cshtml" />
   </Component>

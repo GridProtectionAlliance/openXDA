@@ -5004,7 +5004,7 @@ namespace openXDA
             int auditLogMax = DataContext.Connection.ExecuteScalar<int>("SELECT Value FROM Setting WHERE Name = 'MaxAuditLogRecords'");
             TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
             RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
+            restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy IS NOT NULL AND NewValue IS NOT NULL");
             int count = tableOperations.QueryRecordCount(restriction);
             return (count > auditLogMax ? auditLogMax : count);
         }
@@ -5017,7 +5017,7 @@ namespace openXDA
             DataContext.CustomTableOperationTokens[typeof(AuditLog)] = new[] { new KeyValuePair<string, string>("{count}", auditLogMax.ToString()) };
             TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
             RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
+            restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy IS NOT NULL AND NewValue IS NOT NULL");
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
@@ -5048,6 +5048,14 @@ namespace openXDA
         public void UpdateAuditLog(AuditLog record)
         {
             DataContext.Table<AuditLog>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(AuditLog), RecordOperation.UpdateRecord)]
+        public void RestoreDataAuditLog(AuditLog record)
+        {
+            DataContext.Connection.ExecuteNonQuery("UPDATE {0} SET {1} = {2} WHERE {3} = {4}", record.TableName, record.ColumnName, record.OriginalValue, record.PrimaryKeyColumn, record.PrimaryKeyValue);
+            DataContext.Table<AuditLog>().DeleteRecord(record);
         }
 
         #endregion
