@@ -3532,6 +3532,127 @@ namespace openXDA
 
         #endregion
 
+        #region [ FaultDetailsByDate Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.QueryRecordCount)]
+        public int QueryFaultDetailsByDateCount(string siteID, DateTime targetDate, string filterString)
+        {
+            DataTable dt;
+
+            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
+            SqlDataReader rdr = null;
+
+            try
+            {
+                SqlCommand cmd = new SqlCommand("dbo.selectSitesFaultsDetailsByDate", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
+                cmd.Parameters.Add(new SqlParameter("@username", GetCurrentUserSID()));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                dt = new DataTable();
+                dt.Load(rdr);
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+            string fe = $"locationname LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
+            return dt.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).Count();
+        }
+
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.QueryRecords)]
+        public IEnumerable<FaultsDetailsByDate> QueryFaultsDetailsByDate(string siteID, DateTime targetDate, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            DataTable dt;
+
+            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
+            SqlDataReader rdr = null;
+
+            try
+            {
+                SqlCommand cmd = new SqlCommand("dbo.selectSitesFaultsDetailsByDate", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
+                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
+                cmd.Parameters.Add(new SqlParameter("@username", GetCurrentUserSID()));
+                cmd.CommandTimeout = 300;
+
+                rdr = cmd.ExecuteReader();
+                dt = new DataTable();
+                dt.Load(rdr);
+
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+            }
+            string fe = $"locationname LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
+            if (ascending)
+                return dt.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
+            else
+                return dt.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.DeleteRecord)]
+        public void DeleteFaultsDetailsByDate(int id)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.CreateNewRecord)]
+        public FaultsDetailsByDate NewFaultsDetailsByDate()
+        {
+            return new FaultsDetailsByDate();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.AddNewRecord)]
+        public void AddNewFaultsDetailsByDate(FaultsDetailsByDate record)
+        {
+            DataContext.Table<FaultsDetailsByDate>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.UpdateRecord)]
+        public void UpdateFaultsDetailsByDate(FaultsDetailsByDate record)
+        {
+        }
+
+        public void UpdateFaultsDetailsByDate(List<int> eventIds, string eventType)
+        {
+            foreach (var eventId in eventIds)
+            {
+                DataContext.Connection.ExecuteNonQuery("Update Event SET EventTypeID = (SELECT ID FROM EventType WHERE Name = {0}), UpdatedBy = {1} WHERE ID ={2}", eventType, GetCurrentUserName(), eventId);
+                DataContext.Connection.ExecuteNonQuery("Update FaultSummary SET IsValid = {0} WHERE EventID = {1}", (eventType != "Fault"? 0: 1), eventId);
+            }
+        }
+
+        #endregion
+
+
         #region [DisturbancesForDay Operations]
         public IEnumerable<DisturbanceView> GetDisturbancesForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {

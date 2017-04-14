@@ -31,30 +31,34 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
-    ViewBag.Title = "Meter Events by Line";
+    ViewBag.Title = "Faults Details By Date";
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    int eventId = 0;
-    if (parameters.ContainsKey("EventID"))
+    string meterIds = "";
+    string date = "";
+    if (parameters.ContainsKey("MeterIDs"))
     {
-        eventId = int.Parse(parameters["EventID"]);
+        meterIds = parameters["MeterIDs"];
     }
+    if(parameters.ContainsKey("Date"))
+    {
+        date = parameters["Date"];
+    }
+
     ViewBag.ShowSearchFilter = true;
 
-    Event theEvent = dataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("ID = {0}", eventId)).First();
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
         new[] { null, "<input id='selectAll' type='checkbox' onclick='selectAll()'/> Select All", "text-left"},
-        new[] { "theeventid", "Event ID", "text-center"},
         new[] { "theinceptiontime", "Start Time", "text-center"},
-        new[] { "theeventtype", "Event Type", "text-center"},
-        new[] { "thelinename", "Line Name", "text-center"},
+        new[] { "thelinename", "Line Name", "text-left"},
         new[] { "voltage", "Line KV" , "text-center"},
         new[] { "thefaulttype", "Phase", "text-center"},
         new[] { "thecurrentdistance", "Distance", "text-center" },
+        new[] { "locationname", "Location", "text-left"},
 
     };
 
@@ -71,14 +75,14 @@
 
 @helper BodyRows()
 {
-    <td width="5%"><input type="checkbox" data-bind="attr: {id: 'checkbox' + theeventid}"/></td>
-    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + theeventid + '&faultcurves=1' }, text: theeventid"></a></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: theinceptiontime.formatDate(DateTimeFormat)"></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: theeventtype"></td>
-    <td width="20%" class="text-center valign-middle" data-bind="text: thelinename.truncate(25), attr: {title: thelinename}"></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: voltage"></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: thefaulttype"></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: thecurrentdistance"></td>
+    <td width="100px"><input type="checkbox" data-bind="attr: {id: 'checkbox' + theeventid}"/></td>
+    <td width="200px" class="text-left valign-middle truncate"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + theeventid + '&faultcurves=1' }, text: theinceptiontime.formatDate(DateTimeFormat)"></a></td>
+    <td width="auto" class="text-left valign-middle truncate" data-bind="text: thelinename.truncate(25), attr: {title: thelinename}"></td>
+    <td width="150px" class="text-center valign-middle" data-bind="text: voltage"></td>
+    <td width="150px" class="text-center valign-middle" data-bind="text: thefaulttype"></td>
+    <td width="150px" class="text-center valign-middle" data-bind="text: thecurrentdistance"></td>
+    <td width="10%" class="text-left valign-middle truncate" data-bind="text: locationname"></td>
+
     <td width="5%" class="text-center valign-middle" nowrap>
         @*<button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -89,18 +93,18 @@
 
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddSelectField<MeterEventsByLine, EventType>("theeventtype", "Name"))
+    @Raw(dataContext.AddSelectField<FaultsDetailsByDate, EventType>("theeventtype", "Name",fieldLabel: "Reclassify fault: "))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "theeventid", null, theEvent.MeterID, theEvent.StartTime))
+        @Raw(dataContext.RenderViewModelConfiguration<FaultsDetailsByDate, DataHub>(ViewBag, "theinceptiontime", null, meterIds, date ))
         
         $(function () {
             $('#addRecordButton').text('Update Selected');
             
             viewModel.setAddNewRecord(function (record) {
-                return dataHub.updateAllEventTypesForRange(IDs, record.theeventtype);
+                return dataHub.updateFaultsDetailsByDate(IDs, record.theeventtype);
             });
 
         });

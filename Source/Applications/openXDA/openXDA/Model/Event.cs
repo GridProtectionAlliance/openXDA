@@ -87,4 +87,25 @@ namespace openXDA.Model
         public bool pqiexists { get; set; }
         public string UpdatedBy { get; set; }
     }
+
+    public class FaultsDetailsByDate
+    {
+        public int thefaultid { get; set; }
+        public string thesite { get; set; }
+        public string locationname { get; set; }
+        public int themeterid { get; set; }
+        public int thelineid { get; set; }
+        public int theeventid { get; set; }
+        public string thelinename { get; set; }
+        public int voltage { get; set; }
+        public DateTime theinceptiontime { get; set; }
+        public string thefaulttype { get; set; }
+        public double thecurrentdistance { get; set; }
+        public int notecount { get; set; }
+        public int rk { get; set; }
+        [NonRecordField]
+        public string theeventtype { get; set; }
+
+    }
+
 }
