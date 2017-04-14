@@ -69,6 +69,7 @@ namespace openXDA.Model
         public string LineName { get; set; }
         [Searchable]
         public string MeterName { get; set; }
+        public string StationName { get; set; }
         public double Length { get; set; }
         [Searchable]
         public string EventTypeName { get; set; }

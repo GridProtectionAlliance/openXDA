@@ -12,56 +12,228 @@ CREATE TYPE [dbo].[SiteLineDetailsByDate] AS TABLE(
 )
 GO
 
-CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIds]
+CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIdsForSystem]
     @EventID as INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @currentTime DATETIME2,
-            @meterID INT,
-            @lineID INT
+    DECLARE @startTime DATETIME2
+    DECLARE @prevID INT
+    DECLARE @nextID INT
 
-    SELECT @currentTime = StartTime, @meterID = MeterID, @lineID = LineID
+    SELECT @startTime = StartTime
     FROM Event
     WHERE ID = @EventID
 
-    SELECT evt2.ID as previd, evt3.ID as nextid
-    FROM Event evt1 LEFT OUTER JOIN 
-         Event evt2 ON evt2.StartTime = (SELECT MAX(StartTime)
-         FROM Event
-         WHERE StartTime < @currentTime AND MeterID = @meterID AND LineID = @lineID) AND evt2.MeterID = @meterID AND evt2.LineID = @lineID 
-         LEFT OUTER JOIN 
-         Event evt3 ON evt3.StartTime = (SELECT MIN(StartTime)
-         FROM Event
-         WHERE StartTime > @currentTime AND MeterID = @meterID AND LineID = @lineID) 
-         AND evt3.MeterID = @meterID AND evt3.LineID = @lineID
-    WHERE evt1.ID = @EventID
+    SELECT @prevID = COALESCE
+    (
+        (SELECT MAX(ID) FROM Event WHERE ID < @EventID AND StartTime = @startTime),
+        (SELECT MAX(ID) FROM Event WHERE StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime))
+    )
+
+    SELECT @nextID = COALESCE
+    (
+        (SELECT MIN(ID) FROM Event WHERE ID > @EventID AND StartTime = @startTime),
+        (SELECT MIN(ID) FROM Event WHERE StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime))
+    )
+
+    SELECT
+        @prevID AS previd,
+        @nextID AS nextid
 END
 GO
 
-CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIdsNonMeter]
+CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIdsForMeterLocation]
     @EventID as INT
 AS
 BEGIN
-	SET NOCOUNT ON;
+    SET NOCOUNT ON;
 
-	DECLARE @currentTime DATETIME2
+    DECLARE @startTime DATETIME2
+    DECLARE @meterLocationID INT
+    DECLARE @prevID INT
+    DECLARE @nextID INT
 
-	SELECT @currentTime = StartTime
-	FROM Event
-	WHERE ID = @EventID
+    SELECT
+        @startTime = Event.StartTime,
+        @meterLocationID = Meter.MeterLocationID
+    FROM
+        Event JOIN
+        Meter ON Event.MeterID = Meter.ID
+    WHERE Event.ID = @EventID
 
-	SELECT evt2.ID as previd, evt3.ID as nextid
-	FROM Event evt1 LEFT OUTER JOIN 
-		 Event evt2 ON evt2.StartTime = 
-			 (SELECT MAX(StartTime)
-			 FROM Event
-			 WHERE StartTime < @currentTime ) LEFT OUTER JOIN 
-		 Event evt3 ON evt3.StartTime = (SELECT MIN(StartTime)
-			 FROM Event
-			 WHERE StartTime > @currentTime )
-	WHERE evt1.ID = @EventID
+    SELECT @prevID = COALESCE
+    (
+        (
+            SELECT MAX(Event.ID)
+            FROM
+                Event JOIN
+                Meter ON Event.MeterID = Meter.ID
+            WHERE
+                Event.ID < @EventID AND
+                StartTime = @startTime AND
+                MeterLocationID = @meterLocationID
+        ),
+        (
+            SELECT MAX(Event.ID)
+            FROM
+                Event JOIN
+                Meter ON Event.MeterID = Meter.ID
+            WHERE
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime) AND
+                MeterLocationID = @meterLocationID
+        )
+    )
+
+    SELECT @nextID = COALESCE
+    (
+        (
+            SELECT MIN(Event.ID)
+            FROM
+                Event JOIN
+                Meter ON Event.MeterID = Meter.ID
+            WHERE
+                Event.ID > @EventID AND
+                StartTime = @startTime AND
+                MeterLocationID = @meterLocationID
+        ),
+        (
+            SELECT MIN(Event.ID)
+            FROM
+                Event JOIN
+                Meter ON Event.MeterID = Meter.ID
+            WHERE
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime > @startTime) AND
+                MeterLocationID = @meterLocationID
+        )
+    )
+
+    SELECT
+        @prevID AS previd,
+        @nextID AS nextid
+END
+GO
+
+CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIdsForMeter]
+    @EventID as INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @startTime DATETIME2
+    DECLARE @meterID INT
+    DECLARE @prevID INT
+    DECLARE @nextID INT
+
+    SELECT
+        @startTime = Event.StartTime,
+        @meterID = Event.MeterID
+    FROM Event
+    WHERE Event.ID = @EventID
+
+    SELECT @prevID = COALESCE
+    (
+        (
+            SELECT MAX(Event.ID)
+            FROM Event
+            WHERE
+                Event.ID < @EventID AND
+                StartTime = @startTime AND
+                MeterID = @meterID
+        ),
+        (
+            SELECT MAX(Event.ID)
+            FROM Event
+            WHERE
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime) AND
+                MeterID = @meterID
+        )
+    )
+
+    SELECT @nextID = COALESCE
+    (
+        (
+            SELECT MIN(Event.ID)
+            FROM Event
+            WHERE
+                Event.ID > @EventID AND
+                StartTime = @startTime AND
+                MeterID = @meterID
+        ),
+        (
+            SELECT MIN(Event.ID)
+            FROM Event
+            WHERE
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime > @startTime) AND
+                MeterID = @meterID
+        )
+    )
+
+    SELECT
+        @prevID AS previd,
+        @nextID AS nextid
+END
+GO
+
+CREATE PROCEDURE [dbo].[GetPreviousAndNextEventIdsForLine]
+    @EventID as INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @startTime DATETIME2
+    DECLARE @lineID INT
+    DECLARE @prevID INT
+    DECLARE @nextID INT
+
+    SELECT
+        @startTime = Event.StartTime,
+        @lineID = Event.LineID
+    FROM Event
+    WHERE Event.ID = @EventID
+
+    SELECT @prevID = COALESCE
+    (
+        (
+            SELECT MAX(Event.ID)
+            FROM Event
+            WHERE
+                Event.ID < @EventID AND
+                StartTime = @startTime AND
+                LineID = @lineID
+        ),
+        (
+            SELECT MAX(Event.ID)
+            FROM Event
+            WHERE
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime) AND
+                LineID = @lineID
+        )
+    )
+
+    SELECT @nextID = COALESCE
+    (
+        (
+            SELECT MIN(Event.ID)
+            FROM Event
+            WHERE
+                Event.ID > @EventID AND
+                StartTime = @startTime AND
+                LineID = @lineID
+        ),
+        (
+            SELECT MIN(Event.ID)
+            FROM Event
+            WHERE
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime > @startTime) AND
+                LineID = @lineID
+        )
+    )
+
+    SELECT
+        @prevID AS previd,
+        @nextID AS nextid
 END
 GO
 
