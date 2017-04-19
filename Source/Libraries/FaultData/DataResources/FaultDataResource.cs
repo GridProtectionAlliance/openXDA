@@ -387,6 +387,28 @@ namespace FaultData.DataResources
                     Log.Debug(stopwatch.Elapsed);
                 }
 
+                Log.Debug("Checking whether impedances are defined...");
+
+                // Create the fault location data set and begin populating
+                // the properties necessary for calculating fault location
+                faultLocationDataSet = new FaultLocationDataSet();
+                faultLocationDataSet.LineDistance = dataGroup.Line.Length;
+                faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
+
+                // Extract impedances from the database
+                // and into the fault location data set
+                impedanceExtractor = new ImpedanceExtractor();
+                impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
+                impedanceExtractor.FaultLocationInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
+                impedanceExtractor.Meter = meterDataSet.Meter;
+                impedanceExtractor.Line = dataGroup.Line;
+
+                if (!impedanceExtractor.TryExtractImpedances())
+                {
+                    Log.Debug("No impedances defined; skipping fault analysis.");
+                    continue;
+                }
+
                 // Break into faults and segments
                 Log.Debug("Classifying data into faults and segments...");
 
@@ -421,41 +443,24 @@ namespace FaultData.DataResources
                     ClassifyFaults(faults, dataGroup, viCycleDataGroup);
                 }
 
-                // Create the fault location data set and begin populating
-                // the properties necessary for calculating fault location
-                faultLocationDataSet = new FaultLocationDataSet();
-                faultLocationDataSet.LineDistance = dataGroup.Line.Length;
-                faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
+                // Generate fault curves for fault analysis
+                Log.Debug("Generating fault curves...");
+                stopwatch.Restart();
 
-                // Extract impedances from the database
-                // and into the fault location data set
-                impedanceExtractor = new ImpedanceExtractor();
-                impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
-                impedanceExtractor.FaultLocationInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
-                impedanceExtractor.Meter = meterDataSet.Meter;
-                impedanceExtractor.Line = dataGroup.Line;
+                faultCurveGenerator = new FaultCurveGenerator();
+                faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, m_systemFrequency);
+                faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
+                faultCurveGenerator.Faults = faults;
+                faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
+                faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
+                faultCurveGenerator.GenerateFaultCurves();
 
-                if (impedanceExtractor.TryExtractImpedances())
-                {
-                    // Generate fault curves for fault analysis
-                    Log.Debug("Generating fault curves...");
-                    stopwatch.Restart();
+                Log.Debug(stopwatch.Elapsed);
 
-                    faultCurveGenerator = new FaultCurveGenerator();
-                    faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, m_systemFrequency);
-                    faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
-                    faultCurveGenerator.Faults = faults;
-                    faultCurveGenerator.FaultLocationDataSet = faultLocationDataSet;
-                    faultCurveGenerator.FaultLocationAlgorithms = faultLocationAlgorithms;
-                    faultCurveGenerator.GenerateFaultCurves();
-
-                    Log.Debug(stopwatch.Elapsed);
-
-                    // Gather additional info about each fault
-                    // based on the results of the above analysis
-                    foreach (Fault fault in faults)
-                        PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup);
-                }
+                // Gather additional info about each fault
+                // based on the results of the above analysis
+                foreach (Fault fault in faults)
+                    PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup);
 
                 // Create a fault group and add it to the lookup table
                 faultValidationLogicResult = CheckFaultValidationLogic(faults);
