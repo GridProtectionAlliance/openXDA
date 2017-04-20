@@ -711,6 +711,14 @@ namespace openXDA
         }
 
         /// <summary>
+        /// Issues command to the file processor to enumerate the watch directories.
+        /// </summary>
+        public void EnumerateWatchDirectories()
+        {
+            m_fileProcessor.EnumerateWatchDirectories();
+        }
+
+        /// <summary>
         /// Stops the fault location engine.
         /// </summary>
         public void Stop()

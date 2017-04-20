@@ -228,6 +228,7 @@ namespace openXDA
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.AddScheduledProcess(ReloadConfigurationHandler, "ReloadConfiguration", "0 0 * * *");
+            m_serviceHelper.AddProcess(EnumerateWatchDirectoriesHandler, "EnumWatchDirectories");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
@@ -479,6 +480,11 @@ namespace openXDA
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadConfiguration();
             ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
+        }
+
+        private void EnumerateWatchDirectoriesHandler(string s, object[] args)
+        {
+            m_extensibleDisturbanceAnalysisEngine.EnumerateWatchDirectories();
         }
 
         // Reloads system settings from the database.
