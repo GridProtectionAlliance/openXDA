@@ -99,23 +99,37 @@
 @section Scripts {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<FaultsDetailsByDate, DataHub>(ViewBag, "theinceptiontime", null, meterIds, date ))
-        
+        var IDs;
+        var lastChanges;
+
+        $('#pageControlsRow').prepend("<button id='undoBtn' class='btn btn-sm btn-primary' onclick='undoLastChange()'>Undo</button>");
+        $('#undoBtn').hide();
+
         $(function () {
             $('#addRecordButton').text('Update Selected');
             
             viewModel.setAddNewRecord(function (record) {
+                $('#undoBtn').show();
+                lastChanges = IDs;
                 return dataHub.updateFaultsDetailsByDate(IDs, record.theeventtype);
             });
 
         });
         
-        var IDs;
         $(viewModel).on('beforeSave', function (event, record) {
             IDs = $('td input').filter('[id*="checkbox"]').filter(':checked').toArray().map(function (a) { return parseInt(a.id.split('checkbox')[1]) });
         });
 
         function selectAll() {
             $('td input').filter('[id*="checkbox"]').prop('checked', $('#selectAll').prop('checked'))
+        }
+
+        function undoLastChange() {
+            dataHub.undoChanges(lastChanges).done(function () {
+                viewModel.queryPageRecords();
+                $('#undoBtn').hide();
+                lastChanges = null;
+            });
         }
     </script>
 }

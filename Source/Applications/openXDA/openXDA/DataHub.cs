@@ -3650,6 +3650,16 @@ namespace openXDA
             }
         }
 
+        public void UndoChanges(List<int> eventIds)
+        {
+            foreach (var eventId in eventIds)
+            {
+                int eventTypeID = DataContext.Connection.ExecuteScalar<int>("Select OriginalValue FROM AuditLog WHERE PrimaryKeyValue = {0}", eventId);
+                DataContext.Connection.ExecuteNonQuery("Update Event SET EventTypeID = {0}, UpdatedBy = {1} WHERE ID = {2}", eventTypeID, GetCurrentUserName(), eventId);
+                DataContext.Connection.ExecuteNonQuery("Update FaultSummary SET IsValid = 1 WHERE EventID = {0}", eventId);
+            }
+        }
+
         #endregion
 
 
@@ -5051,12 +5061,21 @@ namespace openXDA
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(AuditLog), RecordOperation.UpdateRecord)]
         public void RestoreDataAuditLog(AuditLog record)
         {
-            DataContext.Connection.ExecuteNonQuery("UPDATE {0} SET {1} = {2} WHERE {3} = {4}", record.TableName, record.ColumnName, record.OriginalValue, record.PrimaryKeyColumn, record.PrimaryKeyValue);
-            DataContext.Table<AuditLog>().DeleteRecord(record);
+            DataContext.Connection.ExecuteNonQuery($"UPDATE {record.TableName} SET {record.ColumnName} = '{record.OriginalValue}' WHERE {record.PrimaryKeyColumn} = {record.PrimaryKeyValue}");
         }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        public void RestoreMultipleDataAuditLog(List<int> IDs)
+        {
+            foreach(int id in IDs)
+            {
+                DataRow record = DataContext.Connection.RetrieveRow("SELECT * FROM AuditLog WHERE ID = {0}",id);
+                DataContext.Connection.ExecuteNonQuery($"UPDATE {record["TableName"]} SET {record["ColumnName"]} = '{record["OriginalValue"]}' WHERE {record["PrimaryKeyColumn"]} = {record["PrimaryKeyValue"]}");
+            }
+        }
+
 
         #endregion
 

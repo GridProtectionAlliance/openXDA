@@ -54,6 +54,7 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
+        new[] { null, "<input id='selectAll' type='checkbox' onclick='selectAll(this)'/> Select All", "text-left checkboxColumn"},
         new[] { "TableName", "Table", "text-left tableNameColumn"},
         new[] { "PrimaryKeyColumn", "Table Key", "text-left primaryKeyColumn"},
         new[] { "PrimaryKeyValue", "Key Value", "text-left primaryKeyValueColumn"},
@@ -79,7 +80,7 @@
             table-layout: fixed;
             min-width: 1200px;
         }
-
+        .checkboxColumn{ width: 100px;}
         .tableNameColumn { width: 130px; }
         .primaryKeyColumn { width: 100px; }
         .primaryKeyValueColumn { width: 120px; }
@@ -95,6 +96,7 @@
 
 @helper BodyRows()
 {
+    <td class="text-left valign-middle truncate checkboxColumn"><input type="checkbox" data-bind="attr: {id: 'checkbox' + ID}" onclick="checkButton(this)" /></td>
     <td class="text-left valign-middle truncate tableNameColumn" data-bind="text: TableName"></td>
     <td class="text-left valign-middle truncate primaryKeyColumn" data-bind="text: PrimaryKeyColumn"></td>
     <td class="text-left valign-middle truncate primaryKeyValueColumn " data-bind="text: PrimaryKeyValue"></td>
@@ -104,7 +106,7 @@
     <td class="text-left valign-middle truncate updatedByColumn" data-bind="text: UpdatedBy.trim()"></td>
     <td class="text-center valign-middle truncate updatedOnColumn" data-bind="text: UpdatedOn.formatDate(DateTimeFormat)"></td>
     <td class="text-center valign-middle buttonsColumn" nowrap>
-        <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" data-bind="enable: $parent.dataHubIsConnected()" title="Restore data"><span class="glyphicon glyphicon-repeat"></span></button>
+        <button type="button" class="btn btn-xs" data-toggle="modal" data-bind="enable: $parent.dataHubIsConnected(), click: reprocess.bind($data)" title="Restore data"><span class="glyphicon glyphicon-repeat"></span></button>
             @*<button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
             <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>*@
     </td>
@@ -121,5 +123,37 @@
 @section Scripts {
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AuditLog, DataHub>(ViewBag))        
+
+        $('#pageControlsRow').prepend("<button id='reprocessSelectedButton' class='btn btn-sm btn-primary' onclick='reprocessForRange()' disabled='disabled'>Reprocess Selected</button>");
+
+        function reprocess(record) {
+            dataHub.restoreDataAuditLog(record).done(function () {
+                viewModel.queryPageRecords();
+            });
+        }
+
+        function checkButton(control) {
+            if ($.grep($('input[type=checkbox]'), function (a, i) { return $(a).prop('checked') }).length > 0)
+                $('#reprocessSelectedButton').prop('disabled', false);
+            else
+                $('#reprocessSelectedButton').prop('disabled', true);
+        }
+
+        function selectAll(control) {
+            $('td input').filter('[id*="checkbox"]').prop('checked', $('#selectAll').prop('checked'));
+            if ($.grep($('input[type=checkbox]'), function (a, i) { return $(a).prop('checked') }).length > 0)
+                $('#reprocessSelectedButton').prop('disabled', false);
+            else
+                $('#reprocessSelectedButton').prop('disabled', true);
+
+
+        }
+
+        function reprocessForRange() {
+            var IDs = $('td input').filter('[id*="checkbox"]').filter(':checked').toArray().map(function (a) { return parseInt(a.id.split('checkbox')[1]) });
+            dataHub.restoreMultipleDataAuditLog(IDs).done(function () {
+                viewModel.queryPageRecords();
+            });
+        }
     </script>
 }
