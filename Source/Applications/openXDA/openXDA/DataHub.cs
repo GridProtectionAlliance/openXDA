@@ -2142,7 +2142,7 @@ namespace openXDA
 
         public IEnumerable<Meter> GetMetersForSelect()
         {
-            return DataContext.Table<Meter>().QueryRecords(restriction: new RecordRestriction("ID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0})", GetCurrentUserSID()));
+            return DataContext.Table<Meter>().QueryRecords("Name", new RecordRestriction("ID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0})", GetCurrentUserSID()));
         }
 
         public IEnumerable<Line> GetLinesForSelect()

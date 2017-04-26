@@ -188,7 +188,7 @@
             });
 
 
-            $('#typefilter').on('keyup', function () {
+            $('#typefilter').on('keypress', function () {
                 var string = $('#typefilter').val();
                 if (string === "") {
                     $('.mobileSelect-container :visible .list-container').children().show();
@@ -213,7 +213,7 @@
                 $('#meters').mobileSelect('show');
             });
 
-            $('#meterfilter').on('keyup', function () {
+            $('#meterfilter').on('keypress', function () {
                 var string = $('#meterfilter').val();
                 if (string === "") {
                     $('.mobileSelect-container :visible .list-container').children().show();
