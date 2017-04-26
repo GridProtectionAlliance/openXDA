@@ -449,6 +449,10 @@
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
     <None Include="wwwroot\Config\DashSettings.cshtml" />
     <None Include="wwwroot\Config\DefaultAlarmSettings.cshtml" />
+    <Content Include="wwwroot\Content\jquery.jspanel.sass" />
+    <Content Include="wwwroot\Content\_jsglyph.sass" />
+    <Content Include="wwwroot\Content\_themes.sass" />
+    <Content Include="wwwroot\Content\_themes_mdl_styles.sass" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <Content Include="wwwroot\Config\EmailTypes.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />
@@ -467,6 +471,8 @@
     <None Include="wwwroot\Config\index.cshtml" />
     <None Include="wwwroot\Config\Layout.cshtml" />
     <None Include="wwwroot\Config\MeterGroups.cshtml" />
+    <Content Include="wwwroot\Content\jquery.jspanel.css" />
+    <Content Include="wwwroot\Content\jquery.jspanel.min.css" />
     <Content Include="wwwroot\Content\jquery.multiselect.css" />
     <Content Include="wwwroot\Content\jquery.multiselect.filter.css" />
     <Content Include="wwwroot\Content\OpenSEE.css" />
@@ -538,6 +544,10 @@
     <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />
     <None Include="wwwroot\Config\Users.cshtml" />
     <Content Include="wwwroot\Scripts\jquery.blockUI.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel-compiled.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel-compiled.min.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel.min.js" />
     <Content Include="wwwroot\Scripts\jquery.multiselect.filter.js" />
     <Content Include="wwwroot\Scripts\jquery.multiselect.js" />
     <Content Include="wwwroot\Scripts\moment.min.js" />
@@ -1670,6 +1680,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Code\" />
+    <Folder Include="wwwroot\Scripts\fonts\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

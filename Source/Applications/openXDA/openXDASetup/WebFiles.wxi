@@ -207,6 +207,15 @@
   <Component Id="Content_jquery_ui_theme_min_css">
     <File Id="Content_jquery_ui.theme.min.css" Name="jquery-ui.theme.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\jquery-ui.theme.min.css" />
   </Component>
+  <Component Id="Content_jquery_jspanel_css">
+    <File Id="Content_jquery.jspanel.css" Name="jquery.jspanel.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\jquery.jspanel.css" />
+  </Component>
+  <Component Id="Content_jquery_jspanel_min_css">
+    <File Id="Content_jquery.jspanel.min.css" Name="jquery.jspanel.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\jquery.jspanel.min.css" />
+  </Component>
+  <Component Id="Content_jquery_jspanel_sass">
+    <File Id="Content_jquery.jspanel.sass" Name="jquery.jspanel.sass" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\jquery.jspanel.sass" />
+  </Component>
   <Component Id="Content_jquery_multiselect_css">
     <File Id="Content_jquery.multiselect.css" Name="jquery.multiselect.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\jquery.multiselect.css" />
   </Component>
@@ -233,6 +242,15 @@
   </Component>
   <Component Id="Content_Site_css">
     <File Id="Content_Site.css" Name="Site.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\Site.css" />
+  </Component>
+  <Component Id="Content_jsglyph_sass">
+    <File Id="Content_jsglyph.sass" Name="_jsglyph.sass" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\_jsglyph.sass" />
+  </Component>
+  <Component Id="Content_themes_sass">
+    <File Id="Content_themes.sass" Name="_themes.sass" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\_themes.sass" />
+  </Component>
+  <Component Id="Content_themes_mdl_styles_sass">
+    <File Id="Content_themes_mdl_styles.sass" Name="_themes_mdl_styles.sass" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\_themes_mdl_styles.sass" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Content_fullscreenselect_Components" Directory="CONTENTFULLSCREENSELECTFOLDER">
@@ -566,6 +584,18 @@
   <Component Id="Scripts_jquery_blockUI_js">
     <File Id="Scripts_jquery.blockUI.js" Name="jquery.blockUI.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.blockUI.js" />
   </Component>
+  <Component Id="Scripts_jquery_jspanel_compiled_js">
+    <File Id="Scripts_jquery.jspanel_compiled.js" Name="jquery.jspanel-compiled.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.jspanel-compiled.js" />
+  </Component>
+  <Component Id="Scripts_jquery_jspanel_compiled_min_js">
+    <File Id="Scripts_jquery.jspanel_compiled.min.js" Name="jquery.jspanel-compiled.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.jspanel-compiled.min.js" />
+  </Component>
+  <Component Id="Scripts_jquery_jspanel_js">
+    <File Id="Scripts_jquery.jspanel.js" Name="jquery.jspanel.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.jspanel.js" />
+  </Component>
+  <Component Id="Scripts_jquery_jspanel_min_js">
+    <File Id="Scripts_jquery.jspanel.min.js" Name="jquery.jspanel.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.jspanel.min.js" />
+  </Component>
   <Component Id="Scripts_jquery_multiselect_filter_js">
     <File Id="Scripts_jquery.multiselect.filter.js" Name="jquery.multiselect.filter.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\jquery.multiselect.filter.js" />
   </Component>
@@ -842,6 +872,20 @@
   </Component>
   <Component Id="Scripts_flot_README_md">
     <File Id="Scripts_flot_README.md" Name="README.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\README.md" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_fonts_Components" Directory="SCRIPTSFONTSFOLDER">
+  <Component Id="Scripts_fonts_jsglyph_eot">
+    <File Id="Scripts_fonts_jsglyph.eot" Name="jsglyph.eot" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fonts\jsglyph.eot" />
+  </Component>
+  <Component Id="Scripts_fonts_jsglyph_svg">
+    <File Id="Scripts_fonts_jsglyph.svg" Name="jsglyph.svg" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fonts\jsglyph.svg" />
+  </Component>
+  <Component Id="Scripts_fonts_jsglyph_ttf">
+    <File Id="Scripts_fonts_jsglyph.ttf" Name="jsglyph.ttf" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fonts\jsglyph.ttf" />
+  </Component>
+  <Component Id="Scripts_fonts_jsglyph_woff">
+    <File Id="Scripts_fonts_jsglyph.woff" Name="jsglyph.woff" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\fonts\jsglyph.woff" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_fullscreenselect_Components" Directory="SCRIPTSFULLSCREENSELECTFOLDER">

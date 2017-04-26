@@ -19,6 +19,7 @@
   <Directory Id="SCRIPTSFOLDER" Name="Scripts">
     <Directory Id="SCRIPTSD3FOLDER" Name="D3" />
     <Directory Id="SCRIPTSFLOTFOLDER" Name="flot" />
+    <Directory Id="SCRIPTSFONTSFOLDER" Name="fonts" />
     <Directory Id="SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="SCRIPTSPRIMEUIFOLDER" Name="PrimeUI">
       <Directory Id="SCRIPTSPRIMEUIFONTAWESOMEFOLDER" Name="Font-Awesome">
