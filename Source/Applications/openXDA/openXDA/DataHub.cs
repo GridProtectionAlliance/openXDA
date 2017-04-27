@@ -29,26 +29,19 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
-using System.Security.Policy;
-using System.Text;
 using System.Threading;
 using System.Transactions;
-using System.Windows.Forms;
 using FaultData.DataAnalysis;
 using FaultData.Database;
 using GSF;
 using GSF.Collections;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Identity;
-using GSF.PhasorProtocols.BPAPDCstream;
 using GSF.Security.Model;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
-using GSF.Identity;
-using openXDA.Adapters;
 using openXDA.Model;
 using openHistorian.XDALink;
 using Channel = openXDA.Model.Channel;
@@ -81,22 +74,14 @@ namespace openXDA
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecordCount)]
         public int QuerySettingCount(string filterString)
         {
-            TableOperations<Setting> tableOperations = DataContext.Table<Setting>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<Setting>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Setting), RecordOperation.QueryRecords)]
         public IEnumerable<Setting> QuerySettings(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<Setting> tableOperations = DataContext.Table<Setting>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<Setting>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -135,22 +120,14 @@ namespace openXDA
         [RecordOperation(typeof(DashSettings), RecordOperation.QueryRecordCount)]
         public int QueryDashSettingsCount(string filterString)
         {
-            TableOperations<DashSettings> tableOperations = DataContext.Table<DashSettings>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<DashSettings>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(DashSettings), RecordOperation.QueryRecords)]
         public IEnumerable<DashSettings> QueryDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<DashSettings> tableOperations = DataContext.Table<DashSettings>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<DashSettings>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -189,22 +166,14 @@ namespace openXDA
         [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecordCount)]
         public int QueryUserDashSettingsCount(string filterString)
         {
-            TableOperations<UserDashSettings> tableOperations = DataContext.Table<UserDashSettings>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<UserDashSettings>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecords)]
         public IEnumerable<UserDashSettings> QueryUserDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<UserDashSettings> tableOperations = DataContext.Table<UserDashSettings>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<UserDashSettings>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -251,22 +220,14 @@ namespace openXDA
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(string filterString)
         {
-            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<MeterGroup>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<MeterGroup> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -348,22 +309,14 @@ namespace openXDA
         [RecordOperation(typeof(LineGroup), RecordOperation.QueryRecordCount)]
         public int QueryLineGroupCount(string filterString)
         {
-            TableOperations<LineGroup> tableOperations = DataContext.Table<LineGroup>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<LineGroup>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineGroup), RecordOperation.QueryRecords)]
         public IEnumerable<LineGroup> QueryLineGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<LineGroup> tableOperations = DataContext.Table<LineGroup>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<LineGroup>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -601,16 +554,14 @@ namespace openXDA
         [RecordOperation(typeof(User), RecordOperation.QueryRecordCount)]
         public int QueryUserCount(string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%').Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<User>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+            return DataContext.Table<User>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(User), RecordOperation.QueryRecords)]
         public IEnumerable<User> QueryUsers(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").TrimEnd('%').Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<User>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("Name LIKE {0}", filterString));
+            return DataContext.Table<User>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -862,11 +813,7 @@ namespace openXDA
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecordCount)]
         public int QueryDefaultAlarmRangeLimitViewCount(string filterString)
         {
-            TableOperations<DefaultAlarmRangeLimitView> tableOperations = DataContext.Table<DefaultAlarmRangeLimitView>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<DefaultAlarmRangeLimitView>().QueryRecordCount(filterString);
 
         }
 
@@ -874,11 +821,7 @@ namespace openXDA
         [RecordOperation(typeof(DefaultAlarmRangeLimitView), RecordOperation.QueryRecords)]
         public IEnumerable<DefaultAlarmRangeLimitView> QueryDefaultAlarmRangeLimitViews(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<DefaultAlarmRangeLimitView> tableOperations = DataContext.Table<DefaultAlarmRangeLimitView>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<DefaultAlarmRangeLimitView>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -958,22 +901,14 @@ namespace openXDA
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecordCount)]
         public int QueryEmailTypeCount(string filterString)
         {
-            TableOperations<EmailTypeView> tableOperations = DataContext.Table<EmailTypeView>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<EmailTypeView>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecords)]
         public IEnumerable<EmailTypeView> QueryEmailType(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<EmailTypeView> tableOperations = DataContext.Table<EmailTypeView>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<EmailTypeView>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1022,22 +957,14 @@ namespace openXDA
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecordCount)]
         public int QueryEmailGroupCount(string filterString)
         {
-            TableOperations<EmailGroup> tableOperations = DataContext.Table<EmailGroup>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<EmailGroup>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecords)]
         public IEnumerable<EmailGroup> QueryEmailGroup(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<EmailGroup> tableOperations = DataContext.Table<EmailGroup>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1079,7 +1006,7 @@ namespace openXDA
         public int QueryEmailGroupMeterGroupCount(int emailGroupId, string filterString)
         {
             TableOperations<EmailGroupMeterGroupView> tableOperations = DataContext.Table<EmailGroupMeterGroupView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupId > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
             else
@@ -1093,7 +1020,7 @@ namespace openXDA
         public IEnumerable<EmailGroupMeterGroupView> QueryEmailGroupMeterGroup(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<EmailGroupMeterGroupView> tableOperations = DataContext.Table<EmailGroupMeterGroupView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupId > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
             else
@@ -1140,7 +1067,7 @@ namespace openXDA
         public int QueryEmailGroupLineGroupCount(int emailGroupId, string filterString)
         {
             TableOperations<EmailGroupLineGroupView> tableOperations = DataContext.Table<EmailGroupLineGroupView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupId > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
             else
@@ -1154,7 +1081,7 @@ namespace openXDA
         public IEnumerable<EmailGroupLineGroupView> QueryEmailGroupLineGroup(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<EmailGroupLineGroupView> tableOperations = DataContext.Table<EmailGroupLineGroupView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupId > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
             else
@@ -1201,7 +1128,7 @@ namespace openXDA
         public int QueryEmailGroupUserAccountCount(int emailGroupId, string filterString)
         {
             TableOperations<EmailGroupUserAccountView> tableOperations = DataContext.Table<EmailGroupUserAccountView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupId > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
             else
@@ -1215,7 +1142,7 @@ namespace openXDA
         public IEnumerable<EmailGroupUserAccountView> QueryEmailGroupUserAccount(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<EmailGroupUserAccountView> tableOperations = DataContext.Table<EmailGroupUserAccountView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupId > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
             else
@@ -1262,7 +1189,7 @@ namespace openXDA
         public int QueryEmailGroupTypeCount(int emailGroupID, string filterString)
         {
             TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupID > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupID);
             else
@@ -1276,7 +1203,7 @@ namespace openXDA
         public IEnumerable<EmailGroupType> QueryEmailGroupType(int emailGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (emailGroupID > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupID);
             else
@@ -1332,22 +1259,14 @@ namespace openXDA
         [RecordOperation(typeof(XSLTemplate), RecordOperation.QueryRecordCount)]
         public int QueryXSLTemplateCount(string filterString)
         {
-            TableOperations<XSLTemplate> tableOperations = DataContext.Table<XSLTemplate>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<XSLTemplate>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(XSLTemplate), RecordOperation.QueryRecords)]
         public IEnumerable<XSLTemplate> QueryXSLTemplate(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<XSLTemplate> tableOperations = DataContext.Table<XSLTemplate>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<XSLTemplate>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         public XSLTemplate QueryXSLTemplateByID(int id)
@@ -1551,7 +1470,7 @@ namespace openXDA
         public int QueryMeterCount(int meterLocationID, string filterString)
         {
             TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (meterLocationID > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
             else
@@ -1565,7 +1484,7 @@ namespace openXDA
         public IEnumerable<MeterDetail> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             if (meterLocationID > 0)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterLocationID = {0}", meterLocationID);
             else
@@ -1578,7 +1497,6 @@ namespace openXDA
         [RecordOperation(typeof(Meter), RecordOperation.DeleteRecord)]
         public void DeleteMeter(int id)
         {
-            //DataContext.Table<Meter>().DeleteRecord(id);
             CascadeDelete("Meter", $"ID = {id}");
 
         }
@@ -1630,29 +1548,20 @@ namespace openXDA
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecordCount)]
         public int QueryMeterLocationCount(string filterString)
         {
-            TableOperations<MeterLocation> tableOperations = DataContext.Table<MeterLocation>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<MeterLocation>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.QueryRecords)]
         public IEnumerable<MeterLocation> QueryMeterLocations(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<MeterLocation> tableOperations = DataContext.Table<MeterLocation>();
-            RecordRestriction restriction = new RecordRestriction();
-            restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<MeterLocation>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLocation), RecordOperation.DeleteRecord)]
         public void DeleteMeterLocation(int id)
         {
-            //DataContext.Table<MeterLocation>().DeleteRecord(id);
             CascadeDelete("MeterLocation", $"ID = {id}");
         }
 
@@ -1694,16 +1603,14 @@ namespace openXDA
         [RecordOperation(typeof(Line), RecordOperation.QueryRecordCount)]
         public int QueryLinesCount(string filterString)
         {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<Line>().QueryRecordCount(new RecordRestriction("Name LIKE {0}", filterString));
+            return DataContext.Table<Line>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Line), RecordOperation.QueryRecords)]
         public IEnumerable<Line> QueryLines(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
+            return DataContext.Table<Line>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1763,25 +1670,20 @@ namespace openXDA
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecordCount)]
         public int QueryLineViewCount(string filterString)
         {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<LineView>().QueryRecordCount(new RecordRestriction("TopName LIKE {0}", filterString));
+            return DataContext.Table<LineView>().QueryRecordCount(filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.QueryRecords)]
         public IEnumerable<LineView> QueryLineView(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            filterString = (filterString ?? "").Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]").Replace("*", "%") + "%";
-            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetKey LIKE {0}", filterString));
+            return DataContext.Table<LineView>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(LineView), RecordOperation.DeleteRecord)]
         public void DeleteLineView(int id)
         {
-            //int index = DataContext.Connection.ExecuteScalar<int>("Select ID FROM LineImpedance WHERE LineID = {0}", id);
-            //DataContext.Table<LineImpedance>().DeleteRecord(index);
-            //DataContext.Table<Line>().DeleteRecord(id);
             CascadeDelete("Line", $"ID = {id}");
 
         }
@@ -1844,7 +1746,7 @@ namespace openXDA
         public int QueryMeterLineCount(int lineID, int meterID, string filterString)
         {
             TableOperations<MeterLineDetail> tableOperations = DataContext.Table<MeterLineDetail>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
 
             if (lineID == -1 && meterID != -1)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0}", meterID);
@@ -1860,7 +1762,7 @@ namespace openXDA
         public IEnumerable<MeterLineDetail> QueryMeterLine(int lineID, int meterID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<MeterLineDetail> tableOperations = DataContext.Table<MeterLineDetail>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
 
             if (lineID == -1 && meterID != -1)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0}", meterID);
@@ -1908,7 +1810,7 @@ namespace openXDA
         public int QueryChannelCount(int meterID, int lineID, string filterString)
         {
             TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
 
             if (meterID != -1 && lineID == -1)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
@@ -1925,7 +1827,7 @@ namespace openXDA
         public IEnumerable<ChannelDetail> QueryChannel(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<ChannelDetail> tableOperations = DataContext.Table<ChannelDetail>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
 
             if (meterID != -1 && lineID == -1)
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} ", meterID);
@@ -3662,7 +3564,6 @@ namespace openXDA
 
         #endregion
 
-
         #region [DisturbancesForDay Operations]
         public IEnumerable<DisturbanceView> GetDisturbancesForDay(DateTime date, string eventTypes, int filterId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
@@ -3928,7 +3829,7 @@ namespace openXDA
                 filterString += "%";
 
             TableOperations<BreakerView> table = DataContext.Table<BreakerView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction ;
             restriction = table.GetSearchRestriction(filterString) + new RecordRestriction($"(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {filterId}), ','))) AND Energized >= '{startTime}' AND Energized <= '{endTime}' AND OperationType IN ({operationTypeList})");
             return table.QueryRecordCount(restriction);
         }
@@ -3953,7 +3854,7 @@ namespace openXDA
                 filterString += "%";
 
             TableOperations<BreakerView> table = DataContext.Table<BreakerView>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             restriction = table.GetSearchRestriction(filterString) + new RecordRestriction($"(MeterID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = {filterId}), ','))) AND Energized >= '{startTime}' AND Energized <= '{endTime}' AND OperationType IN ({operationTypeList})");
 
             return table.QueryRecords(sortField, ascending, page, pageSize, restriction);
@@ -5013,7 +4914,7 @@ namespace openXDA
         {
             int auditLogMax = DataContext.Connection.ExecuteScalar<int>("SELECT Value FROM Setting WHERE Name = 'MaxAuditLogRecords'");
             TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy IS NOT NULL AND NewValue IS NOT NULL");
             int count = tableOperations.QueryRecordCount(restriction);
             return (count > auditLogMax ? auditLogMax : count);
@@ -5026,7 +4927,7 @@ namespace openXDA
             int auditLogMax = DataContext.Connection.ExecuteScalar<int>("SELECT Value FROM Setting WHERE Name = 'MaxAuditLogRecords'");
             DataContext.CustomTableOperationTokens[typeof(AuditLog)] = new[] { new KeyValuePair<string, string>("{count}", auditLogMax.ToString()) };
             TableOperations<AuditLog> tableOperations = DataContext.Table<AuditLog>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("UpdatedBy IS NOT NULL AND NewValue IS NOT NULL");
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
@@ -5087,12 +4988,15 @@ namespace openXDA
         {
             IEnumerable<openXDA.Model.DataReader> dataReaders = DataContext.Table<openXDA.Model.DataReader>().QueryRecords();
             TableOperations<openXDA.Model.DataFile> tableOperations = DataContext.Table<openXDA.Model.DataFile>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             restriction = tableOperations.GetSearchRestriction(filterString);
-            RecordRestriction innerRestriction = new RecordRestriction();
+            RecordRestriction innerRestriction = null;
             foreach (var dataReader in dataReaders)
             {
-                innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
+                if(innerRestriction == null)
+                    innerRestriction = new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
+                else
+                    innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
             }
             restriction += innerRestriction;
             return tableOperations.QueryRecordCount(restriction);
@@ -5104,12 +5008,15 @@ namespace openXDA
         {
             IEnumerable<openXDA.Model.DataReader> dataReaders = DataContext.Table<openXDA.Model.DataReader>().QueryRecords();
             TableOperations<openXDA.Model.DataFile> tableOperations = DataContext.Table<openXDA.Model.DataFile>();
-            RecordRestriction restriction = new RecordRestriction();
+            RecordRestriction restriction;
             restriction = tableOperations.GetSearchRestriction(filterString);
-            RecordRestriction innerRestriction = new RecordRestriction();
+            RecordRestriction innerRestriction = null;
             foreach (var dataReader in dataReaders)
             {
-                innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
+                if (innerRestriction == null)
+                    innerRestriction = new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
+                else
+                    innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
             }
             restriction += innerRestriction;
             return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);

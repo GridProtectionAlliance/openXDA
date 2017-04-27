@@ -14,14 +14,11 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         [StringLength(50)]
+        [Searchable]
         public string AssetKey { get; set; }
-
         public float VoltageKV { get; set; }
-
         public float ThermalRating { get; set; }
-
         public float Length { get; set; }
-
         public string Description { get; set; }
     }
 }

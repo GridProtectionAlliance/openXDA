@@ -15,6 +15,7 @@ namespace openXDA.Model
         public int ID { get; set; }
 
         [StringLength(50)]
+        [Searchable]
         public string AssetKey { get; set; }
 
         public float VoltageKV { get; set; }
@@ -25,6 +26,7 @@ namespace openXDA.Model
 
         public string Description { get; set; }
 
+        [Searchable]
         public string TopName { get; set; }
 
         public int LineImpedanceID { get; set; }

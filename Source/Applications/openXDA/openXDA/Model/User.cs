@@ -12,6 +12,7 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [Searchable]
         public string Name { get; set; }
         public bool Active { get; set; }
     }
