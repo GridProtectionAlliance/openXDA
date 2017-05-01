@@ -114,6 +114,7 @@ namespace FaultData.DataReaders
             DataSeries series;
             List<DateTime> timeSamples;
             List<double> valueSamples;
+            List<bool?> digitalSamples;
 
             if ((object)m_eventFile == null)
                 m_eventFile = EventFile.Parse(filePath, SystemFrequency);
@@ -165,12 +166,14 @@ namespace FaultData.DataReaders
                         continue;
 
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
-                    valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
+                    digitalSamples = report.AnalogSection.DigitalChannels[i].Samples;
 
                     series.SeriesInfo = channel.Series[0];
 
                     series.DataPoints = timeSamples
-                        .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
+                        .Zip(digitalSamples, (time, value) => new { Time = time, Value = value })
+                        .Where(x => x.Value != null)
+                        .Select(x => new DataPoint { Time = x.Time, Value = Convert.ToDouble(x.Value) })
                         .ToList();
 
                     m_meterDataSet.Digitals.Add(series);
@@ -231,12 +234,14 @@ namespace FaultData.DataReaders
                         continue;
 
                     timeSamples = report.AnalogSection.TimeChannel.Samples;
-                    valueSamples = report.AnalogSection.DigitalChannels[i].Samples.Select(Convert.ToDouble).ToList();
+                    digitalSamples = report.AnalogSection.DigitalChannels[i].Samples;
 
                     series.SeriesInfo = channel.Series[0];
 
                     series.DataPoints = timeSamples
-                        .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
+                        .Zip(digitalSamples, (time, value) => new { Time = time, Value = value })
+                        .Where(x => x.Value != null )
+                        .Select(x => new DataPoint { Time= x.Time, Value = Convert.ToDouble(x.Value)})
                         .ToList();
 
                     m_meterDataSet.Digitals.Add(series);
@@ -331,7 +336,7 @@ namespace FaultData.DataReaders
         {
             Channel channel = new Channel();
             Series series = new Series();
-            Channel<bool> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
+            Channel<bool?> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
 
             channel.Name = digitalChannel.Name;
             channel.HarmonicGroup = 0;
@@ -439,7 +444,7 @@ namespace FaultData.DataReaders
         {
             Channel channel = new Channel();
             Series series = new Series();
-            Channel<bool> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
+            Channel<bool?> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
 
             channel.Name = digitalChannel.Name;
             channel.HarmonicGroup = 0;
