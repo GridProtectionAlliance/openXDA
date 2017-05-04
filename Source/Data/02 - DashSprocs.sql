@@ -2492,7 +2492,7 @@ BEGIN
     SELECT @sql = COALESCE(@sql + ',dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName, 'dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName)
     FROM EASExtension
 
-    SET @sql = 'SELECT *,' + @sql + ' FROM #temp'
+    SET @sql = COALESCE('SELECT *,' + @sql + ' FROM #temp', 'SELECT * FROM #temp')
     EXEC sp_executesql @sql
 
     DROP TABLE #temp
