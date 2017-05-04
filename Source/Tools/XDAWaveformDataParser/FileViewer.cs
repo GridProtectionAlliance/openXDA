@@ -231,17 +231,21 @@ namespace XDAWaveformDataParser
                 parsedFile = EventFile.Parse(dialog.FileName);
 
                 // Convert to common channel format
-                if(parsedFile.EventReports.Count > 0)
+                if (parsedFile.EventReports.Count > 0)
                 {
                     m_channels = parsedFile.EventReports
                         .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
                         .ToList();
                 }
-                else if( parsedFile.CommaSeparatedEventReports.Count > 0)
+                else if (parsedFile.CommaSeparatedEventReports.Count > 0)
                 {
                     m_channels = parsedFile.CommaSeparatedEventReports
                         .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
                         .ToList();
+                }
+                else
+                {
+                    m_channels = null;
                 }
 
                 // Clear the list box and data chart
