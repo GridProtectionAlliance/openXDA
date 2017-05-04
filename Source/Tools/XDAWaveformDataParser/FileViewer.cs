@@ -218,7 +218,7 @@ namespace XDAWaveformDataParser
 
             using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                dialog.Filter = "SEL Event Files|*.eve;*.sel|Text Files|*.txt|All Files|*.*";
+                dialog.Filter = "SEL Event Files|*.eve;*.sel;*.cev;|Text Files|*.txt|All Files|*.*";
                 dialog.Title = "Browse SEL Event Files";
 
                 if (dialog.ShowDialog() == DialogResult.Cancel)
