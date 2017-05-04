@@ -31,6 +31,7 @@ using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 using GSF.SELEventParser;
+using GSF.Units;
 
 namespace FaultData.DataReaders
 {
@@ -187,13 +188,13 @@ namespace FaultData.DataReaders
                     z1.Magnitude = groupSetting;
 
                 if (double.TryParse(report.GetGroupSettings("Z1ANG"), out groupSetting))
-                    z1.Angle = groupSetting;
+                    z1.Angle = Angle.FromDegrees(groupSetting);
 
                 if (double.TryParse(report.GetGroupSettings("Z0MAG"), out groupSetting))
                     z0.Magnitude = groupSetting;
 
                 if (double.TryParse(report.GetGroupSettings("Z0ANG"), out groupSetting))
-                    z0.Angle = groupSetting;
+                    z0.Angle = Angle.FromDegrees(groupSetting);
 
                 if (z1 != z0)
                 {
