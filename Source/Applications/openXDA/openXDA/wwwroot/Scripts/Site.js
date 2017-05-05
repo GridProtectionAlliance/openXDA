@@ -36,26 +36,11 @@ var infoPanel = null;
 function hideErrorMessage() {
     if(errorPanel)
         errorPanel.close();
-    //const wasVisible = $("#error-msg-block").is(":visible");
-
-    //$("#error-msg-block").hide();
-
-    //// Raise "messageVisibiltyChanged" event
-    //if (wasVisible)
-    //    $(window).trigger("messageVisibiltyChanged");    
 }
 
 function hideInfoMessage() {
     if(infoPanel)
         infoPanel.close();
-
-    //const wasVisible = $("#info-msg-block").is(":visible");
-
-    //$("#info-msg-block").hide();
-
-    //// Raise "messageVisibiltyChanged" event
-    //if (wasVisible)
-    //    $(window).trigger("messageVisibiltyChanged");
 }
 
 function showErrorMessage(message, timeout) {
@@ -103,17 +88,6 @@ function showErrorMessage(message, timeout) {
         }
     });
 
-    //const wasVisible = $("#error-msg-block").is(":visible");
-
-    //$("#error-msg-text").html(message);
-    //$("#error-msg-block").show();
-
-    //if (timeout != undefined && timeout > 0)
-    //    setTimeout(hideErrorMessage, timeout);
-
-    //// Raise "messageVisibiltyChanged" event
-    //if (!wasVisible)
-    //    $(window).trigger("messageVisibiltyChanged");
 }
 
 function showInfoMessage(message, timeout) {
@@ -160,20 +134,6 @@ function showInfoMessage(message, timeout) {
             }).click(function () { panel.close(); });
         }
     });
-    //const wasVisible = $("#info-msg-block").is(":visible");
-
-    //$("#info-msg-text").html(message);
-    //$("#info-msg-block").show();
-
-    //if (timeout === undefined)
-    //    timeout = 3000;
-
-    //if (timeout > 0)
-    //    setTimeout(hideInfoMessage, timeout);
-
-    //// Raise "messageVisibiltyChanged" event
-    //if (!wasVisible)
-    //    $(window).trigger("messageVisibiltyChanged");
 }
 
 function calculateRemainingBodyHeight() {
