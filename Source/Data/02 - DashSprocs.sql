@@ -869,14 +869,41 @@ CREATE PROCEDURE [dbo].[selectDisturbancesForMeterIDByDateRange]
     @EventDateFrom as DateTime, 
     @EventDateTo as DateTime, 
     @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
+    @username as nvarchar(4000),
+	@context as nvarchar(20)
 AS
 BEGIN
 
     SET NOCOUNT ON;
 
-DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
-DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
+DECLARE @startDate DATETIME = @EventDateFrom 
+DECLARE @endDate DATETIME = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
+
+DECLARE @dateStatement NVARCHAR(200) = N'CAST(Disturbance.StartTime AS Date)'
+DECLARE @groupByStatement NVARCHAR(200) = N'CAST(Disturbance.StartTime AS Date)'
+
+IF @context = 'day'
+BEGIN
+	SET @endDate = DATEADD(DAY, 1, @startDate)
+	SET @dateStatement = N'DateAdd(HOUR,DatePart(HOUR,Disturbance.StartTime), @EventDateFrom)'
+	SET @groupByStatement = N'DATEPART(HOUR, Disturbance.StartTime), DateAdd(HOUR,DatePart(HOUR,Disturbance.StartTime), @EventDateFrom)'
+END
+
+if @context = 'hour'
+BEGIN
+	SET @endDate = DATEADD(HOUR, 1, @startDate)
+	SET @dateStatement = N'DateAdd(MINUTE,DatePart(MINUTE,Disturbance.StartTime), @EventDateFrom)'
+	SET @groupByStatement = N'DATEPART(MINUTE, Disturbance.StartTime), DateAdd(MINUTE,DatePart(MINUTE,Disturbance.StartTime), @EventDateFrom)'
+END
+
+if @context = 'minute'
+BEGIN
+	SET @endDate = DATEADD(MINUTE, 1, @startDate)
+	SET @dateStatement = N'DateAdd(SECOND,DatePart(SECOND,Disturbance.StartTime), @EventDateFrom)'
+	SET @groupByStatement = N'DATEPART(SECOND, Disturbance.StartTime), DateAdd(SECOND,DatePart(SECOND,Disturbance.StartTime), @EventDateFrom)'
+END
+
+
 
 DECLARE @PivotColumns NVARCHAR(MAX) = N''
 DECLARE @ReturnColumns NVARCHAR(MAX) = N''
@@ -887,44 +914,40 @@ insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM Di
 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
 FROM #TEMP ORDER BY Name desc
-IF @PivotColumns = ''
-	SET @PivotColumns = '[0],'
 
 SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
 FROM #TEMP ORDER BY Name desc
-IF @ReturnColumns = ''
-	SET @ReturnColumns = ' COALESCE([0],0) AS [0],'
 
 SET @SQLStatement =
-' SELECT DisturbanceDate as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
-' FROM (																		  ' +
-'	SELECT                                                                        ' + 
-'		CAST(Disturbance.StartTime AS DATE) AS DisturbanceDate,                	  ' + 
-'		SeverityCode,															  ' + 
-'		COUNT(*) AS DisturbanceCount											  ' + 
-'	FROM																		  ' + 
-'		DisturbanceSeverity JOIN												  ' + 
-'		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN	  ' + 
-'		Event ON Event.ID = Disturbance.EventID JOIN							  ' + 
-'		Phase ON Disturbance.PhaseID = Phase.ID									  ' + 
-'	WHERE																		  ' + 
-'		(																		  ' + 
-'			@MeterID = ''0'' OR													  ' + 
-'			MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, '',''))	      ' + 
-'		) AND																	  ' + 
-'		MeterID IN (SELECT * FROM authMeters(@username)) AND					  ' + 
-'		Phase.Name = ''Worst'' AND												  ' + 
-'		Disturbance.StartTime BETWEEN @startDate AND @endDate AND				  ' + 
-'		Disturbance.StartTime <> @endDate										  ' + 
-'	GROUP BY CAST(Disturbance.StartTime AS DATE), SeverityCode 					  ' + 
-'	) As DisturbanceDate														  ' + 
-' PIVOT( ' +
-'		SUM(DisturbanceDate.DisturbanceCount) ' +
-'		FOR DisturbanceDate.SeverityCode IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
-' ) as pvt ' +
-' ORDER BY DisturbanceDate '
-
-exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
+N' SELECT DisturbanceDate as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+ FROM (																		 
+	SELECT                                                                       
+		' + @dateStatement + ' AS DisturbanceDate,                	 
+		SeverityCode,															 
+		COUNT(*) AS DisturbanceCount											 
+	FROM																		 
+		DisturbanceSeverity JOIN												 
+		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN	 
+		Event ON Event.ID = Disturbance.EventID JOIN							 
+		Phase ON Disturbance.PhaseID = Phase.ID									 
+	WHERE																		 
+		(																		 
+			@MeterID = ''0'' OR													 
+			MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, '',''))	     
+		) AND																	 
+		MeterID IN (SELECT * FROM authMeters(@username)) AND					 
+		Phase.Name = ''Worst'' AND												 
+		Disturbance.StartTime BETWEEN @startDate AND @endDate AND				 
+		Disturbance.StartTime <> @endDate										 
+	GROUP BY ' + @groupByStatement + ', SeverityCode 					 
+	) As DisturbanceDate														 
+ PIVOT(
+		SUM(DisturbanceDate.DisturbanceCount) 
+		FOR DisturbanceDate.SeverityCode IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
+ ) as pvt
+ ORDER BY DisturbanceDate '
+print @sqlstatement
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATETIMe, @endDate DATEtime, @EventDateFrom DATETIME ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate, @EventDateFrom = @EventDateFrom
 
 END
 GO
@@ -1094,26 +1117,55 @@ END
 GO
 
 -- =============================================
--- Author:      <Author, Jeff Walker>
+-- Author:      <Author, Billy Ernest>
 -- Create date: <Create Date, March 25, 2015>
 -- Description: <Description, Selects Events for a MeterID by Date for date range>
--- selectEventsForMeterIDByDateRange '01/10/2013', '05/10/2015', '0'
--- selectEventsForMeterIDByDateRange '03/05/2015', '03/06/2015', '0', 'External'
+-- selectEventsForMeterIDByDateRange '11/08/2016', '11/10/2016', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'External', 'custom'
+-- selectEventsForMeterIDByDateRange '11/08/2016', '03/06/2016', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'External', 'day'
+-- selectEventsForMeterIDByDateRange '11/08/2016 03:00 PM', '03/06/2016', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'External', 'hour'
+-- selectEventsForMeterIDByDateRange '11/08/2016 03:37 PM', '03/06/2016', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'External', 'minute'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectEventsForMeterIDByDateRange]
     -- Add the parameters for the stored procedure here
     @EventDateFrom as DateTime, 
     @EventDateTo as DateTime, 
     @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
+    @username as nvarchar(4000),
+	@context as nvarchar(20)
 
 AS
 BEGIN
 
     SET NOCOUNT ON;
 
-DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
-DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
+DECLARE @startDate DATETIME = @EventDateFrom 
+DECLARE @endDate DATETIME = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
+
+DECLARE @dateStatement NVARCHAR(200) = N'CAST(StartTime AS Date)'
+DECLARE @groupByStatement NVARCHAR(200) = N'CAST(StartTime AS Date)'
+
+IF @context = 'day'
+BEGIN
+	SET @endDate = DATEADD(DAY, 1, @startDate)
+	SET @dateStatement = N'DateAdd(HOUR,DatePart(HOUR,StartTime), @EventDateFrom)'
+	SET @groupByStatement = N'DATEPART(HOUR, StartTime), DateAdd(HOUR,DatePart(HOUR,StartTime), @EventDateFrom)'
+END
+
+if @context = 'hour'
+BEGIN
+	SET @endDate = DATEADD(HOUR, 1, @startDate)
+	SET @dateStatement = N'DateAdd(MINUTE,DatePart(MINUTE,StartTime), @EventDateFrom)'
+	SET @groupByStatement = N'DATEPART(MINUTE, StartTime), DateAdd(MINUTE,DatePart(MINUTE,StartTime), @EventDateFrom)'
+END
+
+if @context = 'minute'
+BEGIN
+	SET @endDate = DATEADD(MINUTE, 1, @startDate)
+	SET @dateStatement = N'DateAdd(SECOND,DatePart(SECOND,StartTime), @EventDateFrom)'
+	SET @groupByStatement = N'DATEPART(SECOND, StartTime), DateAdd(SECOND,DatePart(SECOND,StartTime), @EventDateFrom)'
+END
+
+
 
 DECLARE @PivotColumns NVARCHAR(MAX) = N''
 DECLARE @ReturnColumns NVARCHAR(MAX) = N''
@@ -1126,22 +1178,30 @@ SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + t.Name + '], 0) AS [' +
 FROM (Select Name FROM EventType) AS t
 
 SET @SQLStatement =
-' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
-' FROM ( ' +
-'		SELECT CAST(StartTime AS Date) as Date, COUNT(*) AS EventCount, EventType.Name as Name ' +
-'		FROM Event JOIN '+
-'		EventType ON Event.EventTypeID = EventType.ID ' +
-'       WHERE ' +
-'			MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND StartTime >= @startDate AND StartTime < @endDate  ' +
-'       GROUP BY CAST(StartTime AS DATE), EventType.Name ' +
-'       ) as ed ' +
-' PIVOT( ' +
-'		SUM(ed.EventCount) ' +
-'		FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
-' ) as pvt ' +
-' ORDER BY Date '
+' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+FROM (
+		SELECT ' + @dateStatement + ' as Date, COUNT(*) AS EventCount, EventType.Name as Name
+		FROM Event JOIN
+		EventType ON Event.EventTypeID = EventType.ID 
+       WHERE 
+			MeterID in (select * from authMeters(@username)) AND 
+			MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND 
+			StartTime <= @endDate AND @startDate <= EndTime  
+       GROUP BY ' + @groupByStatement + ', EventType.Name 
+       ) as ed 
+ PIVOT( 
+		SUM(ed.EventCount)
+		FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+ ) as pvt 
+ ORDER BY Date '
 
-exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
+--print @startDate
+--print @endDate
+print @sqlstatement
+
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATETIME, @endDate DATETIME, @EventDateFrom DATETIME ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate, @EventDateFrom = @EventDateFrom
+
+
 END
 GO
 
@@ -1893,69 +1953,93 @@ CREATE PROCEDURE [dbo].[selectMeterLocationsDisturbances]
     -- Add the parameters for the stored procedure here
     @EventDateFrom as DateTime,
     @EventDateTo as DateTime,
-    @meterIds AS varchar(max)
+    @meterIds AS varchar(max),
+    @username as nvarchar(4000),
+	@context as nvarchar(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
-    DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
+DECLARE @startDate DATETIME = @EventDateFrom 
+DECLARE @endDate DATETIME = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-    -- Force the optimizer to generate a more intelligent query plan by storing
-    -- the results of this simple query in a temp table before using it
-    SELECT
-        Event.MeterID,
-        DisturbanceSeverity.SeverityCode
-    INTO #MeterSeverityCode
-    FROM
-        DisturbanceSeverity JOIN
-        Disturbance ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-        Event ON Disturbance.EventID = Event.ID JOIN
-        Phase ON Disturbance.PhaseID = Phase.ID
-    WHERE
-        Disturbance.StartTime BETWEEN @startDate AND @endDate AND
-        Disturbance.StartTime <> @endDate AND
-        Phase.Name = 'Worst'
-    
-    ; WITH SeverityCount AS
-    (
-        SELECT
-            MeterID,
-            [5] + [4] + [3] + [2] + [1] + [0] AS Disturbance_Count,
-            [5],
-            [4],
-            [3],
-            [2],
-            [1],
-            [0]
-        FROM #MeterSeverityCode
-        PIVOT
-        (
-            COUNT(SeverityCode)
-            FOR SeverityCode IN ([5], [4], [3], [2], [1], [0])
-        ) AS PivotTable
-    )
-    SELECT
-        Meter.ID AS ID,
-        Meter.Name AS Name,
-        MeterLocation.Latitude AS Latitude,
-        MeterLocation.Longitude AS Longitude,
-        COALESCE(Disturbance_Count, 0) AS Count,
-        COALESCE([5], 0) AS [5],
-        COALESCE([4], 0) AS [4],
-        COALESCE([3], 0) AS [3],
-        COALESCE([2], 0) AS [2],
-        COALESCE([1], 0) AS [1],
-        COALESCE([0], 0) AS [0]
-    FROM
-        Meter JOIN
-        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-        SeverityCount ON SeverityCount.MeterID = Meter.ID
-		WHERE Meter.ID IN (SELECT * FROM String_To_Int_Table(@meterIds, ','))
-    ORDER BY Meter.Name
 
-    DROP TABLE #MeterSeverityCode
+IF @context = 'day'
+BEGIN
+	SET @endDate = DATEADD(DAY, 1, @startDate)
 END
+
+if @context = 'hour'
+BEGIN
+	SET @endDate = DATEADD(HOUR, 1, @startDate)
+END
+
+if @context = 'minute'
+BEGIN
+	SET @endDate = DATEADD(MINUTE, 1, @startDate)
+END
+
+if @context = 'second'
+BEGIN
+	SET @endDate = DATEADD(SECOND, 1, @startDate)
+END
+
+
+DECLARE @PivotColumns NVARCHAR(MAX) = N''
+DECLARE @CountColumns NVARCHAR(MAX) = N''
+DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+DECLARE @SQLStatement NVARCHAR(MAX) = N''
+
+
+create table #TEMP (Name varchar(max))
+insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM DisturbanceSeverity) as t
+
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
+FROM #TEMP ORDER BY Name desc
+
+SELECT @CountColumns = @CountColumns + 'COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) + ' 
+FROM #TEMP ORDER BY Name desc
+
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
+FROM #TEMP ORDER BY Name desc
+DROP TABLE #TEMP
+
+SET @SQLStatement = N'
+SELECT Meter.ID, 
+		 Meter.Name,
+		 MeterLocation.Longitude,
+		 MeterLocation.Latitude,
+		 ' + SUBSTRING(@CountColumns,0, LEN(@CountColumns)) +' as Count,
+		 ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '		  
+FROM 
+    Meter JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+	(
+		SELECT MeterID, 
+			   COUNT(*) AS EventCount, 
+			   SeverityCode			   
+		FROM Event JOIN
+			 Disturbance ON Event.ID = Disturbance.EventID JOIN
+			 DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
+			 Phase ON Phase.ID = Disturbance.PhaseID
+        WHERE 
+			 Phase.Name = ''Worst'' AND 
+			 MeterID in (select * from authMeters(@username)) AND 
+			 MeterID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '','')) AND 
+			 Disturbance.StartTime >= @startDate AND Disturbance.StartTime < @endDate  
+        GROUP BY Event.MeterID, SeverityCode 
+       ) as ed 
+	   PIVOT( 
+	   		 SUM(ed.EventCount)
+	   		 FOR ed.SeverityCode IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+	   ) as pvt On pvt.MeterID = meter.ID
+Order By Name '
+
+print @SqlStatement
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME ', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate
+
+END
+
 GO
 
 -- =============================================
@@ -1968,62 +2052,87 @@ GO
 CREATE PROCEDURE [dbo].[selectMeterLocationsEvents]
     @EventDateFrom DATETIME,
     @EventDateTo DATETIME,
-    @meterIds AS varchar(max)
+    @meterIds AS varchar(max),
+    @username as nvarchar(4000),
+	@context as nvarchar(20)
+
 AS
 BEGIN
 
     SET NOCOUNT ON;
-    
-    DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
-    DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
+DECLARE @startDate DATETIME = @EventDateFrom 
+DECLARE @endDate DATETIME = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
-    SELECT
-        Meter.ID,
-        Meter.Name,
-        MeterLocation.Longitude,
-        MeterLocation.Latitude,
-		COALESCE(Event_Count, 0) AS Count,
-		COALESCE(Interruption, 0) AS Interruption,
-		COALESCE(Fault, 0) AS Fault,
-		COALESCE(Sag, 0) AS Sag,
-		COALESCE(Transient, 0) AS Transient,
-		COALESCE(Swell, 0) AS Swell,
-		COALESCE(Other, 0) AS Other
 
-        FROM
-            Meter JOIN
-            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-			(
-				SELECT 
-					Interruption + Fault + Sag + Transient + Swell + Other AS Event_Count, 
-					MeterID,
-					Interruption,
-					Fault,
-					Sag,
-					Transient,
-					Swell,
-					Other
-				FROM
-				(
-					SELECT 
-						Event.MeterID,
-						EventType.Name
-					FROM
-						Event JOIN
-						EventType ON EventType.ID = Event.EventTypeID 
-					WHERE
-						CAST([StartTime] AS DATE) between @startDate AND @endDate
-				)AS EventCode
-				PIVOT
-				(
-					COUNT(Name)
-					FOR Name IN (Interruption, Fault, Sag, Transient, Swell, Other)
-				) AS PivotTable
-				
-			)AS Event_Count ON Event_Count.MeterID = Meter.ID
+IF @context = 'day'
+BEGIN
+	SET @endDate = DATEADD(DAY, 1, @startDate)
+END
 
-		WHERE Meter.ID IN (SELECT * FROM String_To_Int_Table(@meterIds, ','))
-        ORDER BY Meter.Name
+if @context = 'hour'
+BEGIN
+	SET @endDate = DATEADD(HOUR, 1, @startDate)
+END
+
+if @context = 'minute'
+BEGIN
+	SET @endDate = DATEADD(MINUTE, 1, @startDate)
+END
+
+if @context = 'second'
+BEGIN
+	SET @endDate = DATEADD(SECOND, 1, @startDate)
+END
+
+
+DECLARE @PivotColumns NVARCHAR(MAX) = N''
+DECLARE @CountColumns NVARCHAR(MAX) = N''
+DECLARE @ReturnColumns NVARCHAR(MAX) = N''
+DECLARE @SQLStatement NVARCHAR(MAX) = N''
+
+SELECT @PivotColumns = @PivotColumns + '[' + t.Name + '],' 
+FROM (Select Name FROM EventType) AS t
+
+SELECT @CountColumns = @CountColumns + 'COALESCE([' + t.Name + '], 0) + ' 
+FROM (Select Name FROM EventType) AS t
+
+
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + t.Name + '], 0) AS [' + t.Name + '],' 
+FROM (Select Name FROM EventType) AS t
+
+SET @SQLStatement =
+' SELECT Meter.ID, 
+		 Meter.Name,
+		 MeterLocation.Longitude,
+		 MeterLocation.Latitude,
+		 ' + SUBSTRING(@CountColumns,0, LEN(@CountColumns)) +' as Count,
+		 ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+FROM 
+    Meter JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+	(
+		SELECT MeterID, 
+			   COUNT(*) AS EventCount, 
+			   EventType.Name as Name
+			   
+		FROM Event JOIN
+			 EventType ON Event.EventTypeID = EventType.ID 
+        WHERE 
+			 MeterID in (select * from authMeters(@username)) AND 
+			 MeterID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '','')) AND 
+			 StartTime >= @startDate AND StartTime < @endDate  
+        GROUP BY Event.MeterID, EventType.Name 
+       ) as ed 
+	   PIVOT( 
+	   		 SUM(ed.EventCount)
+	   		 FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+	   ) as pvt On pvt.MeterID = meter.ID'
+
+--print @startDate
+--print @endDate
+print @sqlstatement
+
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME, @EventDateFrom DATETIME ', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate, @EventDateFrom = @EventDateFrom
 END
 GO
 
@@ -2978,23 +3087,35 @@ END
 GO
 
 -- =============================================
--- Author:      <Author, Jeff Walker>
--- Create date: <Create Date, Jun 23, 2014>
+-- Author:      <Author, Billy Ernest>
+-- Create date: <Create Date, Mar 06, 2015>
 -- Description: <Description, Selects Events for a set of sites by Date>
--- selectSitesEventsDetailsByDate '07/19/2014', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,','jwalker'
--- selectSitesEventsDetailsByDate '07/19/2014', '0','jwalker'
+-- selectSitesEventsDetailsByDate '11/08/2016', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'S-1-5-21-4100281765-940110593-2650863885-4619', 'day'
+-- selectSitesEventsDetailsByDate '11/08/2016 03:00 PM', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'S-1-5-21-4100281765-940110593-2650863885-4619', 'hour'
+-- selectSitesEventsDetailsByDate '11/08/2016 03:37 PM', '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,341,1340,1341,1342,1343,1344,1345,1346,1347,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1363,1364,1365', 'S-1-5-21-4100281765-940110593-2650863885-4619', 'minute'
+
 -- =============================================
+
 CREATE PROCEDURE [dbo].[selectSitesEventsDetailsByDate]
+    -- Add the parameters for the stored procedure here
     @EventDate as DateTime,
     @MeterID as nvarchar(MAX),
-    @username as nvarchar(4000)
+    @username as nvarchar(4000),
+	@context as nvarchar(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @startDate DATE = CAST(@EventDate AS DATE)
-	DECLARE @endDate DATE = DATEADD(DAY, 1, @startDate)
-	
+	DECLARE @startDate DateTime = @EventDate
+	DECLARE @endDate DateTime
+
+	if @context = 'day'
+		SET @endDate = DATEADD(DAY, 1, @startDate);
+	if @context = 'hour'
+		SET @endDate = DATEADD(HOUR, 1, @startDate);
+	if @context = 'minute'
+		SET @endDate = DATEADD(MINUTE, 1, @startDate);
+
 	DECLARE @PivotColumns NVARCHAR(MAX) = N''
 	DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 	DECLARE @SQLStatement NVARCHAR(MAX) = N''
@@ -3006,27 +3127,32 @@ BEGIN
 	FROM (Select Name FROM EventType) AS t
 
 	SET @SQLStatement =
-	' SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate) EventID, MeterID, Site, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
-	' FROM ( ' +
-	'	SELECT ' +
-	'		Event.MeterID, COUNT(*) AS EventCount, EventType.Name, Meter.Name as Site ' +
-	'		FROM Event JOIN '+
-	'		EventType ON Event.EventTypeID = EventType.ID JOIN' +
-	'		Meter ON Event.MeterID = Meter.ID' +
-	'       WHERE ' +
-    '			MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND StartTime >= @startDate AND StartTime < @endDate  ' +
-	'       GROUP BY Event.MeterID,Meter.Name,EventType.Name ' +
-	'       ) as ed ' +
-	' PIVOT( ' +
-	'		SUM(ed.EventCount) ' +
-	'		FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') ' +
-	' ) as pvt ' +
-	' ORDER BY MeterID '
+	' SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate) 
+			 EventID, 
+			 MeterID, 
+			 Site, 
+			 ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+	 FROM ( 
+		SELECT 
+			Event.MeterID, COUNT(*) AS EventCount, EventType.Name, Meter.Name as Site 
+			FROM Event JOIN
+			EventType ON Event.EventTypeID = EventType.ID JOIN
+			Meter ON Event.MeterID = Meter.ID
+	       WHERE 
+    			MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND 
+				StartTime >= @startDate AND StartTime < @endDate  
+	       GROUP BY Event.MeterID,Meter.Name,EventType.Name 
+	       ) as ed 
+	 PIVOT( 
+			SUM(ed.EventCount)
+			FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+	 ) as pvt
+	 ORDER BY MeterID '
 
-	print @pivotcolumns
-	print @returncolumns
+	print @startDate
+	print @endDate
 	print @sqlstatement
-	exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATE, @endDate DATE ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
+	exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterID nvarchar(MAX), @startDate DATETIME, @endDate DATETIME ', @username = @username, @MeterID = @MeterID, @startDate = @startDate, @endDate = @endDate
 END
 GO
 
