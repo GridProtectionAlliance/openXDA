@@ -2690,16 +2690,44 @@ GO
 -- Author:      <Author, Jeff Walker>
 -- Create date: <Create Date, Jun 23, 2014>
 -- Description: <Description, Selects Events for a set of sites by Date>
--- selectSiteLinesDetailsByDate '2014-07-21', '140'
-
+-- selectSiteLinesDetailsByDate '11/08/16', '1351', 'day'
+-- selectSiteLinesDetailsByDate '11/08/16 03:00 PM', '1351', 'hour'
+-- selectSiteLinesDetailsByDate '11/08/16 03:30 PM', '1351', 'minute'
+-- selectSiteLinesDetailsByDate '11/08/16 03:30:55 PM', '1351', 'second'
 -- =============================================
-CREATE PROCEDURE [dbo].[selectSiteLinesDetailsByDate]
+ALTER PROCEDURE [dbo].[selectSiteLinesDetailsByDate]
     -- Add the parameters for the stored procedure here
     @EventDate as DateTime,
-    @MeterID as nvarchar(4000)
+    @MeterID as nvarchar(4000),
+	@context as nvarchar(20)
 AS
 BEGIN
     SET NOCOUNT ON;
+
+	DECLARE @startDate DATETIME = @EventDate 
+	DECLARE @endDate DATETIME
+
+
+	IF @context = 'day'
+	BEGIN
+		SET @endDate = DATEADD(DAY, 1, @startDate)
+	END
+
+	if @context = 'hour'
+	BEGIN
+		SET @endDate = DATEADD(HOUR, 1, @startDate)
+	END
+
+	if @context = 'minute'
+	BEGIN
+		SET @endDate = DATEADD(MINUTE, 1, @startDate)
+	END
+
+	if @context = 'second'
+	BEGIN
+		SET @endDate = DATEADD(SECOND, 1, @startDate)
+	END
+
 
     DECLARE @localEventDate DATE = CAST(@EventDate AS DATE)
     DECLARE @localMeterID INT = CAST(@MeterID AS INT)
@@ -2734,7 +2762,7 @@ BEGIN
             Line ON Event.LineID = Line.ID JOIN
             MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
         WHERE
-            CAST(Event.StartTime AS DATE) = @localEventDate AND
+            Event.StartTime >= @startDate AND Event.StartTime < @endDate AND 
             Event.MeterID = @localMeterID AND
             (Phase.ID IS NULL OR Phase.Name <> 'Worst')
     )
@@ -2770,17 +2798,42 @@ GO
 -- Create date: <Create Date, Jun 23, 2014>
 -- Description: <Description, Selects Events for a set of sites by Date>
 -- selectSiteLinesDisturbanceDetailsByDate '10/07/2014', '7'
+
 -- =============================================
-CREATE PROCEDURE [dbo].[selectSiteLinesDisturbanceDetailsByDate]
+ALTER PROCEDURE [dbo].[selectSiteLinesDisturbanceDetailsByDate]
     -- Add the parameters for the stored procedure here
     @EventDate as DateTime,
-    @MeterID as nvarchar(4000)
+    @MeterID as nvarchar(4000),
+	@context as nvarchar(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
     DECLARE @worstPhaseID INT = (SELECT ID FROM Phase WHERE Name = 'Worst')
-	
+	DECLARE @startDate DATETIME = @EventDate 
+	DECLARE @endDate DATETIME
+
+
+	IF @context = 'day'
+	BEGIN
+		SET @endDate = DATEADD(DAY, 1, @startDate)
+	END
+
+	if @context = 'hour'
+	BEGIN
+		SET @endDate = DATEADD(HOUR, 1, @startDate)
+	END
+
+	if @context = 'minute'
+	BEGIN
+		SET @endDate = DATEADD(MINUTE, 1, @startDate)
+	END
+
+	if @context = 'second'
+	BEGIN
+		SET @endDate = DATEADD(SECOND, 1, @startDate)
+	END
+
 	SELECT 
 		Event.LineID AS thelineid, 
 		Event.ID AS theeventid, 
@@ -2815,11 +2868,13 @@ BEGIN
 		Line ON Event.LineID = Line.ID JOIN
 		MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
 	WHERE
-		CAST(Disturbance.StartTime AS DATE) = @EventDate AND Event.MeterID = @MeterID AND
+		Event.StartTime >= @startDate AND Event.StartTime < @endDate AND 
+		Event.MeterID = @MeterID AND
         WorstDisturbance.PhaseID = @worstPhaseID AND
         Disturbance.PhaseID <> @worstPhaseID
 	ORDER BY
 		Event.StartTime ASC
+
 END
 GO
 
