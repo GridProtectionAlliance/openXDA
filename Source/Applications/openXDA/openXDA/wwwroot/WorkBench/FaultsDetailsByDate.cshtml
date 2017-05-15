@@ -47,6 +47,8 @@
         date = parameters["Date"];
     }
 
+    string context = ( parameters.ContainsKey("context")?parameters["context"] : "day");
+
     ViewBag.ShowSearchFilter = true;
 
     // Define column headers, use null for field name to make column non-sortable
@@ -98,7 +100,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<FaultsDetailsByDate, DataHub>(ViewBag, "theinceptiontime", null, meterIds, date ))
+        @Raw(dataContext.RenderViewModelConfiguration<FaultsDetailsByDate, DataHub>(ViewBag, "theinceptiontime", null, meterIds, date, context ))
         var IDs;
         var lastChanges;
 

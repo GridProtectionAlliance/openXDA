@@ -9,7 +9,6 @@ namespace openXDA.Model
     [TableName("Event")]
     public class Event
     {
-        [Searchable(SearchType.LikeExpression)]
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int FileGroupID { get; set; }
@@ -86,7 +85,6 @@ namespace openXDA.Model
         public string thefaulttype { get; set; }
         public string thecurrentdistance { get; set; }
         public bool pqiexists { get; set; }
-        public string UpdatedBy { get; set; }
     }
 
     public class FaultsDetailsByDate

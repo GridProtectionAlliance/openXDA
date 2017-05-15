@@ -41,9 +41,12 @@
     {
         eventId = int.Parse(parameters["EventID"]);
     }
+
+    string context = parameters["context"] ?? "day";
+
     ViewBag.ShowSearchFilter = true;
 
-    Event theEvent = dataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction("ID = {0}", eventId)).First();
+    Event theEvent = dataContext.Table<Event>().QueryRecordWhere("ID = {0}", eventId) ?? new Event();
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
@@ -94,7 +97,8 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "theeventid", null, theEvent.MeterID, theEvent.StartTime))
+        var context = '@context';
+        @Raw(dataContext.RenderViewModelConfiguration<MeterEventsByLine, DataHub>(ViewBag, "theeventid", null, theEvent.MeterID, theEvent.StartTime, context))
         
         $(function () {
             $('#addRecordButton').text('Update Selected');

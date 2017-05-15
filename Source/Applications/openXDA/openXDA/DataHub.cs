@@ -3321,80 +3321,75 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterEventsByLine), RecordOperation.QueryRecordCount)]
-        public int QueryMeterEventsByLineCount(int siteID, DateTime targetDate, string filterString )
+        public int QueryMeterEventsByLineCount(int siteID, DateTime targetDate, string context, string filterString )
         {
-            DataTable dt;
-
-            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
-            SqlDataReader rdr = null;
-
-            try
+            DataTable table = new DataTable();
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
-                SqlCommand cmd = new SqlCommand("dbo.selectSiteLinesDetailsByDate", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
-                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
-                cmd.CommandTimeout = 300;
+                sc.CommandText = "dbo.selectSiteLinesDetailsByDate";
+                sc.CommandType = CommandType.StoredProcedure;
 
-                rdr = cmd.ExecuteReader();
-                dt = new DataTable();
-                dt.Load(rdr);
+
+                IDbDataParameter date = sc.CreateParameter();
+                date.ParameterName = "@EventDate";
+                date.Value = targetDate;
+                sc.Parameters.Add(date);
+
+                IDbDataParameter meter = sc.CreateParameter();
+                meter.ParameterName = "@MeterID";
+                meter.Value = siteID;
+                sc.Parameters.Add(meter);
+
+
+                IDbDataParameter window = sc.CreateParameter();
+                window.ParameterName = "@context";
+                window.Value = context;
+                sc.Parameters.Add(window);
+                IDataReader rdr = sc.ExecuteReader();
+                table.Load(rdr);
 
             }
-            finally
-            {
-                if (conn != null)
-                {
-                    conn.Close();
-                }
-                if (rdr != null)
-                {
-                    rdr.Close();
-                }
-            }
+
             string fe = $"theeventtype LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
-            return dt.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).Count();
+            return table.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).Count();
         }
     
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterEventsByLine), RecordOperation.QueryRecords)]
-        public IEnumerable<openXDA.Model.MeterEventsByLine> QueryMeterEventsByLines(int siteID, DateTime targetDate,string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<openXDA.Model.MeterEventsByLine> QueryMeterEventsByLines(int siteID, DateTime targetDate,string context,string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            DataTable dt;
-
-            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
-            SqlDataReader rdr = null;
-
-            try
+            DataTable table = new DataTable();
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
-                SqlCommand cmd = new SqlCommand("dbo.selectSiteLinesDetailsByDate", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
-                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
-                cmd.CommandTimeout = 300;
+                sc.CommandText = "dbo.selectSiteLinesDetailsByDate";
+                sc.CommandType = CommandType.StoredProcedure;
 
-                rdr = cmd.ExecuteReader();
-                dt = new DataTable();
-                dt.Load(rdr);
 
-            }
-            finally
-            {
-                if (conn != null)
-                {
-                    conn.Close();
-                }
-                if (rdr != null)
-                {
-                    rdr.Close();
-                }
+                IDbDataParameter date = sc.CreateParameter();
+                date.ParameterName = "@EventDate";
+                date.Value = targetDate;
+                sc.Parameters.Add(date);
+
+                IDbDataParameter meter = sc.CreateParameter();
+                meter.ParameterName = "@MeterID";
+                meter.Value = siteID;
+                sc.Parameters.Add(meter);
+
+
+                IDbDataParameter window = sc.CreateParameter();
+                window.ParameterName = "@context";
+                window.Value = context;
+                sc.Parameters.Add(window);
+                IDataReader rdr = sc.ExecuteReader();
+                table.Load(rdr);
+
             }
             string fe = $"theeventtype LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
             if (ascending)
-                return dt.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
+                return table.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
             else
-                return dt.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
+                return table.Select(fe).Select(row => DataContext.Table<MeterEventsByLine>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
 
         }
 
@@ -3438,82 +3433,77 @@ namespace openXDA
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.QueryRecordCount)]
-        public int QueryFaultDetailsByDateCount(string siteID, DateTime targetDate, string filterString)
+        public int QueryFaultDetailsByDateCount(string siteID, DateTime targetDate, string context, string filterString)
         {
-            DataTable dt;
+            DataTable table = new DataTable();
 
-            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
-            SqlDataReader rdr = null;
 
-            try
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
-                SqlCommand cmd = new SqlCommand("dbo.selectSitesFaultsDetailsByDate", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
-                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
-                cmd.Parameters.Add(new SqlParameter("@username", GetCurrentUserSID()));
-                cmd.CommandTimeout = 300;
+                sc.CommandText = "dbo.selectSitesFaultsDetailsByDate";
+                sc.CommandType = CommandType.StoredProcedure;
+                IDbDataParameter eventDateFrom = sc.CreateParameter();
+                eventDateFrom.ParameterName = "@EventDate";
+                eventDateFrom.Value = targetDate;
+                sc.Parameters.Add(eventDateFrom);
+                IDbDataParameter param3 = sc.CreateParameter();
+                param3.ParameterName = "@meterID";
+                param3.Value = siteID;
+                IDbDataParameter param4 = sc.CreateParameter();
+                param4.ParameterName = "@username";
+                param4.Value = GetCurrentUserSID();
+                sc.Parameters.Add(param3);
+                sc.Parameters.Add(param4);
+                IDbDataParameter param5 = sc.CreateParameter();
+                param5.ParameterName = "@context";
+                param5.Value = context;
+                sc.Parameters.Add(param5);
 
-                rdr = cmd.ExecuteReader();
-                dt = new DataTable();
-                dt.Load(rdr);
-
-            }
-            finally
-            {
-                if (conn != null)
-                {
-                    conn.Close();
-                }
-                if (rdr != null)
-                {
-                    rdr.Close();
-                }
+                IDataReader rdr = sc.ExecuteReader();
+                table.Load(rdr);
             }
             string fe = $"locationname LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
-            return dt.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).Count();
+            return table.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).Count();
         }
 
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(FaultsDetailsByDate), RecordOperation.QueryRecords)]
-        public IEnumerable<FaultsDetailsByDate> QueryFaultsDetailsByDate(string siteID, DateTime targetDate, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<FaultsDetailsByDate> QueryFaultsDetailsByDate(string siteID, DateTime targetDate,string context, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            DataTable dt;
+            DataTable table = new DataTable();
 
-            SqlConnection conn = (SqlConnection)DataContext.Connection.Connection;
-            SqlDataReader rdr = null;
 
-            try
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
-                SqlCommand cmd = new SqlCommand("dbo.selectSitesFaultsDetailsByDate", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add(new SqlParameter("@EventDate", targetDate.Date));
-                cmd.Parameters.Add(new SqlParameter("@MeterID", siteID));
-                cmd.Parameters.Add(new SqlParameter("@username", GetCurrentUserSID()));
-                cmd.CommandTimeout = 300;
+                sc.CommandText = "dbo.selectSitesFaultsDetailsByDate";
+                sc.CommandType = CommandType.StoredProcedure;
+                IDbDataParameter eventDateFrom = sc.CreateParameter();
+                eventDateFrom.ParameterName = "@EventDate";
+                eventDateFrom.Value = targetDate;
+                sc.Parameters.Add(eventDateFrom);
+                IDbDataParameter param3 = sc.CreateParameter();
+                param3.ParameterName = "@meterID";
+                param3.Value = siteID;
+                IDbDataParameter param4 = sc.CreateParameter();
+                param4.ParameterName = "@username";
+                param4.Value = GetCurrentUserSID();
+                sc.Parameters.Add(param3);
+                sc.Parameters.Add(param4);
+                IDbDataParameter param5 = sc.CreateParameter();
+                param5.ParameterName = "@context";
+                param5.Value = context;
+                sc.Parameters.Add(param5);
 
-                rdr = cmd.ExecuteReader();
-                dt = new DataTable();
-                dt.Load(rdr);
+                IDataReader rdr = sc.ExecuteReader();
+                table.Load(rdr);
+            }
 
-            }
-            finally
-            {
-                if (conn != null)
-                {
-                    conn.Close();
-                }
-                if (rdr != null)
-                {
-                    rdr.Close();
-                }
-            }
             string fe = $"locationname LIKE '%{filterString}%' OR thelinename LIKE '%{filterString}%' OR thefaulttype LIKE '%{filterString}%'";
             if (ascending)
-                return dt.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
+                return table.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).OrderBy(x => x.GetType().GetProperty(sortField).GetValue(x));
             else
-                return dt.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
+                return table.Select(fe).Select(row => DataContext.Table<FaultsDetailsByDate>().LoadRecord(row)).OrderByDescending(x => x.GetType().GetProperty(sortField).GetValue(x));
 
         }
 
