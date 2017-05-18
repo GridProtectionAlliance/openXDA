@@ -990,6 +990,7 @@ CREATE TABLE BreakerOperation
     BreakerNumber VARCHAR(120) NOT NULL,
     TripCoilEnergized DATETIME2 NOT NULL,
     StatusBitSet DATETIME2 NOT NULL,
+    StatusBitChatter INT NOT NULL,
     APhaseCleared DATETIME2 NOT NULL,
     BPhaseCleared DATETIME2 NOT NULL,
     CPhaseCleared DATETIME2 NOT NULL,
