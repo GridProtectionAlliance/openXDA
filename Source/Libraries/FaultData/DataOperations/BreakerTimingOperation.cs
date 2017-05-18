@@ -63,22 +63,26 @@ namespace FaultData.DataOperations
             private XValue m_timeCleared;
             private double m_timing;
             private double m_speed;
+            private bool m_statusChatter;
 
             #endregion
 
             #region [ Constructors ]
 
-            public BreakerTiming(XValue timeEnergized, DataSeries statusChannel, double systemFrequency, double speed)
+            public BreakerTiming(XValue timeEnergized, DataSeries statusChannel, double systemFrequency, double speed, double minWaitBeforeReclose)
             {
                 m_timeEnergized = timeEnergized;
 
                 if ((object)statusChannel != null)
                     m_timeCleared = FindStatusBitSet(statusChannel, timeEnergized.Index);
 
+                m_timing = double.NaN;
+
                 if ((object)m_timeCleared != null)
+                {
                     m_timing = (m_timeCleared.Time - m_timeEnergized.Time).TotalSeconds * systemFrequency;
-                else
-                    m_timing = double.NaN;
+                    m_statusChatter = FindStatusChatter(statusChannel, m_timeCleared.Index, systemFrequency, minWaitBeforeReclose);
+                }
 
                 m_speed = speed;
             }
@@ -127,6 +131,14 @@ namespace FaultData.DataOperations
                 }
             }
 
+            public bool StatusChatter
+            {
+                get
+                {
+                    return m_statusChatter;
+                }
+            }
+
             #endregion
 
             #region [ Methods ]
@@ -140,6 +152,24 @@ namespace FaultData.DataOperations
                 }
 
                 return null;
+            }
+
+            private bool FindStatusChatter(DataSeries statusSeries, int startIndex, double systemFrequency, double minWaitBeforeReclose)
+            {
+                int samples = (int)Math.Round((minWaitBeforeReclose / systemFrequency) * statusSeries.SampleRate);
+
+                for (int i = 0; i < samples; i++)
+                {
+                    int index = startIndex + i;
+
+                    if (index >= statusSeries.DataPoints.Count)
+                        break;
+
+                    if (statusSeries[index - 1].Value != 0.0D && statusSeries[index].Value == 0.0D)
+                        return true;
+                }
+
+                return false;
             }
 
             #endregion
@@ -482,7 +512,7 @@ namespace FaultData.DataOperations
 
                 foreach (XValue breakerOperation in breakerOperations)
                 {
-                    BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, m_systemFrequency, breakerSpeed);
+                    BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, m_systemFrequency, breakerSpeed, m_breakerSettings.MinWaitBeforeReclose);
 
                     PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
                     PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
@@ -508,6 +538,7 @@ namespace FaultData.DataOperations
             breakerOperationRow.BreakerNumber = breakerNumber;
             breakerOperationRow.TripCoilEnergized = breakerTiming.TimeEnergized.Time;
             breakerOperationRow.StatusBitSet = breakerTiming.IsValid ? breakerTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
+            breakerOperationRow.StatusBitChatter = breakerTiming.StatusChatter ? 1 : 0;
             breakerOperationRow.APhaseCleared = aPhaseTiming.IsValid ? aPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
             breakerOperationRow.BPhaseCleared = bPhaseTiming.IsValid ? bPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
             breakerOperationRow.CPhaseCleared = cPhaseTiming.IsValid ? cPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;

@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel;
 using System.Configuration;
 
@@ -33,6 +34,7 @@ namespace FaultData.Configuration
         // Fields
         private double m_openBreakerThreshold;
         private double m_lateBreakerThreshold;
+        private double m_minWaitBeforeReclose;
 
         #endregion
 
@@ -71,6 +73,24 @@ namespace FaultData.Configuration
             set
             {
                 m_lateBreakerThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the minimum amount of time, in cycles, the system must wait
+        /// before automatically reclosing after a breaker operation has occurred.
+        /// </summary>
+        [Setting]
+        [DefaultValue(15.0D)]
+        public double MinWaitBeforeReclose
+        {
+            get
+            {
+                return m_minWaitBeforeReclose;
+            }
+            set
+            {
+                m_minWaitBeforeReclose = value;
             }
         }
 

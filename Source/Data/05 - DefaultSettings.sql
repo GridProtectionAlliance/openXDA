@@ -1,6 +1,9 @@
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.LateBreakerThreshold', '0.0', '0.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MinWaitBeforeReclose', '15.0', '15.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.OpenBreakerThreshold', '20.0', '20.0')
 GO
 
