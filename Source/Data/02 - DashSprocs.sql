@@ -2932,9 +2932,9 @@ BEGIN
         BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
         Phase ON BreakerOperation.PhaseID = Phase.ID
     WHERE
-            TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate AND
-            Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ',')) AND
-			Meter.ID IN (select * from authMeters(@username))
+        TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate AND
+        Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ',')) AND
+		Meter.ID IN (select * from authMeters(@username))
 END
 GO
 
