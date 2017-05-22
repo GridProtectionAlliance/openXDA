@@ -648,7 +648,7 @@ namespace FaultData.DataOperations
 
         private double ConvertBreakerSpeed(object breakerSpeed)
         {
-            if (Convert.IsDBNull(breakerSpeed))
+            if (breakerSpeed == null || Convert.IsDBNull(breakerSpeed))
                 return double.NaN;
 
             return Convert.ToDouble(breakerSpeed);
