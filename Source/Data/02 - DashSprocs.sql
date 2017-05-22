@@ -2934,7 +2934,7 @@ BEGIN
     WHERE
         TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate AND
         Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ',')) AND
-		Meter.ID IN (select * from authMeters(@username))
+        Meter.ID IN (select * from authMeters(@username))
 END
 GO
 
