@@ -438,7 +438,6 @@
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
     <None Include="packages.config" />
-    <None Include="PostBuildSetup.bat" />
     <None Include="Web.config" />
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
     <Content Include="wwwroot\Config\LineGroups.cshtml" />
@@ -1683,13 +1682,6 @@
     <Folder Include="wwwroot\Scripts\fonts\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "$(TargetDir)*.dll"</PostBuildEvent>
-  </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
@@ -1721,9 +1713,16 @@
   </ProjectExtensions>
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
+    <CallTarget Targets="CopyBuild" />
   </Target>
   <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
     <Exec Command="$(SIGNTOOL) $(TargetPath)" />
+  </Target>
+  <Target Name="CopyBuild">
+    <ItemGroup>
+      <FilesToCopy Include="$(TargetDir)*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ProjectDir)bin" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
