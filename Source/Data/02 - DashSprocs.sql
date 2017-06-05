@@ -2751,7 +2751,11 @@ BEGIN
                 WHEN 'Swell' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Magnitude DESC, Disturbance.StartTime, IsSelectedAlgorithm DESC, IsSuppressed, Inception)
                 WHEN 'Fault' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception)
                 ELSE ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Event.ID)
-            END AS RowPriority
+            END AS RowPriority,
+			(SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
+			(SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.LineID = Event.LineID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
+			Event.UpdatedBy,
+			(SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
         FROM
             Event JOIN
             EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
@@ -2775,7 +2779,11 @@ BEGIN
         voltage,
         thefaulttype,
         thecurrentdistance,
-        pqiexists
+        pqiexists,
+		SimultaneousCount,
+		SixtyDayCount,
+		UpdatedBy,
+		Note
     INTO #temp
     FROM cte
     WHERE RowPriority = 1
@@ -2785,7 +2793,12 @@ BEGIN
     SELECT @sql = COALESCE(@sql + ',dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName, 'dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName)
     FROM EASExtension
 
-    SET @sql = COALESCE('SELECT *,' + @sql + ' FROM #temp', 'SELECT * FROM #temp')
+	DECLARE @serviceList NVARCHAR(MAX)
+	SELECT @serviceList = COALESCE(@serviceList + ',' + ServiceName, ServiceName)
+	FROM EASExtension
+	Set @serviceList = '''' + @serviceList + ''''
+
+    SET @sql = COALESCE('SELECT *,' + @sql + ', '+ @ServiceList +'as ServiceList FROM #temp', 'SELECT * FROM #temp')
     EXEC sp_executesql @sql
 
     DROP TABLE #temp
