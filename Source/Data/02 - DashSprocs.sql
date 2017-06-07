@@ -1895,7 +1895,8 @@ BEGIN
 		   PIVOT( 
 	   			 SUM(ed.EventCount)
 	   			 FOR ed.OperationType IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
-		   ) as pvt On pvt.MeterID = meter.ID'
+		   ) as pvt On pvt.MeterID = meter.ID
+	ORDER BY Meter.Name'
 
 	print @SQLStatement
 	exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME, @EventDateFrom DATETIME ', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate, @EventDateFrom = @EventDateFrom
@@ -2220,7 +2221,8 @@ FROM
 	   PIVOT( 
 	   		 SUM(ed.EventCount)
 	   		 FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
-	   ) as pvt On pvt.MeterID = meter.ID'
+	   ) as pvt On pvt.MeterID = meter.ID
+ORDER BY Meter.Name'
 
 --print @startDate
 --print @endDate
@@ -2322,7 +2324,8 @@ FROM
 	   PIVOT( 
 	   		 SUM(ed.EventCount)
 	   		 FOR ed.VoltageKV IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
-	   ) as pvt On pvt.MeterID = meter.ID'
+	   ) as pvt On pvt.MeterID = meter.ID
+ORDER BY Meter.Name'
 
 print @SQLStatement
 exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME, @EventDateFrom DATETIME ', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate, @EventDateFrom = @EventDateFrom
@@ -2798,7 +2801,7 @@ BEGIN
 	FROM EASExtension
 	Set @serviceList = '''' + @serviceList + ''''
 
-    SET @sql = COALESCE('SELECT *,' + @sql + ', '+ @ServiceList +'as ServiceList FROM #temp', 'SELECT * FROM #temp')
+    SET @sql = COALESCE('SELECT *,' + @sql + ', '+ @ServiceList +'as ServiceList FROM #temp', 'SELECT *, '''' as ServiceList FROM #temp')
     EXEC sp_executesql @sql
 
     DROP TABLE #temp
