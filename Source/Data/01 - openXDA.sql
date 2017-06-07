@@ -1,6 +1,6 @@
 -- The following commented statements are used to create a database
 -- from scratch and create a new user with access to the database.
--- 
+--
 --  * To change the database name, replace all [openXDA] with the desired database name.
 --  * To change the username, replace all NewUser with the desired username.
 --  * To change the password, replace all MyPassword with the desired password.
@@ -56,7 +56,7 @@ CREATE TABLE DataReader
     FilePattern VARCHAR(500) NOT NULL,
     AssemblyName VARCHAR(200) NOT NULL,
     TypeName VARCHAR(200) NOT NULL,
-	LoadOrder INT NOT NULL
+    LoadOrder INT NOT NULL
 )
 GO
 
@@ -133,7 +133,7 @@ CREATE TABLE Meter
     ShortName VARCHAR(50) NULL,
     Make VARCHAR(200) NOT NULL,
     Model VARCHAR(200) NOT NULL,
-	MeterTypeID INT NULL,
+    MeterTypeID INT NULL,
     TimeZone VARCHAR(200) NULL,
     Description VARCHAR(MAX) NULL
 )
@@ -157,8 +157,8 @@ GO
 
 CREATE TABLE MeterType
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(25) NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(25) NOT NULL
 )
 GO
 
@@ -309,11 +309,11 @@ GO
 
 CREATE TABLE LineGroup
 (
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[Name] [varchar](200) NOT NULL,
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [Name] [varchar](200) NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
 
@@ -321,12 +321,12 @@ GO
 
 CREATE TABLE LineLineGroup
 (
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[LineID] [int] NOT NULL,
-	[LineGroupID] [int] NOT NULL,
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [LineID] [int] NOT NULL,
+    [LineGroupID] [int] NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
 
@@ -342,12 +342,12 @@ GO
 
 CREATE TABLE EmailGroupLineGroup
 (
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[EmailGroupID] [int] NOT NULL,
-	[LineGroupID] [int] NOT NULL,
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [EmailGroupID] [int] NOT NULL,
+    [LineGroupID] [int] NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )
 
@@ -360,19 +360,19 @@ GO
 
 
 CREATE TABLE [dbo].[AuditLog](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[TableName] [varchar](200) NOT NULL,
-	[PrimaryKeyColumn] [varchar](200) NOT NULL,
-	[PrimaryKeyValue] [varchar](max) NOT NULL,
-	[ColumnName] [varchar](200) NOT NULL,
-	[OriginalValue] [varchar](max) NULL,
-	[NewValue] [varchar](max) NULL,
-	[Deleted] [bit] NOT NULL,
-	[UpdatedBy] [varchar](200) NULL,
-	[UpdatedOn] [datetime] NULL,
- CONSTRAINT [PK_AuditLog] PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [TableName] [varchar](200) NOT NULL,
+    [PrimaryKeyColumn] [varchar](200) NOT NULL,
+    [PrimaryKeyValue] [varchar](max) NOT NULL,
+    [ColumnName] [varchar](200) NOT NULL,
+    [OriginalValue] [varchar](max) NULL,
+    [NewValue] [varchar](max) NULL,
+    [Deleted] [bit] NOT NULL,
+    [UpdatedBy] [varchar](200) NULL,
+    [UpdatedOn] [datetime] NULL,
+ CONSTRAINT [PK_AuditLog] PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
@@ -568,7 +568,7 @@ ON UserAccount
 AFTER INSERT
 AS BEGIN
     SET NOCOUNT ON;
-    
+
     INSERT INTO UserAccountMeterGroup(UserAccountID, MeterGroupID)
     SELECT UserAccount.ID, MeterGroup.ID
     FROM inserted UserAccount CROSS JOIN MeterGroup
@@ -701,32 +701,32 @@ CREATE TABLE SentEmail
 GO
 
 CREATE TABLE [dbo].[FileBlob](
-	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[Blob] [varbinary](max) NOT NULL,
-	[DataFileID] [int] NOT NULL
+    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Blob] [varbinary](max) NOT NULL,
+    [DataFileID] [int] NOT NULL
 )
 
 GO
 
 CREATE TABLE [dbo].[DeviceFilter](
-	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[UserAccount] [varchar](500) NOT NULL,
-	[Name] [nvarchar](500) NOT NULL,
-	[FilterExpression] [nvarchar](max) NOT NULL,
-	[MeterGroupID] [int] NOT NULL,
+    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [UserAccount] [varchar](500) NOT NULL,
+    [Name] [nvarchar](500) NOT NULL,
+    [FilterExpression] [nvarchar](max) NOT NULL,
+    [MeterGroupID] [int] NOT NULL,
 )
 
 GO
 
 CREATE TABLE [dbo].SavedViews(
-	[ID] [int] IDENTITY(1,1) PRIMARY KEY NOT NULL,
-	[UserAccount] [varchar](500) NOT NULL,
-	[Name] [nvarchar](500) NOT NULL,
-	FromDate DateTime NOT NULL,
-	ToDate DateTime NOT NULL,
-	Tab nvarchar(20) NOT NULL,
-	DeviceFilterID INT NOT NULL,
-	MapGrid nvarchar(5) NOT NULL
+    [ID] [int] IDENTITY(1,1) PRIMARY KEY NOT NULL,
+    [UserAccount] [varchar](500) NOT NULL,
+    [Name] [nvarchar](500) NOT NULL,
+    FromDate DateTime NOT NULL,
+    ToDate DateTime NOT NULL,
+    Tab nvarchar(20) NOT NULL,
+    DeviceFilterID INT NOT NULL,
+    MapGrid nvarchar(5) NOT NULL
 )
 
 GO
@@ -825,7 +825,7 @@ CREATE TABLE Event
     SamplesPerSecond INT NOT NULL,
     SamplesPerCycle INT NOT NULL,
     Description VARCHAR(MAX) NULL,
-	UpdatedBy VARCHAR(200) NULL
+    UpdatedBy VARCHAR(200) NULL
 )
 GO
 
@@ -871,7 +871,7 @@ CREATE TABLE Disturbance
     DurationCycles FLOAT NOT NULL,
     StartIndex INT NOT NULL,
     EndIndex INT NOT NULL,
-	UpdatedBy VARCHAR(200) NULL
+    UpdatedBy VARCHAR(200) NULL
 )
 GO
 
@@ -920,7 +920,7 @@ CREATE TABLE WorkbenchVoltageCurve
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
-	Visible BIT NOT NULL
+    Visible BIT NOT NULL
 )
 GO
 
@@ -944,14 +944,14 @@ CREATE TABLE VoltageEnvelopeCurve
 GO
 
 CREATE TABLE [dbo].[WorkbenchFilter](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[Name] [varchar](50) NOT NULL,
-	[UserID] [uniqueidentifier] NOT NULL,
-	[TimeRange] [varchar](512) NOT NULL,
-	[Meters] [varchar](max) NULL,
-	[Lines] [varchar](max) NULL,
-	[EventTypes] [varchar](50) NOT NULL,
-	[IsDefault] [bit] NOT NULL
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [Name] [varchar](50) NOT NULL,
+    [UserID] [uniqueidentifier] NOT NULL,
+    [TimeRange] [varchar](512) NOT NULL,
+    [Meters] [varchar](max) NULL,
+    [Lines] [varchar](max) NULL,
+    [EventTypes] [varchar](50) NOT NULL,
+    [IsDefault] [bit] NOT NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
 GO
@@ -995,12 +995,12 @@ CREATE TABLE BreakerOperation
     BPhaseCleared DATETIME2 NOT NULL,
     CPhaseCleared DATETIME2 NOT NULL,
     BreakerTiming FLOAT NOT NULL,
-	StatusTiming FLOAT NOT NULL,
+    StatusTiming FLOAT NOT NULL,
     APhaseBreakerTiming FLOAT NOT NULL,
     BPhaseBreakerTiming FLOAT NOT NULL,
     CPhaseBreakerTiming FLOAT NOT NULL,
-    BreakerSpeed FLOAT NOT NULL, 
-	UpdatedBy VARCHAR(50) NULL
+    BreakerSpeed FLOAT NOT NULL,
+    UpdatedBy VARCHAR(50) NULL
 )
 GO
 
@@ -1420,9 +1420,9 @@ GO
 
 CREATE TABLE FaultDetectionLogic
 (
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	MeterLineID INT NOT NULL REFERENCES MeterLine(ID),
-	Expression VARCHAR(500) NOT NULL
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterLineID INT NOT NULL REFERENCES MeterLine(ID),
+    Expression VARCHAR(500) NOT NULL
 )
 GO
 
@@ -1456,11 +1456,11 @@ GO
 
 CREATE TABLE FaultGroup
 (
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	EventID INT NOT NULL REFERENCES Event(ID),
-	FaultDetectionLogicResult INT NULL,
-	DefaultFaultDetectionLogicResult INT NOT NULL,
-	FaultValidationLogicResult INT NOT NULL
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    FaultDetectionLogicResult INT NULL,
+    DefaultFaultDetectionLogicResult INT NOT NULL,
+    FaultValidationLogicResult INT NOT NULL
 )
 GO
 
@@ -1924,14 +1924,14 @@ INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regula
 GO
 
 CREATE TABLE [dbo].[FaultNote](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[FaultSummaryID] [int] NOT NULL,
-	[Note] [varchar](max) NOT NULL,
-	[UserAccountID] [uniqueidentifier] NOT NULL,
-	[Timestamp] [datetime] NOT NULL
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [FaultSummaryID] [int] NOT NULL,
+    [Note] [varchar](max) NOT NULL,
+    [UserAccountID] [uniqueidentifier] NOT NULL,
+    [Timestamp] [datetime] NOT NULL
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
@@ -1954,14 +1954,14 @@ ON FaultNote(UserAccountID ASC)
 GO
 
 CREATE TABLE [dbo].[EventNote](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[EventID] [int] NOT NULL,
-	[Note] [varchar](max) NOT NULL,
-	[UserAccount] [varchar](max) NOT NULL,
-	[Timestamp] [datetime] NOT NULL,
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [EventID] [int] NOT NULL,
+    [Note] [varchar](max) NOT NULL,
+    [UserAccount] [varchar](max) NOT NULL,
+    [Timestamp] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
@@ -1993,7 +1993,7 @@ GO
 CREATE TABLE UserDashSettings
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	UserAccountID UNIQUEIDENTIFIER NOT NULL,
+    UserAccountID UNIQUEIDENTIFIER NOT NULL,
     Name NVARCHAR(500) NOT NULL,
     Value NVARCHAR(500) NOT NULL,
     Enabled BIT NOT NULL
@@ -2002,9 +2002,9 @@ GO
 
 CREATE TABLE EASExtension
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	ServiceName VARCHAR(50) NOT NULL,
-	HasResultFunction VARCHAR(50) NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    ServiceName VARCHAR(50) NOT NULL,
+    HasResultFunction VARCHAR(50) NOT NULL
 )
 GO
 
@@ -2097,7 +2097,7 @@ RETURNS DATETIME2
 BEGIN
     DECLARE @adjustSecond INT = @timeTolerance
     DECLARE @adjustNanosecond INT = (@timeTolerance - ROUND(@timeTolerance, 0, 1)) * 1000000000
-    
+
     DECLARE @adjustedDateTime DATETIME2
     DECLARE @dateTimeLimit DATETIME2
     DECLARE @adjustedDateTimeLimit DATETIME2
@@ -2106,7 +2106,7 @@ BEGIN
         CASE WHEN @timeTolerance < 0.0 THEN '0001-01-01'
              ELSE '9999-12-31 23:59:59.9999999'
         END
-        
+
     SET @adjustedDateTimeLimit = DATEADD(SECOND, -@adjustSecond, @dateTimeLimit)
     SET @adjustedDateTimeLimit = DATEADD(NANOSECOND, -@adjustNanosecond, @dateTimeLimit)
 
@@ -2183,7 +2183,7 @@ AS BEGIN
     SELECT ID
     FROM Event
     WHERE @adjustedStartTime <= StartTime AND EndTime <= @adjustedEndTime
-    
+
     RETURN
 END
 GO
@@ -2274,9 +2274,9 @@ CREATE FUNCTION EventHasImpactedComponents
 RETURNS INT
 AS BEGIN
     DECLARE @hasImpactedComponents INT
-    
+
     SELECT @hasImpactedComponents =
-        CASE WHEN EXISTS 
+        CASE WHEN EXISTS
         (
             SELECT *
             FROM Disturbance
@@ -2287,7 +2287,7 @@ AS BEGIN
         THEN 1
         ELSE 0
         END
-        
+
     RETURN @hasImpactedComponents
 END
 GO
@@ -2314,14 +2314,14 @@ SELECT
         WHEN '' THEN COALESCE(Setting.Value, 'UTC')
         ELSE Meter.TimeZone
     END AS TimeZone,
-    Meter.Description, 
-	MeterType.Name AS MeterType, 
-	Meter.MeterTypeID
+    Meter.Description,
+    MeterType.Name AS MeterType,
+    Meter.MeterTypeID
 FROM
     Meter JOIN
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID  LEFT OUTER JOIN
     dbo.MeterType ON dbo.Meter.MeterTypeID = dbo.MeterType.ID LEFT OUTER JOIN
-	Setting ON Setting.Name = 'DefaultMeterTimeZone'
+    Setting ON Setting.Name = 'DefaultMeterTimeZone'
 GO
 
 CREATE VIEW LineView
@@ -2386,9 +2386,9 @@ SELECT
     Channel.HarmonicGroup,
     Series.SourceIndexes AS Mapping,
     Channel.Description,
-    Channel.Enabled, 
-	Series.SeriesTypeID, 
-	SeriesType.Name AS SeriesType
+    Channel.Enabled,
+    Series.SeriesTypeID,
+    SeriesType.Name AS SeriesType
 FROM
     Channel JOIN
     Meter ON Channel.MeterID = Meter.ID JOIN
@@ -2402,7 +2402,7 @@ FROM
     Series ON
         Series.ChannelID = Channel.ID AND
         Series.SourceIndexes <> '' LEFT OUTER JOIN
-	SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
+    SeriesType ON dbo.Series.SeriesTypeID = dbo.SeriesType.ID
 GO
 
 CREATE VIEW DefaultAlarmRangeLimitView
@@ -2411,12 +2411,12 @@ SELECT
     DefaultAlarmRangeLimit.ID,
     DefaultAlarmRangeLimit.MeasurementTypeID,
     DefaultAlarmRangeLimit.AlarmTypeID,
-    DefaultAlarmRangeLimit.MeasurementCharacteristicID, 
+    DefaultAlarmRangeLimit.MeasurementCharacteristicID,
     DefaultAlarmRangeLimit.Severity,
     DefaultAlarmRangeLimit.High,
     DefaultAlarmRangeLimit.Low,
     DefaultAlarmRangeLimit.PerUnit,
-    DefaultAlarmRangeLimit.RangeInclusive, 
+    DefaultAlarmRangeLimit.RangeInclusive,
     AlarmType.Name AS AlarmType,
     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
     MeasurementType.Name AS MeasurementType
@@ -2450,14 +2450,14 @@ SELECT
     Channel.MeasurementCharacteristicID,
     Channel.PhaseID,
     AlarmRangeLimit.IsDefault,
-	Meter.Name AS MeterName
+    Meter.Name AS MeterName
 FROM
     AlarmRangeLimit JOIN
     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
     MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
     MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
     Phase ON Channel.PhaseID = Phase.ID JOIN
-	Meter ON Channel.MeterID = Meter.ID
+    Meter ON Channel.MeterID = Meter.ID
 GO
 
 CREATE VIEW MeterMeterGroupView
@@ -2503,13 +2503,13 @@ GO
 CREATE VIEW UserMeter
 AS
 SELECT
-	UserAccount.Name AS UserName,
-	Meter.ID AS MeterID
+    UserAccount.Name AS UserName,
+    Meter.ID AS MeterID
 FROM
-	Meter JOIN
-	MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
-	UserAccountMeterGroup ON MeterMeterGroup.MeterGroupID = UserAccountMeterGroup.MeterGroupID JOIN
-	UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID
+    Meter JOIN
+    MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
+    UserAccountMeterGroup ON MeterMeterGroup.MeterGroupID = UserAccountMeterGroup.MeterGroupID JOIN
+    UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID
 GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -2639,8 +2639,8 @@ SummaryData AS
         SelectedSummary.EventID,
         Event.StartTime AS EventStartTime,
         Event.EndTime AS EventEndTime,
-		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Simple' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Simple,
-		(Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Reactance' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Reactance
+        (Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Simple' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Simple,
+        (Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Reactance' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Reactance
     FROM
         SelectedSummary JOIN
         Event ON SelectedSummary.EventID = Event.ID JOIN
@@ -2745,10 +2745,10 @@ SELECT
                             FileName,
                             EventID,
                             FaultSummaryID AS FaultID,
-							CASE WHEN ABS(Reactance/COALESCE(Simple,1)) > 0.6 THEN 'LOW'
-								 WHEN ABS(Reactance/COALESCE(Simple,1)) < 0.4 THEN 'HIGH'
-								 ELSE 'MEDIUM'
-							END AS Ratio
+                            CASE WHEN ABS(Reactance/COALESCE(Simple,1)) > 0.6 THEN 'LOW'
+                                 WHEN ABS(Reactance/COALESCE(Simple,1)) < 0.4 THEN 'HIGH'
+                                 ELSE 'MEDIUM'
+                            END AS Ratio
                         FROM SummaryData
                         WHERE FaultSummaryID IN
                         (
@@ -2854,7 +2854,7 @@ GO
 
 CREATE VIEW [dbo].[DisturbanceView]
 AS
-SELECT dbo.Disturbance.ID, dbo.Disturbance.EventID, dbo.Disturbance.EventTypeID, dbo.Disturbance.PhaseID, dbo.Disturbance.Magnitude, dbo.Disturbance.PerUnitMagnitude, dbo.Disturbance.StartTime, 
+SELECT dbo.Disturbance.ID, dbo.Disturbance.EventID, dbo.Disturbance.EventTypeID, dbo.Disturbance.PhaseID, dbo.Disturbance.Magnitude, dbo.Disturbance.PerUnitMagnitude, dbo.Disturbance.StartTime,
        dbo.Disturbance.EndTime, dbo.Disturbance.DurationSeconds, dbo.Disturbance.DurationCycles, dbo.Disturbance.StartIndex, dbo.Disturbance.EndIndex, dbo.Event.MeterID,
            (SELECT        MAX(SeverityCode) AS Expr1
              FROM            dbo.DisturbanceSeverity
@@ -2868,8 +2868,8 @@ GO
 
 CREATE VIEW [dbo].[BreakerView]
 AS
-SELECT dbo.BreakerOperation.ID, dbo.Meter.ID AS MeterID, dbo.Event.ID AS EventID, dbo.EventType.Name AS EventType, dbo.BreakerOperation.TripCoilEnergized AS Energized, dbo.BreakerOperation.BreakerNumber, 
-       dbo.MeterLine.LineName, dbo.Phase.Name AS PhaseName, CAST(dbo.BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing, dbo.BreakerOperation.BreakerSpeed AS Speed, 
+SELECT dbo.BreakerOperation.ID, dbo.Meter.ID AS MeterID, dbo.Event.ID AS EventID, dbo.EventType.Name AS EventType, dbo.BreakerOperation.TripCoilEnergized AS Energized, dbo.BreakerOperation.BreakerNumber,
+       dbo.MeterLine.LineName, dbo.Phase.Name AS PhaseName, CAST(dbo.BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing, dbo.BreakerOperation.BreakerSpeed AS Speed,
        dbo.BreakerOperationType.Name AS OperationType, BreakerOperation.UpdatedBy
 FROM   dbo.BreakerOperation INNER JOIN
        dbo.Event ON dbo.BreakerOperation.EventID = dbo.Event.ID INNER JOIN
@@ -2886,22 +2886,22 @@ CREATE VIEW [dbo].[FaultView]
 AS
 SELECT
             FaultSummary.ID AS ID,
-			FaultSummary.EventID,
-			FaultSummary.Algorithm,
-			FaultSummary.FaultNumber,
-			FaultSummary.CalculationCycle,
-			FaultSummary.Distance,
-			FaultSummary.CurrentMagnitude,
-			FaultSummary.CurrentLag,
-			FaultSummary.PrefaultCurrent,
-			FaultSummary.PostfaultCurrent,
-			FaultSummary.Inception,
-			FaultSummary.DurationSeconds,
-			FaultSummary.DurationCycles,
-			FaultSummary.FaultType,
-			FaultSummary.IsSelectedAlgorithm,
-			FaultSummary.IsValid,
-			FaultSummary.IsSuppressed,
+            FaultSummary.EventID,
+            FaultSummary.Algorithm,
+            FaultSummary.FaultNumber,
+            FaultSummary.CalculationCycle,
+            FaultSummary.Distance,
+            FaultSummary.CurrentMagnitude,
+            FaultSummary.CurrentLag,
+            FaultSummary.PrefaultCurrent,
+            FaultSummary.PostfaultCurrent,
+            FaultSummary.Inception,
+            FaultSummary.DurationSeconds,
+            FaultSummary.DurationCycles,
+            FaultSummary.FaultType,
+            FaultSummary.IsSelectedAlgorithm,
+            FaultSummary.IsValid,
+            FaultSummary.IsSuppressed,
             Meter.Name AS MeterName,
             Meter.ShortName AS ShortName,
             MeterLocation.ShortName AS LocationName,
@@ -2928,17 +2928,17 @@ GO
 
 CREATE VIEW [dbo].[WorkbenchVoltageCurveView]
 AS
-SELECT	dbo.WorkbenchVoltageCurve.ID, dbo.WorkbenchVoltageCurve.Name, dbo.WorkbenchVoltageCurvePoint.ID AS CurvePointID, dbo.WorkbenchVoltageCurvePoint.PerUnitMagnitude, 
-		dbo.WorkbenchVoltageCurvePoint.DurationSeconds, dbo.WorkbenchVoltageCurvePoint.LoadOrder, dbo.WorkbenchVoltageCurve.Visible
-FROM	dbo.WorkbenchVoltageCurve INNER JOIN
-		dbo.WorkbenchVoltageCurvePoint ON dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID AND 
-		dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID AND dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID
+SELECT  dbo.WorkbenchVoltageCurve.ID, dbo.WorkbenchVoltageCurve.Name, dbo.WorkbenchVoltageCurvePoint.ID AS CurvePointID, dbo.WorkbenchVoltageCurvePoint.PerUnitMagnitude,
+        dbo.WorkbenchVoltageCurvePoint.DurationSeconds, dbo.WorkbenchVoltageCurvePoint.LoadOrder, dbo.WorkbenchVoltageCurve.Visible
+FROM    dbo.WorkbenchVoltageCurve INNER JOIN
+        dbo.WorkbenchVoltageCurvePoint ON dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID AND
+        dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID AND dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID
 
 GO
 
 CREATE VIEW [dbo].[EmailTypeView]
 AS
-SELECT        dbo.EmailType.EmailCategoryID, dbo.EmailType.XSLTemplateID, dbo.EmailType.ID, dbo.EmailCategory.Name AS EmailCategory, dbo.XSLTemplate.Name AS XSLTemplate, 
+SELECT        dbo.EmailType.EmailCategoryID, dbo.EmailType.XSLTemplateID, dbo.EmailType.ID, dbo.EmailCategory.Name AS EmailCategory, dbo.XSLTemplate.Name AS XSLTemplate,
                          dbo.EmailCategory.Name + ' - ' + dbo.XSLTemplate.Name AS Name
 FROM            dbo.EmailType INNER JOIN
                          dbo.EmailCategory ON dbo.EmailType.EmailCategoryID = dbo.EmailCategory.ID INNER JOIN
@@ -2948,7 +2948,7 @@ GO
 
 CREATE VIEW [dbo].[EmailGroupTypeView]
 AS
-SELECT        dbo.EmailGroupType.ID, dbo.EmailGroupType.EmailGroupID, dbo.EmailGroupType.EmailTypeID, dbo.EmailGroup.Name AS GroupName, 
+SELECT        dbo.EmailGroupType.ID, dbo.EmailGroupType.EmailGroupID, dbo.EmailGroupType.EmailTypeID, dbo.EmailGroup.Name AS GroupName,
                          dbo.EmailCategory.Name + ' - ' + dbo.XSLTemplate.Name AS TypeName
 FROM            dbo.EmailGroupType INNER JOIN
                          dbo.EmailGroup ON dbo.EmailGroupType.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
@@ -2978,7 +2978,7 @@ GO
 
 CREATE VIEW [dbo].[EmailGroupUserAccountView]
 AS
-SELECT        dbo.EmailGroupUserAccount.ID, dbo.EmailGroupUserAccount.EmailGroupID, dbo.EmailGroupUserAccount.UserAccountID, dbo.EmailGroup.Name AS EmailGroup, 
+SELECT        dbo.EmailGroupUserAccount.ID, dbo.EmailGroupUserAccount.EmailGroupID, dbo.EmailGroupUserAccount.UserAccountID, dbo.EmailGroup.Name AS EmailGroup,
                          dbo.UserAccount.FirstName + ' ' + dbo.UserAccount.LastName AS UserName
 FROM            dbo.EmailGroupUserAccount INNER JOIN
                          dbo.EmailGroup ON dbo.EmailGroupUserAccount.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
@@ -2990,7 +2990,7 @@ CREATE VIEW [dbo].[AuditLogView]
 AS
 SELECT        TOP (2000) ID, TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy, UpdatedOn
 FROM            dbo.AuditLog
-WHERE		  UpdatedBy IS NOT NULL
+WHERE         UpdatedBy IS NOT NULL
 
 GO
 
@@ -3024,9 +3024,9 @@ AS BEGIN
         Event ON SystemEventID.EventID = Event.ID JOIN
         Meter ON Event.MeterID = Meter.ID left JOIN
         MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID left JOIN
-		LineLineGroup ON LineLineGroup.LineID = Event.LineID Left JOIN
+        LineLineGroup ON LineLineGroup.LineID = Event.LineID Left JOIN
         EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID Left JOIN
-		EmailGroupLineGroup ON LineLineGroup.LineGroupID = EmailGroupLineGroup.LineGroupID JOIN
+        EmailGroupLineGroup ON LineLineGroup.LineGroupID = EmailGroupLineGroup.LineGroupID JOIN
         (
             SELECT
                 EmailGroupID,
@@ -3208,177 +3208,142 @@ GO
 -- Author: Kevin Conner
 -- Source: http://stackoverflow.com/questions/116968/in-sql-server-2005-can-i-do-a-cascade-delete-without-setting-the-property-on-my
 CREATE procedure usp_delete_cascade (
-	@base_table_name varchar(200), @base_criteria nvarchar(1000)
+    @base_table_name varchar(200), @base_criteria nvarchar(1000)
 )
 as begin
-	-- Adapted from http://www.sqlteam.com/article/performing-a-cascade-delete-in-sql-server-7
-	-- Expects the name of a table, and a conditional for selecting rows
-	-- within that table that you want deleted.
-	-- Produces SQL that, when run, deletes all table rows referencing the ones
-	-- you initially selected, cascading into any number of tables,
-	-- without the need for "ON DELETE CASCADE".
-	-- Does not appear to work with self-referencing tables, but it will
-	-- delete everything beneath them.
-	-- To make it easy on the server, put a "GO" statement between each line.
+    -- Adapted from http://www.sqlteam.com/article/performing-a-cascade-delete-in-sql-server-7
+    -- Expects the name of a table, and a conditional for selecting rows
+    -- within that table that you want deleted.
+    -- Produces SQL that, when run, deletes all table rows referencing the ones
+    -- you initially selected, cascading into any number of tables,
+    -- without the need for "ON DELETE CASCADE".
+    -- Does not appear to work with self-referencing tables, but it will
+    -- delete everything beneath them.
+    -- To make it easy on the server, put a "GO" statement between each line.
 
-	declare @to_delete table (
-		id int identity(1, 1) primary key not null,
-		criteria nvarchar(1000) not null,
-		table_name varchar(200) not null,
-		processed bit not null,
-		delete_sql varchar(1000)
-	)
+    declare @to_delete table (
+        id int identity(1, 1) primary key not null,
+        criteria nvarchar(1000) not null,
+        table_name varchar(200) not null,
+        processed bit not null,
+        delete_sql varchar(1000)
+    )
 
-	insert into @to_delete (criteria, table_name, processed) values (@base_criteria, @base_table_name, 0)
+    insert into @to_delete (criteria, table_name, processed) values (@base_criteria, @base_table_name, 0)
 
-	declare @id int, @criteria nvarchar(1000), @table_name varchar(200)
-	while exists(select 1 from @to_delete where processed = 0) begin
-		select top 1 @id = id, @criteria = criteria, @table_name = table_name from @to_delete where processed = 0 order by id desc
+    declare @id int, @criteria nvarchar(1000), @table_name varchar(200)
+    while exists(select 1 from @to_delete where processed = 0) begin
+        select top 1 @id = id, @criteria = criteria, @table_name = table_name from @to_delete where processed = 0 order by id desc
 
-		insert into @to_delete (criteria, table_name, processed)
-			select referencing_column.name + ' in (select [' + referenced_column.name + '] from [' + @table_name +'] where ' + @criteria + ')',
-				referencing_table.name,
-				0
-			from  sys.foreign_key_columns fk
-				inner join sys.columns referencing_column on fk.parent_object_id = referencing_column.object_id 
-					and fk.parent_column_id = referencing_column.column_id 
-				inner join  sys.columns referenced_column on fk.referenced_object_id = referenced_column.object_id 
-					and fk.referenced_column_id = referenced_column.column_id 
-				inner join  sys.objects referencing_table on fk.parent_object_id = referencing_table.object_id 
-				inner join  sys.objects referenced_table on fk.referenced_object_id = referenced_table.object_id 
-				inner join  sys.objects constraint_object on fk.constraint_object_id = constraint_object.object_id
-			where referenced_table.name = @table_name
-				and referencing_table.name != referenced_table.name
+        insert into @to_delete (criteria, table_name, processed)
+            select referencing_column.name + ' in (select [' + referenced_column.name + '] from [' + @table_name +'] where ' + @criteria + ')',
+                referencing_table.name,
+                0
+            from  sys.foreign_key_columns fk
+                inner join sys.columns referencing_column on fk.parent_object_id = referencing_column.object_id
+                    and fk.parent_column_id = referencing_column.column_id
+                inner join  sys.columns referenced_column on fk.referenced_object_id = referenced_column.object_id
+                    and fk.referenced_column_id = referenced_column.column_id
+                inner join  sys.objects referencing_table on fk.parent_object_id = referencing_table.object_id
+                inner join  sys.objects referenced_table on fk.referenced_object_id = referenced_table.object_id
+                inner join  sys.objects constraint_object on fk.constraint_object_id = constraint_object.object_id
+            where referenced_table.name = @table_name
+                and referencing_table.name != referenced_table.name
 
-		update @to_delete set
-			processed = 1
-		where id = @id
-	end
+        update @to_delete set
+            processed = 1
+        where id = @id
+    end
 
-	select 'print ''deleting from ' + table_name + '...''; delete from [' + table_name + '] where ' + criteria from @to_delete order by id desc
+    select 'print ''deleting from ' + table_name + '...''; delete from [' + table_name + '] where ' + criteria from @to_delete order by id desc
 end
 GO
 
 -- =============================================
--- Author:		<Author, William Ernest/ Stephen Wills>
+-- Author:      <Author, William Ernest/ Stephen Wills>
 -- Create date: <Create Date,12/1/2016>
--- Description:	<Description, Calls usp_delete_cascade to perform cascading deletes for a table>
+-- Description: <Description, Calls usp_delete_cascade to perform cascading deletes for a table>
 -- =============================================
 CREATE PROCEDURE [dbo].[UniversalCascadeDelete]
-	-- Add the parameters for the stored procedure here
-	@tableName VARCHAR(200),
-	@baseCriteria NVARCHAR(1000)
+    -- Add the parameters for the stored procedure here
+    @tableName VARCHAR(200),
+    @baseCriteria NVARCHAR(1000)
 AS
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
-	DECLARE @deleteSQL NVARCHAR(900)
+    -- SET NOCOUNT ON added to prevent extra result sets from
+    -- interfering with SELECT statements.
+    SET NOCOUNT ON;
+    DECLARE @deleteSQL NVARCHAR(900)
 
-	CREATE TABLE #DeleteCascade
-	(
-		DeleteSQL NVARCHAR(900)
-	)
+    CREATE TABLE #DeleteCascade
+    (
+        DeleteSQL NVARCHAR(900)
+    )
 
-	INSERT INTO #DeleteCascade
-	EXEC usp_delete_cascade @tableName, @baseCriteria
+    INSERT INTO #DeleteCascade
+    EXEC usp_delete_cascade @tableName, @baseCriteria
 
-	DECLARE DeleteCursor CURSOR FOR
-	SELECT *
-	FROM #DeleteCascade
+    DECLARE DeleteCursor CURSOR FOR
+    SELECT *
+    FROM #DeleteCascade
 
-	OPEN DeleteCursor
+    OPEN DeleteCursor
 
-	FETCH NEXT FROM DeleteCursor
-	INTO @deleteSQL
+    FETCH NEXT FROM DeleteCursor
+    INTO @deleteSQL
 
-	WHILE @@FETCH_STATUS = 0
-	BEGIN
-		EXEC sp_executesql @deleteSQL
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        EXEC sp_executesql @deleteSQL
 
-		FETCH NEXT FROM DeleteCursor
-		INTO @deleteSQL
-	END
+        FETCH NEXT FROM DeleteCursor
+        INTO @deleteSQL
+    END
 
-	CLOSE DeleteCursor
-	DEALLOCATE DeleteCursor
+    CLOSE DeleteCursor
+    DEALLOCATE DeleteCursor
 
-	DROP TABLE #DeleteCascade
+    DROP TABLE #DeleteCascade
 END
 GO
 
-CREATE PROCEDURE [dbo].[InsertIntoAuditLog] (@tableName VARCHAR(128), @primaryKeyColumn VARCHAR(128), @primaryKeyValue NVARCHAR(MAX), @deleted BIT = '0', @inserted BIT = '0') AS	
+CREATE PROCEDURE [dbo].[InsertIntoAuditLog] (@tableName VARCHAR(128), @primaryKeyColumn VARCHAR(128), @deleted BIT = '0', @inserted BIT = '0') AS
 BEGIN
 
-	DECLARE @columnName varchar(100) 
-	DECLARE @cursorColumnNames CURSOR 
-	
-	SET @cursorColumnNames = CURSOR FOR 
-	SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @tableName AND TABLE_CATALOG = db_name()
+    DECLARE @columnName varchar(100)
+    DECLARE @cursorColumnNames CURSOR
 
-	OPEN @cursorColumnNames 
+    SET @cursorColumnNames = CURSOR FOR
+    SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @tableName AND TABLE_CATALOG = db_name()
 
-	FETCH NEXT FROM @cursorColumnNames INTO @columnName 
-	WHILE @@FETCH_STATUS = 0 
-	BEGIN 
+    OPEN @cursorColumnNames
 
-		DECLARE @sql VARCHAR(MAX)
-		
-		IF @deleted = '0' AND @inserted = '1'
-			SET @sql = 'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
-					'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', ''' + @primaryKeyValue + ''', ''' + @columnName + ''', ' +
-					'NULL, CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + '), ''0'', #inserted.UpdatedBy FROM #inserted'
-		ELSE IF @deleted = '1' AND @inserted = '0'
-			BEGIN
-				DECLARE @context VARCHAR(128)
-				SELECT @context = CASE WHEN CONTEXT_INFO() IS NULL THEN SUSER_NAME() ELSE CAST(CONTEXT_INFO() AS VARCHAR(128)) END
-				SET @sql = 'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
-						'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', ''' + @primaryKeyValue + ''', ''' + @columnName + ''', ' +
-						'CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), NULL, ''1'', ''' + @context + ''' FROM #deleted'
-			END
-		ELSE
-			SET @sql = 'DECLARE @oldVal NVARCHAR(MAX) ' +
-					'DECLARE @newVal NVARCHAR(MAX) ' +
-					'SELECT @oldVal = CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), @newVal = CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + ') FROM #deleted, #inserted ' +
-					'IF @oldVal <> @newVal BEGIN ' +			
-					'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
-					'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', ''' + @primaryKeyValue + ''', ''' + @columnName + ''', ' +
-					'CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + '), ''0'', #inserted.UpdatedBy ' +
-					'FROM #inserted, #deleted ' +
-					'END'
+    FETCH NEXT FROM @cursorColumnNames INTO @columnName
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
 
-		EXECUTE (@sql)
-		
-		FETCH NEXT FROM @cursorColumnNames INTO @columnName 
-	END 
+        DECLARE @sql VARCHAR(MAX)
 
-	CLOSE @cursorColumnNames 
-	DEALLOCATE @cursorColumnNames
-	
-END
-GO
+        IF @deleted = '0' AND @inserted = '0'
+        BEGIN
+            SET @sql = 'DECLARE @oldVal NVARCHAR(MAX) ' +
+                    'DECLARE @newVal NVARCHAR(MAX) ' +
+                    'SELECT @oldVal = CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), @newVal = CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + ') FROM #deleted, #inserted ' +
+                    'IF @oldVal <> @newVal BEGIN ' +
+                    'INSERT INTO AuditLog (TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy) ' +
+                    'SELECT ''' + @tableName + ''', ''' + @primaryKeyColumn + ''', CONVERT(NVARCHAR(MAX), #inserted.' + @primaryKeyColumn + '), ''' + @columnName + ''', ' +
+                    'CONVERT(NVARCHAR(MAX), #deleted.' + @columnName + '), CONVERT(NVARCHAR(MAX), #inserted.' + @columnName + '), ''0'', #inserted.UpdatedBy ' +
+                    'FROM #inserted JOIN #deleted ON #inserted.' + @primaryKeyColumn + ' = #deleted.' + @primaryKeyColumn + ' ' +
+                    'END'
 
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+            EXECUTE (@sql)
+        END
 
-CREATE TRIGGER Event_AuditInsert 
-   ON  Event
-   AFTER INSERT
-AS 
-BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #inserted FROM inserted
-	
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #inserted	
+        FETCH NEXT FROM @cursorColumnNames INTO @columnName
+    END
 
-	EXEC InsertIntoAuditLog 'Event', 'ID', @id, '0', '1'
-	
-	DROP TABLE #inserted
+    CLOSE @cursorColumnNames
+    DEALLOCATE @cursorColumnNames
 
 END
 GO
@@ -3388,24 +3353,19 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TRIGGER Event_AuditUpdate 
+CREATE TRIGGER Event_AuditUpdate
    ON  Event
    AFTER UPDATE
-AS 
+AS
 BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #deleted  FROM deleted
-	SELECT * INTO #inserted FROM inserted
-	
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
 
-	EXEC InsertIntoAuditLog 'Event', 'ID', @id
-	
-	DROP TABLE #inserted
-	DROP TABLE #deleted
+    SET NOCOUNT ON;
+
+    SELECT * INTO #deleted  FROM deleted
+    SELECT * INTO #inserted FROM inserted
+    EXEC InsertIntoAuditLog 'Event', 'ID'
+    DROP TABLE #inserted
+    DROP TABLE #deleted
 
 END
 GO
@@ -3415,74 +3375,19 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TRIGGER Event_AuditDelete
-   ON  Event
-   AFTER DELETE
-AS 
-BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #deleted FROM deleted
-		
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
-
-	EXEC InsertIntoAuditLog 'Event', 'ID', @id, '1'
-		
-	DROP TABLE #deleted
-
-END
-GO
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE TRIGGER Disturbance_AuditInsert 
-   ON  Disturbance
-   AFTER INSERT
-AS 
-BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #inserted FROM inserted
-
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #inserted
-	
-	EXEC InsertIntoAuditLog 'Disturbance', 'ID', @id, '0', '1'
-	
-	DROP TABLE #inserted
-
-END
-GO
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE TRIGGER Disturbance_AuditUpdate 
+CREATE TRIGGER Disturbance_AuditUpdate
    ON  Disturbance
    AFTER UPDATE
-AS 
+AS
 BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #deleted  FROM deleted
-	SELECT * INTO #inserted FROM inserted
 
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
-	
-	EXEC InsertIntoAuditLog 'Disturbance', 'ID', @id
-	
-	DROP TABLE #inserted
-	DROP TABLE #deleted
+    SET NOCOUNT ON;
+
+    SELECT * INTO #deleted  FROM deleted
+    SELECT * INTO #inserted FROM inserted
+    EXEC InsertIntoAuditLog 'Disturbance', 'ID'
+    DROP TABLE #inserted
+    DROP TABLE #deleted
 
 END
 GO
@@ -3492,89 +3397,19 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TRIGGER Disturbance_AuditDelete
-   ON  Disturbance
-   AFTER DELETE
-AS 
-BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #deleted FROM deleted
-		
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
-
-	EXEC InsertIntoAuditLog 'Disturbance', 'ID', @id, '1'
-		
-	DROP TABLE #deleted
-
-END
-GO
-
-CREATE TRIGGER BreakerOperation_AuditInsert 
-   ON  BreakerOperation
-   AFTER INSERT
-AS 
-BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #inserted FROM inserted
-
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #inserted
-	
-	EXEC InsertIntoAuditLog 'BreakerOperation', 'ID', @id, '0', '1'
-	
-	DROP TABLE #inserted
-
-END
-GO
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE TRIGGER BreakerOperation_AuditUpdate 
+CREATE TRIGGER BreakerOperation_AuditUpdate
    ON  BreakerOperation
    AFTER UPDATE
-AS 
+AS
 BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #deleted  FROM deleted
-	SELECT * INTO #inserted FROM inserted
 
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
-	
-	EXEC InsertIntoAuditLog 'BreakerOperation', 'ID', @id
-	
-	DROP TABLE #inserted
-	DROP TABLE #deleted
+    SET NOCOUNT ON;
 
-END
-GO
-
-CREATE TRIGGER BreakerOperation_AuditDelete
-   ON  BreakerOperation
-   AFTER DELETE
-AS 
-BEGIN
-	
-	SET NOCOUNT ON;
-	
-	SELECT * INTO #deleted FROM deleted
-		
-	DECLARE @id NVARCHAR(MAX)		
-	SELECT @id = CONVERT(NVARCHAR(MAX), ID) FROM #deleted	
-
-	EXEC InsertIntoAuditLog 'BreakerOperation', 'ID', @id, '1'
-		
-	DROP TABLE #deleted
+    SELECT * INTO #deleted  FROM deleted
+    SELECT * INTO #inserted FROM inserted
+    EXEC InsertIntoAuditLog 'BreakerOperation', 'ID'
+    DROP TABLE #inserted
+    DROP TABLE #deleted
 
 END
 GO
@@ -3593,7 +3428,7 @@ SET Template = '<?xml version="1.0"?>
     <html>
     <head>
         <title>Fault detected on <xsl:value-of select="/EventDetail/Line/Name" /> (<xsl:value-of select="/EventDetail/Line/AssetKey" />)</title>
-        
+
         <style>
             th, td {
                 border-spacing: 0;
@@ -3601,11 +3436,11 @@ SET Template = '<?xml version="1.0"?>
                 padding-left: 5px;
                 padding-right: 5px
             }
-            
+
             .fault-details {
                 margin-left: 1cm
             }
-        
+
             .fault-header {
                 font-size: 120%;
                 font-weight: bold;
@@ -3616,11 +3451,11 @@ SET Template = '<?xml version="1.0"?>
                 border-spacing: 0;
                 border-collapse: collapse
             }
-        
+
             table.left tr th, table.left tr td {
                 border: 1px solid black
             }
-            
+
             table.center tr th, table.center tr td {
                 border: 1px solid black;
                 text-align: center
@@ -3632,7 +3467,7 @@ SET Template = '<?xml version="1.0"?>
             <span class="fault-header">Fault <xsl:value-of select="@num" /></span> - <format type="System.DateTime" spec="yyyy-MM-dd HH:mm:ss.fffffff"><xsl:value-of select="SummaryData[1]/Inception" /></format>
             <div class="fault-details">
                 <xsl:variable name="deDistance" select="SummaryData/DoubleEndedDistance" />
-            
+
                 <table>
                     <xsl:for-each select="SummaryData">
                         <tr>
@@ -3640,32 +3475,32 @@ SET Template = '<?xml version="1.0"?>
                             <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/openSeeStack.aspx?eventid=<xsl:value-of select="EventID" /></xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
-                    
+
                     <tr>
                         <td>&amp;nbsp;</td>
                         <td>&amp;nbsp;</td>
                     </tr>
-                    
+
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">Files:</xsl:if></td>
                             <td><xsl:value-of select="FileName" /></td>
                         </tr>
                     </xsl:for-each>
-                    
+
                     <tr>
                         <td>&amp;nbsp;</td>
                         <td>&amp;nbsp;</td>
                     </tr>
-                    
+
                     <tr>
                         <td>Line:</td>
                         <td><xsl:value-of select="/EventDetail/Line/Name" /> (<format type="System.Double" spec="0.00"><xsl:value-of select="/EventDetail/Line/Length" /></format> miles)</td>
                     </tr>
                 </table>
-                
+
                 <br />
-                
+
                 <table class="left">
                     <tr>
                         <td style="border: 0"></td>
@@ -3742,7 +3577,7 @@ SET Template = '<?xml version="1.0"?>
         </xsl:for-each>
 
         <hr />
-        
+
         <table class="center" style="width: 600px">
             <tr>
                 <th style="border: 0; border-bottom: 1px solid black; border-right: 1px solid black; text-align: center">Line Parameters:</th>
