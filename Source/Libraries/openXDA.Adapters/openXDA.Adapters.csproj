@@ -93,6 +93,7 @@
     <Compile Include="Model\Meter.cs" />
     <Compile Include="Model\MeterLocation.cs" />
     <Compile Include="Model\EventData.cs" />
+    <Compile Include="PQMarkController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
