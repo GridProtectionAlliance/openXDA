@@ -21,12 +21,16 @@
 //
 //******************************************************************************************************
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Xml;
 
 namespace openXDA.Adapters
 {
@@ -36,12 +40,44 @@ namespace openXDA.Adapters
     public class PQMarkController : ApiController
     {
         #region [ GET Operations ]
+
+        [HttpGet]
+        public string GetDeviceDefinitionFile()
+        {
+            return null;
+        }
+
+        [HttpGet]
+        public List<string> GetComtradeFileNames()
+        {
+            return null;
+        }
+
         #endregion
 
         #region [ PUT Operations ]
         #endregion
 
         #region [ POST Operations]
+
+        [HttpPost]
+        public void ReadDeviceDefinitionFile(string json)
+        {
+            XmlDocument doc = JsonConvert.DeserializeXmlNode(json);
+
+            doc.Save("DeviceDefinitions.xml");
+            using(Process cmd = new Process())
+            {
+
+            }
+        }
+
+        [HttpPost]
+        public void RecieveFile( byte[] file, string name, string directory)
+        {
+            File.WriteAllBytes(Path.Combine(directory, name), file);
+        }
+
         #endregion
 
         #region [ DELETE Operations]
