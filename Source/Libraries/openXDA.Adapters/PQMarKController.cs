@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using GSF.Web.Model;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -31,56 +32,151 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Xml;
+using GSF.Web;
+using openXDA.Model;
+using Newtonsoft.Json.Linq;
 
 namespace openXDA.Adapters
 {
     /// <summary>
     /// This class will be used to form a Restful HTTP API that will be interfaced using the PQMarkPusher.
     /// </summary>
+
     public class PQMarkController : ApiController
     {
         #region [ GET Operations ]
 
+        /// <summary>
+        /// Return single Record
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
-        public string GetDeviceDefinitionFile()
+        public IHttpActionResult GetRecord(int id, string modelName)
         {
-            return null;
+            object record;
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordWhere("ID = {0}", id);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(record);
         }
 
+        /// <summary>
+        /// Returns multiple records
+        /// </summary>
+        /// <returns></returns>
+
         [HttpGet]
-        public List<string> GetComtradeFileNames()
+        public IHttpActionResult GetRecords(string id, string modelName)
         {
-            return null;
+
+            object record;
+
+            string idList = "";
+
+            try
+            {
+                if (id != "all")
+                {
+                    string[] ids = id.Split(',');
+
+                    if (ids.Count() > 0)
+                        idList = $"ID IN ({ string.Join(",", ids.Select(x => int.Parse(x)))})";
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("The id field must be a comma separated integer list.");
+            }
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    if (idList.Length == 0)
+                        record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecords();
+                    else
+                        record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordsWhere(idList);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(record);
         }
+
 
         #endregion
 
         #region [ PUT Operations ]
+        [HttpPut]
+        public IHttpActionResult UpdateRecord(string modelName, [FromBody]JObject record)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    object obj = record.ToObject(type);
+                    dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).UpdateRecord(obj);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok();
+        }
         #endregion
 
         #region [ POST Operations]
-
         [HttpPost]
-        public void ReadDeviceDefinitionFile(string json)
+        public IHttpActionResult CreateRecord( string modelName, [FromBody]JObject record)
         {
-            XmlDocument doc = JsonConvert.DeserializeXmlNode(json);
-
-            doc.Save("DeviceDefinitions.xml");
-            using(Process cmd = new Process())
+            using (DataContext dataContext = new DataContext("systemSettings"))
             {
-
+                try
+                {
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    object obj = record.ToObject(type);
+                    dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
             }
-        }
 
-        [HttpPost]
-        public void RecieveFile( byte[] file, string name, string directory)
-        {
-            File.WriteAllBytes(Path.Combine(directory, name), file);
+            return Ok();
         }
 
         #endregion
 
         #region [ DELETE Operations]
+
+        [HttpDelete]
+        public IHttpActionResult DeleteRecord(int id, string modelName)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).DeleteRecordWhere("ID = {0}", id);
+            }
+
+            return Ok();
+        }
+
         #endregion
     }
 }

@@ -81,9 +81,6 @@ namespace openXDA
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
 
-            // Set configuration to use reflection to setup routes
-            httpConfig.MapHttpAttributeRoutes();
-
             //Map custom API controllers
             httpConfig.Routes.MapHttpRoute(
                 name: "CustomAPIs",
@@ -99,11 +96,37 @@ namespace openXDA
                 routeTemplate: "api/pqmark/{action}/{id}/{modelName}",
                 defaults: new
                 {
-                    controller = "PQMarkController",
+                    controller = "PQMark",
                     id = RouteParameter.Optional,
                     modelName = RouteParameter.Optional
                 }
             );
+
+            httpConfig.Routes.MapHttpRoute(
+                name: "PQMarkUpdateRecord",
+                routeTemplate: "api/pqmark/updaterecord/{modelName}",
+                defaults: new
+                {
+                    controller = "PQMark",
+                    action = "UpdateRecord",
+                    modelName = RouteParameter.Optional
+                }
+            );
+
+            httpConfig.Routes.MapHttpRoute(
+                name: "PQMarkCreateRecord",
+                routeTemplate: "api/pqmark/createRecord/{modelName}",
+                defaults: new
+                {
+                    controller = "PQMark",
+                    action = "CreateRecord",
+                    modelName = RouteParameter.Optional
+                }
+            );
+
+            // Set configuration to use reflection to setup routes
+            httpConfig.MapHttpAttributeRoutes();
+
 
 
             // Load the WebPageController class and assign its routes
