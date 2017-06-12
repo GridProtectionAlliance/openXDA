@@ -59,12 +59,37 @@ using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
 using Setting = openXDA.Model.Setting;
 
 
-namespace openXDA
+namespace openXDA.Hubs
 {
     [AuthorizeHubRole]
     public class DataHub : RecordOperationsHub<DataHub>
     {
         // Client-side script functionality
+        #region [ Static ]
+
+        public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
+                
+        private static void OnLogStatusMessage(string message)
+        {
+            LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string>(message));
+        }
+
+        public static event EventHandler<EventArgs<int, int, int>> ReprocessFileEvent;
+        public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
+
+        private static void OnReprocessFile(int dataFieldId, int fileGroupId, int meterId)
+        {
+            ReprocessFileEvent?.Invoke(new object(), new EventArgs<int,int,int>(dataFieldId, fileGroupId,meterId));
+        }
+
+
+        private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
+        {
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
+        }
+
+
+        #endregion
 
         #region [Config Page]
 
@@ -2262,7 +2287,7 @@ namespace openXDA
                     }
                     catch(Exception ex)
                     {
-                        Program.Host.LogStatusMessage(ex.ToString());
+                        OnLogStatusMessage(ex.ToString());
                     }
                 }
             }
@@ -2491,7 +2516,7 @@ namespace openXDA
                     }
                     catch (Exception ex)
                     {
-                        Program.Host.LogStatusMessage(ex.ToString());
+                        OnLogStatusMessage(ex.ToString());
                     }
                 }
             }
@@ -2761,7 +2786,7 @@ namespace openXDA
                     }
                     catch (Exception ex)
                     {
-                        Program.Host.LogStatusMessage(ex.ToString());
+                        OnLogStatusMessage(ex.ToString());
                     }
                 }
             }
@@ -3023,7 +3048,7 @@ namespace openXDA
                     }
                     catch (Exception ex)
                     {
-                        Program.Host.LogStatusMessage(ex.ToString());
+                        OnLogStatusMessage(ex.ToString());
                     }
                 }
             }
@@ -3269,7 +3294,7 @@ namespace openXDA
                     }
                     catch (Exception ex)
                     {
-                        Program.Host.LogStatusMessage(ex.ToString());
+                        OnLogStatusMessage(ex.ToString());
                     }
                 }
             }
@@ -5081,14 +5106,14 @@ namespace openXDA
                 CascadeDelete("EventData", $"FileGroupID ={kvPair.Key}");
             }
 
-            openXDA.Program.Host.ReprocessFiles(dictionary);
+            OnReprocessFiles(dictionary);
         }
 
         public void ReprocessFile(int dataFileId, int fileGroupId, int meterId)
         { 
             CascadeDelete("Event", $"FileGroupID = {fileGroupId}");
             CascadeDelete("EventData", $"FileGroupID ={fileGroupId}");
-            openXDA.Program.Host.ReprocessFile(dataFileId, fileGroupId, meterId);
+            OnReprocessFile(dataFileId, fileGroupId, meterId);
         }
 
         #endregion

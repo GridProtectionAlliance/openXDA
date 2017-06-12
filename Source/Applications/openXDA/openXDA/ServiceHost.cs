@@ -95,12 +95,14 @@ using log4net.Layout;
 using Microsoft.Owin.Hosting;
 using openXDA.Logging;
 using openXDA.Model;
+using DataHub = openXDA.Hubs.DataHub;
 using Channel = openXDA.Model.Channel;
 using Meter = openXDA.Model.Meter;
 using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
 using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
 using Setting = openXDA.Model.Setting;
+using System.Web.Mvc;
 
 namespace openXDA
 {
@@ -131,6 +133,11 @@ namespace openXDA
 
 
 
+        #endregion
+
+        #region [ Static ]
+        
+        
         #endregion
 
         #region [ Properties ]
@@ -244,6 +251,11 @@ namespace openXDA
             // Set up the analysis engine
             m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
 
+            //Set up datahub callbacks
+            DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataHub.ReprocessFileEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2, Args.Argument3);
+            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
@@ -253,6 +265,7 @@ namespace openXDA
 
                 bool engineStarted = false;
                 bool webUIStarted = false;
+
 
                 while (true)
                 {
@@ -417,6 +430,8 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Workbench/SiteSummaryPVM.cshtml", new Tuple<Type, Type>(typeof(SiteSummary), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/AuditLog.cshtml", new Tuple<Type, Type>(typeof(AuditLog), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/DataFiles.cshtml", new Tuple<Type, Type>(typeof(openXDA.Model.DataFile), typeof(DataHub)));
+
+
 
                 // Create new web application hosting environment
                 m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);

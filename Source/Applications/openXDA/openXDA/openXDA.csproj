@@ -113,6 +113,10 @@
       <HintPath>..\..\..\Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Antlr3.Runtime, Version=3.3.1.7705, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\WebGrease.1.1.0\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="GSF.Communication">
       <HintPath>..\..\..\Dependencies\GSF\GSF.Communication.dll</HintPath>
     </Reference>
@@ -254,8 +258,16 @@
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.WebApi.WebHost.4.0.30506.0\lib\net40\System.Web.Http.WebHost.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Optimization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Web.Optimization.1.0.0\lib\net40\System.Web.Optimization.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -285,11 +297,15 @@
     <Reference Include="System.Data" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml" />
+    <Reference Include="WebGrease, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\WebGrease.1.1.0\lib\WebGrease.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppModel.cs" />
     <Compile Include="Configuration\CategorizedSetting.cs" />
     <Compile Include="Configuration\FileShare.cs" />
-    <Compile Include="DataHub.cs" />
     <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>
@@ -298,33 +314,6 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
-    <Compile Include="Model\AlarmEmailCriterion.cs" />
-    <Compile Include="Model\AuditLog.cs" />
-    <Compile Include="Model\Breaker.cs" />
-    <Compile Include="Model\CycleDataSOEPointView.cs" />
-    <Compile Include="Model\Disturbance.cs" />
-    <Compile Include="Model\DisturbanceEmailCriterion.cs" />
-    <Compile Include="Model\EmailCategory.cs" />
-    <Compile Include="Model\EmailGroup.cs" />
-    <Compile Include="Model\Event.cs" />
-    <Compile Include="Model\EventInfo.cs" />
-    <Compile Include="Model\EventType.cs" />
-    <Compile Include="Model\FaultEmailCriterion.cs" />
-    <Compile Include="Model\FaultView.cs" />
-    <Compile Include="Model\FileBlob.cs" />
-    <Compile Include="Model\LineGroup.cs" />
-    <Compile Include="Model\LineLineGroup.cs" />
-    <Compile Include="Model\MeterType.cs" />
-    <Compile Include="Model\SeriesType.cs" />
-    <Compile Include="Model\SiteSummary.cs" />
-    <Compile Include="Model\TrendingData.cs" />
-    <Compile Include="Model\User.cs" />
-    <Compile Include="Model\UserAccountMeterGroup.cs" />
-    <Compile Include="Model\UserDashSettings.cs" />
-    <Compile Include="Model\VoltageCurvePoint.cs" />
-    <Compile Include="Model\WorkbenchFilter.cs" />
-    <Compile Include="Model\WorkbenchVoltageCurveView.cs" />
-    <Compile Include="Model\XSLTemplate.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />
     <Compile Include="wwwroot\Config\EmailTemplateHandler.ashx.cs">
@@ -333,26 +322,8 @@
     <Compile Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx.cs">
       <DependentUpon>AlarmRangeLimitCSVUploadHandler.ashx</DependentUpon>
     </Compile>
-    <Compile Include="GlobalSettings.cs" />
     <Compile Include="Logging\SimpleLogger.cs" />
     <Compile Include="Logging\ServiceHelperAppender.cs" />
-    <Compile Include="Model\AlarmRangeLimit.cs" />
-    <Compile Include="Model\AlarmType.cs" />
-    <Compile Include="Model\AppModel.cs" />
-    <Compile Include="Model\Channel.cs" />
-    <Compile Include="Model\DefaultAlarmRangeLimit.cs" />
-    <Compile Include="Model\MeterGroup.cs" />
-    <Compile Include="Model\MeterMeterGroup.cs" />
-    <Compile Include="Model\LineImpedance.cs" />
-    <Compile Include="Model\Line.cs" />
-    <Compile Include="Model\LineView.cs" />
-    <Compile Include="Model\MeasurementCharacteristic.cs" />
-    <Compile Include="Model\MeasurementType.cs" />
-    <Compile Include="Model\Meter.cs" />
-    <Compile Include="Model\MeterLine.cs" />
-    <Compile Include="Model\MeterLocation.cs" />
-    <Compile Include="Model\Phase.cs" />
-    <Compile Include="Model\Setting.cs" />
     <Compile Include="ServiceHost.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -363,7 +334,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\SystemSettings.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="wwwroot\SignalCode.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DebugHost.resx">
@@ -407,6 +377,14 @@
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\openXDA.DataHub\openXDA.Hubs.csproj">
+      <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
+      <Name>openXDA.Hubs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\openXDA.Model\openXDA.Model.csproj">
+      <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
+      <Name>openXDA.Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="AppDebug.config">
@@ -415,6 +393,19 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Scripts\jquery-1.8.3.intellisense.js" />
+    <Content Include="Content\bootstrap-responsive.css" />
+    <Content Include="Content\bootstrap-responsive.min.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\images\glyphicons-halflings-white.png" />
+    <Content Include="Content\images\glyphicons-halflings.png" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Scripts\jquery-1.8.3.js" />
+    <Content Include="Scripts\jquery-1.8.3.min.js" />
+    <Content Include="Scripts\knockout-2.2.1.debug.js" />
+    <Content Include="Scripts\knockout-2.2.1.js" />
     <Content Include="wwwroot\Content\daterangepicker.css" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
     <Content Include="wwwroot\Config\EmailGroups.cshtml" />
@@ -438,7 +429,9 @@
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
     <None Include="packages.config" />
-    <None Include="Web.config" />
+    <None Include="Web.config">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
     <Content Include="wwwroot\Config\LineGroups.cshtml" />
     <Content Include="wwwroot\Config\LineLineGroupView.cshtml" />

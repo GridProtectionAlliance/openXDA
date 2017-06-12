@@ -12,7 +12,7 @@ using FaultData.Database.MeterDataTableAdapters;
 using GSF.Configuration;
 using GSF.Data;
 
-namespace openXDA
+namespace openXDA.Hubs
 {
     public class SignalCode
     {

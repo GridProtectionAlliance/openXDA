@@ -33,6 +33,8 @@ using Microsoft.AspNet.SignalR.Json;
 using Newtonsoft.Json;
 using Owin;
 using openXDA.Model;
+using openXDA.Hubs;
+using System.Web.Mvc;
 
 namespace openXDA
 {
@@ -78,20 +80,36 @@ namespace openXDA
 
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
-            
-            // Map custom API controllers
-            httpConfig.Routes.MapHttpRoute(
-                name: "CustomAPIs",
-                routeTemplate: "api/{controller}/{action}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
 
             // Set configuration to use reflection to setup routes
             httpConfig.MapHttpAttributeRoutes();
 
-           // Load the WebPageController class and assign its routes
+            //Map custom API controllers
+            httpConfig.Routes.MapHttpRoute(
+                name: "CustomAPIs",
+                routeTemplate: "api/{controller}/{action}/{id}",
+                defaults: new
+                {
+                    id = RouteParameter.Optional
+                }
+            );
+
+            httpConfig.Routes.MapHttpRoute(
+                name: "PQMark",
+                routeTemplate: "api/pqmark/{action}/{id}/{modelName}",
+                defaults: new
+                {
+                    controller = "PQMarkController",
+                    id = RouteParameter.Optional,
+                    modelName = RouteParameter.Optional
+                }
+            );
+
+
+            // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);
 
+            httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             // Check for configuration issues before first request
             httpConfig.EnsureInitialized();
         }
