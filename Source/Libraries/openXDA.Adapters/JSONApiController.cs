@@ -28,7 +28,7 @@ using System.Linq;
 using System.Web.Http;
 using GSF.Collections;
 using GSF.Web.Model;
-using openXDA.Adapters.Model;
+using openXDA.Model;
 
 namespace openXDA.Adapters
 {
@@ -184,7 +184,7 @@ namespace openXDA.Adapters
         }
 
         [HttpPost]
-        public IEnumerable<FaultSummary> GetFaults(EventJSON json)
+        public IEnumerable<Fault> GetFaults(EventJSON json)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
@@ -197,7 +197,7 @@ namespace openXDA.Adapters
                     if (json == null || (json.EventIDList == null && json.MeterAssetKeyList == null && json.LineIDList == null && json.LineAssetKeyList == null && json.MeterIDList == null))
                     {
                         table = dataContext.Connection.RetrieveData("Select * FROM FaultSummary WHERE Inception >= {0} AND Inception <= {1}", startTime, endTime).Select();
-                        return table.Select(row => dataContext.Table<FaultSummary>().LoadRecord(row)).ToList();
+                        return table.Select(row => dataContext.Table<Fault>().LoadRecord(row)).ToList();
 
                     }
 
@@ -235,7 +235,7 @@ namespace openXDA.Adapters
                     }
 
 
-                    return table.Select(row => dataContext.Table<FaultSummary>().LoadRecord(row)).DistinctBy(evt => evt.ID).ToList();
+                    return table.Select(row => dataContext.Table<Fault>().LoadRecord(row)).DistinctBy(evt => evt.ID).ToList();
                 }
                 catch (Exception)
                 {

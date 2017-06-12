@@ -35,6 +35,7 @@ using GrafanaAdapters;
 using System.Threading;
 using GSF;
 using GSF.Data;
+using openXDA.Model;
 
 namespace openXDA.Adapters
 {
