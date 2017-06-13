@@ -9,9 +9,6 @@
   <Component Id="OpenSTE_cshtml">
     <File Id="OpenSTE.cshtml" Name="OpenSTE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSTE.cshtml" />
   </Component>
-  <Component Id="SignalCode_cs">
-    <File Id="SignalCode.cs" Name="SignalCode.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\SignalCode.cs" />
-  </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Assets_Components" Directory="ASSETSFOLDER">
   <Component Id="Assets_Channels_cshtml">

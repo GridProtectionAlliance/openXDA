@@ -7,8 +7,8 @@
     <ProjectGuid>{63E2953C-1C57-41C8-A51D-08E52780BF8A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>openXDA.DataHub</RootNamespace>
-    <AssemblyName>openXDA.DataHub</AssemblyName>
+    <RootNamespace>openXDA.Hubs</RootNamespace>
+    <AssemblyName>openXDA.Hubs</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

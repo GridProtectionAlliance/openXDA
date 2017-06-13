@@ -361,6 +361,8 @@
       <ComponentRef Id="FaultData" />
       <ComponentRef Id="openXDA.Adapters" />
       <ComponentRef Id="openHistorian.XDALink" />
+      <ComponentRef Id="openXDA.Hubs" />
+      <ComponentRef Id="openXDA.Model" />
 
       <!-- DotNetZip Dependencies -->
       <ComponentRef Id="Ionic.Zlib" />
@@ -465,6 +467,13 @@
       <Component Id="openXDA.Adapters">
         <File Id="openXDA.Adapters.dll" Name="$(var.openXDA.Adapters.TargetFileName)" Source="$(var.openXDA.Adapters.TargetPath)" />
       </Component>
+      <Component Id="openXDA.Hubs">
+        <File Id="openXDA.Hubs.dll" Name="$(var.openXDA.Hubs.TargetFileName)" Source="$(var.openXDA.Hubs.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.Model">
+        <File Id="openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
+      </Component>
+
       <Component Id="openHistorian.XDALink">
         <File Id="openHistorian.XDALink.dll" Name="$(var.openHistorian.XDALink.TargetFileName)" Source="$(var.openHistorian.XDALink.TargetPath)" />
       </Component>
