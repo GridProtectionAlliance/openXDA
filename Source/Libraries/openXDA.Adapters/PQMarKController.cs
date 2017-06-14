@@ -30,18 +30,17 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Http;
 using System.Xml;
 using GSF.Web;
 using openXDA.Model;
 using Newtonsoft.Json.Linq;
+using System.Web.Http;
 
 namespace openXDA.Adapters
 {
     /// <summary>
     /// This class will be used to form a Restful HTTP API that will be interfaced using the PQMarkPusher.
     /// </summary>
-
     public class PQMarkController : ApiController
     {
         #region [ GET Operations ]

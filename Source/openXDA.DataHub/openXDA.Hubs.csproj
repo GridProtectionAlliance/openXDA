@@ -30,9 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FaultData">
-      <HintPath>..\..\Build\Output\Debug\Applications\openXDA\FaultData.dll</HintPath>
-    </Reference>
     <Reference Include="GSF.Core">
       <HintPath>..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
@@ -63,6 +60,10 @@
     <Compile Include="SignalCode.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Libraries\FaultData\FaultData.csproj">
+      <Project>{11ae594d-2b2b-473c-8550-6bf62914c3e2}</Project>
+      <Name>FaultData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj">
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>

@@ -35,6 +35,7 @@ using Owin;
 using openXDA.Model;
 using openXDA.Hubs;
 using System.Web.Mvc;
+using Microsoft.Owin.Extensions;
 
 namespace openXDA
 {
@@ -42,6 +43,14 @@ namespace openXDA
     {
         public void Configuration(IAppBuilder app)
         {
+
+            app.Use((context, next) =>
+            {
+                context.Response.Headers.Remove("Server");
+                return next.Invoke();
+            });
+            app.UseStageMarker(PipelineStage.PostAcquireState);
+
             // Modify the JSON serializer to serialize dates as UTC - otherwise, timezone will not be appended
             // to date strings and browsers will select whatever timezone suits them
             JsonSerializerSettings settings = JsonUtility.CreateDefaultSerializerSettings();
@@ -53,8 +62,6 @@ namespace openXDA
 
             // Load security hub in application domain before establishing SignalR hub configuration
             using (new SecurityHub()) { }
-            using (new openXDA.Adapters.JSONApiController()) { }
-            //using (new GrafanaController()) { }
 
             // Configuration Windows Authentication for self-hosted web service
             HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
@@ -81,53 +88,8 @@ namespace openXDA
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
 
-            //Map custom API controllers
-            httpConfig.Routes.MapHttpRoute(
-                name: "CustomAPIs",
-                routeTemplate: "api/{controller}/{action}/{id}",
-                defaults: new
-                {
-                    id = RouteParameter.Optional
-                }
-            );
-
-            httpConfig.Routes.MapHttpRoute(
-                name: "PQMark",
-                routeTemplate: "api/pqmark/{action}/{id}/{modelName}",
-                defaults: new
-                {
-                    controller = "PQMark",
-                    id = RouteParameter.Optional,
-                    modelName = RouteParameter.Optional
-                }
-            );
-
-            httpConfig.Routes.MapHttpRoute(
-                name: "PQMarkUpdateRecord",
-                routeTemplate: "api/pqmark/updaterecord/{modelName}",
-                defaults: new
-                {
-                    controller = "PQMark",
-                    action = "UpdateRecord",
-                    modelName = RouteParameter.Optional
-                }
-            );
-
-            httpConfig.Routes.MapHttpRoute(
-                name: "PQMarkCreateRecord",
-                routeTemplate: "api/pqmark/createRecord/{modelName}",
-                defaults: new
-                {
-                    controller = "PQMark",
-                    action = "CreateRecord",
-                    modelName = RouteParameter.Optional
-                }
-            );
-
             // Set configuration to use reflection to setup routes
-            httpConfig.MapHttpAttributeRoutes();
-
-
+            ControllerConfig.Register(httpConfig);
 
             // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);

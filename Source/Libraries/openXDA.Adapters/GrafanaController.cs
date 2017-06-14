@@ -43,7 +43,6 @@ namespace openXDA.Adapters
     /// Represents a REST based API for a simple JSON based Grafana data source.
     /// </summary>
 
-
     public class GrafanaController : ApiController
     {
         #region [ Members ]
