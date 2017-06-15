@@ -66,6 +66,6 @@ Instructions on how to deploy openXDA can be found in the [openXDA wiki](../../w
 If you would like to contribute please:
 
 1. Read the [Coding Style Guidelines.](https://www.gridprotectionalliance.org/docs/GPA_Coding_Guidelines_2011_03.pdf)
-* Fork the repository.
-* Work your magic.
-* Create a pull request.
+2. Fork the repository.
+3. Work your magic.
+4. Create a pull request.
