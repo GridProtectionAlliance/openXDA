@@ -183,6 +183,7 @@ namespace openXDA.Adapters
         [HttpPost]
         public IHttpActionResult CreateRecord( string modelName, [FromBody]JObject record)
         {
+            int recordId;
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 try
@@ -190,6 +191,8 @@ namespace openXDA.Adapters
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
                     dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
+                    recordId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
+
                 }
                 catch (Exception ex)
                 {
@@ -197,12 +200,13 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok();
+            return Ok(recordId);
         }
 
         [HttpPost]
         public IHttpActionResult CreateChannel([FromBody]JObject record)
         {
+            int channelId;
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 try
@@ -243,6 +247,7 @@ namespace openXDA.Adapters
                     channel.Enabled = record["Enabled"].Value<bool>();
 
                     dataContext.Table<Channel>().AddNewRecord(channel);
+                    channelId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
                 }
                 catch (Exception ex)
                 {
@@ -250,7 +255,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok();
+            return Ok(channelId);
         }
 
         #endregion
