@@ -191,7 +191,7 @@ namespace openXDA.Adapters
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
                     dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
-                    recordId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
+                    recordId = dataContext.Connection.ExecuteScalar<int>("SELECT SCOPE_IDENTITY()");
 
                 }
                 catch (Exception ex)
