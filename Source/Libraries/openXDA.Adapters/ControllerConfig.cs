@@ -56,6 +56,7 @@ namespace openXDA.Adapters
                 defaults: new
                 {
                     controller = "PQMark",
+                    modelName = RouteParameter.Optional,
                     id = RouteParameter.Optional
                 }
             );

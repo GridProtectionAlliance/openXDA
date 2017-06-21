@@ -273,6 +273,14 @@ GO
 
 INSERT INTO SeriesType(Name, Description) VALUES('Values', 'Instantaneous data values')
 GO
+INSERT INTO SeriesType(Name, Description) VALUES('Minimum', 'Minimum data values')
+GO
+INSERT INTO SeriesType(Name, Description) VALUES('Maximum', 'Maximum data values')
+GO
+INSERT INTO SeriesType(Name, Description) VALUES('Average', 'Average data values')
+GO
+INSERT INTO SeriesType(Name, Description) VALUES('Duration', 'Duration data values')
+GO
 
 
 CREATE TABLE Series

@@ -115,7 +115,46 @@ namespace openXDA.Adapters
             return Ok(record);
         }
 
+        [HttpGet]
+        public IHttpActionResult GetChannels(string id)
+        {
+            object record;
 
+            string idList = "";
+
+            try
+            {
+                if (id != "all")
+                {
+                    string[] ids = id.Split(',');
+
+                    if (ids.Count() > 0)
+                        idList = $"ID IN ({ string.Join(",", ids.Select(x => int.Parse(x)))})";
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("The id field must be a comma separated integer list.");
+            }
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    if (idList.Length == 0)
+                        record = dataContext.Table<ChannelDetail>().QueryRecords();
+                    else
+                        record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(idList);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(record);
+
+        }
         #endregion
 
         #region [ PUT Operations ]
@@ -151,6 +190,59 @@ namespace openXDA.Adapters
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
                     dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public IHttpActionResult CreateChannel([FromBody]JObject record)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    int measurementCharacteristicID = dataContext.Table<MeasurementCharacteristic>().QueryRecordWhere("Name = {0}", record["MeasurementCharacteristic"].Value<string>())?.ID ?? -1;
+                    int measurementTypeID = dataContext.Table<MeasurementType>().QueryRecordWhere("Name = {0}", record["MeasurementType"].Value<string>())?.ID ?? -1;
+                    int phaseID = dataContext.Table<Phase>().QueryRecordWhere("Name = {0}", record["Phase"].Value<string>())?.ID ?? -1;
+
+                    if(measurementCharacteristicID == -1)
+                    {
+                        dataContext.Table<MeasurementCharacteristic>().AddNewRecord(new MeasurementCharacteristic() { Name = record["MeasurementCharacteristic"].Value<string>(), Description = "", Display = false });
+                        measurementCharacteristicID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    }
+
+                    if(measurementTypeID == -1)
+                    {
+                        dataContext.Table<MeasurementType>().AddNewRecord(new MeasurementType() { Name = record["MeasurementType"].Value<string>(), Description = "" });
+                        measurementTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    }
+
+                    if (phaseID == -1)
+                    {
+                        dataContext.Table<Phase>().AddNewRecord(new Phase() { Name = record["Phase"].Value<string>(), Description = "" });
+                        phaseID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    }
+
+                    Channel channel = new Channel();
+                    channel.MeterID = record["MeterID"].Value<int>();
+                    channel.LineID = record["LineID"].Value<int>();
+                    channel.MeasurementTypeID = measurementTypeID;
+                    channel.MeasurementTypeID = measurementCharacteristicID;
+                    channel.PhaseID = phaseID;
+                    channel.Name = record["Name"].Value<string>();
+                    channel.SamplesPerHour = record["SamplesPerHour"].Value<float>();
+                    channel.PerUnitValue = record["PerUnitValue"].Value<float>();
+                    channel.HarmonicGroup = record["HarmonicGroup"].Value<int>();
+                    channel.Description = record["Description"].Value<string>();
+                    channel.Enabled = record["Enabled"].Value<bool>();
+
+                    dataContext.Table<Channel>().AddNewRecord(channel);
                 }
                 catch (Exception ex)
                 {
