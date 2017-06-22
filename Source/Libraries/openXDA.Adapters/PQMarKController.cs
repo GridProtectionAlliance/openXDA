@@ -82,7 +82,7 @@ namespace openXDA.Adapters
             {
                 try
                 {
-                    record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordWhere(id);
+                    record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordsWhere(id);
                 }
                 catch (Exception ex)
                 {
