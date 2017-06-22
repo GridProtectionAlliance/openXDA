@@ -70,6 +70,30 @@ namespace openXDA.Adapters
         }
 
         /// <summary>
+        /// Return single Record
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IHttpActionResult GetRecordsWhere(string id, string modelName)
+        {
+            object record;
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordWhere(id);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(record);
+        }
+
+        /// <summary>
         /// Returns multiple records
         /// </summary>
         /// <returns></returns>
