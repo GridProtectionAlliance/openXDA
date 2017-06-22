@@ -66,7 +66,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok(record);
+            return Ok((record == null ? new List<dynamic>(): record));
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok(record);
+            return Ok((record == null ? new List<dynamic>() : record));
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok(record);
+            return Ok((record == null ? new List<dynamic>() : record));
         }
 
         [HttpGet]
@@ -176,7 +176,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok(record);
+            return Ok((record == null ? new List<dynamic>() : record));
 
         }
         #endregion
