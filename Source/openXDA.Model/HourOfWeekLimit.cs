@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterFacility.cs - Gbtc
+//  HourOfWeekLimit.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/20/2017 - Billy Ernest
+//  06/22/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,11 +25,17 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class MeterFacility
+    public class HourOfWeekLimit
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int MeterID { get; set; }
-        public int FacilityID { get; set; }
+        public int ChannelID { get; set; }
+        public int AlarmTypeID { get; set; }
+        public int HourOfWeek { get; set; }
+        public int Severity { get; set; }
+        public double High { get; set; }
+        public double Low { get; set; }
+        public int Enabled { get; set; }
+
     }
 }

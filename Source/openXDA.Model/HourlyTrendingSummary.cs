@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterFacility.cs - Gbtc
+//  HourlyTrendingSummary.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,20 +16,27 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/20/2017 - Billy Ernest
+//  06/22/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System;
 
 namespace openXDA.Model
 {
-    public class MeterFacility
+    public class HourlyTrendingSummary
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int MeterID { get; set; }
-        public int FacilityID { get; set; }
+        public int ChannelID { get; set; }
+        public DateTime Time { get; set; }
+        public double Minimum { get; set; }
+        public double Maximum { get; set; }
+        public double Average { get; set; }
+        public int ValidCount { get; set; }
+        public int InvalidCount { get; set; }
+
     }
 }

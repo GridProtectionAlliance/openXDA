@@ -48,12 +48,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlarmEmailCriterion.cs" />
+    <Compile Include="AlarmLog.cs" />
     <Compile Include="AlarmRangeLimit.cs" />
     <Compile Include="AlarmType.cs" />
     <Compile Include="AuditLog.cs" />
     <Compile Include="Breaker.cs" />
+    <Compile Include="BreakerChannel.cs" />
     <Compile Include="Channel.cs" />
+    <Compile Include="ChannelNormal.cs" />
     <Compile Include="CycleDataSOEPointView.cs" />
+    <Compile Include="DailyQualityRangeLimit.cs" />
+    <Compile Include="DailyTrendingSummary.cs" />
     <Compile Include="DefaultAlarmRangeLimit.cs" />
     <Compile Include="Disturbance.cs" />
     <Compile Include="DisturbanceEmailCriterion.cs" />
@@ -66,6 +71,8 @@
     <Compile Include="FaultView.cs" />
     <Compile Include="FileBlob.cs" />
     <Compile Include="GlobalSettings.cs" />
+    <Compile Include="HourlyTrendingSummary.cs" />
+    <Compile Include="HourOfWeekLimit.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LineGroup.cs" />
     <Compile Include="LineImpedance.cs" />
@@ -74,7 +81,9 @@
     <Compile Include="MeasurementCharacteristic.cs" />
     <Compile Include="MeasurementType.cs" />
     <Compile Include="Meter.cs" />
+    <Compile Include="ChannelAlarmSummary.cs" />
     <Compile Include="MeterAlarmSummary.cs" />
+    <Compile Include="ChannelDataQualitySummary.cs" />
     <Compile Include="MeterDataQualitySummary.cs" />
     <Compile Include="MeterFacility.cs" />
     <Compile Include="MeterGroup.cs" />

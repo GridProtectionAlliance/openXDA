@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterFacility.cs - Gbtc
+//  MeterDataQualitySummary.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -22,14 +22,25 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace openXDA.Model
 {
-    public class MeterFacility
+    public class ChannelDataQualitySummary
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int MeterID { get; set; }
-        public int FacilityID { get; set; }
+        public int ChannelID { get; set; }
+        public DateTime Date { get; set; }
+        public int ExpectedPoints { get; set; }
+        public int GoodPoints { get; set; }
+        public int LatchedPoints { get; set; }
+        public int UnreasonablePoints { get; set; }
+        public int NoncongruentPoints { get; set; }
+        public int DuplicatePoints { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterFacility.cs - Gbtc
+//  MeterAlarmSummary.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,15 +21,19 @@
 //
 //******************************************************************************************************
 
+
 using GSF.Data.Model;
+using System;
 
 namespace openXDA.Model
 {
-    public class MeterFacility
+    public class ChannelAlarmSummary
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int MeterID { get; set; }
-        public int FacilityID { get; set; }
+        public int ChannelID { get; set; }
+        public int AlarmTypeID { get; set; }
+        public DateTime Date { get; set; } 
+        public int AlarmPoints { get; set; }
     }
 }

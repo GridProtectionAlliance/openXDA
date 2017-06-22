@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterFacility.cs - Gbtc
+//  BreakerChannel.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/20/2017 - Billy Ernest
+//  06/22/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,11 +25,11 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class MeterFacility
+    public class BreakerChannel
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int MeterID { get; set; }
-        public int FacilityID { get; set; }
+        public int ChannelID { get; set; }
+        public string BreakerNumber { get; set; }
     }
 }

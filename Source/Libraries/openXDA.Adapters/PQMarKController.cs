@@ -191,8 +191,10 @@ namespace openXDA.Adapters
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
                     dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
-                    recordId = dataContext.Connection.ExecuteScalar<int>("SELECT SCOPE_IDENTITY()");
-
+                    if(modelName == "Meter")
+                        recordId = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = {0}", ((Meter)obj).AssetKey).ID;
+                    else
+                        recordId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
                 }
                 catch (Exception ex)
                 {
@@ -237,7 +239,7 @@ namespace openXDA.Adapters
                     channel.MeterID = record["MeterID"].Value<int>();
                     channel.LineID = record["LineID"].Value<int>();
                     channel.MeasurementTypeID = measurementTypeID;
-                    channel.MeasurementTypeID = measurementCharacteristicID;
+                    channel.MeasurementCharacteristicID = measurementCharacteristicID;
                     channel.PhaseID = phaseID;
                     channel.Name = record["Name"].Value<string>();
                     channel.SamplesPerHour = record["SamplesPerHour"].Value<float>();
