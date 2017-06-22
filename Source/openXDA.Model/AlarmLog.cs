@@ -30,6 +30,7 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        public int ChannelID { get; set; }
         public int AlarmTypeID { get; set; }
         public DateTime Time { get; set; }
         public int Severity { get; set; }
