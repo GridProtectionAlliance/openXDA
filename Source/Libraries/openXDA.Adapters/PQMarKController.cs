@@ -144,31 +144,15 @@ namespace openXDA.Adapters
         {
             object record;
 
-            string idList = "";
-
-            try
-            {
-                if (id != "all")
-                {
-                    string[] ids = id.Split(',');
-
-                    if (ids.Count() > 0)
-                        idList = $"ID IN ({ string.Join(",", ids.Select(x => int.Parse(x)))})";
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("The id field must be a comma separated integer list.");
-            }
 
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 try
                 {
-                    if (idList.Length == 0)
+                    if (id == "all")
                         record = dataContext.Table<ChannelDetail>().QueryRecords();
                     else
-                        record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(idList);
+                        record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(id);
                 }
                 catch (Exception ex)
                 {
