@@ -66,7 +66,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok((record == null ? typeof(IEnumerable<>).MakeGenericType(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)) : record));
+            return Ok(record);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok((record == null ? typeof(IEnumerable<>).MakeGenericType(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)) : record));
+            return Ok(record);
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok((record == null ? typeof(IEnumerable<>).MakeGenericType(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)) : record));
+            return Ok(record);
         }
 
         [HttpGet]
@@ -160,7 +160,7 @@ namespace openXDA.Adapters
                 }
             }
 
-            return Ok((record == null ? new ChannelDetail() : record));
+            return Ok(record);
 
         }
         #endregion
