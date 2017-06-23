@@ -20,11 +20,13 @@ namespace openXDA.Model
         public DateTime BPhaseCleared { get; set; }
         public DateTime CPhaseCleared { get; set; }
         public double BreakerTiming { get; set; }
+        public double StatusTiming { get; set; }
         public double APhaseBreakerTiming { get; set; }
         public double BPhaseBreakerTiming { get; set; }
         public double CPhaseBreakerTiming { get; set; }
         public double BreakerSpeed { get; set; }
         public string UpdatedBy { get; set; }
+        public bool StatusBitChatter { get; set; }
     }
 
     [TableName("BreakerOperation")]
