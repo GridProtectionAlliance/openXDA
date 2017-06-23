@@ -29,6 +29,8 @@ namespace openXDA.Model
         public bool IsSuppressed { get; set; }
     }
 
+    public class FaultSummary : Fault { } 
+
     [TableName("FaultView")]
     public class FaultView : Fault
     {
