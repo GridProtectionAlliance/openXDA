@@ -20,6 +20,7 @@ namespace openXDA.Model
         public double CurrentLag { get; set; }
         public double PrefaultCurrent { get; set; }
         public double PostfaultCurrent { get; set; }
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime Inception { get; set; }
         public double DurationSeconds { get; set; }
         public double DurationCycles { get; set; }

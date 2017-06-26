@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FaultGroup.cs - Gbtc
+//  VoltageEnvelope.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/23/2017 - Billy Ernest
+//  06/26/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,13 +25,11 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class FaultGroup
+    public class VoltageEnvelope
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int EventID { get; set; }
-        public int? FaultDetectionLogicResult { get; set; }
-        public int? DefaultFaultDetectionLogicResult { get; set; }
-        public int? FaultValidationLogicResult { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
 }
