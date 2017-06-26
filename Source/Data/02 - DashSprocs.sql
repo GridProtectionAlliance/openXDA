@@ -2047,7 +2047,7 @@ GO
 -- selectMeterLocationsDisturbances '07/19/2014', '0','External'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectMeterLocationsDisturbances]
-    -- Add the parameters for the stored procedure here
+     
     @EventDateFrom as DateTime,
     @EventDateTo as DateTime,
     @meterIds AS varchar(max),
@@ -2092,13 +2092,19 @@ create table #TEMP (Name varchar(max))
 insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM DisturbanceSeverity) as t
 
 SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
-FROM #TEMP ORDER BY Name desc
+FROM #TEMP WHERE Name != 0 ORDER BY Name desc
+SET @PivotColumns = @PivotColumns + '[0]'
 
 SELECT @CountColumns = @CountColumns + 'COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) + ' 
-FROM #TEMP ORDER BY Name desc
+FROM #TEMP WHERE Name != 0 ORDER BY Name desc
+SET @CountColumns = @CountColumns + 'COALESCE([0], 0) '
+
 
 SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
-FROM #TEMP ORDER BY Name desc
+FROM #TEMP WHERE Name != 0ORDER BY Name desc
+SET @ReturnColumns = @ReturnColumns + 'COALESCE([0], 0) as [0]'
+
+
 DROP TABLE #TEMP
 
 SET @SQLStatement = N'
@@ -2106,8 +2112,8 @@ SELECT Meter.ID,
 		 Meter.Name,
 		 MeterLocation.Longitude,
 		 MeterLocation.Latitude,
-		 ' + SUBSTRING(@CountColumns,0, LEN(@CountColumns)) +' as Count,
-		 ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '		  
+		 ' + @CountColumns +' as Count,
+		 ' + @ReturnColumns + '		  
 FROM 
     Meter JOIN
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
@@ -2117,8 +2123,8 @@ FROM
 			   SeverityCode			   
 		FROM Event JOIN
 			 Disturbance ON Event.ID = Disturbance.EventID JOIN
-			 DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
-			 Phase ON Phase.ID = Disturbance.PhaseID
+			 Phase ON Phase.ID = Disturbance.PhaseID LEFT JOIN
+			 DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID 
         WHERE 
 			 Phase.Name = ''Worst'' AND 
 			 MeterID in (select * from authMeters(@username)) AND 
@@ -2128,7 +2134,7 @@ FROM
        ) as ed 
 	   PIVOT( 
 	   		 SUM(ed.EventCount)
-	   		 FOR ed.SeverityCode IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+	   		 FOR ed.SeverityCode IN(' + @PivotColumns + ') 
 	   ) as pvt On pvt.MeterID = meter.ID
 Order By Name '
 
@@ -2136,7 +2142,6 @@ print @SqlStatement
 exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME ', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate
 
 END
-
 GO
 
 -- =============================================
