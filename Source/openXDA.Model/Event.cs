@@ -19,7 +19,9 @@ namespace openXDA.Model
         public string Name { get; set; }
         public string Alias { get; set; }
         public string ShortName { get; set; }
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime StartTime { get; set; }
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime EndTime { get; set; }
         public int Samples { get; set; }
         public int TimeZoneOffset { get; set; }
