@@ -15,7 +15,9 @@ namespace openXDA.Model
         public int PhaseID { get; set; }
         public float Magnitude { get; set; }
         public float PerUnitMagnitude { get; set; }
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime StartTime { get; set; }
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime EndTime { get; set; }
         public float DurationSeconds { get; set; }
         public float DurationCycles { get; set; }
