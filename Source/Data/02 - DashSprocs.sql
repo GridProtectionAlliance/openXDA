@@ -893,7 +893,7 @@ GO
 -- selectDisturbancesForMeterIDByDateRange '03/05/2015', '03/06/2015', '0', 'External'
 -- =============================================
 CREATE PROCEDURE [dbo].[selectDisturbancesForMeterIDByDateRange]
-    -- Add the parameters for the stored procedure here
+     
     @EventDateFrom as DateTime, 
     @EventDateTo as DateTime, 
     @MeterID as nvarchar(MAX),
@@ -940,14 +940,16 @@ DECLARE @SQLStatement NVARCHAR(MAX) = N''
 create table #TEMP (Name varchar(max))
 insert into #TEMP SELECT SeverityCode FROM (Select Distinct SeverityCode FROM DisturbanceSeverity) as t
 
-SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
-FROM #TEMP ORDER BY Name desc
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(Name as varchar(5)), '') + '],'
+FROM #TEMP WHERE Name != 0 ORDER BY Name desc
+SET @PivotColumns = @PivotColumns + '[0]'
 
-SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
-FROM #TEMP ORDER BY Name desc
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(Name as varchar(5)), '0') + '], 0) AS [' + COALESCE(CAST(Name as varchar(5)), '') + '],' 
+FROM #TEMP WHERE Name != 0 ORDER BY Name desc
+SET @ReturnColumns = @ReturnColumns + 'COALESCE([0],0) as [0]'
 
 SET @SQLStatement =
-N' SELECT DisturbanceDate as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+N' SELECT DisturbanceDate as thedate, ' + @ReturnColumns + '
  FROM (																		 
 	SELECT                                                                       
 		' + @dateStatement + ' AS DisturbanceDate,                	 
@@ -971,7 +973,7 @@ N' SELECT DisturbanceDate as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@Retur
 	) As DisturbanceDate														 
  PIVOT(
 		SUM(DisturbanceDate.DisturbanceCount) 
-		FOR DisturbanceDate.SeverityCode IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
+		FOR DisturbanceDate.SeverityCode IN(' + @PivotColumns + ')
  ) as pvt
  ORDER BY DisturbanceDate '
 print @sqlstatement
