@@ -59,7 +59,7 @@
     <Compile Include="CSAResult.cs" />
     <Compile Include="CycleData.cs" />
     <Compile Include="CycleDataSOEPointView.cs" />
-    <Compile Include="DailyQualityRangeLimit.cs" />
+    <Compile Include="DataQualityRangeLimit.cs" />
     <Compile Include="DailyTrendingSummary.cs" />
     <Compile Include="DefaultAlarmRangeLimit.cs" />
     <Compile Include="Disturbance.cs" />

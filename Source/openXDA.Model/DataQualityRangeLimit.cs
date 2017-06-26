@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class DailyQualityRangeLimit
+    public class DataQualityRangeLimit
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
