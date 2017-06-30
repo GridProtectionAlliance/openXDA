@@ -89,6 +89,7 @@
     <Compile Include="LineGroup.cs" />
     <Compile Include="LineImpedance.cs" />
     <Compile Include="LineLineGroup.cs" />
+    <Compile Include="LinesToDataPush.cs" />
     <Compile Include="LineView.cs" />
     <Compile Include="MeasurementCharacteristic.cs" />
     <Compile Include="MeasurementType.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="MeterLocation.cs" />
     <Compile Include="MeterLocationLine.cs" />
     <Compile Include="MeterMeterGroup.cs" />
+    <Compile Include="MetersToDataPush.cs" />
     <Compile Include="MeterType.cs" />
     <Compile Include="OutputChannel.cs" />
     <Compile Include="Phase.cs" />
