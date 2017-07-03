@@ -5209,6 +5209,68 @@ namespace openXDA.Hubs
         }
         #endregion
 
+        #region [ DataPusher Operations ]
+
+        #region [ MetersToDataPush Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MetersToDataPush), RecordOperation.QueryRecordCount)]
+        public int QueryMetersToDataPushCount(string filterString)
+        {
+            return DataContext.Table<MetersToDataPush>().QueryRecordCount(filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MetersToDataPush), RecordOperation.QueryRecords)]
+        public IEnumerable<MetersToDataPush> QueryMetersToDataPushs(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<MetersToDataPush>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MetersToDataPush), RecordOperation.DeleteRecord)]
+        public void DeleteMetersToDataPush(int id)
+        {
+            DataContext.Table<MetersToDataPush>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MetersToDataPush), RecordOperation.CreateNewRecord)]
+        public MetersToDataPush NewMetersToDataPush()
+        {
+            return new MetersToDataPush();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(MetersToDataPush), RecordOperation.AddNewRecord)]
+        public void AddNewMetersToDataPush(MetersToDataPush record)
+        {
+            record.RemoteXDAAssetKey = Guid.NewGuid();
+            DataContext.Table<MetersToDataPush>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(MetersToDataPush), RecordOperation.UpdateRecord)]
+        public void UpdateMetersToDataPush(MetersToDataPush record)
+        {
+            DataContext.Table<MetersToDataPush>().UpdateRecord(record);
+        }
+
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchMetersToDataPushs(string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
+
+            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+        }
+
+
+        #endregion
+
+        #endregion
+
         #region [OpenSEE Operations]
         public List<SignalCode.FlotSeries> GetFlotData(int eventID, List<int> seriesIndexes)
         {

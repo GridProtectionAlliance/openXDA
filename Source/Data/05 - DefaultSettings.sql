@@ -133,6 +133,11 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
 GO
 
+INSERT INTO Setting (Name, Value, DefaultValue)VALUES ('LocalXDAInstance', 'http://127.0.0.1:8989', 'http://127.0.0.1:8989')
+GO
+
+INSERT INTO Setting (Name, Value, DefaultValue)VALUES ('RemoteXDAInstance', 'http://127.0.0.1:8989', 'http://127.0.0.1:8989')
+GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsOverviewToday', 0)
 GO

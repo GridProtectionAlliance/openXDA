@@ -82,6 +82,30 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\openXDA.DataHub\openXDA.Hubs.csproj">
+      <Name>openXDA.Hubs</Name>
+      <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\openXDA.DataPusher\openXDA.DataPusher.csproj">
+      <Name>openXDA.DataPusher</Name>
+      <Project>{666eb8a6-fba9-454c-8537-9113c2ee68d4}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\openXDA.Model\openXDA.Model.csproj">
+      <Name>openXDA.Model</Name>
+      <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj">
       <Name>DeviceDefinitionsMigrator</Name>
       <Project>{94e98b70-2f52-45a2-a805-3d6b62547149}</Project>

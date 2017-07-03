@@ -1983,6 +1983,22 @@ CREATE NONCLUSTERED INDEX IX_EventNote_EventID
 ON EventNote(EventID ASC)
 GO
 
+CREATE TABLE MetersToDataPush
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    LocalXDAMeterID INT NOT NULL,
+	RemoteXDAMeterID INT NULL,
+	LocalXDAAssetKey varchar(200) NOT NULL,
+	RemoteXDAAssetKey uniqueidentifier NOT NULL
+)
+GO
+CREATE TABLE [dbo].[LinesToDataPush](
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	[LocalXDALineID] [int] NOT NULL,
+	[RemoteXDALineID] [int] NULL,
+	[LocalXDAAssetKey] [varchar](200) NOT NULL,
+	[RemoteXDAAssetKey] [uniqueidentifier] NOT NULL,
+)
 
 
 -- ------------ --

@@ -363,6 +363,8 @@
       <ComponentRef Id="openHistorian.XDALink" />
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
+      <ComponentRef Id="openXDA.DataPusher" />
+
 
       <!-- DotNetZip Dependencies -->
       <ComponentRef Id="Ionic.Zlib" />
@@ -468,10 +470,13 @@
         <File Id="openXDA.Adapters.dll" Name="$(var.openXDA.Adapters.TargetFileName)" Source="$(var.openXDA.Adapters.TargetPath)" />
       </Component>
       <Component Id="openXDA.Hubs">
-        <File Id="openXDA.Hubs.dll" Name="openXDA.Hubs.dll" Source="$(var.SolutionDir)..\Build\Output\Release\Applications\openXDA\openXDA.Hubs.dll" />
+        <File Id="openXDA.Hubs.dll" Name="$(var.openXDA.Hubs.TargetFileName)" Source="$(var.openXDA.Hubs.TargetPath)" />
       </Component>
       <Component Id="openXDA.Model">
-        <File Id="openXDA.Model.dll" Name="openXDA.Model.dll" Source="$(var.SolutionDir)..\Build\Output\Release\Applications\openXDA\openXDA.Model.dll" />
+        <File Id="openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.DataPusher">
+        <File Id="openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
       </Component>
 
       <Component Id="openHistorian.XDALink">
