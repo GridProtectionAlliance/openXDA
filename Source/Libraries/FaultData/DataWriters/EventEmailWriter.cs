@@ -235,7 +235,7 @@ namespace FaultData.DataWriters
                 });
             }
 
-            if ((object)s_dbAdapterContainer == null)
+            if ((object)s_dbAdapterContainer == null || !s_dbAdapterContainer.Connection.State.HasFlag(ConnectionState.Open))
             {
                 ProcessQueue.Add(() =>
                 {
@@ -281,8 +281,8 @@ namespace FaultData.DataWriters
         {
             ProcessQueue.Add(() =>
             {
-                MeterData.EventRow eventRow;
-                MeterData.EventDataTable systemEvent;
+                EventRow eventRow;
+                EventDataTable systemEvent;
 
                 QueuedEventIDs.Remove(eventID);
 
