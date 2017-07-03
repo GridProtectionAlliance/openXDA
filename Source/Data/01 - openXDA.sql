@@ -1997,8 +1997,30 @@ CREATE TABLE [dbo].[LinesToDataPush](
 	[LocalXDALineID] [int] NOT NULL,
 	[RemoteXDALineID] [int] NULL,
 	[LocalXDAAssetKey] [varchar](200) NOT NULL,
-	[RemoteXDAAssetKey] [uniqueidentifier] NOT NULL,
+	[RemoteXDAAssetKey] varchar(200) NOT NULL,
+	Obsfucate bit NOT NULL
 )
+CREATE TABLE [dbo].RemoteXDAInstance(
+	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	Name varchar(200) NOT NULL,
+	Address varchar(200) NULL,
+	Frequency [varchar](20) NOT NULL
+)
+
+CREATE TABLE RemoteXDAInstanceMeter(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	RemoteXDAInstanceID INT NOT NULL,
+	MetersToDataPushID INT NOT NULL
+)
+
+ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(RemoteXDAInstanceID)
+REFERENCES [dbo].RemoteXDAInstance ([ID])
+GO
+
+ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(MetersToDataPushID)
+REFERENCES [dbo].MetersToDataPush ([ID])
+GO
+
 
 
 -- ------------ --

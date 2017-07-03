@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MetersToDataPush.cs - Gbtc
+//  RemoteXDAInstance.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,38 +16,23 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/30/2017 - Billy Ernest
+//  07/03/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace openXDA.Model
 {
-    public class MetersToDataPush
+    public class RemoteXDAInstance
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int LocalXDAMeterID { get; set; }
-        public int RemoteXDAMeterID { get; set; }
-
-        [StringLength(50)]
-        public string LocalXDAAssetKey { get; set; }
-        [StringLength(20)]
-        public string RemoteXDAName { get; set; }
-
-        public string RemoteXDAAssetKey { get; set; }
-        public bool Obsfucate { get; set; }
-
-        [Required]
-        [NonRecordField]
-        public string MeterSelection { get; set; }
-        [NonRecordField]
-        public int RemoteXDAInstanceId { get; set; }
-
-
+        public string Name { get; set; }
+        public string Address { get; set; }
+        [RegularExpression("(\\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\\*\\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\\*|([0-9]|1[0-9]|2[0-3])|\\*\\/([0-9]|1[0-9]|2[0-3])) (\\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\\*\\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\\*|([1-9]|1[0-2])|\\*\\/([1-9]|1[0-2])) (\\*|([0-6])|\\*\\/([0-6]))$", ErrorMessage = "Please see syntax help for correct cron syntax.")]
+        public string Frequency { get; set; }
     }
 }

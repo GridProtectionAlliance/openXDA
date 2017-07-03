@@ -1,0 +1,183 @@
+﻿@*******************************************************************************************************
+    //  Meters.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  01/15/2016 - J. Ritchie Carroll
+    //       Generated original version of source code.
+    //
+    //*****************************************************************************************************@
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using openXDA.Hubs
+@using RazorEngine.Templating
+
+@inherits ExtendedTemplateBase<AppModel>
+@section StyleSheets {
+    <style>
+        html, body {
+            height: 100%;
+        }
+    </style>
+}
+@{
+    DataContext dataContext = ViewBag.DataContext;
+
+    Layout = "DataPusher/Layout.cshtml";
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-Left" },
+        new[] { "Address", "Remote Address", "text-left"},
+        new[] { "Freqency", "Freqency", "text-left"},
+        new[] { null, "", ""}
+    };
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.Title = "Selected Meters For Data Pushing";
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+
+}
+@helper BodyRows()
+{
+    <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="30%" class="text-left valign-middle" data-bind="text: Address"></td>
+    <td width="30%" class="text-left valign-middle" data-bind="text: Frequency"></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/DataPusher/MetersToDataPush.cshtml?XDAInstance=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" title="Manually sync to remote device using set meters" data-bind="click: sync.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddInputField<RemoteXDAInstance>("Name"))
+    @Raw(dataContext.AddInputField<RemoteXDAInstance>("Address"))
+    @Raw(dataContext.AddInputField<RemoteXDAInstance>("Frequency", fieldLabel: "Schedule Cron<span class=\"pull-right\">&nbsp;&nbsp;<a href=\"#\" data-toggle=\"modal\" data-target=\"#cronHelpDialog\" data-backdrop=\"static\"><small><em>Syntax Help</em></small></a></span>"))
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+<div id="cronHelpDialog" class="modal fade" role="dialog">
+    <div class="modal-vertical-align-container">
+        <div class="modal-dialog modal-md modal-vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Cron Syntax</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="center-block" style="width: 380px">
+                            <pre>
+ # ┌───────────── min (0 - 59)
+ # │ ┌────────────── hour (0 - 23)
+ # │ │ ┌─────────────── day of month (1 - 31)
+ # │ │ │ ┌──────────────── month (1 - 12)
+ # │ │ │ │ ┌───────────────── day of week (0 - 6):
+ # │ │ │ │ │        0 to 6 are Sunday to Saturday,
+ # │ │ │ │ │        or 7 is Sunday, the same as 0
+ # * * * * *
+</pre>
+                        </div>
+                        <table class="small table-condensed table-center">
+                            <tr>
+                                <td style="text-align: right" nowrap>Every five minutes:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('*/5 * * * *')"><code>*/5 * * * *</code></button></td>
+                                <td style="text-align: right" nowrap>Every hour:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 * * * *')"><code>&nbsp;0 * * * *&nbsp;</code></button></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right" nowrap>Every half-hour:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0,30 * * * *')"><code>0,30 * * * *</code></button></td>
+                                <td style="text-align: right" nowrap>Every four hours:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 */4 * * *')"><code>0 */4 * * *</code></button></td>
+                            <tr>
+                                <td style="text-align: right" nowrap>Every day:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 * * *')"><code>&nbsp;0 0 * * *&nbsp;</code></button></td>
+                                <td style="text-align: right" nowrap>Every month:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 * *')"><code>&nbsp;0 0 1 * *&nbsp;</code></button></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right" nowrap>Every six months:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 */6 *')"><code>&nbsp;0 0 1 */6 *&nbsp;</code></button></td>
+                                <td style="text-align: right" nowrap>Every year:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 1 *')"><code>&nbsp;0 0 1 1 *&nbsp;</code></button></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right" nowrap>Never:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('')"><code>&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;</code></button></td>
+                                @*<td style="text-align: right" nowrap>Every year:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 1 *')"><code>&nbsp;0 0 1 1 *&nbsp;</code></button></td>*@
+                            </tr>
+
+                        </table>
+                        <br />
+                        <div class="text-center">
+                            <a href="https://en.wikipedia.org/wiki/Cron" target="_blank">https://en.wikipedia.org/wiki/Cron</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<RemoteXDAInstance, DataHub>(ViewBag))
+        var localMeters;
+        $(function () {
+            $('#addNewEditDialog').on('shown.bs.modal', function () {
+                if (viewModel.dataHubIsConnected()) {
+                }
+            });
+        });
+
+        @*$(viewModel).on('newRecord', function (event, newRecord) {
+            newRecord.MeterLocationID = @ViewBag.MeterLocationID;
+        });*@
+
+        function updateSchedule(schedule) {
+            if (viewModel.recordMode() !== RecordMode.View)
+                viewModel.currentRecord().Frequency(schedule);
+        }
+
+        function getMeterCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryMetersToDataPushCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
+        function sync(record) {
+
+        }
+    </script>
+}

@@ -448,6 +448,7 @@
     <Content Include="wwwroot\DataPusher\index.cshtml" />
     <Content Include="wwwroot\DataPusher\Layout.cshtml" />
     <Content Include="wwwroot\DataPusher\MetersToDataPush.cshtml" />
+    <Content Include="wwwroot\DataPusher\RemoteXDAInstances.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <Content Include="wwwroot\Config\EmailTypes.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />

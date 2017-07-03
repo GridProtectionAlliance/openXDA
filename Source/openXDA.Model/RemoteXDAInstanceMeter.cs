@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MetersToDataPush.cs - Gbtc
+//  RemoteXDAInstanceMeter.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,38 +16,20 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/30/2017 - Billy Ernest
+//  07/03/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF.Data.Model;
-using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace openXDA.Model
 {
-    public class MetersToDataPush
+    public class RemoteXDAInstanceMeter
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int LocalXDAMeterID { get; set; }
-        public int RemoteXDAMeterID { get; set; }
-
-        [StringLength(50)]
-        public string LocalXDAAssetKey { get; set; }
-        [StringLength(20)]
-        public string RemoteXDAName { get; set; }
-
-        public string RemoteXDAAssetKey { get; set; }
-        public bool Obsfucate { get; set; }
-
-        [Required]
-        [NonRecordField]
-        public string MeterSelection { get; set; }
-        [NonRecordField]
-        public int RemoteXDAInstanceId { get; set; }
-
-
+        public int RemoteXDAInstanceID { get; set; }
+        public int MetersToDataPushID { get; set; }
     }
 }

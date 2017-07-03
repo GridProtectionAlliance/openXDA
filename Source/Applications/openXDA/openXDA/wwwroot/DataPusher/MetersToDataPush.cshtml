@@ -40,6 +40,12 @@
 }
 @{
     DataContext dataContext = ViewBag.DataContext;
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+    if (parameters.ContainsKey("XDAInstance"))
+    {
+        ViewBag.XDAInstance = parameters["XDAInstance"];
+    }
 
     Layout = "DataPusher/Layout.cshtml";
 
@@ -76,18 +82,17 @@
     </div>
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAAssetKey", fieldLabel: "Local Asset Key", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAName", fieldLabel: "Remote Name"))
-    @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAAssetKey", fieldLabel: "Remote Asset Guid", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAAssetKey", fieldLabel: "Remote Asset Key", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAMeterID", fieldLabel: "Local Meter ID", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAMeterID", fieldLabel: "Remote Meter ID", customDataBinding: "enable: false"))
-
-
+    @Raw(dataContext.AddCheckBoxField<MetersToDataPush>("Obsfucate", fieldLabel: "Obsfucate meter information?"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MetersToDataPush, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<MetersToDataPush, DataHub>(ViewBag, "LocalXDAAssetKey", null, ViewBag.XDAInstance))
         var localMeters;
         $(function () {
             $('#addNewEditDialog').on('shown.bs.modal', function () {
@@ -108,9 +113,9 @@
             });
         });
 
-        @*$(viewModel).on('newRecord', function (event, newRecord) {
-            newRecord.MeterLocationID = @ViewBag.MeterLocationID;
-        });*@
+        $(viewModel).on('newRecord', function (event, newRecord) {
+            newRecord.RemoteXDAInstanceId = @ViewBag.XDAInstance;
+        });
 
     </script>
 }

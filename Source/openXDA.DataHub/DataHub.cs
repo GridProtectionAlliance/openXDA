@@ -5215,16 +5215,20 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MetersToDataPush), RecordOperation.QueryRecordCount)]
-        public int QueryMetersToDataPushCount(string filterString)
+        public int QueryMetersToDataPushCount(int remoteXDAInstanceId, string filterString)
         {
-            return DataContext.Table<MetersToDataPush>().QueryRecordCount(filterString);
+            TableOperations<MetersToDataPush> table = DataContext.Table<MetersToDataPush>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", remoteXDAInstanceId);
+            return  table.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MetersToDataPush), RecordOperation.QueryRecords)]
-        public IEnumerable<MetersToDataPush> QueryMetersToDataPushs(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<MetersToDataPush> QueryMetersToDataPushs(int remoteXDAInstanceId, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<MetersToDataPush>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+            TableOperations<MetersToDataPush> table = DataContext.Table<MetersToDataPush>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterString) + new RecordRestriction("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", remoteXDAInstanceId);
+            return table.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -5245,8 +5249,13 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MetersToDataPush), RecordOperation.AddNewRecord)]
         public void AddNewMetersToDataPush(MetersToDataPush record)
         {
-            record.RemoteXDAAssetKey = Guid.NewGuid();
+            if (record.Obsfucate)
+                record.RemoteXDAAssetKey = Guid.NewGuid().ToString();
+            else
+                record.RemoteXDAAssetKey = record.LocalXDAAssetKey;
             DataContext.Table<MetersToDataPush>().AddNewRecord(record);
+            int meterId = DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            DataContext.Table<RemoteXDAInstanceMeter>().AddNewRecord(new RemoteXDAInstanceMeter(){ RemoteXDAInstanceID = record.RemoteXDAInstanceId, MetersToDataPushID = meterId});
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
@@ -5267,6 +5276,51 @@ namespace openXDA.Hubs
         }
 
 
+        #endregion
+
+        #region [ RemoteXDAInstance Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(RemoteXDAInstance), RecordOperation.QueryRecordCount)]
+        public int QueryRemoteXDAInstanceCount(string filterString)
+        {
+            return DataContext.Table<RemoteXDAInstance>().QueryRecordCount(filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(RemoteXDAInstance), RecordOperation.QueryRecords)]
+        public IEnumerable<RemoteXDAInstance> QueryRemoteXDAInstances(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<RemoteXDAInstance>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(RemoteXDAInstance), RecordOperation.DeleteRecord)]
+        public void DeleteRemoteXDAInstance(int id)
+        {
+            DataContext.Table<RemoteXDAInstance>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(RemoteXDAInstance), RecordOperation.CreateNewRecord)]
+        public RemoteXDAInstance NewRemoteXDAInstance()
+        {
+            return new RemoteXDAInstance();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(RemoteXDAInstance), RecordOperation.AddNewRecord)]
+        public void AddNewRemoteXDAInstance(RemoteXDAInstance record)
+        {
+            DataContext.Table<RemoteXDAInstance>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(RemoteXDAInstance), RecordOperation.UpdateRecord)]
+        public void UpdateRemoteXDAInstance(RemoteXDAInstance record)
+        {
+            DataContext.Table<RemoteXDAInstance>().UpdateRecord(record);
+        }
         #endregion
 
         #endregion
