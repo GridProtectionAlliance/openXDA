@@ -170,19 +170,19 @@ namespace openXDA.DataPusher
                 LinesToDataPush selectedLine = AddLine(instance.Address, meterLine, meterToDataPush.Obsfucate);
 
                 // if MeterLine association has not been previously made, make it
-                AddMeterLine(meterToDataPush, selectedLine);
+                AddMeterLine(instance.Address, meterToDataPush, selectedLine);
 
                 // ensure remote and local line impedance matches
-                SyncLineImpedances(selectedLine);
+                SyncLineImpedances(instance.Address, selectedLine);
 
                 // add line to meterlocationline table
-                int meterLocationLineID = SyncMeterLocationLines(selectedLine.RemoteXDALineID, remoteMeterLocationId);
+                int meterLocationLineID = SyncMeterLocationLines(instance.Address, selectedLine.RemoteXDALineID, remoteMeterLocationId);
 
                 // ensure remote and local Source Impedance records match for the current meter line location
-                SyncSourceImpedance(meterLocationLineID);
+                SyncSourceImpedance(instance.Address, meterLocationLineID);
 
                 // Sync Channel and channel dependant data
-                SyncChannel(meterToDataPush, selectedLine);
+                SyncChannel(instance.Address, meterToDataPush, selectedLine);
 
             }
         }
@@ -334,9 +334,9 @@ namespace openXDA.DataPusher
             }
         }
 
-        private void AddMeterLine(MetersToDataPush meter, LinesToDataPush selectedLine)
+        private void AddMeterLine(string address, MetersToDataPush meter, LinesToDataPush selectedLine)
         {
-            List<MeterLine> remoteMeterLines = WebAPIHub.GetRecordsWhere("remote", "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {selectedLine.RemoteXDALineID}").Select(x => (MeterLine)x).ToList();
+            List<MeterLine> remoteMeterLines = WebAPIHub.GetRecordsWhere(address, "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {selectedLine.RemoteXDALineID}").Select(x => (MeterLine)x).ToList();
 
             // if MeterLine association has not been previously made, make it
             if (!remoteMeterLines.Any())
@@ -348,15 +348,15 @@ namespace openXDA.DataPusher
                     LineName = selectedLine.RemoteXDAAssetKey.ToString()
                 };
 
-                WebAPIHub.CreateRecord("remote", "MeterLine", JObject.FromObject(record));
+                WebAPIHub.CreateRecord(address, "MeterLine", JObject.FromObject(record));
             }
         }
 
-        private void SyncLineImpedances(LinesToDataPush selectedLine)
+        private void SyncLineImpedances(string address, LinesToDataPush selectedLine)
         {
             // ensure remote and local line impedance matches
             LineImpedance localLineImpedance = m_dataContext.Table<LineImpedance>().QueryRecordWhere("LineID = {0}",selectedLine.LocalXDALineID);
-            LineImpedance remoteLineImpedance = (LineImpedance)WebAPIHub.GetRecordsWhere("remote", "LineImpedance", $"LineID = {selectedLine.RemoteXDALineID}").FirstOrDefault();
+            LineImpedance remoteLineImpedance = (LineImpedance)WebAPIHub.GetRecordsWhere(address, "LineImpedance", $"LineID = {selectedLine.RemoteXDALineID}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (localLineImpedance != null && remoteLineImpedance == null)
@@ -368,31 +368,31 @@ namespace openXDA.DataPusher
                 record.Add("X0", localLineImpedance.X0);
                 record.Add("X1", localLineImpedance.X1);
 
-                WebAPIHub.CreateRecord("remote", "LineImpedance", record);
+                WebAPIHub.CreateRecord(address, "LineImpedance", record);
             }
         }
 
-        private int SyncMeterLocationLines(int lineID, int meterLocationID)
+        private int SyncMeterLocationLines(string address, int lineID, int meterLocationID)
         {
             // add line to meterlocationline table
-            dynamic remoteMeterLocationLine = WebAPIHub.GetRecordsWhere("remote", "MeterLocationLine", $"LineID = {lineID}").FirstOrDefault();
+            dynamic remoteMeterLocationLine = WebAPIHub.GetRecordsWhere(address, "MeterLocationLine", $"LineID = {lineID}").FirstOrDefault();
             if (remoteMeterLocationLine == null)
             {
                 JObject record = new JObject();
                 record.Add("LineID", lineID);
                 record.Add("MeterLocationID", meterLocationID);
 
-                WebAPIHub.CreateRecord("remote", "MeterLocationLine", record);
+                WebAPIHub.CreateRecord(address, "MeterLocationLine", record);
             }
 
-            return WebAPIHub.GetRecords("remote", "MeterLocationLine", "all").Where(x => x.LineID == lineID).First().ID;
+            return WebAPIHub.GetRecords(address, "MeterLocationLine", "all").Where(x => x.LineID == lineID).First().ID;
         }
 
-        private void SyncSourceImpedance(int meterLocationLineID)
+        private void SyncSourceImpedance(string address, int meterLocationLineID)
         {
             // ensure remote and local line impedance matches
             SourceImpedance local = m_dataContext.Table<SourceImpedance>().QueryRecordWhere("MeterLocationLineID = {0}", meterLocationLineID);
-            SourceImpedance remote = (SourceImpedance)WebAPIHub.GetRecordsWhere("remote", "SourceImpedance", $"MeterLocationLineID = {meterLocationLineID}").FirstOrDefault();
+            SourceImpedance remote = (SourceImpedance)WebAPIHub.GetRecordsWhere(address, "SourceImpedance", $"MeterLocationLineID = {meterLocationLineID}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (local != null && remote == null)
@@ -402,16 +402,16 @@ namespace openXDA.DataPusher
                 record.Add("RSrc", local.RSrc);
                 record.Add("XSrc", local.XSrc);
 
-                WebAPIHub.CreateRecord("remote", "LineImpedance", record);
+                WebAPIHub.CreateRecord(address, "LineImpedance", record);
             }
 
         }
 
-        private void SyncMeterAlarmSummary(MetersToDataPush meter)
+        private void SyncMeterAlarmSummary(string address, MetersToDataPush meter)
         {
             // ensure remote and local line impedance matches
-            List<MeterAlarmSummary> local = WebAPIHub.GetRecordsWhere("local", "MeterAlarmSummary", $"MeterID = {meter.LocalXDAMeterID}").Select(x => (MeterAlarmSummary)x).ToList();
-            List<MeterAlarmSummary> remote = WebAPIHub.GetRecordsWhere("remote", "MeterAlarmSummary", $"MeterID = {meter.RemoteXDAMeterID}").Select(x => (MeterAlarmSummary)x).ToList();
+            IEnumerable<MeterAlarmSummary> local = m_dataContext.Table<MeterAlarmSummary>().QueryRecordsWhere("MeterID = {0}", meter.LocalXDAMeterID);
+            List<MeterAlarmSummary> remote = WebAPIHub.GetRecordsWhere(address, "MeterAlarmSummary", $"MeterID = {meter.RemoteXDAMeterID}").Select(x => (MeterAlarmSummary)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (MeterAlarmSummary summary in local)
@@ -424,16 +424,16 @@ namespace openXDA.DataPusher
                     record.Add("Date", summary.Date);
                     record.Add("AlarmPoints", summary.AlarmPoints);
 
-                    WebAPIHub.CreateRecord("remote", "MeterAlarmSummary", record);
+                    WebAPIHub.CreateRecord(address, "MeterAlarmSummary", record);
                 }
             }
         }
 
-        private void SyncMeterDataQualitySummary(MetersToDataPush meter)
+        private void SyncMeterDataQualitySummary(string address, MetersToDataPush meter)
         {
             // ensure remote and local line impedance matches
-            List<MeterDataQualitySummary> local = WebAPIHub.GetRecordsWhere("local", "MeterDataQualitySummary", $"MeterID = {meter.LocalXDAMeterID}").Select(x => (MeterDataQualitySummary)x).ToList();
-            List<MeterDataQualitySummary> remote = WebAPIHub.GetRecordsWhere("remote", "MeterDataQualitySummary", $"MeterID = {meter.RemoteXDAMeterID}").Select(x => (MeterDataQualitySummary)x).ToList();
+            IEnumerable<MeterDataQualitySummary> local = m_dataContext.Table<MeterDataQualitySummary>().QueryRecordsWhere("MeterID = {0}", meter.LocalXDAMeterID);
+            List<MeterDataQualitySummary> remote = WebAPIHub.GetRecordsWhere(address, "MeterDataQualitySummary", $"MeterID = {meter.RemoteXDAMeterID}").Select(x => (MeterDataQualitySummary)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (MeterDataQualitySummary summary in local)
@@ -450,17 +450,17 @@ namespace openXDA.DataPusher
                     record.Add("NoncongruentPoints", summary.NoncongruentPoints);
                     record.Add("DuplicatePoints", summary.DuplicatePoints);
 
-                    WebAPIHub.CreateRecord("remote", "MeterDataQualitySummary", record);
+                    WebAPIHub.CreateRecord(address, "MeterDataQualitySummary", record);
                 }
             }
 
         }
 
-        private void SyncMeterFacility(MetersToDataPush meter)
+        private void SyncMeterFacility(string address, MetersToDataPush meter)
         {
             // ensure remote and local line impedance matches
-            MeterFacility local = WebAPIHub.GetRecordsWhere("local", "MeterFacility", $"MeterID = {meter.LocalXDAMeterID}").Where(x => x.MeterID == meter.LocalXDAMeterID).Select(x => (MeterFacility)x).FirstOrDefault();
-            MeterFacility remote = WebAPIHub.GetRecordsWhere("remote", "MeterFacility", $"MeterID = {meter.RemoteXDAMeterID}").Select(x => (MeterFacility)x).FirstOrDefault();
+            MeterFacility local = m_dataContext.Table<MeterFacility>().QueryRecordWhere("MeterID = {0}", meter.LocalXDAMeterID);
+            MeterFacility remote = WebAPIHub.GetRecordsWhere(address, "MeterFacility", $"MeterID = {meter.RemoteXDAMeterID}").Select(x => (MeterFacility)x).FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (local != null && remote == null)
@@ -469,15 +469,15 @@ namespace openXDA.DataPusher
                 record.Add("MeterID", meter.RemoteXDAMeterID);
                 record.Add("FacilityID", local.FacilityID);
 
-                WebAPIHub.CreateRecord("remote", "MeterFacility", record);
+                WebAPIHub.CreateRecord(address, "MeterFacility", record);
             }
         }
 
-        private void SyncChannel(MetersToDataPush meter, LinesToDataPush line)
+        private void SyncChannel(string address, MetersToDataPush meter, LinesToDataPush line)
         {
             // ensure remote and local line impedance matches
             IEnumerable<ChannelDetail> local = m_dataContext.Table<ChannelDetail>().QueryRecordsWhere("MeterID = {0} AND LineID = {1}",meter.LocalXDAMeterID,line.LocalXDALineID);
-            List<ChannelDetail> remote = WebAPIHub.GetChannels("remote", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {line.RemoteXDALineID}").ToList();
+            List<ChannelDetail> remote = WebAPIHub.GetChannels(address, $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {line.RemoteXDALineID}").ToList();
 
             // if there is a local record but not a remote record
             foreach (ChannelDetail summary in local)
@@ -497,24 +497,24 @@ namespace openXDA.DataPusher
                     record.Add("Description", summary.Description);
                     record.Add("Enabled", summary.Enabled);
 
-                    int remoteChannelId = WebAPIHub.CreateChannel("remote", record);
+                    int remoteChannelId = WebAPIHub.CreateChannel(address, record);
 
-                    SyncSeries(summary.ID, remoteChannelId);
-                    //SyncAlarmLogs(summary.ID, remoteChannelId);
-                    SyncAlarmRangeLimit(summary.ID, remoteChannelId);
-                    SyncBreakerChannel(summary.ID, remoteChannelId);
-                    //SyncChannelAlarmSummary(summary.ID, remoteChannelId);
-                    //SyncChannelDataQualitySummary(summary.ID, remoteChannelId);
-                    //SyncDailyTrendingSummary(summary.ID, remoteChannelId);
-                    SyncDailyQualityRangeLimit(summary.ID, remoteChannelId);
+                    SyncSeries(address, summary.ID, remoteChannelId);
+                    //SyncAlarmLogs(address, summary.ID, remoteChannelId);
+                    SyncAlarmRangeLimit(address, summary.ID, remoteChannelId);
+                    SyncBreakerChannel(address, summary.ID, remoteChannelId);
+                    //SyncChannelAlarmSummary(address, summary.ID, remoteChannelId);
+                    //SyncChannelDataQualitySummary(address, summary.ID, remoteChannelId);
+                    //SyncDailyTrendingSummary(address, summary.ID, remoteChannelId);
+                    SyncDailyQualityRangeLimit(address, summary.ID, remoteChannelId);
                 }
             }
         }
 
-        private void SyncSeries(int localChannelId, int remoteChannelId)
+        private void SyncSeries(string address, int localChannelId, int remoteChannelId)
         {
-            List<Series> local = WebAPIHub.GetRecordsWhere("local", "Series", $"ChannelID = {localChannelId}").Select(x => (Series)x).ToList();
-            List<Series> remote = WebAPIHub.GetRecordsWhere("remote", "Series", $"ChannelID = {remoteChannelId}").Select(x => (Series)x).ToList();
+            IEnumerable<Series> local = m_dataContext.Table<Series>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<Series> remote = WebAPIHub.GetRecordsWhere(address, "Series", $"ChannelID = {remoteChannelId}").Select(x => (Series)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (Series localSeries in local)
@@ -528,24 +528,24 @@ namespace openXDA.DataPusher
                         SourceIndexes = localSeries.SourceIndexes
                     };
 
-                    int remoteSeriesId = WebAPIHub.CreateRecord("remote", "Series", JObject.FromObject(record));
-                    SynceOutputChannels(localSeries.ID, remoteSeriesId);
+                    int remoteSeriesId = WebAPIHub.CreateRecord(address, "Series", JObject.FromObject(record));
+                    SynceOutputChannels(address, localSeries.ID, remoteSeriesId);
 
                 }
                 else
                 {
                     int remoteSeriesId = remote.Where(x => x.SeriesTypeID == localSeries.SeriesTypeID && x.SourceIndexes == localSeries.SourceIndexes).FirstOrDefault().ID;
-                    SynceOutputChannels(localSeries.ID, remoteSeriesId);
+                    SynceOutputChannels(address, localSeries.ID, remoteSeriesId);
                 }
 
             }
 
         }
 
-        private void SynceOutputChannels(int localSeriesId, int remoteSeriesId)
+        private void SynceOutputChannels(string address, int localSeriesId, int remoteSeriesId)
         {
-            List<OutputChannel> local = WebAPIHub.GetRecordsWhere("local", "OutputChannel", $"SeriesID = {localSeriesId}").Select(x => (OutputChannel)x).ToList();
-            List<OutputChannel> remote = WebAPIHub.GetRecordsWhere("remote", "OutputChannel", $"SeriesID = {remoteSeriesId}").Select(x => (OutputChannel)x).ToList();
+            IEnumerable<OutputChannel> local = m_dataContext.Table<OutputChannel>().QueryRecordsWhere("SeriesID = {0}",localSeriesId);
+            List<OutputChannel> remote = WebAPIHub.GetRecordsWhere(address, "OutputChannel", $"SeriesID = {remoteSeriesId}").Select(x => (OutputChannel)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (OutputChannel localOutputChannel in local)
@@ -558,15 +558,15 @@ namespace openXDA.DataPusher
                         ChannelKey = localOutputChannel.ChannelKey,
                         LoadOrder = localOutputChannel.LoadOrder
                     };
-                    WebAPIHub.CreateRecord("remote", "OutputChannel", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "OutputChannel", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncAlarmLogs(int localChannelId, int remoteChannelId)
+        private void SyncAlarmLogs(string address, int localChannelId, int remoteChannelId)
         {
-            List<AlarmLog> local = WebAPIHub.GetRecordsWhere("local", "AlarmLog", $"ChannelID = {localChannelId}").Select(x => (AlarmLog)x).ToList();
-            List<AlarmLog> remote = WebAPIHub.GetRecordsWhere("remote", "AlarmLog", $"ChannelID = {remoteChannelId}").Select(x => (AlarmLog)x).ToList();
+            IEnumerable<AlarmLog> local = m_dataContext.Table<AlarmLog>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<AlarmLog> remote = WebAPIHub.GetRecordsWhere(address, "AlarmLog", $"ChannelID = {remoteChannelId}").Select(x => (AlarmLog)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (AlarmLog localRecord in local)
@@ -583,15 +583,15 @@ namespace openXDA.DataPusher
                         LimitLow = localRecord.LimitLow,
                         Value = localRecord.Value,
                     };
-                    WebAPIHub.CreateRecord("remote", "AlarmLog", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "AlarmLog", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncAlarmRangeLimit(int localChannelId, int remoteChannelId)
+        private void SyncAlarmRangeLimit(string address, int localChannelId, int remoteChannelId)
         {
-            List<AlarmRangeLimit> local = WebAPIHub.GetRecordsWhere("local", "AlarmRangeLimit", $"ChannelID = {localChannelId}").Select(x => (AlarmRangeLimit)x).ToList();
-            List<AlarmRangeLimit> remote = WebAPIHub.GetRecordsWhere("remote", "AlarmRangeLimit", $"ChannelID = {remoteChannelId}").Select(x => (AlarmRangeLimit)x).ToList();
+            IEnumerable<AlarmRangeLimit> local = m_dataContext.Table<AlarmRangeLimit>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<AlarmRangeLimit> remote = WebAPIHub.GetRecordsWhere(address, "AlarmRangeLimit", $"ChannelID = {remoteChannelId}").Select(x => (AlarmRangeLimit)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (AlarmRangeLimit localRecord in local)
@@ -610,15 +610,15 @@ namespace openXDA.DataPusher
                         Enabled = localRecord.Enabled,
                         IsDefault = localRecord.IsDefault
                     };
-                    WebAPIHub.CreateRecord("remote", "AlarmRangeLimit", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "AlarmRangeLimit", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncBreakerChannel(int localChannelId, int remoteChannelId)
+        private void SyncBreakerChannel(string address, int localChannelId, int remoteChannelId)
         {
-            List<BreakerChannel> local = WebAPIHub.GetRecordsWhere("local", "BreakerChannel", $"ChannelID = {localChannelId}").Select(x => (BreakerChannel)x).ToList();
-            List<BreakerChannel> remote = WebAPIHub.GetRecordsWhere("remote", "BreakerChannel", $"ChannelID = {remoteChannelId}").Select(x => (BreakerChannel)x).ToList();
+            IEnumerable<BreakerChannel> local = m_dataContext.Table<BreakerChannel>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<BreakerChannel> remote = WebAPIHub.GetRecordsWhere(address, "BreakerChannel", $"ChannelID = {remoteChannelId}").Select(x => (BreakerChannel)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (BreakerChannel localRecord in local)
@@ -630,15 +630,15 @@ namespace openXDA.DataPusher
                         ChannelID = remoteChannelId,
                         BreakerNumber = localRecord.BreakerNumber
                     };
-                    WebAPIHub.CreateRecord("remote", "BreakerChannel", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "BreakerChannel", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncChannelAlarmSummary(int localChannelId, int remoteChannelId)
+        private void SyncChannelAlarmSummary(string address, int localChannelId, int remoteChannelId)
         {
-            List<ChannelAlarmSummary> local = WebAPIHub.GetRecordsWhere("local", "ChannelAlarmSummary", $"ChannelID = {localChannelId}").Select(x => (ChannelAlarmSummary)x).ToList();
-            List<ChannelAlarmSummary> remote = WebAPIHub.GetRecordsWhere("remote", "ChannelAlarmSummary", $"ChannelID = {remoteChannelId}").Select(x => (ChannelAlarmSummary)x).ToList();
+            IEnumerable<ChannelAlarmSummary> local = m_dataContext.Table<ChannelAlarmSummary>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<ChannelAlarmSummary> remote = WebAPIHub.GetRecordsWhere(address, "ChannelAlarmSummary", $"ChannelID = {remoteChannelId}").Select(x => (ChannelAlarmSummary)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (ChannelAlarmSummary localRecord in local)
@@ -652,15 +652,15 @@ namespace openXDA.DataPusher
                         Date = localRecord.Date,
                         AlarmPoints = localRecord.AlarmPoints
                     };
-                    WebAPIHub.CreateRecord("remote", "ChannelAlarmSummary", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "ChannelAlarmSummary", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncChannelDataQualitySummary(int localChannelId, int remoteChannelId)
+        private void SyncChannelDataQualitySummary(string address, int localChannelId, int remoteChannelId)
         {
-            List<ChannelDataQualitySummary> local = WebAPIHub.GetRecordsWhere("local", "ChannelDataQualitySummary", $"ChannelID = {localChannelId}").Select(x => (ChannelDataQualitySummary)x).ToList();
-            List<ChannelDataQualitySummary> remote = WebAPIHub.GetRecordsWhere("remote", "ChannelDataQualitySummary", $"ChannelID = {remoteChannelId}").Select(x => (ChannelDataQualitySummary)x).ToList();
+            IEnumerable<ChannelDataQualitySummary> local = m_dataContext.Table<ChannelDataQualitySummary>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<ChannelDataQualitySummary> remote = WebAPIHub.GetRecordsWhere(address, "ChannelDataQualitySummary", $"ChannelID = {remoteChannelId}").Select(x => (ChannelDataQualitySummary)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (ChannelDataQualitySummary localRecord in local)
@@ -678,15 +678,15 @@ namespace openXDA.DataPusher
                         NoncongruentPoints = localRecord.NoncongruentPoints,
                         DuplicatePoints = localRecord.DuplicatePoints,
                     };
-                    WebAPIHub.CreateRecord("remote", "ChannelDataQualitySummary", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "ChannelDataQualitySummary", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncDailyTrendingSummary(int localChannelId, int remoteChannelId)
+        private void SyncDailyTrendingSummary(string address, int localChannelId, int remoteChannelId)
         {
-            List<DailyTrendingSummary> local = WebAPIHub.GetRecordsWhere("local", "DailyTrendingSummary", $"ChannelID = {localChannelId}").Select(x => (DailyTrendingSummary)x).ToList();
-            List<DailyTrendingSummary> remote = WebAPIHub.GetRecordsWhere("remote", "DailyTrendingSummary", $"ChannelID = {remoteChannelId}").Select(x => (DailyTrendingSummary)x).ToList();
+            IEnumerable<DailyTrendingSummary> local = m_dataContext.Table<DailyTrendingSummary>().QueryRecordsWhere("ChannelID = {0}", localChannelId);
+            List<DailyTrendingSummary> remote = WebAPIHub.GetRecordsWhere(address, "DailyTrendingSummary", $"ChannelID = {remoteChannelId}").Select(x => (DailyTrendingSummary)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (DailyTrendingSummary localRecord in local)
@@ -703,16 +703,16 @@ namespace openXDA.DataPusher
                         ValidCount = localRecord.ValidCount,
                         InvalidCount = localRecord.InvalidCount
                     };
-                    WebAPIHub.CreateRecord("remote", "DailyTrendingSummary", JObject.FromObject(record));
+                    WebAPIHub.CreateRecord(address, "DailyTrendingSummary", JObject.FromObject(record));
                 }
             }
         }
 
-        private void SyncDailyQualityRangeLimit(int localChannelId, int remoteChannelId)
+        private void SyncDailyQualityRangeLimit(string address, int localChannelId, int remoteChannelId)
         {
             // ensure remote and local line impedance matches
-            DataQualityRangeLimit local = WebAPIHub.GetRecordsWhere("local", "DataQualityRangeLimit", $"ChannelID = {localChannelId}").Select(x => (DataQualityRangeLimit)x).FirstOrDefault();
-            DataQualityRangeLimit remote = WebAPIHub.GetRecordsWhere("remote", "DataQualityRangeLimit", $"ChannelID = {remoteChannelId}").Select(x => (DataQualityRangeLimit)x).FirstOrDefault();
+            DataQualityRangeLimit local = m_dataContext.Table<DataQualityRangeLimit>().QueryRecordWhere("ChannelID = {0}", localChannelId);
+            DataQualityRangeLimit remote = WebAPIHub.GetRecordsWhere(address, "DataQualityRangeLimit", $"ChannelID = {remoteChannelId}").Select(x => (DataQualityRangeLimit)x).FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (local != null && remote == null)
@@ -727,22 +727,22 @@ namespace openXDA.DataPusher
                     Enabled = local.Enabled
                 };
 
-                WebAPIHub.CreateRecord("remote", "DataQualityRangeLimit", JObject.FromObject(record));
+                WebAPIHub.CreateRecord(address, "DataQualityRangeLimit", JObject.FromObject(record));
             }
         }
 
-        private void SyncEvents(int localMeterId, int remoteMeterId, int localLineId, int remoteLineId)
+        private void SyncEvents(string address, int localMeterId, int remoteMeterId, int localLineId, int remoteLineId)
         {
             // ensure remote and local line impedance matches
-            List<Event> local = WebAPIHub.GetRecordsWhere("local", "Event", $"MeterID = {localMeterId} AND LineID = {localLineId}").Select(x => (Event)x).ToList();
-            List<Event> remote = WebAPIHub.GetRecordsWhere("remote", "Event", $"MeterID = {remoteMeterId} AND LineID = {remoteLineId}").Select(x => (Event)x).ToList();
+            IEnumerable<Event> local = m_dataContext.Table<Event>().QueryRecordsWhere("MeterID = {0} AND LineID = {1}", localMeterId, localLineId);
+            List<Event> remote = WebAPIHub.GetRecordsWhere(address, "Event", $"MeterID = {remoteMeterId} AND LineID = {remoteLineId}").Select(x => (Event)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (Event summary in local)
             {
-                int eventTypeId = GetRemoteEventTypeId(summary.EventTypeID);
-                int fileGroupId = GetRemoteFileGroup(summary.FileGroupID);
-                int eventDataId = GetRemoteEventData(summary.EventDataID, fileGroupId);
+                int eventTypeId = GetRemoteEventTypeId(address, summary.EventTypeID);
+                int fileGroupId = GetRemoteFileGroup(address, summary.FileGroupID);
+                int eventDataId = GetRemoteEventData(address, summary.EventDataID, fileGroupId);
 
                 if (!remote.Where(x => x.EventTypeID == eventTypeId && x.StartTime.Equals(summary.StartTime) && x.EndTime.Equals(summary.EndTime)).Any())
                 {
@@ -766,23 +766,23 @@ namespace openXDA.DataPusher
                         UpdatedBy = summary.UpdatedBy
                     };
 
-                    int eventId = WebAPIHub.CreateRecord("remote", "Event", JObject.FromObject(record));
+                    int eventId = WebAPIHub.CreateRecord(address, "Event", JObject.FromObject(record));
 
-                    GetBreakerOperation(summary.ID, eventId);
+                    GetBreakerOperation(address, summary.ID, eventId);
                     //GetCSAResult(summary.ID, eventId);
-                    GetDisturbances(summary.ID, eventId);
-                    GetFaultGroup(summary.ID, eventId);
-                    GetFaultSegments(summary.ID, eventId);
-                    GetFaultSummary(summary.ID, eventId);
+                    GetDisturbances(address, summary.ID, eventId);
+                    GetFaultGroup(address, summary.ID, eventId);
+                    GetFaultSegments(address, summary.ID, eventId);
+                    GetFaultSummary(address, summary.ID, eventId);
                 }
             }
 
         }
 
-        private int GetRemoteEventTypeId(int localEventTypeId)
+        private int GetRemoteEventTypeId(string address, int localEventTypeId)
         {
-            List<EventType> localTypes = WebAPIHub.GetRecords("local", "EventType", "all").Select(x => (EventType)x).ToList();
-            List<EventType> remoteTypes = WebAPIHub.GetRecords("remote", "EventType", "all").Select(x => (EventType)x).ToList();
+            IEnumerable<EventType> localTypes = m_dataContext.Table<EventType>().QueryRecords();
+            List<EventType> remoteTypes = WebAPIHub.GetRecords(address, "EventType", "all").Select(x => (EventType)x).ToList();
 
             if (!remoteTypes.Where(x => x.Name == localTypes.Where(y => y.ID == localEventTypeId).First().Name).Any())
             {
@@ -791,7 +791,7 @@ namespace openXDA.DataPusher
                     Name = localTypes.Where(y => y.ID == localEventTypeId).First().Name,
                     Description = localTypes.Where(y => y.ID == localEventTypeId).First().Description
                 };
-                return WebAPIHub.CreateRecord("remote", "EventType", JObject.FromObject(record));
+                return WebAPIHub.CreateRecord(address, "EventType", JObject.FromObject(record));
             }
             else
             {
@@ -799,10 +799,10 @@ namespace openXDA.DataPusher
             }
         }
 
-        private int GetRemoteFileGroup(int localFileGroupId)
+        private int GetRemoteFileGroup(string address, int localFileGroupId)
         {
-            FileGroup local = (FileGroup)WebAPIHub.GetRecordsWhere("local", "FileGroup", $"ID = {localFileGroupId}").FirstOrDefault();
-            List<FileGroup> remote = WebAPIHub.GetRecords("remote", "FileGroup", "all").Select(x => (FileGroup)x).ToList();
+            FileGroup local = m_dataContext.Table<FileGroup>().QueryRecordWhere("ID = {0}", localFileGroupId);
+            List<FileGroup> remote = WebAPIHub.GetRecords(address, "FileGroup", "all").Select(x => (FileGroup)x).ToList();
 
             int id;
             if (local != null && !remote.Where(x => x.DataStartTime.Equals(local.DataStartTime) && x.DataEndTime.Equals(local.DataEndTime) && x.ProcessingStartTime.Equals(local.ProcessingStartTime) && x.ProcessingEndTime.Equals(local.ProcessingEndTime)).Any())
@@ -815,22 +815,22 @@ namespace openXDA.DataPusher
                     ProcessingEndTime = local.ProcessingEndTime,
                     Error = local.Error
                 };
-                id = WebAPIHub.CreateRecord("remote", "FileGroup", JObject.FromObject(record));
+                id = WebAPIHub.CreateRecord(address, "FileGroup", JObject.FromObject(record));
             }
             else
             {
                 id = remote.Where(x => x.DataStartTime.Equals(local.DataStartTime) && x.DataEndTime.Equals(local.DataEndTime) && x.ProcessingStartTime.Equals(local.ProcessingStartTime) && x.ProcessingEndTime.Equals(local.ProcessingEndTime)).First().ID;
             }
 
-            SyncDataFiles(localFileGroupId, id);
+            SyncDataFiles(address, localFileGroupId, id);
 
             return id;
         }
 
-        private void SyncDataFiles(int localFileGroupId, int remoteFileGroupId)
+        private void SyncDataFiles(string address, int localFileGroupId, int remoteFileGroupId)
         {
-            List<DataFile> local = WebAPIHub.GetRecordsWhere("local", "DataFile", $"FileGroupID = {localFileGroupId}").Select(x => (DataFile)x).ToList();
-            List<DataFile> remote = WebAPIHub.GetRecordsWhere("remote", "DataFile", $"FileGroupID = {remoteFileGroupId}").Select(x => (DataFile)x).ToList();
+            IEnumerable<DataFile> local = m_dataContext.Table<DataFile>().QueryRecordsWhere("FileGroupID = {0}", localFileGroupId);
+            List<DataFile> remote = WebAPIHub.GetRecordsWhere(address, "DataFile", $"FileGroupID = {remoteFileGroupId}").Select(x => (DataFile)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (DataFile localRecord in local)
@@ -847,17 +847,17 @@ namespace openXDA.DataPusher
                         LastAccessTime = localRecord.LastAccessTime,
                         LastWriteTime = localRecord.LastWriteTime
                     };
-                    int id = WebAPIHub.CreateRecord("remote", "DataFile", JObject.FromObject(record));
+                    int id = WebAPIHub.CreateRecord(address, "DataFile", JObject.FromObject(record));
 
-                    SyncFileBlobs(localRecord.ID, id);
+                    SyncFileBlobs(address, localRecord.ID, id);
                 }
             }
         }
 
-        private void SyncFileBlobs(int localDataFileId, int remoteDataFileId)
+        private void SyncFileBlobs(string address, int localDataFileId, int remoteDataFileId)
         {
-            FileBlob local = (FileBlob)WebAPIHub.GetRecordsWhere("local", "FileBlob", $"DataFileID = {localDataFileId}").FirstOrDefault();
-            FileBlob remote = (FileBlob)WebAPIHub.GetRecordsWhere("remote", "FileBlob", $"DataFileID = {remoteDataFileId}").FirstOrDefault();
+            FileBlob local = m_dataContext.Table<FileBlob>().QueryRecordWhere("DataFileID = {0}", localDataFileId);
+            FileBlob remote = (FileBlob)WebAPIHub.GetRecordsWhere(address, "FileBlob", $"DataFileID = {remoteDataFileId}").FirstOrDefault();
 
             if (local != null && remote == null)
             {
@@ -866,14 +866,14 @@ namespace openXDA.DataPusher
                     DataFileID = remoteDataFileId,
                     Blob = local.Blob
                 };
-                WebAPIHub.CreateRecord("remote", "FileBlob", JObject.FromObject(record));
+                WebAPIHub.CreateRecord(address, "FileBlob", JObject.FromObject(record));
             }
         }
 
-        private int GetRemoteEventData(int localEventDataId, int remoteFileGroup)
+        private int GetRemoteEventData(string address, int localEventDataId, int remoteFileGroup)
         {
-            EventData local = (EventData)WebAPIHub.GetRecord("local", "EventData", localEventDataId);
-            List<EventData> remote = WebAPIHub.GetRecordsWhere("remote", "EventData", $"FileGroupID = {remoteFileGroup}").Select(x => (EventData)x).ToList();
+            EventData local = m_dataContext.Table<EventData>().QueryRecordWhere("ID = {0}", localEventDataId);
+            List<EventData> remote = WebAPIHub.GetRecordsWhere(address, "EventData", $"FileGroupID = {remoteFileGroup}").Select(x => (EventData)x).ToList();
 
 
             if (local != null && !remote.Where(x => x.RunTimeID == local.RunTimeID).Any())
@@ -886,16 +886,16 @@ namespace openXDA.DataPusher
                     FrequencyDomainData = local.FrequencyDomainData,
                     MarkedForDeletion = local.MarkedForDeletion
                 };
-                return WebAPIHub.CreateRecord("remote", "EventData", JObject.FromObject(record));
+                return WebAPIHub.CreateRecord(address, "EventData", JObject.FromObject(record));
             }
             else
                 return remote.Where(x => x.RunTimeID == local.RunTimeID).FirstOrDefault().ID;
         }
 
-        private void GetBreakerOperation(int localEventId, int remoteEventId)
+        private void GetBreakerOperation(string address, int localEventId, int remoteEventId)
         {
-            List<BreakerOperation> local = WebAPIHub.GetRecordsWhere("local", "BreakerOperation", $"EventID = {localEventId}").Select(x => (BreakerOperation)x).ToList();
-            List<BreakerOperation> remote = WebAPIHub.GetRecordsWhere("remote", "BreakerOperation", $"EventID = {remoteEventId}").Select(x => (BreakerOperation)x).ToList();
+            IEnumerable<BreakerOperation> local = m_dataContext.Table<BreakerOperation>().QueryRecordsWhere("EventID = {0}", localEventId);
+            List<BreakerOperation> remote = WebAPIHub.GetRecordsWhere(address, "BreakerOperation", $"EventID = {remoteEventId}").Select(x => (BreakerOperation)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (BreakerOperation localRecord in local)
@@ -905,8 +905,8 @@ namespace openXDA.DataPusher
                     BreakerOperation record = new BreakerOperation()
                     {
                         EventID = remoteEventId,
-                        PhaseID = GetRemotePhaseId(localRecord.PhaseID),
-                        BreakerOperationTypeID = GetRemoteBreakerOperationType(localRecord.BreakerOperationTypeID),
+                        PhaseID = GetRemotePhaseId(address, localRecord.PhaseID),
+                        BreakerOperationTypeID = GetRemoteBreakerOperationType(address, localRecord.BreakerOperationTypeID),
                         BreakerNumber = localRecord.BreakerNumber,
                         TripCoilEnergized = localRecord.TripCoilEnergized,
                         StatusBitSet = localRecord.StatusBitSet,
@@ -922,17 +922,17 @@ namespace openXDA.DataPusher
                         UpdatedBy = localRecord.UpdatedBy,
                         StatusBitChatter = localRecord.StatusBitChatter
                     };
-                    int id = WebAPIHub.CreateRecord("remote", "BreakerOperation", JObject.FromObject(record));
+                    int id = WebAPIHub.CreateRecord(address, "BreakerOperation", JObject.FromObject(record));
 
                 }
             }
 
         }
 
-        private int GetRemotePhaseId(int localPhaseId)
+        private int GetRemotePhaseId(string address, int localPhaseId)
         {
-            List<Phase> remote = WebAPIHub.GetRecords("remote", "Phase", "all").Select(x => (Phase)x).ToList();
-            Phase local = (Phase)WebAPIHub.GetRecord("local", "Phase", localPhaseId);
+            List<Phase> remote = WebAPIHub.GetRecords(address, "Phase", "all").Select(x => (Phase)x).ToList();
+            Phase local = m_dataContext.Table<Phase>().QueryRecordWhere("ID = {0}", localPhaseId);
             if (remote.Where(x => x.Name == local.Name).Any())
                 return remote.Where(x => x.Name == local.Name).First().ID;
             else
@@ -943,14 +943,14 @@ namespace openXDA.DataPusher
                     Description = local.Description
                 };
 
-                return WebAPIHub.CreateRecord("remote", "Phase", JObject.FromObject(record));
+                return WebAPIHub.CreateRecord(address, "Phase", JObject.FromObject(record));
             }
         }
 
-        private int GetRemoteBreakerOperationType(int localBreakerOperationTypeId)
+        private int GetRemoteBreakerOperationType(string address, int localBreakerOperationTypeId)
         {
-            List<BreakerOperationType> remote = WebAPIHub.GetRecords("remote", "BreakerOperationType", "all").Select(x => (BreakerOperationType)x).ToList();
-            BreakerOperationType local = (BreakerOperationType)WebAPIHub.GetRecord("local", "BreakerOperationType", localBreakerOperationTypeId);
+            List<BreakerOperationType> remote = WebAPIHub.GetRecords(address, "BreakerOperationType", "all").Select(x => (BreakerOperationType)x).ToList();
+            BreakerOperationType local = m_dataContext.Table<BreakerOperationType>().QueryRecordWhere("ID = {0}", localBreakerOperationTypeId);
             if (remote.Where(x => x.Name == local.Name).Any())
                 return remote.Where(x => x.Name == local.Name).First().ID;
             else
@@ -961,15 +961,15 @@ namespace openXDA.DataPusher
                     Description = local.Description
                 };
 
-                return WebAPIHub.CreateRecord("remote", "BreakerOperationType", JObject.FromObject(record));
+                return WebAPIHub.CreateRecord(address, "BreakerOperationType", JObject.FromObject(record));
             }
 
         }
 
-        private void GetCSAResult(int localEventId, int remoteEventId)
+        private void GetCSAResult(string address, int localEventId, int remoteEventId)
         {
-            CSAResult local = (CSAResult)WebAPIHub.GetRecordsWhere("local", "CSAResult", $"EventID = {localEventId}").FirstOrDefault();
-            CSAResult remote = (CSAResult)WebAPIHub.GetRecordsWhere("remote", "CSAResult", $"EventID = {remoteEventId}").FirstOrDefault();
+            CSAResult local = m_dataContext.Table<CSAResult>().QueryRecordWhere("EventID = {0}", localEventId);
+            CSAResult remote = (CSAResult)WebAPIHub.GetRecordsWhere(address, "CSAResult", $"EventID = {remoteEventId}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (remote == null && local != null)
@@ -1002,28 +1002,28 @@ namespace openXDA.DataPusher
                     OutVTHDAfter = local.OutVTHDAfter,
                     OutVTHDIncrease = local.OutVTHDIncrease
                 };
-                int id = WebAPIHub.CreateRecord("remote", "CSAResult", JObject.FromObject(record));
+                int id = WebAPIHub.CreateRecord(address, "CSAResult", JObject.FromObject(record));
 
             }
 
         }
 
-        private void GetDisturbances(int localEventId, int remoteEventId)
+        private void GetDisturbances(string address, int localEventId, int remoteEventId)
         {
-            List<Disturbance> local = WebAPIHub.GetRecordsWhere("local", "Disturbance", $"EventID = {localEventId}").Select(x => (Disturbance)x).ToList();
-            List<Disturbance> remote = WebAPIHub.GetRecordsWhere("remote", "Disturbance", $"EventID = {remoteEventId}").Select(x => (Disturbance)x).ToList();
+            IEnumerable<Disturbance> local = m_dataContext.Table<Disturbance>().QueryRecordsWhere("EventID = {0}", localEventId);
+            List<Disturbance> remote = WebAPIHub.GetRecordsWhere(address, "Disturbance", $"EventID = {remoteEventId}").Select(x => (Disturbance)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (Disturbance localRecord in local)
             {
-                int remoteEventTypeId = GetRemoteEventTypeId(localRecord.EventTypeID);
+                int remoteEventTypeId = GetRemoteEventTypeId(address, localRecord.EventTypeID);
 
                 if (!remote.Where(x => x.StartTime.Equals(localRecord.StartTime) && x.EndTime.Equals(localRecord.EndTime) && x.EventTypeID == remoteEventTypeId).Any())
                 {
                     Disturbance record = new Disturbance()
                     {
                         EventID = remoteEventId,
-                        PhaseID = GetRemotePhaseId(localRecord.PhaseID),
+                        PhaseID = GetRemotePhaseId(address, localRecord.PhaseID),
                         EventTypeID = remoteEventTypeId,
                         Magnitude = localRecord.Magnitude,
                         PerUnitMagnitude = localRecord.PerUnitMagnitude,
@@ -1035,34 +1035,34 @@ namespace openXDA.DataPusher
                         EndIndex = localRecord.EndIndex,
                         UpdatedBy = ""
                     };
-                    int id = WebAPIHub.CreateRecord("remote", "Disturbance", JObject.FromObject(record));
-                    GetDisturbanceSeverity(localRecord.ID, id);
+                    int id = WebAPIHub.CreateRecord(address, "Disturbance", JObject.FromObject(record));
+                    GetDisturbanceSeverity(address, localRecord.ID, id);
                 }
             }
         }
 
-        private void GetDisturbanceSeverity(int localDisturbanceId, int remoteDisturbanceId)
+        private void GetDisturbanceSeverity(string address, int localDisturbanceId, int remoteDisturbanceId)
         {
-            DisturbanceSeverity local = (DisturbanceSeverity)WebAPIHub.GetRecordsWhere("local", "DisturbanceSeverity", $"DisturbanceID = {localDisturbanceId}").FirstOrDefault();
-            DisturbanceSeverity remote = (DisturbanceSeverity)WebAPIHub.GetRecordsWhere("remote", "DisturbanceSeverity", $"DisturbanceID = {remoteDisturbanceId}").FirstOrDefault();
+            DisturbanceSeverity local = m_dataContext.Table<DisturbanceSeverity>().QueryRecordWhere("DisturbanceID = {0}", localDisturbanceId);
+            DisturbanceSeverity remote = (DisturbanceSeverity)WebAPIHub.GetRecordsWhere(address, "DisturbanceSeverity", $"DisturbanceID = {remoteDisturbanceId}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (remote == null && local != null)
             {
                 DisturbanceSeverity record = new DisturbanceSeverity()
                 {
-                    VoltageEnvelopeID = GetRemoteVoltageEnvelopeId(local.VoltageEnvelopeID),
+                    VoltageEnvelopeID = GetRemoteVoltageEnvelopeId(address, local.VoltageEnvelopeID),
                     DisturbanceID = remoteDisturbanceId,
                     SeverityCode = local.SeverityCode
                 };
-                int id = WebAPIHub.CreateRecord("remote", "DisturbanceSeverity", JObject.FromObject(record));
+                int id = WebAPIHub.CreateRecord(address, "DisturbanceSeverity", JObject.FromObject(record));
             }
         }
 
-        private int GetRemoteVoltageEnvelopeId(int id)
+        private int GetRemoteVoltageEnvelopeId(string address, int id)
         {
-            VoltageEnvelope local = (VoltageEnvelope)WebAPIHub.GetRecordsWhere("local", "VoltageEnvelope", $"ID = {id}").FirstOrDefault();
-            VoltageEnvelope remote = (VoltageEnvelope)WebAPIHub.GetRecordsWhere("remote", "VoltageEnvelope", $"Name = {local.Name}").FirstOrDefault();
+            VoltageEnvelope local = m_dataContext.Table<VoltageEnvelope>().QueryRecordWhere("ID = {0}",id);
+            VoltageEnvelope remote = (VoltageEnvelope)WebAPIHub.GetRecordsWhere(address, "VoltageEnvelope", $"Name = {local.Name}").FirstOrDefault();
 
             if (remote == null)
             {
@@ -1071,16 +1071,16 @@ namespace openXDA.DataPusher
                     Name = local.Name,
                     Description = local.Description
                 };
-                return WebAPIHub.CreateRecord("remote", "VoltageEnvelope", JObject.FromObject(record));
+                return WebAPIHub.CreateRecord(address, "VoltageEnvelope", JObject.FromObject(record));
 
             }
             return remote.ID;
         }
 
-        private void GetFaultGroup(int localEventId, int remoteEventId)
+        private void GetFaultGroup(string address, int localEventId, int remoteEventId)
         {
-            FaultGroup local = (FaultGroup)WebAPIHub.GetRecordsWhere("local", "FaultGroup", $"EventID = {localEventId}").FirstOrDefault();
-            FaultGroup remote = (FaultGroup)WebAPIHub.GetRecordsWhere("remote", "FaultGroup", $"EventID = {remoteEventId}").FirstOrDefault();
+            FaultGroup local = m_dataContext.Table<FaultGroup>().QueryRecordWhere("EventID = {0}", localEventId);
+            FaultGroup remote = (FaultGroup)WebAPIHub.GetRecordsWhere(address, "FaultGroup", $"EventID = {remoteEventId}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (remote == null && local != null)
@@ -1092,21 +1092,21 @@ namespace openXDA.DataPusher
                     DefaultFaultDetectionLogicResult = local.DefaultFaultDetectionLogicResult,
                     FaultValidationLogicResult = local.FaultValidationLogicResult
                 };
-                int id = WebAPIHub.CreateRecord("remote", "FaultGroup", JObject.FromObject(record));
+                int id = WebAPIHub.CreateRecord(address, "FaultGroup", JObject.FromObject(record));
 
             }
 
         }
 
-        private void GetFaultSegments(int localEventId, int remoteEventId)
+        private void GetFaultSegments(string address, int localEventId, int remoteEventId)
         {
-            List<FaultSegment> local = WebAPIHub.GetRecordsWhere("local", "FaultSegment", $"EventID = {localEventId}").Select(x => (FaultSegment)x).ToList();
-            List<FaultSegment> remote = WebAPIHub.GetRecordsWhere("remote", "FaultSegment", $"EventID = {remoteEventId}").Select(x => (FaultSegment)x).ToList();
+            IEnumerable<FaultSegment> local = m_dataContext.Table<FaultSegment>().QueryRecordsWhere("EventID = {0}", localEventId);
+            List<FaultSegment> remote = WebAPIHub.GetRecordsWhere(address, "FaultSegment", $"EventID = {remoteEventId}").Select(x => (FaultSegment)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (FaultSegment localRecord in local)
             {
-                int remoteSegmentTypeId = GetRemoteSegmentTypeId(localRecord.SegmentTypeID);
+                int remoteSegmentTypeId = GetRemoteSegmentTypeId(address, localRecord.SegmentTypeID);
 
                 if (!remote.Where(x => x.StartTime.Equals(localRecord.StartTime) && x.EndTime.Equals(localRecord.EndTime) && x.SegmentTypeID == remoteSegmentTypeId).Any())
                 {
@@ -1119,15 +1119,15 @@ namespace openXDA.DataPusher
                         StartSample = localRecord.StartSample,
                         EndSample = localRecord.EndSample
                     };
-                    int id = WebAPIHub.CreateRecord("remote", "FaultSegment", JObject.FromObject(record));
+                    int id = WebAPIHub.CreateRecord(address, "FaultSegment", JObject.FromObject(record));
                 }
             }
         }
 
-        private int GetRemoteSegmentTypeId(int id)
+        private int GetRemoteSegmentTypeId(string address, int id)
         {
-            SegmentType local = (SegmentType)WebAPIHub.GetRecordsWhere("local", "SegmentType", $"ID = {id}").FirstOrDefault();
-            SegmentType remote = (SegmentType)WebAPIHub.GetRecordsWhere("remote", "SegmentType", $"Name = '{local.Name}'").FirstOrDefault();
+            SegmentType local = m_dataContext.Table<SegmentType>().QueryRecordWhere("ID = {0}", id);
+            SegmentType remote = (SegmentType)WebAPIHub.GetRecordsWhere(address, "SegmentType", $"Name = '{local.Name}'").FirstOrDefault();
 
             if (remote == null)
             {
@@ -1136,16 +1136,16 @@ namespace openXDA.DataPusher
                     Name = local.Name,
                     Description = local.Description
                 };
-                return WebAPIHub.CreateRecord("remote", "SegmentType", JObject.FromObject(record));
+                return WebAPIHub.CreateRecord(address, "SegmentType", JObject.FromObject(record));
 
             }
             return remote.ID;
         }
 
-        private void GetFaultSummary(int localEventId, int remoteEventId)
+        private void GetFaultSummary(string address, int localEventId, int remoteEventId)
         {
-            List<FaultSummary> local = WebAPIHub.GetRecordsWhere("local", "FaultSummary", $"EventID = {localEventId}").Select(x => (FaultSummary)x).ToList();
-            List<FaultSummary> remote = WebAPIHub.GetRecordsWhere("remote", "FaultSummary", $"EventID = {remoteEventId}").Select(x => (FaultSummary)x).ToList();
+            IEnumerable<FaultSummary> local = m_dataContext.Table<FaultSummary>().QueryRecordsWhere("EventID = {0}", localEventId);
+            List<FaultSummary> remote = WebAPIHub.GetRecordsWhere(address, "FaultSummary", $"EventID = {remoteEventId}").Select(x => (FaultSummary)x).ToList();
 
             // if there is a local record but not a remote record
             foreach (FaultSummary localRecord in local)
@@ -1171,15 +1171,15 @@ namespace openXDA.DataPusher
                         IsValid = localRecord.IsValid,
                         IsSuppressed = localRecord.IsSuppressed
                     };
-                    int id = WebAPIHub.CreateRecord("remote", "FaultSummary", JObject.FromObject(record));
+                    int id = WebAPIHub.CreateRecord(address, "FaultSummary", JObject.FromObject(record));
                 }
             }
         }
 
-        private void GetICFResult(int localEventId, int remoteEventId)
+        private void GetICFResult(string address, int localEventId, int remoteEventId)
         {
-            ICFResult local = (ICFResult)WebAPIHub.GetRecordsWhere("local", "ICFResult", $"EventID = {localEventId}").FirstOrDefault();
-            ICFResult remote = (ICFResult)WebAPIHub.GetRecordsWhere("remote", "ICFResult", $"EventID = {remoteEventId}").FirstOrDefault();
+            ICFResult local = m_dataContext.Table<ICFResult>().QueryRecordWhere("EventID = {0}", localEventId);
+            ICFResult remote = (ICFResult)WebAPIHub.GetRecordsWhere(address, "ICFResult", $"EventID = {remoteEventId}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (remote == null && local != null)
@@ -1193,16 +1193,16 @@ namespace openXDA.DataPusher
                     Phase = local.Phase,
                     EventCount = local.EventCount
                 };
-                int id = WebAPIHub.CreateRecord("remote", "ICFResult", JObject.FromObject(record));
+                int id = WebAPIHub.CreateRecord(address, "ICFResult", JObject.FromObject(record));
 
             }
 
         }
 
-        private void GetICFEvent(int localEventId, int remoteEventId)
+        private void GetICFEvent(string address, int localEventId, int remoteEventId)
         {
-            ICFEvent local = (ICFEvent)WebAPIHub.GetRecordsWhere("local", "ICFEvent", $"ICFResultID = {localEventId}").FirstOrDefault();
-            ICFEvent remote = (ICFEvent)WebAPIHub.GetRecordsWhere("remote", "ICFEvent", $"ICFResultID = {remoteEventId}").FirstOrDefault();
+            ICFEvent local = m_dataContext.Table<ICFEvent>().QueryRecordWhere("ICFResultID = {0}", localEventId);
+            ICFEvent remote = (ICFEvent)WebAPIHub.GetRecordsWhere(address, "ICFEvent", $"ICFResultID = {remoteEventId}").FirstOrDefault();
 
             // if there is a local record but not a remote record
             if (remote == null && local != null)
@@ -1215,7 +1215,7 @@ namespace openXDA.DataPusher
                     DurationCycles = local.DurationCycles,
                     PeakFaultCurrent = local.PeakFaultCurrent
                 };
-                int id = WebAPIHub.CreateRecord("remote", "ICFEvent", JObject.FromObject(record));
+                int id = WebAPIHub.CreateRecord(address, "ICFEvent", JObject.FromObject(record));
 
             }
 
