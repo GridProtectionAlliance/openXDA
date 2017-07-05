@@ -60,6 +60,7 @@ using Setting = openXDA.Model.Setting;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
+using openXDA.DataPusher;
 
 namespace openXDA.Hubs
 {
@@ -5262,6 +5263,13 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MetersToDataPush), RecordOperation.UpdateRecord)]
         public void UpdateMetersToDataPush(MetersToDataPush record)
         {
+            MetersToDataPush oldrecord = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", record.ID);
+
+            if (record.Obsfucate && !oldrecord.Obsfucate)
+                record.RemoteXDAAssetKey = Guid.NewGuid().ToString();
+            else if(!record.Obsfucate && oldrecord.Obsfucate)
+                record.RemoteXDAAssetKey = record.LocalXDAAssetKey;
+
             DataContext.Table<MetersToDataPush>().UpdateRecord(record);
         }
 
@@ -5275,7 +5283,13 @@ namespace openXDA.Hubs
                 .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
         }
 
-
+        [AuthorizeHubRole("Administrator")]
+        public void SyncMeterForInstance(int instanceId, int meterId)
+        {
+            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+            DataPusherEngine engine = new DataPusherEngine();
+            engine.SyncMeterConfigurationForInstance(instanceId, meterId);
+        }
         #endregion
 
         #region [ RemoteXDAInstance Table Operations ]
@@ -5321,6 +5335,15 @@ namespace openXDA.Hubs
         {
             DataContext.Table<RemoteXDAInstance>().UpdateRecord(record);
         }
+
+        [AuthorizeHubRole("Administrator")]
+        public void SyncInstance(int instanceId)
+        {
+            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+            DataPusherEngine engine = new DataPusherEngine();
+            engine.SyncInstance(instanceId);
+        }
+
         #endregion
 
         #endregion
@@ -5413,194 +5436,6 @@ namespace openXDA.Hubs
         }
 
         #endregion
-
-        #region [ RESTful API Handlers ]
-
-        public dynamic GetRecordHub(string instance, string tableName, int id)
-        {
-            return GetRecord(instance, tableName, id);
-        }
-
-        public static dynamic GetRecord(string instance, string tableName, int id)
-        {
-            dynamic record = new object();
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecord/" + tableName + "/" + id).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    record = response.Content.ReadAsAsync<dynamic>();
-                }
-            }
-            return record.Result.ToObject(typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName));
-        }
-
-        public dynamic GetRecordsHub(string instance, string tableName, string ids)
-        {
-            return GetRecords(instance, tableName, ids);
-        }
-
-        public static IEnumerable<dynamic> GetRecords(string instance, string tableName, string ids)
-        {
-            dynamic record = new object();
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecords/" + tableName + "/" + ids).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    record = response.Content.ReadAsAsync<dynamic>();
-                }
-            }
-
-            Type type = typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName);
-            Type listType = typeof(IEnumerable<>).MakeGenericType(type);
-            return record.Result.ToObject(listType);
-        }
-
-        public dynamic GetRecordsWhereHub(string instance, string tableName, string ids)
-        {
-            return GetRecordsWhere(instance, tableName, ids);
-        }
-
-        public static IEnumerable<dynamic> GetRecordsWhere(string instance, string tableName, string ids)
-        {
-            dynamic record = new object();
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordsWhere/" + tableName + "/" + ids).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    record = response.Content.ReadAsAsync<dynamic>();
-                }
-            }
-
-            Type type = typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName);
-            Type listType = typeof(IEnumerable<>).MakeGenericType(type);
-            return record.Result.ToObject(listType);
-        }
-
-
-
-        public dynamic GetChannelsHub(string instance, string ids)
-        {
-            return GetChannels(instance, ids);
-        }
-
-        public static IEnumerable<ChannelDetail> GetChannels(string instance, string ids)
-        {
-            dynamic record = new object();
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetChannels/channel/" + ids).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    record = response.Content.ReadAsAsync<dynamic>();
-                }
-            }
-
-            return record.Result.ToObject(typeof(IEnumerable<ChannelDetail>));
-        }
-
-
-        public HttpResponseMessage UpdateRecordHub(string instance, string tableName, JObject record)
-        {
-            return UpdateRecord(instance, tableName, record);
-        }
-
-        public static HttpResponseMessage UpdateRecord(string instance, string tableName, JObject record)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/UpdateRecord/" + tableName, record).Result;
-                return response;
-            }
-
-        }
-
-        public int CreateRecordHub(string instance, string tableName, JObject record)
-        {
-            return CreateRecord(instance, tableName, record);
-        }
-
-        public static int CreateRecord(string instance, string tableName, JObject record)
-        {
-            dynamic r = new object();
-
-            using (HttpClient client = new HttpClient())
-            {
-
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateRecord/" + tableName, record).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    r = response.Content.ReadAsAsync<dynamic>();
-                }
-
-                return (int)r.Result;
-            }
-        }
-
-        public int CreateChannelHub(string instance, JObject record)
-        {
-            return CreateChannel(instance, record);
-        }
-
-        public static int CreateChannel(string instance, JObject record)
-        {
-            dynamic r = new object();
-
-            using (HttpClient client = new HttpClient())
-            {
-
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateChannel", record).Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    r = response.Content.ReadAsAsync<dynamic>();
-                }
-
-                return (int)r.Result;
-            }
-        }
-
-        public HttpResponseMessage DeleteRecordHub(string instance, string tableName, int id)
-        {
-            return DeleteRecord(instance, tableName, id);
-        }
-
-        public static HttpResponseMessage DeleteRecord(string instance, string tableName, int id)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = new Uri((instance == "remote" ? RemoteXDAInstance : LocalXDAInstance));
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                HttpResponseMessage response = client.DeleteAsync("api/PQMark/DeleteRecord/" + tableName + "/" + id).Result;
-                return response;
-            }
-        }
-
-        #endregion
-
 
         #region [ Misc ]
 

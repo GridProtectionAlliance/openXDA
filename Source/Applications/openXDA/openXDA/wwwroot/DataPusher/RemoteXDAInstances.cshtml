@@ -62,7 +62,7 @@
     <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: Address"></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: Frequency"></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/DataPusher/MetersToDataPush.cshtml?XDAInstance=' + ID }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/DataPusher/MetersToDataPush.cshtml?XDAInstance=' + ID + '&Name=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" title="Manually sync to remote device using set meters" data-bind="click: sync.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -177,7 +177,7 @@
         }
 
         function sync(record) {
-
+            dataHub.syncInstance(record.ID);
         }
     </script>
 }

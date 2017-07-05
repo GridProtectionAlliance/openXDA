@@ -46,6 +46,10 @@
     {
         ViewBag.XDAInstance = parameters["XDAInstance"];
     }
+    if (parameters.ContainsKey("Name"))
+    {
+        ViewBag.Name = parameters["Name"];
+    }
 
     Layout = "DataPusher/Layout.cshtml";
 
@@ -54,10 +58,10 @@
     {   //    { "Field", "Label", "Classes" }
         new[] { "LocalXDAAssetKey", "Local Name", "text-Left" },
         new[] { "RemoteXDAName", "Remote Name", "text-left"},
-        new[] { "RemoteXDAAssetKey", "Remote Guid", "text-left"},
+        new[] { "RemoteXDAAssetKey", "Remote Asset Key", "text-left"},
     };
     ViewBag.ShowSearchFilter = true;
-    ViewBag.Title = "Selected Meters For Data Pushing";
+    ViewBag.Title = "Selected Meters For Sync With " + ViewBag.Name;
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 
@@ -68,6 +72,7 @@
     <td width="30%" class="text-left valign-middle" data-bind="text: RemoteXDAName"></td>
     <td width="30%" class="text-left valign-middle" data-bind="text: RemoteXDAAssetKey"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" title="Manually sync to remote device using set meters" data-bind="click: sync.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
@@ -85,7 +90,7 @@
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAAssetKey", fieldLabel: "Remote Asset Key", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAMeterID", fieldLabel: "Local Meter ID", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAMeterID", fieldLabel: "Remote Meter ID", customDataBinding: "enable: false"))
-    @Raw(dataContext.AddCheckBoxField<MetersToDataPush>("Obsfucate", fieldLabel: "Obsfucate meter information?"))
+    @Raw(dataContext.AddCheckBoxField<MetersToDataPush>("Obsfucate", customDataBinding: "click: handleObsfucateClick($element, $data)",fieldLabel: "Obsfucate meter information?"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
@@ -104,6 +109,10 @@
                             var id = Number(item.data("id"));
                             viewModel.currentRecord().LocalXDAMeterID(id);
                             viewModel.currentRecord().LocalXDAAssetKey(item.data("label"));
+                            if($('#checkObsfucate').prop('checked'))
+                                viewModel.currentRecord().RemoteXDAAssetKey("00000000-0000-0000-0000-000000000000");
+                            else
+                                viewModel.currentRecord().RemoteXDAAssetKey(item.data("label"));
                             viewModel.currentRecord().RemoteXDAMeterID(0);
                             viewModel.currentRecord().RemoteXDAName("Site" + id);
 
@@ -116,6 +125,21 @@
         $(viewModel).on('newRecord', function (event, newRecord) {
             newRecord.RemoteXDAInstanceId = @ViewBag.XDAInstance;
         });
+
+        function sync(record) {
+            dataHub.syncMeterForInstance(@ViewBag.XDAInstance, record.ID);
+        }
+
+        function handleObsfucateClick(control, record){
+            if($(control).prop('checked'))
+                viewModel.currentRecord().RemoteXDAAssetKey("00000000-0000-0000-0000-000000000000");
+            else{
+                if(viewModel.recordMode() == RecordMode.AddNew)
+                    viewModel.currentRecord().RemoteXDAAssetKey($('#inputMeterSelection').val());
+                else
+                    viewModel.currentRecord().RemoteXDAAssetKey($('#inputLocalXDAAssetKey').val());
+            }
+        }
 
     </script>
 }
