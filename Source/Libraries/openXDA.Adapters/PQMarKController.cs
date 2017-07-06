@@ -276,7 +276,7 @@ namespace openXDA.Adapters
         public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
         {
             Dictionary<int, int> dictionary = new Dictionary<int, int>();
-            dictionary.Add(record["key"].Value<int>(), record["value"].Value<int>());
+            dictionary.Add(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
             OnReprocessFiles(dictionary);
 
             return Ok();

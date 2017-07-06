@@ -235,7 +235,7 @@ namespace openXDA.DataPusher
                 }
 
                 IEnumerable<DataFile> localDataFiles = m_dataContext.Table<DataFile>().QueryRecordsWhere("FileGroupID = {0}", fileGroupLocalToRemote.LocalFileGroupID);
-                IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere(instance.Address, "DataFile", $"FileGroupID IN = {fileGroupLocalToRemote.RemoteFileGroupID}").Select(x => (DataFile)x);
+                IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere(instance.Address, "DataFile", $"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}").Select(x => (DataFile)x);
 
                 bool process = false;
                 foreach (DataFile localDataFile in localDataFiles)
@@ -259,7 +259,7 @@ namespace openXDA.DataPusher
                     else
                         remoteDataFileId = remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).First().ID;
 
-                    FileBlob remoteFileBlob = (FileBlob)WebAPIHub.GetRecords(instance.Address, "FileBlob", $"DataFileID = {remoteDataFileId}");
+                    FileBlob remoteFileBlob = (FileBlob)WebAPIHub.GetRecordsWhere(instance.Address, "FileBlob", $"DataFileID = {remoteDataFileId}").FirstOrDefault();
 
                     if (remoteFileBlob == null)
                     {
@@ -282,8 +282,9 @@ namespace openXDA.DataPusher
 
                     if (process)
                     {
-                        Dictionary<int, int> dictionary = new Dictionary<int, int>();
-                        dictionary.Add(fileGroupLocalToRemote.RemoteFileGroupID, meterId);
+                        Dictionary<string, int> dictionary = new Dictionary<string, int>();
+                        dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
+                        dictionary.Add("MeterID", meterId);
                         WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary));
 
                     }
