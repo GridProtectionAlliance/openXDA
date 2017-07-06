@@ -5341,7 +5341,7 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstance(instanceId);
+            engine.SyncInstanceConfiguration(instanceId);
         }
 
         #endregion

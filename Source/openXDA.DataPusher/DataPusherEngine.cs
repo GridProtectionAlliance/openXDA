@@ -143,8 +143,10 @@ namespace openXDA.DataPusher
             //}
         }
 
-        public void SyncInstance(int instanceId) {
-
+        public void SyncInstanceConfiguration(int instanceId) {
+            IEnumerable<int> meters = m_dataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId).Select(x => x.ID);
+            foreach (int meter in meters)
+                SyncMeterConfigurationForInstance(instanceId, meter);
         }
 
         public void SyncMeterConfigurationForInstance(int instanceId, int meterId) {
