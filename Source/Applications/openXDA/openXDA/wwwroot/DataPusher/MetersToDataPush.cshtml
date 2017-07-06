@@ -59,6 +59,7 @@
         new[] { "LocalXDAAssetKey", "Local Name", "text-Left" },
         new[] { "RemoteXDAName", "Remote Name", "text-left"},
         new[] { "RemoteXDAAssetKey", "Remote Asset Key", "text-left"},
+        new[] {null, "Export", "text-center"}
     };
     ViewBag.ShowSearchFilter = true;
     ViewBag.Title = "Selected Meters For Sync With " + ViewBag.Name;
@@ -68,11 +69,14 @@
 }
 @helper BodyRows()
 {
-    <td width="35%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LocalXDAAssetKey, click: $parent.viewPageRecord"></button></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: RemoteXDAName"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: RemoteXDAAssetKey"></td>
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LocalXDAAssetKey, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: RemoteXDAName"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: RemoteXDAAssetKey"></td>
+    <td width="10%" class="text-center valign-middle">
+        <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncConfiguration.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Config Data</button>
+        <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncFiles.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Files</button>
+    </td>
     <td width="5%" class="text-center valign-middle" nowrap>
-        <button type="button" class="btn btn-xs" title="Manually sync to remote device using set meters" data-bind="click: sync.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
@@ -126,9 +130,14 @@
             newRecord.RemoteXDAInstanceId = @ViewBag.XDAInstance;
         });
 
-        function sync(record) {
-            dataHub.syncMeterForInstance(@ViewBag.XDAInstance, record.ID);
+        function syncConfiguration(record) {
+            dataHub.syncMeterConfigurationForInstance(@ViewBag.XDAInstance, record.ID);
         }
+
+        function syncFiles(record) {
+            @*dataHub.syncMeterConfigurationForInstance(@ViewBag.XDAInstance, record.ID);*@
+        }
+
 
         function handleObsfucateClick(control, record){
             if($(control).prop('checked'))

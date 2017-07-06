@@ -102,6 +102,7 @@ using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
 using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
 using Setting = openXDA.Model.Setting;
+using openXDA.DataPusher;
 using System.Web.Mvc;
 
 namespace openXDA
@@ -130,6 +131,7 @@ namespace openXDA
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
         private bool m_disposed;
+        private DataPusherEngine dataPusherEngine;
 
 
 
@@ -255,6 +257,11 @@ namespace openXDA
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataHub.ReprocessFileEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2, Args.Argument3);
             DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+
+            //Set up DataPusherEngine callbacks
+            DataPusherEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataPusherEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataPusherEngine.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
 
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>

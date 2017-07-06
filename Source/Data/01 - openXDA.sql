@@ -2021,6 +2021,15 @@ ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(MetersToDat
 REFERENCES [dbo].MetersToDataPush ([ID])
 GO
 
+CREATE TABLE FileGroupLocalToRemote(
+	ID INT IDENTITY(1,1) Primary key not null,
+	LocalFileGroupID INT not null,
+	RemoteFileGroupID INT not null
+)
+
+ALTER TABLE [dbo].FileGroupLocalToRemote  WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
+REFERENCES [dbo].FileGroup ([ID])
+GO
 
 
 -- ------------ --

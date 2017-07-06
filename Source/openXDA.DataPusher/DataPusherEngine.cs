@@ -30,6 +30,7 @@ using GSF.Web.Model;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using GSF;
+using System.IO;
 
 namespace openXDA.DataPusher
 {
@@ -40,7 +41,7 @@ namespace openXDA.DataPusher
         // Fields
         private string m_dbConnectionString;
         private DataContext m_dataContext;
-        private bool m_dispoded;
+        private bool m_disposed;
 
         #endregion
 
@@ -66,12 +67,28 @@ namespace openXDA.DataPusher
         {
             LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
         }
+
+        public static event EventHandler<EventArgs<string>> LogExceptionMessageEvent;
+
+        private static void OnLogExceptionMessage(string message)
+        {
+            LogExceptionMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
+        }
+
+        public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
+
+        private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
+        {
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
+        }
+
+
         #endregion
 
         #region [ Methods ]
         public void Dispose()
         {
-            if (!m_dispoded)
+            if (!m_disposed)
             {
                 try
                 {
@@ -186,6 +203,91 @@ namespace openXDA.DataPusher
                 // Sync Channel and channel dependant data
                 SyncChannel(instance.Address, meterToDataPush, selectedLine);
 
+            }
+        }
+
+        public void SyncMeterFilesForInstance(int instanceId, int meterId, DateTime? startTime = null, DateTime? endTime = null)
+        {
+            RemoteXDAInstance instance = m_dataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
+            MetersToDataPush meterToDataPush = m_dataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
+            IEnumerable<FileGroup> localFileGroups = m_dataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
+            foreach (FileGroup fileGroup in localFileGroups)
+            {
+                FileGroupLocalToRemote fileGroupLocalToRemote = m_dataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroup.ID);
+
+                if (fileGroupLocalToRemote == null)
+                {
+                    FileGroup fg = new FileGroup()
+                    {
+                        ProcessingEndTime = fileGroup.ProcessingEndTime,
+                        ProcessingStartTime = fileGroup.ProcessingStartTime,
+                        DataEndTime = fileGroup.DataEndTime,
+                        DataStartTime = fileGroup.DataStartTime,
+                        Error = fileGroup.Error
+                    };
+                    int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, "FileGroup", JObject.FromObject(fg));
+                    fileGroupLocalToRemote = new FileGroupLocalToRemote()
+                    {
+                        LocalFileGroupID = fileGroup.ID,
+                        RemoteFileGroupID = remoteFileGroupId
+                    };
+                    m_dataContext.Table<FileGroupLocalToRemote>().AddNewRecord(fileGroupLocalToRemote);
+                }
+
+                IEnumerable<DataFile> localDataFiles = m_dataContext.Table<DataFile>().QueryRecordsWhere("FileGroupID = {0}", fileGroupLocalToRemote.LocalFileGroupID);
+                IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere(instance.Address, "DataFile", $"FileGroupID IN = {fileGroupLocalToRemote.RemoteFileGroupID}").Select(x => (DataFile)x);
+
+                bool process = false;
+                foreach (DataFile localDataFile in localDataFiles)
+                {
+                    int remoteDataFileId;
+                    if (!remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).Any())
+                    {
+                        DataFile df = new DataFile()
+                        {
+                            CreationTime = localDataFile.CreationTime,
+                            FileGroupID = fileGroupLocalToRemote.RemoteFileGroupID,
+                            FilePath = localDataFile.FilePath,
+                            FilePathHash = localDataFile.FilePathHash,
+                            FileSize = localDataFile.FileSize,
+                            LastAccessTime = localDataFile.LastAccessTime,
+                            LastWriteTime = localDataFile.LastWriteTime
+                        };
+                        remoteDataFileId = WebAPIHub.CreateRecord(instance.Address, "DataFile", JObject.FromObject(df));
+                        process = true;
+                    }
+                    else
+                        remoteDataFileId = remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).First().ID;
+
+                    FileBlob remoteFileBlob = (FileBlob)WebAPIHub.GetRecords(instance.Address, "FileBlob", $"DataFileID = {remoteDataFileId}");
+
+                    if (remoteFileBlob == null)
+                    {
+                        FileBlob localFileBlob = m_dataContext.Table<FileBlob>().QueryRecordWhere("DataFileID = {0}", localDataFile.ID);
+
+                        try
+                        {
+                            if (localFileBlob == null)
+                            {
+                                localFileBlob = new FileBlob() { DataFileID = localDataFile.ID, Blob = File.ReadAllBytes(localDataFile.FilePath) };
+                                m_dataContext.Table<FileBlob>().AddNewRecord(localFileBlob);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            OnLogExceptionMessage(ex.ToString());
+                            process = false;
+                        }
+                    }
+
+                    if (process)
+                    {
+                        Dictionary<int, int> dictionary = new Dictionary<int, int>();
+                        dictionary.Add(fileGroupLocalToRemote.RemoteFileGroupID, meterId);
+                        WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary));
+
+                    }
+                }
             }
         }
 

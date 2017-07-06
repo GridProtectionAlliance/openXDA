@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF;
+using GSF.Configuration;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
@@ -44,13 +45,20 @@ namespace openXDA.DataPusher
             LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
         }
 
+        public static event EventHandler<EventArgs<string>> LogExceptionMessageEvent;
+
+        private static void OnLogExceptionMessage(string message)
+        {
+            LogExceptionMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
+        }
+
         public static string CompanyName
         {
             get
             {
                 using (DataContext dataContext = new DataContext("systemSettings"))
                 {
-                    return dataContext.Table<Setting>().QueryRecordWhere("Name = 'CompanyName'").Value;
+                    return dataContext.Table<Setting>().QueryRecordWhere("Name = 'CompanyName'")?.Value ?? "Synced Remote Devices";
                 }
             }
         }
@@ -225,6 +233,26 @@ namespace openXDA.DataPusher
                 return (int)r.Result;
             }
         }
+
+
+        public HttpResponseMessage ProcessFileGroupHub(string instance, JObject record)
+        {
+            return ProcessFileGroup(instance, record);
+        }
+
+        public static HttpResponseMessage ProcessFileGroup(string instance, JObject record)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/ProcessFileGroup", record).Result;
+                return response;
+            }
+        }
+
 
         public HttpResponseMessage DeleteRecordHub(string instance, string tableName, int id)
         {

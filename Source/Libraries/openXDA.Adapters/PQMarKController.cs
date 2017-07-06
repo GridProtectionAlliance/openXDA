@@ -22,19 +22,13 @@
 //******************************************************************************************************
 
 using GSF.Web.Model;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using GSF.Web;
 using openXDA.Model;
 using Newtonsoft.Json.Linq;
 using System.Web.Http;
+using GSF;
 
 namespace openXDA.Adapters
 {
@@ -43,6 +37,16 @@ namespace openXDA.Adapters
     /// </summary>
     public class PQMarkController : ApiController
     {
+        #region [ Static Event Handlers ]
+        public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
+
+        private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
+        {
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
+        }
+
+        #endregion
+
         #region [ GET Operations ]
 
         /// <summary>
@@ -266,6 +270,16 @@ namespace openXDA.Adapters
             }
 
             return Ok(channelId);
+        }
+
+        [HttpPost]
+        public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
+        {
+            Dictionary<int, int> dictionary = new Dictionary<int, int>();
+            dictionary.Add(record["key"].Value<int>(), record["value"].Value<int>());
+            OnReprocessFiles(dictionary);
+
+            return Ok();
         }
 
         #endregion

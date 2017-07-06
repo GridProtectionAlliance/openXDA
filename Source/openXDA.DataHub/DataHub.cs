@@ -5284,12 +5284,21 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        public void SyncMeterForInstance(int instanceId, int meterId)
+        public void SyncMeterConfigurationForInstance(int instanceId, int meterId)
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
             engine.SyncMeterConfigurationForInstance(instanceId, meterId);
         }
+
+        [AuthorizeHubRole("Administrator")]
+        public void SyncMeterFilesForInstance(int instanceId, int meterId)
+        {
+            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+            DataPusherEngine engine = new DataPusherEngine();
+            engine.SyncMeterFilesForInstance(instanceId, meterId);
+        }
+
         #endregion
 
         #region [ RemoteXDAInstance Table Operations ]

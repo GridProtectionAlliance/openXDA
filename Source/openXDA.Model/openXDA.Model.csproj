@@ -80,6 +80,7 @@
     <Compile Include="FaultSegment.cs" />
     <Compile Include="FaultView.cs" />
     <Compile Include="FileBlob.cs" />
+    <Compile Include="FileGroupLocalToRemote.cs" />
     <Compile Include="GlobalSettings.cs" />
     <Compile Include="HourlyTrendingSummary.cs" />
     <Compile Include="HourOfWeekLimit.cs" />
