@@ -103,6 +103,7 @@ using MeterLocation = openXDA.Model.MeterLocation;
 using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
 using Setting = openXDA.Model.Setting;
 using openXDA.DataPusher;
+using openXDA.Adapters;
 using System.Web.Mvc;
 
 namespace openXDA
@@ -262,6 +263,9 @@ namespace openXDA
             DataPusherEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataPusherEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataPusherEngine.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+
+            //Set up PQMarkController callbacks
+            PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
 
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>

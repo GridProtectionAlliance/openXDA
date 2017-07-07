@@ -278,6 +278,9 @@ namespace openXDA.DataPusher
                             OnLogExceptionMessage(ex.ToString());
                             process = false;
                         }
+                        localFileBlob.DataFileID = remoteDataFileId;
+                        WebAPIHub.CreateRecord(instance.Address, "FileBlob", JObject.FromObject(new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }));
+
                     }
 
                     if (process)
