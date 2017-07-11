@@ -41,6 +41,7 @@ namespace openXDA.Model
 
         public string RemoteXDAAssetKey { get; set; }
         public bool Obsfucate { get; set; }
+        public bool Synced { get; set; }
 
         [Required]
         [NonRecordField]

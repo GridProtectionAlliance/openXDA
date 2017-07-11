@@ -82,6 +82,13 @@ namespace openXDA.DataPusher
             ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
         }
 
+        public static event EventHandler<EventArgs<string, int>> UpdateProgressForMeter;
+
+        private static void OnUpdateProgressForMeter(string client, int update)
+        {
+            UpdateProgressForMeter?.Invoke(new object(), new EventArgs<string, int>(client, update));
+        }
+
 
         #endregion
 
@@ -166,21 +173,30 @@ namespace openXDA.DataPusher
                 SyncMeterConfigurationForInstance(instanceId, meter);
         }
 
+        public void SyncInstanceFiles(int instanceId)
+        {
+            IEnumerable<int> meters = m_dataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId).Select(x => x.ID);
+            foreach (int meter in meters)
+                SyncMeterFilesForInstance(instanceId, meter);
+        }
+
         public void SyncMeterConfigurationForInstance(int instanceId, int meterId) {
 
             RemoteXDAInstance instance = m_dataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
             MetersToDataPush meterToDataPush = m_dataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
             Meter localMeterRecord = m_dataContext.Table<Meter>().QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
-
+            // get MeterLine table 
+            IEnumerable<MeterLine> localMeterLines = m_dataContext.Table<MeterLine>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
+            int progressTotal = localMeterLines.Count() + 2;
+            int progressCount = 0;
             int remoteMeterLocationId = SyncMeterLocations(instance.Address, meterToDataPush, localMeterRecord);
             int meterGroupId = AddMeterGroup(instance.Address);
 
             // if meter doesnt exist remotely add it
             AddMeter(instance.Address, meterToDataPush, localMeterRecord, remoteMeterLocationId);
+            OnUpdateProgressForMeter(null, (int)(100*(++progressCount)/progressTotal));
             AddMeterMeterGroup(instance.Address, meterGroupId, meterToDataPush.RemoteXDAMeterID);
-
-            // get MeterLine table 
-            IEnumerable<MeterLine> localMeterLines = m_dataContext.Table<MeterLine>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
+            OnUpdateProgressForMeter(null, (int)(100 * (++progressCount) / progressTotal));
 
             // if there is a line for the meter ensure that its data has been uploaded remotely
             foreach (MeterLine meterLine in localMeterLines)
@@ -203,6 +219,7 @@ namespace openXDA.DataPusher
                 // Sync Channel and channel dependant data
                 SyncChannel(instance.Address, meterToDataPush, selectedLine);
 
+                OnUpdateProgressForMeter(null, (int)(100 * (++progressCount) / progressTotal));
             }
         }
 
@@ -287,7 +304,7 @@ namespace openXDA.DataPusher
                     {
                         Dictionary<string, int> dictionary = new Dictionary<string, int>();
                         dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
-                        dictionary.Add("MeterID", meterId);
+                        dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
                         WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary));
 
                     }

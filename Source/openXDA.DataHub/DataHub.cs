@@ -61,6 +61,7 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using openXDA.DataPusher;
+using Microsoft.AspNet.SignalR;
 
 namespace openXDA.Hubs
 {
@@ -124,6 +125,15 @@ namespace openXDA.Hubs
             }
         }
 
+        public static void ProgressUpdatedByMeter(object sender, EventArgs<string, int> e)
+        {
+            string clientID = e.Argument1;
+
+            if ((object)clientID != null)
+                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.Client(clientID).updateProgressBarForMeter(e.Argument2);
+            else
+                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForMeter(e.Argument2);
+        }
 
         #endregion
 
@@ -5236,7 +5246,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MetersToDataPush), RecordOperation.DeleteRecord)]
         public void DeleteMetersToDataPush(int id)
         {
-            DataContext.Table<MetersToDataPush>().DeleteRecord(id);
+            CascadeDelete("MetersToDataPush", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -5254,6 +5264,8 @@ namespace openXDA.Hubs
                 record.RemoteXDAAssetKey = Guid.NewGuid().ToString();
             else
                 record.RemoteXDAAssetKey = record.LocalXDAAssetKey;
+            record.Synced = false;
+
             DataContext.Table<MetersToDataPush>().AddNewRecord(record);
             int meterId = DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             DataContext.Table<RemoteXDAInstanceMeter>().AddNewRecord(new RemoteXDAInstanceMeter(){ RemoteXDAInstanceID = record.RemoteXDAInstanceId, MetersToDataPushID = meterId});
@@ -5280,7 +5292,12 @@ namespace openXDA.Hubs
             RecordRestriction restriction = new RecordRestriction("Name LIKE {0}", $"%{searchText}%");
 
             return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
-                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.AssetKey));
+        }
+
+        public Meter GetMeterRecord(int id)
+        {
+            return DataContext.Table<Meter>().QueryRecordWhere("ID = {0}",id);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -5294,9 +5311,18 @@ namespace openXDA.Hubs
         [AuthorizeHubRole("Administrator")]
         public void SyncMeterFilesForInstance(int instanceId, int meterId)
         {
-            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-            DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncMeterFilesForInstance(instanceId, meterId);
+
+            try
+            {
+                // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                DataPusherEngine engine = new DataPusherEngine();
+                engine.SyncMeterFilesForInstance(instanceId, meterId);
+                DataContext.Connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterId);
+            }
+            finally
+            {
+
+            }
         }
 
         #endregion
@@ -5346,12 +5372,22 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        public void SyncInstance(int instanceId)
+        public void SyncInstanceConfiguration(int instanceId)
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
             engine.SyncInstanceConfiguration(instanceId);
         }
+
+        [AuthorizeHubRole("Administrator")]
+        public void SyncFilesForInstance(int instanceId)
+        {
+            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+            DataPusherEngine engine = new DataPusherEngine();
+            engine.SyncInstanceFiles(instanceId);
+        }
+
+
 
         #endregion
 

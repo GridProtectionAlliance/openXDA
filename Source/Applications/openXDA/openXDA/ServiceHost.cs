@@ -263,6 +263,7 @@ namespace openXDA
             DataPusherEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataPusherEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataPusherEngine.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+            DataPusherEngine.UpdateProgressForMeter += (obj, Args) => DataHub.ProgressUpdatedByMeter(obj, Args);
 
             //Set up PQMarkController callbacks
             PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);

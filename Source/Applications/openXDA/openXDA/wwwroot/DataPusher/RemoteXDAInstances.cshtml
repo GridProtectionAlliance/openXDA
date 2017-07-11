@@ -49,7 +49,9 @@
         new[] { "Name", "Name", "text-Left" },
         new[] { "Address", "Remote Address", "text-left"},
         new[] { "Freqency", "Freqency", "text-left"},
+        new[] {null, "Export", "text-center"},
         new[] { null, "", ""}
+
     };
     ViewBag.ShowSearchFilter = true;
     ViewBag.Title = "Selected Meters For Data Pushing";
@@ -59,12 +61,15 @@
 }
 @helper BodyRows()
 {
-    <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: Address"></td>
-    <td width="30%" class="text-left valign-middle" data-bind="text: Frequency"></td>
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Address"></td>
+    <td width="20%" class="text-left valign-middle" data-bind="text: Frequency"></td>
+    <td width="30%" class="text-center valign-middle">
+        <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncConfiguration.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Config Data</button>
+        <button type="button" class="btn btn-primary" title="Manually sync to remote device using set meters" data-bind="click: syncFiles.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Files</button>
+    </td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/DataPusher/MetersToDataPush.cshtml?XDAInstance=' + ID + '&Name=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
-        <button type="button" class="btn btn-xs" title="Manually sync to remote device using set meters" data-bind="click: sync.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
@@ -179,5 +184,14 @@
         function sync(record) {
             dataHub.syncInstance(record.ID);
         }
+
+        function syncConfiguration(record) {
+            dataHub.syncInstanceConfiguration(record.ID);
+        }
+
+        function syncFiles(record) {
+            dataHub.syncFilesForInstance(record.ID);
+        }
+
     </script>
 }
