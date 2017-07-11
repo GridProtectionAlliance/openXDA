@@ -125,14 +125,24 @@ namespace openXDA.Hubs
             }
         }
 
-        public static void ProgressUpdatedByMeter(object sender, EventArgs<string, int> e)
+        public static void ProgressUpdatedByMeter(object sender, EventArgs<string, string, int> e)
         {
             string clientID = e.Argument1;
 
             if ((object)clientID != null)
-                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.Client(clientID).updateProgressBarForMeter(e.Argument2);
+                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.Client(clientID).updateProgressBarForMeter(e.Argument2, e.Argument3);
             else
-                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForMeter(e.Argument2);
+                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForMeter(e.Argument2, e.Argument3);
+        }
+
+        public static void ProgressUpdatedByInstance(object sender, EventArgs<string, string, int> e)
+        {
+            string clientID = e.Argument1;
+
+            if ((object)clientID != null)
+                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.Client(clientID).updateProgressBarForInstance(e.Argument2, e.Argument3);
+            else
+                GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForInstance(e.Argument2, e.Argument3);
         }
 
         #endregion
@@ -5303,21 +5313,30 @@ namespace openXDA.Hubs
         [AuthorizeHubRole("Administrator")]
         public void SyncMeterConfigurationForInstance(int instanceId, int meterId)
         {
-            // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
-            DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncMeterConfigurationForInstance(instanceId, meterId);
+            string clientId = Context.ConnectionId;
+            try
+            {
+                // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
+                DataPusherEngine engine = new DataPusherEngine();
+                engine.SyncMeterConfigurationForInstance(clientId, instanceId, meterId);
+                DataContext.Connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID ={0}", meterId);
+            }
+            finally
+            {
+
+            }
         }
 
         [AuthorizeHubRole("Administrator")]
         public void SyncMeterFilesForInstance(int instanceId, int meterId)
         {
+            string clientId = Context.ConnectionId;
 
             try
             {
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
-                engine.SyncMeterFilesForInstance(instanceId, meterId);
-                DataContext.Connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID = {0}", meterId);
+                engine.SyncMeterFilesForInstance(clientId, instanceId, meterId);
             }
             finally
             {
@@ -5376,7 +5395,7 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstanceConfiguration(instanceId);
+            engine.SyncInstanceConfiguration(Context.ConnectionId, instanceId);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -5384,7 +5403,7 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstanceFiles(instanceId);
+            engine.SyncInstanceFiles(Context.ConnectionId, instanceId);
         }
 
 

@@ -82,11 +82,18 @@ namespace openXDA.DataPusher
             ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
         }
 
-        public static event EventHandler<EventArgs<string, int>> UpdateProgressForMeter;
+        public static event EventHandler<EventArgs<string, string,int>> UpdateProgressForMeter;
 
-        private static void OnUpdateProgressForMeter(string client, int update)
+        private static void OnUpdateProgressForMeter(string client, string meter, int update)
         {
-            UpdateProgressForMeter?.Invoke(new object(), new EventArgs<string, int>(client, update));
+            UpdateProgressForMeter?.Invoke(new object(), new EventArgs<string, string, int>(client, meter, update));
+        }
+
+        public static event EventHandler<EventArgs<string, string, int>> UpdateProgressForInstance;
+
+        private static void OnUpdateProgressForInstance(string client, string instance, int update)
+        {
+            UpdateProgressForInstance?.Invoke(new object(), new EventArgs<string, string, int>(client, instance, update));
         }
 
 
@@ -167,20 +174,35 @@ namespace openXDA.DataPusher
             //}
         }
 
-        public void SyncInstanceConfiguration(int instanceId) {
+        public void SyncInstanceConfiguration(string clientId, int instanceId) {
             IEnumerable<int> meters = m_dataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId).Select(x => x.ID);
+            string instance = m_dataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId).Name;
+            int progressTotal = meters.Count();
+            int progressCount = 0;
+            OnUpdateProgressForInstance(clientId, instance, (int)(100 * (progressCount) / progressTotal));
             foreach (int meter in meters)
-                SyncMeterConfigurationForInstance(instanceId, meter);
+            {
+                SyncMeterConfigurationForInstance(null, instanceId, meter);
+                OnUpdateProgressForInstance(clientId, instance, (int)(100 * (++progressCount) / progressTotal));
+
+            }
         }
 
-        public void SyncInstanceFiles(int instanceId)
+        public void SyncInstanceFiles(string clientId, int instanceId)
         {
             IEnumerable<int> meters = m_dataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId).Select(x => x.ID);
+            int progressTotal = meters.Count();
+            int progressCount = 0;
+            string instance = m_dataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId).Name;
+            OnUpdateProgressForInstance(clientId, instance, (int)(100 * (progressCount) / progressTotal));
             foreach (int meter in meters)
-                SyncMeterFilesForInstance(instanceId, meter);
+            {
+                SyncMeterFilesForInstance(clientId, instanceId, meter);
+                OnUpdateProgressForInstance(clientId, instance, (int)(100 * (++progressCount) / progressTotal));
+            }
         }
 
-        public void SyncMeterConfigurationForInstance(int instanceId, int meterId) {
+        public void SyncMeterConfigurationForInstance(string clientId, int instanceId, int meterId) {
 
             RemoteXDAInstance instance = m_dataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
             MetersToDataPush meterToDataPush = m_dataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
@@ -191,12 +213,13 @@ namespace openXDA.DataPusher
             int progressCount = 0;
             int remoteMeterLocationId = SyncMeterLocations(instance.Address, meterToDataPush, localMeterRecord);
             int meterGroupId = AddMeterGroup(instance.Address);
+            OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
 
             // if meter doesnt exist remotely add it
             AddMeter(instance.Address, meterToDataPush, localMeterRecord, remoteMeterLocationId);
-            OnUpdateProgressForMeter(null, (int)(100*(++progressCount)/progressTotal));
+            OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey,(int)(100*(++progressCount)/progressTotal));
             AddMeterMeterGroup(instance.Address, meterGroupId, meterToDataPush.RemoteXDAMeterID);
-            OnUpdateProgressForMeter(null, (int)(100 * (++progressCount) / progressTotal));
+            OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
             // if there is a line for the meter ensure that its data has been uploaded remotely
             foreach (MeterLine meterLine in localMeterLines)
@@ -219,15 +242,19 @@ namespace openXDA.DataPusher
                 // Sync Channel and channel dependant data
                 SyncChannel(instance.Address, meterToDataPush, selectedLine);
 
-                OnUpdateProgressForMeter(null, (int)(100 * (++progressCount) / progressTotal));
+                OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
             }
         }
 
-        public void SyncMeterFilesForInstance(int instanceId, int meterId, DateTime? startTime = null, DateTime? endTime = null)
+        public void SyncMeterFilesForInstance(string clientId, int instanceId, int meterId, DateTime? startTime = null, DateTime? endTime = null)
         {
             RemoteXDAInstance instance = m_dataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
             MetersToDataPush meterToDataPush = m_dataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
             IEnumerable<FileGroup> localFileGroups = m_dataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
+            int progressTotal = (localFileGroups.Count() > 0 ? localFileGroups.Count() : 1 );
+            int progressCount = 0;
+            OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
+
             foreach (FileGroup fileGroup in localFileGroups)
             {
                 FileGroupLocalToRemote fileGroupLocalToRemote = m_dataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroup.ID);
@@ -308,7 +335,10 @@ namespace openXDA.DataPusher
                         WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary));
 
                     }
+
                 }
+                OnUpdateProgressForMeter(clientId,meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
+
             }
         }
 

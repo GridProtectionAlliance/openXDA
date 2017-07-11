@@ -133,8 +133,10 @@
             });
             $('#notify').puinotify({position: 'bottom'});
 
-            dataHubClient.updateProgressBarForMeter = function(update){
-                $('#notify').puinotify('update', '<div class="progress">' +
+            dataHubClient.updateProgressBarForMeter = function(meterName, update){
+                $('#notify').puinotify('update', 
+                                    '<h4>' + meterName + '</h4>' +
+                                    '<div class="progress">' +
                                         '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
                                                 ' aria-valuenow="'+update +'" aria-valuemin="0" aria-valuemax="100" style="width:'+update+'%">'+update+'%</div>' +
                                     '</div>');
@@ -155,12 +157,20 @@
                                             '</div>');
 
             dataHub.syncMeterConfigurationForInstance(@ViewBag.XDAInstance, record.ID)
-                .done(function(){ $('#notify').puinotify('hide');})
+                .done(function(){ $('#notify').puinotify('hide'); viewModel.queryPageRecords();})
                 .fail(function(msg){ $('#notify').puinotify('update','<span>Sync Failed - : '+ msg.message+'</span>')});
         }
 
         function syncFiles(record) {
-            dataHub.syncMeterFilesForInstance(@ViewBag.XDAInstance, record.ID);
+            $('#notify').puinotify('show', '<div class="progress">' +
+                                    '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
+                                            ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">0%</div>' +
+                                '</div>');
+
+            dataHub.syncMeterFilesForInstance(@ViewBag.XDAInstance, record.ID)                
+                .done(function(){ $('#notify').puinotify('hide'); viewModel.queryPageRecords();})
+                .fail(function(msg){ $('#notify').puinotify('update','<span>Sync Failed - : '+ msg.message+'</span>')});
+            ;
         }
 
 

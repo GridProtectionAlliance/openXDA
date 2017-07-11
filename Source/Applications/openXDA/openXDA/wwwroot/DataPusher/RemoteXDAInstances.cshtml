@@ -36,6 +36,9 @@
         html, body {
             height: 100%;
         }
+        .ui-notify{
+            height: auto;
+        }
     </style>
 }
 @{
@@ -148,6 +151,12 @@
         </div>
     </div>
 </div>
+<div id="notify">
+    <h4 id="meterName"></h4>
+    <div id="meterProgress" class="progress"></div>
+    <h4 id="instanceName"></h4>
+    <div id="instanceProgress" class="progress"></div>
+</div>
 
 @section Scripts
 {
@@ -156,10 +165,24 @@
         @Raw(dataContext.RenderViewModelConfiguration<RemoteXDAInstance, DataHub>(ViewBag))
         var localMeters;
         $(function () {
+            $('#notify').puinotify({position: 'bottom'});
             $('#addNewEditDialog').on('shown.bs.modal', function () {
                 if (viewModel.dataHubIsConnected()) {
                 }
             });
+
+            dataHubClient.updateProgressBarForInstance = function (instanceName, update) {
+                $('#instanceName').text(instanceName);
+                $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+
+            }
+
+            dataHubClient.updateProgressBarForMeter = function (meterName, update) {
+                $('#meterName').text(meterName);
+                $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+            }
+
+
         });
 
         @*$(viewModel).on('newRecord', function (event, newRecord) {
@@ -186,11 +209,18 @@
         }
 
         function syncConfiguration(record) {
-            dataHub.syncInstanceConfiguration(record.ID);
+            $('#notify').puinotify('show');
+            dataHub.syncInstanceConfiguration(record.ID)
+                .done(function () { $('#notify').puinotify('hide'); viewModel.queryPageRecords(); })
+                .fail(function (msg) { $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>') });
+
         }
 
         function syncFiles(record) {
-            dataHub.syncFilesForInstance(record.ID);
+            $('#notify').puinotify('show');
+            dataHub.syncFilesForInstance(record.ID)
+                .done(function () { $('#notify').puinotify('hide'); viewModel.queryPageRecords(); })
+                .fail(function (msg) { $('#notify').puinotify('update', '<span>Sync Failed - : ' + msg.message + '</span>') });
         }
 
     </script>
