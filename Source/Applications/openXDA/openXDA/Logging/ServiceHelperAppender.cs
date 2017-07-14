@@ -105,6 +105,18 @@ namespace openXDA.Logging
             if (string.IsNullOrEmpty(renderedMessage))
                 renderedMessage = loggingEvent.GetExceptionString();
 
+            // Do not log FileSkippedExceptions
+            // to the error log or the status log
+            if (ex is FileSkippedException)
+            {
+                if (meterKey == null)
+                    m_serviceHelper.UpdateStatus(updateType, false, "[{0}] {1}{2}", threadID, renderedMessage, Environment.NewLine);
+                else
+                    m_serviceHelper.UpdateStatus(updateType, false, "[{0}] {{{1}}} {2}{3}", threadID, meterKey, renderedMessage, Environment.NewLine);
+
+                return;
+            }
+
             // If the event was an exception event,
             // also log to the service helper's error log
             if ((object)ex != null)

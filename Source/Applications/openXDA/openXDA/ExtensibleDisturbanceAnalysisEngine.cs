@@ -102,6 +102,38 @@ using Setting = FaultData.Database.Setting;
 namespace openXDA
 {
     /// <summary>
+    /// Exception thrown when a file is skipped by the file processing engine.
+    /// </summary>
+    public class FileSkippedException : Exception
+    {
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileSkippedException"/> class.
+        /// </summary>
+        public FileSkippedException()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileSkippedException"/> class.
+        /// </summary>
+        /// <param name="message">The error message that explains the reason for the exception.</param>
+        public FileSkippedException(string message)
+            : base(message)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileSkippedException"/> class.
+        /// </summary>
+        /// <param name="message">The error message that explains the reason for the exception.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        public FileSkippedException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+    }
+
+    /// <summary>
     /// Represents an engine that processes power quality data
     /// to determine the locations of faults along power lines.
     /// </summary>
@@ -253,23 +285,6 @@ namespace openXDA
             }
 
             #endregion
-        }
-
-        private class FileSkippedException : Exception
-        {
-            public FileSkippedException()
-            {
-            }
-
-            public FileSkippedException(string message)
-                : base(message)
-            {
-            }
-
-            public FileSkippedException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-            }
         }
 
         // Constants
