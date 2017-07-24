@@ -36,6 +36,7 @@ using GSF.Configuration;
 using log4net;
 using openHistorian.XDALink;
 using static FaultData.Database.AlarmData;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -46,7 +47,7 @@ namespace FaultData.DataOperations
         // Fields
         private HistorianSettings m_historianSettings;
         private DbAdapterContainer m_dbAdapterContainer;
-
+        private DataContext m_dataContext;
         #endregion
 
         #region [ Constructors ]
@@ -81,6 +82,12 @@ namespace FaultData.DataOperations
         {
             m_dbAdapterContainer = dbAdapterContainer;
         }
+
+        public override void Prepare(DataContext dataContext)
+        {
+            m_dataContext = dataContext;
+        }
+
 
         public override void Execute(MeterDataSet meterDataSet)
         {

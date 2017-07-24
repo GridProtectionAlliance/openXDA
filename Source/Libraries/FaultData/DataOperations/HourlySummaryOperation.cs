@@ -30,6 +30,7 @@ using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using log4net;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -51,6 +52,10 @@ namespace FaultData.DataOperations
             m_dbAdapterContainer = dbAdapterContainer;
             m_hourlySummaryTable = new MeterData.HourlyTrendingSummaryDataTable();
             m_channelNormalTable = new MeterData.ChannelNormalDataTable();
+        }
+
+        public override void Prepare(DataContext dataContext)
+        {
         }
 
         public override void Execute(MeterDataSet meterDataSet)

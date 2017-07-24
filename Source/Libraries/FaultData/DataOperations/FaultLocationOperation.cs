@@ -34,6 +34,7 @@ using FaultData.DataSets;
 using GSF.Collections;
 using log4net;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -375,6 +376,11 @@ namespace FaultData.DataOperations
 
             m_dbAdapterContainer = dbAdapterContainer;
         }
+
+        public override void Prepare(DataContext dataContext)
+        {
+        }
+
 
         public override void Execute(MeterDataSet meterDataSet)
         {

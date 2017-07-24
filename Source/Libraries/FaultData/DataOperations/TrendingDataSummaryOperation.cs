@@ -31,6 +31,7 @@ using FaultData.DataSets;
 using GSF.Configuration;
 using log4net;
 using openHistorian.XDALink;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -72,6 +73,11 @@ namespace FaultData.DataOperations
         #region [ Methods ]
 
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
+        {
+            // Not doing anything with database
+        }
+
+        public override void Prepare(DataContext dataContext)
         {
             // Not doing anything with database
         }

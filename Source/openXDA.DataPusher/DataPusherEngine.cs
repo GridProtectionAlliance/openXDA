@@ -326,17 +326,17 @@ namespace openXDA.DataPusher
                         WebAPIHub.CreateRecord(instance.Address, "FileBlob", JObject.FromObject(new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }));
 
                     }
+                }
 
-                    if (process)
-                    {
-                        Dictionary<string, int> dictionary = new Dictionary<string, int>();
-                        dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
-                        dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
-                        WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary));
-
-                    }
+                if (process)
+                {
+                    Dictionary<string, int> dictionary = new Dictionary<string, int>();
+                    dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
+                    dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
+                    WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary));
 
                 }
+
                 OnUpdateProgressForMeter(clientId,meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
 
             }

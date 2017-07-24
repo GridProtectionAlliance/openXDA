@@ -28,6 +28,7 @@ using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using static FaultData.Database.MeterData;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -46,6 +47,10 @@ namespace FaultData.DataOperations
         public override void Prepare(DbAdapterContainer dbAdapterContainer)
         {
             m_dbAdapterContainer = dbAdapterContainer;
+        }
+
+        public override void Prepare(DataContext dataContext)
+        {
         }
 
         public override void Execute(MeterDataSet meterDataSet)

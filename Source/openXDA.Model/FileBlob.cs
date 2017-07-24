@@ -23,7 +23,7 @@ namespace openXDA.Model
         [Searchable]
         public string FilePath { get; set; }
         public int FilePathHash { get; set; }
-        public int FileSize { get; set; }
+        public long FileSize { get; set; }
         public DateTime CreationTime { get; set; }
         public DateTime LastWriteTime { get; set; }
         public DateTime LastAccessTime { get; set; }

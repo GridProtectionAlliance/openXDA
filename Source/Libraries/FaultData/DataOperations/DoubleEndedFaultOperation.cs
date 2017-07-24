@@ -37,6 +37,7 @@ using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
 using static FaultData.Database.FaultLocationData;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -257,6 +258,11 @@ namespace FaultData.DataOperations
         {
             m_dbAdapterContainer = dbAdapterContainer;
         }
+
+        public override void Prepare(DataContext dataContext)
+        {
+        }
+
 
         public override void Execute(MeterDataSet meterDataSet)
         {

@@ -30,6 +30,7 @@ using FaultData.DataAnalysis;
 using FaultData.Database;
 using FaultData.DataSets;
 using log4net;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -121,6 +122,10 @@ namespace FaultData.DataOperations
         {
             m_meterInfo = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
             m_faultLocationInfo = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
+        }
+
+        public override void Prepare(DataContext dataContext)
+        {
         }
 
         public override void Execute(MeterDataSet meterDataSet)

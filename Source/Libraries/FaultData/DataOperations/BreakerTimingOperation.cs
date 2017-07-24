@@ -39,6 +39,7 @@ using GSF.Data;
 using log4net;
 using static FaultData.Database.MeterData;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
+using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -413,6 +414,10 @@ namespace FaultData.DataOperations
             m_breakerOperations = new List<Tuple<EventKey, BreakerOperationRow>>();
 
             LoadBreakerOperationTypes(dbAdapterContainer);
+        }
+
+        public override void Prepare(DataContext dataContext)
+        {
         }
 
         public override void Execute(MeterDataSet meterDataSet)

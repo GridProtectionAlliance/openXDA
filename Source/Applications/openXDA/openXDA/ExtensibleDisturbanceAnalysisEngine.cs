@@ -207,6 +207,41 @@ namespace openXDA
                 return fileGroup;
             }
 
+            public openXDA.Model.FileGroup GetFileGroup(DataContext dataContext, TimeZoneInfo xdaTimeZone)
+            {
+                FileInfo fileInfo;
+                Model.FileGroup fileGroup = new Model.FileGroup()
+                {
+                    ProcessingStartTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone),
+                    ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone),
+                    DataEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone),
+                    DataStartTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, xdaTimeZone),
+                    Error = 0
+                };
+
+                dataContext.Table<Model.FileGroup>().AddNewRecord(fileGroup);
+                fileGroup.ID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
+                foreach (string file in GSF.IO.FilePath.GetFileList($"{m_filePathWithoutExtension}.*"))
+                {
+                    fileInfo = new FileInfo(file);
+
+                    Model.DataFile dataFile = new Model.DataFile()
+                    {
+                        FilePath = file,
+                        FilePathHash = file.GetHashCode(),
+                        FileSize = fileInfo.Length,
+                        CreationTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.CreationTimeUtc, xdaTimeZone),
+                        LastWriteTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastWriteTimeUtc, xdaTimeZone),
+                        LastAccessTime = TimeZoneInfo.ConvertTimeFromUtc(fileInfo.LastAccessTimeUtc, xdaTimeZone),
+                        FileGroupID = fileGroup.ID
+                    };
+                    dataContext.Table<Model.DataFile>().AddNewRecord(dataFile);
+                }
+
+                return fileGroup;
+            }
+
             /// <summary>
             /// Gets the maximum creation time of the files with the same root name as the wrapped file.
             /// </summary>
@@ -1214,13 +1249,13 @@ namespace openXDA
 
                             // Shift date/time values to the configured time zone and set the start and end time values on the file group
                             ShiftTime(meterDataSet, meterDataSet.Meter.GetTimeZoneInfo(systemSettings.DefaultMeterTimeZoneInfo), systemSettings.XDATimeZoneInfo);
-                            SetDataTimeRange(meterDataSet, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+                            SetDataTimeRange(meterDataSet.DataSeries, meterDataSet.Digitals, fileGroup.ID,dataContext);
 
                             // Determine whether the file duration is within a user-defined maximum tolerance
-                            ValidateFileDuration(meterDataSet.FilePath, systemSettings.MaxFileDuration, meterDataSet.FileGroup);
+                            ValidateFileDuration(meterDataSet.FilePath, systemSettings.MaxFileDuration, meterDataSet.FileGroup.DataStartTime, meterDataSet.FileGroup.DataEndTime);
 
                             // Determine whether the timestamps in the file extend beyond user-defined thresholds
-                            ValidateFileTimestamps(meterDataSet.FilePath, meterDataSet.FileGroup, systemSettings, dbAdapterContainer.GetAdapter<FileInfoDataContext>());
+                            ValidateFileTimestamps(meterDataSet.FilePath, meterDataSet.FileGroup.DataStartTime, meterDataSet.FileGroup.DataEndTime, systemSettings);
 
                             // Process the meter data set
                             OnStatusMessage($"Processing meter data from file \"{filePath}\"...");
@@ -1412,12 +1447,128 @@ namespace openXDA
                 
         }
         
+        private void ParseFileWithoutLinq(string connectionString, SystemSettings systemSettings, string filePath, string meterKey, DataReaderWrapper dataReaderWrapper, FileWrapper fileWrapper)
+        {
+            MeterDataSet meterDataSet;
+            Model.FileGroup fileGroup = null;
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
 
-        private void LoadFileBlob(List<FaultData.Database.DataFile> dataFiles)
+                try
+                {
+                    fileGroup = fileWrapper.GetFileGroup(dataContext, systemSettings.XDATimeZoneInfo);
+                    IEnumerable<Model.DataFile> dataFiles = dataContext.Table<Model.DataFile>().QueryRecordsWhere("FileGroupID = {0}", fileGroup.ID);
+                    LoadFileBlob(dataFiles);
+
+                    // Parse the file to turn it into a meter data set
+                    OnStatusMessage($"Parsing data from file \"{filePath}\"...");
+                    dataReaderWrapper.DataObject.Parse(filePath);
+                    OnStatusMessage($"Finished parsing data from file \"{filePath}\".");
+                    meterDataSet = dataReaderWrapper.DataObject.MeterDataSet;
+
+                    // If the data reader does not return a data set,
+                    // there is nothing left to do
+                    if ((object)meterDataSet == null)
+                        return;
+
+                    // Data reader has finally outlived its usefulness
+                    dataReaderWrapper.Dispose();
+
+                    Model.Meter meter = dataContext.Table<Model.Meter>().QueryRecordWhere("AssetKey = {0}", meterKey);
+                    ConfigurationDataSet configuration = meterDataSet.Configuration;
+                    IEnumerable<DataSeries> dataSeries = meterDataSet.DataSeries;
+                    IEnumerable<DataSeries> digitals = meterDataSet.Digitals;
+
+                    // Shift date/time values to the configured time zone and set the start and end time values on the file group
+                    ShiftTime(dataSeries, digitals, meterDataSet.Meter.GetTimeZoneInfo(systemSettings.DefaultMeterTimeZoneInfo), systemSettings.XDATimeZoneInfo);
+                    SetDataTimeRange(dataSeries, digitals, fileGroup.ID, dataContext);
+
+                    // Determine whether the file duration is within a user-defined maximum tolerance
+                    ValidateFileDuration(meterDataSet.FilePath, systemSettings.MaxFileDuration, fileGroup.DataStartTime, fileGroup.DataEndTime);
+
+                    // Determine whether the timestamps in the file extend beyond user-defined thresholds
+                    ValidateFileTimestamps(meterDataSet.FilePath, fileGroup.DataStartTime,fileGroup.DataEndTime, systemSettings);
+
+                    // Process the meter data set
+                    OnStatusMessage($"Processing meter data from file \"{filePath}\"...");
+                    using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(systemSettings.DbConnectionString, systemSettings.DbTimeout))
+                    {
+
+                        ProcessMeterDataSet(meterDataSet, dbAdapterContainer);
+                    }
+                    OnStatusMessage($"Finished processing data from file \"{filePath}\".");
+
+                }
+                catch (Exception ex)
+                {
+                    // There seems to be a problem here where the outer exception's call stack
+                    // was overwritten by the call stack of the point where it was thrown
+                    ExceptionDispatchInfo exInfo = ExceptionDispatchInfo.Capture(ex);
+
+                    try
+                    {
+                        // Attempt to set the error flag on the file group
+                        if ((object)fileGroup != null)
+                            fileGroup.Error = 1;
+                    }
+                    catch (Exception fileGroupError)
+                    {
+                        // Log any exceptions that occur when attempting to set the error flag on the file group
+                        string message = $"Exception occurred setting error flag on file group: {fileGroupError.Message}";
+                        OnProcessException(new Exception(message, fileGroupError));
+                    }
+
+                    // Throw the original exception
+                    exInfo.Throw();
+
+                }
+                finally
+                {
+                    if ((object)fileGroup != null)
+                    {
+                        try
+                        {
+                            // Attempt to set the processing end time of the file group
+                            fileGroup.ProcessingEndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemSettings.XDATimeZoneInfo);
+                            dataContext.Table<Model.FileGroup>().UpdateRecord(fileGroup);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log any exceptions that occur when attempting to set processing end time on the file group
+                            string message = $"Exception occurred setting processing end time on file group: {ex.Message}";
+                            OnProcessException(new Exception(message, ex));
+                        }
+                    }
+
+                    // Keep track of the meters and files currently being processed
+                    if ((object)meterKey != null)
+                        m_activeFiles.TryRemove(meterKey, out filePath);
+
+                    ThreadContext.Properties.Remove("Meter");
+
+                }
+            }
+
+        }
+
+
+        private void LoadFileBlob(IEnumerable<FaultData.Database.DataFile> dataFiles)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 foreach (FaultData.Database.DataFile dataFile in dataFiles)
+                {
+                    FileBlob file = new FileBlob() { DataFileID = dataFile.ID, Blob = File.ReadAllBytes(dataFile.FilePath) };
+                    dataContext.Table<FileBlob>().AddNewRecord(file);
+                }
+            }
+        }
+
+        private void LoadFileBlob(IEnumerable<Model.DataFile> dataFiles)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                foreach (Model.DataFile dataFile in dataFiles)
                 {
                     FileBlob file = new FileBlob() { DataFileID = dataFile.ID, Blob = File.ReadAllBytes(dataFile.FilePath) };
                     dataContext.Table<FileBlob>().AddNewRecord(file);
@@ -1529,6 +1680,107 @@ namespace openXDA
 
                     // Write the results to the data writer's destination by calling the WriteResults method
                     dataWriter.DataObject.WriteResults(dbAdapterContainer, meterDataSet);
+
+                    Log.Debug($"Finished writing results with data writer '{dataWriter.DataObject.GetType().Name}'.");
+                }
+                catch (Exception ex)
+                {
+                    // Log the error and move on to the next data writer
+                    string message = $"An error occurred while writing data from meter '{meterDataSet.Meter.AssetKey}' using data writer of type '{dataWriter.DataObject.GetType().FullName}': {ex.Message}";
+                    OnProcessException(new Exception(message, ex));
+                }
+            }
+
+            // All data writers are complete, but we still need to clean up
+            foreach (DataWriterWrapper dataWriter in dataWriters)
+                dataWriter.Dispose();
+        }
+
+        // Instantiates and executes data operations and data writers to process the meter data set.
+        private void ProcessMeterDataSet(MeterDataSet meterDataSet, DataContext dataContext)
+        {
+            List<DataOperationWrapper> dataOperations = dataContext.Table<Model.DataOperation>().QueryRecords(orderByExpression: "LoadOrder DESC").Select(x => Wrap(x)).Where(x => (object)x != null).ToList();
+            List<DataWriterWrapper> dataWriters = dataContext.Table<Model.DataWriter>().QueryRecords(orderByExpression: "LoadOrder DESC").Select(x => Wrap(x)).Where(x => (object)x != null).ToList(); ;
+
+            for (int i = dataOperations.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    Log.Debug($"Preparing data operation '{dataOperations[i].DataObject.GetType().Name}' for execution...");
+
+                    // Load configuration parameters from the connection string into the data operation
+                    ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataOperations[i].DataObject);
+
+                    // Call the prepare method to allow the data operation to prepare any data it needs from the database
+                    //dataOperations[i].DataObject.Prepare(dbAdapterContainer);
+
+                    Log.Debug($"Finished preparing data operation '{dataOperations[i].DataObject.GetType().Name}' for execution.");
+                }
+                catch (Exception ex)
+                {
+                    // Log the error and remove the data operation from the list
+                    string message = $"An error occurred while preparing data from meter '{meterDataSet.Meter.AssetKey}' for data operation of type '{dataOperations[i].DataObject.GetType().FullName}': {ex.Message}";
+                    OnProcessException(new Exception(message, ex));
+                    dataOperations[i].Dispose();
+                    dataOperations.RemoveAt(i);
+                }
+            }
+
+            for (int i = dataOperations.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    Log.Debug($"Executing data operation '{dataOperations[i].DataObject.GetType().Name}'...");
+
+                    // Call the execute method on the data operation to perform in-memory data transformations
+                    //dataOperations[i].DataObject.Execute(meterDataSet);
+
+                    Log.Debug($"Finished execurting data operation '{dataOperations[i].DataObject.GetType().Name}'.");
+                }
+                catch (Exception ex)
+                {
+                    // Log the error and skip to the next data operation
+                    string message = $"An error occurred while executing data operation of type '{dataOperations[i].DataObject.GetType().FullName}' on data from meter '{meterDataSet.Meter.AssetKey}': {ex.Message}";
+                    OnProcessException(new Exception(message, ex));
+                    continue;
+                }
+
+                try
+                {
+                    Log.Debug($"Loading data from data operation '{dataOperations[i].DataObject.GetType().Name}' into database...");
+
+                    // Call the load method inside a transaction to load data into from the data operation into the database
+                    using (TransactionScope transaction = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+                    {
+                        //dataOperations[i].DataObject.Load(dbAdapterContainer);
+                        transaction.Complete();
+                    }
+
+                    Log.Debug($"Finished loading data from data operation '{dataOperations[i].DataObject.GetType().Name}' into database.");
+                }
+                catch (Exception ex)
+                {
+                    // Log the error and move on to the next data operation
+                    string message = $"An error occurred while loading data from data operation of type '{dataOperations[i].DataObject.GetType().FullName}' for data from meter '{meterDataSet.Meter.AssetKey}': {ex.Message}";
+                    OnProcessException(new Exception(message, ex));
+                }
+            }
+
+            // All data operations are complete, but we still need to clean up
+            for (int i = dataOperations.Count - 1; i >= 0; i--)
+                dataOperations[i].Dispose();
+
+            foreach (DataWriterWrapper dataWriter in dataWriters)
+            {
+                try
+                {
+                    Log.Debug($"Writing results to external location with data writer '{dataWriter.DataObject.GetType().Name}'...");
+
+                    // Load configuration parameters from the connection string into the data writer
+                    ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataWriter.DataObject);
+
+                    // Write the results to the data writer's destination by calling the WriteResults method
+                    //dataWriter.DataObject.WriteResults(dbAdapterContainer, meterDataSet);
 
                     Log.Debug($"Finished writing results with data writer '{dataWriter.DataObject.GetType().Name}'.");
                 }
@@ -1753,6 +2005,68 @@ namespace openXDA
             fileInfo.SubmitChanges();
         }
 
+        // Adjusts the timestamps in the given data sets to the time zone of XDA.
+        private static void ShiftTime(IEnumerable<DataSeries> dataSerieses, IEnumerable<DataSeries> digitals, TimeZoneInfo meterTimeZone, TimeZoneInfo xdaTimeZone)
+        {
+            foreach (DataSeries dataSeries in dataSerieses)
+            {
+                foreach (DataPoint dataPoint in dataSeries.DataPoints)
+                {
+                    if (dataPoint.Time.Kind != DateTimeKind.Unspecified)
+                        dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time);
+                    else
+                        dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time, meterTimeZone);
+
+                    dataPoint.Time = TimeZoneInfo.ConvertTimeFromUtc(dataPoint.Time, xdaTimeZone);
+                }
+            }
+
+            foreach (DataSeries dataSeries in digitals)
+            {
+                foreach (DataPoint dataPoint in dataSeries.DataPoints)
+                {
+                    if (dataPoint.Time.Kind != DateTimeKind.Unspecified)
+                        dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time);
+                    else
+                        dataPoint.Time = TimeZoneInfo.ConvertTimeToUtc(dataPoint.Time, meterTimeZone);
+
+                    dataPoint.Time = TimeZoneInfo.ConvertTimeFromUtc(dataPoint.Time, xdaTimeZone);
+                }
+            }
+        }
+
+        // Determines the start time and end time of the given data and sets the properties on the given file group.
+        private static void SetDataTimeRange(IEnumerable<DataSeries> dataSerieses, IEnumerable<DataSeries> digitals, int fileGroupId, DataContext dataContext)
+        {
+            DateTime dataStartTime;
+            DateTime dataEndTime;
+
+            Model.FileGroup fileGroup = dataContext.Table<Model.FileGroup>().QueryRecordWhere("ID = {0}", fileGroupId);
+            dataStartTime = dataSerieses
+                .Concat(digitals)
+                .Where(dataSeries => dataSeries.DataPoints.Any())
+                .Select(dataSeries => dataSeries.DataPoints.First().Time)
+                .DefaultIfEmpty()
+                .Min();
+
+            dataEndTime = dataSerieses
+                .Concat(digitals)
+                .Where(dataSeries => dataSeries.DataPoints.Any())
+                .Select(dataSeries => dataSeries.DataPoints.Last().Time)
+                .DefaultIfEmpty()
+                .Max();
+
+            if (dataStartTime != default(DateTime))
+                fileGroup.DataStartTime = dataStartTime;
+
+            if (dataEndTime != default(DateTime))
+                fileGroup.DataEndTime = dataEndTime;
+
+            dataContext.Table<Model.FileGroup>().UpdateRecord(fileGroup);
+        }
+
+
+
         // Instantiates the given data reader and wraps it in a disposable wrapper object.
         private static DataReaderWrapper Wrap(FaultData.Database.DataReader reader)
         {
@@ -1770,7 +2084,7 @@ namespace openXDA
         }
 
         // Instantiates the given data operation and wraps it in a disposable wrapper object.
-        private static DataOperationWrapper Wrap(DataOperation operation)
+        private static DataOperationWrapper Wrap(FaultData.Database.DataOperation operation)
         {
             try
             {
@@ -1785,8 +2099,25 @@ namespace openXDA
             }
         }
 
+        // Instantiates the given data operation and wraps it in a disposable wrapper object.
+        private static DataOperationWrapper Wrap(Model.DataOperation operation)
+        {
+            try
+            {
+                Assembly assembly = Assembly.LoadFrom(operation.AssemblyName);
+                Type type = assembly.GetType(operation.TypeName);
+                return new DataOperationWrapper(operation.ID, type);
+            }
+            catch (Exception ex)
+            {
+                string message = $"Failed to create data operation of type {operation.TypeName}: {ex.Message}";
+                throw new TypeLoadException(message, ex);
+            }
+        }
+
+
         // Instantiates the given data writer and wraps it in a disposable wrapper object.
-        private static DataWriterWrapper Wrap(DataWriter writer)
+        private static DataWriterWrapper Wrap(FaultData.Database.DataWriter writer)
         {
             try
             {
@@ -1800,6 +2131,23 @@ namespace openXDA
                 throw new TypeLoadException(message, ex);
             }
         }
+
+        // Instantiates the given data writer and wraps it in a disposable wrapper object.
+        private static DataWriterWrapper Wrap(Model.DataWriter writer)
+        {
+            try
+            {
+                Assembly assembly = Assembly.LoadFrom(writer.AssemblyName);
+                Type type = assembly.GetType(writer.TypeName);
+                return new DataWriterWrapper(writer.ID, type);
+            }
+            catch (Exception ex)
+            {
+                string message = $"Failed to create data writer of type {writer.TypeName}: {ex.Message}";
+                throw new TypeLoadException(message, ex);
+            }
+        }
+
 
         // Determines whether the file creation time exceeds a user-defined threshold.
         private static void ValidateFileCreationTime(string filePath, double maxFileCreationTimeOffset)
@@ -1851,6 +2199,24 @@ namespace openXDA
                 throw new FileSkippedException($"Skipped file \"{filePath}\" because duration of the file ({timeDifference:0.##} seconds) is too long.");
         }
 
+        // Determines whether the duration of data in the file exceeds a user-defined threshold.
+        private static void ValidateFileDuration(string filePath, double maxFileDuration, DateTime dataStartTime, DateTime dataEndTime)
+        {
+            double timeDifference;
+
+            // Determine whether file duration validation is disabled
+            if (maxFileDuration <= 0.0D)
+                return;
+
+            // Determine the number of seconds between the start and end time of the data in the file
+            timeDifference = dataEndTime.Subtract(dataStartTime).TotalSeconds;
+
+            // Determine whether the file duration exceeds the maximum threshold
+            if (timeDifference > maxFileDuration)
+                throw new FileSkippedException($"Skipped file \"{filePath}\" because duration of the file ({timeDifference:0.##} seconds) is too long.");
+        }
+
+
         // Determines whether the timestamps in the file extend beyond user-defined thresholds.
         private static void ValidateFileTimestamps(string filePath, FaultData.Database.FileGroup fileGroup, SystemSettings systemSettings, FileInfoDataContext fileInfo)
         {
@@ -1880,6 +2246,38 @@ namespace openXDA
                 // Determine whether the number of hours exceeds the threshold
                 if (timeDifference > systemSettings.MaxTimeOffset)
                     throw new FileSkippedException($"Skipped file \"{filePath}\" because data end time '{fileGroup.DataEndTime}' is too far in the future.");
+            }
+        }
+
+        // Determines whether the timestamps in the file extend beyond user-defined thresholds.
+        private static void ValidateFileTimestamps(string filePath, DateTime dataStartTime, DateTime dataEndTime, SystemSettings systemSettings)
+        {
+            DateTime now;
+            double timeDifference;
+
+            // Get the current time in XDA's time zone
+            now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemSettings.XDATimeZoneInfo);
+
+            // Determine whether past timestamp validation is disabled
+            if (systemSettings.MinTimeOffset > 0.0D)
+            {
+                // Get the total number of hours between the current time and the start time of the data in the file
+                timeDifference = now.Subtract(dataStartTime).TotalHours;
+
+                // Determine whether the number of hours exceeds the threshold
+                if (timeDifference > systemSettings.MinTimeOffset)
+                    throw new FileSkippedException($"Skipped file \"{filePath}\" because data start time '{dataStartTime}' is too old.");
+            }
+
+            // Determine whether future timestamp validation is disabled
+            if (systemSettings.MaxTimeOffset > 0.0D)
+            {
+                // Get the total number of hours between the current time and the end time of the data in the file
+                timeDifference = dataEndTime.Subtract(now).TotalHours;
+
+                // Determine whether the number of hours exceeds the threshold
+                if (timeDifference > systemSettings.MaxTimeOffset)
+                    throw new FileSkippedException($"Skipped file \"{filePath}\" because data end time '{dataEndTime}' is too far in the future.");
             }
         }
 
