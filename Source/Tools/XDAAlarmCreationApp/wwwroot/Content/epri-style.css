@@ -1,0 +1,1116 @@
+html, body {
+    font-family: Helvetica, Arial, sans-serif;
+	font-size: 13px; /* 12px=9pt (EPRI default), 13px=9.75pt (Google, some EPRI sites), 14px=10.5pt */
+	margin: 0px auto 0px auto;
+	/*max-width: 2000px;
+	min-width: 320px;*/
+	padding: 0px;
+}
+p {
+    line-height: 1.4; /* hint: should be unitless */
+}
+img {
+    border: none;
+}
+img.thumbnail {
+   width: 36px;
+   height: 36px;
+}
+a {
+    text-decoration: none;
+}
+.clearfix {
+	overflow: auto; /* TO DO: warning: 'auto' could add scroll bars in undesired places; consider replacing with fixed-height divs to deal with floating child divs. */
+}
+.epriBoxShadow {
+	box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.4);
+	/*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);*/
+}
+
+.epriTextShadow {
+	text-shadow: 2px 2px 2px rgba(0,0,0,0.6);
+}
+
+.epriColorDark, a:link, a:visited {	color: rgb(0,109,182); }
+.epriColorLight { color: rgb(255,255,255); }
+.epriBackgroundColorDark, .epriPanelTitle { background-color: rgb(0,109,182); }
+.epriBackgroundColorLight { background-color: #e6e6e6; /*rgb(240,234,216);*/ }
+.epriBackgroundColorPrimaryGreen { background-color: rgb(76,139,43); } /* EPRI branding primary green */
+
+.external-link {
+    width: 11px;
+    height: 11px;
+}
+
+.epriLineHorizontal { /* shared by both header and footer */
+    clear: both;
+    min-height: 3px;
+}
+
+
+/**** HEADER ****/
+#epriHeaderOuter {
+	clear: both; /* clear both is necessary when floating images */
+}
+#epriLogoImageLeft, #epriLogoImageRight {
+    display: block; /* this hides the mysterious 2-px space below images */
+	height: 40px; /* desired logo height */
+	padding: 16px;
+    width: auto;
+}
+#epriLogoImageLeft {
+	float: left;
+}
+#epriLogoImageRight {
+	float: right;
+}
+#epriHeaderTitleWide {
+	font-size: 22px; /* 21.333px=16pt */
+	font-weight: bold;
+	line-height: 40px; /* match logo height only if titleTag is omitted */
+	margin: auto;
+	padding: 16px 16px 15px 16px; /* bottom padding is 15px by design */
+	text-align: center;
+	width: 480px; /* setting fixed width and margin:auto achieves horizontal centering! */
+}
+#epriHeaderTitleNarrow {
+	clear: both;
+	display: none;
+    font-size: 18px; /* 18.667px=14pt */
+	font-weight: bold;
+	padding: 8px;
+    text-align: center;
+}
+
+
+/*--- NAVIGATION BAR ---*/
+#epriNavOuter {
+	box-shadow: 0px 2px 2px 0px rgba(0,0,0,0.6); /* shadow across bottom of div */
+	clear: both;
+	height: 40px; /* sum of 24px + 8px (nav-left, nav-right: height + padding). Explicit height required due to 'float' of inner divs */
+	position: relative; /* relative: enables use of z-index */
+	z-index: 9999; /* must be greater than z-index of the body/div below it, otherwise box-shadow is hidden */
+}
+.epri-nav-inner {
+	color: #ffffff; /* white text */
+	font-size: 18px;
+	line-height: 24px; /* must be same as nav-left and nav-right heights and be greater than font-size */
+	height: 24px;
+	min-width: 24px;
+	padding: 8px;
+	text-align: center;
+}
+.epri-nav-inner:hover {
+	/*background-color: rgb(0,131,123);*/ /* EPRI branding primary teal */
+	background-color: rgb(255,80,0); /* EPRI branding primary orange */
+}
+.epri-nav-self, .epri-nav-self:hover {
+	background-color: rgb(76,139,43); /* EPRI branding primary green */
+    text-align: center;
+}
+.epri-nav-left {
+	float: left;
+	border-right: 1px solid #e6e6e6;
+}
+.epri-nav-right {
+	float: right;
+}
+.epri-nav-img { /* height + padding must be same as nav-left, heights */
+	height: 20px; 
+	padding: 2px;
+}
+.epri-nav-img-gauge {
+	height: 18px; /* gauge icon is wider than tall, so we reduce its height to look better */
+	padding-top: 4px; /* gauge icon also needs to be nudged download to align better with home icon */
+}
+#epriNavDashboardText { /* adds extra padding on left/right for "Dashboard" nav element */
+	display: inline-block;
+	padding-right: 2px; /* 1px: fine-tuned to have equal spacing from end of word to vertical line */
+	padding-left: 7px; /* 7px: fine-tuned to work with left icon */
+	vertical-align: top;
+}
+#epriNavCustomText {
+	display: inline-block;
+	padding-right: 2px; /* 2px: fine-tuned to have equal spacing from end of word to vertical line */
+	padding-left: 2px; /* 2px: fine tuned, too */
+	vertical-align: top;
+}
+
+
+/*--- BODY ---*/
+#epriBody {
+	min-height: 240px;
+	width: 100%;
+    position: relative;
+}
+#epriBodyTitle {
+	font-size: 22px; /* same font as header title (wide mode) */
+	text-align: center;
+	padding: 16px;
+}
+
+/*--- FOOTER ---*/
+#FooterContainer {
+    padding: 16px 10px 16px 10px;
+    background-color: white
+}
+#FooterLinks, #FooterCopyright {
+    font-size: 12px;
+    text-align: center;
+}
+#FooterCopyright {
+    padding-top: 8px;
+}
+
+
+/*--- VIEW: HOME/INDEX ---*/
+#intro-slider {
+	height: inherit;
+	min-height: inherit;
+}
+.intro-slide {
+	background-color: lightgray;
+	position: relative;
+	background-size: cover;
+    background-position: center center;
+	/*width: 100%;*/
+	/*height: inherit;
+	min-height: inherit;*/
+}
+/*.intro-slide-img {
+	height: inherit;
+	width: auto;
+	/*min-height: 100%;
+	min-width: 100%;*
+}*/
+.intro-description {
+	color: white;
+	padding: 32px;
+	display: inline-block;
+	max-width: 40%; /* see media queries for adjustments */
+}
+.intro-text-heading {
+	font-size: 24px;
+	text-shadow: 1px 1px 1px rgba(0,0,0,0.9);
+	margin-bottom: 16px;
+}
+ul.intro-text-ul {
+	list-style: none; /* remove the default bullet so that text shadow will apply */
+	padding-left: 16px; /* override default ul padding */
+	margin: 0px; /* override default ul margin */
+}
+li.intro-text-li:before {
+    content: "\2022"; /* this is a bullet; text shadow applies! */
+    padding: 8px; /* must have some padding when overriding default bullet */
+}
+li.intro-text-li {
+	line-height: 1.4; /* override default li line height (adds more space) */
+}
+a.intro-text-link {
+	color: white;
+}
+a.intro-text-link:hover {
+	text-decoration: none;
+}
+
+/*--- INTRO 'NEXT SLIDE' BUTTON ---*/
+.intro-next-container {
+	background-color: rgb(0,109,182); /* EPRI Color Dark */
+	display: inline-block; /* prevents div from filling parent's width */
+	padding: 8px 16px 8px 16px; /* extra padding on left & right */
+}
+.intro-next-container:hover {
+	background-color: rgba(0,109,182,0.7); /* EPRI Color Dark *//* EPRI branding red = 196,18,48 */
+	cursor: pointer; /* need to show the hand because slick action is via javascript mouse click event */
+}
+.intro-next-text {
+	color: #ffffff;
+	display: inline-block; /* positions text div inline vertically with image arrow */
+	font-size: 18px;
+	line-height: 24px; /* to vertically align text, line-height must be >= font size*/
+	text-decoration: none; /* prevents underline because of hyperlink */
+}
+.intro-next-img-arrow {
+	float: right; /* pushes image all the way to right */
+	height: 24px;
+	padding-left: 8px; /* spacing between text and image arrow */
+	width: 24px; /* explicit width fixes an issue in IE */
+}
+
+
+.epri-button {
+	background-color: rgb(0,109,182); /* EPRI branding primary blue */
+	color: #ffffff;
+	display: inline-block; /* prevents div from filling parent's width */
+	font-size: 18px;
+	line-height: 24px;
+	padding: 8px 12px 8px 12px; /* extra padding on left */
+	text-align: center;
+	text-decoration: none; /* prevents underline because of hyperlink */
+}
+.epri-button:hover {
+	background-color: rgb(255,80,0); /* EPRI branding primary orange */
+	cursor: pointer;
+}
+.epri-button-img { /* height + padding must be same as button's line-height */
+	height: 20px;
+	padding: 2px 0px 2px 10px; /* extra padding on left assumes img is to right of text */
+	min-width: 20px; /* just in case image is not square, keep consistent width spacing */
+	vertical-align: top;
+}
+.epri-button-img-notext {
+	padding-left: 0px; /* undo extra padding if no text is on the button (just an icon) */
+}
+
+.epri-button-small {
+	background-color: rgb(0,109,182); /* EPRI branding primary blue */
+	color: #ffffff;
+	display: inline-block; /* prevents div from filling parent's width */
+	font-size: 12px;
+	line-height: 16px;
+	padding: 4px 8px 4px 8px; /* extra padding on left */
+	text-align: center;
+	text-decoration: none; /* prevents underline because of hyperlink */
+}
+
+.epri-button-small:hover {
+	background-color: rgb(255,80,0); /* EPRI branding primary orange */
+	cursor: pointer;
+}
+
+/* Clear button to set a clear button over a div */
+.epri-clear-button {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+  	color: #ffffff;
+
+}
+
+/*--- LAUNCH ---*/
+#launch-container {
+	/*background-color: rgba(44,187,15,0.9);*/ /*#2CBB0F EPRI branding green = 76,139,43 */ /* green-ish, alternate: #2CBB0F; */
+	/*background-color: rgba(76,139,43,0.9); /*#2CBB0F EPRI branding green = 76,139,43 */ /* green-ish, alternate: #2CBB0F; */
+	/*background-color: rgba(255,212,0,0.9);*/ /* #ffde65 :: Alliant yellow website color scheme */
+	background-color: rgb(0,109,182);
+	height: 24px; /* explicit height required because all child divs are floating */
+	margin-top: -40px; /* place container on top of intro container along bottom edge */
+	padding: 8px 16px 8px 16px; /* extra padding on left & right */
+	position: relative; /* relative required so that margin-top works properly */
+	/*float: right;
+	margin: -72px 32px 0px 0px;*/
+}
+#launch-container:hover {
+	/*background-color: rgba(196,18,48,0.9);*/ /* EPRI branding red = 196,18,48 */
+	background-color: rgba(0,109,182,0.7); /* EPRI Color Dark */
+}
+#launch-text {
+	color: #ffffff;
+	display: inline-block; /* positions text div inline vertically with image arrow */
+	float: right; /* pushes text all the way to right */
+	font-size: 18px;
+	line-height: 24px; /* to vertically align text, line-height must be exactly same height as separator and arrow image */
+	text-decoration: none; /* prevents underline because of hyperlink */
+}
+#launch-img-arrow {
+	float: right; /* pushes image all the way to right */
+	height: 24px;
+	padding-left: 8px; /* spacing between text and image arrow */
+	width: 24px; /* explicit width fixes an issue in IE */
+}
+
+
+/*--- DASHBOARD PANELS ---*/
+#Dashboard-Outer {
+	/*background-image: url('/Content/Images/intro-01-washed.jpg');*/
+	background-size: cover;
+	background-position: center center;
+}
+#Dashboard-Inner {
+	padding: 8px;
+	margin: 0px auto 0px auto;
+}
+.panel-footer-right{
+    width: 15%;
+    text-align: right;
+    display: inline-block;
+    margin-right: 3px;
+    position: relative;
+}
+.panel-footer-left{
+    width: 80%;
+    text-align:left;
+    display: inline-block;
+    margin-left: 3px;
+    position: relative;
+}
+.panel-outer {
+	/*background-color: red;*/
+	display: inline-block;
+	float: none;
+	margin: 0px auto 0px auto; /* not used unless a specific panel needs to be centered */
+	max-width: 500px;
+	min-width: 320px;
+	vertical-align: top; /* in case panels on same row do not have equal heights, align them at the top */
+	width: 25%;
+}
+.panel-outer-wide {
+	float: left;
+	max-width: 100%;
+	width: 100%;
+}
+/*.panel-outer-center {
+	display: block;
+	overflow: auto;
+}*/
+.panel-inner {
+	background-color: rgba(255,255,255,0.94);
+	border-color: #b3b3b3; /* 30% black */
+	border-style: solid;
+	border-width: 1px;
+	box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.4);
+	margin: 8px;
+}
+.panel-header {
+	background-color: rgb(230,230,230);
+	padding: 8px;
+}
+.panel-header-title {
+	/*color: rgb(102,102,102);*/
+	color: rgb(0,109,182);
+	display: inline-block;
+	font-size: 18px;
+	/*font-weight: bold;*/
+	line-height: 24px; /* fixed line height vertically-centers text */
+}
+.panel-header-icon-img {
+	float: right; /* pushes image all the way to right */
+	height: 20px;
+	padding: 2px 8px 2px 8px; /* top & bottom padding a function of image height and header title line height */
+	width: auto;
+}
+.panel-header-icon-img:hover {
+	background-color: rgba(0,205,235,0.6);
+	box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.4);
+}
+.panel-popup-window {
+    width: 200px;
+    display: none;
+}
+
+.panel-header {
+    box-shadow: 0px 2px 2px 0px rgba(0,0,0,0.3);
+    z-index: 9999;
+}
+
+.panel-header-option {
+    display: inline-block;
+    min-height: 18px;   /*should be same as .panel-header-icon-img.height !!*/
+    float: right;
+}
+.panel-body {
+	/*background-color: #ffd800;*/
+	padding: 8px;
+	min-height: 180px; /* 180px = 9/16 * 320px */
+    position: relative;
+
+}
+#epriDashboardPanelMap {
+	background-size: cover;
+    background-position: center center;
+	position: relative; /* enables absolute positioning of "view map" button */
+}
+#epriDashboardPanelMapButton {
+	bottom: 0px;
+	margin: 8px;
+	position: absolute;
+	right: 0px;
+}
+
+
+/* Styling for small panel help/setting divs*/
+.epri-dropdown-div-small {
+    display: none;
+    background-color: rgb(230,230,230);
+    width: 50%;
+    color: #fff;
+    padding: 0;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 1;
+    text-align: center;
+
+}
+
+/* Styling for small panel help/setting divs for portrait mode*/
+@media screen and (orientation: portrait) {
+    .epri-dropdown-div-small {
+        display: none;
+        background-color: rgb(230,230,230);
+        width: 50%;
+        color: #fff;
+        padding: 0;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        z-index: 1;
+        text-align: center;
+    }
+}
+/*--- VIEW: DASHBOARD/OVERALL ---*/
+#epriOverallOuter {
+	box-sizing: border-box;
+	width: 100%;
+}
+#epriOverallLeft {
+    position: relative;
+    width: 23.4%;   /*23.6*/
+    display: inline-block;
+    vertical-align: top;
+}
+.overall-chart{
+    height: 140px;
+    width: 280px;
+    left: 5px;
+}
+#epriOverallMid{
+    position: relative;
+    width: 38%;   /*38.2*/
+    height: 100%;
+    display: inline-block;
+    vertical-align: top;
+}
+#epriOverallMid .row {
+    display:block;
+    position:relative;
+    width: 100%;
+}
+#epriOverallMid .row:nth-child(1) {
+    height: 37.8%;   /*38.2*/
+}
+#epriOverallMid .row:nth-child(2){
+    height: 61.6%;  /*61.8*/
+}
+
+#epriOverallRight { /*image*/
+    position: relative;
+    width: 37.8%;   /*38.2*/
+    display: inline-block;
+}
+#epriOverallRight img {
+    position: relative;
+    width: 100%;
+}
+
+    #epriDashboardPanelImageButton {
+        bottom: 0px;
+        margin: 8px;
+        position: absolute;
+        right: 0px;
+    }
+#photoViewer{
+    background-size: cover;
+    background-position: center center;
+    position: relative;
+    height: 180px;
+            
+}
+
+.epri-image-thumb-half-col {
+    width: 48%;
+
+
+             
+}
+.epri-image-thumb-half-col a img {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+}
+
+
+/* Masonry Styles*/
+.grid {
+    width: 100%;
+    height: 100%;
+}
+
+.grid-sizer,.grid-item {
+    min-width: 320px;
+    width: 25%;
+}
+
+.grid-item.wide {
+    width: 50%;
+    max-width: 100%;
+}
+
+.grid-item.spacer {
+    min-width: 320px;
+    width: 25%;
+    color: white;
+}
+
+/*--- VIEW: DASHBOARD/IMAGES ---*/
+#epriImagesOuter {
+	box-sizing: border-box;
+	height: 100%;
+	position: relative;
+	width: 100%;
+}
+#epriImageSliderLarge {
+	background-color: #666666; /* dark gray (60% black) */
+	height: 100%;
+}
+#epriImagesZoomToggle {
+	/*position: absolute;
+	top: 16px;
+	right: 16px;*/
+}
+#epriImagesDownload {
+	/*position: absolute;
+	top: 72px;
+	right: 16px;*/
+}
+.epri-image-slider-large-cell {
+    position: relative;
+	background-size: cover;
+    background-position: center center;
+	background-repeat: no-repeat;
+	width: 100%;
+	height: 100%;
+}
+.epri-background-size-contain {
+	background-size: contain;
+}
+/*.epri-image-slider-large-cell {
+	opacity: 0;
+	transition: opacity 0.4s;
+}
+.epri-image-slider-large-cell.flickity-lazyloaded, .epri-image-slider-large-cell.flickity-lazyerror {
+	opacity: 1;
+}*/
+.epri-image-slider-large-caption {
+	color: white;
+	font-size: 18px;
+	/*text-align: center;*/
+}
+.flickity-page-dots {
+	bottom: 40px;
+}
+
+
+/*--- VIEW: DASHBOARD/MAP ---*/
+#epriMapOuter { /* fills entire epriBody element, with padding */
+	box-sizing: border-box; /* border-box: includes padding in width/height calculation so that 100% sizes don't overflow the window */
+	height: 100%;
+	padding: 0px; /* just to make sure no padding */
+	position: relative; /* relative: enables proper absolute positioning of child elements (i.e., patch and overlay) */
+	width: 100%;
+}
+#epriMapInline { 
+	border: 0px; /* note: iframes have a border by default */
+	height: 100%;
+	position: absolute;
+	width: 100%;
+}
+#epriMapOuter > #epriBodyTitle { /* body title only on map page */
+	background-color: #e6e6e6;
+	border-bottom: 1px solid rgb(102,102,102);
+	min-height: 24px; /* min-height + padding top + padding bottom must be at least 50px to cover up embedded map's header*/
+	line-height: 24px; /* must be same as height to vertically center text */
+	padding: 14px 8px 12px 8px;
+	position: relative;
+}
+#epriMapLink {
+	position: relative;
+	float: right;
+	margin: 16px 16px 0px 16px;
+}
+#epriMapTip {
+	background-color: rgba(255,255,255,0.9);
+	border: 1px solid rgb(102,102,102);
+	box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.4);
+	clear: both;
+	cursor: pointer; /* indicates user can click to close the tip message */
+	float: right;
+	margin: 16px 16px 0px 16px;
+	padding: 8px;
+	position: relative;
+}
+/* map tip legend img was used when an icon was inline with the tip text */
+/*#epriMapTipLegendImg {
+	height: 18px; /* exact height 
+	width: 22px; /* exact width 
+	vertical-align: bottom;
+}*/
+#epriMapNarrowInfo {
+	background-color: rgba(242,216,107,0.9); /* EPRI branding accent maize */
+	border: 1px solid rgb(188, 153, 16); /* EPRI branding accent maize with lum=40% (darker) */
+	box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.4);
+	clear: both;
+	cursor: pointer; /* so the user knows to click to close the message */
+	display: none;
+	float: right;
+	margin: 16px 16px 0px 16px;
+	position: relative;
+	padding: 16px;
+	text-align: center;
+}
+
+@media (max-width: 1500px) { /* screen width <= (max-width) */
+	.panel-outer {
+		width: 33.333%;
+	}
+	.panel-outer-wide {
+		width: 100%;
+	}
+}
+@media (max-width: 1080px) { /* screen width <= (max-width) */
+	#Dashboard-Inner {
+		max-width: 1000px;
+	}
+	#epriNavDashboardText {
+		display: none;
+	}
+	.panel-outer {
+		width: 50%;
+	}
+	.panel-outer-wide {
+		width: 100%;
+	}
+}
+@media (max-width: 700px) { /* screen width <= (max-width) */
+	#Dashboard-Inner {
+		max-width: 500px;
+	}
+	.panel-outer {
+		width: 100%;
+	}
+	.panel-outer-wide {
+		float: none;
+		max-width: 500px;
+	}
+}
+@media (max-width: 500px) { /* screen width <= (max-width) */
+	#Dashboard-Inner {
+		padding-left: 0px;
+		padding-right: 0px;
+	}
+	.panel-inner {
+		margin-left: 0px;
+		margin-right: 0px;
+		border-left-width: 0px;
+		border-right-width: 0px;
+		border-bottom-width: 0px;
+		box-shadow: 0px -1px 1px 0px rgba(0,0,0,0.4);
+	}
+	#epriMapNarrowInfo {
+		display: initial;
+	}
+}
+
+
+/*--- SOLID GAUGE ---*/
+#summary {
+    /*background-color: yellowgreen;*/
+}
+.gauge-wrapper {
+    background-color: lightgoldenrodyellow;
+    /*float: left;
+    position: relative;*/
+    /*width: 100%;*/
+}
+.gauge-container {
+    /*height: 100%;
+    width: 100%;
+    position: relative;*/
+    /*width: 500px;
+    height: 400px;*/
+    margin: 0 auto;
+}
+.gauge-block{
+    width: 300px;
+    height: 200px;
+    /*float: left;*/
+}
+
+
+/*--- TECHNOLOGY EXPLORER ---*/
+.container {
+    /*height: 100%;
+    width: 100%;
+    position: relative;*/
+}
+.wrapper-outer {
+    float: left;
+    position: relative;
+    background-color: white;
+}
+.wrapper-inner {
+    float: left;
+    position: relative;
+    background-color: white;
+}
+#technology {
+    /*background-color: darkcyan;*/
+}
+
+
+/*--- TILES ---*/
+/* A tile is a collection of consice information: name tag, short title, gauge (chart), and thumbnail image. 
+	All tiles are contained within 1 inner div block (id="Tiles-Inner"), which slides horizontally with elastisity. 
+	The sliding inner block is contained within a fixed outer block (id="Tiles-Outer"). */
+#Tiles-Outer {
+    width: 100%;
+    /*height: 250px;*/
+    overflow: hidden;
+    text-align:center; /* use this to center the collection of tiles within the outer block */
+	/*padding: 0px 8px 0px 8px;*/
+}
+#Tiles-Outer a {
+	text-decoration: none;
+}
+#Tiles-Inner {
+    width: auto; /* depends on number of tiles; MUST BE ASSIGNED DYNAMICALLY */
+}
+.tile {
+    position: relative; /* relative is required so that child divs can use absolute positioning */
+    display: inline-block;
+    padding: 0px;
+    width: 150px;
+    height: 225px;
+    border: solid;
+    border-width: 1px;
+    border-color: #cccccc;
+	margin: 4px;
+	vertical-align: top;
+}
+.tile:hover {
+	border-color: rgb(0,109,182);
+	box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.6); /* darker shadow */
+}
+.tile-tag {
+	font-size: 13px;
+	text-transform: uppercase;
+	padding: 4px;
+	text-align: center;
+}
+.tile-title {
+	font-size: 18px;
+	font-weight: bold;
+	padding: 0 10px 4px 10px; /* extra left/right padding helps force word wrapping to 2nd line */
+	text-align: center;
+}
+.tile-chart { /* Note: Highcharts solid gauge is sized to 70px H x 140px W*/
+    height: 70px;
+    width: 140px;
+	bottom: 85px;
+	position: absolute;
+	left: 5px; /* 5px left will center a 140px-wide chart within a 150px-wide tile */
+}
+.tile-image { /*image part of the data box*/
+	bottom: 0px;
+	left: 0px;
+	position: absolute;
+	width: 100%;
+	height: 84px; /* 84.4 = 9/16 of 150px width */
+}
+.tile-gradient {
+	position: absolute;
+	bottom: 42px;
+	height: 42px;
+	width: 100%;
+	background: none; /* place "background:none" before linear gradient for backward compatibility (<=IE9) */
+	background: linear-gradient(rgba(255,255,255,1), rgba(255,255,255,0));
+}
+
+/*--- IMAGE GALLERY ---*/
+#Gallery-Outer {
+    width: 100%;
+    /*height: 250px;*/
+    overflow: hidden;
+    text-align:center; /* use this to center the collection of tiles within the outer block */
+	/*padding: 0px 8px 0px 8px;*/
+}
+#Gallery-Outer a {
+	text-decoration: none;
+}
+#Gallery-Inner {
+    width: auto; /* depends on number of tiles; MUST BE ASSIGNED DYNAMICALLY */
+}
+.gallery-item {
+    position: relative; /* relative is required so that child divs can use absolute positioning */
+    display: inline-block;
+    padding: 0px;
+    width: 150px;
+    height: 150px;
+    border: solid;
+    border-width: 1px;
+    border-color: #cccccc;
+	margin: 4px;
+	vertical-align: top;
+}
+.gallery:hover {
+	border-color: rgb(0,109,182);
+	box-shadow: 1px 1px 2px 0px rgba(0,0,0,0.6); /* darker shadow */
+}
+.gallery-image { /*image part of the data box*/
+	bottom: 0px;
+	left: 0px;
+	position: absolute;
+	width: 100%;
+	height: 128px; /* 131.25 = 14/16 of 150px width */
+}
+.gallery-tag {
+	font-size: 13px;
+	text-transform: uppercase;
+	padding: 4px;
+	text-align: center;
+}
+.gallery-gradient {
+	position: absolute;
+	bottom: 86px;
+	height: 42px;
+	width: 100%;
+	background: none; /* place "background:none" before linear gradient for backward compatibility (<=IE9) */
+	background: linear-gradient(rgba(255,255,255,1), rgba(255,255,255,0));
+}
+
+/*-- Technology Pages --*/
+#chart-wrapper {
+    width: 100%;
+    margin: 0 auto;
+}
+    #chart-wrapper .expandable-panel {
+        width: 100%;
+        /*position: relative;*/
+        min-height: 50px;   /* min = size of heading panel below */
+        overflow: auto;
+        margin-bottom: 15px;
+    }
+    /* expandable panel content*/
+    #chart-wrapper .expandable-panel-heading {
+        cursor: pointer;
+        min-height: 50px;
+        height: 50px;
+        width: 100%;
+        line-height: 100%;
+        vertical-align: middle;
+        clear: both;
+        /*background-color: #E5E5E5;*/
+        background-color: rgb(240,234,216);     /* epriBackgroundColorLight */
+        /*position: relative;*/
+        overflow-y:hidden;
+        overflow-x:hidden;
+    }
+        #chart-wrapper .expandable-panel-heading:hover {
+            color: #666;
+        }
+        #chart-wrapper .expandable-panel-heading div {
+            float: right;
+            top:50%;
+            transform: translate(15%);
+            -ms-transform: translateY(15%);
+            -moz-transform: translateY(15%);
+            -webkit-transform: translateY(15%);
+            -o-transform: translateY(15%);
+            overflow-y:hidden;
+            overflow-x:hidden;
+        }
+        #chart-wrapper .expandable-panel-heading h2 {
+            /*padding: 14px 10px 9px 15px;*/
+            font-size: 18px;
+            padding: 5px 10px;  /* indented */
+            float: left;
+        }
+
+        #chart-wrapper .expandable-panel-heading:before { /* create a full-height inline block pseudo=element */
+            content: ' ';
+            display: inline-block;
+            vertical-align: middle; /* vertical alignment of the inline element */
+            height: 100%;
+        }
+        #chart-wrapper .expandable-panel-heading img {
+            border: none;
+            height: 40px;
+            vertical-align: middle;
+            line-height: 100%;
+            padding: 0px 5px;
+        }
+
+    /* expandable panel content*/
+    #chart-wrapper .expandable-panel-content {
+        padding: 0 15px 0 15px;
+        margin-top: -999px;
+        height: 440px;
+        overflow-y:hidden;
+        overflow-x:hidden;
+    }
+        /*#chart-wrapper .expandable-panel-content img {
+            float: right;
+            padding-left: 12px;
+        }
+        #chart-wrapper .expandable-panel-content p {
+            padding: 4px 0 6px 0;
+        }*/
+            /*#chart-wrapper .expandable-panel-content p:first-child {
+                padding-top: 10px;
+            }
+            #chart-wrapper .expandable-panel-content p:last-child {
+                padding-bottom: 10px;
+            }*/
+    #chart-wrapper .expandable-panel .icon-close-open {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            background-image: url(icon-close-open.png);
+            right: 15px;
+        }
+    #chart-wrapper .expandable-panel .header-active {
+        /*background-color: #D0D7F3;*/
+        background-color: rgb(0,109,182);   /* epriBackgroundColorDark */
+    }
+
+/*--- WEATHER ---*/
+#weather {
+    box-shadow: 0px 0px 1px 0px rgb(194, 194, 194);
+    border: 1px solid rgba(0,0,0,0);
+    border-radius: 0;
+    /*background-color: #FCFCFC;*/
+}
+#weather-panel{
+    width: 100%;
+}
+#weather-wrapper{
+    width: 100%;
+}
+#weather-container{
+    width: 100%;
+    display: inline-block;
+    text-decoration: none;
+}
+.weather-item{
+    width: 20%;
+    display: inline-block;
+    vertical-align: top;
+    margin: 6px -4px 6px 0px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+}
+div[class^="weather-item-"] {
+    display: block;
+    overflow: hidden;
+    position: relative;
+    padding: 2px;
+}
+div[class^="weather-item-"] div[id^="chart_"] {
+    display: inline-block;
+    position: relative;
+}
+div[class="weather-item-note"] {
+    display: inline-block;
+    position: relative;
+	height: 20px;
+}
+
+/*--- RESPONSIVENESS ---*/
+@media (max-width: 958px) { /* screen width <= 958px (below 960px) */
+	#epriHeaderTitleWide {
+		display: none;
+	}
+    #epriHeaderTitleNarrow {
+        display: block;
+    }
+}
+
+@media (max-width: 478px) { /* screen width <= 478px (below 480px) */
+	#epriLogoImageLeft, #epriLogoImageRight {
+		height: 34px; /* reduce logo size to 85% of original 40px */
+		padding-left: 12px; /* reduce padding to accommodate smaller screen size (original padding 16px) */
+		padding-right: 12px;
+	}
+	.intro-text-heading {
+		font-size: 18px; /* reduction from 22px */
+	}
+	.intro-description {
+		padding: 16px; /* reduce padding to accommodate smaller screen size (original padding 32px) */
+		max-width: 70%;
+	}
+}
+
+@media (max-width: 398px) { /* screen width <= 398px (below 400px) */
+	#epriLogoImageLeft, #epriLogoImageRight {
+		height: 28px; /* reduce logo size to 70% of original 40px */
+	}
+}
+
+
+/*--- new from SSRC ---*/
+.widget {
+    margin: 0 0 20px;
+    padding: 0;
+    background-color: #ffffff;
+    border: 1px solid #e7e7e7;
+    border-radius: 3px;
+}
+.widget.placeholder {
+    opacity: 0.4;
+    border: 1px dashed #a6a6a6;
+}
+.widget:hover {
+    background-color: #fcfcfc;
+    border-color: #cccccc;
+}
+.widget-content {
+    padding: 20px;
+}
+#daily-profile-other {
+    position: relative;
+    top: 435px;
+    text-align: center;
+}
+#daily-profile-toggle-h4 {
+    display: inline-block;
+    width: 30%;
+}
+#daily-profile-date-h4 {
+    margin-top: 2.3em;
+    margin-bottom: .5em;
+}
+#daily-profile-date-p {
+    margin: 0 0 1.33em 0;
+    color: grey;
+    font-size: 15px;
+}
+#daily-profile-table {
+    display: inline-block;
+}
+.daily-profile-table-td {
+    padding-right: 10px;
+}
+.highchart-widget-content {
+    position: relative;
+}
+.handler {
+    padding: 15px 20px 14px 20px;
+    margin: 0;
+    border-bottom: 1px solid #e7e7e7;
+    cursor: move;
+}
+.handler:active {
+    background-color: #f7f7f7;
+}
+.handler span {
+    float: right;
+}

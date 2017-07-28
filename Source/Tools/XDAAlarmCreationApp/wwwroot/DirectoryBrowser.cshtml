@@ -1,0 +1,196 @@
+﻿@*******************************************************************************************************
+//  DirectoryBrowser.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  06/09/2016 - Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using System.Text
+@using GSF.Web
+@using XDAAlarmCreationApp.Model
+@using RazorEngine.Templating
+@using System.IO
+@inherits TemplateBase<AppModel>
+@{
+    // Check for optional page behaviors
+    bool allowShowHidden = ViewBag.DirectoryAllowShowHidden ?? true;
+    bool allowCreateFolder = ViewBag.DirectoryAllowCreateFolder ?? true;
+    string path = ViewBag.path ?? Directory.GetCurrentDirectory();
+
+}
+<style>
+    ul.directoryListing {
+        height: 300px;
+        overflow-x: scroll;
+        overflow-y: auto;
+    }
+</style>
+
+<div ng-app="DirectoryBrowser" ng-controller="DirectoryBrowserCtrl">
+    <div id="directoryBrowser" class="modal fade" role="dialog">
+        <div class="modal-vertical-align-container">
+            <div class="modal-dialog modal-md modal-vertical-align-center">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Select Folder</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div style="margin: 0 0 5px 5px">
+                                    <span class="glyphicon glyphicon-folder-open"></span>&nbsp;
+                                    <span class="table-cell-hard-wrap"><strong>{{currentFolder}}</strong></span>
+                                </div>
+                                <ul class="directoryListing" style="border: 1px solid #e5e5e5" size="15">
+                                    <li ng-repeat="folder in folders">
+                                        <a href="#" ng-click="SetCurrentFolder(folder)" ng-if="IsDirectory(folder)">{{folder}}</a>
+                                        <span ng-if="!IsDirectory(folder)">{{folder}}</span>
+                                    </li>
+                                </ul>
+                                Folders: <span>{{recordCount}}</span>
+                                <div class="pull-right">
+                                    <span class="checkbox" style="margin-top: 0@(allowShowHidden ? "" : "; display: none")" hub-dependent>
+                                        <label><input type="checkbox" ng-click="ShowHidden()" ng-model="showHidden">Show Hidden Folders</label>
+                                    </span>
+                                    <span class="checkbox" style="margin-top: 0" hub-dependent>
+                                        <label><input type="checkbox" ng-click="ShowHidden()" ng-model="showFiles">Show Files</label>
+                                    </span>
+                                </div>
+
+                            </div>
+                        </div>
+                        @if (allowCreateFolder)
+                        {
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="newFolderName">Create Folder:</label>
+                                    <div class="input-group">
+                                        <input class="form-control" type="text" ng-model="newFolderName" />
+                                        <span class="input-group-btn">
+                                            <button id="createFolder" type="button" class="btn btn-default" title="Create Folder" ng-click="CreateFolder()" ng-enable="hubConnected && newFolderName != null"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="ApplyChanges()">Select</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var directoryBrowser = angular.module('DirectoryBrowser', []);
+    var directoryBrowserCtrl = directoryBrowser.controller('DirectoryBrowserCtrl', function ($scope) {
+        $scope.folders;
+        $scope.isRootFolder = false;   // Is root folder
+        $scope.recordCount = 0;
+        $scope.currentFolder = '@path.Replace("\\", "\\\\")';
+        $scope.showHidden = false;
+        $scope.hubConnected = viewModel.dataHubIsConnected();
+        $scope.newfolderName = null;
+        $scope.showFiles = true;
+
+        $("#directoryBrowser").on("show.bs.modal", function () {
+            if (hubIsConnected) {
+                dataHub.resolvePath($("#directory").val()).done(function (path) {
+                    $scope.currentFolder = path;
+                });
+
+                $scope.LoadFolders($scope.currentFolder);
+            }
+        });
+       
+        if (!viewModel.dataHubIsConnected()) {
+            $(window).on('hubIsConnected', function () {
+                $scope.hubConnected = viewModel.dataHubIsConnected();
+            });
+
+        }
+
+        $scope.SetCurrentFolder = function (value) {
+                if (hubIsConnected) {
+                    if (value === "..\\" && $scope.isRootFolder) {
+                        $scope.LoadFolders("");
+                    }
+                    else {
+                        dataHub.combinePath($scope.currentFolder, value).done(function (combinedPath) {
+                            dataHub.resolvePath(combinedPath).done(function (path) {
+                                $scope.currentFolder = path;
+                                $scope.LoadFolders(path);
+
+                                dataHub.isLogicalDrive(path).done(function (isRootFolder) {
+                                    $scope.isRootFolder = isRootFolder;
+                                });
+                            }).fail(function (error) {
+                                showErrorMessage(error);
+                            });
+                        });
+                    }
+                }
+            }
+
+        $scope.ShowHidden = function () {
+                $scope.LoadFolders($scope.currentFolder);
+        }
+
+        $scope.LoadFolders = function (rootFolder) {
+            if (!hubIsConnected)
+                return;
+
+            dataHub.loadDirectories(rootFolder, $scope.showHidden, $scope.showFiles).done(function (folders) {
+                $scope.folders = folders;
+                $scope.recordCount = $.grep(folders, function(folder, index){ return $scope.IsDirectory(folder);}).length - 1;
+                $scope.$apply();
+            });
+        }
+
+        $scope.CreateFolder = function() {
+            if (hubIsConnected) {
+                dataHub.combinePath($scope.currentFolder, $scope.newFolderName).done(function (path) {
+                    dataHub.createPath(path).done(function () {
+                        $scope.LoadFolders($scope.currentFolder);
+                        $("#newFolderName").val("");
+                    }).fail(function (error) {
+                        showErrorMessage(error);
+                    });
+                }).fail(function (error) {
+                    showErrorMessage(error);
+                });
+            }
+        }
+
+        $scope.ApplyChanges = function () {
+            $('input[id=directory]').val($scope.currentFolder);
+        }
+
+        $scope.IsDirectory = function (value) {
+            if (value[value.length - 1] == "\\") return true
+            else return false;
+        }
+
+    });
+
+</script>
