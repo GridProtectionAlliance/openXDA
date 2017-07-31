@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LineSegment.cs - Gbtc
+//  HourOfWeekLimit.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,41 +16,58 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/23/2017 - Billy Ernest
+//  07/31/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
-using System.ComponentModel.DataAnnotations;
-
 namespace XDAAlarmCreationApp.Model
 {
-    public class LineSegment
+    public class MetersWithHourlyLimits
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [Searchable]
+        public string Name { get; set; }
+        public int Limits { get; set; }
+    }
 
-        [Label("Result ID")]
-        public int ResultID { get; set; }
-
-        [Label("Start Node")]
-        public int FromNodeID { get; set; }
-
-        [Label("End Node")]
-        public int ToNodeID { get; set; }
-  
-        public string Data { get; set; }
-
+    public class ChannelsWithHourlyLimits
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        [Searchable]
+        public string Name { get; set; }
+        public int Limits { get; set; }
+        [Searchable]
+        public string MeasurementCharacteristic { get; set; }
+        [Searchable]
+        public string MeasurementType { get; set; }
+        public int MeterID { get; set; }
+        public int HarmonicGroup { get; set; }
+        [Searchable]
+        public string Phase { get; set; }
 
     }
 
-    [TableName("LineSegmentView")]
-    public class LineSegmentView : LineSegment
+    public class HourOfWeekLimit
     {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public int ChannelID { get; set; }
+        public int AlarmTypeID { get; set; }
         [Searchable]
-        public string FromNode { get; set; }
-        public string ToNode { get; set; }
+        public int HourOfWeek { get; set; }
+        public int Severity { get; set; }
+        public double High { get; set; }
+        public double Low { get; set; }
+        public int Enabled { get; set; }
+    }
+
+    [TableName("HourOfWeekLimitView")]
+    public class HourOfWeekLimitView: HourOfWeekLimit
+    {
+        public string AlarmTypeName { get; set; }
     }
 }

@@ -140,10 +140,11 @@ function showInfoMessage(message, timeout) {
 
 function calculateRemainingBodyHeight() {
     // Calculation based on content in Layout.cshtml
-    return $(document).height() - 30 - 
-        $("#navBar").outerHeight() -
-        $("#companySelect").outerHeight() -
-        $("#pageFooter").outerHeight() ;
+    return $(window).height() -
+        $("#menuBar").outerHeight(true) -
+        $("#bodyContainer").paddingHeight() -
+        $("#pageHeader").outerHeight(true) -
+        ($(window).width() < 768 ? 30 : 5);
 }
 
 function hubConnected() {

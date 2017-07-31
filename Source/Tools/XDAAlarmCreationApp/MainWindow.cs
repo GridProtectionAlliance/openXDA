@@ -100,16 +100,12 @@ namespace XDAAlarmCreationApp
 
                 // Define types for Razor pages - self-hosted web service does not use view controllers so
                 // we must define configuration types for all paged view model based Razor views here:
-                webServer.PagedViewModelTypes.TryAdd("LineSegment.cshtml", new Tuple<Type, Type>(typeof(LineSegmentView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("IndividualResult.cshtml", new Tuple<Type, Type>(typeof(IndividualResult), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("NodePoint.cshtml", new Tuple<Type, Type>(typeof(NodePoint), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("ColorGradients.cshtml", new Tuple<Type, Type>(typeof(ColorGradients), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("LineCharacteristicsToDisplay.cshtml", new Tuple<Type, Type>(typeof(LineCharacteristicsToDisplay), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("ResultsToDisplay.cshtml", new Tuple<Type, Type>(typeof(ResultsToDisplay), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("ChannelsWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithHourlyLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("HourOfWeekLimits.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Results.cshtml", new Tuple<Type, Type>(typeof(Result), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Security.cshtml", new Tuple<Type, Type>(typeof(Security), typeof(DataHub)));
 
                 // Initiate pre-compile of base templates

@@ -1,0 +1,70 @@
+﻿@*//******************************************************************************************************
+//  Settings.cshtml - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  05/02/2017 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using XDAAlarmCreationApp.Model
+@using GSF.Web.Model
+@using GSF.Web
+@using XDAAlarmCreationApp
+@using System.Collections.Generic;
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+
+    Layout = "Layout.cshtml";
+    string title = ViewBag.CustomTitle = "Meters With Alarm Limits";
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-Left" },
+        new[] { "Limits", "Channels", "text-center"}
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.HideAddNewButton = false;
+
+}
+@helper BodyRows()
+{
+    <td width="90%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/ChannelsWithHourlyLimits.cshtml?MeterID=' +ID +'&Name=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: Limits, attr: {id: Name + 'Count' + ID}"></span></a></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddInputField<MetersWithHourlyLimits>("Name"))
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts{
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<MetersWithHourlyLimits, DataHub>(ViewBag, "Name"))
+
+        $(function () {
+            $('#addRecordButton').text()
+        });
+    </script>
+}

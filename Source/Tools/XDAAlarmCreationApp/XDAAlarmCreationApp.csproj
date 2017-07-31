@@ -293,18 +293,12 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\AppModel.cs" />
-    <Compile Include="Model\File.cs" />
-    <Compile Include="Model\FileStructureClasses.cs" />
-    <Compile Include="Model\IndividualResult.cs" />
-    <Compile Include="Model\Lines.cs" />
-    <Compile Include="Model\LineSegment.cs" />
-    <Compile Include="Model\NodePoint.cs" />
-    <Compile Include="Model\Result.cs" />
     <Compile Include="Model\Security.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Model\HourOfWeekLimit.cs" />
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -340,6 +334,9 @@
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
+    <None Include="wwwroot\Groups.cshtml" />
+    <None Include="wwwroot\ChannelsWithHourlyLimits.cshtml" />
+    <None Include="wwwroot\MetersWithHourlyLimits.cshtml" />
     <None Include="wwwroot\Index.cshtml" />
     <Content Include="AppReadme\CSV-Reports-Help.txt" />
     <Content Include="Data\DriveSetup.sql" />
@@ -352,6 +349,7 @@
     <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
     <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
     <None Include="wwwroot\Security.cshtml" />
+    <None Include="wwwroot\HourOfWeekLimits.cshtml" />
     <None Include="wwwroot\Settings.cshtml" />
     <None Include="wwwroot\Layout.cshtml" />
     <None Include="wwwroot\Users.cshtml" />

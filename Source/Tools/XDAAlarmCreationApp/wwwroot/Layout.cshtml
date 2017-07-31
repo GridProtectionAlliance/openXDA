@@ -65,10 +65,10 @@
     <link href="/Content/primeui-theme.css" rel="stylesheet">
     <link href="/Content/font-awesome@(min).css" rel="stylesheet">
     <link href="/Content/primeui@(min).css" rel="stylesheet">
-    <link href="/Content/jquery.jspanel@(min).css" rel="stylesheet">
+    @*<link href="/Content/jquery.jspanel@(min).css" rel="stylesheet">*@
     <link href="/Content/Site.css" rel="stylesheet">
-    <link href="/Content/daterangepicker.css" rel="stylesheet">
-    <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
+    @*<link href="/Content/daterangepicker.css" rel="stylesheet">*@
+    @*<link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />*@
 
     @RenderSection("StyleSheets", false)
     <style>
@@ -153,22 +153,22 @@
     <script src="/Scripts/modernizr-2.8.3.js"></script>
     <script src="/Scripts/angular.js"></script>
     <script src="/Scripts/jquery-2.2.1@(min).js"></script>
-    <script src="/Scripts/moment.min.js"></script>
+    @*<script src="/Scripts/moment.min.js"></script>*@
     <script src="/Scripts/jquery-ui@(min).js"></script>
     <script src="/Scripts/bootstrap@(min).js"></script>
     <script src="/Scripts/ie10-viewport-bug-workaround.js"></script>
     <script src="/Scripts/respond@(min).js"></script>
     <script src="/Scripts/bootstrap-datepicker@(min).js"></script>
-    <script src="/Scripts/daterangepicker.js"></script>
+    @*<script src="/Scripts/daterangepicker.js"></script>*@
     <script src="/Scripts/bootstrap-toolkit@(min).js"></script>
     <script src="/Scripts/jquery.signalR-2.2.0@(min).js"></script>
     <script src="/@("@GSF/Web/Model/Scripts/gsf.web.client.js")"></script>
     <script src="/signalr/hubs"></script>
-    <script src="/Scripts/jquery.jspanel-compiled@(min).js"></script>
+    @*<script src="/Scripts/jquery.jspanel-compiled@(min).js"></script>*@
     <script src="/Scripts/plugins-all.js"></script>
     <script src="/Scripts/primeui@(min).js"></script>
     <script src="/Scripts/Site.js"></script>
-    <script type="text/javascript" src="~/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
+    @*<script type="text/javascript" src="~/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>*@
     <script>
         const DateFormat = "@Model.Global.DateFormat";
         const TimeFormat = "@Model.Global.TimeFormat";
@@ -192,11 +192,7 @@
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        @*<li @Raw(pageTitle == "Filters" ? "class=\"active\"" : "")><a href="Filters.cshtml">Filters</a></li>
-                        <li @Raw(pageTitle == "Events" ? "class=\"active\"" : "")><a href="Events.cshtml">Events</a></li>
-                        <li @Raw(pageTitle == "Charts" ? "class=\"active\"" : "")><a href="Charts.cshtml">Charts</a></li>
-                        <li @Raw(pageTitle == "Site Summary" ? "class=\"active\"" : "")><a href="SiteSummary.cshtml">Site Summary</a></li>
-                        <li @Raw(pageTitle == "Data Files" ? "class=\"active\"" : "")><a href="DataFiles.cshtml">Data Files</a></li>*@
+                        <li @Raw(pageTitle == "Meters With Alarm Limits" ? "class=\"active\"" : "")><a href="MetersWithHourlyLimits.cshtml">Meters With Alarm Limits</a></li>
                         <li @Raw(pageTitle == "Security" ? "class=\"active\"" : "")><a href="Security.cshtml">Security</a></li>
 
                     </ul>
