@@ -888,6 +888,134 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [HourOfWeekLimit Table Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecordCount)]
+        public int QueryHourOfWeekLimitCount()
+        {
+            return DataContext.Table<HourOfWeekLimit>().QueryRecordCount();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecords)]
+        public IEnumerable<HourOfWeekLimit> QueryHourOfWeekLimits(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            // Stub
+
+            return DataContext.Table<HourOfWeekLimit>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.DeleteRecord)]
+        public void DeleteHourOfWeekLimit(int id)
+        {
+            DataContext.Table<HourOfWeekLimit>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.CreateNewRecord)]
+        public HourOfWeekLimit NewHourOfWeekLimit()
+        {
+            return new HourOfWeekLimit();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.AddNewRecord)]
+        public void AddHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().AddNewRecord(CreateNewHourOfWeekLimit(record));
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.UpdateRecord)]
+        public void UpdateHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().UpdateRecord(CreateNewHourOfWeekLimit(record));
+        }
+
+        public HourOfWeekLimit CreateNewHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            HourOfWeekLimit howl = new HourOfWeekLimit() {
+                ID = record.ID,
+                ChannelID = record.ChannelID,
+                AlarmTypeID = record.AlarmTypeID,
+                Enabled = record.Enabled,
+                Severity = record.Severity,
+                High = record.High,
+                Low = record.Low,
+                HourOfWeek = record.HourOfWeek
+            };
+
+            return howl;
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public void ResetHourOfWeekLimitToDefault(HourOfWeekLimit record)
+        {
+            // TODO: Finish
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public string SendHourOfWeekLimitTableToCSV()
+        {
+            string csv = "";
+            string[] headers = DataContext.Table<AlarmRangeLimitView>().GetFieldNames();
+
+            foreach (string h in headers)
+            {
+                if (csv == "")
+                    csv = '[' + h + ']';
+                else
+                    csv += ",[" + h + ']';
+            }
+
+            csv += "\n";
+
+            IEnumerable<AlarmRangeLimitView> limits = DataContext.Table<AlarmRangeLimitView>().QueryRecords();
+
+            foreach (AlarmRangeLimitView limit in limits)
+            {
+                csv += limit.csvString() + '\n';
+                //csv += limit.ID.ToString() + ',' + limit.ChannelID.ToString() + ',' + limit.Name.ToString() + ',' + limit.AlarmTypeID.ToString() + ',' + limit.Severity.ToString() + ',' + limit.High.ToString() + ',' 
+                //    + limit.Low.ToString() + ',' + limit.RangeInclusive.ToString() + ',' + limit.PerUnit.ToString() + ',' + limit.Enabled.ToString() + ',' + limit.MeasurementType.ToString() + ','
+                //    + limit.MeasurementTypeID.ToString() + ',' + limit.MeasurementCharacteristic.ToString() + ',' + limit.MeasurementCharacteristicID.ToString() + ',' + limit.Phase.ToString() + ','
+                //    + limit.PhaseID.ToString() + ',' + limit.HarmonicGroup.ToString() + ','  + limit.IsDefault.ToString() + "\n";
+            }
+
+            return csv;
+        }
+
+        public void ImportHourOfWeekLimitTableCSV(string csv)
+        {
+            string[] csvRows = csv.Split('\n');
+            string[] tableFields = csvRows[0].Split(',');
+
+            TableOperations<AlarmRangeLimit> table = DataContext.Table<AlarmRangeLimit>();
+
+            if (table.GetFieldNames() == tableFields)
+            {
+                for (int i = 1; i < csvRows.Length; ++i)
+                {
+                    string[] row = csvRows[i].Split(',');
+
+                    AlarmRangeLimit newRecord = DataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
+
+                    newRecord.Severity = int.Parse(row[4]);
+                    newRecord.High = float.Parse(row[5]);
+                    newRecord.Low = float.Parse(row[6]);
+                    newRecord.RangeInclusive = int.Parse(row[7]);
+                    newRecord.PerUnit = int.Parse(row[8]);
+                    newRecord.Enabled = int.Parse(row[9]);
+                    newRecord.IsDefault = bool.Parse(row[17]);
+
+                    table.UpdateRecord(newRecord);
+                }
+            }
+        }
+
+        #endregion
+
         #region [ DefaultAlarmRangeLimit Table Operations ]
 
         [AuthorizeHubRole("Administrator")]

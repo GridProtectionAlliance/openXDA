@@ -439,6 +439,7 @@
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
     <Content Include="wwwroot\Config\LineGroups.cshtml" />
     <Content Include="wwwroot\Config\LineLineGroupView.cshtml" />
+    <Content Include="wwwroot\Config\OffNormalAlarmSettings.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
