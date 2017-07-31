@@ -375,6 +375,10 @@ namespace openXDA.DataPusher
 
                 m_dataContext.Table<MetersToDataPush>().UpdateRecord(meter);
             }
+            else
+            {
+                meter.RemoteXDAMeterID = remoteMeters.Where(x => x.AssetKey.Equals(meter.RemoteXDAAssetKey.ToString())).First().ID;
+            }
         }
 
         private LinesToDataPush AddLine(string address, MeterLine meterLine, bool obsfucate)

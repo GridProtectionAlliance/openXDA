@@ -1,0 +1,530 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\Dependencies\Nuget\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.4\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\..\Dependencies\Nuget\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.4\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\..\Dependencies\Nuget\Microsoft.Net.Compilers.2.0.1\build\Microsoft.Net.Compilers.props" Condition="Exists('..\..\Dependencies\Nuget\Microsoft.Net.Compilers.2.0.1\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1D865DF4-2C43-4BB2-9CFC-169093C6C9C3}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>XDAAlarmCreationApp</RootNamespace>
+    <AssemblyName>XDAAlarmCreationApp</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AppConfig>AppDebug.config</AppConfig>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\Build\Output\Debug\Tools\XDAAlarmCreationApp\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AjaxMin">
+      <HintPath>..\..\Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\..\DependenciesNuget\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="CsvHelper, Version=3.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\CsvHelper.3.0.0-chi06\lib\netstandard1.3\CsvHelper.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ExpressionEvaluator, Version=2.0.4.0, Culture=neutral, PublicKeyToken=90d9f15d622e2348, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\ExpressionEvaluator.2.0.4.0\lib\net40\ExpressionEvaluator.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GSF.Core, Version=2.2.56.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\GSF.Core.2.2.56-beta\lib\net46\GSF.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GSF.Security, Version=2.2.56.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\GSF.Security.2.2.56-beta\lib\net46\GSF.Security.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GSF.ServiceModel, Version=2.2.56.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\GSF.ServiceModel.2.2.56-beta\lib\net46\GSF.ServiceModel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="GSF.Web, Version=2.2.56.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\GSF.Web.2.2.56-beta\lib\net46\GSF.Web.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="KellermanSoftware.CSV-Reports, Version=2.14.0.0, Culture=neutral, PublicKeyToken=dccbd7ce7d6a58c0, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\CSVReports.2.14.0.0\lib\net46\KellermanSoftware.CSV-Reports.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.SignalR.SystemWeb.2.2.0\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.4\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\NuGet\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.HttpListener, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.Owin.Host.HttpListener.3.1.0\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.Owin.Host.SystemWeb.3.1.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Hosting, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\NuGet\Microsoft.Owin.Hosting.2.1.0\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\NuGet\Microsoft.Owin.Security.2.1.0\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.Win32.Primitives.4.3.0\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\NuGet\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Owin.1.0\lib\net40\Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="RazorEngine, Version=3.7.7.0, Culture=neutral, PublicKeyToken=9ee697374c7e744a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\RazorEngine.3.7.7\lib\net45\RazorEngine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.AppContext, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.AppContext.4.3.0\lib\net46\System.AppContext.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Console, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Console.4.3.0\lib\net46\System.Console.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Diagnostics.DiagnosticSource.4.3.0\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Globalization.Calendars, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Globalization.Calendars.4.3.0\lib\net46\System.Globalization.Calendars.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.IO.Compression.ZipFile, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.IO.Compression.ZipFile.4.3.0\lib\net46\System.IO.Compression.ZipFile.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.IO.FileSystem.4.3.0\lib\net46\System.IO.FileSystem.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.IO.FileSystem.Primitives.4.3.0\lib\net46\System.IO.FileSystem.Primitives.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Sockets, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Reflection.TypeExtensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Reflection.TypeExtensions.4.1.0\lib\net46\System.Reflection.TypeExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Security.Cryptography.Algorithms.4.3.0\lib\net46\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Security.Cryptography.X509Certificates.4.3.0\lib\net46\System.Security.Cryptography.X509Certificates.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http.Owin, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http.SelfHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebApi.SelfHost.5.2.3\lib\net45\System.Web.Http.SelfHost.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Deployment">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\System.Xml.ReaderWriter.4.3.0\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\Nuget\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataHub.cs" />
+    <Compile Include="GlobalSettings.cs" />
+    <Compile Include="MainWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainWindow.Designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AppModel.cs" />
+    <Compile Include="Model\Security.cs" />
+    <Compile Include="Model\Setting.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Startup.cs" />
+    <Compile Include="Model\HourOfWeekLimit.cs" />
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="AppDebug.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Content\jscolor\Thumbs.db" />
+    <None Include="packages.config" />
+    <None Include="PostBuildSetup.bat" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="Web.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="wwwroot\Content\bootstrap-theme.css.map" />
+    <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
+    <None Include="wwwroot\Content\bootstrap.css.map" />
+    <None Include="wwwroot\Content\bootstrap.min.css.map" />
+    <None Include="wwwroot\Groups.cshtml" />
+    <None Include="wwwroot\ChannelsWithHourlyLimits.cshtml" />
+    <None Include="wwwroot\MetersWithHourlyLimits.cshtml" />
+    <None Include="wwwroot\Index.cshtml" />
+    <Content Include="AppReadme\CSV-Reports-Help.txt" />
+    <Content Include="Data\DriveSetup.sql" />
+    <Content Include="wwwroot\Images\DriveDataLoader_40high - Copy.png" />
+    <Content Include="wwwroot\Images\DriveDataLoader_40high.png" />
+    <Content Include="wwwroot\Images\DriveDataLoader_65high.png" />
+    <Content Include="wwwroot\Images\DriveModelResults_40high.png" />
+    <Content Include="wwwroot\Images\DriveModelResults_65high.png" />
+    <None Include="wwwroot\Scripts\jquery-1.10.2.min.map" />
+    <None Include="wwwroot\Scripts\jquery-2.2.1.min.map" />
+    <None Include="wwwroot\Scripts\knockout.validation.min.js.map" />
+    <None Include="wwwroot\Security.cshtml" />
+    <None Include="wwwroot\HourOfWeekLimits.cshtml" />
+    <None Include="wwwroot\Settings.cshtml" />
+    <None Include="wwwroot\Layout.cshtml" />
+    <None Include="wwwroot\Users.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\jscolor\arrow.gif" />
+    <Content Include="Content\jscolor\cross.gif" />
+    <Content Include="Content\jscolor\hs.png" />
+    <Content Include="Content\jscolor\hv.png" />
+    <Content Include="Data\InitialSettings.sql" />
+    <Content Include="wwwroot\Scripts\jscolor.js" />
+    <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
+    <Content Include="wwwroot\Content\bootstrap-datepicker3.min.css" />
+    <Content Include="wwwroot\Content\bootstrap-multiselect.css" />
+    <Content Include="wwwroot\Content\bootstrap-sidebar.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-cerulean.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-cosmo.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-cyborg.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-readable.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-sandstone.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-slate.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme-united.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme.css" />
+    <Content Include="wwwroot\Content\bootstrap-theme.min.css" />
+    <Content Include="wwwroot\Content\bootstrap.css" />
+    <Content Include="wwwroot\Content\bootstrap.min.css" />
+    <Content Include="wwwroot\Content\default.css" />
+    <Content Include="wwwroot\Content\epri-style.css" />
+    <Content Include="wwwroot\Content\fileinput.css" />
+    <Content Include="wwwroot\Content\font-awesome.css" />
+    <Content Include="wwwroot\Content\font-awesome.min.css" />
+    <Content Include="wwwroot\Content\images\loading-sm.gif" />
+    <Content Include="wwwroot\Content\images\loading.gif" />
+    <Content Include="wwwroot\Content\images\ui-bg_glass_55_fbf9ee_1x400.png" />
+    <Content Include="wwwroot\Content\images\ui-bg_glass_65_ffffff_1x400.png" />
+    <Content Include="wwwroot\Content\images\ui-bg_glass_75_dadada_1x400.png" />
+    <Content Include="wwwroot\Content\images\ui-bg_glass_75_e6e6e6_1x400.png" />
+    <Content Include="wwwroot\Content\images\ui-bg_glass_95_fef1ec_1x400.png" />
+    <Content Include="wwwroot\Content\images\ui-bg_highlight-soft_75_cccccc_1x100.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_222222_256x240.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_2e83ff_256x240.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_333333_256x240.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_454545_256x240.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_888888_256x240.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_cd0a0a_256x240.png" />
+    <Content Include="wwwroot\Content\images\ui-icons_ffffff_256x240.png" />
+    <Content Include="wwwroot\Content\jquery-ui.css" />
+    <Content Include="wwwroot\Content\jquery-ui.min.css" />
+    <Content Include="wwwroot\Content\jquery-ui.structure.css" />
+    <Content Include="wwwroot\Content\jquery-ui.structure.min.css" />
+    <Content Include="wwwroot\Content\jquery-ui.theme.css" />
+    <Content Include="wwwroot\Content\jquery-ui.theme.min.css" />
+    <Content Include="wwwroot\Content\leaflet.css" />
+    <Content Include="wwwroot\Content\Popup.css" />
+    <Content Include="wwwroot\Content\primeui-theme.css" />
+    <Content Include="wwwroot\Content\primeui.css" />
+    <Content Include="wwwroot\Content\primeui.min.css" />
+    <Content Include="wwwroot\Content\Site.css" />
+    <Content Include="wwwroot\Scripts\angular.js" />
+    <Content Include="wwwroot\Scripts\bootstrap-datepicker.js" />
+    <Content Include="wwwroot\Scripts\bootstrap-datepicker.min.js" />
+    <Content Include="wwwroot\Scripts\bootstrap-multiselect.js" />
+    <Content Include="wwwroot\Scripts\bootstrap-toolkit.js" />
+    <Content Include="wwwroot\Scripts\bootstrap-toolkit.min.js" />
+    <Content Include="wwwroot\Scripts\bootstrap.js" />
+    <Content Include="wwwroot\Scripts\bootstrap.min.js" />
+    <Content Include="wwwroot\Scripts\d3-dsv.v1.min.js" />
+    <Content Include="wwwroot\Scripts\fileinput.js" />
+    <Content Include="wwwroot\Scripts\fileinput.min.js" />
+    <Content Include="wwwroot\Scripts\gsf.web.client.js" />
+    <Content Include="wwwroot\Scripts\gsf.web.knockout.js" />
+    <Content Include="wwwroot\Scripts\gsf.web.primeui.js" />
+    <Content Include="wwwroot\Scripts\ie10-viewport-bug-workaround.js" />
+    <Content Include="wwwroot\Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="wwwroot\Scripts\jquery-1.10.2.js" />
+    <Content Include="wwwroot\Scripts\jquery-1.10.2.min.js" />
+    <Content Include="wwwroot\Scripts\jquery-2.2.1.js" />
+    <Content Include="wwwroot\Scripts\jquery-2.2.1.min.js" />
+    <Content Include="wwwroot\Scripts\jquery-2.2.2.intellisense.js" />
+    <Content Include="wwwroot\Scripts\jquery-ui.js" />
+    <Content Include="wwwroot\Scripts\jquery-ui.min.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel-compiled.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel-compiled.min.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel.js" />
+    <Content Include="wwwroot\Scripts\jquery.jspanel.min.js" />
+    <Content Include="wwwroot\Scripts\jquery.signalR-2.2.0.js" />
+    <Content Include="wwwroot\Scripts\jquery.signalR-2.2.0.min.js" />
+    <Content Include="wwwroot\Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="wwwroot\Scripts\jquery.validate.js" />
+    <Content Include="wwwroot\Scripts\jquery.validate.min.js" />
+    <Content Include="wwwroot\Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="wwwroot\Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="wwwroot\Scripts\js.cookie.js" />
+    <Content Include="wwwroot\Scripts\jscolor.min.js" />
+    <Content Include="wwwroot\Scripts\json2.js" />
+    <Content Include="wwwroot\Scripts\jstorage.js" />
+    <Content Include="wwwroot\Scripts\knockout-3.4.0.debug.js" />
+    <Content Include="wwwroot\Scripts\knockout-3.4.0.js" />
+    <Content Include="wwwroot\Scripts\knockout.mapping-latest.debug.js" />
+    <Content Include="wwwroot\Scripts\knockout.mapping-latest.js" />
+    <Content Include="wwwroot\Scripts\knockout.validation.js" />
+    <Content Include="wwwroot\Scripts\knockout.validation.min.js" />
+    <Content Include="wwwroot\Scripts\ko-reactor.js" />
+    <Content Include="wwwroot\Scripts\ko-reactor.min.js" />
+    <Content Include="wwwroot\Scripts\ko.observableDictionary.js" />
+    <Content Include="wwwroot\Scripts\leaflet.js" />
+    <Content Include="wwwroot\Scripts\modernizr-2.6.2.js" />
+    <Content Include="wwwroot\Scripts\modernizr-2.8.3.js" />
+    <Content Include="wwwroot\Scripts\mustache.min.js" />
+    <Content Include="wwwroot\Scripts\pagedViewModel.js" />
+    <Content Include="wwwroot\Scripts\plugins-all.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeelements.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeelements.min.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-all.css" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-all.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-all.min.css" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-all.min.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-ng-all.css" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-ng-all.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-ng-all.min.css" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-ng-all.min.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-ng.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui-ng.min.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui.css" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui.min.css" />
+    <Content Include="wwwroot\Scripts\PrimeUI\primeui.min.js" />
+    <Content Include="wwwroot\Scripts\PrimeUI\x-tag-core.min.js" />
+    <Content Include="wwwroot\Scripts\Site.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\fonts\" />
+    <Folder Include="wwwroot\Scripts\PrimeUI\Font-Awesome\" />
+    <Folder Include="wwwroot\Scripts\PrimeUI\images\" />
+    <Folder Include="wwwroot\Scripts\PrimeUI\plugins\" />
+    <Folder Include="wwwroot\Scripts\PrimeUI\themes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\Dependencies\Nuget\Microsoft.Net.Compilers.2.0.1\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Dependencies\Nuget\Microsoft.Net.Compilers.2.0.1\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\..\Dependencies\Nuget\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.4\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Dependencies\Nuget\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.4\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <PropertyGroup>
+    <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)wwwroot" "$(ProjectDir)wwwroot\*.*"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)" "$(SolutionDir)Dependencies\Nuget\RazorEngine.3.7.7\lib\net45\*.*"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)" "$(SolutionDir)Dependencies\Nuget\GSF.Security.2.2.40-beta\lib\net46\*.*"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)" "$(SolutionDir)Dependencies\Nuget\GSF.Web.2.2.40-beta\lib\net46\*.*"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)" "$(SolutionDir)Dependencies\Nuget\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll"
+</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

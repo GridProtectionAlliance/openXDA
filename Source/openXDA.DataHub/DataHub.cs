@@ -4308,11 +4308,15 @@ namespace openXDA.Hubs
                 IDbDataParameter param4 = sc.CreateParameter();
                 param4.ParameterName = "@username";
                 param4.Value = userName;
+                IDbDataParameter param5 = sc.CreateParameter();
+                param5.ParameterName = "@context";
+                param5.Value = "day";
 
                 sc.Parameters.Add(param1);
                 sc.Parameters.Add(param2);
                 sc.Parameters.Add(param3);
                 sc.Parameters.Add(param4);
+                sc.Parameters.Add(param5);
 
                 IDataReader rdr = sc.ExecuteReader();
                 DataTable table = new DataTable();
