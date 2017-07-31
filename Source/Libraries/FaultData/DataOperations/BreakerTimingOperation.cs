@@ -497,7 +497,7 @@ namespace FaultData.DataOperations
 
             foreach (string breakerNumber in breakerNumbers)
             {
-                double breakerSpeed = ConvertBreakerSpeed(m_dbAdapterContainer.Connection.ExecuteScalar("SELECT BreakerSpeed FROM MaximoBreaker WHERE BreakerNum = @breakerNumber", breakerNumber));
+                double breakerSpeed = ConvertBreakerSpeed(m_dbAdapterContainer.Connection.ExecuteScalar("SELECT BreakerSpeed FROM MaximoBreaker WHERE CAST(BreakerNum AS INT) = @breakerNumber", Convert.ToInt32(breakerNumber)));
 
                 List<DataSeries> breakerDigitals = dataGroup.DataSeries
                     .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name == "Digital")
