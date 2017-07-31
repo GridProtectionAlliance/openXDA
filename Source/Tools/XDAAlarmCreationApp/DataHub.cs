@@ -43,6 +43,8 @@ using System.Web.Script;
 using CsvHelper;
 using Microsoft.AspNet.SignalR;
 using GSF.Web.Model;
+using GSF.Identity;
+using openHistorian.XDALink;
 
 namespace XDAAlarmCreationApp
 {
@@ -82,9 +84,14 @@ namespace XDAAlarmCreationApp
             s_connectionID = new ThreadLocal<string>();
         }
 
-        public static void ProgressUpdate(string name, int update)
+        public void ProgressUpdatedByMeter(string meterName, int value)
         {
-            GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBar(name, update);
+            GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForMeter(meterName, value);
+        }
+
+        public static void ProgressUpdatedOverall(string meterName, int value)
+        {
+            GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForOverall(meterName, value);
         }
 
 
@@ -185,6 +192,68 @@ namespace XDAAlarmCreationApp
         public void AddNewOrUpdateMetersWithHourlyLimits(MetersWithHourlyLimits record)
         {
             DataContext.Table<MetersWithHourlyLimits>().AddNewOrUpdateRecord(record);
+        }
+
+        public IEnumerable<Meter> GetMetersForSelect()
+        {
+            return DataContext.Table<Meter>().QueryRecords("Name", new RecordRestriction("ID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0})", GetCurrentUserSID()));
+        }
+
+        public class TrendingData
+        {
+            public int ChannelID { get; set; }
+            public string SeriesType { get; set; }
+            public DateTime Time { get; set; }
+            public double Value { get; set; }
+        }
+
+
+        public void ProcessSmartAlarms(IEnumerable<int> meterIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool zeroValues)
+        {
+
+            int progressTotal = (meterIds.Any()? meterIds.Count() : 1 );
+            int progressCount = 0;
+            ProgressUpdatedOverall("",(int)(100 * (progressCount) / progressTotal));
+
+            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+            foreach (int meterId in meterIds)
+            {
+                IEnumerable<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0}", meterId).Select(x => x.ID);
+                int innerProgressTotal = (channelIds.Any()? channelIds.Count() : 1);
+                int innerProgressCount = 0;
+                ProgressUpdatedByMeter("", (int)(100 * (innerProgressCount) / innerProgressTotal));
+
+                foreach(int channelId in channelIds)
+                {
+                    IEnumerable<int> channelIDs = new List<int> { channelId };
+
+                    List<TrendingData> trendingData = new List<TrendingData>();
+
+                    using (openHistorian.XDALink.Historian historian = new Historian(historianServer, historianInstance))
+                    {
+                        foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIDs, startDate, endDate))
+                        {
+                            TrendingData obj = new TrendingData();
+
+                            obj.ChannelID = point.ChannelID;
+                            obj.SeriesType = point.SeriesID.ToString();
+                            obj.Time = point.Timestamp;
+                            obj.Value = point.Value;
+                            trendingData.Add(obj);
+                        }
+                    }
+
+                    var dataGroupedByWeek = trendingData.GroupBy(x => new { x.Time.DayOfWeek, x.Time.Hour });
+
+                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", meterId);
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
+
+                }
+                string meterName = DataContext.Connection.ExecuteScalar<string>("Select Name from Meter where ID = {0}", meterId);
+                ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
+            }
         }
 
         #endregion
@@ -474,6 +543,16 @@ namespace XDAAlarmCreationApp
 
             return dt;
         }
+
+        /// <summary>
+        /// Gets UserAccount table SID for current user.
+        /// </summary>
+        /// <returns>UserAccount.ID for current user.</returns>
+        public static string GetCurrentUserSID()
+        {
+            return UserInfo.UserNameToSID(Thread.CurrentPrincipal.Identity.Name);
+        }
+
         #endregion
 
 

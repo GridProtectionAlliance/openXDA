@@ -293,6 +293,8 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\AppModel.cs" />
+    <Compile Include="Model\Channel.cs" />
+    <Compile Include="Model\Meter.cs" />
     <Compile Include="Model\Security.cs" />
     <Compile Include="Model\Setting.cs" />
     <Compile Include="Program.cs" />
@@ -334,12 +336,17 @@
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
     <None Include="wwwroot\Content\bootstrap.min.css.map" />
+    <None Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
     <None Include="wwwroot\Groups.cshtml" />
     <None Include="wwwroot\ChannelsWithHourlyLimits.cshtml" />
     <None Include="wwwroot\MetersWithHourlyLimits.cshtml" />
     <None Include="wwwroot\Index.cshtml" />
     <Content Include="AppReadme\CSV-Reports-Help.txt" />
     <Content Include="Data\DriveSetup.sql" />
+    <Content Include="wwwroot\Content\daterangepicker.css" />
+    <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
+    <Content Include="wwwroot\Content\jquery.jspanel.css" />
+    <Content Include="wwwroot\Content\jquery.jspanel.min.css" />
     <Content Include="wwwroot\Images\DriveDataLoader_40high - Copy.png" />
     <Content Include="wwwroot\Images\DriveDataLoader_40high.png" />
     <Content Include="wwwroot\Images\DriveDataLoader_65high.png" />
@@ -365,6 +372,9 @@
     <Content Include="Content\jscolor\hs.png" />
     <Content Include="Content\jscolor\hv.png" />
     <Content Include="Data\InitialSettings.sql" />
+    <Content Include="wwwroot\Scripts\daterangepicker.js" />
+    <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
+    <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\Scripts\jscolor.js" />
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
     <Content Include="wwwroot\Content\bootstrap-datepicker3.min.css" />
@@ -463,6 +473,7 @@
     <Content Include="wwwroot\Scripts\leaflet.js" />
     <Content Include="wwwroot\Scripts\modernizr-2.6.2.js" />
     <Content Include="wwwroot\Scripts\modernizr-2.8.3.js" />
+    <Content Include="wwwroot\Scripts\moment.min.js" />
     <Content Include="wwwroot\Scripts\mustache.min.js" />
     <Content Include="wwwroot\Scripts\pagedViewModel.js" />
     <Content Include="wwwroot\Scripts\plugins-all.js" />
@@ -503,6 +514,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj">
+      <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
+      <Name>openHistorian.XDALink</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

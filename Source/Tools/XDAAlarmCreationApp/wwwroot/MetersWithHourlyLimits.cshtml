@@ -27,6 +27,13 @@
 @using System.Collections.Generic;
 
 @inherits ExtendedTemplateBase<AppModel>
+@section StyleSheets {
+    <style>
+        .ui-notify {
+            height: 200px;
+        }
+    </style>
+}
 @{
     DataContext dataContext = ViewBag.DataContext;
 
@@ -56,15 +63,179 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<MetersWithHourlyLimits>("Name"))
+    <p>Use this screen to calculate and apply smart alarm limits.  You can choose the number of standard deviations to use and whether you want to include zero values in the calculation.</p>
+
+    <div id="metersFrame" class="form-group">
+        <label>Meters</label>
+        <select id="meters" class="form-control mobileSelect" multiple></select>
+    </div>
+
+    <label>Date Range</label>
+    <input id="dateRange" type="text" class="form-control">
+
+    <label>Sigma Level</label>
+    <select class="form-control" id="sigmaValue">
+        <option value="6">6 (99.9999998%)</option>
+        <option value="5">5 (99.99994%)</option>
+        <option value="4">4 (99.994%)</option>
+        <option value="3">3 (99.7%)</option>
+        <option value="2">2 (95%)</option>
+        <option value="1" selected="selected">1 (68%)</option>
+    </select>
+
+    <label>Decimals in Result</label>
+    <select class="form-control" id="significance">
+        <option>9</option>
+        <option>8</option>
+        <option>7</option>
+        <option>6</option>
+        <option>5</option>
+        <option selected="selected">4</option>
+        <option>3</option>
+        <option>2</option>
+        <option>1</option>
+        <option>0</option>
+    </select>
+
+    <label><input type="checkbox" id="zeroValues" class="" checked="checked" />Ignore Zero Values</label>
 }
+<div id="notify">
+    <h4 id="meterName"></h4>
+    <div id="meterProgress" class="progress"></div>
+    <h4 id="instanceName"></h4>
+    <div id="instanceProgress" class="progress"></div>
+</div>
+
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts{
-    <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MetersWithHourlyLimits, DataHub>(ViewBag, "Name"))
+<script>
+@Raw(dataContext.RenderViewModelConfiguration<MetersWithHourlyLimits, DataHub>(ViewBag, "Name"))
 
         $(function () {
-            $('#addRecordButton').text()
+            $('#addRecordButton').text('Configure Alarms');
+            $('#notify').puinotify({ position: 'bottom' });
+
+            dataHubClient.updateProgressBarForOverall = function (instanceName, update) {
+                $('#instanceName').text(instanceName);
+                $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+
+            }
+
+            dataHubClient.updateProgressBarForMeter = function (meterName, update) {
+                $('#meterName').text(meterName);
+                $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+            }
+
+            viewModel.saveNewRecord = function(record)
+            {
+                meterIds = $('#meters').val();
+                startDate = $('#dateRange').data('daterangepicker').startDate._d.toISOString();
+                endDate = $('#dateRange').data('daterangepicker').endDate._d.toISOString();
+                sigmaLevel = $('#sigmaValue').val();
+                sigmaLevel = $('#sigmaValue').val();
+                decimals = $('#significance').val();
+                zeroValues = $('#zeroValues').prop('checked');
+                if (!viewModel.canAddNew()) return;
+                if (meterIds == null) return;
+
+                if (viewModel.dataHubIsConnected()) {
+                    $('#notify').puinotify('show');
+                    dataHub.processSmartAlarms(meterIds, startDate, endDate, sigmaLevel, decimals, zeroValues).done(function () {
+                        // Raise event to allow any new record initialization
+                        viewModel.queryPageRecords();
+                        $('#notify').puinotify('hide');
+
+                        (self).trigger("recordSaved", [record, true]);
+                        showInfoMessage("Saved new record...");
+                    }).fail(function (error) {
+                        showErrorMessage(error);
+                    });
+                }
+            }
+        });
+        var mobileSelectOptions = {
+            padding: {
+                top: '5%',
+                left: '15%',
+                right: '15%',
+                bottom: '5%'
+            },
+            title: "",
+            onOpen: function () {
+                $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+                $('.selectAllBtn').click(function () {
+                    $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+                });
+
+
+            },
+            onClose: function () {
+                $('.selectAllBtn').remove();
+            }
+        };
+
+        var dateRangeOptions = {
+            "timePicker": false,
+            "locale": {
+                "format": 'MM/DD/YYYY '
+            },
+            "autoApply": true,
+            "ranges": {
+                '1 Day': [moment().utc().startOf('day'), moment().utc().endOf('day')],
+                'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
+                'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
+                'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
+                'Last 90 Days': [moment().utc().startOf('day').subtract(89, 'days'), moment().utc().endOf('day')],
+                'Last 365 Days': [moment().utc().startOf('day').subtract(364, 'days'), moment().utc().endOf('day')]
+            },
+            "startDate": moment().utc().subtract(29, 'days').startOf('day'),
+            "endDate": moment.utc().endOf('day')
+        };
+
+        $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+            $('#saveRecordButton').text('Process');
+            $('#addNewEditDialog .modal-header h4 :visible').text('Configure Alarms')
+            $('#dateRange').daterangepicker(dateRangeOptions);
+
+            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+            $('#meters').mobileSelect(mobileSelectOptions);
+            $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+            $('#metersFrame .btn-mobileSelect-gen').off('click');
+            $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+                event.preventDefault();
+                $('#meters').mobileSelect('show');
+            });
+
+            $('#meterfilter').on('keypress', function () {
+                var string = $('#meterfilter').val();
+                if (string === "") {
+                    $('.mobileSelect-container :visible .list-container').children().show();
+
+                }
+                else {
+                    $('.mobileSelect-container :visible .list-container').children().hide();
+                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                        if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                            $(item).show();
+                    });
+                }
+            });
+
+            dataHub.getMetersForSelect().done(function (data) {
+                $.each(data, function (index, type) {
+                    $('#meters').append($(new Option(type.Name, type.ID)));
+                });
+                if (viewModel.recordMode() !== RecordMode.AddNew) {
+                    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
+                        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
+                    });
+                }
+
+                $('#meters').mobileSelect('refresh');
+
+            });
+
         });
     </script>
 }
