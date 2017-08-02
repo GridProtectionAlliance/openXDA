@@ -207,8 +207,21 @@ namespace XDAAlarmCreationApp
             public double Value { get; set; }
         }
 
+        public class RunningAvgStdDev
+        {
+            public int ChannelID { get; set; }
+            public int HourOfWeek { get; set; }
+            public double TotalMin { get; set; }
+            public double CountMin { get; set; }
+            public double TotalMax { get; set; }
+            public double CountMax { get; set; }
+            public double TotalX2Min { get; set; }
+            public double TotalX2Max { get; set; }
+            public double OldMaxMean { get; set; }
+            public double OldMinMean { get; set; }
+        }
 
-        public void ProcessSmartAlarms(IEnumerable<int> meterIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool zeroValues)
+        public void ProcessSmartAlarms(IEnumerable<int> meterIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool zeroValues, bool overwriteOldAlarms)
         {
 
             int progressTotal = (meterIds.Any()? meterIds.Count() : 1 );
@@ -221,37 +234,98 @@ namespace XDAAlarmCreationApp
             foreach (int meterId in meterIds)
             {
                 IEnumerable<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0}", meterId).Select(x => x.ID);
-                int innerProgressTotal = (channelIds.Any()? channelIds.Count() : 1);
-                int innerProgressCount = 0;
-                ProgressUpdatedByMeter("", (int)(100 * (innerProgressCount) / innerProgressTotal));
-
-                foreach(int channelId in channelIds)
+                string meterName = DataContext.Connection.ExecuteScalar<string>("Select Name from Meter where ID = {0}", meterId);
+                ProgressUpdatedOverall(meterName, (int)(100 * (progressCount) / progressTotal));
+                List<TrendingData> trendingData = new List<TrendingData>();
+                List<RunningAvgStdDev> runningData = new List<RunningAvgStdDev>();
+                ProgressUpdatedByMeter("Querying openHistorian", 0);
+                using (openHistorian.XDALink.Historian historian = new Historian(historianServer, historianInstance))
                 {
-                    IEnumerable<int> channelIDs = new List<int> { channelId };
-
-                    List<TrendingData> trendingData = new List<TrendingData>();
-
-                    using (openHistorian.XDALink.Historian historian = new Historian(historianServer, historianInstance))
+                    foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
                     {
-                        foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIDs, startDate, endDate))
-                        {
-                            TrendingData obj = new TrendingData();
+                        if ((zeroValues? point.Value != 0 : true)) {
+                            int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
+                            RunningAvgStdDev record = runningData.FirstOrDefault(x => x.ChannelID == point.ChannelID && x.HourOfWeek == hourOfWeek);
 
-                            obj.ChannelID = point.ChannelID;
-                            obj.SeriesType = point.SeriesID.ToString();
-                            obj.Time = point.Timestamp;
-                            obj.Value = point.Value;
-                            trendingData.Add(obj);
+                            if (record == null)
+                            {
+                                record = new RunningAvgStdDev()
+                                {
+                                    ChannelID = point.ChannelID,
+                                    HourOfWeek = hourOfWeek,
+                                    CountMax = 0,
+                                    CountMin = 0,
+                                    TotalMax = 0,
+                                    TotalMin = 0,
+                                    TotalX2Max = 0,
+                                    TotalX2Min = 0
+                                };
+                                runningData.Add(record);
+                            }
+                            if (point.SeriesID.ToString() == "Maximum")
+                            {
+                                record.TotalMax += point.Value;
+                                record.TotalX2Max += (point.Value * point.Value);
+                                ++record.CountMax;
+                            }
+                            if (point.SeriesID.ToString() == "Minimum")
+                            {
+                                record.TotalMin += point.Value;
+                                record.TotalX2Min += (point.Value * point.Value);
+                                ++record.CountMin;
+                            }
                         }
                     }
-
-                    var dataGroupedByWeek = trendingData.GroupBy(x => new { x.Time.DayOfWeek, x.Time.Hour });
-
-                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", meterId);
-                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
-
                 }
-                string meterName = DataContext.Connection.ExecuteScalar<string>("Select Name from Meter where ID = {0}", meterId);
+
+                int innerProgressTotal = (channelIds.Any() ? channelIds.Count() : 1);
+                int innerProgressCount = 0;
+
+                foreach (int channelId in channelIds)
+                {
+                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", channelId);
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (innerProgressCount) / innerProgressTotal));
+                    foreach(RunningAvgStdDev data in runningData.Where(x => x.ChannelID == channelId))
+                    {
+                        double averageMax = data.TotalMax/(data.CountMax != 0 ? data.CountMax : 1);
+                        double averageMin = data.TotalMin/(data.CountMin != 0 ? data.CountMin : 1);
+
+                        double stdDevMax = Math.Round(Math.Sqrt(Math.Abs((data.TotalX2Max - 2 * averageMax * data.TotalMax + data.CountMax * averageMax * averageMax) / ((data.CountMax != 1 ? data.CountMax : 2) - 1))), decimals);
+                        double stdDevMin = Math.Round(Math.Sqrt(Math.Abs((data.TotalX2Min - 2 * averageMin * data.TotalMin + data.CountMin * averageMin * averageMin) / ((data.CountMin != 1 ? data.CountMin : 2) - 1))), decimals);
+
+                        double high = averageMax + stdDevMax;
+                        double low = averageMin - stdDevMin;
+
+                        HourOfWeekLimit hwl = DataContext.Table<HourOfWeekLimit>().QueryRecordWhere("ChannelID = {0} AND HourOfWeek = {1}", data.ChannelID, data.HourOfWeek);
+
+                        if (hwl == null)
+                        {
+                            HourOfWeekLimit record = new HourOfWeekLimit()
+                            {
+                                ChannelID = data.ChannelID,
+                                AlarmTypeID = 4,
+                                HourOfWeek = data.HourOfWeek,
+                                Severity = 1,
+                                High = high,
+                                Low = low,
+                                Enabled = 1
+                            };
+                            DataContext.Table<HourOfWeekLimit>().AddNewRecord(record);
+                        }
+                        else if (hwl != null && overwriteOldAlarms)
+                        {
+                            hwl.ChannelID = data.ChannelID;
+                            hwl.AlarmTypeID = 4;
+                            hwl.HourOfWeek = data.HourOfWeek;
+                            hwl.Severity = 1;
+                            hwl.High = high;
+                            hwl.Low = low;
+                            hwl.Enabled = 1;
+                            DataContext.Table<HourOfWeekLimit>().UpdateRecord(hwl);
+                        }
+                    }
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
+                }
                 ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
             }
         }
@@ -586,5 +660,26 @@ namespace XDAAlarmCreationApp
             
         }
 
+    }
+
+    public static class Extensions
+    {
+        public static double StdDev(this IEnumerable<double> values)
+        {
+            double ret = 0;
+            int count = values.Count();
+            if (count > 1)
+            {
+                //Compute the Average
+                double avg = values.Average();
+
+                //Perform the Sum of (value-avg)^2
+                double sum = values.Sum(d => (d - avg) * (d - avg));
+
+                //Put it all together
+                ret = Math.Sqrt(sum / count);
+            }
+            return ret;
+        }
     }
 }

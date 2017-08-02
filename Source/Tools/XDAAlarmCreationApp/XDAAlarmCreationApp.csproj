@@ -431,8 +431,6 @@
     <Content Include="wwwrootXDAAlarm\Scripts\bootstrap-toolkit.min.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\bootstrap.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\bootstrap.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\gsf.web.knockout.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\gsf.web.primeui.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\ie10-viewport-bug-workaround.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\jquery-2.2.1.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\jquery-2.2.1.min.js" />
@@ -450,7 +448,6 @@
     <Content Include="wwwrootXDAAlarm\Scripts\jquery.validate.min.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\jquery.validate.unobtrusive.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\js.cookie.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\knockout-3.4.0.debug.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\knockout-3.4.0.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\knockout.mapping-latest.debug.js" />
