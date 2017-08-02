@@ -41,8 +41,18 @@
       <Feature Id="ConsoleFeature" Title="openXDA Remote Console" AllowAdvertise="no" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
         <ComponentGroupRef Id="ConsoleComponents" />
       </Feature>
+      
+      <!-- XDAAlarmCreationApp -->
+      <Feature Id="XDAAlarmCreationAppFeature" Title="XDA Alarm Creation Application" AllowAdvertise="no" Description="Installs the XDA Alarm Creation Application used to add off normal alarms to the openXDA service.">
+        <ComponentGroupRef Id="XDAAlarmComponents" />
+        <!-- Web Files -->
+        <?include WebFeaturesXDAAlarm.wxi ?>
+      </Feature>
+
+
     </Feature>
 
+    
     <UI>
       <!-- User Interface -->
       <UIRef Id="WixUI_FeatureTree" />
@@ -123,6 +133,9 @@
 
     <CustomAction Id="UpdateConfigFileAction.SetProperty" Property="UpdateConfigFileAction" Value="FilePath=[#openXDA.exe.config];Mode=WRITE;PropertyMappings=[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING];XDACONNECTIONSTRING=[XDACONNECTIONSTRING];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM]" />
     <CustomAction Id="UpdateConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="UpdateXDAAlarmConfigFileAction.SetProperty" Property="UpdateXDAAlarmConfigFileAction" Value="FilePath=[#XDAAlarmCreationApp.exe.config];Mode=WRITE;PropertyMappings=[CONNECTIONSTRINGMAPPING];XDACONNECTIONSTRING=[XDACONNECTIONSTRING]" />
+    <CustomAction Id="UpdateXDAAlarmConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="deferred" Impersonate="no" />
+
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
     <CustomAction Id="ServiceAccountAction.SetProperty" Property="ServiceAccountAction" Value="SERVICENAME=[SERVICENAME];SERVICEACCOUNT=[SERVICEACCOUNT];HTTPSERVICEPORTS=[HTTPSERVICEPORTS]" />
@@ -203,6 +216,9 @@
     <InstallExecuteSequence>
       <Custom Action="UpdateConfigFileAction.SetProperty" After="InstallFiles"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
       <Custom Action="UpdateConfigFileAction" After="UpdateConfigFileAction.SetProperty"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
+      <Custom Action="UpdateXDAAlarmConfigFileAction.SetProperty" After="UpdateConfigFileAction"><![CDATA[&XDAAlarmCreationAppFeature=3 OR (!XDAAlarmCreationAppFeature=3 AND &XDAAlarmCreationAppFeature=-1)]]></Custom>
+      <Custom Action="UpdateXDAAlarmConfigFileAction" After="UpdateXDAAlarmConfigFileAction.SetProperty"><![CDATA[&XDAAlarmCreationAppFeature=3 OR (!XDAAlarmCreationAppFeature=3 AND &XDAAlarmCreationAppFeature=-1)]]></Custom>
+
       <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices"><![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
@@ -272,6 +288,7 @@
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
             <?include WebFolders.wxi ?>
+            <?include WebFoldersXDAAlarm.wxi ?>
           </Directory>
         </Directory>
       <?else ?>
@@ -288,6 +305,7 @@
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
             <?include WebFolders.wxi ?>
+            <?include WebFoldersXDAAlarm.wxi ?>
           </Directory>
         </Directory>
       <?endif ?>
@@ -300,6 +318,8 @@
 
   <Fragment>
     <?include WebFiles.wxi ?>
+    <?include WebFilesXDAAlarm.wxi ?>
+
   </Fragment>
 
   <Fragment>
@@ -448,6 +468,24 @@
       </Component>
       <Component Id="openXDAConsoleConfig">
         <File Id="openXDAConsole.exe.config" Name="$(var.openXDAConsole.TargetFileName).config" Source="$(var.openXDAConsole.TargetPath).config" />
+      </Component>
+
+      <!-- GSF Dependencies -->
+      <ComponentRef Id="GSF.Communication" />
+      <ComponentRef Id="GSF.Core" />
+      <ComponentRef Id="GSF.Security" />
+      <ComponentRef Id="GSF.ServiceProcess" />
+    </ComponentGroup>
+
+    <!-- Console Components -->
+    <ComponentGroup Id="XDAAlarmComponents" Directory="INSTALLFOLDER">
+      <!-- Remote Console Applications -->
+      <Component Id="XDAAlarmCreationApp">
+        <File Id="XDAAlarmCreationApp.exe" Name="$(var.XDAAlarmCreationApp.TargetFileName)" Source="$(var.XDAAlarmCreationApp.TargetPath)" />
+        <Shortcut Id="XDAAlarmCreationAppStartMenuShortcut" Name="XDAAlarmCreationApp" Icon="openXDAConsole.ico.exe" Description="Application to add off normal alarm limits to the openXDA service." WorkingDirectory="INSTALLFOLDER" Directory="ApplicationProgramsFolder" Advertise="yes" />
+      </Component>
+      <Component Id="XDAAlarmCreationAppConfig">
+        <File Id="XDAAlarmCreationApp.exe.config" Name="$(var.XDAAlarmCreationApp.TargetFileName).config" Source="$(var.XDAAlarmCreationApp.ProjectDir)\app.config" />
       </Component>
 
       <!-- GSF Dependencies -->
@@ -618,7 +656,7 @@
         <File Id="Microsoft.Web.Infrastructure.dll" Name="Microsoft.Web.Infrastructure.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll" />
       </Component>
       <Component Id="System.Net.Http">
-        <File Id="System.Net.Http.dll" Name="System.Net.Http.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.dll" />
+        <File Id="System.Net.Http.dll" Name="System.Net.Http.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.4.3.0\lib\net46\System.Net.Http.dll" />
       </Component>
       <Component Id="System.Net.Http.Extensions">
         <File Id="System.Net.Http.Extensions.dll" Name="System.Net.Http.Extensions.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.Formatting.Extension.5.2.3.0\lib\System.Net.Http.Extensions.dll" />

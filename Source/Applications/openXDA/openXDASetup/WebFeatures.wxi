@@ -9,6 +9,7 @@
   <ComponentGroupRef Id="wwwroot_Content_themes_Components" />
   <ComponentGroupRef Id="wwwroot_Content_themes_redmond_Components" />
   <ComponentGroupRef Id="wwwroot_Content_themes_redmond_images_Components" />
+  <ComponentGroupRef Id="wwwroot_DataPusher_Components" />
   <ComponentGroupRef Id="wwwroot_Docs_Components" />
   <ComponentGroupRef Id="wwwroot_fonts_Components" />
   <ComponentGroupRef Id="wwwroot_Images_Components" />
@@ -105,6 +106,6 @@
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_themes_vader_images_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_src_noconflict_snippets_Components" />
-  <ComponentGroupRef Id="wwwroot_Workbench_Components" />
+  <ComponentGroupRef Id="wwwroot_WorkBench_Components" />
 </Feature>
 </Include>
