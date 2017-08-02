@@ -62,7 +62,7 @@ namespace XDAAlarmCreationApp
             if (!Path.IsPathRooted(errorLogPath))
             {
                 string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                string clientDataPath = Path.Combine(appData, "Grid Protection Alliance", "EPRI Drive Configuration");
+                string clientDataPath = Path.Combine(appData, "Grid Protection Alliance", "XDA Alarm Configuration App");
                 ErrorLogger.ErrorLog.FileName = Path.Combine(clientDataPath, errorLogPath);
             }
         }
@@ -168,7 +168,7 @@ namespace XDAAlarmCreationApp
             if (e.CloseReason != CloseReason.UserClosing)
                 return;
 
-            if (MessageBox.Show(this, $"Stopping application will terminate EPRI Drive Configuration Manager web functionality. Are you sure you want to stop the {Text}?", $"Shutdown {Text}...", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show(this, $"Stopping application will terminate XDA Alarm Creation App web functionality. Are you sure you want to stop the {Text}?", $"Shutdown {Text}...", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
                 e.Cancel = true;
         }
 
@@ -344,12 +344,12 @@ namespace XDAAlarmCreationApp
             systemSettings.Add("DefaultWebPage", "Index.cshtml", "Determines if cache control is enabled for browser clients.");
             systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
             systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
-            systemSettings.Add("ProjectName", "EPRI DRIVE Data Loader", "The name of the current project.", false, SettingScope.User);
+            systemSettings.Add("ProjectName", "XDA Alarm Creation App", "The name of the current project.", false, SettingScope.User);
             systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
             systemSettings.Add("TimeFormat", "HH:mm.ss.fff", "The default time format to use when rendering timestamps.");
             systemSettings.Add("BootstrapTheme", "Content/bootstrap.min.css", "Path to Bootstrap CSS to use for rendering styles.", false, SettingScope.User);
-            systemSettings.Add("SubscriptionConnectionString", "server=localhost:6190; interface=0.0.0.0", "Connection string for data subscriptions to Epri Drive server.", false, SettingScope.User);
-            systemSettings.Add("DefaultProjectPath", "EpriDrive Projects", "Default path on which to store the user's projects.", false, SettingScope.User);
+            systemSettings.Add("SubscriptionConnectionString", "server=localhost:6190; interface=0.0.0.0", "Connection string for data subscriptions to openXDA server.", false, SettingScope.User);
+            systemSettings.Add("DefaultProjectPath", "openXDA Projects", "Default path on which to store the user's projects.", false, SettingScope.User);
 
             Model = new AppModel();
             Model.Global.WebHostURL = systemSettings["WebHostURL"].Value;
@@ -358,7 +358,7 @@ namespace XDAAlarmCreationApp
             Model.Global.CompanyName = systemSettings["CompanyName"].Value;
             Model.Global.CompanyAcronym = systemSettings["CompanyAcronym"].Value;
             Model.Global.ProjectName = systemSettings["ProjectName"].Value;
-            Model.Global.ApplicationName = "Epri Drive Data Modeling Manager";
+            Model.Global.ApplicationName = "XDA Alarm Creation App";
             Model.Global.ApplicationDescription = "open Extensible Control & Analytics Client";
             Model.Global.ApplicationKeywords = "open source, utility, software, analytics";
             Model.Global.DateFormat = systemSettings["DateFormat"].Value;

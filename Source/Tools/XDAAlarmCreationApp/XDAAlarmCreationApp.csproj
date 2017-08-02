@@ -339,14 +339,11 @@
     <EmbeddedResource Include="wwwrootXDAAlarm\ChannelsWithHourlyLimits.cshtml" />
     <EmbeddedResource Include="wwwrootXDAAlarm\MetersWithHourlyLimits.cshtml" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Index.cshtml" />
-    <Content Include="AppReadme\CSV-Reports-Help.txt" />
-    <Content Include="Data\DriveSetup.sql" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Content\daterangepicker.css" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Content\bootstrap-fullscreen-select.css" />
     <Content Include="wwwrootXDAAlarm\Content\jquery.jspanel.css" />
     <Content Include="wwwrootXDAAlarm\Content\jquery.jspanel.min.css" />
     <None Include="wwwrootXDAAlarm\Scripts\jquery-2.2.1.min.map" />
-    <None Include="wwwrootXDAAlarm\Scripts\knockout.validation.min.js.map" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Security.cshtml" />
     <EmbeddedResource Include="wwwrootXDAAlarm\HourOfWeekLimits.cshtml" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Settings.cshtml" />
@@ -360,7 +357,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Data\InitialSettings.sql" />
     <Content Include="wwwrootXDAAlarm\Images\gpa-lock.png" />
     <Content Include="wwwrootXDAAlarm\Images\gpa-smalllock.png" />
     <Content Include="wwwrootXDAAlarm\Images\header.jpg" />
@@ -384,8 +380,8 @@
     <Content Include="wwwrootXDAAlarm\Images\Icons\mstile-310x310.png" />
     <Content Include="wwwrootXDAAlarm\Images\Icons\mstile-70x70.png" />
     <Content Include="wwwrootXDAAlarm\Scripts\daterangepicker.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
+    <Content Include="wwwrootXDAAlarm\Scripts\bootstrap-fullscreen-select.js" />
+    <Content Include="wwwrootXDAAlarm\Scripts\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwrootXDAAlarm\Content\bootstrap-datepicker3.css" />
     <Content Include="wwwrootXDAAlarm\Content\bootstrap-datepicker3.min.css" />
     <Content Include="wwwrootXDAAlarm\Content\bootstrap-multiselect.css" />
@@ -448,12 +444,6 @@
     <Content Include="wwwrootXDAAlarm\Scripts\jquery.validate.min.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\jquery.validate.unobtrusive.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\knockout-3.4.0.debug.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\knockout-3.4.0.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\knockout.mapping-latest.debug.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\knockout.mapping-latest.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\knockout.validation.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\knockout.validation.min.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\modernizr-2.6.2.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\modernizr-2.8.3.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\moment.min.js" />
@@ -461,23 +451,6 @@
     <Content Include="wwwrootXDAAlarm\Scripts\plugins-all.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\primeui.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\primeui.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeelements.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeelements.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-all.css" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-all.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-all.min.css" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-all.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-ng-all.css" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-ng-all.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-ng-all.min.css" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-ng-all.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-ng.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui-ng.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui.css" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui.min.css" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\primeui.min.js" />
-    <Content Include="wwwrootXDAAlarm\Scripts\PrimeUI\x-tag-core.min.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\respond.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\respond.matchmedia.addListener.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\respond.matchmedia.addListener.min.js" />
@@ -486,10 +459,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="wwwrootXDAAlarm\fonts\" />
-    <Folder Include="wwwrootXDAAlarm\Scripts\PrimeUI\Font-Awesome\" />
-    <Folder Include="wwwrootXDAAlarm\Scripts\PrimeUI\images\" />
-    <Folder Include="wwwrootXDAAlarm\Scripts\PrimeUI\plugins\" />
-    <Folder Include="wwwrootXDAAlarm\Scripts\PrimeUI\themes\" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6">

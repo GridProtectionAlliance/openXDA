@@ -118,7 +118,7 @@
             this.OpenWebButton.Size = new System.Drawing.Size(113, 24);
             this.OpenWebButton.TabIndex = 3;
             this.OpenWebButton.Text = ">> Launch Web UI";
-            this.MainWindowToolTip.SetToolTip(this.OpenWebButton, "Epri Drive Client Home Page");
+            this.MainWindowToolTip.SetToolTip(this.OpenWebButton, "XDA Alarm Creation App");
             this.OpenWebButton.UseVisualStyleBackColor = true;
             this.OpenWebButton.Click += new System.EventHandler(this.OpenWebButton_Click);
             // 
@@ -144,7 +144,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.MainWindowMenuStrip;
             this.Name = "MainWindow";
-            this.Text = "EPRI DRIVE Data Loader Web UI Host";
+            this.Text = "XDA Alarm Creation App Web UI Host";
             this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
