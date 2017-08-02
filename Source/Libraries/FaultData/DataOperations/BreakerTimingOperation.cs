@@ -249,6 +249,9 @@ namespace FaultData.DataOperations
                     .TakeWhile(dataPoint => dataPoint.Value > openBreakerThreshold)
                     .Count() + startIndex;
 
+                if (cycleIndex == startIndex)
+                    return null;
+
                 if (cycleIndex == m_cycleDataGroup.Peak.DataPoints.Count)
                     return null;
 
