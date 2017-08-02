@@ -252,3 +252,7 @@
         </div>
     </div>
 </div>
+@{
+    ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
+    ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
+}

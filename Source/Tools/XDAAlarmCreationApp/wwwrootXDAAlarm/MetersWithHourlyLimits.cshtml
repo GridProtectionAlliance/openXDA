@@ -97,7 +97,9 @@
         <option>0</option>
     </select>
 
-    <label><input type="checkbox" id="zeroValues" class="" checked="checked" />Ignore Zero Values</label>
+    <div class=""><label><input type="checkbox" id="zeroValues" class="" checked="checked" />Ignore Zero Values</label></div>
+    <div><label><input type="checkbox" id="overwrightOldAlarms" class="" checked="checked" />Overwrite Old Alarms</label></div>
+
 }
 <div id="notify">
     <h4 id="meterName"></h4>
@@ -135,17 +137,18 @@
                 sigmaLevel = $('#sigmaValue').val();
                 decimals = $('#significance').val();
                 zeroValues = $('#zeroValues').prop('checked');
+                overwriteOld = $('#overwrightOldAlarms').prop('checked');
                 if (!viewModel.canAddNew()) return;
                 if (meterIds == null) return;
 
                 if (viewModel.dataHubIsConnected()) {
                     $('#notify').puinotify('show');
-                    dataHub.processSmartAlarms(meterIds, startDate, endDate, sigmaLevel, decimals, zeroValues).done(function () {
+                    dataHub.processSmartAlarms(meterIds, startDate, endDate, sigmaLevel, decimals, zeroValues, overwriteOld).done(function () {
                         // Raise event to allow any new record initialization
-                        viewModel.queryPageRecords();
                         $('#notify').puinotify('hide');
+                        viewModel.queryPageRecords();
 
-                        (self).trigger("recordSaved", [record, true]);
+                        (viewModel).trigger("recordSaved", [record, true]);
                         showInfoMessage("Saved new record...");
                     }).fail(function (error) {
                         showErrorMessage(error);
@@ -207,7 +210,7 @@
                 $('#meters').mobileSelect('show');
             });
 
-            $('#meterfilter').on('keypress', function () {
+            $('#meterfilter').on('keyup', function () {
                 var string = $('#meterfilter').val();
                 if (string === "") {
                     $('.mobileSelect-container :visible .list-container').children().show();
@@ -224,13 +227,13 @@
 
             dataHub.getMetersForSelect().done(function (data) {
                 $.each(data, function (index, type) {
-                    $('#meters').append($(new Option(type.Name, type.ID)));
+                    $('#meters').append($(new Option(type.Name, type.ID, true)));
                 });
-                if (viewModel.recordMode() !== RecordMode.AddNew) {
-                    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
-                        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
-                    });
-                }
+                //if (viewModel.recordMode() !== RecordMode.AddNew) {
+                //    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
+                //        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
+                //    });
+                //}
 
                 $('#meters').mobileSelect('refresh');
 
