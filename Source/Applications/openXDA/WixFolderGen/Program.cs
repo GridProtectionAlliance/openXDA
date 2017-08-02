@@ -9,63 +9,91 @@ using GSF.IO.Checksums;
 
 namespace WixFolderGen
 {
+    class Solution
+    {
+        public string ProjectName { get; set; }
+        public string SolutionName { get; set; }
+        public string RootFolderName { get; set; }
+        public string SolutionRelativeRootFolder { get; set; }
+        public string ApplicationFolder { get; set; }
+        public int MaxWixIDLength { get; set; }
+        public string ApplicationPath { get; set; }
+        public string SourceFolder { get; set; }
+        public string WebFeaturesDestinationFile { get; set; }
+        public string WebFoldersDestinationFile { get; set; }
+        public string WebFilesDestinationFile { get; set; }
+        public string FileNamePostfix { get; set; }
+
+        public Solution(string projectName, string rootFolderName, string applicationFolder, string fileNamePostfix)
+        {
+            ProjectName = projectName;
+            RootFolderName = rootFolderName;
+            ApplicationFolder = applicationFolder;
+            SolutionRelativeRootFolder = applicationFolder + "\\" + ProjectName + "\\" + RootFolderName;
+            MaxWixIDLength = 72;
+            ApplicationPath = "..\\..\\..\\..\\..\\Source\\" + applicationFolder;
+            SourceFolder = ApplicationPath + "\\" + ProjectName + "\\" + RootFolderName;
+            FileNamePostfix = fileNamePostfix;
+            WebFeaturesDestinationFile = "..\\..\\..\\..\\..\\Source\\Applications\\openXDA\\openXDASetup\\WebFeatures"+fileNamePostfix +".wxi";
+            WebFoldersDestinationFile = "..\\..\\..\\..\\..\\Source\\Applications\\openXDA\\openXDASetup\\WebFolders" + fileNamePostfix + ".wxi";
+            WebFilesDestinationFile = "..\\..\\..\\..\\..\\Source\\Applications\\openXDA\\openXDASetup\\WebFiles" + fileNamePostfix + ".wxi";
+        }
+
+    }
     class Program
     {
-        const string ProjectName = "openXDA";
-        const string RootFolderName = "wwwroot";
-        const string SolutionRelativeRootFolder = "Applications\\" + ProjectName + "\\" + ProjectName + "\\" + RootFolderName;
-        const int MaxWixIDLength = 72;
-
-        // Following paths are relative to build output location
-        const string ApplicationPath = "..\\..\\..\\..\\..\\Source\\Applications\\" + ProjectName;
-        const string SourceFolder = ApplicationPath + "\\" + ProjectName + "\\" + RootFolderName;
-        const string WebFeaturesDestinationFile = ApplicationPath + "\\" + ProjectName + "Setup\\WebFeatures.wxi";
-        const string WebFoldersDestinationFile = ApplicationPath + "\\" + ProjectName + "Setup\\WebFolders.wxi";
-        const string WebFilesDestinationFile = ApplicationPath + "\\" + ProjectName + "Setup\\WebFiles.wxi";
-
         static void Main()
         {
-
-            List<string> folderList = GetFolderList(SourceFolder);
-            List<string> componentGroupRefTags = GetComponentRefTags(folderList);
-            List<string> directoryTags = GetDirectoryTags(folderList);
-            List<string> componentGroupTags = GetComponentGroupTags(SourceFolder, folderList);
-
-            using (FileStream stream = File.Create(WebFeaturesDestinationFile))
-            using (StreamWriter writer = new StreamWriter(stream))
+            List<Solution> solutions = new List<Solution>()
             {
-                writer.WriteLine("<Include>");
-                writer.WriteLine("<Feature Id=\"WebFilesFeature\" Title=\"Web Files\" Description=\"Web Files\">");
+                new Solution("openXDA", "wwwroot", "Applications\\openXDA", ""),
+                new Solution("XDAAlarmCreationApp", "wwwrootXDAAlarm", "Tools", "XDAAlarm")
+            };
 
-                foreach (string tag in componentGroupRefTags)
-                    writer.WriteLine("  " + tag);
-
-                writer.WriteLine("</Feature>");
-                writer.WriteLine("</Include>");
-            }
-
-            using (FileStream stream = File.Create(WebFoldersDestinationFile))
-            using (StreamWriter writer = new StreamWriter(stream))
+            foreach(Solution solution in solutions)
             {
-                writer.WriteLine("<Include>");
-                writer.WriteLine($"<Directory Id=\"{GetDirectoryID(RootFolderName)}\" Name=\"{RootFolderName}\">");
+                List<string> folderList = GetFolderList(solution.SourceFolder);
+                List<string> componentGroupRefTags = GetComponentRefTags(solution, folderList);
+                List<string> directoryTags = GetDirectoryTags(solution, folderList);
+                List<string> componentGroupTags = GetComponentGroupTags(solution, folderList);
 
-                foreach (string tag in directoryTags)
-                    writer.WriteLine("  " + tag);
+                using (FileStream stream = File.Create(solution.WebFeaturesDestinationFile))
+                using (StreamWriter writer = new StreamWriter(stream))
+                {
+                    writer.WriteLine("<Include>");
+                    writer.WriteLine("<Feature Id=\"WebFilesFeature" + solution.FileNamePostfix + "\" Title=\"Web Files\" Description=\"Web Files\">");
 
-                writer.WriteLine("</Directory>");
-                writer.WriteLine("</Include>");
-            }
+                    foreach (string tag in componentGroupRefTags)
+                        writer.WriteLine("  " + tag);
 
-            using (FileStream stream = File.Create(WebFilesDestinationFile))
-            using (StreamWriter writer = new StreamWriter(stream))
-            {
-                writer.WriteLine("<Include>");
+                    writer.WriteLine("</Feature>");
+                    writer.WriteLine("</Include>");
+                }
 
-                foreach (string tag in componentGroupTags)
-                    writer.WriteLine(tag);
+                using (FileStream stream = File.Create(solution.WebFoldersDestinationFile))
+                using (StreamWriter writer = new StreamWriter(stream))
+                {
+                    writer.WriteLine("<Include>");
+                    writer.WriteLine($"<Directory Id=\"{GetDirectoryID(solution, solution.RootFolderName)}\" Name=\"{solution.RootFolderName}\">");
 
-                writer.WriteLine("</Include>");
+                    foreach (string tag in directoryTags)
+                        writer.WriteLine("  " + tag);
+
+                    writer.WriteLine("</Directory>");
+                    writer.WriteLine("</Include>");
+                }
+
+                using (FileStream stream = File.Create(solution.WebFilesDestinationFile))
+                using (StreamWriter writer = new StreamWriter(stream))
+                {
+                    writer.WriteLine("<Include>");
+
+                    foreach (string tag in componentGroupTags)
+                        writer.WriteLine(tag);
+
+                    writer.WriteLine("</Include>");
+                }
+
             }
         }
 
@@ -76,15 +104,15 @@ namespace WixFolderGen
             return folderList;
         }
 
-        private static List<string> GetComponentRefTags(List<string> folderList)
+        private static List<string> GetComponentRefTags(Solution solution, List<string> folderList)
         {
             return new[] { "" }
                 .Concat(folderList)
-                .Select(folder => $"<ComponentGroupRef Id=\"{GetComponentGroupID(folder)}\" />")
+                .Select(folder => $"<ComponentGroupRef Id=\"{GetComponentGroupID(solution, folder)}\" />")
                 .ToList();
         }
 
-        private static List<string> GetDirectoryTags(List<string> folderList)
+        private static List<string> GetDirectoryTags(Solution solution, List<string> folderList)
         {
             List<string> directoryTags = new List<string>();
 
@@ -93,24 +121,24 @@ namespace WixFolderGen
                 .Select(folder => folder.Split(Path.DirectorySeparatorChar))
                 .ToList();
 
-            BuildDirectoryTags(directoryTags, brokenFolderList, 0);
+            BuildDirectoryTags(solution, directoryTags, brokenFolderList, 0);
 
             return directoryTags;
         }
 
-        private static List<string> GetComponentGroupTags(string path, List<string> folderList)
+        private static List<string> GetComponentGroupTags(Solution solution, List<string> folderList)
         {
             List<string> componentGroupTags = new List<string>();
 
-            componentGroupTags.Add($"<ComponentGroup Id=\"{GetComponentGroupID(null)}\" Directory=\"{GetDirectoryID(RootFolderName)}\">");
+            componentGroupTags.Add($"<ComponentGroup Id=\"{GetComponentGroupID(solution, null)}\" Directory=\"{GetDirectoryID(solution, solution.RootFolderName)}\">");
 
-            foreach (string file in Directory.EnumerateFiles(path))
+            foreach (string file in Directory.EnumerateFiles(solution.SourceFolder))
             {
                 string fileName = FilePath.GetFileName(file);
-                string fileSource = $"$(var.SolutionDir){Path.Combine(SolutionRelativeRootFolder, fileName)}";
+                string fileSource = $"$(var.SolutionDir){Path.Combine(solution.SolutionRelativeRootFolder, fileName)}";
 
-                componentGroupTags.Add($"  <Component Id=\"{GetComponentID(fileName)}\">");
-                componentGroupTags.Add($"    <File Id=\"{GetFileID(fileName)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
+                componentGroupTags.Add($"  <Component Id=\"{GetComponentID(solution, fileName)}\">");
+                componentGroupTags.Add($"    <File Id=\"{GetFileID(solution, fileName)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
                 componentGroupTags.Add("  </Component>");
             }
 
@@ -118,19 +146,19 @@ namespace WixFolderGen
 
             foreach (string folder in folderList)
             {
-                componentGroupTags.Add($"<ComponentGroup Id=\"{GetComponentGroupID(folder)}\" Directory=\"{GetDirectoryID(folder)}\">");
+                componentGroupTags.Add($"<ComponentGroup Id=\"{GetComponentGroupID(solution, folder)}\" Directory=\"{GetDirectoryID(solution, folder)}\">");
 
-                foreach (string file in Directory.EnumerateFiles(Path.Combine(path, folder)))
+                foreach (string file in Directory.EnumerateFiles(Path.Combine(solution.SourceFolder, folder)))
                 {
                     string fileName = FilePath.GetFileName(file);
 
                     if (!fileName.Equals("thumbs.db", System.StringComparison.OrdinalIgnoreCase))
                     {
                         string fileID = folder + "_" + fileName;
-                        string fileSource = $"$(var.SolutionDir){Path.Combine(SolutionRelativeRootFolder, folder, fileName)}";
+                        string fileSource = $"$(var.SolutionDir){Path.Combine(solution.SolutionRelativeRootFolder, folder, fileName)}";
 
-                        componentGroupTags.Add($"  <Component Id=\"{GetComponentID(fileID)}\">");
-                        componentGroupTags.Add($"    <File Id=\"{GetFileID(fileID)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
+                        componentGroupTags.Add($"  <Component Id=\"{GetComponentID(solution, fileID)}\">");
+                        componentGroupTags.Add($"    <File Id=\"{GetFileID(solution, fileID)}\" Name=\"{fileName}\" Source=\"{fileSource}\" />");
                         componentGroupTags.Add("  </Component>");
                     }
                 }
@@ -153,7 +181,7 @@ namespace WixFolderGen
             }
         }
 
-        private static void BuildDirectoryTags(List<string> directoryTags, List<string[]> folderList, int level)
+        private static void BuildDirectoryTags(Solution solution, List<string> directoryTags, List<string[]> folderList, int level)
         {
             List<IGrouping<string, string[]>> groupings = folderList
                 .Where(folder => folder.Length > level)
@@ -168,7 +196,7 @@ namespace WixFolderGen
                     string[] folder = grouping.First();
                     string name = FilePath.GetLastDirectoryName(FilePath.AddPathSuffix(string.Join(Path.DirectorySeparatorChar.ToString(), folder)));
 
-                    directoryTags.Add($"{new string(' ', level * 2)}<Directory Id=\"{GetDirectoryID(string.Join("", folder))}\" Name=\"{name}\" />");
+                    directoryTags.Add($"{new string(' ', level * 2)}<Directory Id=\"{GetDirectoryID(solution, string.Join("", folder))}\" Name=\"{name}\" />");
                 }
                 else
                 {
@@ -178,8 +206,8 @@ namespace WixFolderGen
 
                     string name = FilePath.GetLastDirectoryName(FilePath.AddPathSuffix(grouping.Key));
 
-                    directoryTags.Add($"{new string(' ', level * 2)}<Directory Id=\"{GetDirectoryID(grouping.Key)}\" Name=\"{name}\">");
-                    BuildDirectoryTags(directoryTags, subfolderList, level + 1);
+                    directoryTags.Add($"{new string(' ', level * 2)}<Directory Id=\"{GetDirectoryID(solution, grouping.Key)}\" Name=\"{name}\">");
+                    BuildDirectoryTags(solution, directoryTags, subfolderList, level + 1);
                     directoryTags.Add($"{new string(' ', level * 2)}</Directory>");
                 }
             }
@@ -230,33 +258,36 @@ namespace WixFolderGen
             return path;
         }
 
-        private static string GetDirectoryID(string folderName)
+        private static string GetDirectoryID(Solution solution, string folderName)
         {
+            string Prefix = solution.RootFolderName + "_";
             const string Suffix = "FOLDER";
-            return GetCleanID(folderName, MaxWixIDLength - Suffix.Length, removeDirectorySeparatorChar: true, removeUnderscores: true).ToUpperInvariant() + Suffix;
+            return Prefix + GetCleanID(folderName, solution.MaxWixIDLength - Suffix.Length, removeDirectorySeparatorChar: true, removeUnderscores: true).ToUpperInvariant() + Suffix;
         }
 
-        private static string GetComponentGroupID(string folderName)
+        private static string GetComponentGroupID(Solution solution, string folderName)
         {
-            const string Prefix = RootFolderName + "_";
-            const string Suffix = "_Components";
+            string Prefix = solution.RootFolderName + "_";
+            string Suffix = "_Components";
 
             if (string.IsNullOrWhiteSpace(folderName))
-                return RootFolderName + Suffix;
+                return solution.RootFolderName + Suffix;
 
-            return Prefix + GetCleanID(folderName, MaxWixIDLength - Prefix.Length - Suffix.Length, replaceDirectorySeparatorChar: true, replaceSpaces: true) + Suffix;
+            return Prefix + GetCleanID(folderName, solution.MaxWixIDLength - Prefix.Length - Suffix.Length, replaceDirectorySeparatorChar: true, replaceSpaces: true) + Suffix;
         }
 
-        private static string GetComponentID(string fileName)
+        private static string GetComponentID(Solution solution,string fileName)
         {
+            string Prefix = solution.RootFolderName + "_";
             string suffix = FilePath.GetExtension(fileName).Replace('.', '_');
-            return GetCleanID(FilePath.GetDirectoryName(fileName) + FilePath.GetFileNameWithoutExtension(fileName), MaxWixIDLength - suffix.Length, removeSpaces: true, replaceDot: true) + suffix;
+            return Prefix + GetCleanID(FilePath.GetDirectoryName(fileName) + FilePath.GetFileNameWithoutExtension(fileName), solution.MaxWixIDLength - suffix.Length, removeSpaces: true, replaceDot: true) + suffix;
         }
 
-        private static string GetFileID(string fileName)
+        private static string GetFileID(Solution solution,string fileName)
         {
+            string Prefix = solution.RootFolderName + "_";
             string suffix = FilePath.GetExtension(fileName);
-            return GetCleanID(FilePath.GetDirectoryName(fileName) + FilePath.GetFileNameWithoutExtension(fileName), MaxWixIDLength - suffix.Length, removeSpaces: true) + suffix;
+            return Prefix + GetCleanID(FilePath.GetDirectoryName(fileName) + FilePath.GetFileNameWithoutExtension(fileName), solution.MaxWixIDLength - suffix.Length, removeSpaces: true) + suffix;
         }
     }
 }
