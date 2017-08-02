@@ -3052,6 +3052,40 @@ WHERE         UpdatedBy IS NOT NULL
 
 GO
 
+CREATE VIEW [dbo].[MetersWithHourlyLimits]
+AS
+SELECT        dbo.Meter.Name, COUNT(DISTINCT dbo.Channel.ID) AS Limits, dbo.Meter.ID
+FROM            dbo.HourOfWeekLimit INNER JOIN
+                         dbo.Channel ON dbo.HourOfWeekLimit.ChannelID = dbo.Channel.ID INNER JOIN
+                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID
+GROUP BY dbo.Meter.Name, dbo.Meter.ID
+
+GO
+
+CREATE VIEW [dbo].[HourOfWeekLimitView]
+AS
+SELECT        dbo.HourOfWeekLimit.ID, dbo.HourOfWeekLimit.ChannelID, dbo.HourOfWeekLimit.AlarmTypeID, dbo.HourOfWeekLimit.HourOfWeek, dbo.HourOfWeekLimit.Severity, dbo.HourOfWeekLimit.High, dbo.HourOfWeekLimit.Low, 
+                         dbo.HourOfWeekLimit.Enabled, dbo.AlarmType.Name AS AlarmTypeName
+FROM            dbo.HourOfWeekLimit INNER JOIN
+                         dbo.AlarmType ON dbo.HourOfWeekLimit.AlarmTypeID = dbo.AlarmType.ID
+
+GO
+
+CREATE VIEW [dbo].[ChannelsWithHourlyLimits]
+AS
+SELECT        dbo.Channel.Name, COUNT(DISTINCT dbo.HourOfWeekLimit.HourOfWeek) AS Limits, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName, 
+                         dbo.MeasurementCharacteristic.Name AS MeasurementCharacteristic, dbo.MeasurementType.Name AS MeasurementType, dbo.Channel.HarmonicGroup, dbo.Phase.Name AS Phase
+FROM            dbo.HourOfWeekLimit INNER JOIN
+                         dbo.Channel ON dbo.HourOfWeekLimit.ChannelID = dbo.Channel.ID INNER JOIN
+                         dbo.AlarmType ON dbo.HourOfWeekLimit.AlarmTypeID = dbo.AlarmType.ID INNER JOIN
+                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID INNER JOIN
+                         dbo.MeasurementCharacteristic ON dbo.Channel.MeasurementCharacteristicID = dbo.MeasurementCharacteristic.ID INNER JOIN
+                         dbo.MeasurementType ON dbo.Channel.MeasurementTypeID = dbo.MeasurementType.ID INNER JOIN
+                         dbo.Phase ON dbo.Channel.PhaseID = dbo.Phase.ID
+GROUP BY dbo.Channel.Name, dbo.Channel.MeterID, dbo.Channel.ID, dbo.AlarmType.Name, dbo.MeasurementCharacteristic.Name, dbo.MeasurementType.Name, dbo.Channel.HarmonicGroup, dbo.Phase.Name
+
+GO
+
 ----- PROCEDURES -----
 
 CREATE PROCEDURE [dbo].[GetEventEmailRecipients]
