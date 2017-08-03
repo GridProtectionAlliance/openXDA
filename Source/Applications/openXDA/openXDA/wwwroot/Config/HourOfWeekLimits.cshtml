@@ -1,0 +1,128 @@
+﻿@*//******************************************************************************************************
+//  Settings.cshtml - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  05/02/2017 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using GSF.Web.Model
+@using GSF.Web
+@using System.Collections.Generic;
+@using System.Net.Http
+@using openXDA.Model
+@using openXDA
+@using openXDA.Hubs
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("ChannelID"))
+    {
+        ViewBag.ChannelID = int.Parse(parameters["ChannelID"]);
+    }
+    if (parameters.ContainsKey("MeterName"))
+    {
+        ViewBag.MeterName = parameters["MeterName"];
+    }
+    if (parameters.ContainsKey("ChannelName"))
+    {
+        ViewBag.ChannelName = parameters["ChannelName"];
+    }
+
+    Layout = "Config/Layout.cshtml";
+    string title = ViewBag.CustomTitle = "Hour Of Week Alarm Limits for Meter: " + ViewBag.MeterName + " ,Channel: " + ViewBag.ChannelName;
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "AlarmTypeName", "AlarmType", "text-Left" },
+        new[] { "HourOfWeek", "Hour Of Week", "text-Left" },
+        new[] { "Severity", "Severity", "text-Left" },
+        new[] { "High", "High", "text-Left" },
+        new[] { "Low", "Low", "text-Left" },
+        new[] { "Enabled", "Enabled", "text-Left" },
+    };
+
+    ViewBag.AddNewEditTitle = "Setting";
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.HideAddNewButton = true;
+
+}
+@helper BodyRows()
+{
+    <td width="20%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AlarmTypeName, click: $parent.viewPageRecord"></button></td>
+    <td width="15%" class="text-left valign-middle" nowrap data-bind="text: HourOfWeek"></td>
+    <td width="15%" class="text-left valign-middle" nowrap data-bind="text: Severity"></td>
+    <td width="15%" class="text-left valign-middle" nowrap data-bind="text: High"></td>
+    <td width="15%" class="text-left valign-middle" nowrap data-bind="text: Low"></td>
+    <td width="15%" class="text-left valign-middle" nowrap data-bind="text: Enabled"></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("ID"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("ChannelID"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("AlarmTypeID"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("HourOfWeek"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("Severity"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("High"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("Low"))
+    @Raw(dataContext.AddInputField<HourOfWeekLimit>("Enabled"))
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts{
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<HourOfWeekLimit, DataHub>(ViewBag, "ID", null, ViewBag.ChannelID))
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#exportCSVButton').off('click');
+
+            $('#exportCSVButton').click(function () {
+                if (!hubIsConnected)
+                    return;
+        
+                dataHub.getConnectionID().done(function (connectionID) {
+                    $("#exportCSVLink").attr("href", "/Config/HowlCSVDownloadHandler.ashx" +
+                        "?ModelName=" + encodeURIComponent(viewModel.modelName) +
+                        "&HubName=" + encodeURIComponent(viewModel.hubName) +
+                        "&ConnectionID=" + encodeURIComponent(connectionID) +
+                        "&CallingFrom=Alarms" +
+                        "&ID=" + @ViewBag.ChannelID + 
+                        "&FilterText=" + encodeURIComponent(viewModel.filterText) +
+                        "&SortField=" + encodeURIComponent(viewModel.sortField()) +
+                        "&SortAscending=" + encodeURIComponent(viewModel.sortAscending()) +
+                        "&ShowDeleted=False&ParentKeys=");
+
+                    $("#exportCSVLink")[0].click();
+                }).
+                fail(function (error) {
+                    showErrorMessage(error);
+                });
+            });
+        });
+    </script>
+}

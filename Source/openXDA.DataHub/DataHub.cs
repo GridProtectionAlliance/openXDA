@@ -888,78 +888,60 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [HourOfWeekLimit Table Operations]
+        #region [ MetersWithHourlyLimits Table Operations ]
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecordCount)]
-        public int QueryHourOfWeekLimitCount()
+        [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.QueryRecordCount)]
+        public int QueryMetersWithHourlyLimitsCount(string filterText)
         {
-            return DataContext.Table<HourOfWeekLimit>().QueryRecordCount();
+
+            return DataContext.Table<MetersWithHourlyLimits>().QueryRecordCount(filterText);
         }
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecords)]
-        public IEnumerable<HourOfWeekLimit> QueryHourOfWeekLimits(int meterID, int lineID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.QueryRecords)]
+        public IEnumerable<MetersWithHourlyLimits> QueryMetersWithHourlyLimits(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            // Stub
-
-            return DataContext.Table<HourOfWeekLimit>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<MetersWithHourlyLimits>().QueryRecords(sortField, ascending, page, pageSize, filterText);
         }
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.DeleteRecord)]
-        public void DeleteHourOfWeekLimit(int id)
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.DeleteRecord)]
+        public void DeleteMetersWithHourlyLimits(int id)
         {
-            DataContext.Table<HourOfWeekLimit>().DeleteRecord(id);
+            DataContext.Table<MetersWithHourlyLimits>().DeleteRecord(id);
         }
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.CreateNewRecord)]
-        public HourOfWeekLimit NewHourOfWeekLimit()
+        [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.CreateNewRecord)]
+        public MetersWithHourlyLimits NewMetersWithHourlyLimits()
         {
-            return new HourOfWeekLimit();
+            return DataContext.Table<MetersWithHourlyLimits>().NewRecord();
         }
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.AddNewRecord)]
-        public void AddHourOfWeekLimit(HourOfWeekLimit record)
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.AddNewRecord)]
+        public void AddNewMetersWithHourlyLimits(MetersWithHourlyLimits record)
         {
-            DataContext.Table<HourOfWeekLimit>().AddNewRecord(CreateNewHourOfWeekLimit(record));
+            DataContext.Table<MetersWithHourlyLimits>().AddNewRecord(record);
         }
 
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.UpdateRecord)]
-        public void UpdateHourOfWeekLimit(HourOfWeekLimit record)
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.UpdateRecord)]
+        public void UpdateMetersWithHourlyLimits(MetersWithHourlyLimits record)
         {
-            DataContext.Table<HourOfWeekLimit>().UpdateRecord(CreateNewHourOfWeekLimit(record));
+            DataContext.Table<MetersWithHourlyLimits>().UpdateRecord(record);
         }
 
-        public HourOfWeekLimit CreateNewHourOfWeekLimit(HourOfWeekLimit record)
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateMetersWithHourlyLimits(MetersWithHourlyLimits record)
         {
-            HourOfWeekLimit howl = new HourOfWeekLimit() {
-                ID = record.ID,
-                ChannelID = record.ChannelID,
-                AlarmTypeID = record.AlarmTypeID,
-                Enabled = record.Enabled,
-                Severity = record.Severity,
-                High = record.High,
-                Low = record.Low,
-                HourOfWeek = record.HourOfWeek
-            };
-
-            return howl;
+            DataContext.Table<MetersWithHourlyLimits>().AddNewOrUpdateRecord(record);
         }
-
+        
         [AuthorizeHubRole("Administrator")]
-        public void ResetHourOfWeekLimitToDefault(HourOfWeekLimit record)
-        {
-            // TODO: Finish
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        public string SendHourOfWeekLimitTableToCSV()
+        public string SendHourOfWeekLimitTableToCSV(int meterID, int channelID)
         {
             string csv = "";
+
+
             string[] headers = DataContext.Table<AlarmRangeLimitView>().GetFieldNames();
 
             foreach (string h in headers)
@@ -975,16 +957,122 @@ namespace openXDA.Hubs
             IEnumerable<AlarmRangeLimitView> limits = DataContext.Table<AlarmRangeLimitView>().QueryRecords();
 
             foreach (AlarmRangeLimitView limit in limits)
-            {
                 csv += limit.csvString() + '\n';
-                //csv += limit.ID.ToString() + ',' + limit.ChannelID.ToString() + ',' + limit.Name.ToString() + ',' + limit.AlarmTypeID.ToString() + ',' + limit.Severity.ToString() + ',' + limit.High.ToString() + ',' 
-                //    + limit.Low.ToString() + ',' + limit.RangeInclusive.ToString() + ',' + limit.PerUnit.ToString() + ',' + limit.Enabled.ToString() + ',' + limit.MeasurementType.ToString() + ','
-                //    + limit.MeasurementTypeID.ToString() + ',' + limit.MeasurementCharacteristic.ToString() + ',' + limit.MeasurementCharacteristicID.ToString() + ',' + limit.Phase.ToString() + ','
-                //    + limit.PhaseID.ToString() + ',' + limit.HarmonicGroup.ToString() + ','  + limit.IsDefault.ToString() + "\n";
-            }
 
             return csv;
         }
+
+        #endregion
+
+        #region [ ChannelsWithHourlyLimits Table Operations ]
+
+        [RecordOperation(typeof(ChannelsWithHourlyLimits), RecordOperation.QueryRecordCount)]
+        public int QueryChannelsWithHourlyLimitsCount(int meterId, string filterText)
+        {
+            TableOperations<ChannelsWithHourlyLimits> table = DataContext.Table<ChannelsWithHourlyLimits>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecordCount(new RecordRestriction("MeterID = {0}", meterId) + restriction);
+        }
+
+        [RecordOperation(typeof(ChannelsWithHourlyLimits), RecordOperation.QueryRecords)]
+        public IEnumerable<ChannelsWithHourlyLimits> QueryChannelsWithHourlyLimits(int meterId, string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            TableOperations<ChannelsWithHourlyLimits> table = DataContext.Table<ChannelsWithHourlyLimits>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID = {0}", meterId) + restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithHourlyLimits), RecordOperation.DeleteRecord)]
+        public void DeleteChannelsWithHourlyLimits(int id)
+        {
+            DataContext.Table<ChannelsWithHourlyLimits>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(ChannelsWithHourlyLimits), RecordOperation.CreateNewRecord)]
+        public ChannelsWithHourlyLimits NewChannelsWithHourlyLimits()
+        {
+            return DataContext.Table<ChannelsWithHourlyLimits>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithHourlyLimits), RecordOperation.AddNewRecord)]
+        public void AddNewChannelsWithHourlyLimits(ChannelsWithHourlyLimits record)
+        {
+            DataContext.Table<ChannelsWithHourlyLimits>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithHourlyLimits), RecordOperation.UpdateRecord)]
+        public void UpdateChannelsWithHourlyLimits(ChannelsWithHourlyLimits record)
+        {
+            DataContext.Table<ChannelsWithHourlyLimits>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateChannelsWithHourlyLimits(ChannelsWithHourlyLimits record)
+        {
+            DataContext.Table<ChannelsWithHourlyLimits>().AddNewOrUpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ HourOfWeekLimit Table Operations ]
+
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecordCount)]
+        public int QueryHourOfWeekLimitCount(int channelId, string filterText)
+        {
+            TableOperations<HourOfWeekLimit> table = DataContext.Table<HourOfWeekLimit>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecordCount(new RecordRestriction("ChannelID = {0}", channelId) + restriction);
+        }
+
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecords)]
+        public IEnumerable<HourOfWeekLimitView> QueryHourOfWeekLimit(int channelId, string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            TableOperations<HourOfWeekLimitView> table = DataContext.Table<HourOfWeekLimitView>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ChannelID = {0}", channelId) + restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.DeleteRecord)]
+        public void DeleteHourOfWeekLimit(int id)
+        {
+            DataContext.Table<HourOfWeekLimit>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.CreateNewRecord)]
+        public HourOfWeekLimit NewHourOfWeekLimit()
+        {
+            return DataContext.Table<HourOfWeekLimit>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.AddNewRecord)]
+        public void AddNewHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.UpdateRecord)]
+        public void UpdateHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().AddNewOrUpdateRecord(record);
+        }
+
+
 
         public void ImportHourOfWeekLimitTableCSV(string csv)
         {

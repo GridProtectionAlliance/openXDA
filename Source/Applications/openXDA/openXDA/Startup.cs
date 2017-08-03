@@ -36,6 +36,8 @@ using openXDA.Model;
 using openXDA.Hubs;
 using System.Web.Mvc;
 using Microsoft.Owin.Extensions;
+using GSF.Web.Model.Handlers;
+using openXDA.wwwroot.Config;
 
 namespace openXDA
 {
@@ -84,6 +86,9 @@ namespace openXDA
                 app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
             else if ((object)allowedDomainList != null)
                 httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(allowedDomainList, "*", "*"));
+
+            CsvDownloadHandler.LogExceptionHandler = Program.Host.HandleException;
+            HowlCSVDownloadHandler.LogExceptionHandler = Program.Host.HandleException;
 
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);

@@ -417,8 +417,10 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Assets/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/UserDashSettings.cshtml", new Tuple<Type, Type>(typeof(UserDashSettings), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/ChannelsWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithHourlyLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/HourOfWeekLimits.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/OffNormalAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
@@ -599,7 +601,7 @@ namespace openXDA
         }
 
         // Send the error to the service helper, error logger, and each service monitor
-        private void HandleException(Exception ex)
+        public void HandleException(Exception ex)
         {
             string newLines = string.Format("{0}{0}", Environment.NewLine);
 

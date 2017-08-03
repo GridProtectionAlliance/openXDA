@@ -25,17 +25,68 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    public class MetersWithHourlyLimits
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        [Searchable]
+        public string Name { get; set; }
+        public int Limits { get; set; }
+
+        public string ToCSV()
+        {
+            string csv = $"{ID},{Name},{Limits}";
+            return csv;
+        }
+    }
+
+    public class ChannelsWithHourlyLimits
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        [Searchable]
+        public string Name { get; set; }
+        public int Limits { get; set; }
+        [Searchable]
+        public string MeasurementCharacteristic { get; set; }
+        [Searchable]
+        public string MeasurementType { get; set; }
+        public int MeterID { get; set; }
+        public int HarmonicGroup { get; set; }
+        [Searchable]
+        public string Phase { get; set; }
+
+        public string ToCSV()
+        {
+            string csv = $"{ID},{Name},{Limits},{MeasurementCharacteristic},{MeasurementType},{MeterID},{HarmonicGroup},{Phase}";
+            return csv;
+        }
+
+    }
+
     public class HourOfWeekLimit
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int ChannelID { get; set; }
         public int AlarmTypeID { get; set; }
+        [Searchable]
         public int HourOfWeek { get; set; }
         public int Severity { get; set; }
         public double High { get; set; }
         public double Low { get; set; }
         public int Enabled { get; set; }
 
+        public string ToCSV()
+        {
+            string csv = $"{ID},{ChannelID},{AlarmTypeID},{HourOfWeek},{Severity},{High},{Low},{Enabled}";
+            return csv;
+        }
+    }
+
+    [TableName("HourOfWeekLimitView")]
+    public class HourOfWeekLimitView : HourOfWeekLimit
+    {
+        public string AlarmTypeName { get; set; }
     }
 }
