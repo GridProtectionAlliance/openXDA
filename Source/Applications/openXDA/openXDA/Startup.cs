@@ -89,6 +89,7 @@ namespace openXDA
 
             CsvDownloadHandler.LogExceptionHandler = Program.Host.HandleException;
             HowlCSVDownloadHandler.LogExceptionHandler = Program.Host.HandleException;
+            HowlCSVUploadHandler.LogExceptionHandler = Program.Host.HandleException;
 
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
