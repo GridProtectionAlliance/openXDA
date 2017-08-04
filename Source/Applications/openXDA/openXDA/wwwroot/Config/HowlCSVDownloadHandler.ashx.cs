@@ -183,15 +183,15 @@ namespace openXDA.wwwroot.Config
                 writer.WriteLine(GetHourOfWeekLimitCSVHeaders());
             }
 
-                if (callingFrom == "Alarms")
-                    SendHourOfWeekLimitTableToCSV(responseStream, ID, filterText, sortField, sortAscending);
-                else if (callingFrom == "Channels")
-                    SendChannelsWithHourlyLimitsToCSV(responseStream, ID, filterText, sortField, sortAscending);
-                else
-                    SendMetersWithHourlyLimitsToCSV(responseStream, filterText, sortField, sortAscending);
+            if (callingFrom == "Alarms")
+                SendHourOfWeekLimitTableToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
+            else if (callingFrom == "Channels")
+                SendChannelsWithHourlyLimitsToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
+            else
+                SendMetersWithHourlyLimitsToCSV(responseStream, filterText, cancellationToken, sortField, sortAscending);
         }
 
-        public void SendMetersWithHourlyLimitsToCSV(Stream returnStream, string searchString, string sortField = "Name", bool ascending = true)
+        public void SendMetersWithHourlyLimitsToCSV(Stream returnStream, string searchString, CompatibleCancellationToken cancellationToken, string sortField = "Name", bool ascending = true)
         {
             List<MetersWithHourlyLimits> meters;
             using (var connection = new AdoDataConnection("systemSettings"))
@@ -204,10 +204,16 @@ namespace openXDA.wwwroot.Config
             }
 
             foreach (MetersWithHourlyLimits meter in meters)
-                SendChannelsWithHourlyLimitsToCSV(returnStream, meter.ID, "");
+            {
+                if (cancellationToken.IsCancelled)
+                    return;
+
+                SendChannelsWithHourlyLimitsToCSV(returnStream, meter.ID, "", cancellationToken);
+            }
+                
         }
 
-        public void SendChannelsWithHourlyLimitsToCSV(Stream returnStream, int meterID, string searchString, string sortField = "Name", bool ascending = true)
+        public void SendChannelsWithHourlyLimitsToCSV(Stream returnStream, int meterID, string searchString, CompatibleCancellationToken cancellationToken, string sortField = "Name", bool ascending = true)
         {
             MetersWithHourlyLimits meter;
             List<ChannelsWithHourlyLimits> channels;
@@ -225,15 +231,19 @@ namespace openXDA.wwwroot.Config
                 RecordRestriction finalRestriction = searchRestriction + meterRestriction;
 
                 channels = channelTable.QueryRecords(sortExpression, finalRestriction).ToList();
-
-                //channels = channelTable.QueryRecordsWhere("MeterID = {0}", meterID).ToList();
             }
 
             foreach (var channel in channels)
-                SendHourOfWeekLimitTableToCSV(returnStream, channel.ID, "");
+            {
+                if (cancellationToken.IsCancelled)
+                    return;
+
+                SendHourOfWeekLimitTableToCSV(returnStream, channel.ID, "", cancellationToken);
+            }
+                
         }
 
-        public void SendHourOfWeekLimitTableToCSV(Stream returnStream, int channelID, string searchString, string sortField = "HourOfWeek", bool ascending=true)
+        public void SendHourOfWeekLimitTableToCSV(Stream returnStream, int channelID, string searchString, CompatibleCancellationToken cancellationToken, string sortField = "HourOfWeek", bool ascending=true)
         {
             MetersWithHourlyLimits meter;
             ChannelsWithHourlyLimits channel;
