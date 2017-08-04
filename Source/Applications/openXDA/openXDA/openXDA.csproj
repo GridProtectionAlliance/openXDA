@@ -339,6 +339,9 @@
     <Compile Include="wwwroot\Config\HowlCSVDownloadHandler.ashx.cs">
       <DependentUpon>HowlCSVDownloadHandler.ashx</DependentUpon>
     </Compile>
+    <Compile Include="wwwroot\Config\HowlCSVUploadHandler.ashx.cs">
+      <DependentUpon>HowlCSVUploadHandler.ashx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DebugHost.resx">
@@ -448,6 +451,7 @@
     <Content Include="wwwroot\Config\HourOfWeekLimits.cshtml" />
     <Content Include="wwwroot\Config\MetersWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\HowlCSVDownloadHandler.ashx" />
+    <Content Include="wwwroot\Config\HowlCSVUploadHandler.ashx" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />

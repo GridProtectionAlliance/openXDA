@@ -61,6 +61,10 @@
     @Raw(dataContext.AddInputField<MetersWithHourlyLimits>("Name"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+<form id="uploadCSVFile" action="HowlCSVUploadHandler.ashx" method="post" enctype="multipart/form-data" style="display: none">
+    <input id="importCSVFile" name="importCSVFile" type="file" accept=".csv" multiple>
+    <input type="submit" />
+</form>
 @section Scripts{
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MetersWithHourlyLimits, DataHub>(ViewBag, "Name"))
@@ -97,5 +101,18 @@
             });
         });
     });
+
+    $(function () {
+        $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
+        $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>');
+
+        $("#importCSVFile").on("change", function (event) {
+            $("#uploadCSVFile").submit();
+        });
+    });
+
+    function importCSV() {
+        $('#importCSVFile').click();
+    }
 </script>
 }
