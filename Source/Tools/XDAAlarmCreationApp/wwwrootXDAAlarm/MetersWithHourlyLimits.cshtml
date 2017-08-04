@@ -109,136 +109,179 @@
 </div>
 
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+<form id="uploadCSVFile" action="HowlCSVUploadHandler.ashx" method="post" enctype="multipart/form-data" style="display: none">
+    <input id="importCSVFile" name="importCSVFile" type="file" accept=".csv" multiple>
+    <input type="submit" />
+</form>
 @section Scripts{
 <script>
 @Raw(dataContext.RenderViewModelConfiguration<MetersWithHourlyLimits, DataHub>(ViewBag, "Name"))
 
-        $(function () {
-            $('#addRecordButton').text('Configure Alarms');
-            $('#notify').puinotify({ position: 'bottom' });
+    $(function () {
+        $('#addRecordButton').text('Configure Alarms');
+        $('#notify').puinotify({ position: 'bottom' });
 
-            dataHubClient.updateProgressBarForOverall = function (instanceName, update) {
-                $('#instanceName').text(instanceName);
-                $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+        dataHubClient.updateProgressBarForOverall = function (instanceName, update) {
+            $('#instanceName').text(instanceName);
+            $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+
+        }
+
+        dataHubClient.updateProgressBarForMeter = function (meterName, update) {
+            $('#meterName').text(meterName);
+            $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+        }
+
+        viewModel.saveNewRecord = function (record) {
+            meterIds = $('#meters').val();
+            startDate = $('#dateRange').data('daterangepicker').startDate._d.toISOString();
+            endDate = $('#dateRange').data('daterangepicker').endDate._d.toISOString();
+            sigmaLevel = $('#sigmaValue').val();
+            sigmaLevel = $('#sigmaValue').val();
+            decimals = $('#significance').val();
+            zeroValues = $('#zeroValues').prop('checked');
+            overwriteOld = $('#overwrightOldAlarms').prop('checked');
+            if (!viewModel.canAddNew()) return;
+            if (meterIds == null) return;
+
+            if (viewModel.dataHubIsConnected()) {
+                $('#notify').puinotify('show');
+                dataHub.processSmartAlarms(meterIds, startDate, endDate, sigmaLevel, decimals, zeroValues, overwriteOld).done(function () {
+                    // Raise event to allow any new record initialization
+                    $('#notify').puinotify('hide');
+                    viewModel.queryPageRecords();
+
+                    (viewModel).trigger("recordSaved", [record, true]);
+                    showInfoMessage("Saved new record...");
+                }).fail(function (error) {
+                    showErrorMessage(error);
+                });
+            }
+        }
+    });
+    var mobileSelectOptions = {
+        padding: {
+            top: '5%',
+            left: '15%',
+            right: '15%',
+            bottom: '5%'
+        },
+        title: "",
+        onOpen: function () {
+            $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+            $('.selectAllBtn').click(function () {
+                $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+            });
+
+
+        },
+        onClose: function () {
+            $('.selectAllBtn').remove();
+        }
+    };
+
+    var dateRangeOptions = {
+        "timePicker": false,
+        "locale": {
+            "format": 'MM/DD/YYYY '
+        },
+        "autoApply": true,
+        "ranges": {
+            '1 Day': [moment().utc().startOf('day'), moment().utc().endOf('day')],
+            'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
+            'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
+            'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
+            'Last 90 Days': [moment().utc().startOf('day').subtract(89, 'days'), moment().utc().endOf('day')],
+            'Last 365 Days': [moment().utc().startOf('day').subtract(364, 'days'), moment().utc().endOf('day')]
+        },
+        "startDate": moment().utc().subtract(29, 'days').startOf('day'),
+        "endDate": moment.utc().endOf('day')
+    };
+
+    $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+        $('#saveRecordButton').text('Process');
+        $('#addNewEditDialog .modal-header h4 :visible').text('Configure Alarms')
+        $('#dateRange').daterangepicker(dateRangeOptions);
+
+        mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+        $('#meters').mobileSelect(mobileSelectOptions);
+        $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+        $('#metersFrame .btn-mobileSelect-gen').off('click');
+        $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+            event.preventDefault();
+            $('#meters').mobileSelect('show');
+        });
+
+        $('#meterfilter').on('keyup', function () {
+            var string = $('#meterfilter').val();
+            if (string === "") {
+                $('.mobileSelect-container :visible .list-container').children().show();
 
             }
-
-            dataHubClient.updateProgressBarForMeter = function (meterName, update) {
-                $('#meterName').text(meterName);
-                $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
-            }
-
-            viewModel.saveNewRecord = function(record)
-            {
-                meterIds = $('#meters').val();
-                startDate = $('#dateRange').data('daterangepicker').startDate._d.toISOString();
-                endDate = $('#dateRange').data('daterangepicker').endDate._d.toISOString();
-                sigmaLevel = $('#sigmaValue').val();
-                sigmaLevel = $('#sigmaValue').val();
-                decimals = $('#significance').val();
-                zeroValues = $('#zeroValues').prop('checked');
-                overwriteOld = $('#overwrightOldAlarms').prop('checked');
-                if (!viewModel.canAddNew()) return;
-                if (meterIds == null) return;
-
-                if (viewModel.dataHubIsConnected()) {
-                    $('#notify').puinotify('show');
-                    dataHub.processSmartAlarms(meterIds, startDate, endDate, sigmaLevel, decimals, zeroValues, overwriteOld).done(function () {
-                        // Raise event to allow any new record initialization
-                        $('#notify').puinotify('hide');
-                        viewModel.queryPageRecords();
-
-                        (viewModel).trigger("recordSaved", [record, true]);
-                        showInfoMessage("Saved new record...");
-                    }).fail(function (error) {
-                        showErrorMessage(error);
-                    });
-                }
+            else {
+                $('.mobileSelect-container :visible .list-container').children().hide();
+                $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                    if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                        $(item).show();
+                });
             }
         });
-        var mobileSelectOptions = {
-            padding: {
-                top: '5%',
-                left: '15%',
-                right: '15%',
-                bottom: '5%'
-            },
-            title: "",
-            onOpen: function () {
-                $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
-                $('.selectAllBtn').click(function () {
-                    $('.mobileSelect-container :visible .list-container').children().addClass('selected');
-                });
 
-
-            },
-            onClose: function () {
-                $('.selectAllBtn').remove();
-            }
-        };
-
-        var dateRangeOptions = {
-            "timePicker": false,
-            "locale": {
-                "format": 'MM/DD/YYYY '
-            },
-            "autoApply": true,
-            "ranges": {
-                '1 Day': [moment().utc().startOf('day'), moment().utc().endOf('day')],
-                'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
-                'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
-                'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
-                'Last 90 Days': [moment().utc().startOf('day').subtract(89, 'days'), moment().utc().endOf('day')],
-                'Last 365 Days': [moment().utc().startOf('day').subtract(364, 'days'), moment().utc().endOf('day')]
-            },
-            "startDate": moment().utc().subtract(29, 'days').startOf('day'),
-            "endDate": moment.utc().endOf('day')
-        };
-
-        $('#addNewEditDialog').on('shown.bs.modal', function (event) {
-            $('#saveRecordButton').text('Process');
-            $('#addNewEditDialog .modal-header h4 :visible').text('Configure Alarms')
-            $('#dateRange').daterangepicker(dateRangeOptions);
-
-            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
-            $('#meters').mobileSelect(mobileSelectOptions);
-            $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
-
-            $('#metersFrame .btn-mobileSelect-gen').off('click');
-            $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
-                event.preventDefault();
-                $('#meters').mobileSelect('show');
+        dataHub.getMetersForSelect().done(function (data) {
+            $.each(data, function (index, type) {
+                $('#meters').append($(new Option(type.Name, type.ID, true)));
             });
+            //if (viewModel.recordMode() !== RecordMode.AddNew) {
+            //    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
+            //        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
+            //    });
+            //}
 
-            $('#meterfilter').on('keyup', function () {
-                var string = $('#meterfilter').val();
-                if (string === "") {
-                    $('.mobileSelect-container :visible .list-container').children().show();
-
-                }
-                else {
-                    $('.mobileSelect-container :visible .list-container').children().hide();
-                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                        if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
-                            $(item).show();
-                    });
-                }
-            });
-
-            dataHub.getMetersForSelect().done(function (data) {
-                $.each(data, function (index, type) {
-                    $('#meters').append($(new Option(type.Name, type.ID, true)));
-                });
-                //if (viewModel.recordMode() !== RecordMode.AddNew) {
-                //    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
-                //        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
-                //    });
-                //}
-
-                $('#meters').mobileSelect('refresh');
-
-            });
+            $('#meters').mobileSelect('refresh');
 
         });
-    </script>
+
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('#exportCSVButton').off('click');
+        $('#exportCSVButton').click(function () {
+            if (!hubIsConnected)
+                return;
+
+            dataHub.getConnectionID().done(function (connectionID) {
+                $("#exportCSVLink").attr("href", "/HowlCSVDownloadHandler.ashx" +
+                    "?ModelName=" + encodeURIComponent(viewModel.modelName) +
+                    "&HubName=" + encodeURIComponent(viewModel.hubName) +
+                    "&ConnectionID=" + encodeURIComponent(connectionID) +
+                    "&CallingFrom=Meters" +
+                    "&ID=0" +
+                    "&FilterText=" + encodeURIComponent(viewModel.filterText) +
+                    "&SortField=" + encodeURIComponent(viewModel.sortField()) +
+                    "&SortAscending=" + encodeURIComponent(viewModel.sortAscending()) +
+                    "&ShowDeleted=False&ParentKeys=");
+
+                $("#exportCSVLink")[0].click();
+            }).
+            fail(function (error) {
+                showErrorMessage(error);
+            });
+        });
+    });
+
+    $(function () {
+        $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
+        $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>');
+
+        $("#importCSVFile").on("change", function (event) {
+            $("#uploadCSVFile").submit();
+        });
+    });
+
+    function importCSV() {
+        $('#importCSVFile').click();
+    }
+</script>
 }

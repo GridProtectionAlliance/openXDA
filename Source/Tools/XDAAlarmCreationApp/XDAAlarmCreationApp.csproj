@@ -301,6 +301,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Model\HourOfWeekLimit.cs" />
+    <Compile Include="wwwrootXDAAlarm\HowlCSVDownloadHandler.ashx.cs">
+      <DependentUpon>HowlCSVDownloadHandler.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="wwwrootXDAAlarm\HowlCSVUploadHandler.ashx.cs">
+      <DependentUpon>HowlCSVUploadHandler.ashx</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -343,6 +349,8 @@
     <EmbeddedResource Include="wwwrootXDAAlarm\Content\bootstrap-fullscreen-select.css" />
     <Content Include="wwwrootXDAAlarm\Content\jquery.jspanel.css" />
     <Content Include="wwwrootXDAAlarm\Content\jquery.jspanel.min.css" />
+    <Content Include="wwwrootXDAAlarm\HowlCSVDownloadHandler.ashx" />
+    <Content Include="wwwrootXDAAlarm\HowlCSVUploadHandler.ashx" />
     <None Include="wwwrootXDAAlarm\Scripts\jquery-2.2.1.min.map" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Security.cshtml" />
     <EmbeddedResource Include="wwwrootXDAAlarm\HourOfWeekLimits.cshtml" />

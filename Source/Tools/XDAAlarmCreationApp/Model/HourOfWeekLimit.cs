@@ -31,10 +31,17 @@ namespace XDAAlarmCreationApp.Model
         [Searchable]
         public string Name { get; set; }
         public int Limits { get; set; }
+
+        public string ToCSV()
+        {
+            string csv = $"{ID},{Name},{Limits}";
+            return csv;
+        }
     }
 
     public class ChannelsWithHourlyLimits
     {
+
         [PrimaryKey(true)]
         public int ID { get; set; }
         [Searchable]
@@ -49,6 +56,12 @@ namespace XDAAlarmCreationApp.Model
         [Searchable]
         public string Phase { get; set; }
 
+
+        public string ToCSV()
+        {
+            string csv = $"{ID},{Name},{Limits},{MeasurementCharacteristic},{MeasurementType},{MeterID},{HarmonicGroup},{Phase}";
+            return csv;
+        }
     }
 
     public class HourOfWeekLimit
@@ -63,6 +76,12 @@ namespace XDAAlarmCreationApp.Model
         public double High { get; set; }
         public double Low { get; set; }
         public int Enabled { get; set; }
+
+        public string ToCSV()
+        {
+            string csv = $"{ID},{ChannelID},{AlarmTypeID},{HourOfWeek},{Severity},{High},{Low},{Enabled}";
+            return csv;
+        }
     }
 
     [TableName("HourOfWeekLimitView")]
