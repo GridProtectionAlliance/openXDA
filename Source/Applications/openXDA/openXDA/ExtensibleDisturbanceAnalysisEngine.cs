@@ -765,6 +765,9 @@ namespace openXDA
         /// </summary>
         public void EnumerateWatchDirectories()
         {
+            if (m_fileProcessor.EnumerationThreads > 0)
+                throw new InvalidOperationException("Enumeration of watch directories already in progress.");
+
             m_fileProcessor.EnumerateWatchDirectories();
         }
 
