@@ -46,6 +46,9 @@
   <Component Id="wwwroot_Config_AlarmSettings_cshtml">
     <File Id="wwwroot_Config_AlarmSettings.cshtml" Name="AlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AlarmSettings.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_ChannelsWithHourlyLimits_cshtml">
+    <File Id="wwwroot_Config_ChannelsWithHourlyLimits.cshtml" Name="ChannelsWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\ChannelsWithHourlyLimits.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_DashSettings_cshtml">
     <File Id="wwwroot_Config_DashSettings.cshtml" Name="DashSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\DashSettings.cshtml" />
   </Component>
@@ -85,6 +88,21 @@
   <Component Id="wwwroot_Config_Help_cshtml">
     <File Id="wwwroot_Config_Help.cshtml" Name="Help.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Help.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_HourOfWeekLimits_cshtml">
+    <File Id="wwwroot_Config_HourOfWeekLimits.cshtml" Name="HourOfWeekLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\HourOfWeekLimits.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Config_HowlCSVDownloadHandler_ashx">
+    <File Id="wwwroot_Config_HowlCSVDownloadHandler.ashx" Name="HowlCSVDownloadHandler.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\HowlCSVDownloadHandler.ashx" />
+  </Component>
+  <Component Id="wwwroot_Config_HowlCSVDownloadHandler_ashx_cs">
+    <File Id="wwwroot_Config_HowlCSVDownloadHandler.ashx.cs" Name="HowlCSVDownloadHandler.ashx.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\HowlCSVDownloadHandler.ashx.cs" />
+  </Component>
+  <Component Id="wwwroot_Config_HowlCSVUploadHandler_ashx">
+    <File Id="wwwroot_Config_HowlCSVUploadHandler.ashx" Name="HowlCSVUploadHandler.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\HowlCSVUploadHandler.ashx" />
+  </Component>
+  <Component Id="wwwroot_Config_HowlCSVUploadHandler_ashx_cs">
+    <File Id="wwwroot_Config_HowlCSVUploadHandler.ashx.cs" Name="HowlCSVUploadHandler.ashx.cs" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\HowlCSVUploadHandler.ashx.cs" />
+  </Component>
   <Component Id="wwwroot_Config_index_cshtml">
     <File Id="wwwroot_Config_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\index.cshtml" />
   </Component>
@@ -103,8 +121,8 @@
   <Component Id="wwwroot_Config_MeterMeterGroupView_cshtml">
     <File Id="wwwroot_Config_MeterMeterGroupView.cshtml" Name="MeterMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterMeterGroupView.cshtml" />
   </Component>
-  <Component Id="wwwroot_Config_OffNormalAlarmSettings_cshtml">
-    <File Id="wwwroot_Config_OffNormalAlarmSettings.cshtml" Name="OffNormalAlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\OffNormalAlarmSettings.cshtml" />
+  <Component Id="wwwroot_Config_MetersWithHourlyLimits_cshtml">
+    <File Id="wwwroot_Config_MetersWithHourlyLimits.cshtml" Name="MetersWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MetersWithHourlyLimits.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_Settings_cshtml">
     <File Id="wwwroot_Config_Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Settings.cshtml" />
@@ -438,8 +456,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_ddAssets_png">
-    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
+  <Component Id="wwwroot_Images_dDAssets_png">
+    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
@@ -908,6 +926,10 @@
   <Component Id="wwwroot_Scripts_flot_README_md">
     <File Id="wwwroot_Scripts_flot_README.md" Name="README.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\README.md" />
   </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_flot_examples_Components" Directory="wwwroot_SCRIPTSFLOTEXAMPLESFOLDER">
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_flot_examples_gauge_Components" Directory="wwwroot_SCRIPTSFLOTEXAMPLESGAUGEFOLDER">
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_fonts_Components" Directory="wwwroot_SCRIPTSFONTSFOLDER">
   <Component Id="wwwroot_Scripts_fonts_jsglyph_eot">
