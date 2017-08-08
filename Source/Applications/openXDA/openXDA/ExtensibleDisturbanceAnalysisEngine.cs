@@ -653,7 +653,7 @@ namespace openXDA
 
             if (args[0].Equals("-Enumerate", StringComparison.OrdinalIgnoreCase))
             {
-                m_fileProcessor.EnumerateWatchDirectories();
+                EnumerateWatchDirectories();
                 return "Started enumeration of the watch directories.";
             }
 
