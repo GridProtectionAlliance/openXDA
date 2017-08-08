@@ -3086,6 +3086,31 @@ GROUP BY dbo.Channel.Name, dbo.Channel.MeterID, dbo.Channel.ID, dbo.AlarmType.Na
 
 GO
 
+CREATE VIEW [dbo].[MetersWithNormalLimits]
+AS
+SELECT        dbo.Meter.Name, COUNT(DISTINCT dbo.Channel.ID) AS Limits, dbo.Meter.ID
+FROM            dbo.AlarmRangeLimit INNER JOIN
+                         dbo.Channel ON dbo.AlarmRangeLimit.ChannelID = dbo.Channel.ID INNER JOIN
+                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID
+GROUP BY dbo.Meter.Name, dbo.Meter.ID
+
+GO
+
+CREATE VIEW [dbo].[ChannelsWithNormalLimits]
+AS
+SELECT        dbo.Channel.Name, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName, 
+                         dbo.MeasurementCharacteristic.Name AS MeasurementCharacteristic, dbo.MeasurementType.Name AS MeasurementType, dbo.Channel.HarmonicGroup, dbo.Phase.Name AS Phase, High, Low
+FROM            dbo.AlarmRangeLimit INNER JOIN
+                         dbo.Channel ON dbo.AlarmRangeLimit.ChannelID = dbo.Channel.ID INNER JOIN
+                         dbo.AlarmType ON dbo.AlarmRangeLimit.AlarmTypeID = dbo.AlarmType.ID INNER JOIN
+                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID INNER JOIN
+                         dbo.MeasurementCharacteristic ON dbo.Channel.MeasurementCharacteristicID = dbo.MeasurementCharacteristic.ID INNER JOIN
+                         dbo.MeasurementType ON dbo.Channel.MeasurementTypeID = dbo.MeasurementType.ID INNER JOIN
+                         dbo.Phase ON dbo.Channel.PhaseID = dbo.Phase.ID
+
+GO
+
+
 ----- PROCEDURES -----
 
 CREATE PROCEDURE [dbo].[GetEventEmailRecipients]

@@ -217,16 +217,10 @@ namespace XDAAlarmCreationApp
         {
             public int ChannelID { get; set; }
             public int HourOfWeek { get; set; }
-            public double TotalMin { get; set; }
-            public double CountMin { get; set; }
-            public double TotalMax { get; set; }
-            public double CountMax { get; set; }
-            public double TotalX2Min { get; set; }
-            public double TotalX2Max { get; set; }
-            public double OldMaxMean { get; set; }
-            public double OldMinMean { get; set; }
-            public double FirstPassStdDevMax { get; set; }
-            public double FirstPassStdDevMin { get; set; }
+            public double Sum { get; set; }
+            public double Count { get; set; }
+            public double SumOfSquares { get; set; }
+            public double FirstPassStdDev { get; set; }
         }
 
         public void ProcessSmartAlarms(IEnumerable<int> meterIds, IEnumerable<int> typeIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool ignoreLargeValues, bool overwriteOldAlarms, int largeValueLevel)
@@ -254,33 +248,24 @@ namespace XDAAlarmCreationApp
                     {
                         int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
                         RunningAvgStdDev record = runningData.FirstOrDefault(x => x.ChannelID == point.ChannelID && x.HourOfWeek == hourOfWeek);
-
                         if (record == null)
                         {
                             record = new RunningAvgStdDev()
                             {
                                 ChannelID = point.ChannelID,
-                                HourOfWeek = hourOfWeek,
-                                CountMax = 0,
-                                CountMin = 0,
-                                TotalMax = 0,
-                                TotalMin = 0,
-                                TotalX2Max = 0,
-                                TotalX2Min = 0
+                                Count = 0,
+                                Sum = 0,
+                                SumOfSquares = 0
                             };
                             runningData.Add(record);
                         }
-                        if (point.SeriesID.ToString() == "Maximum")
+
+                        if (point.SeriesID.ToString() == "Average")
                         {
-                            record.TotalMax += point.Value;
-                            record.TotalX2Max += (point.Value * point.Value);
-                            ++record.CountMax;
-                        }
-                        if (point.SeriesID.ToString() == "Minimum")
-                        {
-                            record.TotalMin += point.Value;
-                            record.TotalX2Min += (point.Value * point.Value);
-                            ++record.CountMin;
+                            record.Sum += point.Value;
+                            record.SumOfSquares += (point.Value * point.Value);
+                            ++record.Count;
+
                         }
                     }
 
@@ -288,19 +273,12 @@ namespace XDAAlarmCreationApp
                     {
                         runningData = runningData.Select(x =>
                         {
-                            double averageMax = x.TotalMax / (x.CountMax != 0 ? x.CountMax : 1);
-                            double averageMin = x.TotalMin / (x.CountMin != 0 ? x.CountMin : 1);
+                            double average = x.Sum / (x.Count != 0 ? x.Count : 1);
 
-                            
-                            x.FirstPassStdDevMax = Math.Sqrt(Math.Abs((x.TotalX2Max - 2 * averageMax * x.TotalMax + x.CountMax * averageMax * averageMax) / ((x.CountMax != 1 ? x.CountMax : 2) - 1)));
-                            x.FirstPassStdDevMin = Math.Sqrt(Math.Abs((x.TotalX2Min - 2 * averageMin * x.TotalMin + x.CountMin * averageMin * averageMin) / ((x.CountMin != 1 ? x.CountMin : 2) - 1)));
-                            x.CountMax = 0;
-                            x.CountMin = 0;
-                            x.TotalMax = 0;
-                            x.TotalMin = 0;
-                            x.TotalX2Max = 0;
-                            x.TotalX2Min = 0;
-
+                            x.FirstPassStdDev = Math.Sqrt(Math.Abs((x.SumOfSquares - 2 * average * x.Sum + x.Count * average * average) / ((x.Count != 1 ? x.Count : 2) - 1)));
+                            x.Sum = 0;
+                            x.SumOfSquares = 0;
+                            x.Count = 0;
                             return x;
                         }).ToList();
 
@@ -309,26 +287,28 @@ namespace XDAAlarmCreationApp
                         {
                             int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
                             RunningAvgStdDev record = runningData.FirstOrDefault(x => x.ChannelID == point.ChannelID && x.HourOfWeek == hourOfWeek);
-                            if ((point.SeriesID.ToString() == "Maximum" && point.Value > (record.FirstPassStdDevMax * largeValueLevel)) || (point.SeriesID.ToString() == "Minimum" && point.Value < (record.FirstPassStdDevMin * largeValueLevel))) continue;
-
-                            if (point.SeriesID.ToString() == "Maximum")
+                            if ((point.SeriesID.ToString() == "Average" && point.Value > (record.FirstPassStdDev * largeValueLevel)) || (point.SeriesID.ToString() == "Average" && point.Value < (record.FirstPassStdDev * largeValueLevel))) continue;
+                            if (record == null)
                             {
-                                record.TotalMax += point.Value;
-                                record.TotalX2Max += (point.Value * point.Value);
-                                ++record.CountMax;
+                                record = new RunningAvgStdDev()
+                                {
+                                    ChannelID = point.ChannelID,
+                                    Count = 0,
+                                    Sum = 0,
+                                    SumOfSquares = 0
+                                };
+                                runningData.Add(record);
                             }
-                            if (point.SeriesID.ToString() == "Minimum")
+
+                            if (point.SeriesID.ToString() == "Average")
                             {
-                                record.TotalMin += point.Value;
-                                record.TotalX2Min += (point.Value * point.Value);
-                                ++record.CountMin;
+                                record.Sum += point.Value;
+                                record.SumOfSquares += (point.Value * point.Value);
+                                ++record.Count;
+
                             }
                         }
-
-
                     }
-
-
                 }
 
 
@@ -339,22 +319,20 @@ namespace XDAAlarmCreationApp
                 {
                     string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", channelId);
                     ProgressUpdatedByMeter(channelName, (int)(100 * (innerProgressCount) / innerProgressTotal));
-                    foreach(RunningAvgStdDev data in runningData.Where(x => x.ChannelID == channelId))
+                    foreach (RunningAvgStdDev data in runningData.Where(x => x.ChannelID == channelId))
                     {
-                        double averageMax = data.TotalMax/(data.CountMax != 0 ? data.CountMax : 1);
-                        double averageMin = data.TotalMin/(data.CountMin != 0 ? data.CountMin : 1);
+                        double average = data.Sum / (data.Count != 0 ? data.Count : 1);
 
-                        double stdDevMax = Math.Round(Math.Sqrt(Math.Abs((data.TotalX2Max - 2 * averageMax * data.TotalMax + data.CountMax * averageMax * averageMax) / ((data.CountMax != 1 ? data.CountMax : 2) - 1))), decimals);
-                        double stdDevMin = Math.Round(Math.Sqrt(Math.Abs((data.TotalX2Min - 2 * averageMin * data.TotalMin + data.CountMin * averageMin * averageMin) / ((data.CountMin != 1 ? data.CountMin : 2) - 1))), decimals);
+                        double stdDev = Math.Sqrt(Math.Abs((data.SumOfSquares - 2 * average * data.Sum + data.Count * average * average) / ((data.Count != 1 ? data.Count : 2) - 1)));
+                        float high = (float)Math.Round(average + stdDev * sigmaLevel, decimals);
+                        float low = (float)Math.Round(average - stdDev * sigmaLevel, decimals);
 
-                        double high = Math.Round(averageMax + stdDevMax, decimals);
-                        double low = Math.Round(averageMin - stdDevMin, decimals);
 
                         HourOfWeekLimit hwl = DataContext.Table<HourOfWeekLimit>().QueryRecordWhere("ChannelID = {0} AND HourOfWeek = {1}", data.ChannelID, data.HourOfWeek);
 
                         if (hwl == null)
                         {
-                            HourOfWeekLimit record = new HourOfWeekLimit()
+                            HourOfWeekLimit newrecord = new HourOfWeekLimit()
                             {
                                 ChannelID = data.ChannelID,
                                 AlarmTypeID = 4,
@@ -364,7 +342,7 @@ namespace XDAAlarmCreationApp
                                 Low = low,
                                 Enabled = 1
                             };
-                            DataContext.Table<HourOfWeekLimit>().AddNewRecord(record);
+                            DataContext.Table<HourOfWeekLimit>().AddNewRecord(newrecord);
                         }
                         else if (hwl != null && overwriteOldAlarms)
                         {
@@ -378,6 +356,7 @@ namespace XDAAlarmCreationApp
                             DataContext.Table<HourOfWeekLimit>().UpdateRecord(hwl);
                         }
                     }
+
                     ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
                 }
                 ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
@@ -492,6 +471,237 @@ namespace XDAAlarmCreationApp
         public void AddNewOrUpdateHourOfWeekLimit(HourOfWeekLimit record)
         {
             DataContext.Table<HourOfWeekLimit>().AddNewOrUpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ MetersWithNormalLimits Table Operations ]
+
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.QueryRecordCount)]
+        public int QueryMetersWithNormalLimitsCount(string filterText)
+        {
+
+            return DataContext.Table<MetersWithNormalLimits>().QueryRecordCount(filterText);
+        }
+
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.QueryRecords)]
+        public IEnumerable<MetersWithNormalLimits> QueryMetersWithNormalLimits(string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            return DataContext.Table<MetersWithNormalLimits>().QueryRecords(sortField, ascending, page, pageSize, filterText);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.DeleteRecord)]
+        public void DeleteMetersWithNormalLimits(int id)
+        {
+            DataContext.Table<MetersWithNormalLimits>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.CreateNewRecord)]
+        public MetersWithNormalLimits NewMetersWithNormalLimits()
+        {
+            return DataContext.Table<MetersWithNormalLimits>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.AddNewRecord)]
+        public void AddNewMetersWithNormalLimits(MetersWithNormalLimits record)
+        {
+            DataContext.Table<MetersWithNormalLimits>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.UpdateRecord)]
+        public void UpdateMetersWithNormalLimits(MetersWithNormalLimits record)
+        {
+            DataContext.Table<MetersWithNormalLimits>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateMetersWithNormalLimits(MetersWithNormalLimits record)
+        {
+            DataContext.Table<MetersWithNormalLimits>().AddNewOrUpdateRecord(record);
+        }
+
+        public void ProcessSmartAlarmsNormal(IEnumerable<int> meterIds, IEnumerable<int> typeIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool ignoreLargeValues, bool overwriteOldAlarms, int largeValueLevel)
+        {
+
+            int progressTotal = (meterIds.Any() ? meterIds.Count() : 1);
+            int progressCount = 0;
+            ProgressUpdatedOverall("", (int)(100 * (progressCount) / progressTotal));
+
+            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+            foreach (int meterId in meterIds)
+            {
+                string characteristicList = "(" + string.Join(",", typeIds) + ")";
+                IEnumerable<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID IN " + characteristicList, meterId).Select(x => x.ID);
+                string meterName = DataContext.Connection.ExecuteScalar<string>("Select Name from Meter where ID = {0}", meterId);
+                ProgressUpdatedOverall(meterName, (int)(100 * (progressCount) / progressTotal));
+                List<TrendingData> trendingData = new List<TrendingData>();
+                List<RunningAvgStdDev> normalRunningData = new List<RunningAvgStdDev>();
+                ProgressUpdatedByMeter("Querying openHistorian...", 0);
+                using (openHistorian.XDALink.Historian historian = new Historian(historianServer, historianInstance))
+                {
+                    foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                    {
+                        RunningAvgStdDev normalRecord = normalRunningData.FirstOrDefault(x => x.ChannelID == point.ChannelID);
+                        if (normalRecord == null)
+                        {
+                            normalRecord = new RunningAvgStdDev()
+                            {
+                                ChannelID = point.ChannelID,
+                                Count = 0,
+                                Sum = 0,
+                                SumOfSquares = 0
+                            };
+                            normalRunningData.Add(normalRecord);
+                        }
+
+                        if (point.SeriesID.ToString() == "Average")
+                        {
+                            normalRecord.Sum += point.Value;
+                            normalRecord.SumOfSquares += (point.Value * point.Value);
+                            ++normalRecord.Count;
+
+                        }
+                    }
+
+                    if (ignoreLargeValues)
+                    {
+
+                        normalRunningData = normalRunningData.Select(x =>
+                        {
+                            double average = x.Sum / (x.Count != 0 ? x.Count : 1);
+
+                            x.FirstPassStdDev = Math.Sqrt(Math.Abs((x.SumOfSquares - 2 * average * x.Sum + x.Count * average * average) / ((x.Count != 1 ? x.Count : 2) - 1)));
+                            x.Count = 0;
+                            x.Sum = 0;
+                            x.SumOfSquares = 0;
+                            return x;
+                        }).ToList();
+
+
+
+                        ProgressUpdatedByMeter("Querying openHistorian for second pass...", 0);
+                        foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                        {
+                            int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
+                            RunningAvgStdDev normalRecord = normalRunningData.FirstOrDefault(x => x.ChannelID == point.ChannelID);
+                            if ((point.SeriesID.ToString() == "Average" && point.Value > (normalRecord.FirstPassStdDev * largeValueLevel)) || (point.SeriesID.ToString() == "Average" && point.Value < (normalRecord.FirstPassStdDev * largeValueLevel))) continue;
+                            if (point.SeriesID.ToString() == "Average")
+                            {
+                                normalRecord.Sum += point.Value;
+                                normalRecord.SumOfSquares += (point.Value * point.Value);
+                                ++normalRecord.Count;
+                            }
+                        }
+                    }
+                }
+
+                int innerProgressTotal = (channelIds.Any() ? channelIds.Count() : 1);
+                int innerProgressCount = 0;
+
+                foreach (int channelId in channelIds)
+                {
+                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", channelId);
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (innerProgressCount) / innerProgressTotal));
+                    RunningAvgStdDev record = normalRunningData.Where(x => x.ChannelID == channelId).FirstOrDefault();
+                    if (record != null)
+                    {
+                        double average = record.Sum / (record.Count != 0 ? record.Count : 1);
+
+                        double stdDev = Math.Sqrt(Math.Abs((record.SumOfSquares - 2 * average * record.Sum + record.Count * average * average) / ((record.Count != 1 ? record.Count : 2) - 1)));
+                        float high = (float)Math.Round(average + stdDev * sigmaLevel, decimals);
+                        float low = (float)Math.Round(average - stdDev * sigmaLevel, decimals);
+
+                        AlarmRangeLimit hwl = DataContext.Table<AlarmRangeLimit>().QueryRecordWhere("ChannelID = {0}", record.ChannelID);
+
+                        if (hwl == null)
+                        {
+                            AlarmRangeLimit newRecord = new AlarmRangeLimit()
+                            {
+                                ChannelID = record.ChannelID,
+                                AlarmTypeID = 5,
+                                Severity = 1,
+                                High = high,
+                                Low = low,
+                                RangeInclusive = 0,
+                                PerUnit = 0,
+                                Enabled = 1,
+                                IsDefault = false
+                            };
+                            DataContext.Table<AlarmRangeLimit>().AddNewRecord(newRecord);
+                        }
+                        else if (hwl != null && overwriteOldAlarms)
+                        {
+                            hwl.High = high;
+                            hwl.Low = low;
+                            DataContext.Table<AlarmRangeLimit>().UpdateRecord(hwl);
+                        }
+
+                    }
+
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
+                }
+                ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
+            }
+        }
+
+        #endregion
+
+        #region [ ChannelsWithNormalLimits Table Operations ]
+
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.QueryRecordCount)]
+        public int QueryChannelsWithNormalLimitsCount(int meterId, string filterText)
+        {
+            TableOperations<ChannelsWithNormalLimits> table = DataContext.Table<ChannelsWithNormalLimits>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecordCount(new RecordRestriction("MeterID = {0}", meterId) + restriction);
+        }
+
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.QueryRecords)]
+        public IEnumerable<ChannelsWithNormalLimits> QueryChannelsWithNormalLimits(int meterId, string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            TableOperations<ChannelsWithNormalLimits> table = DataContext.Table<ChannelsWithNormalLimits>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID = {0}", meterId) + restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.DeleteRecord)]
+        public void DeleteChannelsWithNormalLimits(int id)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.CreateNewRecord)]
+        public ChannelsWithNormalLimits NewChannelsWithNormalLimits()
+        {
+            return DataContext.Table<ChannelsWithNormalLimits>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.AddNewRecord)]
+        public void AddNewChannelsWithNormalLimits(ChannelsWithNormalLimits record)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.UpdateRecord)]
+        public void UpdateChannelsWithNormalLimits(ChannelsWithNormalLimits record)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateChannelsWithNormalLimits(ChannelsWithNormalLimits record)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().AddNewOrUpdateRecord(record);
         }
 
         #endregion

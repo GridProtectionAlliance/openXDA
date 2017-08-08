@@ -1,0 +1,137 @@
+﻿@*//******************************************************************************************************
+//  Settings.cshtml - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  05/02/2017 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using XDAAlarmCreationApp.Model
+@using GSF.Web.Model
+@using GSF.Web
+@using XDAAlarmCreationApp
+@using System.Collections.Generic;
+@using System.Net.Http
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("MeterID"))
+    {
+        ViewBag.meterID = int.Parse(parameters["MeterID"]);
+    }
+    if (parameters.ContainsKey("Name"))
+    {
+        ViewBag.name = parameters["Name"];
+    }
+
+    Layout = "Layout.cshtml";
+    string title = ViewBag.CustomTitle = "Channels for " + ViewBag.name + " With Alarm Limits";
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-left" },
+        new[] { "MeasurementType", "Meas Type", "text-left" },
+        new[] { "MeasurementCharacteristic", "Meas Char", "text-left" },
+        new[] { "Phase", "Phase", "text-left" },
+        new[] { "HarmonicGroup", "Harmonic", "text-left" },
+        new[] { "High", "High", "text-left"},
+        new[] { "Low", "Low", "text-left"},
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.HideAddNewButton = true;
+
+}
+@helper BodyRows()
+{
+    <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="10%" class="text-left valign-middle" nowrap data-bind="text: MeasurementType"></td>
+    <td width="10%" class="text-left valign-middle" nowrap data-bind="text: MeasurementCharacteristic"></td>
+    <td width="10%" class="text-left valign-middle" nowrap data-bind="text: Phase"></td>
+    <td width="10%" class="text-left valign-middle" nowrap data-bind="text: HarmonicGroup"></td>
+    <td width="10%" class="text-left valign-middle" nowrap data-bind="text: High"></td>
+    <td width="10%" class="text-left valign-middle" nowrap data-bind="text: Low"></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    @Raw(dataContext.AddInputField<ChannelsWithNormalLimits>("Name"))
+    @Raw(dataContext.AddInputField<ChannelsWithNormalLimits>("MeasurementType"))
+    @Raw(dataContext.AddInputField<ChannelsWithNormalLimits>("MeasurementCharacteristic"))
+    @Raw(dataContext.AddInputField<ChannelsWithNormalLimits>("Phase"))
+    @Raw(dataContext.AddInputField<ChannelsWithNormalLimits>("HarmonicGroup"))
+
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+<form id="uploadCSVFile" action="HowlCSVUploadHandler.ashx" method="post" enctype="multipart/form-data" style="display: none">
+    <input id="importCSVFile" name="importCSVFile" type="file" accept=".csv" multiple>
+    <input type="submit" />
+</form>
+@section Scripts{
+<script>
+        @Raw(dataContext.RenderViewModelConfiguration<ChannelsWithNormalLimits, DataHub>(ViewBag, "Name", null, ViewBag.meterID))
+</script>
+<script>
+        $(document).ready(function () {
+            $('#exportCSVButton').off('click');
+            $('#exportCSVButton').click(function () {
+                if (!hubIsConnected)
+                    return;
+
+                dataHub.getConnectionID().done(function (connectionID) {
+                    $("#exportCSVLink").attr("href", "/HowlCSVDownloadHandler.ashx" +
+                        "?ModelName=" + encodeURIComponent(viewModel.modelName) +
+                        "&HubName=" + encodeURIComponent(viewModel.hubName) +
+                        "&ConnectionID=" + encodeURIComponent(connectionID) +
+                        "&CallingFrom=Channels" +
+                        "&ID=" + @ViewBag.meterID +
+                        "&FilterText=" + encodeURIComponent(viewModel.filterText) +
+                        "&SortField=" + encodeURIComponent(viewModel.sortField()) +
+                        "&SortAscending=" + encodeURIComponent(viewModel.sortAscending()) +
+                        "&ShowDeleted=False&ParentKeys=");
+
+                    $("#exportCSVLink")[0].click();
+                }).
+                fail(function (error) {
+                    showErrorMessage(error);
+                });
+            });
+        });
+
+        $(function () {
+            $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
+            $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>');
+
+            $("#importCSVFile").on("change", function (event) {
+                $("#uploadCSVFile").submit();
+            });
+        });
+
+        function importCSV() {
+            $('#importCSVFile').click();
+        }
+</script>
+}

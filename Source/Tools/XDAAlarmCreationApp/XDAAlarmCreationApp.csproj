@@ -292,6 +292,7 @@
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\AlarmRangeLimit.cs" />
     <Compile Include="Model\AppModel.cs" />
     <Compile Include="Model\Channel.cs" />
     <Compile Include="Model\MeasurementCharacteristic.cs" />
@@ -338,6 +339,7 @@
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
+    <EmbeddedResource Include="wwwrootXDAAlarm\ChannelsWithLimits.cshtml" />
     <None Include="wwwrootXDAAlarm\Content\bootstrap-theme.css.map" />
     <None Include="wwwrootXDAAlarm\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwrootXDAAlarm\Content\bootstrap.css.map" />
@@ -352,6 +354,7 @@
     <Content Include="wwwrootXDAAlarm\Content\jquery.jspanel.min.css" />
     <Content Include="wwwrootXDAAlarm\HowlCSVDownloadHandler.ashx" />
     <Content Include="wwwrootXDAAlarm\HowlCSVUploadHandler.ashx" />
+    <EmbeddedResource Include="wwwrootXDAAlarm\MetersWithNormalLimits.cshtml" />
     <None Include="wwwrootXDAAlarm\Scripts\jquery-2.2.1.min.map" />
     <EmbeddedResource Include="wwwrootXDAAlarm\Security.cshtml" />
     <EmbeddedResource Include="wwwrootXDAAlarm\HourOfWeekLimits.cshtml" />

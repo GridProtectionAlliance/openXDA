@@ -102,6 +102,8 @@ namespace XDAAlarmCreationApp
                 // we must define configuration types for all paged view model based Razor views here:
                 webServer.PagedViewModelTypes.TryAdd("MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("ChannelsWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithHourlyLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("MetersWithNormalLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithNormalLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("ChannelsWithNormalLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithNormalLimits), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("HourOfWeekLimits.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Users.cshtml", new Tuple<Type, Type>(typeof(UserAccount), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
