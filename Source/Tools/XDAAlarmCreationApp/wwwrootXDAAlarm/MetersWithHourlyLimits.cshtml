@@ -70,19 +70,29 @@
         <select id="meters" class="form-control mobileSelect" multiple></select>
     </div>
 
+    <div id="typesFrame" class="form-group">
+        <label>Channel Types</label>
+        <select id="types" class="form-control mobileSelect" multiple></select>
+    </div>
+
     <label>Date Range</label>
     <input id="dateRange" type="text" class="form-control">
-
+    <br />
     <label>Sigma Level</label>
     <select class="form-control" id="sigmaValue">
-        <option value="6">6 (99.9999998%)</option>
-        <option value="5">5 (99.99994%)</option>
         <option value="4">4 (99.994%)</option>
-        <option value="3">3 (99.7%)</option>
+        <option value="3"  selected="selected">3 (99.7%)</option>
         <option value="2">2 (95%)</option>
-        <option value="1" selected="selected">1 (68%)</option>
+        <option value="1">1 (68%)</option>
     </select>
-
+    <br />
+    <div><label><input type="checkbox" id="ignoreValuesAlarms" onclick="doSomething()" checked="checked"/>Remove values beyond given deviations</label></div>
+    <select class="form-control" id="ignoreValue">
+        <option value="7">7 (99.9999999997%)</option>
+        <option value="6" selected="selected">6 (99.9999998%)</option>
+        <option value="5">5 (99.99994%)</option>
+    </select>
+    <br />
     <label>Decimals in Result</label>
     <select class="form-control" id="significance">
         <option>9</option>
@@ -96,8 +106,7 @@
         <option>1</option>
         <option>0</option>
     </select>
-
-    <div class=""><label><input type="checkbox" id="zeroValues" class="" checked="checked" />Ignore Zero Values</label></div>
+    <br />
     <div><label><input type="checkbox" id="overwrightOldAlarms" class="" checked="checked" />Overwrite Old Alarms</label></div>
 
 }
@@ -133,20 +142,22 @@
         }
 
         viewModel.saveNewRecord = function (record) {
-            meterIds = $('#meters').val();
-            startDate = $('#dateRange').data('daterangepicker').startDate._d.toISOString();
-            endDate = $('#dateRange').data('daterangepicker').endDate._d.toISOString();
-            sigmaLevel = $('#sigmaValue').val();
-            sigmaLevel = $('#sigmaValue').val();
-            decimals = $('#significance').val();
-            zeroValues = $('#zeroValues').prop('checked');
-            overwriteOld = $('#overwrightOldAlarms').prop('checked');
+            var meterIds = $('#meters').val();
+            var typeIds = $('#types').val();
+            var startDate = $('#dateRange').data('daterangepicker').startDate._d.toISOString();
+            var endDate = $('#dateRange').data('daterangepicker').endDate._d.toISOString();
+            var sigmaLevel = $('#sigmaValue').val();
+            var sigmaLevel = $('#sigmaValue').val();
+            var decimals = $('#significance').val();
+            var ignoreLargeValues = $('#ignoreValuesAlarms').prop('checked');
+            var overwriteOld = $('#overwrightOldAlarms').prop('checked');
+            var largeValueLevel = $('#ignoreValue').val();
             if (!viewModel.canAddNew()) return;
             if (meterIds == null) return;
 
             if (viewModel.dataHubIsConnected()) {
                 $('#notify').puinotify('show');
-                dataHub.processSmartAlarms(meterIds, startDate, endDate, sigmaLevel, decimals, zeroValues, overwriteOld).done(function () {
+                dataHub.processSmartAlarms(meterIds, typeIds, startDate, endDate, sigmaLevel, decimals, ignoreLargeValues, overwriteOld, largeValueLevel).done(function () {
                     // Raise event to allow any new record initialization
                     $('#notify').puinotify('hide');
                     viewModel.queryPageRecords();
@@ -230,19 +241,53 @@
 
         dataHub.getMetersForSelect().done(function (data) {
             $.each(data, function (index, type) {
-                $('#meters').append($(new Option(type.Name, type.ID, true)));
+                $('#meters').append($(new Option(type.Name, type.ID, false, true)));
             });
-            //if (viewModel.recordMode() !== RecordMode.AddNew) {
-            //    $.each(viewModel.currentRecord().Meters().split(','), function (i, val) {
-            //        $('#meters').find('option[value="' + val + '"]').attr('selected', true);
-            //    });
-            //}
-
             $('#meters').mobileSelect('refresh');
 
         });
 
+        mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Characteristics' /></div>";
+        $('#types').mobileSelect(mobileSelectOptions);
+        $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+        $('#typesFrame .btn-mobileSelect-gen').off('click');
+        $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
+            event.preventDefault();
+            $('#types').mobileSelect('show');
+        });
+
+        $('#typefilter').on('keyup', function () {
+            var string = $('#typefilter').val();
+            if (string === "") {
+                $('.mobileSelect-container :visible .list-container').children().show();
+
+            }
+            else {
+                $('.mobileSelect-container :visible .list-container').children().hide();
+                $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                    if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
+                        $(item).show();
+                });
+            }
+        });
+
+
+        dataHub.getCharacteristicsForSelect().done(function (data) {
+            $.each(data, function (index, type) {
+                $('#types').append($(new Option(type.Name, type.ID, false, true)));
+            });
+            $('#types').mobileSelect('refresh');
+
+        });
+
+
+
     });
+
+    function doSomething() {
+        $('#ignoreValue').attr('disabled', !$('#ignoreValuesAlarms').prop('checked'))
+    }
 </script>
 <script>
     $(document).ready(function () {

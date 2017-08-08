@@ -294,6 +294,7 @@
     </Compile>
     <Compile Include="Model\AppModel.cs" />
     <Compile Include="Model\Channel.cs" />
+    <Compile Include="Model\MeasurementCharacteristic.cs" />
     <Compile Include="Model\Meter.cs" />
     <Compile Include="Model\Security.cs" />
     <Compile Include="Model\Setting.cs" />
@@ -387,6 +388,7 @@
     <Content Include="wwwrootXDAAlarm\Images\Icons\mstile-310x150.png" />
     <Content Include="wwwrootXDAAlarm\Images\Icons\mstile-310x310.png" />
     <Content Include="wwwrootXDAAlarm\Images\Icons\mstile-70x70.png" />
+    <Content Include="wwwrootXDAAlarm\Scripts\angular.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\daterangepicker.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\bootstrap-fullscreen-select.js" />
     <Content Include="wwwrootXDAAlarm\Scripts\bootstrap-fullscreen-select.min.js" />
