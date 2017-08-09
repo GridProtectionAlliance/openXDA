@@ -88,7 +88,7 @@ namespace XDAAlarmCreationApp
         /// </remarks>
         public bool UseClientCache => false;
 
-        public string Filename => "HourOfWeekAlarmLimitsExport.csv";
+        public string Filename { get; set; }
 
         #endregion
 
@@ -108,7 +108,7 @@ namespace XDAAlarmCreationApp
             HttpResponse response = HttpContext.Current.Response;
             HttpResponseCancellationToken cancellationToken = new HttpResponseCancellationToken(response);
             NameValueCollection requestParameters = context.Request.QueryString;
-
+            Filename = requestParameters["CallingFrom"] + ".csv";
             response.ClearContent();
             response.Clear();
             response.AddHeader("Content-Type", CsvContentType);
@@ -134,6 +134,7 @@ namespace XDAAlarmCreationApp
         public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             NameValueCollection requestParameters = request.RequestUri.ParseQueryString();
+            Filename = requestParameters["CallingFrom"] + ".csv";
 
             response.Content = new PushStreamContent((stream, content, context) =>
             {
@@ -179,13 +180,17 @@ namespace XDAAlarmCreationApp
 
             using (StreamWriter writer = new StreamWriter(responseStream))
             {
-                writer.WriteLine(GetHourOfWeekLimitCSVHeaders());
+                writer.WriteLine(GetCSVHeaders(callingFrom));
             }
 
             if (callingFrom == "Alarms")
                 SendHourOfWeekLimitTableToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
             else if (callingFrom == "Channels")
                 SendChannelsWithHourlyLimitsToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
+            else if (callingFrom == "MetersWithNormalLimits")
+                SendMetersWithNormalLimitsToCSV(responseStream, filterText, cancellationToken, sortField, sortAscending);
+            else if (callingFrom == "ChannelsWithLimits")
+                SendChannelsWithNormalLimitsToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
             else
                 SendMetersWithHourlyLimitsToCSV(responseStream, filterText, cancellationToken, sortField, sortAscending);
         }
@@ -273,38 +278,87 @@ namespace XDAAlarmCreationApp
                     writer.WriteLine(meterInfo + "," + channelInfo + "," + limit.ToCSV());
         }
 
+        public void SendMetersWithNormalLimitsToCSV(Stream returnStream, string searchString, CompatibleCancellationToken cancellationToken, string sortField = "Name", bool ascending = true)
+        {
+            List<MetersWithNormalLimits> meters;
+            using (var connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<MetersWithNormalLimits> meterTable = new TableOperations<MetersWithNormalLimits>(connection);
+                RecordRestriction restriction = meterTable.GetSearchRestriction(searchString);
+                string sortExpression = sortField != null ? sortField + (ascending == true ? " ASC" : " DESC") : null;
+
+                meters = meterTable.QueryRecords(sortExpression, restriction).ToList();
+            }
+
+            foreach (MetersWithNormalLimits meter in meters)
+            {
+                if (cancellationToken.IsCancelled)
+                    return;
+
+                SendChannelsWithNormalLimitsToCSV(returnStream, meter.ID, "", cancellationToken);
+            }
+
+        }
+
+        public void SendChannelsWithNormalLimitsToCSV(Stream returnStream, int meterID, string searchString, CompatibleCancellationToken cancellationToken, string sortField = "Name", bool ascending = true)
+        {
+            MetersWithNormalLimits meter;
+            IEnumerable<ChannelsWithNormalLimits> channels;
+            using (var connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<MetersWithNormalLimits> meterTable = new TableOperations<MetersWithNormalLimits>(connection);
+                TableOperations<ChannelsWithNormalLimits> channelTable = new TableOperations<ChannelsWithNormalLimits>(connection);
+
+                meter = meterTable.QueryRecordWhere("ID = {0}", meterID);
+
+                RecordRestriction searchRestriction = channelTable.GetSearchRestriction(searchString);
+                string sortExpression = sortField != null ? sortField + (ascending == true ? " ASC" : " DESC") : null;
+
+                channels = channelTable.QueryRecords(sortExpression, new RecordRestriction("MeterID = {0}", meterID) + searchRestriction).ToList();
+            }
+
+            string meterInfo = meter.ToCSV();
+
+            using (StreamWriter writer = new StreamWriter(returnStream))
+                foreach (ChannelsWithNormalLimits limit in channels)
+                    writer.WriteLine(meterInfo + "," +  limit.ToCSV());
+        }
+
+
         /// <summary>
         /// Gets the field names for the MetersWithAlarmLimits, ChannelsWithAlarmLimits, and HourOfWeekAlarmLimits tables
         /// and concatenates them together.
         /// </summary>
         /// <returns></returns>
-        private string GetHourOfWeekLimitCSVHeaders()
+        private string GetCSVHeaders(string callingFrom)
         {
             string csv = "";
 
-            string[] meterHeaders;
-            string[] channelHeaders;
-            string[] alarmHeaders;
+            List<string> meterHeaders = new List<string>();
+            List<string> channelHeaders = new List<string>();
+            List<string> alarmHeaders = new List<string>();
 
             using (var connection = new AdoDataConnection("systemSettings"))
             {
-                TableOperations<MetersWithHourlyLimits> meterTable = new TableOperations<MetersWithHourlyLimits>(connection);
-                TableOperations<ChannelsWithHourlyLimits> channelTable = new TableOperations<ChannelsWithHourlyLimits>(connection);
-                TableOperations<HourOfWeekLimit> alarmTable = new TableOperations<HourOfWeekLimit>(connection);
+                if (callingFrom == "Alarms" || callingFrom == "Channels" || callingFrom == "Meters")
+                {
+                    TableOperations<MetersWithHourlyLimits> meterTable = new TableOperations<MetersWithHourlyLimits>(connection);
+                    TableOperations<ChannelsWithHourlyLimits> channelTable = new TableOperations<ChannelsWithHourlyLimits>(connection);
+                    TableOperations<HourOfWeekLimit> alarmTable = new TableOperations<HourOfWeekLimit>(connection);
 
-                meterHeaders = meterTable.GetFieldNames();
-                channelHeaders = channelTable.GetFieldNames();
-                alarmHeaders = alarmTable.GetFieldNames();
+                    meterHeaders = meterTable.GetFieldNames().Select(x => "Meter" + x).ToList();
+                    channelHeaders = channelTable.GetFieldNames().Select(x => "Channel" + x).ToList();
+                    alarmHeaders = alarmTable.GetFieldNames().Select(x => "Alarm" + x).ToList();
+                }
+                else if (callingFrom == "MetersWithNormalLimits" || callingFrom == "ChannelsWithLimits")
+                {
+                    TableOperations<MetersWithNormalLimits> meterTable = new TableOperations<MetersWithNormalLimits>(connection);
+                    TableOperations<ChannelsWithNormalLimits> channelTable = new TableOperations<ChannelsWithNormalLimits>(connection);
+
+                    meterHeaders = meterTable.GetFieldNames().Select(x => "Meter" + x).ToList();
+                    channelHeaders = channelTable.GetFieldNames().Select(x => "Channel" + x).ToList();
+                }
             }
-
-            for (int i = 0; i < meterHeaders.Length; i++)
-                meterHeaders[i] = "Meter" + meterHeaders[i];
-
-            for (int i = 0; i < channelHeaders.Length; i++)
-                channelHeaders[i] = "Channel" + channelHeaders[i];
-
-            for (int i = 0; i < alarmHeaders.Length; i++)
-                alarmHeaders[i] = "Alarm" + alarmHeaders[i];
 
             string[] headers = meterHeaders.Concat(channelHeaders).ToArray().Concat(alarmHeaders).ToArray();
 
