@@ -124,7 +124,6 @@ namespace openXDA
         /// </summary>
         public event EventHandler<EventArgs<Exception>> LoggedException;
 
-
         // Fields
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
@@ -135,13 +134,6 @@ namespace openXDA
         private bool m_disposed;
         private DataPusherEngine dataPusherEngine;
 
-
-
-        #endregion
-
-        #region [ Static ]
-        
-        
         #endregion
 
         #region [ Properties ]

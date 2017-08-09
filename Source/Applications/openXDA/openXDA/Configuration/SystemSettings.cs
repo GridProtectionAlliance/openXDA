@@ -68,6 +68,7 @@ namespace openXDA.Configuration
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
         private FileEnumerationStrategy m_fileWatcherEnumerationStrategy;
+        private bool m_fileWatcherOrderedEnumeration;
         private int m_maxQueuedFileCount;
         private int m_fileWatcherMaxFragmentation;
         private int m_fileWatcherInternalThreadCount;
@@ -535,6 +536,24 @@ namespace openXDA.Configuration
             set
             {
                 m_fileWatcherEnumerationStrategy = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the file watcher
+        /// should raise events for enumerated files in alphabetical order.
+        /// </summary>
+        [Setting]
+        [DefaultValue(false)]
+        public bool FileWatcherOrderedEnumeration
+        {
+            get
+            {
+                return m_fileWatcherOrderedEnumeration;
+            }
+            set
+            {
+                m_fileWatcherOrderedEnumeration = value;
             }
         }
 
