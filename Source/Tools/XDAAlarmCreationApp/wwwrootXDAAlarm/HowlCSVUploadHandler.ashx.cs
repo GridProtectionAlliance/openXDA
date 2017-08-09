@@ -77,16 +77,17 @@ namespace XDAAlarmCreationApp
 
         public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
+            string referrer = request.Headers.Referrer.ToString();
             await request.GetPostDataAsync().ContinueWith(async postDataTask =>
             {
-                await Task.WhenAll(postDataTask.Result.FileData.Select(ProcessFileAsync));
+                await Task.WhenAll(postDataTask.Result.FileData.Select(file => ProcessFileAsync(file, referrer)));
             });
 
             response.Headers.Location = request.Headers.Referrer;
             response.StatusCode = HttpStatusCode.Moved;
         }
 
-        private async Task ProcessFileAsync(HttpContent file)
+        private async Task ProcessFileAsync(HttpContent file, string referrer)
         {
             string csvFileData = await file.ReadAsStringAsync();
 
@@ -101,42 +102,70 @@ namespace XDAAlarmCreationApp
                     tableFields[i] = tableFields[i].Trim(new char[] { '[', ']' });
                 }
 
-                int[] fieldIndexes = new int[8];
-
-                fieldIndexes[0] = Array.IndexOf(tableFields, "AlarmID");
-                fieldIndexes[1] = Array.IndexOf(tableFields, "AlarmChannelID");
-                fieldIndexes[2] = Array.IndexOf(tableFields, "AlarmAlarmTypeID");
-                fieldIndexes[3] = Array.IndexOf(tableFields, "AlarmHourOfWeek");
-                fieldIndexes[4] = Array.IndexOf(tableFields, "AlarmSeverity");
-                fieldIndexes[5] = Array.IndexOf(tableFields, "AlarmHigh");
-                fieldIndexes[6] = Array.IndexOf(tableFields, "AlarmLow");
-                fieldIndexes[7] = Array.IndexOf(tableFields, "AlarmEnabled");
-
-                if (!fieldIndexes.Any(n => n < 0)) // Check if any indexes are negative (missing)
+                if (referrer.Contains("ChannelsWithHourlyLimits.cshtml") || referrer.Contains("MetersWithHourlyLimits.cshtml") || referrer.Contains("HourOfWeekLimits.cshtml"))
                 {
+                    int[] fieldIndexes = new int[8];
+
+                    fieldIndexes[0] = Array.IndexOf(tableFields, "AlarmID");
+                    fieldIndexes[1] = Array.IndexOf(tableFields, "AlarmChannelID");
+                    fieldIndexes[2] = Array.IndexOf(tableFields, "AlarmAlarmTypeID");
+                    fieldIndexes[3] = Array.IndexOf(tableFields, "AlarmHourOfWeek");
+                    fieldIndexes[4] = Array.IndexOf(tableFields, "AlarmSeverity");
+                    fieldIndexes[5] = Array.IndexOf(tableFields, "AlarmHigh");
+                    fieldIndexes[6] = Array.IndexOf(tableFields, "AlarmLow");
+                    fieldIndexes[7] = Array.IndexOf(tableFields, "AlarmEnabled");
+
+                    if (!fieldIndexes.Any(n => n < 0)) // Check if any indexes are negative (missing)
+                    {
+                        using (DataContext dataContext = new DataContext())
+                        {
+                            TableOperations<HourOfWeekLimit> table = dataContext.Table<HourOfWeekLimit>();
+
+                            for (int i = 1; i < csvRows.Length; ++i)
+                            {
+                                string[] row = csvRows[i].Split(',');
+                                HourOfWeekLimit newRecord = new HourOfWeekLimit()
+                                {
+                                    ID = int.Parse(row[fieldIndexes[0]]),
+                                    ChannelID = int.Parse(row[fieldIndexes[1]]),
+                                    AlarmTypeID = int.Parse(row[fieldIndexes[2]]),
+                                    HourOfWeek = int.Parse(row[fieldIndexes[3]]),
+                                    Severity = int.Parse(row[fieldIndexes[4]]),
+                                    High = float.Parse(row[fieldIndexes[5]]),
+                                    Low = float.Parse(row[fieldIndexes[6]]),
+                                    Enabled = int.Parse(row[fieldIndexes[7]])
+                                };
+
+                                table.UpdateRecord(newRecord);
+
+                            }
+                        }
+                    }
+                }
+                else if(referrer.Contains("ChannelsWithLimits.cshtml") || referrer.Contains("MetersWithNormalLimits.cshtml"))
+                {
+                    int channelIdIndex = Array.IndexOf(tableFields, "ChannelID");
+                    int highIndex = Array.IndexOf(tableFields, "ChannelHigh");
+                    int lowIndex = Array.IndexOf(tableFields, "ChannelLow");
+
                     using (DataContext dataContext = new DataContext())
                     {
-                        TableOperations<HourOfWeekLimit> table = dataContext.Table<HourOfWeekLimit>();
+                        TableOperations<AlarmRangeLimit> table = dataContext.Table<AlarmRangeLimit>();
 
                         for (int i = 1; i < csvRows.Length; ++i)
                         {
                             string[] row = csvRows[i].Split(',');
-                            HourOfWeekLimit newRecord = new HourOfWeekLimit()
-                            {
-                                ID = int.Parse(row[fieldIndexes[0]]),
-                                ChannelID = int.Parse(row[fieldIndexes[1]]),
-                                AlarmTypeID = int.Parse(row[fieldIndexes[2]]),
-                                HourOfWeek = int.Parse(row[fieldIndexes[3]]),
-                                Severity = int.Parse(row[fieldIndexes[4]]),
-                                High = float.Parse(row[fieldIndexes[5]]),
-                                Low = float.Parse(row[fieldIndexes[6]]),
-                                Enabled = int.Parse(row[fieldIndexes[7]])
-                            };
+                            AlarmRangeLimit record = table.QueryRecordWhere("ChannelID = {0}", int.Parse(row[channelIdIndex]));
 
-                            table.UpdateRecord(newRecord);
+                            if (record == null) continue;
+                            record.High = float.Parse(row[highIndex]);
+                            record.Low = float.Parse(row[lowIndex]);
+
+                            table.UpdateRecord(record);
 
                         }
                     }
+
                 }
             }
             catch (Exception e)
