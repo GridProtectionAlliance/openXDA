@@ -128,6 +128,7 @@ namespace openXDA
         // Fields
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
+        private DataPusherEngine m_dataPusherEngine;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
@@ -254,10 +255,14 @@ namespace openXDA
             // Set up the analysis engine
             m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
 
+            // Set up data pusher engine
+            m_dataPusherEngine = new DataPusherEngine();
+
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataHub.ReprocessFileEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2, Args.Argument3);
             DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+            DataHub.ReloadSystemSettingsEvent += (obj, Args) => OnReloadSystemSettingsRequestHandler();
 
             //Set up DataPusherEngine callbacks
             DataPusherEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
@@ -278,14 +283,15 @@ namespace openXDA
 
                 bool engineStarted = false;
                 bool webUIStarted = false;
-
+                bool dataPusherEngineStarted = false;
 
                 while (true)
                 {
                     engineStarted = engineStarted || TryStartEngine();
                     webUIStarted = webUIStarted || TryStartWebUI();
+                    dataPusherEngineStarted = dataPusherEngineStarted || TryStartDataPusherEngine();
 
-                    if (engineStarted && webUIStarted)
+                    if (engineStarted && webUIStarted && dataPusherEngineStarted)
                         break;
 
                     for (int i = 0; i < LoopCount; i++)
@@ -330,6 +336,10 @@ namespace openXDA
             m_extensibleDisturbanceAnalysisEngine.Stop();
             m_extensibleDisturbanceAnalysisEngine.Dispose();
 
+            // Dispose of the data pusher engine
+            m_dataPusherEngine.Stop();
+            m_dataPusherEngine.Dispose();
+
             // Save updated settings to the configuration file
             ConfigurationFile.Current.Save();
         }
@@ -352,6 +362,35 @@ namespace openXDA
 
                 // Log the exception
                 message = "Failed to start XDA engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
+
+        // Attempts to start the engine and logs startup errors.
+        private bool TryStartDataPusherEngine()
+        {
+            try
+            {
+                // Start the analysis engine
+                using(DataContext conn = new DataContext("systemSettings"))
+                {
+                    bool start = bool.Parse(conn.Table<Setting>().QueryRecordWhere("Name = 'EnableDataPusher'")?.Value ?? "false");
+                    if(start)
+                        m_dataPusherEngine.Start();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the analysis engine
+                m_dataPusherEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start DataPusher engine due to exception: " + ex.Message;
                 HandleException(new InvalidOperationException(message, ex));
 
                 return false;
@@ -524,8 +563,46 @@ namespace openXDA
         private void ReloadSystemSettingsRequestHandler(ClientRequestInfo requestInfo)
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
+            
+            using(DataContext dataContext = new DataContext("systemSettings"))
+            {
+                bool flag = bool.Parse(dataContext.Table<Setting>().QueryRecordWhere("Name = 'EnableDataPusher'")?.Value ?? "false");
+
+                if (m_dataPusherEngine.Running && flag)
+                    m_dataPusherEngine.ReloadSystemSettings();
+                else if (!flag)
+                    m_dataPusherEngine.Stop();
+                else if (!m_dataPusherEngine.Running && flag)
+                    m_dataPusherEngine.Start();
+                else
+                    m_dataPusherEngine.Stop();
+            }
+
             SendResponse(requestInfo, true);
         }
+
+        // Reloads system settings from the database.
+        private void OnReloadSystemSettingsRequestHandler()
+        {
+            m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                bool flag = bool.Parse(dataContext.Table<Setting>().QueryRecordWhere("Name = 'EnableDataPusher'")?.Value ?? "false");
+
+                if (m_dataPusherEngine.Running && flag)
+                    m_dataPusherEngine.ReloadSystemSettings();
+                else if (!flag)
+                    m_dataPusherEngine.Stop();
+                else if (!m_dataPusherEngine.Running && flag)
+                    m_dataPusherEngine.Start();
+                else
+                    m_dataPusherEngine.Stop();
+            }
+
+            LogStatusMessage("Reload system settings complete...");
+        }
+
 
         // Displays status information about the XDA engine.
         private void EngineStatusHandler(ClientRequestInfo requestInfo)
