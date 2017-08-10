@@ -71,6 +71,14 @@ namespace openXDA.Hubs
         // Client-side script functionality
         #region [ Static ]
 
+        public static event EventHandler ReloadSystemSettingsEvent;
+
+        private static void OnReloadSystemSettings()
+        {
+            ReloadSystemSettingsEvent?.Invoke(new object(), null);
+        }
+
+
         public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
                 
         private static void OnLogStatusMessage(string message)
@@ -148,6 +156,14 @@ namespace openXDA.Hubs
         #endregion
 
         #region [Config Page]
+
+        #region [ Index Page ]
+        public void ReloadSystemSetting()
+        {
+            OnReloadSystemSettings();
+        }
+
+        #endregion
 
         #region [ Setting Table Operations ]
 

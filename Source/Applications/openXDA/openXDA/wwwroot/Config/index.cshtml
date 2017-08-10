@@ -163,6 +163,60 @@
         }
     </style>
 }
+@functions {
+    public string GetCurrentUserID()
+    {
+        //if (Thread.CurrentPrincipal.Identity == null)
+        //    return UserInfo.CurrentUserID;
+
+        return Thread.CurrentPrincipal.Identity.Name;
+    }
+}
+
+<div class="row">
+    <div class="col-lg-4 col-md-4 col-sm-5">
+        <div class="panel panel-default">
+            <div class="panel-heading">Quick Links</div>
+            <div class="panel-body">
+                <div class="btn-group-vertical btn-block">
+                    @*<a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
+                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
+                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
+                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
+                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>*@
+                    <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
+                </div>
+            </div>
+        </div>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <span class="badge badge-fixed" id="serverTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Server&nbsp;Time
+                <hr class="quarter-break" />
+                <span class="badge badge-fixed" id="localTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Local&nbsp;Time
+                <hr class="quarter-break" />
+                <span class="badge badge-fixed" id="currentUser">@GetCurrentUserID()</span> Current User
+            </li>
+            <li class="list-group-item">
+                <span class="badge badge-fixed" id="applicationVersion">@applicationVersion</span>App&nbsp;Version
+                <hr class="quarter-break" />
+                <span class="badge badge-fixed" id="databaseType">DB: @databaseType</span>Config&nbsp;Type
+                <hr class="quarter-break" />
+                <span class="badge badge-fixed" id="databaseName">@databaseName</span>Config&nbsp;Name
+            </li>
+        </ul>
+        <p class="text-info text-center small">@ViewBag.Request.RequestUri.ToString()</p>
+        <!-- label class="small" id="fontSizeLabel"></label -->
+    </div>
+    <div class="col-lg-8 col-md-8 col-sm-7">
+        <div class="panel panel-default">
+            <div class="panel-heading">System Health</div>
+            <div class="panel-body">
+                <pre class="performance-statistics" id="performanceStatistics">Loading&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin"></span></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         function updateTimestamps() {
@@ -201,58 +255,13 @@
         //    $("#fontSizeLabel").html("Font Size: " + $("#performanceStatistics").css("font-size") + ", Window Size: " + $(window).width().toString());
         //});
 
+        function reloadSystemSettings() {
+            if (hubIsConnected)
+            {
+                dataHub.reloadSystemSetting().done(function () {
+                    alert('openXDA Settings reloaded...')
+                });
+            }
+        }
     </script>
 }
-@functions {
-    public string GetCurrentUserID()
-    {
-        //if (Thread.CurrentPrincipal.Identity == null)
-        //    return UserInfo.CurrentUserID;
-
-        return Thread.CurrentPrincipal.Identity.Name;
-    }
-}
-
-<div class="row">
-    <div class="col-lg-4 col-md-4 col-sm-5">
-        @*<div class="panel panel-default">
-            <div class="panel-heading">Quick Links</div>
-            <div class="panel-body">
-                <div class="btn-group-vertical btn-block">
-                    <a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
-                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
-                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
-                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
-                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>
-                    <button type="button" class="btn btn-default" id="restartButton" hub-dependent>Restart Service</button>
-                </div>
-            </div>
-        </div>*@
-        <ul class="list-group">
-            <li class="list-group-item">
-                <span class="badge badge-fixed" id="serverTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Server&nbsp;Time
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="localTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Local&nbsp;Time
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="currentUser">@GetCurrentUserID()</span> Current User
-            </li>
-            <li class="list-group-item">
-                <span class="badge badge-fixed" id="applicationVersion">@applicationVersion</span>App&nbsp;Version
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="databaseType">DB: @databaseType</span>Config&nbsp;Type
-                <hr class="quarter-break" />
-                <span class="badge badge-fixed" id="databaseName">@databaseName</span>Config&nbsp;Name
-            </li>
-        </ul>
-        <p class="text-info text-center small">@ViewBag.Request.RequestUri.ToString()</p>
-        <!-- label class="small" id="fontSizeLabel"></label -->
-    </div>
-    <div class="col-lg-8 col-md-8 col-sm-7">
-        <div class="panel panel-default">
-            <div class="panel-heading">System Health</div>
-            <div class="panel-body">
-                <pre class="performance-statistics" id="performanceStatistics">Loading&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin"></span></pre>
-            </div>
-        </div>
-    </div>
-</div>
