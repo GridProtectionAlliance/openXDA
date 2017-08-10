@@ -34,6 +34,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.Username', '', '')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EnableDataPusher', 'False', 'False')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.WaitPeriod', '10.0', '10.0')
 GO
 
