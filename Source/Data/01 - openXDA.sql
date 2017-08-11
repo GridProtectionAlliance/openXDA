@@ -2123,6 +2123,40 @@ CREATE NONCLUSTERED INDEX IX_ContourAnimationFrame_ContourAnimationID
 ON ContourAnimationFrame(ContourAnimationID ASC)
 GO
 
+CREATE TABLE [dbo].[PQMarkCompany](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [varchar](200) NOT NULL
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[PQMarkCompanyMeter](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[PQMarkCompanyID] [int] NOT NULL,
+	[MeterID] [int] NOT NULL,
+	DisplayName varchar(200) NOT NULL,
+	Enabled bit NOT NULL
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[PQMarkCompanyMeter]  WITH CHECK ADD FOREIGN KEY([MeterID])
+REFERENCES [dbo].[Meter] ([ID])
+GO
+
+ALTER TABLE [dbo].[PQMarkCompanyMeter]  WITH CHECK ADD FOREIGN KEY([PQMarkCompanyID])
+REFERENCES [dbo].[PQMarkCompany] ([ID])
+GO
+
+
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash

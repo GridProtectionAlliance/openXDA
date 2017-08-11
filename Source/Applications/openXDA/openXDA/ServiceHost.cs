@@ -105,7 +105,7 @@ using Setting = openXDA.Model.Setting;
 using openXDA.DataPusher;
 using openXDA.Adapters;
 using System.Web.Mvc;
-
+using PQMark.DataAggregator;
 namespace openXDA
 {
     public partial class ServiceHost : ServiceBase
@@ -129,6 +129,7 @@ namespace openXDA
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
         private DataPusherEngine m_dataPusherEngine;
+        private DataAggregationEngine m_dataAggregationEngine;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
@@ -244,6 +245,9 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessAllData", "Creates aggregates for all data", OnProcessAllData));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessEmptyData", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessMonthToDate", "Creates aggregates for month to date data", OnProcessMonthToDateData));
 
             // Set up adapter loader to load service monitors
             m_serviceMonitors = new ServiceMonitors();
@@ -257,6 +261,9 @@ namespace openXDA
 
             // Set up data pusher engine
             m_dataPusherEngine = new DataPusherEngine();
+
+            // Set up data aggregation engine
+            m_dataAggregationEngine = new DataAggregationEngine();
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
@@ -274,6 +281,10 @@ namespace openXDA
             //Set up PQMarkController callbacks
             PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
 
+            //Set up DataAggregationEngine callbacks
+            DataAggregationEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataAggregationEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
@@ -284,12 +295,14 @@ namespace openXDA
                 bool engineStarted = false;
                 bool webUIStarted = false;
                 bool dataPusherEngineStarted = false;
+                bool dataAggregationEngineStarted = false;
 
                 while (true)
                 {
                     engineStarted = engineStarted || TryStartEngine();
                     webUIStarted = webUIStarted || TryStartWebUI();
                     dataPusherEngineStarted = dataPusherEngineStarted || TryStartDataPusherEngine();
+                    dataAggregationEngineStarted = dataAggregationEngineStarted || TryStartDataAggregationEngine();
 
                     if (engineStarted && webUIStarted && dataPusherEngineStarted)
                         break;
@@ -396,6 +409,36 @@ namespace openXDA
                 return false;
             }
         }
+
+        // Attempts to start the engine and logs startup errors.
+        private bool TryStartDataAggregationEngine()
+        {
+            try
+            {
+                // Start the analysis engine
+                using (DataContext conn = new DataContext("systemSettings"))
+                {
+                    bool start = bool.Parse(conn.Table<Setting>().QueryRecordWhere("Name = 'EnablePQMarkAggregator'")?.Value ?? "false");
+                    if (start)
+                        m_dataAggregationEngine.Start();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the analysis engine
+                m_dataAggregationEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start PQMark data aggregation engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
+
 
         // Attempts to start the web UI and logs startup errors.
         private bool TryStartWebUI()
@@ -627,6 +670,62 @@ namespace openXDA
             string message = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(args);
             DisplayResponseMessage(requestInfo, message);
         }
+
+        public void OnProcessAllData(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_dataAggregationEngine.GetHelpMessage("PQMarkProcessAllData");
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            if (m_dataAggregationEngine.Running)
+            {
+                m_dataAggregationEngine.ProcessAllData();
+                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating all data.");
+            }
+            else
+                SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
+        }
+
+        public void OnProcessAllEmptyData(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_dataAggregationEngine.GetHelpMessage("PQMarkProcessEmptyData");
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            if (m_dataAggregationEngine.Running)
+            {
+                m_dataAggregationEngine.ProcessAllEmptyData();
+                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating all empty data.");
+            }
+            else
+                SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
+        }
+
+        public void OnProcessMonthToDateData(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_dataAggregationEngine.GetHelpMessage("PQMarkProcessMonthToDateData");
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            if (m_dataAggregationEngine.Running)
+            {
+                m_dataAggregationEngine.ProcessMonthToDateData();
+                SendResponseWithAttachment(requestInfo, true, null, "PQMark data aggregation engine has completed aggregating month to date data.");
+            }
+            else
+                SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
+        }
+
+
 
         // Send a message to the service monitors on request.
         private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)

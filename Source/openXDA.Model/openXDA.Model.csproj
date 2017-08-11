@@ -110,6 +110,8 @@
     <Compile Include="MeterType.cs" />
     <Compile Include="OutputChannel.cs" />
     <Compile Include="Phase.cs" />
+    <Compile Include="PQMarkCompany.cs" />
+    <Compile Include="PQMarkCompanyMeter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteXDAInstance.cs" />
     <Compile Include="RemoteXDAInstanceMeter.cs" />

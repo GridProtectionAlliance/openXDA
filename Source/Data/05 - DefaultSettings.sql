@@ -37,6 +37,12 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EnableDataPusher', 'False', 'False')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EnablePQMarkAggregator', 'False', 'False')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregationFrequency', '0 0 * * *', '0 0 1 * *')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.WaitPeriod', '10.0', '10.0')
 GO
 

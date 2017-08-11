@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Class1.cs - Gbtc
+//  DataPusherEngine.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -25,9 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using openXDA.Model;
-using GSF.Configuration;
 using GSF.Web.Model;
-using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using GSF;
 using System.IO;
@@ -110,6 +108,7 @@ namespace openXDA.DataPusher
                 {
                     Stop();
                     m_dataContext.Dispose();
+                    m_disposed = true;
                 }
                 catch (Exception ex)
                 {
