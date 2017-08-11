@@ -183,6 +183,7 @@ namespace FaultData.DataOperations
             // Fields
             private DataSeries m_waveform;
             private CycleDataGroup m_cycleDataGroup;
+            private BreakerSettings m_breakerSettings;
             private XValue m_timeCleared;
             private double m_timing;
             private double m_systemFrequency;
@@ -191,12 +192,13 @@ namespace FaultData.DataOperations
 
             #region [ Constructors ]
 
-            public PhaseTiming(DataSeries waveform, CycleDataGroup cycleDataGroup, BreakerTiming breakerTiming, double systemFrequency, double openBreakerThreshold)
+            public PhaseTiming(DataSeries waveform, CycleDataGroup cycleDataGroup, BreakerTiming breakerTiming, BreakerSettings breakerSettings, double systemFrequency)
             {
                 m_waveform = waveform;
                 m_cycleDataGroup = cycleDataGroup;
+                m_breakerSettings = breakerSettings;
                 m_systemFrequency = systemFrequency;
-                m_timeCleared = FindBreakerOpen(breakerTiming.TimeEnergized.Index, openBreakerThreshold);
+                m_timeCleared = FindBreakerOpen(breakerTiming.TimeEnergized.Index);
 
                 if ((object)m_timeCleared != null)
                     m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
@@ -236,25 +238,48 @@ namespace FaultData.DataOperations
 
             #region [ Methods ]
 
-            private XValue FindBreakerOpen(int startIndex, double openBreakerThreshold)
+            private XValue FindBreakerOpen(int startIndex)
             {
                 int cycleIndex;
                 int sampleCleared;
+                int samplesPerCycle;
+                int slidingWindowSize;
+                DataSeries slidingWindow;
 
                 if ((object)m_waveform == null || (object)m_cycleDataGroup == null)
                     return null;
 
-                cycleIndex = m_cycleDataGroup.Peak.DataPoints
-                    .Skip(startIndex)
-                    .TakeWhile(dataPoint => dataPoint.Value > openBreakerThreshold)
-                    .Count() + startIndex;
+                samplesPerCycle = Transform.CalculateSamplesPerCycle(m_waveform, m_systemFrequency);
+                slidingWindowSize = (int)Math.Round(m_breakerSettings.DCOffsetWindowSize * samplesPerCycle);
 
-                if (cycleIndex == startIndex)
+                for (cycleIndex = startIndex; cycleIndex < m_cycleDataGroup.Peak.DataPoints.Count; cycleIndex++)
+                {
+                    // If the value is below the open breaker threshold,
+                    // exit the loop so we can find a more accurate clearing time
+                    if (m_cycleDataGroup.Peak[cycleIndex].Value <= m_breakerSettings.OpenBreakerThreshold)
+                        break;
+
+                    // If we detect DC offset (full cycle of data with no zero crossing),
+                    // simply return the zero crossing as the clearing time
+                    if (m_breakerSettings.ApplyDCOffsetLogic)
+                    {
+                        slidingWindow = m_waveform.ToSubSeries(cycleIndex, cycleIndex + slidingWindowSize - 1);
+
+                        if (slidingWindow.Minimum >= 0 || slidingWindow.Maximum <= 0)
+                            return new XValue(cycleIndex, m_waveform[cycleIndex].Time);
+                    }
+                }
+
+                // Throw out phase timing results if the
+                // current channels are filled with noise
+                if (cycleIndex - startIndex <= m_breakerSettings.MinCyclesBeforeOpen)
                     return null;
 
                 if (cycleIndex == m_cycleDataGroup.Peak.DataPoints.Count)
                     return null;
 
+                // Refine the search for the clearing time
+                // by analyzing the instantaneous waveform
                 sampleCleared = FindIndexCleared(m_waveform, cycleIndex);
 
                 return new XValue(sampleCleared, m_waveform[sampleCleared].Time);
@@ -263,12 +288,12 @@ namespace FaultData.DataOperations
             private int FindIndexCleared(DataSeries waveform, int cycleIndex)
             {
                 int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform, m_systemFrequency);
-                int startIndex = cycleIndex - 1;
-                int endIndex = startIndex + samplesPerCycle - 1;
-                int postfaultIndex = Math.Min(endIndex + samplesPerCycle, waveform.DataPoints.Count - 1);
+                int startIndex = Math.Max(0, cycleIndex - samplesPerCycle);
+                int endIndex = startIndex;
+                int postclearIndex = Math.Min(endIndex + samplesPerCycle, waveform.DataPoints.Count - 1);
 
-                double largestPostfaultPeak;
-                double largestFaultCyclePeak;
+                double largestPostclearPeak;
+                double largestPreclearPeak;
 
                 double previousValue;
                 double value;
@@ -279,35 +304,34 @@ namespace FaultData.DataOperations
                 if (cycleIndex == 0)
                     return 0;
 
-                largestPostfaultPeak = 0.0D;
-                largestFaultCyclePeak = 0.0D;
+                largestPostclearPeak = 0.0D;
+                largestPreclearPeak = 0.0D;
 
-                // Find the largest postfault peak as the absolute
-                // peak of the cycle after the last faulted cycle
-                for (int i = postfaultIndex; i > endIndex; i--)
+                // Find the largest peak after the breaker is opened
+                for (int i = postclearIndex; i > endIndex; i--)
                 {
                     value = Math.Abs(waveform[i].Value);
 
-                    if (value > largestPostfaultPeak)
-                        largestPostfaultPeak = value;
+                    if (value > largestPostclearPeak)
+                        largestPostclearPeak = value;
                 }
 
-                // Find the largest peak of the last faulted cycle
+                // Find the largest peak of the last cycle before the breaker opened
                 for (int i = startIndex; i <= endIndex; i++)
                 {
                     value = Math.Abs(waveform[i].Value);
 
-                    if (value > largestFaultCyclePeak)
-                        largestFaultCyclePeak = value;
+                    if (value > largestPreclearPeak)
+                        largestPreclearPeak = value;
                 }
 
                 // Scanning backwards, find the first point where the value exceeds
-                // a point 25% of the way from the postfault peak to the fault peak
+                // a point 25% of the way from the postclear peak to the preclear peak
                 for (int i = endIndex; i >= startIndex; i--)
                 {
                     value = Math.Abs(waveform[i].Value);
 
-                    if (value >= (largestPostfaultPeak * 0.75 + largestFaultCyclePeak * 0.25))
+                    if (value >= (largestPostclearPeak * 0.75 + largestPreclearPeak * 0.25))
                         startIndex = i;
                 }
 
@@ -500,7 +524,7 @@ namespace FaultData.DataOperations
 
             foreach (string breakerNumber in breakerNumbers)
             {
-                double breakerSpeed = ConvertBreakerSpeed(m_dbAdapterContainer.Connection.ExecuteScalar("SELECT BreakerSpeed FROM MaximoBreaker WHERE CAST(BreakerNum AS INT) = @breakerNumber", Convert.ToInt32(breakerNumber)));
+                double breakerSpeed = ConvertBreakerSpeed(m_dbAdapterContainer.Connection.ExecuteScalar("SELECT BreakerSpeed FROM MaximoBreaker WHERE SUBSTRING(BreakerNum, PATINDEX('%[^0]%', BreakerNum + '.'), LEN(BreakerNum)) = @breakerNumber", DataExtensions.DefaultTimeoutDuration, breakerNumber.TrimStart('0')));
 
                 List<DataSeries> breakerDigitals = dataGroup.DataSeries
                     .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name == "Digital")
@@ -522,9 +546,9 @@ namespace FaultData.DataOperations
                 {
                     BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, m_systemFrequency, breakerSpeed, m_breakerSettings.MinWaitBeforeReclose);
 
-                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
-                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
-                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_systemFrequency, m_breakerSettings.OpenBreakerThreshold);
+                    PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_breakerSettings, m_systemFrequency);
+                    PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_breakerSettings, m_systemFrequency);
+                    PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_breakerSettings, m_systemFrequency);
 
                     BreakerOperationRow breakerOperationRow = GetBreakerOperationRow(breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
 

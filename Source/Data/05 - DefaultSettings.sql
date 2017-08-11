@@ -1,4 +1,13 @@
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.ApplyDCOffsetLogic', 'False', 'False')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.DCOffsetWindowSize', '1.125', '1.125')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.LateBreakerThreshold', '0.0', '0.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MinCyclesBeforeOpen', '0.0', '0.0')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.MinWaitBeforeReclose', '15.0', '15.0')
@@ -68,6 +77,9 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherBufferSize', '
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherEnumerationStrategy', 'ParallelSubdirectories', 'ParallelSubdirectories')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherOrderedEnumeration', 'False', 'False')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherInternalThreadCount', '0', '0')
