@@ -187,6 +187,7 @@ namespace FaultData.DataOperations
             private XValue m_timeCleared;
             private double m_timing;
             private double m_systemFrequency;
+            private bool m_dcOffsetDetected;
 
             #endregion
 
@@ -204,6 +205,7 @@ namespace FaultData.DataOperations
                     m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
                 else
                     m_timing = double.NaN;
+                m_dcOffsetDetected = false;
             }
 
             #endregion
@@ -231,6 +233,14 @@ namespace FaultData.DataOperations
                 get
                 {
                     return !double.IsNaN(m_timing);
+                }
+            }
+
+            public bool DcOffsetDetected
+            {
+                get
+                {
+                    return m_dcOffsetDetected;
                 }
             }
 
@@ -266,7 +276,10 @@ namespace FaultData.DataOperations
                         slidingWindow = m_waveform.ToSubSeries(cycleIndex, cycleIndex + slidingWindowSize - 1);
 
                         if (slidingWindow.Minimum >= 0 || slidingWindow.Maximum <= 0)
+                        {
+                            m_dcOffsetDetected = true;
                             return new XValue(cycleIndex, m_waveform[cycleIndex].Time);
+                        }
                     }
                 }
 
@@ -580,6 +593,7 @@ namespace FaultData.DataOperations
             breakerOperationRow.BPhaseBreakerTiming = NotNaN(bPhaseTiming.Timing);
             breakerOperationRow.CPhaseBreakerTiming = NotNaN(cPhaseTiming.Timing);
             breakerOperationRow.BreakerSpeed = NotNaN(breakerTiming.Speed);
+            breakerOperationRow.DcOffsetDetected = aPhaseTiming.DcOffsetDetected || bPhaseTiming.DcOffsetDetected || cPhaseTiming.DcOffsetDetected ? 1 : 0;
 
             return breakerOperationRow;
         }

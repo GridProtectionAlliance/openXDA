@@ -1007,6 +1007,7 @@ CREATE TABLE BreakerOperation
     APhaseBreakerTiming FLOAT NOT NULL,
     BPhaseBreakerTiming FLOAT NOT NULL,
     CPhaseBreakerTiming FLOAT NOT NULL,
+	DcOffsetDetected INT NOT NULL,
     BreakerSpeed FLOAT NOT NULL,
     UpdatedBy VARCHAR(50) NULL
 )
