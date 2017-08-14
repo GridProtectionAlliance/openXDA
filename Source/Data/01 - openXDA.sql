@@ -2156,6 +2156,39 @@ ALTER TABLE [dbo].[PQMarkCompanyMeter]  WITH CHECK ADD FOREIGN KEY([PQMarkCompan
 REFERENCES [dbo].[PQMarkCompany] ([ID])
 GO
 
+CREATE TABLE [dbo].[PQMarkAggregate](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[MeterID] [int] NOT NULL,
+	[Year] [int] NOT NULL,
+	[Month] [int] NOT NULL,
+	[ITIC] [int] NOT NULL,
+	[SEMI] [int] NOT NULL,
+	[SARFI90] [int] NOT NULL,
+	[SARFI70] [int] NOT NULL,
+	[SARFI50] [int] NOT NULL,
+	[SARFI10] [int] NOT NULL,
+	[THDJson] varchar(max) NULL
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+ALTER TABLE [dbo].[PQMarkAggregate]  WITH CHECK ADD FOREIGN KEY([MeterID])
+REFERENCES [dbo].[Meter] ([ID])
+GO
+
+CREATE INDEX IX_PQMarkAggregate_MeterID ON [dbo].[PQMarkAggregate](MeterID)
+GO
+CREATE INDEX IX_PQMarkAggregate_Year ON [dbo].[PQMarkAggregate]([Year])
+GO
+CREATE INDEX IX_PQMarkAggregate_Month ON [dbo].[PQMarkAggregate]([Month])
+GO
 
 ----- FUNCTIONS -----
 

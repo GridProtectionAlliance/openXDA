@@ -197,7 +197,7 @@ namespace PQMark.DataAggregator
                   FROM  	Disturbance JOIN
 		                    Event ON Event.ID = Disturbance.EventID
                   WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
-		                    Event.MeterID IN ("+ string.Join(",", meters.Select(x => x.ID)) +")"
+		                    Event.MeterID IN ("+ string.Join(",", meters.Select(x => x.MeterID)) +")"
             );
             IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
 
@@ -205,6 +205,7 @@ namespace PQMark.DataAggregator
 
             foreach(var meterGroup in meterGroups)
             {
+                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", meterGroup.Key));
                 var yearGroups = meterGroup.GroupBy(x => x.StartTime.Year);
                 foreach(var yearGroup in yearGroups)
                 {
@@ -234,7 +235,7 @@ namespace PQMark.DataAggregator
                                 vc = slope * (x.DurationSeconds - semiCurve[point1].Item2) + semiCurve[point1].Item1;
                             }
                             double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return 0.0D < value && value <= 1.0D;
+                            return value >= 1.0D;
                         }).Count();
 
                         // Get counts for ITIC
@@ -251,7 +252,7 @@ namespace PQMark.DataAggregator
                                 vc = slope * (x.DurationSeconds - iticLowerCurve[point1].Item2) + iticLowerCurve[point1].Item1;
                             }
                             double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return 0.0D < value && value <= 1.0D;
+                            return value >= 1.0D;
                         }).Count();
 
                         int iticUpper = dateGroup.Where(x => {
@@ -267,7 +268,7 @@ namespace PQMark.DataAggregator
                                 vc = slope * (x.DurationSeconds - iticUpperCurve[point1].Item2) + iticUpperCurve[point1].Item1;
                             }
                             double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
-                            return 0.0D < value && value <= 1.0D;
+                            return value >= 1.0D;
                         }).Count();
 
                         List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", meterGroup.Key).Select(x => x.ID).ToList();
@@ -279,11 +280,47 @@ namespace PQMark.DataAggregator
                                     historianPoints.Add(point);
                         }
 
-                        string thdjson = "[" + string.Join(";", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Select(x => $"{x.Key}:{x.Count()}")) + "]";
+                        string thdjson = "\"[{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\\\"{x.Key}\\\":\\\"{x.Count()}\\\"")) + "}]\"";
+
+                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, yearGroup.Key, dateGroup.Key);
+                        if(record != null)
+                        {
+                            record.ITIC = iticLower + iticUpper;
+                            record.SEMI = semi;
+                            record.SARFI90 = sarfi90;
+                            record.SARFI70 = sarfi70;
+                            record.SARFI50 = sarfi50;
+                            record.SARFI10 = sarfi10;
+                            record.THDJson = thdjson;
+
+                            DataContext.Table<PQMarkAggregate>().UpdateRecord(record);
+                        }
+                        else
+                        {
+                            record = new PQMarkAggregate()
+                            {
+                                MeterID = meterGroup.Key,
+                                Year = yearGroup.Key,
+                                Month = dateGroup.Key,
+                                ITIC = iticLower + iticUpper,
+                                SEMI = semi,
+                                SARFI90 = sarfi90,
+                                SARFI70 = sarfi70,
+                                SARFI50 = sarfi50,
+                                SARFI10 = sarfi10,
+                                THDJson = thdjson
+                            };
+
+                            DataContext.Table<PQMarkAggregate>().AddNewRecord(record);
+
+                        }
                     }
 
                 }
             }
+
+            OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
+
         }
 
         public void ProcessAllEmptyData()
