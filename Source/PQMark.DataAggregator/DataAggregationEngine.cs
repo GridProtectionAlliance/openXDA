@@ -155,36 +155,52 @@ namespace PQMark.DataAggregator
             public double DurationCycles { get; set; }
         }
 
+        public class Curves
+        {
+            private readonly static List<Tuple<double, double>> s_IticUpperCurve;
+            private readonly static List<Tuple<double, double>> s_IticLowerCurve;
+            private readonly static List<Tuple<double, double>> s_SemiCurve;
+
+            public static List<Tuple<double, double>> IticUpperCurve { get { return s_IticUpperCurve; }}
+            public static List<Tuple<double, double>> IticLowerCurve { get { return s_IticLowerCurve; } }
+            public static List<Tuple<double, double>> SemiCurve { get { return s_SemiCurve; } }
+
+            static Curves()
+            {
+                s_IticUpperCurve = new List<Tuple<double, double>>()
+                {
+                    Tuple.Create(2.0,0.001),
+                    Tuple.Create(1.4,0.003),
+                    Tuple.Create(1.2,0.003),
+                    Tuple.Create(1.2,0.5),
+                    Tuple.Create(1.1,0.5),
+                };
+                s_IticLowerCurve = new List<Tuple<double, double>>()
+                {
+                    Tuple.Create(0.0,0.02),
+                    Tuple.Create(0.7,0.02),
+                    Tuple.Create(0.7,0.5),
+                    Tuple.Create(0.8,0.5),
+                    Tuple.Create(0.8,10.0),
+                    Tuple.Create(0.9,10.0),
+                };
+                s_SemiCurve = new List<Tuple<double, double>>()
+                {
+                    Tuple.Create(0.0,0.02),
+                    Tuple.Create(0.5,0.02),
+                    Tuple.Create(0.5,0.2),
+                    Tuple.Create(0.7,0.2),
+                    Tuple.Create(0.7,0.5),
+                    Tuple.Create(0.8,0.5),
+                    Tuple.Create(0.8,10.0),
+                    Tuple.Create(0.9,10.0),
+                };
+
+            }
+        }
+
         public void ProcessAllData()
         {
-            List<Tuple<double, double>> iticUpperCurve = new List<Tuple<double, double>>()
-            {
-                Tuple.Create(2.0,0.001),
-                Tuple.Create(1.4,0.003),
-                Tuple.Create(1.2,0.003),
-                Tuple.Create(1.2,0.5),
-                Tuple.Create(1.1,0.5),
-            };
-            List<Tuple<double, double>> iticLowerCurve = new List<Tuple<double, double>>()
-            {
-                Tuple.Create(0.0,0.02),
-                Tuple.Create(0.7,0.02),
-                Tuple.Create(0.7,0.5),
-                Tuple.Create(0.8,0.5),
-                Tuple.Create(0.8,10.0),
-                Tuple.Create(0.9,10.0),
-            };
-            List<Tuple<double, double>> semiCurve = new List<Tuple<double, double>>()
-            {
-                Tuple.Create(0.0,0.02),
-                Tuple.Create(0.5,0.02),
-                Tuple.Create(0.5,0.2),
-                Tuple.Create(0.7,0.2),
-                Tuple.Create(0.7,0.5),
-                Tuple.Create(0.8,0.5),
-                Tuple.Create(0.8,10.0),
-                Tuple.Create(0.9,10.0),
-            };
             string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
             string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 
@@ -225,14 +241,14 @@ namespace PQMark.DataAggregator
                         int semi = dateGroup.Where(x => {
                             double vc = 0.0D;
 
-                            int point1 = semiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
+                            int point1 = Curves.SemiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
                             if (point1 == -1) return false;
-                            else if (point1 + 1 == semiCurve.Count()) vc = semiCurve[point1].Item1;
-                            else if (semiCurve[point1].Item2 == semiCurve[point1 + 1].Item2) vc = semiCurve[point1 + 1].Item1;
+                            else if (point1 + 1 == Curves.SemiCurve.Count()) vc = Curves.SemiCurve[point1].Item1;
+                            else if (Curves.SemiCurve[point1].Item2 == Curves.SemiCurve[point1 + 1].Item2) vc = Curves.SemiCurve[point1 + 1].Item1;
                             else
                             {
-                                double slope = (semiCurve[point1 + 1].Item1 - semiCurve[point1].Item1) / (semiCurve[point1 + 1].Item2 - semiCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - semiCurve[point1].Item2) + semiCurve[point1].Item1;
+                                double slope = (Curves.SemiCurve[point1 + 1].Item1 - Curves.SemiCurve[point1].Item1) / (Curves.SemiCurve[point1 + 1].Item2 - Curves.SemiCurve[point1].Item2);
+                                vc = slope * (x.DurationSeconds - Curves.SemiCurve[point1].Item2) + Curves.SemiCurve[point1].Item1;
                             }
                             double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
                             return value >= 1.0D;
@@ -242,14 +258,14 @@ namespace PQMark.DataAggregator
                         int iticLower = dateGroup.Where(x => {
                             double vc = 0.0D;
 
-                            int point1 = iticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
+                            int point1 = Curves.IticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
                             if (point1 == -1) return false;
-                            else if (point1 + 1 == iticLowerCurve.Count()) vc = iticLowerCurve[point1].Item1;
-                            else if (iticLowerCurve[point1].Item2 == iticLowerCurve[point1 + 1].Item2) vc = iticLowerCurve[point1 + 1].Item1;
+                            else if (point1 + 1 == Curves.IticLowerCurve.Count()) vc = Curves.IticLowerCurve[point1].Item1;
+                            else if (Curves.IticLowerCurve[point1].Item2 == Curves.IticLowerCurve[point1 + 1].Item2) vc = Curves.IticLowerCurve[point1 + 1].Item1;
                             else
                             {
-                                double slope = (iticLowerCurve[point1 + 1].Item1 - iticLowerCurve[point1].Item1) / (iticLowerCurve[point1 + 1].Item2 - iticLowerCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - iticLowerCurve[point1].Item2) + iticLowerCurve[point1].Item1;
+                                double slope = (Curves.IticLowerCurve[point1 + 1].Item1 - Curves.IticLowerCurve[point1].Item1) / (Curves.IticLowerCurve[point1 + 1].Item2 - Curves.IticLowerCurve[point1].Item2);
+                                vc = slope * (x.DurationSeconds - Curves.IticLowerCurve[point1].Item2) + Curves.IticLowerCurve[point1].Item1;
                             }
                             double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
                             return value >= 1.0D;
@@ -258,14 +274,14 @@ namespace PQMark.DataAggregator
                         int iticUpper = dateGroup.Where(x => {
                             double vc = 0.0D;
 
-                            int point1 = iticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
+                            int point1 = Curves.IticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
                             if (point1 == -1) return false;
-                            else if (point1 + 1 == iticUpperCurve.Count()) vc = iticUpperCurve[point1].Item1;
-                            else if (iticUpperCurve[point1].Item2 == iticUpperCurve[point1 + 1].Item2) vc = iticUpperCurve[point1 + 1].Item2;
+                            else if (point1 + 1 == Curves.IticUpperCurve.Count()) vc = Curves.IticUpperCurve[point1].Item1;
+                            else if (Curves.IticUpperCurve[point1].Item2 == Curves.IticUpperCurve[point1 + 1].Item2) vc = Curves.IticUpperCurve[point1 + 1].Item2;
                             else
                             {
-                                double slope = (iticUpperCurve[point1 + 1].Item1 - iticUpperCurve[point1].Item1) / (iticUpperCurve[point1 + 1].Item2 - iticUpperCurve[point1].Item2);
-                                vc = slope * (x.DurationSeconds - iticUpperCurve[point1].Item2) + iticUpperCurve[point1].Item1;
+                                double slope = (Curves.IticUpperCurve[point1 + 1].Item1 - Curves.IticUpperCurve[point1].Item1) / (Curves.IticUpperCurve[point1 + 1].Item2 - Curves.IticUpperCurve[point1].Item2);
+                                vc = slope * (x.DurationSeconds - Curves.IticUpperCurve[point1].Item2) + Curves.IticUpperCurve[point1].Item1;
                             }
                             double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
                             return value >= 1.0D;
@@ -325,6 +341,128 @@ namespace PQMark.DataAggregator
 
         public void ProcessAllEmptyData()
         {
+            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+            IEnumerable<PQMarkCompanyMeter> meters = DataContext.Table<PQMarkCompanyMeter>().QueryRecordsWhere("Enabled = 1");
+
+            if (!meters.Any()) return;
+
+            DataTable table = DataContext.Connection.RetrieveData(
+                @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
+                  FROM  	Disturbance JOIN
+		                    Event ON Event.ID = Disturbance.EventID
+                  WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
+		                    Event.MeterID IN (" + string.Join(",", meters.Select(x => x.MeterID)) + ")"
+            );
+            IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
+
+            var meterGroups = dd.GroupBy(x => x.MeterID);
+
+            foreach (var meterGroup in meterGroups)
+            {
+                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", meterGroup.Key));
+                var yearGroups = meterGroup.GroupBy(x => x.StartTime.Year);
+                foreach (var yearGroup in yearGroups)
+                {
+                    var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
+                    foreach (var dateGroup in dateGroups)
+                    {
+                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, yearGroup.Key, dateGroup.Key);
+                        if (record != null) continue;
+
+                        DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
+                        DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+                        // Get Easy Counts for SARFI 90, 70, 50, 10
+                        int sarfi90 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
+                        int sarfi70 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
+                        int sarfi50 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
+                        int sarfi10 = dateGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
+
+                        // Get Counts for semi
+                        int semi = dateGroup.Where(x => {
+                            double vc = 0.0D;
+
+                            int point1 = Curves.SemiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
+                            if (point1 == -1) return false;
+                            else if (point1 + 1 == Curves.SemiCurve.Count()) vc = Curves.SemiCurve[point1].Item1;
+                            else if (Curves.SemiCurve[point1].Item2 == Curves.SemiCurve[point1 + 1].Item2) vc = Curves.SemiCurve[point1 + 1].Item1;
+                            else
+                            {
+                                double slope = (Curves.SemiCurve[point1 + 1].Item1 - Curves.SemiCurve[point1].Item1) / (Curves.SemiCurve[point1 + 1].Item2 - Curves.SemiCurve[point1].Item2);
+                                vc = slope * (x.DurationSeconds - Curves.SemiCurve[point1].Item2) + Curves.SemiCurve[point1].Item1;
+                            }
+                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
+                            return value >= 1.0D;
+                        }).Count();
+
+                        // Get counts for ITIC
+                        int iticLower = dateGroup.Where(x => {
+                            double vc = 0.0D;
+
+                            int point1 = Curves.IticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
+                            if (point1 == -1) return false;
+                            else if (point1 + 1 == Curves.IticLowerCurve.Count()) vc = Curves.IticLowerCurve[point1].Item1;
+                            else if (Curves.IticLowerCurve[point1].Item2 == Curves.IticLowerCurve[point1 + 1].Item2) vc = Curves.IticLowerCurve[point1 + 1].Item1;
+                            else
+                            {
+                                double slope = (Curves.IticLowerCurve[point1 + 1].Item1 - Curves.IticLowerCurve[point1].Item1) / (Curves.IticLowerCurve[point1 + 1].Item2 - Curves.IticLowerCurve[point1].Item2);
+                                vc = slope * (x.DurationSeconds - Curves.IticLowerCurve[point1].Item2) + Curves.IticLowerCurve[point1].Item1;
+                            }
+                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
+                            return value >= 1.0D;
+                        }).Count();
+
+                        int iticUpper = dateGroup.Where(x => {
+                            double vc = 0.0D;
+
+                            int point1 = Curves.IticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
+                            if (point1 == -1) return false;
+                            else if (point1 + 1 == Curves.IticUpperCurve.Count()) vc = Curves.IticUpperCurve[point1].Item1;
+                            else if (Curves.IticUpperCurve[point1].Item2 == Curves.IticUpperCurve[point1 + 1].Item2) vc = Curves.IticUpperCurve[point1 + 1].Item2;
+                            else
+                            {
+                                double slope = (Curves.IticUpperCurve[point1 + 1].Item1 - Curves.IticUpperCurve[point1].Item1) / (Curves.IticUpperCurve[point1 + 1].Item2 - Curves.IticUpperCurve[point1].Item2);
+                                vc = slope * (x.DurationSeconds - Curves.IticUpperCurve[point1].Item2) + Curves.IticUpperCurve[point1].Item1;
+                            }
+                            double value = (1.0D - x.PerUnitMagnitude) / (1.0D - vc);
+                            return value >= 1.0D;
+                        }).Count();
+
+                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", meterGroup.Key).Select(x => x.ID).ToList();
+                        List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
+                        using (Historian historian = new Historian(historianServer, historianInstance))
+                        {
+                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                                if (point.SeriesID.ToString() == "Average")
+                                    historianPoints.Add(point);
+                        }
+
+                        string thdjson = "\"[{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\\\"{x.Key}\\\":\\\"{x.Count()}\\\"")) + "}]\"";
+
+                        record = new PQMarkAggregate()
+                        {
+                            MeterID = meterGroup.Key,
+                            Year = yearGroup.Key,
+                            Month = dateGroup.Key,
+                            ITIC = iticLower + iticUpper,
+                            SEMI = semi,
+                            SARFI90 = sarfi90,
+                            SARFI70 = sarfi70,
+                            SARFI50 = sarfi50,
+                            SARFI10 = sarfi10,
+                            THDJson = thdjson
+                        };
+
+                        DataContext.Table<PQMarkAggregate>().AddNewRecord(record);
+
+                    }
+
+                }
+            }
+
+            OnLogStatusMessage(string.Format("PQMark data aggregation is complete..."));
 
         }
 
