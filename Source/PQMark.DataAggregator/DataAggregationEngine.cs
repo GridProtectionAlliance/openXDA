@@ -296,7 +296,7 @@ namespace PQMark.DataAggregator
                                     historianPoints.Add(point);
                         }
 
-                        string thdjson = "\"[{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\\\"{x.Key}\\\":\\\"{x.Count()}\\\"")) + "}]\"";
+                        string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
 
                         PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, yearGroup.Key, dateGroup.Key);
                         if(record != null)
@@ -439,7 +439,7 @@ namespace PQMark.DataAggregator
                                     historianPoints.Add(point);
                         }
 
-                        string thdjson = "\"[{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\\\"{x.Key}\\\":\\\"{x.Count()}\\\"")) + "}]\"";
+                        string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
 
                         record = new PQMarkAggregate()
                         {
@@ -559,7 +559,7 @@ namespace PQMark.DataAggregator
                             historianPoints.Add(point);
                 }
 
-                string thdjson = "\"[{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\\\"{x.Key}\\\":\\\"{x.Count()}\\\"")) + "}]\"";
+                string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
 
                 PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, startDate.Year, startDate.Month);
                 if (record != null)
