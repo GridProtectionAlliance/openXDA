@@ -3843,6 +3843,8 @@ namespace FaultData.Database {
             
             private global::System.Data.DataColumn columnCPhaseBreakerTiming;
             
+            private global::System.Data.DataColumn columnDcOffsetDetected;
+            
             private global::System.Data.DataColumn columnBreakerSpeed;
             
             private global::System.Data.DataColumn columnUpdatedBy;
@@ -4010,6 +4012,14 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn DcOffsetDetectedColumn {
+                get {
+                    return this.columnDcOffsetDetected;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public global::System.Data.DataColumn BreakerSpeedColumn {
                 get {
                     return this.columnBreakerSpeed;
@@ -4077,6 +4087,7 @@ namespace FaultData.Database {
                         double APhaseBreakerTiming, 
                         double BPhaseBreakerTiming, 
                         double CPhaseBreakerTiming, 
+                        int DcOffsetDetected, 
                         double BreakerSpeed, 
                         string UpdatedBy) {
                 BreakerOperationRow rowBreakerOperationRow = ((BreakerOperationRow)(this.NewRow()));
@@ -4097,6 +4108,7 @@ namespace FaultData.Database {
                         APhaseBreakerTiming,
                         BPhaseBreakerTiming,
                         CPhaseBreakerTiming,
+                        DcOffsetDetected,
                         BreakerSpeed,
                         UpdatedBy};
                 rowBreakerOperationRow.ItemArray = columnValuesArray;
@@ -4144,6 +4156,7 @@ namespace FaultData.Database {
                 this.columnAPhaseBreakerTiming = base.Columns["APhaseBreakerTiming"];
                 this.columnBPhaseBreakerTiming = base.Columns["BPhaseBreakerTiming"];
                 this.columnCPhaseBreakerTiming = base.Columns["CPhaseBreakerTiming"];
+                this.columnDcOffsetDetected = base.Columns["DcOffsetDetected"];
                 this.columnBreakerSpeed = base.Columns["BreakerSpeed"];
                 this.columnUpdatedBy = base.Columns["UpdatedBy"];
             }
@@ -4183,6 +4196,8 @@ namespace FaultData.Database {
                 base.Columns.Add(this.columnBPhaseBreakerTiming);
                 this.columnCPhaseBreakerTiming = new global::System.Data.DataColumn("CPhaseBreakerTiming", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnCPhaseBreakerTiming);
+                this.columnDcOffsetDetected = new global::System.Data.DataColumn("DcOffsetDetected", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnDcOffsetDetected);
                 this.columnBreakerSpeed = new global::System.Data.DataColumn("BreakerSpeed", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnBreakerSpeed);
                 this.columnUpdatedBy = new global::System.Data.DataColumn("UpdatedBy", typeof(string), null, global::System.Data.MappingType.Element);
@@ -4211,6 +4226,7 @@ namespace FaultData.Database {
                 this.columnAPhaseBreakerTiming.AllowDBNull = false;
                 this.columnBPhaseBreakerTiming.AllowDBNull = false;
                 this.columnCPhaseBreakerTiming.AllowDBNull = false;
+                this.columnDcOffsetDetected.AllowDBNull = false;
                 this.columnBreakerSpeed.AllowDBNull = false;
                 this.columnUpdatedBy.MaxLength = 50;
             }
@@ -5460,6 +5476,17 @@ namespace FaultData.Database {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public int DcOffsetDetected {
+                get {
+                    return ((int)(this[this.tableBreakerOperation.DcOffsetDetectedColumn]));
+                }
+                set {
+                    this[this.tableBreakerOperation.DcOffsetDetectedColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public double BreakerSpeed {
                 get {
                     return ((double)(this[this.tableBreakerOperation.BreakerSpeedColumn]));
@@ -5977,15 +6004,15 @@ namespace FaultData.Database.MeterDataTableAdapters {
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
             this._adapter.InsertCommand.CommandText = "INSERT INTO [dbo].[EventType] ([Name], [Description]) VALUES (@Name, @Description" +
-                ");\nSELECT ID, Name, Description FROM EventType WHERE (ID = SCOPE_IDENTITY())";
+                ");\r\nSELECT ID, Name, Description FROM EventType WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
             this._adapter.UpdateCommand.CommandText = "UPDATE [dbo].[EventType] SET [Name] = @Name, [Description] = @Description WHERE (" +
-                "([ID] = @Original_ID) AND ([Name] = @Original_Name));\nSELECT ID, Name, Descripti" +
-                "on FROM EventType WHERE (ID = @ID)";
+                "([ID] = @Original_ID) AND ([Name] = @Original_Name));\r\nSELECT ID, Name, Descript" +
+                "ion FROM EventType WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -7528,16 +7555,16 @@ WHEN NOT MATCHED THEN
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
             this._adapter.InsertCommand.CommandText = "INSERT INTO [dbo].[BreakerOperationType] ([Name], [Description]) VALUES (@Name, @" +
-                "Description);\nSELECT ID, Name, Description FROM BreakerOperationType WHERE (ID =" +
-                " SCOPE_IDENTITY())";
+                "Description);\r\nSELECT ID, Name, Description FROM BreakerOperationType WHERE (ID " +
+                "= SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
             this._adapter.UpdateCommand.CommandText = "UPDATE [dbo].[BreakerOperationType] SET [Name] = @Name, [Description] = @Descript" +
-                "ion WHERE (([ID] = @Original_ID) AND ([Name] = @Original_Name));\nSELECT ID, Name" +
-                ", Description FROM BreakerOperationType WHERE (ID = @ID)";
+                "ion WHERE (([ID] = @Original_ID) AND ([Name] = @Original_Name));\r\nSELECT ID, Nam" +
+                "e, Description FROM BreakerOperationType WHERE (ID = @ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Name", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Name", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Description", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "Description", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -7961,7 +7988,7 @@ SELECT ID, FileGroupID, MeterID, LineID, EventTypeID, EventDataID, Name, Alias, 
             this._commandCollection[0].Connection = this.Connection;
             this._commandCollection[0].CommandText = "SELECT        ID, FileGroupID, MeterID, LineID, EventTypeID, EventDataID, Name, A" +
                 "lias, ShortName, StartTime, EndTime, Samples, TimeZoneOffset, SamplesPerSecond, " +
-                "SamplesPerCycle, Description\nFROM            Event";
+                "SamplesPerCycle, Description\r\nFROM            Event";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
@@ -9982,12 +10009,13 @@ SELECT ID, VoltageEnvelopeID, DisturbanceID, SeverityCode FROM DisturbanceSeveri
             tableMapping.ColumnMappings.Add("APhaseBreakerTiming", "APhaseBreakerTiming");
             tableMapping.ColumnMappings.Add("BPhaseBreakerTiming", "BPhaseBreakerTiming");
             tableMapping.ColumnMappings.Add("CPhaseBreakerTiming", "CPhaseBreakerTiming");
+            tableMapping.ColumnMappings.Add("DcOffsetDetected", "DcOffsetDetected");
             tableMapping.ColumnMappings.Add("BreakerSpeed", "BreakerSpeed");
             tableMapping.ColumnMappings.Add("UpdatedBy", "UpdatedBy");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[BreakerOperation] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([PhaseID] = @Original_PhaseID) AND ([BreakerOperationTypeID] = @Original_BreakerOperationTypeID) AND ([BreakerNumber] = @Original_BreakerNumber) AND ([TripCoilEnergized] = @Original_TripCoilEnergized) AND ([StatusBitSet] = @Original_StatusBitSet) AND ([StatusBitChatter] = @Original_StatusBitChatter) AND ([APhaseCleared] = @Original_APhaseCleared) AND ([BPhaseCleared] = @Original_BPhaseCleared) AND ([CPhaseCleared] = @Original_CPhaseCleared) AND ([BreakerTiming] = @Original_BreakerTiming) AND ([StatusTiming] = @Original_StatusTiming) AND ([APhaseBreakerTiming] = @Original_APhaseBreakerTiming) AND ([BPhaseBreakerTiming] = @Original_BPhaseBreakerTiming) AND ([CPhaseBreakerTiming] = @Original_CPhaseBreakerTiming) AND ([BreakerSpeed] = @Original_BreakerSpeed) AND ((@IsNull_UpdatedBy = 1 AND [UpdatedBy] IS NULL) OR ([UpdatedBy] = @Original_UpdatedBy)))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [dbo].[BreakerOperation] WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([PhaseID] = @Original_PhaseID) AND ([BreakerOperationTypeID] = @Original_BreakerOperationTypeID) AND ([BreakerNumber] = @Original_BreakerNumber) AND ([TripCoilEnergized] = @Original_TripCoilEnergized) AND ([StatusBitSet] = @Original_StatusBitSet) AND ([StatusBitChatter] = @Original_StatusBitChatter) AND ([APhaseCleared] = @Original_APhaseCleared) AND ([BPhaseCleared] = @Original_BPhaseCleared) AND ([CPhaseCleared] = @Original_CPhaseCleared) AND ([BreakerTiming] = @Original_BreakerTiming) AND ([StatusTiming] = @Original_StatusTiming) AND ([APhaseBreakerTiming] = @Original_APhaseBreakerTiming) AND ([BPhaseBreakerTiming] = @Original_BPhaseBreakerTiming) AND ([CPhaseBreakerTiming] = @Original_CPhaseBreakerTiming) AND ([DcOffsetDetected] = @Original_DcOffsetDetected) AND ([BreakerSpeed] = @Original_BreakerSpeed) AND ((@IsNull_UpdatedBy = 1 AND [UpdatedBy] IS NULL) OR ([UpdatedBy] = @Original_UpdatedBy)))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -10005,13 +10033,14 @@ SELECT ID, VoltageEnvelopeID, DisturbanceID, SeverityCode FROM DisturbanceSeveri
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_APhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "APhaseBreakerTiming", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_BPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BPhaseBreakerTiming", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CPhaseBreakerTiming", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DcOffsetDetected", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DcOffsetDetected", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_BreakerSpeed", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BreakerSpeed", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_UpdatedBy", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "UpdatedBy", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.DeleteCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_UpdatedBy", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "UpdatedBy", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.InsertCommand = new global::System.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[BreakerOperation] ([EventID], [PhaseID], [BreakerOperationTypeID], [BreakerNumber], [TripCoilEnergized], [StatusBitSet], [StatusBitChatter], [APhaseCleared], [BPhaseCleared], [CPhaseCleared], [BreakerTiming], [StatusTiming], [APhaseBreakerTiming], [BPhaseBreakerTiming], [CPhaseBreakerTiming], [BreakerSpeed], [UpdatedBy]) VALUES (@EventID, @PhaseID, @BreakerOperationTypeID, @BreakerNumber, @TripCoilEnergized, @StatusBitSet, @StatusBitChatter, @APhaseCleared, @BPhaseCleared, @CPhaseCleared, @BreakerTiming, @StatusTiming, @APhaseBreakerTiming, @BPhaseBreakerTiming, @CPhaseBreakerTiming, @BreakerSpeed, @UpdatedBy);
-SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, BreakerSpeed, UpdatedBy FROM BreakerOperation WHERE (ID = SCOPE_IDENTITY())";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [dbo].[BreakerOperation] ([EventID], [PhaseID], [BreakerOperationTypeID], [BreakerNumber], [TripCoilEnergized], [StatusBitSet], [StatusBitChatter], [APhaseCleared], [BPhaseCleared], [CPhaseCleared], [BreakerTiming], [StatusTiming], [APhaseBreakerTiming], [BPhaseBreakerTiming], [CPhaseBreakerTiming], [DcOffsetDetected], [BreakerSpeed], [UpdatedBy]) VALUES (@EventID, @PhaseID, @BreakerOperationTypeID, @BreakerNumber, @TripCoilEnergized, @StatusBitSet, @StatusBitChatter, @APhaseCleared, @BPhaseCleared, @CPhaseCleared, @BreakerTiming, @StatusTiming, @APhaseBreakerTiming, @BPhaseBreakerTiming, @CPhaseBreakerTiming, @DcOffsetDetected, @BreakerSpeed, @UpdatedBy);
+SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, DcOffsetDetected, BreakerSpeed, UpdatedBy FROM BreakerOperation WHERE (ID = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PhaseID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PhaseID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -10028,6 +10057,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@APhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "APhaseBreakerTiming", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@BPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BPhaseBreakerTiming", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CPhaseBreakerTiming", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DcOffsetDetected", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DcOffsetDetected", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@BreakerSpeed", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BreakerSpeed", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.InsertCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@UpdatedBy", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "UpdatedBy", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand = new global::System.Data.SqlClient.SqlCommand();
@@ -10039,23 +10069,25 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                 "Cleared] = @BPhaseCleared, [CPhaseCleared] = @CPhaseCleared, [BreakerTiming] = @" +
                 "BreakerTiming, [StatusTiming] = @StatusTiming, [APhaseBreakerTiming] = @APhaseBr" +
                 "eakerTiming, [BPhaseBreakerTiming] = @BPhaseBreakerTiming, [CPhaseBreakerTiming]" +
-                " = @CPhaseBreakerTiming, [BreakerSpeed] = @BreakerSpeed, [UpdatedBy] = @UpdatedB" +
-                "y WHERE (([ID] = @Original_ID) AND ([EventID] = @Original_EventID) AND ([PhaseID" +
-                "] = @Original_PhaseID) AND ([BreakerOperationTypeID] = @Original_BreakerOperatio" +
-                "nTypeID) AND ([BreakerNumber] = @Original_BreakerNumber) AND ([TripCoilEnergized" +
-                "] = @Original_TripCoilEnergized) AND ([StatusBitSet] = @Original_StatusBitSet) A" +
-                "ND ([StatusBitChatter] = @Original_StatusBitChatter) AND ([APhaseCleared] = @Ori" +
-                "ginal_APhaseCleared) AND ([BPhaseCleared] = @Original_BPhaseCleared) AND ([CPhas" +
-                "eCleared] = @Original_CPhaseCleared) AND ([BreakerTiming] = @Original_BreakerTim" +
-                "ing) AND ([StatusTiming] = @Original_StatusTiming) AND ([APhaseBreakerTiming] = " +
-                "@Original_APhaseBreakerTiming) AND ([BPhaseBreakerTiming] = @Original_BPhaseBrea" +
-                "kerTiming) AND ([CPhaseBreakerTiming] = @Original_CPhaseBreakerTiming) AND ([Bre" +
-                "akerSpeed] = @Original_BreakerSpeed) AND ((@IsNull_UpdatedBy = 1 AND [UpdatedBy]" +
-                " IS NULL) OR ([UpdatedBy] = @Original_UpdatedBy)));\r\nSELECT ID, EventID, PhaseID" +
-                ", BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, Status" +
-                "BitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTi" +
-                "ming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, BreakerSpee" +
-                "d, UpdatedBy FROM BreakerOperation WHERE (ID = @ID)";
+                " = @CPhaseBreakerTiming, [DcOffsetDetected] = @DcOffsetDetected, [BreakerSpeed] " +
+                "= @BreakerSpeed, [UpdatedBy] = @UpdatedBy WHERE (([ID] = @Original_ID) AND ([Eve" +
+                "ntID] = @Original_EventID) AND ([PhaseID] = @Original_PhaseID) AND ([BreakerOper" +
+                "ationTypeID] = @Original_BreakerOperationTypeID) AND ([BreakerNumber] = @Origina" +
+                "l_BreakerNumber) AND ([TripCoilEnergized] = @Original_TripCoilEnergized) AND ([S" +
+                "tatusBitSet] = @Original_StatusBitSet) AND ([StatusBitChatter] = @Original_Statu" +
+                "sBitChatter) AND ([APhaseCleared] = @Original_APhaseCleared) AND ([BPhaseCleared" +
+                "] = @Original_BPhaseCleared) AND ([CPhaseCleared] = @Original_CPhaseCleared) AND" +
+                " ([BreakerTiming] = @Original_BreakerTiming) AND ([StatusTiming] = @Original_Sta" +
+                "tusTiming) AND ([APhaseBreakerTiming] = @Original_APhaseBreakerTiming) AND ([BPh" +
+                "aseBreakerTiming] = @Original_BPhaseBreakerTiming) AND ([CPhaseBreakerTiming] = " +
+                "@Original_CPhaseBreakerTiming) AND ([DcOffsetDetected] = @Original_DcOffsetDetec" +
+                "ted) AND ([BreakerSpeed] = @Original_BreakerSpeed) AND ((@IsNull_UpdatedBy = 1 A" +
+                "ND [UpdatedBy] IS NULL) OR ([UpdatedBy] = @Original_UpdatedBy)));\r\nSELECT ID, Ev" +
+                "entID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, Status" +
+                "BitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTi" +
+                "ming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTimin" +
+                "g, DcOffsetDetected, BreakerSpeed, UpdatedBy FROM BreakerOperation WHERE (ID = @" +
+                "ID)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@EventID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@PhaseID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "PhaseID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
@@ -10072,6 +10104,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@APhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "APhaseBreakerTiming", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@BPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BPhaseBreakerTiming", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@CPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CPhaseBreakerTiming", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@DcOffsetDetected", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DcOffsetDetected", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@BreakerSpeed", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BreakerSpeed", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@UpdatedBy", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "UpdatedBy", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_ID", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "ID", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -10090,6 +10123,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_APhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "APhaseBreakerTiming", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_BPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BPhaseBreakerTiming", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_CPhaseBreakerTiming", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "CPhaseBreakerTiming", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
+            this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_DcOffsetDetected", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "DcOffsetDetected", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_BreakerSpeed", global::System.Data.SqlDbType.Float, 0, global::System.Data.ParameterDirection.Input, 0, 0, "BreakerSpeed", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@IsNull_UpdatedBy", global::System.Data.SqlDbType.Int, 0, global::System.Data.ParameterDirection.Input, 0, 0, "UpdatedBy", global::System.Data.DataRowVersion.Original, true, null, "", "", ""));
             this._adapter.UpdateCommand.Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@Original_UpdatedBy", global::System.Data.SqlDbType.VarChar, 0, global::System.Data.ParameterDirection.Input, 0, 0, "UpdatedBy", global::System.Data.DataRowVersion.Original, false, null, "", "", ""));
@@ -10109,11 +10143,12 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this._commandCollection = new global::System.Data.SqlClient.SqlCommand[2];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, BreakerSpeed, UpdatedBy FROM dbo.BreakerOperation";
+            this._commandCollection[0].CommandText = @"SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, DcOffsetDetected, BreakerSpeed, UpdatedBy FROM dbo.BreakerOperation";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[1].Connection = this.Connection;
-            this._commandCollection[1].CommandText = @"SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, BreakerSpeed, UpdatedBy FROM dbo.BreakerOperation WHERE EventID = @eventID";
+            this._commandCollection[1].CommandText = @"SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, DcOffsetDetected, BreakerSpeed, UpdatedBy FROM dbo.BreakerOperation
+WHERE EventID=@eventID";
             this._commandCollection[1].CommandType = global::System.Data.CommandType.Text;
             this._commandCollection[1].Parameters.Add(new global::System.Data.SqlClient.SqlParameter("@eventID", global::System.Data.SqlDbType.Int, 4, global::System.Data.ParameterDirection.Input, 0, 0, "EventID", global::System.Data.DataRowVersion.Current, false, null, "", "", ""));
         }
@@ -10218,6 +10253,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                     double Original_APhaseBreakerTiming, 
                     double Original_BPhaseBreakerTiming, 
                     double Original_CPhaseBreakerTiming, 
+                    int Original_DcOffsetDetected, 
                     double Original_BreakerSpeed, 
                     string Original_UpdatedBy) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_ID));
@@ -10241,14 +10277,15 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this.Adapter.DeleteCommand.Parameters[13].Value = ((double)(Original_APhaseBreakerTiming));
             this.Adapter.DeleteCommand.Parameters[14].Value = ((double)(Original_BPhaseBreakerTiming));
             this.Adapter.DeleteCommand.Parameters[15].Value = ((double)(Original_CPhaseBreakerTiming));
-            this.Adapter.DeleteCommand.Parameters[16].Value = ((double)(Original_BreakerSpeed));
+            this.Adapter.DeleteCommand.Parameters[16].Value = ((int)(Original_DcOffsetDetected));
+            this.Adapter.DeleteCommand.Parameters[17].Value = ((double)(Original_BreakerSpeed));
             if ((Original_UpdatedBy == null)) {
-                this.Adapter.DeleteCommand.Parameters[17].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[18].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[18].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[19].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[17].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[18].Value = ((string)(Original_UpdatedBy));
+                this.Adapter.DeleteCommand.Parameters[18].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[19].Value = ((string)(Original_UpdatedBy));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -10286,6 +10323,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                     double APhaseBreakerTiming, 
                     double BPhaseBreakerTiming, 
                     double CPhaseBreakerTiming, 
+                    int DcOffsetDetected, 
                     double BreakerSpeed, 
                     string UpdatedBy) {
             this.Adapter.InsertCommand.Parameters[0].Value = ((int)(EventID));
@@ -10308,12 +10346,13 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this.Adapter.InsertCommand.Parameters[12].Value = ((double)(APhaseBreakerTiming));
             this.Adapter.InsertCommand.Parameters[13].Value = ((double)(BPhaseBreakerTiming));
             this.Adapter.InsertCommand.Parameters[14].Value = ((double)(CPhaseBreakerTiming));
-            this.Adapter.InsertCommand.Parameters[15].Value = ((double)(BreakerSpeed));
+            this.Adapter.InsertCommand.Parameters[15].Value = ((int)(DcOffsetDetected));
+            this.Adapter.InsertCommand.Parameters[16].Value = ((double)(BreakerSpeed));
             if ((UpdatedBy == null)) {
-                this.Adapter.InsertCommand.Parameters[16].Value = global::System.DBNull.Value;
+                this.Adapter.InsertCommand.Parameters[17].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[16].Value = ((string)(UpdatedBy));
+                this.Adapter.InsertCommand.Parameters[17].Value = ((string)(UpdatedBy));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -10351,6 +10390,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                     double APhaseBreakerTiming, 
                     double BPhaseBreakerTiming, 
                     double CPhaseBreakerTiming, 
+                    int DcOffsetDetected, 
                     double BreakerSpeed, 
                     string UpdatedBy, 
                     int Original_ID, 
@@ -10369,6 +10409,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                     double Original_APhaseBreakerTiming, 
                     double Original_BPhaseBreakerTiming, 
                     double Original_CPhaseBreakerTiming, 
+                    int Original_DcOffsetDetected, 
                     double Original_BreakerSpeed, 
                     string Original_UpdatedBy, 
                     int ID) {
@@ -10392,44 +10433,46 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
             this.Adapter.UpdateCommand.Parameters[12].Value = ((double)(APhaseBreakerTiming));
             this.Adapter.UpdateCommand.Parameters[13].Value = ((double)(BPhaseBreakerTiming));
             this.Adapter.UpdateCommand.Parameters[14].Value = ((double)(CPhaseBreakerTiming));
-            this.Adapter.UpdateCommand.Parameters[15].Value = ((double)(BreakerSpeed));
+            this.Adapter.UpdateCommand.Parameters[15].Value = ((int)(DcOffsetDetected));
+            this.Adapter.UpdateCommand.Parameters[16].Value = ((double)(BreakerSpeed));
             if ((UpdatedBy == null)) {
-                this.Adapter.UpdateCommand.Parameters[16].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[17].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[16].Value = ((string)(UpdatedBy));
+                this.Adapter.UpdateCommand.Parameters[17].Value = ((string)(UpdatedBy));
             }
-            this.Adapter.UpdateCommand.Parameters[17].Value = ((int)(Original_ID));
-            this.Adapter.UpdateCommand.Parameters[18].Value = ((int)(Original_EventID));
-            this.Adapter.UpdateCommand.Parameters[19].Value = ((int)(Original_PhaseID));
-            this.Adapter.UpdateCommand.Parameters[20].Value = ((int)(Original_BreakerOperationTypeID));
+            this.Adapter.UpdateCommand.Parameters[18].Value = ((int)(Original_ID));
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((int)(Original_EventID));
+            this.Adapter.UpdateCommand.Parameters[20].Value = ((int)(Original_PhaseID));
+            this.Adapter.UpdateCommand.Parameters[21].Value = ((int)(Original_BreakerOperationTypeID));
             if ((Original_BreakerNumber == null)) {
                 throw new global::System.ArgumentNullException("Original_BreakerNumber");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[21].Value = ((string)(Original_BreakerNumber));
+                this.Adapter.UpdateCommand.Parameters[22].Value = ((string)(Original_BreakerNumber));
             }
-            this.Adapter.UpdateCommand.Parameters[22].Value = ((System.DateTime)(Original_TripCoilEnergized));
-            this.Adapter.UpdateCommand.Parameters[23].Value = ((System.DateTime)(Original_StatusBitSet));
-            this.Adapter.UpdateCommand.Parameters[24].Value = ((int)(Original_StatusBitChatter));
-            this.Adapter.UpdateCommand.Parameters[25].Value = ((System.DateTime)(Original_APhaseCleared));
-            this.Adapter.UpdateCommand.Parameters[26].Value = ((System.DateTime)(Original_BPhaseCleared));
-            this.Adapter.UpdateCommand.Parameters[27].Value = ((System.DateTime)(Original_CPhaseCleared));
-            this.Adapter.UpdateCommand.Parameters[28].Value = ((double)(Original_BreakerTiming));
-            this.Adapter.UpdateCommand.Parameters[29].Value = ((double)(Original_StatusTiming));
-            this.Adapter.UpdateCommand.Parameters[30].Value = ((double)(Original_APhaseBreakerTiming));
-            this.Adapter.UpdateCommand.Parameters[31].Value = ((double)(Original_BPhaseBreakerTiming));
-            this.Adapter.UpdateCommand.Parameters[32].Value = ((double)(Original_CPhaseBreakerTiming));
-            this.Adapter.UpdateCommand.Parameters[33].Value = ((double)(Original_BreakerSpeed));
+            this.Adapter.UpdateCommand.Parameters[23].Value = ((System.DateTime)(Original_TripCoilEnergized));
+            this.Adapter.UpdateCommand.Parameters[24].Value = ((System.DateTime)(Original_StatusBitSet));
+            this.Adapter.UpdateCommand.Parameters[25].Value = ((int)(Original_StatusBitChatter));
+            this.Adapter.UpdateCommand.Parameters[26].Value = ((System.DateTime)(Original_APhaseCleared));
+            this.Adapter.UpdateCommand.Parameters[27].Value = ((System.DateTime)(Original_BPhaseCleared));
+            this.Adapter.UpdateCommand.Parameters[28].Value = ((System.DateTime)(Original_CPhaseCleared));
+            this.Adapter.UpdateCommand.Parameters[29].Value = ((double)(Original_BreakerTiming));
+            this.Adapter.UpdateCommand.Parameters[30].Value = ((double)(Original_StatusTiming));
+            this.Adapter.UpdateCommand.Parameters[31].Value = ((double)(Original_APhaseBreakerTiming));
+            this.Adapter.UpdateCommand.Parameters[32].Value = ((double)(Original_BPhaseBreakerTiming));
+            this.Adapter.UpdateCommand.Parameters[33].Value = ((double)(Original_CPhaseBreakerTiming));
+            this.Adapter.UpdateCommand.Parameters[34].Value = ((int)(Original_DcOffsetDetected));
+            this.Adapter.UpdateCommand.Parameters[35].Value = ((double)(Original_BreakerSpeed));
             if ((Original_UpdatedBy == null)) {
-                this.Adapter.UpdateCommand.Parameters[34].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[35].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[36].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[37].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[34].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[35].Value = ((string)(Original_UpdatedBy));
+                this.Adapter.UpdateCommand.Parameters[36].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[37].Value = ((string)(Original_UpdatedBy));
             }
-            this.Adapter.UpdateCommand.Parameters[36].Value = ((int)(ID));
+            this.Adapter.UpdateCommand.Parameters[38].Value = ((int)(ID));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -10466,6 +10509,7 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                     double APhaseBreakerTiming, 
                     double BPhaseBreakerTiming, 
                     double CPhaseBreakerTiming, 
+                    int DcOffsetDetected, 
                     double BreakerSpeed, 
                     string UpdatedBy, 
                     int Original_ID, 
@@ -10484,9 +10528,10 @@ SELECT ID, EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEner
                     double Original_APhaseBreakerTiming, 
                     double Original_BPhaseBreakerTiming, 
                     double Original_CPhaseBreakerTiming, 
+                    int Original_DcOffsetDetected, 
                     double Original_BreakerSpeed, 
                     string Original_UpdatedBy) {
-            return this.Update(EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, BreakerSpeed, UpdatedBy, Original_ID, Original_EventID, Original_PhaseID, Original_BreakerOperationTypeID, Original_BreakerNumber, Original_TripCoilEnergized, Original_StatusBitSet, Original_StatusBitChatter, Original_APhaseCleared, Original_BPhaseCleared, Original_CPhaseCleared, Original_BreakerTiming, Original_StatusTiming, Original_APhaseBreakerTiming, Original_BPhaseBreakerTiming, Original_CPhaseBreakerTiming, Original_BreakerSpeed, Original_UpdatedBy, Original_ID);
+            return this.Update(EventID, PhaseID, BreakerOperationTypeID, BreakerNumber, TripCoilEnergized, StatusBitSet, StatusBitChatter, APhaseCleared, BPhaseCleared, CPhaseCleared, BreakerTiming, StatusTiming, APhaseBreakerTiming, BPhaseBreakerTiming, CPhaseBreakerTiming, DcOffsetDetected, BreakerSpeed, UpdatedBy, Original_ID, Original_EventID, Original_PhaseID, Original_BreakerOperationTypeID, Original_BreakerNumber, Original_TripCoilEnergized, Original_StatusBitSet, Original_StatusBitChatter, Original_APhaseCleared, Original_BPhaseCleared, Original_CPhaseCleared, Original_BreakerTiming, Original_StatusTiming, Original_APhaseBreakerTiming, Original_BPhaseBreakerTiming, Original_CPhaseBreakerTiming, Original_DcOffsetDetected, Original_BreakerSpeed, Original_UpdatedBy, Original_ID);
         }
     }
     
