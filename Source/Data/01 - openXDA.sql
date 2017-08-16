@@ -2190,6 +2190,90 @@ GO
 CREATE INDEX IX_PQMarkAggregate_Month ON [dbo].[PQMarkAggregate]([Month])
 GO
 
+/****** Object:  Table [dbo].PQMarkDuration    Script Date: 8/15/2017 2:07:17 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].PQMarkDuration(
+	[ID] [int] NOT NULL,
+	[Label] [nvarchar](50) NOT NULL,
+	[Min] [float] NOT NULL,
+	[Max] [float] NOT NULL,
+	[LoadOrder] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+/****** Object:  Table [dbo].[PQMarkVoltageBin]    Script Date: 8/15/2017 2:07:17 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PQMarkVoltageBin](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[Label] [nvarchar](50) NOT NULL,
+	[Min] [float] NOT NULL,
+	[Max] [float] NOT NULL,
+	[LoadOrder] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1, N'<1c', 0, 0.01666666666, 0)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (2, N'1 to 2 c', 0.01666666667, 0.03333333333, 1)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (3, N'2 to 3 c', 0.03333333334, 0.05, 2)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (4, N'3 to 4 c', 0.050000000001, 0.06666666667, 3)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (5, N'4 to 5 c', 0.06666666668, 0.08333333334, 4)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (6, N'5 to 10 c', 0.08333333335, 0.16666666666, 5)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (7, N'10 c to 0.25s', 0.166666666667, 0.24999999999, 6)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (8, N'0.25 to 0.5s', 0.25, 0.49999999999, 7)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (9, N'0.5 to 1s', 0.5, 0.99999999999, 8)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (10, N'1 to 2s', 1, 1.99999999999, 9)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (11, N'2 to 5s', 2, 4.99999999999, 10)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (12, N'5 to 10s', 5, 9.99999999999, 11)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (13, N'10 to 20s', 10, 19.9999999999, 12)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (14, N'20 to 30s', 20, 29.9999999999, 13)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (15, N'30 to 60s', 30, 59.99999999999, 14)
+GO
+INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (16, N'1 to 2 min', 60, 119.9999999999, 15)
+GO
+SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] ON 
+
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1, N'00-10', 0, 9.999999999, 0)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (2, N'10-20', 10, 19.99999999, 1)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (3, N'20-30', 20, 29.999999999, 2)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (4, N'30-40', 30, 39.999999999, 3)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (5, N'40-50', 40, 49.999999999, 4)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (6, N'50-60', 50, 59.999999999, 5)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (7, N'60-70', 60, 69.999999999, 6)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (8, N'70-80', 70, 79.999999999, 7)
+GO
+INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (9, N'80-90', 80, 89.999999999, 8)
+GO
+SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] OFF
+GO
+
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash
