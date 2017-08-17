@@ -633,6 +633,18 @@ namespace openXDA
                     m_dataPusherEngine.Start();
                 else
                     m_dataPusherEngine.Stop();
+
+                bool flag2 = bool.Parse(dataContext.Table<Setting>().QueryRecordWhere("Name = 'EnablePQMarkAggregator'")?.Value ?? "false");
+
+                if (m_dataAggregationEngine.Running && flag2)
+                    m_dataAggregationEngine.ReloadSystemSettings();
+                else if (!flag2)
+                    m_dataAggregationEngine.Stop();
+                else if (!m_dataPusherEngine.Running && flag2)
+                    m_dataAggregationEngine.Start();
+                else
+                    m_dataAggregationEngine.Stop();
+
             }
 
             LogStatusMessage("Reload system settings complete...");

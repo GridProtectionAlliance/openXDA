@@ -106,6 +106,14 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
+      <Name>PQMark.DataAggregator</Name>
+      <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj">
       <Name>DeviceDefinitionsMigrator</Name>
       <Project>{94e98b70-2f52-45a2-a805-3d6b62547149}</Project>
