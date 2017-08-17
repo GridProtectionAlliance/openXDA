@@ -49,7 +49,6 @@
         <?include WebFeaturesXDAAlarm.wxi ?>
       </Feature>
 
-
     </Feature>
 
     
@@ -384,6 +383,7 @@
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
       <ComponentRef Id="openXDA.DataPusher" />
+      <ComponentRef Id="PQMark.DataAggregator" />
 
 
       <!-- DotNetZip Dependencies -->
@@ -516,6 +516,11 @@
       <Component Id="openXDA.DataPusher">
         <File Id="openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
       </Component>
+
+      <Component Id="PQMark.DataAggregator">
+        <File Id="PQMark.DataAggregator.dll" Name="$(var.PQMark.DataAggregator.TargetFileName)" Source="$(var.PQMark.DataAggregator.TargetPath)" />
+      </Component>
+
 
       <Component Id="openHistorian.XDALink">
         <File Id="openHistorian.XDALink.dll" Name="$(var.openHistorian.XDALink.TargetFileName)" Source="$(var.openHistorian.XDALink.TargetPath)" />
