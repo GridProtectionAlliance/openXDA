@@ -435,7 +435,6 @@
       <ComponentRef Id="RazorEngine" />
       <ComponentRef Id="System.Web.Razor" />
       <ComponentRef Id="Microsoft.Web.Infrastructure" />
-      <ComponentRef Id="System.Net.Http" />
       <ComponentRef Id="System.Net.Http.Extensions" />
       <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Net.Http.Primitives" />
@@ -659,9 +658,6 @@
       </Component>
       <Component Id="Microsoft.Web.Infrastructure">
         <File Id="Microsoft.Web.Infrastructure.dll" Name="Microsoft.Web.Infrastructure.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll" />
-      </Component>
-      <Component Id="System.Net.Http">
-        <File Id="System.Net.Http.dll" Name="System.Net.Http.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.4.3.0\lib\net46\System.Net.Http.dll" />
       </Component>
       <Component Id="System.Net.Http.Extensions">
         <File Id="System.Net.Http.Extensions.dll" Name="System.Net.Http.Extensions.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.Formatting.Extension.5.2.3.0\lib\System.Net.Http.Extensions.dll" />
