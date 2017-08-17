@@ -1889,8 +1889,6 @@ BEGIN
 				 EventType ON Event.EventTypeID = EventType.ID JOIN
 				 BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID
 			WHERE 
-				 MeterID in (select * from authMeters(@username)) AND 
-				 MeterID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '','')) AND 
 				 TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate
 			GROUP BY Event.MeterID, BreakerOperationType.Name
 		   ) as ed 
@@ -1898,6 +1896,10 @@ BEGIN
 	   			 SUM(ed.EventCount)
 	   			 FOR ed.OperationType IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
 		   ) as pvt On pvt.MeterID = meter.ID
+	WHERE 
+		Meter.ID in (select * from authMeters(@username)) AND 
+		Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))  
+
 	ORDER BY Meter.Name'
 
 	print @SQLStatement
@@ -2127,8 +2129,6 @@ FROM
 			 DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID 
         WHERE 
 			 Phase.Name = ''Worst'' AND 
-			 MeterID in (select * from authMeters(@username)) AND 
-			 MeterID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '','')) AND 
 			 Disturbance.StartTime >= @startDate AND Disturbance.StartTime < @endDate  
         GROUP BY Event.MeterID, SeverityCode 
        ) as ed 
@@ -2136,6 +2136,10 @@ FROM
 	   		 SUM(ed.EventCount)
 	   		 FOR ed.SeverityCode IN(' + @PivotColumns + ') 
 	   ) as pvt On pvt.MeterID = meter.ID
+	WHERE 
+		Meter.ID in (select * from authMeters(@username)) AND 
+		Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))  
+
 Order By Name '
 
 print @SqlStatement
@@ -2220,8 +2224,6 @@ FROM
 		FROM Event JOIN
 			 EventType ON Event.EventTypeID = EventType.ID 
         WHERE 
-			 MeterID in (select * from authMeters(@username)) AND 
-			 MeterID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '','')) AND 
 			 StartTime >= @startDate AND StartTime < @endDate  
         GROUP BY Event.MeterID, EventType.Name 
        ) as ed 
@@ -2229,6 +2231,10 @@ FROM
 	   		 SUM(ed.EventCount)
 	   		 FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
 	   ) as pvt On pvt.MeterID = meter.ID
+	WHERE 
+		Meter.ID in (select * from authMeters(@username)) AND 
+		Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))  
+
 ORDER BY Meter.Name'
 
 --print @startDate
@@ -2322,8 +2328,6 @@ FROM
 			 EventType ON Event.EventTypeID = EventType.ID JOIN
 			 Line ON Event.LineID = Line.ID
         WHERE 
-			 MeterID in (select * from authMeters(@username)) AND 
-			 MeterID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '','')) AND 
 			 StartTime >= @startDate AND StartTime < @endDate AND
 			 EventType.Name = ''Fault''  
         GROUP BY Event.MeterID, VoltageKV
@@ -2332,6 +2336,10 @@ FROM
 	   		 SUM(ed.EventCount)
 	   		 FOR ed.VoltageKV IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
 	   ) as pvt On pvt.MeterID = meter.ID
+	WHERE 
+		Meter.ID in (select * from authMeters(@username)) AND 
+		Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))  
+
 ORDER BY Meter.Name'
 
 print @SQLStatement
