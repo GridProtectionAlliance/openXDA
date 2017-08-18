@@ -204,15 +204,18 @@
         <p class="text-info text-center small">@ViewBag.Request.RequestUri.ToString()</p>
         <!-- label class="small" id="fontSizeLabel"></label -->
         <div class="panel panel-default">
-            <div class="panel-heading">Quick Links</div>
+            <div class="panel-heading">Quick Links For Remote Console</div>
             <div class="panel-body">
                 <div class="btn-group-vertical btn-block">
-                    @*<a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
-                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
-                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
-                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
-                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>*@
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Help')" hub-dependent>Help</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessAllData')" hub-dependent>PQMark Process All Data</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessEmptyData')" hub-dependent>PQMark Process Empty Data</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessMonthToDate')" hub-dependent>PQMark Process Month To Date</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -Enumerate')" hub-dependent>Enumerate Watch Directory</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -stopEnumeration')" hub-dependent>Stop Enumeration</button>
                     <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Start ReloadConfiguration')" hub-dependent>Reload Configuration</button>
+
                 </div>
             </div>
         </div>
@@ -289,6 +292,11 @@
             {
                 dataHub.reloadSystemSetting();
             }
+        }
+
+        function submitTerminalCommand(word) {
+            $('.ui-terminal-input').val(word);
+            $('.ui-terminal-input').trigger('keydown.terminal', $.ui.keyCode.ENTER);
         }
     </script>
 }
