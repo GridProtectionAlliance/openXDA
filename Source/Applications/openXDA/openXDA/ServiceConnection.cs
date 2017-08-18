@@ -97,13 +97,13 @@ namespace openXDA
 
         private void BroadcastMessage(Guid clientID, string message, string color)
         {
-            dynamic client;
+            dynamic client = m_clients.Client(clientID.ToString());
 
             if (string.IsNullOrEmpty(color))
                 color = "white";
 
-            client = m_clients.Client(clientID.ToString());
             client.broadcastMessage(message, color);
+            //m_clients.All.broadcastMessage(message, color);
         }
 
         #endregion

@@ -12714,7 +12714,16 @@ PUI.resolveUserAgent();
         clear: function() {
             this.content.html('');
             this.input.val('');
-        }                       
+        },
+
+        updateContent: function (content, color) {
+            if (color == null) color = "white";
+            var commandResponseContainer = $('<div></div>');
+            commandResponseContainer.append('<div style="color: '+ color +'; font-family: monospace;white-space: pre">' + content + '</div>').appendTo(this.content);
+
+            this.input.val('');
+            this.element.scrollTop(this.content.height());
+        }
     });
 })();
 /**

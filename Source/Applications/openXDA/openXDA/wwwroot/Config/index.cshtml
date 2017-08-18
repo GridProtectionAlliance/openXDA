@@ -161,6 +161,11 @@
             display:inline-block;
             width: 150px;
         }
+
+        .ui-terminal {
+            background: black;
+            color: white;
+        }
     </style>
 }
 @functions {
@@ -216,6 +221,7 @@
         </div>
     </div>
 </div>
+<div id="trmnl"></div>
 
 @section Scripts {
     <script>
@@ -239,6 +245,7 @@
         $(window).on("hubConnected", function (event) {
             updatePerformanceStatistics();
             setInterval(updatePerformanceStatistics, 5000);
+            serviceHub.sendCommand('filter -remove 0')
         });
 
         $("#restartButton").click(function () {
@@ -249,8 +256,25 @@
         $(function () {
             updateTimestamps();
             setInterval(updateTimestamps, 1000);
-        });
+            var trml = $('#trmnl').puiterminal({
+                prompt: "$",
+                handler: function (request, response) {
+                    if (request.toLowerCase() == 'clear')
+                    {
+                        trml.puiterminal('clear');
+                    }
+                    else {
+                        serviceHub.sendCommand(request);
+                        response.call(this, '')
+                    }
+                }
+            });
 
+            serviceHubClient.broadcastMessage = function (message, color) {             
+                $('#trmnl').puiterminal('updateContent', message, color);
+            }
+
+        });
         //$(window).resize(function () {
         //    $("#fontSizeLabel").html("Font Size: " + $("#performanceStatistics").css("font-size") + ", Window Size: " + $(window).width().toString());
         //});

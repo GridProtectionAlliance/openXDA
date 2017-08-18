@@ -240,6 +240,8 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessAllData", "Creates aggregates for all data", OnProcessAllData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessEmptyData", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessMonthToDate", "Creates aggregates for month to date data", OnProcessMonthToDateData));
+            m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
+            m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
             // Set up adapter loader to load service monitors
             m_serviceMonitors = new ServiceMonitors();
@@ -331,6 +333,8 @@ namespace openXDA
             // running, wait for it to stop
             m_serviceStopping = true;
             m_startEngineThread.Join();
+            m_serviceHelper.UpdatedStatus -= UpdatedStatusHandler;
+            m_serviceHelper.LoggedException -= LoggedExceptionHandler;
 
             // Dispose of adapter loader for service monitors
             m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
@@ -1055,6 +1059,20 @@ namespace openXDA
                 HandleException(new InvalidOperationException(message, ex));
             }
         }
+
+
+        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
+        {
+            if ((object)UpdatedStatus != null)
+                UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
+        }
+
+        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e)
+        {
+            if ((object)LoggedException != null)
+                LoggedException(sender, new EventArgs<Exception>(e.Argument));
+        }
+
 
         #endregion
 
