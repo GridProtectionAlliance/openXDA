@@ -1990,7 +1990,7 @@ CREATE TABLE MetersToDataPush
     LocalXDAMeterID INT NOT NULL,
 	RemoteXDAMeterID INT NULL,
 	LocalXDAAssetKey varchar(200) NOT NULL,
-	RemoteXDAAssetKey uniqueidentifier NOT NULL,
+	RemoteXDAAssetKey varchar(200) NOT NULL,
 	RemoteXDAName varchar(20) NOT NULL,
 	Obsfucate bit NOT NULL,
 	Synced bit NOT NULL
