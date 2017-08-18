@@ -12719,10 +12719,11 @@ PUI.resolveUserAgent();
         updateContent: function (content, color) {
             if (color == null) color = "white";
             var commandResponseContainer = $('<div></div>');
-            commandResponseContainer.append('<div style="color: '+ color +'; font-family: monospace;white-space: pre">' + content + '</div>').appendTo(this.content);
+            commandResponseContainer.append($('<div style="color: '+ color +'; font-family: monospace;white-space: pre"></div>').text(content)).appendTo(this.content);
 
             //this.input.val('');
             this.element.scrollTop(this.content.height());
+            while (this.content.children().length > 100) this.content.children().first().remove();
         }
     });
 })();

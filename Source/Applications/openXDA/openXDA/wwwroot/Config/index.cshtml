@@ -166,6 +166,10 @@
             background: black;
             color: white;
         }
+        .ui-terminal-content div{
+            font-family: monospace;
+            white-space: pre;
+        }
     </style>
 }
 @functions {
@@ -180,19 +184,7 @@
 
 <div class="row">
     <div class="col-lg-4 col-md-4 col-sm-5">
-        <div class="panel panel-default">
-            <div class="panel-heading">Quick Links</div>
-            <div class="panel-body">
-                <div class="btn-group-vertical btn-block">
-                    @*<a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
-                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
-                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
-                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
-                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>*@
-                    <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
-                </div>
-            </div>
-        </div>
+     
         <ul class="list-group">
             <li class="list-group-item">
                 <span class="badge badge-fixed" id="serverTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Server&nbsp;Time
@@ -211,6 +203,19 @@
         </ul>
         <p class="text-info text-center small">@ViewBag.Request.RequestUri.ToString()</p>
         <!-- label class="small" id="fontSizeLabel"></label -->
+        <div class="panel panel-default">
+            <div class="panel-heading">Quick Links</div>
+            <div class="panel-body">
+                <div class="btn-group-vertical btn-block">
+                    @*<a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
+                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
+                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
+                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
+                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>*@
+                    <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="col-lg-8 col-md-8 col-sm-7">
         <div class="panel panel-default">
@@ -282,9 +287,7 @@
         function reloadSystemSettings() {
             if (hubIsConnected)
             {
-                dataHub.reloadSystemSetting().done(function () {
-                    alert('openXDA Settings reloaded...')
-                });
+                dataHub.reloadSystemSetting();
             }
         }
     </script>
