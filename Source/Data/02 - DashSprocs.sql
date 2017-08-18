@@ -2952,6 +2952,7 @@ BEGIN
         CAST(BreakerOperation.StatusTiming AS DECIMAL(16,5)) AS statustiming,
         BreakerOperation.BreakerSpeed AS speed,
         BreakerOperation.StatusBitChatter AS chatter,
+        BreakerOperation.DcOffsetDetected AS dcoffset,
         BreakerOperationType.Name AS operationtype 
     FROM
         BreakerOperation JOIN
