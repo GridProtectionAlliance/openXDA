@@ -169,6 +169,7 @@
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
+    <Compile Include="DataReaders\IGridPQIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
@@ -207,7 +208,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Database\AlarmData.xsc">
       <DependentUpon>AlarmData.xsd</DependentUpon>
     </None>
