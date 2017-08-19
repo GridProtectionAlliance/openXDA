@@ -26,17 +26,15 @@ using System.Net;
 using System.Web.Http;
 using GSF.Configuration;
 using GSF.Web.Hosting;
+using GSF.Web.Model.Handlers;
 using GSF.Web.Security;
-using openXDA.Adapters;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
+using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
 using Owin;
+using openXDA.Adapters;
 using openXDA.Model;
-using openXDA.Hubs;
-using System.Web.Mvc;
-using Microsoft.Owin.Extensions;
-using GSF.Web.Model.Handlers;
 using openXDA.wwwroot.Config;
 
 namespace openXDA
@@ -107,6 +105,9 @@ namespace openXDA
 
         private static AuthenticationSchemes AuthenticationSchemeForClient(HttpListenerRequest request)
         {
+            if (request.Url.PathAndQuery.StartsWith("/api/pqmark/", StringComparison.OrdinalIgnoreCase))
+                return AuthenticationSchemes.Basic;
+
             if (request.Url.PathAndQuery.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
                 return AuthenticationSchemes.Anonymous;
 
