@@ -14,6 +14,7 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [Required]
         [StringLength(50)]
         [Searchable]
         public string AssetKey { get; set; }

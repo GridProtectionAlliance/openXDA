@@ -11,12 +11,15 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [Required]
         [StringLength(50)]
         public string AssetKey { get; set; }
 
+        [Required]
         [Label("Location")]
         public int MeterLocationID { get; set; }
 
+        [Required]
         [Searchable]
         [StringLength(200)]
         public string Name { get; set; }
@@ -27,10 +30,12 @@ namespace openXDA.Model
         [StringLength(12)]
         public string ShortName { get; set; }
 
+        [Required]
         [Searchable]
         [StringLength(200)]
         public string Make { get; set; }
 
+        [Required]
         [Searchable]
         [StringLength(200)]
         public string Model { get; set; }

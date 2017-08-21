@@ -23,6 +23,7 @@
 
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace openXDA.Model
 {
@@ -31,14 +32,30 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+
+        [Required]
         public int ChannelID { get; set; }
+
+        [Required]
         public int AlarmTypeID { get; set; }
+
+        [Required]
         public int Severity { get; set; }
+
         public float High { get; set; }
+
         public float Low { get; set; }
+
+        [Required]
         public int RangeInclusive { get; set; }
+
+        [Required]
         public int PerUnit { get; set; }
+
+        [Required]
         public int Enabled { get; set; }
+
+        [Required]
         public bool IsDefault { get; set; }
 
     }

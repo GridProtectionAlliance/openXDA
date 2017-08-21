@@ -11,9 +11,11 @@ namespace openXDA.Model
 
     public class MeterGroup
     {
+        [Required]
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [Required]
         [StringLength(100)]
         [Searchable]
         public string Name { get; set; }

@@ -15,10 +15,12 @@ namespace openXDA.Model
 
         [StringLength(50)]
         [Searchable]
+        [Required]
         public string AssetKey { get; set; }
 
         [StringLength(200)]
         [Searchable]
+        [Required]
         public string Name { get; set; }
 
         [StringLength(200)]
@@ -29,9 +31,11 @@ namespace openXDA.Model
         [Searchable]
         public string ShortName { get; set; }
 
+        [Required]
         public float Latitude { get; set; }
 
         [StringLength(200)]
+        [Required]
         public float Longitude { get; set; }
 
         public string Description { get; set; }

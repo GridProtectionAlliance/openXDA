@@ -22,14 +22,17 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
 
+        [Required]
         [StringLength(500)]
         [Searchable]
         public string Name { get; set; }
 
+        [Required]
         [StringLength(500)]
         [Searchable]
         public string Value { get; set; }
 
+        [Required]
         public bool Enabled { get; set; }
 
     }

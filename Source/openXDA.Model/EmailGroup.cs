@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using GSF.Data.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace openXDA.Model
 {
@@ -10,6 +11,8 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+
+        [Required]
         [Searchable]
         public string Name { get; set; }
     }
