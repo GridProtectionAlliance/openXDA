@@ -215,7 +215,11 @@
                     <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -stopEnumeration')" hub-dependent>Stop Enumeration</button>
                     <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
                     <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Start ReloadConfiguration')" hub-dependent>Reload Configuration</button>
-
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL')" hub-dependent>Remove All Filters</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Alarm')" hub-dependent>Show Only Alarms</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Warning')" hub-dependent>Show Only Warnings</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Information')" hub-dependent>Show Only Information</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -exclude Message &quot;&quot;')" hub-dependent>Suppress All Messages</button>
                 </div>
             </div>
         </div>
