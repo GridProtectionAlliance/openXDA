@@ -22,12 +22,34 @@
 //******************************************************************************************************
 
 using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace XDAWaveformDataParser
 {
     static class Program
     {
+        /* Uncomment to be able to run 2 windows side by side.
+        private class MultiFormsContext : ApplicationContext
+        {
+            private int openForms;
+            public MultiFormsContext(params Form[] forms)
+            {
+                openForms = forms.Length;
+
+                foreach (Form form in forms)
+                {
+                    form.FormClosed += (s, args) =>
+                    {
+                        if (Interlocked.Decrement(ref openForms) == 0)
+                            ExitThread();
+                    };
+
+                    form.Show();
+                }
+            }
+        }*/
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -37,6 +59,13 @@ namespace XDAWaveformDataParser
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FileViewer());
+
+            /* Uncomment to be able to run two windows side by side.
+            FileViewer app1 = new FileViewer();
+            FileViewer app2 = new FileViewer();
+
+            Application.Run(new MultiFormsContext(app1, app2));
+            */
         }
     }
 }
