@@ -4188,3 +4188,63 @@ from UserMeter
 where UserName = @username
 )
 GO
+
+CREATE PROCEDURE [dbo].[GetSiteSummaries]
+    -- Add the parameters for the stored procedure here
+    @startDate as DateTime, 
+    @endDate as DateTime, 
+    @filterID as int,
+	@Page int,
+	@RecsPerPage int,
+	@orderBy varchar(MAX)
+AS
+BEGIN
+SET NOCOUNT ON
+
+
+DECLARE @sql NVARCHAR(MAX)
+
+SET @sql = '
+DECLARE @Page int, @RecsPerPage int
+SET @Page = ' + CAST(@Page as varchar) + '
+SET @RecsPerPage = ' + CAST(@RecsPerPage as varchar) + '
+-- Determine the first record and last record 
+DECLARE @FirstRec int, @LastRec int
+SELECT @FirstRec = (@Page - 1) * @RecsPerPage;
+SELECT @LastRec = (@Page * @RecsPerPage + 1);
+DECLARE @EventDateFrom DATE = CAST( '''+ CAST(@startDate as varchar(100)) +''' AS DATE)
+DECLARE @EventDateTO DATE = CAST( '''+ CAST(@endDate as varchar(100)) +''' AS DATE)
+DECLARE @filterID int = ' + CAST(@filterID as varchar(4)) + ';
+WITH TempResult as
+(
+SELECT 
+  '
+  +
+    ' Meter.Name AS MeterID, 
+	   (SELECT SUM(100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT)) / DATEDIFF(day, @EventDateFrom, @EventDateTo) FROM MeterDataQualitySummary WHERE MeterID = Meter.ID AND MeterDataQualitySummary.Date BETWEEN @EventDateFrom AND @EventDateTo ) as Completeness,
+	   (SELECT SUM(100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT)) / DATEDIFF(day, @EventDateFrom,  @EventDateTo) FROM MeterDataQualitySummary WHERE MeterID = Meter.ID AND MeterDataQualitySummary.Date BETWEEN @EventDateFrom AND @EventDateTo) as Correctness,
+	   (SELECT COUNT(Event.ID) FROM Event WHERE MeterID = Meter.ID AND StartTime BETWEEN @EventDateFrom AND @EventDateTo AND EventTypeID IN (SELECT * FROM String_To_Int_Table((SELECT EventTypes FROM WorkbenchFilter Where ID = @filterID), '',''))) AS [Events],
+       (SELECT COUNT(Disturbance.ID) FROM Disturbance JOIN Event ON Disturbance.EventID = Event.ID WHERE MeterID = Meter.ID AND Event.StartTime BETWEEN @EventDateTo AND @EventDateFrom) AS Disturbances, 
+       (SELECT COUNT(ID) FROM FaultView WHERE MeterID = Meter.ID AND InceptionTime BETWEEN @EventDateFrom AND @EventDateTo AND RK = 1) AS Faults,
+       (SELECT Max(Maximum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 2) AND Date BETWEEN @EventDateFrom AND @EventDateTo) AS MaxCurrent,
+       (SELECT Min(Minimum) FROM DailyTrendingSummary WHERE ChannelID IN (SELECT ID FROM Channel WHERE MeterID = Meter.ID AND MeasurementTypeID = 1) AND Date BETWEEN @EventDateFrom AND @EventDateTo) AS MinVoltage 
+FROM Meter 
+WHERE Meter.ID IN (Select * FROM String_To_Int_Table((Select Meters FROM WorkbenchFilter WHERE ID = @filterID), '',''))
+'
+  +
+  '
+), 
+TempResult2 AS
+(
+	SELECT ROW_NUMBER() OVER(ORDER BY ' + @orderBy + ') as RowNum, * FROM TempResult
+)
+SELECT top (@LastRec-1) *
+FROM TempResult2
+WHERE RowNum > @FirstRec 
+AND RowNum < @LastRec
+'
+print @sql
+EXEC sp_executesql @sql
+-- Turn NOCOUNT back OFF
+SET NOCOUNT OFF
+END
