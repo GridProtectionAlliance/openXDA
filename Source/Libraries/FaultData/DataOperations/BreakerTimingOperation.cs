@@ -36,10 +36,10 @@ using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Web.Model;
 using log4net;
 using static FaultData.Database.MeterData;
 using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
-using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
@@ -205,6 +205,7 @@ namespace FaultData.DataOperations
                     m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
                 else
                     m_timing = double.NaN;
+
                 m_dcOffsetDetected = false;
             }
 
@@ -593,7 +594,7 @@ namespace FaultData.DataOperations
             breakerOperationRow.BPhaseBreakerTiming = NotNaN(bPhaseTiming.Timing);
             breakerOperationRow.CPhaseBreakerTiming = NotNaN(cPhaseTiming.Timing);
             breakerOperationRow.BreakerSpeed = NotNaN(breakerTiming.Speed);
-            breakerOperationRow.DcOffsetDetected = aPhaseTiming.DcOffsetDetected || bPhaseTiming.DcOffsetDetected || cPhaseTiming.DcOffsetDetected ? 1 : 0;
+            breakerOperationRow.DcOffsetDetected = (aPhaseTiming.DcOffsetDetected || bPhaseTiming.DcOffsetDetected || cPhaseTiming.DcOffsetDetected) ? 1 : 0;
 
             return breakerOperationRow;
         }

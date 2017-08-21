@@ -161,6 +161,15 @@
             display:inline-block;
             width: 150px;
         }
+
+        .ui-terminal {
+            background: black;
+            color: white;
+        }
+        .ui-terminal-content div{
+            font-family: monospace;
+            white-space: pre;
+        }
     </style>
 }
 @functions {
@@ -175,19 +184,7 @@
 
 <div class="row">
     <div class="col-lg-4 col-md-4 col-sm-5">
-        <div class="panel panel-default">
-            <div class="panel-heading">Quick Links</div>
-            <div class="panel-body">
-                <div class="btn-group-vertical btn-block">
-                    @*<a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
-                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
-                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
-                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
-                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>*@
-                    <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
-                </div>
-            </div>
-        </div>
+     
         <ul class="list-group">
             <li class="list-group-item">
                 <span class="badge badge-fixed" id="serverTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Server&nbsp;Time
@@ -206,6 +203,26 @@
         </ul>
         <p class="text-info text-center small">@ViewBag.Request.RequestUri.ToString()</p>
         <!-- label class="small" id="fontSizeLabel"></label -->
+        <div class="panel panel-default">
+            <div class="panel-heading">Quick Links For Remote Console</div>
+            <div class="panel-body">
+                <div class="btn-group-vertical btn-block">
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Help')" hub-dependent>Help</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessAllData')" hub-dependent>PQMark Process All Data</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessEmptyData')" hub-dependent>PQMark Process Empty Data</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('PQMarkProcessMonthToDate')" hub-dependent>PQMark Process Month To Date</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -Enumerate')" hub-dependent>Enumerate Watch Directory</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Tweakfileprocessor -stopEnumeration')" hub-dependent>Stop Enumeration</button>
+                    <button type="button" class="btn btn-default" onclick="reloadSystemSettings()" hub-dependent>Reload System Settings</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('Start ReloadConfiguration')" hub-dependent>Reload Configuration</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL')" hub-dependent>Remove All Filters</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Alarm')" hub-dependent>Show Only Alarms</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Warning')" hub-dependent>Show Only Warnings</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -remove ALL -include Type Information')" hub-dependent>Show Only Information</button>
+                    <button type="button" class="btn btn-default" onclick="submitTerminalCommand('filter -exclude Message &quot;&quot;')" hub-dependent>Suppress All Messages</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="col-lg-8 col-md-8 col-sm-7">
         <div class="panel panel-default">
@@ -216,6 +233,7 @@
         </div>
     </div>
 </div>
+<div id="trmnl"></div>
 
 @section Scripts {
     <script>
@@ -239,6 +257,7 @@
         $(window).on("hubConnected", function (event) {
             updatePerformanceStatistics();
             setInterval(updatePerformanceStatistics, 5000);
+            serviceHub.sendCommand('filter -remove 0')
         });
 
         $("#restartButton").click(function () {
@@ -249,8 +268,25 @@
         $(function () {
             updateTimestamps();
             setInterval(updateTimestamps, 1000);
-        });
+            var trml = $('#trmnl').puiterminal({
+                prompt: "$",
+                handler: function (request, response) {
+                    if (request.toLowerCase() == 'clear')
+                    {
+                        trml.puiterminal('clear');
+                    }
+                    else {
+                        serviceHub.sendCommand(request);
+                        response.call(this, '')
+                    }
+                }
+            });
 
+            serviceHubClient.broadcastMessage = function (message, color) {             
+                $('#trmnl').puiterminal('updateContent', message, color);
+            }
+
+        });
         //$(window).resize(function () {
         //    $("#fontSizeLabel").html("Font Size: " + $("#performanceStatistics").css("font-size") + ", Window Size: " + $(window).width().toString());
         //});
@@ -258,10 +294,13 @@
         function reloadSystemSettings() {
             if (hubIsConnected)
             {
-                dataHub.reloadSystemSetting().done(function () {
-                    alert('openXDA Settings reloaded...')
-                });
+                dataHub.reloadSystemSetting();
             }
+        }
+
+        function submitTerminalCommand(word) {
+            $('.ui-terminal-input').val(word);
+            $('.ui-terminal-input').trigger('keydown.terminal', $.ui.keyCode.ENTER);
         }
     </script>
 }

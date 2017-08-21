@@ -93,19 +93,19 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Layout;
 using Microsoft.Owin.Hosting;
+using openXDA.Adapters;
+using openXDA.DataPusher;
 using openXDA.Logging;
 using openXDA.Model;
-using DataHub = openXDA.Hubs.DataHub;
+using PQMark.DataAggregator;
 using Channel = openXDA.Model.Channel;
+using DataHub = openXDA.Hubs.DataHub;
 using Meter = openXDA.Model.Meter;
 using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
 using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
 using Setting = openXDA.Model.Setting;
-using openXDA.DataPusher;
-using openXDA.Adapters;
-using System.Web.Mvc;
-using PQMark.DataAggregator;
+
 namespace openXDA
 {
     public partial class ServiceHost : ServiceBase
@@ -240,6 +240,8 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessAllData", "Creates aggregates for all data", OnProcessAllData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessEmptyData", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessMonthToDate", "Creates aggregates for month to date data", OnProcessMonthToDateData));
+            m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
+            m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
             // Set up adapter loader to load service monitors
             m_serviceMonitors = new ServiceMonitors();
@@ -331,6 +333,8 @@ namespace openXDA
             // running, wait for it to stop
             m_serviceStopping = true;
             m_startEngineThread.Join();
+            m_serviceHelper.UpdatedStatus -= UpdatedStatusHandler;
+            m_serviceHelper.LoggedException -= LoggedExceptionHandler;
 
             // Dispose of adapter loader for service monitors
             m_serviceMonitors.AdapterLoaded -= ServiceMonitors_AdapterLoaded;
@@ -456,7 +460,10 @@ namespace openXDA
                 securityProvider.Add("ConnectionString", "Eval(systemSettings.ConnectionString)", "Connection connection string to be used for connection to the backend security datastore.");
                 securityProvider.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
 
-                ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
+                using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
+                {
+                    ValidateAccountsAndGroups(connection);
+                }
 
                 DefaultWebPage = systemSettings["DefaultWebPage"].Value;
 
@@ -523,8 +530,6 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("DataPusher/RemoteXDAInstances.cshtml", new Tuple<Type, Type>(typeof(RemoteXDAInstance), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DataPusher/MetersToDataPush.cshtml", new Tuple<Type, Type>(typeof(MetersToDataPush), typeof(DataHub)));
 
-
-
                 // Create new web application hosting environment
                 m_webAppHost = WebApp.Start<Startup>(systemSettings["WebHostURL"].Value);
 
@@ -586,7 +591,11 @@ namespace openXDA
         private void ReloadConfigurationHandler(string s, object[] args)
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadConfiguration();
-            ValidateAccountsAndGroups(new AdoDataConnection("securityProvider"));
+
+            using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
+            {
+                ValidateAccountsAndGroups(connection);
+            }
         }
 
         private void EnumerateWatchDirectoriesHandler(string s, object[] args)
@@ -728,8 +737,6 @@ namespace openXDA
             else
                 SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
         }
-
-
 
         // Send a message to the service monitors on request.
         private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)
@@ -1055,6 +1062,20 @@ namespace openXDA
                 HandleException(new InvalidOperationException(message, ex));
             }
         }
+
+
+        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
+        {
+            if ((object)UpdatedStatus != null)
+                UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
+        }
+
+        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e)
+        {
+            if ((object)LoggedException != null)
+                LoggedException(sender, new EventArgs<Exception>(e.Argument));
+        }
+
 
         #endregion
 
