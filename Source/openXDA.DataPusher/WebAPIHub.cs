@@ -23,6 +23,7 @@
 
 using GSF;
 using GSF.Configuration;
+using GSF.Web;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
@@ -39,6 +40,25 @@ namespace openXDA.DataPusher
         #region [ Static ]
 
         public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
+
+        private static readonly string s_userName;
+        private static readonly string s_password;
+
+        static WebAPIHub()
+        {
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            systemSettings.Add("PQMarkUserName", "username", "User name for PQMarkWeb API access.");
+            systemSettings.Add("PQMarkPassword", "password", "Password for PQMarkWeb API access.", true);
+
+            s_userName = systemSettings["PQMarkUserName"].Value;
+            s_password = systemSettings["PQMarkPassword"].Value;
+        }
+
+        private static void AddBasicAuthenticationHeader(HttpClient client)
+        {
+            client.AddBasicAuthenticationHeader(s_userName, s_password);
+        }
 
         private static void OnLogStatusMessage(string message)
         {
@@ -81,6 +101,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecord/" + tableName + "/" + id).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -103,6 +124,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecords/" + tableName + "/" + ids).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -128,6 +150,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordsWhere/" + tableName + "/" + ids).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -155,6 +178,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.GetAsync("api/PQMark/GetChannels/channel/" + ids).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -178,6 +202,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/UpdateRecord/" + tableName, record).Result;
                 return response;
             }
@@ -199,6 +224,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateRecord/" + tableName, record).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -224,6 +250,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateChannel", record).Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -248,6 +275,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/ProcessFileGroup", record).Result;
                 return response;
             }
@@ -266,6 +294,7 @@ namespace openXDA.DataPusher
                 client.BaseAddress = new Uri(instance);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                AddBasicAuthenticationHeader(client);
                 HttpResponseMessage response = client.DeleteAsync("api/PQMark/DeleteRecord/" + tableName + "/" + id).Result;
                 return response;
             }
