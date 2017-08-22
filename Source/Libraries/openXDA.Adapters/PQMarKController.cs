@@ -29,12 +29,14 @@ using openXDA.Model;
 using Newtonsoft.Json.Linq;
 using System.Web.Http;
 using GSF;
+using GSF.Web.Security;
 
 namespace openXDA.Adapters
 {
     /// <summary>
     /// This class will be used to form a Restful HTTP API that will be interfaced using the PQMarkPusher.
     /// </summary>
+    [AuthenticateController]
     public class PQMarkController : ApiController
     {
         #region [ Static Event Handlers ]
