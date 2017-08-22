@@ -2002,7 +2002,6 @@ CREATE TABLE [dbo].[LinesToDataPush](
 	[RemoteXDALineID] [int] NULL,
 	[LocalXDAAssetKey] [varchar](200) NOT NULL,
 	[RemoteXDAAssetKey] varchar(200) NOT NULL,
-	Obsfucate bit NOT NULL
 )
 CREATE TABLE [dbo].RemoteXDAInstance(
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
