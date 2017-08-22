@@ -3,6 +3,9 @@
   <Component Id="wwwrootXDAAlarm_ChannelsWithHourlyLimits_cshtml">
     <File Id="wwwrootXDAAlarm_ChannelsWithHourlyLimits.cshtml" Name="ChannelsWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\ChannelsWithHourlyLimits.cshtml" />
   </Component>
+  <Component Id="wwwrootXDAAlarm_ChannelsWithLimits_cshtml">
+    <File Id="wwwrootXDAAlarm_ChannelsWithLimits.cshtml" Name="ChannelsWithLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\ChannelsWithLimits.cshtml" />
+  </Component>
   <Component Id="wwwrootXDAAlarm_Groups_cshtml">
     <File Id="wwwrootXDAAlarm_Groups.cshtml" Name="Groups.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\Groups.cshtml" />
   </Component>
@@ -32,6 +35,9 @@
   </Component>
   <Component Id="wwwrootXDAAlarm_MetersWithHourlyLimits_cshtml">
     <File Id="wwwrootXDAAlarm_MetersWithHourlyLimits.cshtml" Name="MetersWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\MetersWithHourlyLimits.cshtml" />
+  </Component>
+  <Component Id="wwwrootXDAAlarm_MetersWithNormalLimits_cshtml">
+    <File Id="wwwrootXDAAlarm_MetersWithNormalLimits.cshtml" Name="MetersWithNormalLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\MetersWithNormalLimits.cshtml" />
   </Component>
   <Component Id="wwwrootXDAAlarm_Security_cshtml">
     <File Id="wwwrootXDAAlarm_Security.cshtml" Name="Security.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\Security.cshtml" />
@@ -291,6 +297,9 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwrootXDAAlarm_Scripts_Components" Directory="wwwrootXDAAlarm_SCRIPTSFOLDER">
+  <Component Id="wwwrootXDAAlarm_Scripts_angular_js">
+    <File Id="wwwrootXDAAlarm_Scripts_angular.js" Name="angular.js" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\Scripts\angular.js" />
+  </Component>
   <Component Id="wwwrootXDAAlarm_Scripts_bootstrap_datepicker_js">
     <File Id="wwwrootXDAAlarm_Scripts_bootstrap_datepicker.js" Name="bootstrap-datepicker.js" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\Scripts\bootstrap-datepicker.js" />
   </Component>
