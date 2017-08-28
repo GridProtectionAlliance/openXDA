@@ -21,25 +21,24 @@
 //
 //******************************************************************************************************
 
-using GSF.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using openXDA.Model;
-using Newtonsoft.Json.Linq;
 using System.Web.Http;
 using GSF;
-using GSF.Web.Security;
+using GSF.Web.Model;
+using Newtonsoft.Json.Linq;
+using openXDA.Model;
 
 namespace openXDA.Adapters
 {
     /// <summary>
     /// This class will be used to form a Restful HTTP API that will be interfaced using the PQMarkPusher.
     /// </summary>
-    [AuthenticateController]
     public class PQMarkController : ApiController
     {
         #region [ Static Event Handlers ]
+
         public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
 
         private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
@@ -172,6 +171,7 @@ namespace openXDA.Adapters
         #endregion
 
         #region [ PUT Operations ]
+
         [HttpPut]
         public IHttpActionResult UpdateRecord(string modelName, [FromBody]JObject record)
         {
@@ -191,20 +191,25 @@ namespace openXDA.Adapters
 
             return Ok();
         }
+
         #endregion
 
-        #region [ POST Operations]
+        #region [ POST Operations ]
+
         [HttpPost]
         public IHttpActionResult CreateRecord( string modelName, [FromBody]JObject record)
         {
             int recordId;
+
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 try
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
+
                     dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
+
                     if(modelName == "Meter")
                         recordId = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = {0}", ((Meter)obj).AssetKey).ID;
                     else
@@ -218,6 +223,7 @@ namespace openXDA.Adapters
 
             return Ok(recordId);
         }
+
 
         [HttpPost]
         public IHttpActionResult CreateChannel([FromBody]JObject record)
@@ -286,7 +292,7 @@ namespace openXDA.Adapters
 
         #endregion
 
-        #region [ DELETE Operations]
+        #region [ DELETE Operations ]
 
         [HttpDelete]
         public IHttpActionResult DeleteRecord(int id, string modelName)
