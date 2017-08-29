@@ -3874,35 +3874,6 @@
             <param name="resource">Name of the resource being requested.</param>
             <returns>True if access to the resource is to be secured, otherwise False.</returns>
         </member>
-        <member name="T:GSF.Web.Security.AddChallengeOnUnauthorizedResult">
-            <summary>
-            Represents an HTTP action result that will add a challenge header when a result is unauthorized.
-            </summary>
-        </member>
-        <member name="M:GSF.Web.Security.AddChallengeOnUnauthorizedResult.#ctor(System.Net.Http.Headers.AuthenticationHeaderValue,System.Web.Http.IHttpActionResult)">
-            <summary>
-            Creates a new <see cref="T:GSF.Web.Security.AddChallengeOnUnauthorizedResult"/>.
-            </summary>
-            <param name="challenge">Authentication header value containing the challenge.</param>
-            <param name="innerResult">Inner HTTP action result to execute for response.</param>
-        </member>
-        <member name="P:GSF.Web.Security.AddChallengeOnUnauthorizedResult.Challenge">
-            <summary>
-            Gets the authentication header value containing the challenge.
-            </summary>
-        </member>
-        <member name="P:GSF.Web.Security.AddChallengeOnUnauthorizedResult.InnerResult">
-            <summary>
-            Gets the inner HTTP action result to execute for response.
-            </summary>
-        </member>
-        <member name="M:GSF.Web.Security.AddChallengeOnUnauthorizedResult.ExecuteAsync(System.Threading.CancellationToken)">
-            <summary>
-            Executes <see cref="P:GSF.Web.Security.AddChallengeOnUnauthorizedResult.InnerResult"/> so challenge header can be added when unauthorized.
-            </summary>
-            <param name="cancellationToken">Token to cancel async operation.</param>
-            <returns>Response message result of execution.</returns>
-        </member>
         <member name="T:GSF.Web.Security.AuthenticationHandler">
             <summary>
             Handles authentication using the configured <see cref="T:GSF.Security.ISecurityProvider"/> implementation in the Owin pipeline.
