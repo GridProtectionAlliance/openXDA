@@ -21,9 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
-using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {
@@ -31,24 +30,28 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+
         public int LocalXDAMeterID { get; set; }
+
         public int RemoteXDAMeterID { get; set; }
 
         [StringLength(50)]
         public string LocalXDAAssetKey { get; set; }
+
         [StringLength(20)]
         public string RemoteXDAName { get; set; }
 
         public string RemoteXDAAssetKey { get; set; }
+
         public bool Obsfucate { get; set; }
+
         public bool Synced { get; set; }
 
         [Required]
         [NonRecordField]
         public string MeterSelection { get; set; }
+
         [NonRecordField]
         public int RemoteXDAInstanceId { get; set; }
-
-
     }
 }

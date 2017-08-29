@@ -42,8 +42,10 @@ using GSF.Security.Model;
 using GSF.Web.Hubs;
 using GSF.Web.Model;
 using GSF.Web.Security;
-using openXDA.Model;
+using Microsoft.AspNet.SignalR;
 using openHistorian.XDALink;
+using openXDA.DataPusher;
+using openXDA.Model;
 using Channel = openXDA.Model.Channel;
 using ChannelDetail = openXDA.Model.ChannelDetail;
 using Disturbance = openXDA.Model.Disturbance;
@@ -57,11 +59,6 @@ using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
 using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
 using Setting = openXDA.Model.Setting;
-using System.Net.Http;
-using Newtonsoft.Json.Linq;
-using System.Net.Http.Headers;
-using openXDA.DataPusher;
-using Microsoft.AspNet.SignalR;
 
 namespace openXDA.Hubs
 {
@@ -864,7 +861,7 @@ namespace openXDA.Hubs
 
             foreach (AlarmRangeLimitView limit in limits)
             {
-                csv += limit.csvString() + '\n';
+                csv += limit.ToCSV() + '\n';
                 //csv += limit.ID.ToString() + ',' + limit.ChannelID.ToString() + ',' + limit.Name.ToString() + ',' + limit.AlarmTypeID.ToString() + ',' + limit.Severity.ToString() + ',' + limit.High.ToString() + ',' 
                 //    + limit.Low.ToString() + ',' + limit.RangeInclusive.ToString() + ',' + limit.PerUnit.ToString() + ',' + limit.Enabled.ToString() + ',' + limit.MeasurementType.ToString() + ','
                 //    + limit.MeasurementTypeID.ToString() + ',' + limit.MeasurementCharacteristic.ToString() + ',' + limit.MeasurementCharacteristicID.ToString() + ',' + limit.Phase.ToString() + ','
@@ -973,7 +970,7 @@ namespace openXDA.Hubs
             IEnumerable<AlarmRangeLimitView> limits = DataContext.Table<AlarmRangeLimitView>().QueryRecords();
 
             foreach (AlarmRangeLimitView limit in limits)
-                csv += limit.csvString() + '\n';
+                csv += limit.ToCSV() + '\n';
 
             return csv;
         }

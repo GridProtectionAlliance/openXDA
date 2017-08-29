@@ -21,13 +21,27 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
 using System.ComponentModel.DataAnnotations;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {
     public class RemoteXDAInstance
     {
+        private const string MinutePattern = "[1-5]?[0-9]";
+        private const string HourPattern = "[01]?[0-9]|2[0-3]";
+        private const string DayOfMonthPattern = "[1-9]|[12][0-9]|3[01]";
+        private const string MonthPattern = "[1-9]|1[0-2]";
+        private const string DayOfWeekPattern = "[0-6]";
+
+        private const string CronPattern = "^" +
+            @"(?:\*|(?:\*/)?(?:" + MinutePattern + ")) " +
+            @"(?:\*|(?:\*/)?(?:" + HourPattern + ")) " +
+            @"(?:\*|(?:\*/)?(?:" + DayOfMonthPattern + ")) " +
+            @"(?:\*|(?:\*/)?(?:" + MonthPattern + ")) " +
+            @"(?:\*|(?:\*/)?(?:" + DayOfWeekPattern + "))" +
+            "$";
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -37,7 +51,7 @@ namespace openXDA.Model
         public string Address { get; set; }
 
         [Required]
-        [RegularExpression("(\\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\\*\\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\\*|([0-9]|1[0-9]|2[0-3])|\\*\\/([0-9]|1[0-9]|2[0-3])) (\\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\\*\\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\\*|([1-9]|1[0-2])|\\*\\/([1-9]|1[0-2])) (\\*|([0-6])|\\*\\/([0-6]))$", ErrorMessage = "Please see syntax help for correct cron syntax.")]
+        [RegularExpression(CronPattern, ErrorMessage = "Please see syntax help for correct cron syntax.")]
         public string Frequency { get; set; }
     }
 }

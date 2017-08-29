@@ -21,9 +21,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Data.Model;
 using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.Data.Model;
 
 namespace openXDA.Model
 {
@@ -31,13 +31,14 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+
         public int LocalXDALineID { get; set; }
+
         public int RemoteXDALineID { get; set; }
 
         [StringLength(50)]
         public string LocalXDAAssetKey { get; set; }
 
         public Guid RemoteXDAAssetKey { get; set; }
-
     }
 }

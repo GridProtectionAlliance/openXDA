@@ -22,15 +22,20 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+
 namespace openXDA.Model
 {
     public class PQMarkCompanyMeter
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+
         public int PQMarkCompanyID { get; set; }
+
         public int MeterID { get; set; }
+
         public string DisplayName { get; set; }
+
         public bool Enabled { get; set; }
     }
 }
