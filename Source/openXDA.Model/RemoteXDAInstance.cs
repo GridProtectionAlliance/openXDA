@@ -29,17 +29,17 @@ namespace openXDA.Model
     public class RemoteXDAInstance
     {
         private const string MinutePattern = "[1-5]?[0-9]";
-        private const string HourPattern = "[01]?[0-9]|2[0-3]";
+        private const string HourPattern = "[1]?[0-9]|2[0-3]";
         private const string DayOfMonthPattern = "[1-9]|[12][0-9]|3[01]";
         private const string MonthPattern = "[1-9]|1[0-2]";
         private const string DayOfWeekPattern = "[0-6]";
 
         private const string CronPattern = "^" +
-            @"(?:\*|(?:\*/)?(?:" + MinutePattern + ")) " +
-            @"(?:\*|(?:\*/)?(?:" + HourPattern + ")) " +
-            @"(?:\*|(?:\*/)?(?:" + DayOfMonthPattern + ")) " +
-            @"(?:\*|(?:\*/)?(?:" + MonthPattern + ")) " +
-            @"(?:\*|(?:\*/)?(?:" + DayOfWeekPattern + "))" +
+            @"(?:\*|(?:\*/)?0*(?:" + MinutePattern + ")) " +
+            @"(?:\*|(?:\*/)?0*(?:" + HourPattern + ")) " +
+            @"(?:\*|(?:\*/)?0*(?:" + DayOfMonthPattern + ")) " +
+            @"(?:\*|(?:\*/)?0*(?:" + MonthPattern + ")) " +
+            @"(?:\*|(?:\*/)?0*(?:" + DayOfWeekPattern + "))" +
             "$";
 
         [PrimaryKey(true)]
