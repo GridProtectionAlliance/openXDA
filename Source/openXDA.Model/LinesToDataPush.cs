@@ -34,10 +34,10 @@ namespace openXDA.Model
         public int LocalXDALineID { get; set; }
         public int RemoteXDALineID { get; set; }
 
-        [StringLength(50)]
+        [StringLength(200)]
         public string LocalXDAAssetKey { get; set; }
-
-        public Guid RemoteXDAAssetKey { get; set; }
+        [StringLength(200)]
+        public string RemoteXDAAssetKey { get; set; }
 
     }
 }
