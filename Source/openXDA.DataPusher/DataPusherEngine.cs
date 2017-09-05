@@ -443,7 +443,7 @@ namespace openXDA.DataPusher
                     LocalXDALineID = localLine.ID,
                     RemoteXDALineID = 0,
                     LocalXDAAssetKey = localLine.AssetKey,
-                    RemoteXDAAssetKey = Guid.NewGuid()
+                    RemoteXDAAssetKey = (obsfucate ? Guid.NewGuid().ToString(): localLine.AssetKey)
                 };
 
                 Line newRecord = new Line()
