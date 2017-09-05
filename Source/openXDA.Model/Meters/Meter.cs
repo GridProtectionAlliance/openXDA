@@ -29,6 +29,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
+    [PQMarkRestricted]
     public class Meter
     {
         [PrimaryKey(true)]

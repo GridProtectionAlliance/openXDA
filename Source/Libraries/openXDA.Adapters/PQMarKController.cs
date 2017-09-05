@@ -29,6 +29,8 @@ using GSF;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
+using System.Threading;
+using GSF.Reflection;
 
 namespace openXDA.Adapters
 {
@@ -63,7 +65,17 @@ namespace openXDA.Adapters
             {
                 try
                 {
-                    record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordWhere("ID = {0}", id);
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    PQMarkRestrictedAttribute thing;
+
+                    if(type.TryGetAttribute(out thing))
+                    {
+                        record = dataContext.Table(type).QueryRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {1} AND UserAccount = {2})", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                    }
+                    else
+                    {
+                        record = dataContext.Table(type).QueryRecordWhere("ID = {0}", id);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -87,7 +99,17 @@ namespace openXDA.Adapters
             {
                 try
                 {
-                    record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordsWhere(id);
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    PQMarkRestrictedAttribute thing;
+
+                    if (type.TryGetAttribute(out thing))
+                    {
+                        record = dataContext.Table(type).QueryRecordWhere( id + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                    }
+                    else
+                    {
+                        record = dataContext.Table(type).QueryRecordWhere(id);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -130,10 +152,33 @@ namespace openXDA.Adapters
             {
                 try
                 {
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    PQMarkRestrictedAttribute thing;
+
                     if (idList.Length == 0)
-                        record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecords();
+                    {
+
+                        if (type.TryGetAttribute(out thing))
+                        {
+                            record = dataContext.Table(type).QueryRecordWhere("ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                        }
+                        else
+                        {
+                            record = dataContext.Table(type).QueryRecords();
+                        }
+
+                    }
                     else
-                        record = dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).QueryRecordsWhere(idList);
+                    {
+                        if (type.TryGetAttribute(out thing))
+                        {
+                            record = dataContext.Table(type).QueryRecordWhere(idList + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                        }
+                        else
+                        {
+                            record = dataContext.Table(type).QueryRecordsWhere(idList);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -154,10 +199,24 @@ namespace openXDA.Adapters
             {
                 try
                 {
+                    Type type = typeof(Channel);
+                    PQMarkRestrictedAttribute thing;
+
                     if (id == "all")
-                        record = dataContext.Table<ChannelDetail>().QueryRecords();
+                    {
+                        if (type.TryGetAttribute(out thing))
+                            record = dataContext.Table<ChannelDetail>().QueryRecordWhere("ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = 'Channel' AND UserAccount = {0})", Thread.CurrentPrincipal.Identity.Name);
+                        else
+                            record = dataContext.Table<ChannelDetail>().QueryRecords();
+                    }
                     else
-                        record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(id);
+                    {
+                        if (type.TryGetAttribute(out thing))
+                            record = dataContext.Table<ChannelDetail>().QueryRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = 'Channel' AND UserAccount = {1})", id, Thread.CurrentPrincipal.Identity.Name);
+                        else
+                            record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(id);
+                    }
+                    record = dataContext.Table<ChannelDetail>().QueryRecordsWhere(id);
                 }
                 catch (Exception ex)
                 {
@@ -207,6 +266,7 @@ namespace openXDA.Adapters
                 {
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     object obj = record.ToObject(type);
+                    PQMarkRestrictedAttribute attribute;
 
                     dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).AddNewRecord(obj);
 
@@ -214,6 +274,9 @@ namespace openXDA.Adapters
                         recordId = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = {0}", ((Meter)obj).AssetKey).ID;
                     else
                         recordId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
+
+                    if (type.TryGetAttribute(out attribute))
+                        dataContext.Connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, {1}, {2})", recordId, modelName, Thread.CurrentPrincipal.Identity.Name);
                 }
                 catch (Exception ex)
                 {
@@ -270,6 +333,11 @@ namespace openXDA.Adapters
 
                     dataContext.Table<Channel>().AddNewRecord(channel);
                     channelId = dataContext.Connection.ExecuteScalar<int>("SELECT @@Identity");
+
+                    PQMarkRestrictedAttribute attribute;
+                    if (typeof(Channel).TryGetAttribute(out attribute))
+                        dataContext.Connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, 'Channel', {1})", channel, Thread.CurrentPrincipal.Identity.Name);
+
                 }
                 catch (Exception ex)
                 {
@@ -299,7 +367,16 @@ namespace openXDA.Adapters
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
-                dataContext.Table(typeof(Meter).Assembly.GetType("openXDA.Model." + modelName)).DeleteRecordWhere("ID = {0}", id);
+                Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                PQMarkRestrictedAttribute attribute;
+
+                if (type.TryGetAttribute(out attribute))
+                {
+                    dataContext.Table(type).DeleteRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {1} AND UserAccount = {2})", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                    dataContext.Connection.ExecuteNonQuery("DELETE FROM [PQMarkRestrictedTableUserAccount] WHERE PrimaryID = {0} AND TableName = {1} AND UserAccount = {2}", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                }
+                else
+                    dataContext.Table(type).DeleteRecordWhere("ID = {0}", id);
             }
 
             return Ok();

@@ -54,6 +54,7 @@
     <Compile Include="Links\EmailGroupMeterGroup.cs" />
     <Compile Include="Links\EmailGroupSecurityGroup.cs" />
     <Compile Include="Links\EmailGroupUserAccount.cs" />
+    <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\DataWriter.cs" />
     <Compile Include="TransmissionElements\Breaker.cs" />

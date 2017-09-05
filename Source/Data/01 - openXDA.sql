@@ -2218,6 +2218,20 @@ CREATE TABLE [dbo].[PQMarkVoltageBin](
 ) ON [PRIMARY]
 
 GO
+
+CREATE TABLE [dbo].[PQMarkRestrictedTableUserAccount](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[PrimaryID] [int] NOT NULL,
+	[TableName] [varchar](max) NOT NULL,
+	[UserAccount] [varchar](max) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
 INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1, N'<1c', 0, 0.01666666666, 0)
 GO
 INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (2, N'1 to 2 c', 0.01666666667, 0.03333333333, 1)
