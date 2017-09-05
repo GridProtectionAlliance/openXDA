@@ -238,7 +238,6 @@ namespace openXDA
         {
             return Task.Run(() =>
             {
-                SecurityProviderCache.ValidateCurrentProvider();
                 NameValueCollection parameters = request.RequestUri.ParseQueryString();
 
                 m_eventID = Convert.ToInt32(parameters["EventID"]);

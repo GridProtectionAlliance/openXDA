@@ -32,10 +32,10 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
 using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
-using Owin;
 using openXDA.Adapters;
 using openXDA.Model;
 using openXDA.wwwroot.Config;
+using Owin;
 
 namespace openXDA
 {
@@ -43,12 +43,12 @@ namespace openXDA
     {
         public void Configuration(IAppBuilder app)
         {
-
             app.Use((context, next) =>
             {
                 context.Response.Headers.Remove("Server");
                 return next.Invoke();
             });
+
             app.UseStageMarker(PipelineStage.PostAcquireState);
 
             // Modify the JSON serializer to serialize dates as UTC - otherwise, timezone will not be appended
@@ -78,6 +78,13 @@ namespace openXDA
             hubConfig.EnableDetailedErrors = true;
 #endif
 
+            app.Use<AuthenticationMiddleware>(new AuthenticationOptions()
+            {
+                SessionToken = "session",
+                AuthFailureRedirectResourceExpression = "(?!)",
+                AnonymousResourceExpression = "^/api/(?:JSONApi|Grafana)"
+            });
+
             string allowedDomainList = ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value;
 
             if (allowedDomainList == "*")
@@ -99,6 +106,7 @@ namespace openXDA
             app.UseWebApi(httpConfig);
 
             httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+
             // Check for configuration issues before first request
             httpConfig.EnsureInitialized();
         }
@@ -108,7 +116,10 @@ namespace openXDA
             if (request.Url.PathAndQuery.StartsWith("/api/pqmark/", StringComparison.OrdinalIgnoreCase))
                 return AuthenticationSchemes.Basic;
 
-            if (request.Url.PathAndQuery.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+            if (request.Url.PathAndQuery.StartsWith("/api/JSONApi", StringComparison.OrdinalIgnoreCase))
+                return AuthenticationSchemes.Anonymous;
+
+            if (request.Url.PathAndQuery.StartsWith("/api/Grafana", StringComparison.OrdinalIgnoreCase))
                 return AuthenticationSchemes.Anonymous;
 
             // Explicitly select NTLM, since Negotiate seems to fail

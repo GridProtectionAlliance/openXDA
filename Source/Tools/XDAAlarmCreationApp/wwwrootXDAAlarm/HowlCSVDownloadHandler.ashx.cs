@@ -189,7 +189,7 @@ namespace XDAAlarmCreationApp
                 SendChannelsWithHourlyLimitsToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
             else if (callingFrom == "MetersWithNormalLimits")
                 SendMetersWithNormalLimitsToCSV(responseStream, filterText, cancellationToken, sortField, sortAscending);
-            else if (callingFrom == "ChannelsWithLimits")
+            else if (callingFrom == "ChannelsWithNormalLimits")
                 SendChannelsWithNormalLimitsToCSV(responseStream, ID, filterText, cancellationToken, sortField, sortAscending);
             else
                 SendMetersWithHourlyLimitsToCSV(responseStream, filterText, cancellationToken, sortField, sortAscending);
@@ -350,7 +350,7 @@ namespace XDAAlarmCreationApp
                     channelHeaders = channelTable.GetFieldNames().Select(x => "Channel" + x).ToList();
                     alarmHeaders = alarmTable.GetFieldNames().Select(x => "Alarm" + x).ToList();
                 }
-                else if (callingFrom == "MetersWithNormalLimits" || callingFrom == "ChannelsWithLimits")
+                else if (callingFrom == "MetersWithNormalLimits" || callingFrom == "ChannelsWithNormalLimits")
                 {
                     TableOperations<MetersWithNormalLimits> meterTable = new TableOperations<MetersWithNormalLimits>(connection);
                     TableOperations<ChannelsWithNormalLimits> channelTable = new TableOperations<ChannelsWithNormalLimits>(connection);

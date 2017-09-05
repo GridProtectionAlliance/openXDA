@@ -63,6 +63,12 @@ namespace XDAAlarmCreationApp
             // Enabled detailed client errors
             hubConfig.EnableDetailedErrors = true;
 
+            app.Use<AuthenticationMiddleware>(new AuthenticationOptions()
+            {
+                AnonymousResourceExpression = "(?!)",
+                AuthFailureRedirectResourceExpression = "(?!)"
+            });
+
             // Load ServiceHub SignalR class
             app.MapSignalR(hubConfig);
 
@@ -75,6 +81,5 @@ namespace XDAAlarmCreationApp
             // Check for configuration issues before first request
             httpConfig.EnsureInitialized();
         }
-
     }
 }

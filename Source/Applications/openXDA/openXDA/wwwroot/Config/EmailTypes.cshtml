@@ -70,7 +70,7 @@
 {
     <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: EmailCategory, click: $parent.viewPageRecord"></button></td>
     <td width="25%" class="text-left valign-middle" data-bind="text: XSLTemplate"></td>
-    <td width="25%"><button class="btn btn-primary" data-bind="click: viewTemplate.bind($data), enable: checkID()">View Template</button></td>
+    <td width="25%"><button class="btn btn-primary" title="Enter an event ID to preview" data-bind="click: viewTemplate.bind($data), enable: checkID()">Preview Email</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -110,9 +110,9 @@
         
         $('#eventID').on('keyup', function (event) {
             if (checkID() && !isNaN(parseInt($('#eventID').val())))
-                $('.btn.btn-primary:contains("View Template")').prop('disabled', false);
+                $('.btn.btn-primary:contains("Preview Email")').prop('disabled', false);
             else
-                $('.btn.btn-primary:contains("View Template")').prop('disabled', true);
+                $('.btn.btn-primary:contains("Preview Email")').prop('disabled', true);
         });
     </script>
 }

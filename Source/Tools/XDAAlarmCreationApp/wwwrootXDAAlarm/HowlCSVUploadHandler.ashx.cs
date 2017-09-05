@@ -78,7 +78,7 @@ namespace XDAAlarmCreationApp
         public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             string referrer = request.Headers.Referrer.ToString();
-            await request.GetPostDataAsync().ContinueWith(async postDataTask =>
+            await request.GetPostDataAsync(cancellationToken).ContinueWith(async postDataTask =>
             {
                 await Task.WhenAll(postDataTask.Result.FileData.Select(file => ProcessFileAsync(file, referrer)));
             });
@@ -142,7 +142,7 @@ namespace XDAAlarmCreationApp
                         }
                     }
                 }
-                else if(referrer.Contains("ChannelsWithLimits.cshtml") || referrer.Contains("MetersWithNormalLimits.cshtml"))
+                else if(referrer.Contains("ChannelsWithNormalLimits.cshtml") || referrer.Contains("MetersWithNormalLimits.cshtml"))
                 {
                     int channelIdIndex = Array.IndexOf(tableFields, "ChannelID");
                     int highIndex = Array.IndexOf(tableFields, "ChannelHigh");

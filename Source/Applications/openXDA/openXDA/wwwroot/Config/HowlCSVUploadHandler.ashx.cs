@@ -78,7 +78,7 @@ namespace openXDA
 
         public async Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
-            await request.GetPostDataAsync().ContinueWith(async postDataTask =>
+            await request.GetPostDataAsync(cancellationToken).ContinueWith(async postDataTask =>
             {
                 await Task.WhenAll(postDataTask.Result.FileData.Select(ProcessFileAsync));
             });

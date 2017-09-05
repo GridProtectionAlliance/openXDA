@@ -3,8 +3,8 @@
   <Component Id="wwwrootXDAAlarm_ChannelsWithHourlyLimits_cshtml">
     <File Id="wwwrootXDAAlarm_ChannelsWithHourlyLimits.cshtml" Name="ChannelsWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\ChannelsWithHourlyLimits.cshtml" />
   </Component>
-  <Component Id="wwwrootXDAAlarm_ChannelsWithLimits_cshtml">
-    <File Id="wwwrootXDAAlarm_ChannelsWithLimits.cshtml" Name="ChannelsWithLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\ChannelsWithLimits.cshtml" />
+  <Component Id="wwwrootXDAAlarm_ChannelsWithNOrmalLimits_cshtml">
+    <File Id="wwwrootXDAAlarm_ChannelsWithNOrmalLimits.cshtml" Name="ChannelsWithNOrmalLimits.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\ChannelsWithNOrmalLimits.cshtml" />
   </Component>
   <Component Id="wwwrootXDAAlarm_Groups_cshtml">
     <File Id="wwwrootXDAAlarm_Groups.cshtml" Name="Groups.cshtml" Source="$(var.SolutionDir)Tools\XDAAlarmCreationApp\wwwrootXDAAlarm\Groups.cshtml" />
