@@ -394,7 +394,7 @@ namespace FaultData.DataWriters
                 {
                     htmlDocument.TransformAll("chart", (element, index) =>
                     {
-                        string cid = $"chart{index:00}.png";
+                        string cid = $"event{eventID}_chart{index:00}.png";
 
                         Stream image = ChartGenerator.ConvertToChartImageStream(s_dbAdapterContainer, element);
                         Attachment attachment = new Attachment(image, cid);
@@ -402,6 +402,11 @@ namespace FaultData.DataWriters
                         attachments.Add(attachment);
 
                         return new XElement("img", new XAttribute("src", $"cid:{cid}"));
+                    });
+
+                    htmlDocument.TransformAll("equipmentAndCustomersAffected", (element, index) =>
+                    {
+                        return PQIEquipmentAffectedGenerator.GetEquipmentAffected(s_dbAdapterContainer, element);
                     });
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
