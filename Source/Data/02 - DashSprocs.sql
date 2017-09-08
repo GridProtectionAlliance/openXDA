@@ -1594,18 +1594,21 @@ SELECT @MiddleStatment = @MiddleStatment + 	'
 			SELECT '+@dateStatement+' as date, 
 				'''+ t.ServiceName + ''' as ServiceName, 
 				Count(*) as EventCount
-			FROM	'+ t.ResultTableName +' 
-				JOIN Event ON Event.ID = ' + t.ResultTableName + '.EventId 
-			WHERE	dbo.' + t.HasResultFunction + '(EventID) != '''' AND
-				MeterID in (select * from authMeters(@username)) AND 
-				MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND 
-				StartTime >= @startDate AND StartTime < @endDate  
+			FROM	#temp 
+			WHERE	dbo.' + t.HasResultFunction + '(ID) != '''' 
 			GROUP BY '+ @dateStatement + ' UNION'
 			 
 FROM (Select * FROM EASExtension) AS t
 
 SET @SQLStatement =
-' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+' 
+SELECT * INTO #temp 
+FROM EVENT 
+WHERE	StartTime Between @startDate AND @endDate AND
+		MeterID in (select * from authMeters(@username)) AND 
+		MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '',''))
+
+SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
 FROM (
 		SELECT * FROM (
 		' + SUBSTRING(@MiddleStatment,0, LEN(@MiddleStatment) - LEN('UNION')) + ' ) as innertable
@@ -1614,7 +1617,10 @@ FROM (
 		SUM(ed.EventCount)
 		FOR ed.ServiceName IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
  ) as pvt 
- ORDER BY Date '
+ ORDER BY Date 
+ 
+ DROP TABLE #temp
+ '
 
 --print @startDate
 --print @endDate
@@ -2714,16 +2720,21 @@ SELECT @MiddleStatment = @MiddleStatment + 	'
 			SELECT MeterID, 
 				'''+ t.ServiceName + ''' as ServiceName, 
 				Count(*) as EventCount
-			FROM	'+ t.ResultTableName +' 
-				JOIN Event ON Event.ID = ' + t.ResultTableName + '.EventId 
-			WHERE	dbo.' + t.HasResultFunction + '(EventID) != '''' AND
-				StartTime >= @startDate AND StartTime < @endDate  
+			FROM	#temp 
+			WHERE	dbo.' + t.HasResultFunction + '(ID) != ''''  
 			GROUP BY MeterID UNION'
 			 
 FROM (Select * FROM EASExtension) AS t
 
 SET @SQLStatement =
-' SELECT Meter.ID, 
+' 
+	SELECT * INTO #temp 
+	FROM EVENT 
+	WHERE	StartTime Between @startDate AND @endDate AND
+			MeterID in (select * from authMeters(@username)) AND 
+			MeterID IN (SELECT * FROM String_To_Int_Table( @meterIds,  '',''))
+
+SELECT Meter.ID, 
 		 Meter.Name,
 		 MeterLocation.Longitude,
 		 MeterLocation.Latitude,
@@ -2743,8 +2754,10 @@ WHERE
 	Meter.ID in (select * from authMeters(@username)) AND 
 	Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))  
 
-ORDER BY Meter.Name'
+ORDER BY Meter.Name
 
+DROP TABLE #temp
+'
 --print @startDate
 --print @endDate
 print @sqlstatement
@@ -3115,6 +3128,107 @@ BEGIN
 
 END
 GO
+
+-- =============================================
+-- Author:      <Author, Jeff Walker>
+-- Create date: <Create Date, Jun 23, 2014>
+-- Description: <Description, Selects Events for a set of sites by Date>
+-- [selectSiteLinesExtensionDetailsByDate] '01/03/08', '77', 'day'
+
+-- =============================================
+ALTER PROCEDURE [dbo].[selectSiteLinesExtensionDetailsByDate]
+    -- Add the parameters for the stored procedure here
+    @EventDate as DateTime,
+    @MeterID as nvarchar(4000),
+	@context as nvarchar(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+	DECLARE @startDate DATETIME = @EventDate 
+	DECLARE @endDate DATETIME
+
+	IF @context = '180d'
+	BEGIN
+		SET @endDate = DATEADD(Day, 180, @startDate)
+	END
+
+		IF @context = '90d'
+	BEGIN
+		SET @endDate = DATEADD(Day, 90, @startDate)
+	END
+
+	IF @context = 'month'
+	BEGIN
+		SET @endDate = DATEADD(Day, 30, @startDate)
+	END
+
+	IF @context = 'week'
+	BEGIN
+		SET @endDate = DATEADD(DAY, 7, @startDate)
+	END
+
+	IF @context = 'day'
+	BEGIN
+		SET @endDate = DATEADD(DAY, 1, @startDate)
+	END
+
+	if @context = 'hour'
+	BEGIN
+		SET @endDate = DATEADD(HOUR, 1, @startDate)
+	END
+
+	if @context = 'minute'
+	BEGIN
+		SET @endDate = DATEADD(MINUTE, 1, @startDate)
+	END
+
+	if @context = 'second'
+	BEGIN
+		SET @endDate = DATEADD(SECOND, 1, @startDate)
+	END
+
+    DECLARE @localEventDate DATE = CAST(@EventDate AS DATE)
+    DECLARE @localMeterID INT = CAST(@MeterID AS INT)
+
+	DECLARE @MiddleStatment NVARCHAR(MAX) = N''
+	DECLARE @SQLStatement NVARCHAR(MAX) = N''
+
+	SELECT @MiddleStatment = @MiddleStatment + 	'
+				SELECT	Event.ID as EventID, 
+						Event.StartTime as StartTime, 
+						'''+ t.ServiceName + ''' as ServiceType,
+						MeterLine.LineName + '' '' + [Line].[AssetKey] AS LineName,
+						Line.VoltageKV AS Voltage,
+						dbo.'+ t.HasResultFunction+'(Event.ID) as Confidence
+				FROM	#temp as Event JOIN
+						Meter ON Meter.ID = Event.MeterID JOIN
+						Line ON Event.LineID = Line.ID JOIN
+						MeterLine ON MeterLine.MeterID = Event.MeterID AND MeterLine.LineID = Line.ID
+				WHERE	dbo.' + t.HasResultFunction +'(Event.ID) != '''' UNION'
+			 
+	FROM (Select * FROM EASExtension) AS t
+
+	SET @MiddleStatment = SUBSTRING(@MiddleStatment,0, LEN(@MiddleStatment) - LEN('UNION'))
+
+	SET @SQLStatement =
+		' 
+		SELECT * INTO #temp 
+		FROM EVENT 
+		WHERE	StartTime Between @startDate AND @endDate AND
+				MeterID = @localMeterID
+
+		' + @MiddleStatment + '
+ 
+		 DROP TABLE #temp
+ '
+
+	exec sp_executesql @SQLStatement, N'@localMeterID int, @startDate DATETIME, @endDate DATETIME ', @localMeterID = @localMeterID, @startDate = @startDate, @endDate = @endDate
+	
+END
+
+GO
+
 
 -- =============================================
 -- Author:      <Author, Jeff Walker>
@@ -3867,16 +3981,21 @@ BEGIN
 			SELECT MeterID, 
 				'''+ t.ServiceName + ''' as ServiceName, 
 				Count(*) as EventCount
-			FROM	'+ t.ResultTableName +' 
-				JOIN Event ON Event.ID = ' + t.ResultTableName + '.EventId 
-			WHERE	dbo.' + t.HasResultFunction + '(EventID) != '''' AND
-				StartTime >= @startDate AND StartTime < @endDate  
+			FROM	#temp 
+			WHERE	dbo.' + t.HasResultFunction + '(ID) != ''''   
 			GROUP BY MeterID UNION'
 			 
 	FROM (Select * FROM EASExtension) AS t
 
 	SET @SQLStatement =
-	' SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = Meter.ID AND StartTime >= @startDate AND StartTime < @endDate) as EventID, 
+	' 
+	SELECT * INTO #temp 
+	FROM EVENT 
+	WHERE	StartTime Between @startDate AND @endDate AND
+			MeterID in (select * from authMeters(@username)) AND 
+			MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '',''))
+
+	SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = Meter.ID AND StartTime >= @startDate AND StartTime < @endDate) as EventID, 
 			 Meter.ID as MeterID, 
 			 Meter.Name as Site, 
 			 ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
@@ -3891,7 +4010,9 @@ BEGIN
 	 WHERE 
 		Meter.ID in (select * from authMeters(@username)) AND Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) 
 
-	 ORDER BY MeterID '
+	 ORDER BY MeterID 
+	 DROP Table #temp
+	 '
 
 	--print @startDate
 	--print @endDate
