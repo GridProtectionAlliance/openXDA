@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Breaker.cs - Gbtc
+//  BreakerOperation.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -43,6 +43,8 @@ namespace openXDA.Model
 
         public DateTime StatusBitSet { get; set; }
 
+        public bool StatusBitChatter { get; set; }
+
         public DateTime APhaseCleared { get; set; }
 
         public DateTime BPhaseCleared { get; set; }
@@ -59,11 +61,11 @@ namespace openXDA.Model
 
         public double CPhaseBreakerTiming { get; set; }
 
+        public bool DcOffsetDetected { get; set; }
+
         public double BreakerSpeed { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        public bool StatusBitChatter { get; set; }
     }
 
     [TableName("BreakerOperation")]
@@ -98,15 +100,5 @@ namespace openXDA.Model
         public string OperationType { get; set; }
 
         public string UpdatedBy { get; set; }
-    }
-
-    public class BreakerOperationType
-    {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        public string Name { get; set; }
-
-        public string Description { get; set; }
     }
 }

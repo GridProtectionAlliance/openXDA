@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
+using System.Transactions;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -35,5 +36,38 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static MeasurementType GetOrAdd(this TableOperations<MeasurementType> measurementTypeTable, string name, string description = null)
+        {
+            TransactionScopeOption required = TransactionScopeOption.Required;
+
+            TransactionOptions transactionOptions = new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+
+            MeasurementType measurementType;
+
+            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
+            {
+                measurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", name);
+
+                if ((object)measurementType == null)
+                {
+                    measurementType = new MeasurementType();
+                    measurementType.Name = name;
+                    measurementType.Description = description ?? name;
+                    measurementTypeTable.AddNewRecord(measurementType);
+
+                    measurementType.ID = measurementTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                }
+            }
+
+            return measurementType;
+        }
     }
 }

@@ -31,12 +31,11 @@ using log4net.Core;
 
 namespace openXDA.Logging
 {
-    public class ServiceHelperAppender : IAppender
+    public class ServiceHelperAppender : AppenderSkeleton
     {
         #region [ Members ]
 
         // Fields
-        private string m_name;
         private ServiceHelper m_serviceHelper;
 
         #endregion
@@ -51,25 +50,9 @@ namespace openXDA.Logging
 
         #endregion
 
-        #region [ Properties ]
-
-        public string Name
-        {
-            get
-            {
-                return m_name;
-            }
-            set
-            {
-                m_name = value;
-            }
-        }
-
-        #endregion
-
         #region [ Methods ]
 
-        public void DoAppend(LoggingEvent loggingEvent)
+        protected override void Append(LoggingEvent loggingEvent)
         {
             object threadID;
             object meterKey;
@@ -135,10 +118,6 @@ namespace openXDA.Logging
                 m_serviceHelper.UpdateStatusAppendLine(updateType, "[{0}] {1}", threadID, renderedMessage);
             else
                 m_serviceHelper.UpdateStatusAppendLine(updateType, "[{0}] {{{1}}} {2}", threadID, meterKey, renderedMessage);
-        }
-
-        public void Close()
-        {
         }
 
         #endregion

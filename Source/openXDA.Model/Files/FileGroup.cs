@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -44,5 +45,8 @@ namespace openXDA.Model
 
         [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime ProcessingEndTime { get; set; }
+
+        [NonRecordField]
+        public List<DataFile> DataFiles { get; set; } = new List<DataFile>();
     }
 }

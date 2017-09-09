@@ -21,17 +21,12 @@
 //
 //******************************************************************************************************
 
-using FaultData.Database;
 using FaultData.DataSets;
-using GSF.Web.Model;
 
 namespace FaultData.DataOperations
 {
     public interface IDataOperation
     {
-        void Prepare(DbAdapterContainer dbAdapterContainer);
-        void Prepare(DataContext dataContext);
         void Execute(IDataSet meterDataSet);
-        void Load(DbAdapterContainer dbAdapterContainer);
     }
 }

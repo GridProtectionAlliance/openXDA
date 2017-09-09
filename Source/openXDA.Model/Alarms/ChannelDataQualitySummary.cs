@@ -47,4 +47,36 @@ namespace openXDA.Model
 
         public int DuplicatePoints { get; set; }
     }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static void Upsert(this TableOperations<ChannelDataQualitySummary> channelDataQualitySummaryTable, ChannelDataQualitySummary channelDataQualitySummary)
+        {
+            const string UpsertQuery =
+                "MERGE ChannelDataQualitySummary WITH (HOLDLOCK) AS Target " +
+                "USING (VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})) AS Source([ChannelID], [Date], [ExpectedPoints], [GoodPoints], [LatchedPoints], [UnreasonablePoints], [NoncongruentPoints], [DuplicatePoints]) " +
+                "ON Target.ChannelID = Source.ChannelID AND Target.Date = Source.Date " +
+                "WHEN MATCHED THEN " +
+                "    UPDATE SET " +
+                "        Target.ExpectedPoints = Source.ExpectedPoints, " +
+                "        Target.GoodPoints = Target.GoodPoints + Source.GoodPoints, " +
+                "        Target.LatchedPoints = Target.LatchedPoints + Source.LatchedPoints, " +
+                "        Target.UnreasonablePoints = Target.UnreasonablePoints + Source.UnreasonablePoints, " +
+                "        Target.NoncongruentPoints = Target.NoncongruentPoints + Source.NoncongruentPoints, " +
+                "        Target.DuplicatePoints = Target.DuplicatePoints + Source.DuplicatePoints " +
+                "WHEN NOT MATCHED THEN " +
+                "    INSERT VALUES(Source.ChannelID, Source.Date, Source.ExpectedPoints, Source.GoodPoints, Source.LatchedPoints, Source.UnreasonablePoints, Source.NoncongruentPoints, Source.DuplicatePoints);";
+
+            int channelID = channelDataQualitySummary.ChannelID;
+            DateTime date = channelDataQualitySummary.Date;
+            int expectedPoints = channelDataQualitySummary.ExpectedPoints;
+            int goodPoints = channelDataQualitySummary.GoodPoints;
+            int latchedPoints = channelDataQualitySummary.LatchedPoints;
+            int unreasonablePoints = channelDataQualitySummary.UnreasonablePoints;
+            int noncongruentPoints = channelDataQualitySummary.NoncongruentPoints;
+            int duplicatePoints = channelDataQualitySummary.DuplicatePoints;
+
+            channelDataQualitySummaryTable.Connection.ExecuteNonQuery(UpsertQuery, channelID, date, expectedPoints, goodPoints, latchedPoints, unreasonablePoints, noncongruentPoints, duplicatePoints);
+        }
+    }
 }

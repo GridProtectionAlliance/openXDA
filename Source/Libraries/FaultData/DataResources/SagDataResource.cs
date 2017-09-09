@@ -23,11 +23,8 @@
 
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
-using GSF.Collections;
 
 namespace FaultData.DataResources
 {
@@ -36,22 +33,11 @@ namespace FaultData.DataResources
         #region [ Members ]
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
         private double m_systemFrequency;
         private double m_sagThreshold;
         private double m_interruptionThreshold;
 
         private Dictionary<DataGroup, List<Disturbance>> m_sags;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        private SagDataResource(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
 
         #endregion
 
@@ -113,7 +99,7 @@ namespace FaultData.DataResources
             VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer;
 
             voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsSag, IsMoreSevere, EventClassification.Sag);
-            voltageDisturbanceAnalyzer.Initialize(meterDataSet, m_dbAdapterContainer);
+            voltageDisturbanceAnalyzer.Initialize(meterDataSet);
 
             m_sags = voltageDisturbanceAnalyzer.Disturbances;
         }
@@ -126,16 +112,6 @@ namespace FaultData.DataResources
         private bool IsMoreSevere(double mag1, double mag2)
         {
             return mag1 < mag2;
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-        public static SagDataResource GetResource(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
-        {
-            return meterDataSet.GetResource(() => new SagDataResource(dbAdapterContainer));
         }
 
         #endregion

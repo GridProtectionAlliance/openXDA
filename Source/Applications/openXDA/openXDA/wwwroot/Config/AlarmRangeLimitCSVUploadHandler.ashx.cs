@@ -92,11 +92,11 @@ namespace openXDA
                         newRecord.ID = int.Parse(row[0]);
                         newRecord.ChannelID = int.Parse(row[1]);
                         newRecord.Severity = int.Parse(row[4]);
-                        newRecord.High = float.Parse(row[5]);
-                        newRecord.Low = float.Parse(row[6]);
-                        newRecord.RangeInclusive = int.Parse(row[7]);
-                        newRecord.PerUnit = int.Parse(row[8]);
-                        newRecord.Enabled = int.Parse(row[9]);
+                        newRecord.High = double.Parse(row[5]);
+                        newRecord.Low = double.Parse(row[6]);
+                        newRecord.RangeInclusive = bool.Parse(row[7]);
+                        newRecord.PerUnit = bool.Parse(row[8]);
+                        newRecord.Enabled = bool.Parse(row[9]);
                         newRecord.IsDefault = bool.Parse(row[17]);
 
                         table.UpdateRecord(newRecord);

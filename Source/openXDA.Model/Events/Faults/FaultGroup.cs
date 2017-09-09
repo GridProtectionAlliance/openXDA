@@ -32,10 +32,10 @@ namespace openXDA.Model
 
         public int EventID { get; set; }
 
-        public int? FaultDetectionLogicResult { get; set; }
+        public bool? FaultDetectionLogicResult { get; set; }
 
-        public int? DefaultFaultDetectionLogicResult { get; set; }
+        public bool DefaultFaultDetectionLogicResult { get; set; }
 
-        public int? FaultValidationLogicResult { get; set; }
+        public bool FaultValidationLogicResult { get; set; }
     }
 }

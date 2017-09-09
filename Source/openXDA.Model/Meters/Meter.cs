@@ -22,16 +22,30 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GSF.ComponentModel.DataAnnotations;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     [PQMarkRestricted]
     public class Meter
     {
+        #region [ Members ]
+
+        // Fields
+        private MeterLocation m_meterLocation;
+        private List<MeterLine> m_meterLines;
+        private List<Channel> m_channels;
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -71,6 +85,168 @@ namespace openXDA.Model
         public string TimeZone { get; set; }
 
         public string Description { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public MeterLocation MeterLocation
+        {
+            get
+            {
+                return m_meterLocation ?? (m_meterLocation = QueryMeterLocation());
+            }
+            set
+            {
+                m_meterLocation = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<MeterLine> MeterLines
+        {
+            get
+            {
+                return m_meterLines ?? (m_meterLines = QueryMeterLines());
+            }
+            set
+            {
+                m_meterLines = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<Channel> Channels
+        {
+            get
+            {
+                return m_channels ?? (m_channels = QueryChannels());
+            }
+            set
+            {
+                m_channels = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public MeterLocation GetMeterLocation(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeterLocation> meterLocationTable = new TableOperations<MeterLocation>(connection);
+            return meterLocationTable.QueryRecordWhere("ID = {0}", MeterLocationID);
+        }
+
+        public IEnumerable<MeterLine> GetMeterLines(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeterLine> meterLineTable = new TableOperations<MeterLine>(connection);
+            return meterLineTable.QueryRecordsWhere("MeterID = {0}", ID);
+        }
+
+        public IEnumerable<Channel> GetChannels(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+            return channelTable.QueryRecordsWhere("MeterID = {0}", ID);
+        }
+
+        public TimeZoneInfo GetTimeZoneInfo(TimeZoneInfo defaultTimeZone)
+        {
+            if (!string.IsNullOrEmpty(TimeZone))
+                return TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
+
+            return defaultTimeZone;
+        }
+
+        private MeterLocation QueryMeterLocation()
+        {
+            MeterLocation meterLocation;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meterLocation = GetMeterLocation(connection);
+            }
+
+            if ((object)meterLocation != null)
+                meterLocation.LazyContext = LazyContext;
+
+            return LazyContext.GetMeterLocation(meterLocation);
+        }
+
+        private List<MeterLine> QueryMeterLines()
+        {
+            List<MeterLine> meterLines;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meterLines = GetMeterLines(connection)?
+                    .Select(LazyContext.GetMeterLine)
+                    .ToList();
+            }
+
+            if ((object)meterLines != null)
+            {
+                foreach (MeterLine meterLine in meterLines)
+                {
+                    meterLine.Meter = this;
+                    meterLine.LazyContext = LazyContext;
+                }
+            }
+
+            return meterLines;
+        }
+
+        private List<Channel> QueryChannels()
+        {
+            List<Channel> channels;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                channels = GetChannels(connection)?
+                    .Select(LazyContext.GetChannel)
+                    .ToList();
+            }
+
+            if ((object)channels != null)
+            {
+                foreach (Channel channel in channels)
+                {
+                    channel.Meter = this;
+                    channel.LazyContext = LazyContext;
+                }
+            }
+
+            return channels;
+        }
+
+        #endregion
     }
 
     public class MeterDetail : Meter

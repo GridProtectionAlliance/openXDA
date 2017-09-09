@@ -1,30 +1,52 @@
-﻿using FaultData.DataAnalysis;
-using FaultData.Database;
-using FaultData.DataSets;
-using GSF.PQDIF.Logical;
-using GSF.PQDIF.Physical;
-using log4net;
+﻿//******************************************************************************************************
+//  IGridPQIFReader.cs - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  09/04/2017 - Stephen Jenks
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FaultData.DataAnalysis;
+using FaultData.DataSets;
+using GSF.PQDIF.Logical;
+using GSF.PQDIF.Physical;
+using log4net;
+using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
 {
     public class IGridPQDIFReader : IDisposable, IDataReader
     {
-        #region Members
+        #region [ Members ]
 
+        // Fields
         private LogicalParser m_parser;
         private MeterDataSet m_meterDataSet;
         private bool m_disposed;
 
         #endregion
 
-        #region Constructors
+        #region [ Constructors ]
 
         /// <summary>
         /// Creates a new instance of the <see cref="IGridPQDIFReader"/> class.
@@ -36,7 +58,7 @@ namespace FaultData.DataReaders
 
         #endregion
 
-        #region Properties
+        #region [ Properties ]
 
         public MeterDataSet MeterDataSet
         {
@@ -48,8 +70,7 @@ namespace FaultData.DataReaders
 
         #endregion
 
-        #region Methods
-
+        #region [ Methods ]
 
         /// <summary>
         /// Determines whether the file can be parsed at this time.
@@ -108,7 +129,6 @@ namespace FaultData.DataReaders
 
             // Create a meter from the parsed data source
             meter = ParseDataSource(dataSources.First());
-            m_meterDataSet.Meter = meter;
 
             // Build the list of all channel instances in the PQDIF file
             channelInstances = observationRecords
@@ -165,18 +185,19 @@ namespace FaultData.DataReaders
                     }
                     else
                     {
+                        channel.Meter = meter;
                         meter.Channels.Add(channel);
                         m_meterDataSet.DataSeries.Add(dataSeries);
                     }
                 }
             }
             
-            foreach(Channel chan in startChannelsAndDataSeries.Keys)
+            foreach (Channel chan in startChannelsAndDataSeries.Keys)
             {
                 string baseChannelName = chan.Name.ToLower().Replace("start", "");
                 Channel endChannel = endChannelsAndDataSeries.Keys.Where(ch => ch.Name.ToLower().Replace("end", "") == baseChannelName).FirstOrDefault();
 
-                if (endChannel != null)
+                if ((object)endChannel != null)
                 {
                     Channel combinedChannel = chan;
                     DataSeries combinedDataSeries = startChannelsAndDataSeries[chan];
@@ -187,11 +208,10 @@ namespace FaultData.DataReaders
 
                     combinedDataSeries.DataPoints.AddRange(endChannelsAndDataSeries[endChannel].DataPoints);
 
+                    combinedChannel.Meter = meter;
                     meter.Channels.Add(combinedChannel);
                     m_meterDataSet.DataSeries.Add(combinedDataSeries);
                 }
-
-
             }
 
             // Build a list of series definitions that were not instanced by this PQDIF file
@@ -205,6 +225,8 @@ namespace FaultData.DataReaders
             // Add each of the series definitions which were not instanced to the meter's list of channels
             foreach (SeriesDefinition seriesDefinition in seriesDefinitions)
                 meter.Channels.Add(ParseSeries(seriesDefinition));
+
+            m_meterDataSet.Meter = meter;
         }
 
         public void Dispose()
@@ -234,7 +256,6 @@ namespace FaultData.DataReaders
         private static readonly ILog Log = LogManager.GetLogger(typeof(IGridPQDIFReader));
 
         // Static Methods
-
         private static bool AreEquivalent(DataSourceRecord dataSource1, DataSourceRecord dataSource2)
         {
             if (ReferenceEquals(dataSource1, dataSource2))
@@ -248,22 +269,21 @@ namespace FaultData.DataReaders
                    dataSource1.EquipmentID == dataSource2.EquipmentID;
         }
 
-        // TODO: Ask Stephen what this function does with meterLocation
         private static Meter ParseDataSource(DataSourceRecord dataSource)
         {
-            Meter meter;
-            MeterLocation meterLocation;
-
             string name = dataSource.DataSourceName;
             Guid vendorID = dataSource.VendorID;
             Guid equipmentID = dataSource.EquipmentID;
 
-            meter = new Meter();
+            Meter meter = new Meter();
+            meter.MeterLocation = new MeterLocation();
+            meter.Channels = new List<Channel>();
             meter.Name = name;
             meter.AssetKey = name;
             meter.ShortName = name.Substring(0, Math.Min(name.Length, 50));
 
-            meterLocation = new MeterLocation();
+            MeterLocation meterLocation = meter.MeterLocation;
+            meterLocation.Meters = new List<Meter>() { meter };
             meterLocation.AssetKey = meter.Name;
             meterLocation.Name = string.Format("{0} location", meter.Name);
             meterLocation.ShortName = meterLocation.Name.Substring(0, Math.Min(meterLocation.Name.Length, 50));
@@ -278,30 +298,28 @@ namespace FaultData.DataReaders
             return meter;
         }
 
-        // TODO: Ask Stephen what this function does with the series variable
         private static Channel ParseSeries(SeriesDefinition seriesDefinition)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
-
             ChannelDefinition channelDefinition = seriesDefinition.ChannelDefinition;
             QuantityMeasured quantityMeasured = channelDefinition.QuantityMeasured;
             Phase phase = channelDefinition.Phase;
 
+            // Populate series properties
+            Series series = new Series();
+            series.Channel = new Channel();
+            series.SeriesType = new SeriesType();
+            series.SourceIndexes = string.Empty;
+
             // Populate channel properties
+            Channel channel = series.Channel;
             channel.Name = channelDefinition.ChannelName;
             channel.HarmonicGroup = 0;
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.Phase = new Database.Phase();
+            channel.Phase = new openXDA.Model.Phase();
 
             if (seriesDefinition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
                 channel.PerUnitValue = seriesDefinition.SeriesNominalQuantity;
-
-            // Populate series properties
-            series.SeriesType = new SeriesType();
-            series.Channel = channel;
-            series.SourceIndexes = string.Empty;
 
             // Populate measurement type properties
             channel.MeasurementType.Name = quantityMeasured.ToString();
@@ -394,11 +412,5 @@ namespace FaultData.DataReaders
         }
 
         #endregion
-
-
     }
-
-
-
-
 }

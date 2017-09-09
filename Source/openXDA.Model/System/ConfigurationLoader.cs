@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataWriter.cs - Gbtc
+//  ConfigurationLoader.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  08/31/2017 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,7 +25,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class DataWriter
+    public class ConfigurationLoader
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -35,5 +35,10 @@ namespace openXDA.Model
         public string TypeName { get; set; }
 
         public int LoadOrder { get; set; }
+
+        [NonRecordField]
+        public string UnqualifiedTypeName => TypeName.Contains(".")
+            ? TypeName.Remove(TypeName.LastIndexOf('.'))
+            : TypeName;
     }
 }

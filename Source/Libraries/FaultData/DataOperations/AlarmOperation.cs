@@ -24,19 +24,18 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.SqlClient;
 using System.Linq;
+using System.Transactions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
-using FaultData.Database.AlarmDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
-using log4net;
+using GSF.Data;
+using GSF.Data.Model;
 using openHistorian.XDALink;
-using static FaultData.Database.AlarmData;
-using GSF.Web.Model;
+using openXDA.Model;
+using TrendingDataPoint = openHistorian.XDALink.TrendingDataPoint;
 
 namespace FaultData.DataOperations
 {
@@ -46,8 +45,7 @@ namespace FaultData.DataOperations
 
         // Fields
         private HistorianSettings m_historianSettings;
-        private DbAdapterContainer m_dbAdapterContainer;
-        private DataContext m_dataContext;
+
         #endregion
 
         #region [ Constructors ]
@@ -78,59 +76,23 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-            m_dataContext = dataContext;
-        }
-
-
         public override void Execute(MeterDataSet meterDataSet)
         {
-            Log.Info("Executing operation to load alarm data into the database...");
             LoadRangeLimits(meterDataSet);
             LoadHourOfWeekLimits(meterDataSet);
         }
 
-        public override void Load(DbAdapterContainer dbAdapterContainer)
-        {
-        }
-
         private void LoadRangeLimits(MeterDataSet meterDataSet)
         {
-            MeterAlarmSummaryTableAdapter meterAlarmSummaryAdapter;
-            ChannelAlarmSummaryTableAdapter channelAlarmSummaryAdapter;
-            HourOfWeekLimitTableAdapter hourlyLimitAdapter;
+            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
 
-            MeterAlarmSummaryDataTable meterAlarmSummaryTable;
-            ChannelAlarmSummaryDataTable channelAlarmSummaryTable;
-
-            Dictionary<Channel, List<DataGroup>> trendingGroups;
-
-            DateTime startTime;
-            DateTime endTime;
-            int days;
-
-            meterAlarmSummaryAdapter = m_dbAdapterContainer.GetAdapter<MeterAlarmSummaryTableAdapter>();
-            channelAlarmSummaryAdapter = m_dbAdapterContainer.GetAdapter<ChannelAlarmSummaryTableAdapter>();
-            hourlyLimitAdapter = m_dbAdapterContainer.GetAdapter<HourOfWeekLimitTableAdapter>();
-
-            meterAlarmSummaryTable = new MeterAlarmSummaryDataTable();
-            channelAlarmSummaryTable = new ChannelAlarmSummaryDataTable();
-
-            trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-
-            startTime = trendingGroups
+            DateTime startTime = trendingGroups
                 .SelectMany(kvp => kvp.Value)
                 .Select(dataGroup => dataGroup.StartTime)
                 .DefaultIfEmpty(DateTime.MaxValue)
                 .Min().Date;
 
-            endTime = trendingGroups
+            DateTime endTime = trendingGroups
                 .SelectMany(kvp => kvp.Value)
                 .Select(dataGroup => dataGroup.EndTime)
                 .DefaultIfEmpty(DateTime.MinValue)
@@ -139,212 +101,192 @@ namespace FaultData.DataOperations
             if (endTime != endTime.Date)
                 endTime = endTime.Date.AddDays(1.0D);
 
-            days = (int)Math.Ceiling((endTime - startTime).TotalDays);
+            int days = (int)Math.Ceiling((endTime - startTime).TotalDays);
 
             if (days < 0)
                 return;
 
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             using (Historian historian = new Historian(m_historianSettings.Server, m_historianSettings.InstanceName))
             {
+                TableOperations<ChannelAlarmSummary> channelAlarmSummaryTable = new TableOperations<ChannelAlarmSummary>(connection);
+                TableOperations<MeterAlarmSummary> meterAlarmSummaryTable = new TableOperations<MeterAlarmSummary>(connection);
+                Dictionary<int, Channel> channelLookup = meterDataSet.Meter.Channels.ToDictionary(channel => channel.ID);
+
                 for (int i = 0; i < days; i++)
                 {
                     DateTime queryStart = startTime.AddDays(i);
                     DateTime queryEnd = queryStart.AddDays(1.0D).AddTicks(-1L);
 
-                    List<ChannelAlarmSummaryRow> channelAlarmSummaries = historian.Read(meterDataSet.Meter.Channels.Select(channel => channel.ID), queryStart, queryEnd)
+                    List<ChannelAlarmSummary> channelAlarmSummaries = historian.Read(meterDataSet.Meter.Channels.Select(channel => channel.ID), queryStart, queryEnd)
                         .Where(trendingPoint => trendingPoint.SeriesID == SeriesID.Average)
                         .GroupBy(trendingPoint => trendingPoint.ChannelID)
                         .SelectMany(channelGroup =>
                         {
-                            Channel channel = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>().Channels.Single(ch => ch.ID == channelGroup.Key);
-                            AlarmRangeLimitDataTable rangeLimitTable = InitializeRangeLimitTable(channel);
+                            Channel channel = channelLookup[channelGroup.Key];
+                            List<AlarmRangeLimit> alarmRangeLimits = InitializeRangeLimitTable(connection, channel);
 
                             return channelGroup
-                                .SelectMany(TrendingPoint => rangeLimitTable.Where(rangeLimit => rangeLimit.Enabled != 0).Select(RangeLimit => new { TrendingPoint, RangeLimit }))
+                                .SelectMany(TrendingPoint => alarmRangeLimits.Where(rangeLimit => rangeLimit.Enabled).Select(RangeLimit => new { TrendingPoint, RangeLimit }))
                                 .Where(obj => CheckAlarm(channel, obj.TrendingPoint, obj.RangeLimit))
                                 .GroupBy(obj => obj.RangeLimit.AlarmTypeID)
-                                .Select(alarmTypeGroup => CreateSummaryRow(channelAlarmSummaryTable, channelGroup.Key, alarmTypeGroup.Key, queryStart, alarmTypeGroup.Count()));
+                                .Select(alarmTypeGroup => CreateChannelAlarmSummary(channelGroup.Key, alarmTypeGroup.Key, queryStart, alarmTypeGroup.Count()));
                         })
                         .ToList();
 
-                    IEnumerable<MeterAlarmSummaryRow> meterAlarmSummaries = channelAlarmSummaries
+                    List<MeterAlarmSummary> meterAlarmSummaries = channelAlarmSummaries
                         .GroupBy(channelAlarmSummary => channelAlarmSummary.AlarmTypeID)
-                        .Select(channelSummaryGroup => CreateSummaryRow(meterAlarmSummaryTable, meterDataSet.Meter.ID, channelSummaryGroup.Key, queryStart, channelSummaryGroup.Sum(channelAlarmSummary => channelAlarmSummary.AlarmPoints)));
+                        .Select(channelSummaryGroup => CreateMeterAlarmSummary(meterDataSet.Meter.ID, channelSummaryGroup.Key, queryStart, channelSummaryGroup.Sum(channelAlarmSummary => channelAlarmSummary.AlarmPoints)))
+                        .ToList();
 
-                    foreach (MeterAlarmSummaryRow meterAlarmSummary in meterAlarmSummaries)
-                        meterAlarmSummaryAdapter.Upsert(meterAlarmSummary);
+                    foreach (MeterAlarmSummary meterAlarmSummary in meterAlarmSummaries)
+                        meterAlarmSummaryTable.Upsert(meterAlarmSummary);
 
-                    foreach (ChannelAlarmSummaryRow channelAlarmSummary in channelAlarmSummaries)
-                        channelAlarmSummaryAdapter.Upsert(channelAlarmSummary);
+                    foreach (ChannelAlarmSummary channelAlarmSummary in channelAlarmSummaries)
+                        channelAlarmSummaryTable.Upsert(channelAlarmSummary);
                 }
             }
         }
 
         private void LoadHourOfWeekLimits(MeterDataSet meterDataSet)
         {
-            MeterAlarmSummaryTableAdapter meterAlarmSummaryAdapter;
-            ChannelAlarmSummaryTableAdapter channelAlarmSummaryAdapter;
-            HourOfWeekLimitTableAdapter hourlyLimitAdapter;
+            TrendingGroupsResource trendingGroupsResource = meterDataSet.GetResource<TrendingGroupsResource>();
+            Dictionary<Channel, List<DataGroup>> trendingGroups = trendingGroupsResource.TrendingGroups;
 
-            MeterAlarmSummaryDataTable meterAlarmSummaryTable;
-            ChannelAlarmSummaryDataTable channelAlarmSummaryTable;
-
-            Dictionary<Channel, List<DataGroup>> trendingGroups;
-
-            DateTime startTime;
-            DateTime endTime;
-            int days;
-
-            meterAlarmSummaryAdapter = m_dbAdapterContainer.GetAdapter<MeterAlarmSummaryTableAdapter>();
-            channelAlarmSummaryAdapter = m_dbAdapterContainer.GetAdapter<ChannelAlarmSummaryTableAdapter>();
-            hourlyLimitAdapter = m_dbAdapterContainer.GetAdapter<HourOfWeekLimitTableAdapter>();
-
-            meterAlarmSummaryTable = new MeterAlarmSummaryDataTable();
-            channelAlarmSummaryTable = new ChannelAlarmSummaryDataTable();
-
-            trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
-
-            startTime = trendingGroups
+            DateTime startTime = trendingGroups
                 .SelectMany(kvp => kvp.Value)
                 .Select(dataGroup => dataGroup.StartTime)
                 .DefaultIfEmpty(DateTime.MaxValue)
                 .Min();
 
-            endTime = trendingGroups
+            DateTime endTime = trendingGroups
                 .SelectMany(kvp => kvp.Value)
                 .Select(dataGroup => dataGroup.EndTime)
                 .DefaultIfEmpty(DateTime.MinValue)
                 .Max();
 
-            days = (int)Math.Ceiling((endTime - startTime).TotalDays);
+            int days = (int)Math.Ceiling((endTime - startTime).TotalDays);
 
             if (days < 0)
                 return;
 
             using (Historian historian = new Historian(m_historianSettings.Server, m_historianSettings.InstanceName))
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
+                TableOperations<HourOfWeekLimit> hourOfWeekLimitTable = new TableOperations<HourOfWeekLimit>(connection);
+                TableOperations<MeterAlarmSummary> meterAlarmSummaryTable = new TableOperations<MeterAlarmSummary>(connection);
+                TableOperations<ChannelAlarmSummary> channelAlarmSummaryTable = new TableOperations<ChannelAlarmSummary>(connection);
+
                 for (int i = 0; i < days; i++)
                 {
                     DateTime queryStart = startTime.AddDays(days);
                     DateTime queryEnd = queryStart.AddDays(1.0D).AddTicks(-1L);
 
-                    List<ChannelAlarmSummaryRow> channelAlarmSummaries = historian.Read(meterDataSet.Meter.Channels.Select(channel => channel.ID), queryStart, queryEnd)
+                    List<ChannelAlarmSummary> channelAlarmSummaries = historian.Read(meterDataSet.Meter.Channels.Select(channel => channel.ID), queryStart, queryEnd)
                         .Where(trendingPoint => trendingPoint.SeriesID == SeriesID.Average)
                         .GroupBy(trendingPoint => trendingPoint.ChannelID)
                         .SelectMany(channelGroup =>
                         {
+                            List<HourOfWeekLimit> hourOfWeekLimits = hourOfWeekLimitTable
+                                .QueryRecordsWhere("ChannelID = {0}", channelGroup.Key)
+                                .ToList();
+
                             return channelGroup
-                                .Join(hourlyLimitAdapter.GetDataBy(channelGroup.Key), trendingPoint => GetHourOfWeek(trendingPoint.Timestamp), hourlyLimit => hourlyLimit.HourOfWeek, (TrendingPoint, HourlyLimit) => new { TrendingPoint, HourlyLimit })
+                                .Join(hourOfWeekLimits, trendingPoint => GetHourOfWeek(trendingPoint.Timestamp), hourlyLimit => hourlyLimit.HourOfWeek, (TrendingPoint, HourlyLimit) => new { TrendingPoint, HourlyLimit })
                                 .Where(obj => obj.TrendingPoint.Value < obj.HourlyLimit.Low || obj.TrendingPoint.Value > obj.HourlyLimit.High)
                                 .GroupBy(obj => obj.HourlyLimit.AlarmTypeID)
-                                .Select(alarmTypeGroup => CreateSummaryRow(channelAlarmSummaryTable, channelGroup.Key, alarmTypeGroup.Key, queryStart, alarmTypeGroup.Count()));
+                                .Select(alarmTypeGroup => CreateChannelAlarmSummary(channelGroup.Key, alarmTypeGroup.Key, queryStart, alarmTypeGroup.Count()));
                         })
                         .ToList();
 
-                    IEnumerable<MeterAlarmSummaryRow> meterAlarmSummaries = channelAlarmSummaries
+                    List<MeterAlarmSummary> meterAlarmSummaries = channelAlarmSummaries
                         .GroupBy(channelAlarmSummary => channelAlarmSummary.AlarmTypeID)
-                        .Select(channelSummaryGroup => CreateSummaryRow(meterAlarmSummaryTable, meterDataSet.Meter.ID, channelSummaryGroup.Key, queryStart, channelSummaryGroup.Sum(channelAlarmSummary => channelAlarmSummary.AlarmPoints)));
+                        .Select(channelSummaryGroup => CreateMeterAlarmSummary(meterDataSet.Meter.ID, channelSummaryGroup.Key, queryStart, channelSummaryGroup.Sum(channelAlarmSummary => channelAlarmSummary.AlarmPoints)))
+                        .ToList();
 
-                    foreach (MeterAlarmSummaryRow meterAlarmSummary in meterAlarmSummaries)
-                        meterAlarmSummaryAdapter.Upsert(meterAlarmSummary);
+                    foreach (MeterAlarmSummary meterAlarmSummary in meterAlarmSummaries)
+                        meterAlarmSummaryTable.Upsert(meterAlarmSummary);
 
-                    foreach (ChannelAlarmSummaryRow channelAlarmSummary in channelAlarmSummaries)
-                        channelAlarmSummaryAdapter.Upsert(channelAlarmSummary);
+                    foreach (ChannelAlarmSummary channelAlarmSummary in channelAlarmSummaries)
+                        channelAlarmSummaryTable.Upsert(channelAlarmSummary);
                 }
             }
         }
 
-        private AlarmRangeLimitDataTable InitializeRangeLimitTable(Channel channel)
+        private List<AlarmRangeLimit> InitializeRangeLimitTable(AdoDataConnection connection, Channel channel)
         {
-            AlarmRangeLimitTableAdapter rangeLimitAdapter;
-            AlarmRangeLimitDataTable rangeLimitTable;
-            AlarmRangeLimitRow alarmRangeLimitRow;
-
-            DefaultAlarmRangeLimitTableAdapter defaultRangeLimitAdapter;
-            DefaultAlarmRangeLimitDataTable defaultRangeLimitTable;
-
-            // Fill the range limit table with range limits for the given channel
-            rangeLimitAdapter = m_dbAdapterContainer.GetAdapter<AlarmRangeLimitTableAdapter>();
-            rangeLimitTable = rangeLimitAdapter.GetDataBy(channel.ID);
-
-            // If limits exist for the given channel,
-            // range limit table has been successfully initialized
-            if (rangeLimitTable.Count != 0)
-                return rangeLimitTable;
-
-            // Get the default range limits for the measurement type and characteristic of this channel
-            defaultRangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DefaultAlarmRangeLimitTableAdapter>();
-            defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
-
-            // If there are no default limits for the channel,
-            // then the range limit table has been successfully initialized
-            if (defaultRangeLimitTable.Count == 0)
-                return rangeLimitTable;
-
-            lock (RangeLimitLock)
+            using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
             {
-                // Fill the range limit table one more time inside the lock to
-                // ensure that no other threads have written limits for this channel
-                rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+                // Fill the range limit table with range limits for the given channel
+                TableOperations<AlarmRangeLimit> alarmRangeLimitTable = new TableOperations<AlarmRangeLimit>(connection);
 
-                // If there are still no limits defined for this channel,
-                // update the table to include this channel's default limits
-                if (rangeLimitTable.Count == 0)
+                List<AlarmRangeLimit> alarmRangeLimits = alarmRangeLimitTable
+                    .QueryRecordsWhere("ChannelID = {0}", channel.ID)
+                    .ToList();
+
+                // If limits exist for the given channel,
+                // range limit table has been successfully initialized
+                if (alarmRangeLimits.Count != 0)
+                    return alarmRangeLimits;
+
+                // Get the default range limits for the measurement type and characteristic of this channel
+                TableOperations<DefaultAlarmRangeLimit> defaultAlarmRangeLimitTable = new TableOperations<DefaultAlarmRangeLimit>(connection);
+                int measurementTypeID = channel.MeasurementTypeID;
+                int measurementCharacteristicID = channel.MeasurementCharacteristicID;
+
+                List<DefaultAlarmRangeLimit> defaultAlarmRangeLimits = defaultAlarmRangeLimitTable
+                    .QueryRecordsWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", measurementTypeID, measurementCharacteristicID)
+                    .ToList();
+
+                // If there are no default limits for the channel,
+                // then the range limit table has been successfully initialized
+                if (defaultAlarmRangeLimits.Count == 0)
+                    return alarmRangeLimits;
+
+                foreach (DefaultAlarmRangeLimit defaultAlarmRangeLimit in defaultAlarmRangeLimits)
                 {
-                    foreach (DefaultAlarmRangeLimitRow row in defaultRangeLimitTable)
+                    AlarmRangeLimit alarmRangeLimit = new AlarmRangeLimit()
                     {
-                        alarmRangeLimitRow = rangeLimitTable.NewAlarmRangeLimitRow();
+                        ChannelID = channel.ID,
+                        AlarmTypeID = defaultAlarmRangeLimit.AlarmTypeID,
+                        Severity = defaultAlarmRangeLimit.Severity,
+                        High = defaultAlarmRangeLimit.High,
+                        Low = defaultAlarmRangeLimit.Low,
+                        RangeInclusive = defaultAlarmRangeLimit.RangeInclusive,
+                        PerUnit = defaultAlarmRangeLimit.PerUnit,
+                        IsDefault = true,
+                        Enabled = true
+                    };
 
-                        alarmRangeLimitRow.ChannelID = channel.ID;
-                        alarmRangeLimitRow.AlarmTypeID = row.AlarmTypeID;
-                        alarmRangeLimitRow.Severity = row.Severity;
-                        alarmRangeLimitRow.RangeInclusive = row.RangeInclusive;
-                        alarmRangeLimitRow.PerUnit = row.PerUnit;
-                        alarmRangeLimitRow.IsDefault = 1;
-                        alarmRangeLimitRow.Enabled = 1;
-
-                        if (!row.IsHighNull())
-                            alarmRangeLimitRow.High = row.High;
-
-                        if (!row.IsLowNull())
-                            alarmRangeLimitRow.Low = row.Low;
-
-                        rangeLimitTable.AddAlarmRangeLimitRow(alarmRangeLimitRow);
-                    }
-
-                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
-                    {
-                        bulkCopy.BulkCopyTimeout = 0;
-                        bulkCopy.DestinationTableName = rangeLimitTable.TableName;
-                        bulkCopy.WriteToServer(rangeLimitTable);
-                    }
+                    alarmRangeLimitTable.AddNewRecord(alarmRangeLimit);
                 }
 
-                return rangeLimitTable;
+                transactionScope.Complete();
+
+                return alarmRangeLimits;
             }
         }
 
-        private bool CheckAlarm(Channel channel, TrendingDataPoint trendingPoint, AlarmRangeLimitRow rangeLimit)
+        private bool CheckAlarm(Channel channel, TrendingDataPoint trendingPoint, AlarmRangeLimit alarmRangeLimit)
         {
-            double perUnitValue;
-
             double highLimit = 0.0D;
             double lowLimit = 0.0D;
             bool highValid = true;
             bool lowValid = true;
 
-            perUnitValue = channel.PerUnitValue ?? 1.0D;
+            double perUnitValue = channel.PerUnitValue ?? 1.0D;
+            double factor = alarmRangeLimit.PerUnit ? perUnitValue : 1.0D;
 
-            if (!rangeLimit.IsHighNull())
+            if ((object)alarmRangeLimit.High != null)
             {
-                highLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? (rangeLimit.High * perUnitValue) : rangeLimit.High;
-                highValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (trendingPoint.Value <= highLimit);
+                highLimit = factor * alarmRangeLimit.High.GetValueOrDefault();
+                highValid = Convert.ToBoolean(alarmRangeLimit.RangeInclusive) ^ (trendingPoint.Value <= highLimit);
             }
 
-            if (!rangeLimit.IsLowNull())
+            if ((object)alarmRangeLimit.Low != null)
             {
-                lowLimit = Convert.ToBoolean(rangeLimit.PerUnit) ? (rangeLimit.Low * perUnitValue) : rangeLimit.Low;
-                lowValid = Convert.ToBoolean(rangeLimit.RangeInclusive) ^ (trendingPoint.Value >= lowLimit);
+                lowLimit = factor * alarmRangeLimit.Low.GetValueOrDefault();
+                lowValid = Convert.ToBoolean(alarmRangeLimit.RangeInclusive) ^ (trendingPoint.Value >= lowLimit);
             }
 
             return !lowValid || !highValid;
@@ -355,33 +297,45 @@ namespace FaultData.DataOperations
             return (int)time.DayOfWeek * 24 + time.Hour;
         }
 
-        private MeterAlarmSummaryRow CreateSummaryRow(MeterAlarmSummaryDataTable meterAlarmSummaryTable, int meterID, int alarmTypeID, DateTime date, int alarmPoints)
+        private MeterAlarmSummary CreateMeterAlarmSummary(int meterID, int alarmTypeID, DateTime date, int alarmPoints)
         {
-            MeterAlarmSummaryRow row = meterAlarmSummaryTable.NewMeterAlarmSummaryRow();
-            row.MeterID = meterID;
-            row.AlarmTypeID = alarmTypeID;
-            row.Date = date;
-            row.AlarmPoints = alarmPoints;
-            return row;
+            return new MeterAlarmSummary()
+            {
+                MeterID = meterID,
+                AlarmTypeID = alarmTypeID,
+                Date = date,
+                AlarmPoints = alarmPoints
+            };
         }
 
-        private ChannelAlarmSummaryRow CreateSummaryRow(ChannelAlarmSummaryDataTable channelAlarmSummaryTable, int channelID, int alarmTypeID, DateTime date, int alarmPoints)
+        private ChannelAlarmSummary CreateChannelAlarmSummary(int channelID, int alarmTypeID, DateTime date, int alarmPoints)
         {
-            ChannelAlarmSummaryRow row = channelAlarmSummaryTable.NewChannelAlarmSummaryRow();
-            row.ChannelID = channelID;
-            row.AlarmTypeID = alarmTypeID;
-            row.Date = date;
-            row.AlarmPoints = alarmPoints;
-            return row;
+            return new ChannelAlarmSummary()
+            {
+                ChannelID = channelID,
+                AlarmTypeID = alarmTypeID,
+                Date = date,
+                AlarmPoints = alarmPoints
+        };
         }
 
         #endregion
 
         #region [ Static ]
 
-        // Static Fields
-        private static readonly object RangeLimitLock = new object();
-        private static readonly ILog Log = LogManager.GetLogger(typeof(AlarmOperation));
+        // Static Methods
+
+        /// <summary>
+        /// Gets the default set of transaction options used for data operation transactions.
+        /// </summary>
+        private static TransactionOptions GetTransactionOptions()
+        {
+            return new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+        }
 
         #endregion
     }

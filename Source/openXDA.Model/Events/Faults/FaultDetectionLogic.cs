@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataOperation.cs - Gbtc
+//  FaultDetectionLogic.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,29 +16,24 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/24/2017 - Billy Ernest
+//  09/06/2017 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class DataOperation
+    public class FaultDetectionLogic
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public string AssemblyName { get; set; }
+        public int MeterLineID { get; set; }
 
-        public string TypeName { get; set; }
-
-        public int LoadOrder { get; set; }
-
-        [NonRecordField]
-        public string UnqualifiedTypeName => TypeName.Contains(".")
-            ? TypeName.Remove(TypeName.LastIndexOf('.'))
-            : TypeName;
+        [StringLength(500)]
+        public string Expression { get; set; }
     }
 }

@@ -25,21 +25,19 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Data;
 using System.Linq;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.Web.Model;
+using GSF.Data.Model;
 using log4net;
-using static FaultData.Database.MeterData;
-using EventKey = System.Tuple<int, System.DateTime, System.DateTime>;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
@@ -397,14 +395,7 @@ namespace FaultData.DataOperations
         // Fields
         private double m_systemFrequency;
         private BreakerSettings m_breakerSettings;
-
-        private DbAdapterContainer m_dbAdapterContainer;
-        private MeterDataSet m_meterDataSet;
-
         private HashSet<string> m_breakerCurrents;
-        private DataContextLookup<string, Phase> m_phaseLookup;
-        private BreakerOperationDataTable m_breakerOperationTable;
-        private List<Tuple<EventKey, BreakerOperationRow>> m_breakerOperations;
 
         #endregion
 
@@ -446,87 +437,52 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-
-            m_phaseLookup = new DataContextLookup<string, Phase>(dbAdapterContainer.GetAdapter<MeterInfoDataContext>(), phase => phase.Name);
-            m_breakerOperationTable = new BreakerOperationDataTable();
-            m_breakerOperations = new List<Tuple<EventKey, BreakerOperationRow>>();
-
-            LoadBreakerOperationTypes(dbAdapterContainer);
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-        }
-
         public override void Execute(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource;
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
 
-            DataGroup dataGroup;
-            VIDataGroup viDataGroup;
-            VICycleDataGroup viCycleDataGroup;
-
-            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
-
-            m_breakerCurrents = new HashSet<string>(cycleDataResource.DataGroups
-                .Where(dg => dg.Line.AssetKey.StartsWith("BR"))
-                .SelectMany(dg => dg.DataSeries)
-                .SelectMany(ds => ds.SeriesInfo.Channel.BreakerChannels)
-                .Select(ch => ch.BreakerNumber));
-
-            for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                dataGroup = cycleDataResource.DataGroups[i];
-                viDataGroup = cycleDataResource.VIDataGroups[i];
-                viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
-                IdentifyBreakerOperations(dataGroup, viDataGroup, viCycleDataGroup);
-            }
+                TableOperations<BreakerChannel> breakerChannelTable = new TableOperations<BreakerChannel>(connection);
 
-            m_meterDataSet = meterDataSet;
-        }
+                List<int> channelsIDs = cycleDataResource.DataGroups
+                    .Where(dataGroup => dataGroup.Line.AssetKey.StartsWith("BR"))
+                    .SelectMany(dataGroup => dataGroup.DataSeries)
+                    .Select(dataSeries => dataSeries.SeriesInfo.ChannelID)
+                    .Distinct()
+                    .ToList();
 
-        public override void Load(DbAdapterContainer dbAdapterContainer)
-        {
-            EventDataTable eventTable;
-            Dictionary<EventKey, EventRow> eventLookup;
-            EventRow eventRow;
-            BulkLoader bulkLoader;
+                // Look up the breaker numbers for the lines
+                // that represent groupings of breaker current data
+                m_breakerCurrents = new HashSet<string>(breakerChannelTable
+                    .QueryRecordsWhere($"ChannelID IN ({string.Join(",", channelsIDs)})")
+                    .Select(breakerChannel => breakerChannel.BreakerNumber));
 
-            eventTable = dbAdapterContainer.GetAdapter<EventTableAdapter>().GetDataByFileGroup(m_meterDataSet.FileGroup.ID);
+                FileGroup fileGroup = meterDataSet.FileGroup;
 
-            eventLookup = eventTable
-                .Where(evt => evt.MeterID == m_meterDataSet.Meter.ID)
-                .GroupBy(CreateEventKey)
-                .ToDictionary(grouping => grouping.Key, grouping =>
+                for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
                 {
-                    if (grouping.Count() > 1)
-                        Log.Warn($"Found duplicate events for meter {m_meterDataSet.Meter.AssetKey}: {string.Join(", ", grouping.Select(evt => evt.ID))}");
-
-                    return grouping.First();
-                });
-
-            foreach (Tuple<EventKey, BreakerOperationRow> breakerOperation in m_breakerOperations)
-            {
-                if (eventLookup.TryGetValue(breakerOperation.Item1, out eventRow))
-                {
-                    breakerOperation.Item2.EventID = eventRow.ID;
-                    m_breakerOperationTable.AddBreakerOperationRow(breakerOperation.Item2);
+                    DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                    VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
+                    VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+                    IdentifyBreakerOperations(connection, fileGroup, dataGroup, viDataGroup, viCycleDataGroup);
                 }
             }
-
-            bulkLoader = new BulkLoader();
-            bulkLoader.Connection = dbAdapterContainer.Connection;
-            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
-            bulkLoader.Load(m_breakerOperationTable);
         }
 
-        private void IdentifyBreakerOperations(DataGroup dataGroup, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
+        private void IdentifyBreakerOperations(AdoDataConnection connection, FileGroup fileGroup, DataGroup dataGroup, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup)
         {
-            List<string> breakerNumbers = dataGroup.DataSeries
-                .SelectMany(dataSeries => dataSeries.SeriesInfo.Channel.BreakerChannels)
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            TableOperations<BreakerChannel> breakerChannelTable = new TableOperations<BreakerChannel>(connection);
+            TableOperations<BreakerOperation> breakerOperationTable = new TableOperations<BreakerOperation>(connection);
+
+            List<int> channelIDs = dataGroup.DataSeries
+                .Select(dataSeries => dataSeries.SeriesInfo.ChannelID)
+                .Distinct()
+                .ToList();
+
+            List<string> breakerNumbers = breakerChannelTable
+                .QueryRecordsWhere($"ChannelID IN ({string.Join(",", channelIDs)})")
                 .Select(breakerChannel => breakerChannel.BreakerNumber)
                 .Distinct()
                 .ToList();
@@ -536,13 +492,15 @@ namespace FaultData.DataOperations
             if (breakerNumbers.Count > 1 && breakerNumbers.Any(num => m_breakerCurrents.Contains(num)))
                 return;
 
+            Event evt = eventTable.GetEvent(fileGroup, dataGroup);
+
             foreach (string breakerNumber in breakerNumbers)
             {
-                double breakerSpeed = ConvertBreakerSpeed(m_dbAdapterContainer.Connection.ExecuteScalar("SELECT BreakerSpeed FROM MaximoBreaker WHERE SUBSTRING(BreakerNum, PATINDEX('%[^0]%', BreakerNum + '.'), LEN(BreakerNum)) = @breakerNumber", DataExtensions.DefaultTimeoutDuration, breakerNumber.TrimStart('0')));
+                double breakerSpeed = connection.ExecuteScalar(double.NaN, "SELECT Speed FROM Breaker WHERE AssetKey = {0}", breakerNumber.TrimStart('0'));
 
                 List<DataSeries> breakerDigitals = dataGroup.DataSeries
                     .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name == "Digital")
-                    .Where(dataSeries => dataSeries.SeriesInfo.Channel.BreakerChannels.Any(breakerChannel => breakerChannel.BreakerNumber == breakerNumber))
+                    .Where(dataSeries => breakerChannelTable.QueryRecordCountWhere("BreakerNumber = {0}", breakerNumber) > 0)
                     .ToList();
 
                 List<DataSeries> tripCoilEnergizedChannels = breakerDigitals
@@ -552,51 +510,53 @@ namespace FaultData.DataOperations
                 DataSeries breakerStatusChannel = breakerDigitals
                     .FirstOrDefault(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name == "BreakerStatus");
 
-                List<XValue> breakerOperations = Range<XValue>.MergeAllOverlapping(tripCoilEnergizedChannels.SelectMany(FindTCERanges))
+                List<XValue> tripCoilEnergizedTriggers = Range<XValue>.MergeAllOverlapping(tripCoilEnergizedChannels.SelectMany(FindTCERanges))
                     .Select(range => range.Start)
                     .ToList();
 
-                foreach (XValue breakerOperation in breakerOperations)
+                foreach (XValue tripCoilEnergizedTrigger in tripCoilEnergizedTriggers)
                 {
-                    BreakerTiming breakerTiming = new BreakerTiming(breakerOperation, breakerStatusChannel, m_systemFrequency, breakerSpeed, m_breakerSettings.MinWaitBeforeReclose);
+                    BreakerTiming breakerTiming = new BreakerTiming(tripCoilEnergizedTrigger, breakerStatusChannel, m_systemFrequency, breakerSpeed, m_breakerSettings.MinWaitBeforeReclose);
 
                     PhaseTiming aPhaseTiming = new PhaseTiming(viDataGroup.IA, viCycleDataGroup.IA, breakerTiming, m_breakerSettings, m_systemFrequency);
                     PhaseTiming bPhaseTiming = new PhaseTiming(viDataGroup.IB, viCycleDataGroup.IB, breakerTiming, m_breakerSettings, m_systemFrequency);
                     PhaseTiming cPhaseTiming = new PhaseTiming(viDataGroup.IC, viCycleDataGroup.IC, breakerTiming, m_breakerSettings, m_systemFrequency);
 
-                    BreakerOperationRow breakerOperationRow = GetBreakerOperationRow(breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
-
-                    m_breakerOperations.Add(Tuple.Create(CreateEventKey(dataGroup), breakerOperationRow));
+                    BreakerOperation breakerOperation = GetBreakerOperation(connection, evt.ID, breakerNumber, breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
+                    breakerOperationTable.AddNewRecord(breakerOperation);
                 }
             }
         }
 
-        private BreakerOperationRow GetBreakerOperationRow(string breakerNumber, BreakerTiming breakerTiming, PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
+        private BreakerOperation GetBreakerOperation(AdoDataConnection connection, int eventID, string breakerNumber, BreakerTiming breakerTiming, PhaseTiming aPhaseTiming, PhaseTiming bPhaseTiming, PhaseTiming cPhaseTiming)
         {
+            TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
+            TableOperations<openXDA.Model.BreakerOperationType> breakerOperationTypeTable = new TableOperations<openXDA.Model.BreakerOperationType>(connection);
+
             double maxTiming = GetMaxTiming(breakerTiming, aPhaseTiming, bPhaseTiming, cPhaseTiming);
             string phase = GetLatestPhase(aPhaseTiming, bPhaseTiming, cPhaseTiming);
             BreakerOperationType type = GetBreakerOperationType(maxTiming, breakerTiming.Speed);
 
-            BreakerOperationRow breakerOperationRow = m_breakerOperationTable.NewBreakerOperationRow();
-
-            breakerOperationRow.PhaseID = m_phaseLookup.GetOrAdd(phase, name => new Phase() { Name = name, Description = name }).ID;
-            breakerOperationRow.BreakerOperationTypeID = s_breakerOperationTypeLookup[type];
-            breakerOperationRow.BreakerNumber = breakerNumber;
-            breakerOperationRow.TripCoilEnergized = breakerTiming.TimeEnergized.Time;
-            breakerOperationRow.StatusBitSet = breakerTiming.IsValid ? breakerTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
-            breakerOperationRow.StatusBitChatter = breakerTiming.StatusChatter ? 1 : 0;
-            breakerOperationRow.APhaseCleared = aPhaseTiming.IsValid ? aPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
-            breakerOperationRow.BPhaseCleared = bPhaseTiming.IsValid ? bPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
-            breakerOperationRow.CPhaseCleared = cPhaseTiming.IsValid ? cPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time;
-            breakerOperationRow.BreakerTiming = NotNaN(maxTiming);
-            breakerOperationRow.StatusTiming = NotNaN(breakerTiming.Timing);
-            breakerOperationRow.APhaseBreakerTiming = NotNaN(aPhaseTiming.Timing);
-            breakerOperationRow.BPhaseBreakerTiming = NotNaN(bPhaseTiming.Timing);
-            breakerOperationRow.CPhaseBreakerTiming = NotNaN(cPhaseTiming.Timing);
-            breakerOperationRow.BreakerSpeed = NotNaN(breakerTiming.Speed);
-            breakerOperationRow.DcOffsetDetected = (aPhaseTiming.DcOffsetDetected || bPhaseTiming.DcOffsetDetected || cPhaseTiming.DcOffsetDetected) ? 1 : 0;
-
-            return breakerOperationRow;
+            return new BreakerOperation()
+            {
+                EventID = eventID,
+                PhaseID = phaseTable.GetOrAdd(phase).ID,
+                BreakerOperationTypeID = breakerOperationTypeTable.GetOrAdd(type.ToString()).ID,
+                BreakerNumber = breakerNumber,
+                TripCoilEnergized = breakerTiming.TimeEnergized.Time,
+                StatusBitSet = breakerTiming.IsValid ? breakerTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time,
+                StatusBitChatter = breakerTiming.StatusChatter,
+                APhaseCleared = aPhaseTiming.IsValid ? aPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time,
+                BPhaseCleared = bPhaseTiming.IsValid ? bPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time,
+                CPhaseCleared = cPhaseTiming.IsValid ? cPhaseTiming.TimeCleared.Time : breakerTiming.TimeEnergized.Time,
+                BreakerTiming = NotNaN(maxTiming),
+                StatusTiming = NotNaN(breakerTiming.Timing),
+                APhaseBreakerTiming = NotNaN(aPhaseTiming.Timing),
+                BPhaseBreakerTiming = NotNaN(bPhaseTiming.Timing),
+                CPhaseBreakerTiming = NotNaN(cPhaseTiming.Timing),
+                DcOffsetDetected = (aPhaseTiming.DcOffsetDetected || bPhaseTiming.DcOffsetDetected || cPhaseTiming.DcOffsetDetected),
+                BreakerSpeed = NotNaN(breakerTiming.Speed)
+            };
         }
 
         private List<Range<XValue>> FindTCERanges(DataSeries tceSeries)
@@ -701,73 +661,11 @@ namespace FaultData.DataOperations
             return Convert.ToDouble(breakerSpeed);
         }
 
-        private EventKey CreateEventKey(DataGroup dataGroup)
-        {
-            return Tuple.Create(dataGroup.Line.ID, dataGroup.StartTime, dataGroup.EndTime);
-        }
-
-        private EventKey CreateEventKey(EventRow evt)
-        {
-            return Tuple.Create(evt.LineID, evt.StartTime, evt.EndTime);
-        }
-
-        private void LoadBreakerOperationTypes(DbAdapterContainer dbAdapterContainer)
-        {
-            if ((object)s_breakerOperationTypeLookup == null)
-            {
-                lock (BreakerOperationTypeLookupLock)
-                {
-                    if ((object)s_breakerOperationTypeLookup == null)
-                        s_breakerOperationTypeLookup = GetBreakerOperationTypeLookup(dbAdapterContainer);
-                }
-            }
-        }
-
-        private Dictionary<BreakerOperationType, int> GetBreakerOperationTypeLookup(DbAdapterContainer dbAdapterContainer)
-        {
-            BreakerOperationTypeDataTable breakerOperationTypeTable = new BreakerOperationTypeDataTable();
-            BreakerOperationType breakerOperationType = default(BreakerOperationType);
-
-            foreach (BreakerOperationType operationType in Enum.GetValues(typeof(BreakerOperationType)))
-                breakerOperationTypeTable.AddBreakerOperationTypeRow(operationType.ToString(), operationType.ToString());
-
-            BulkLoader bulkLoader = new BulkLoader();
-
-            bulkLoader.Connection = dbAdapterContainer.Connection;
-            bulkLoader.CommandTimeout = dbAdapterContainer.CommandTimeout;
-
-            bulkLoader.MergeTableFormat = "MERGE INTO {0} AS Target " +
-                                          "USING {1} AS Source " +
-                                          "ON Source.Name = Target.Name " +
-                                          "WHEN NOT MATCHED THEN " +
-                                          "    INSERT (Name, Description) " +
-                                          "    VALUES (Source.Name, Source.Description);";
-
-            bulkLoader.Load(breakerOperationTypeTable);
-
-            dbAdapterContainer.GetAdapter<BreakerOperationTypeTableAdapter>().Fill(breakerOperationTypeTable);
-
-            foreach (IGrouping<string, BreakerOperationTypeRow> grouping in breakerOperationTypeTable.GroupBy(row => row.Name))
-            {
-                if (grouping.Count() > 1)
-                    Log.Warn($"Found duplicate breaker operation type: {grouping.Key}");
-            }
-
-            return breakerOperationTypeTable
-                .Where(row => Enum.TryParse(row.Name, out breakerOperationType))
-                .Select(row => new { BreakerOperationType = breakerOperationType, row.ID })
-                .ToList()
-                .DistinctBy(obj => obj.BreakerOperationType)
-                .ToDictionary(obj => obj.BreakerOperationType, obj => obj.ID);
-        }
-
         #endregion
 
         #region [ Static ]
 
         // Static Fields
-        private static readonly object BreakerOperationTypeLookupLock = new object();
-        private static Dictionary<BreakerOperationType, int> s_breakerOperationTypeLookup;
         private static readonly ILog Log = LogManager.GetLogger(typeof(BreakerTimingOperation));
 
         #endregion

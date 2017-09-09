@@ -32,17 +32,22 @@ using System.Reflection;
 using FaultAlgorithms;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Data;
+using GSF.Data.Model;
 using GSF.Parsing;
 using GSF.Units;
 using log4net;
 using MathNet.Numerics.IntegralTransforms;
+using openXDA.Model;
+using CycleData = FaultAlgorithms.CycleData;
+using Fault = FaultData.DataAnalysis.Fault;
+using FaultGroup = FaultData.DataAnalysis.FaultGroup;
 using FaultLocationAlgorithm = FaultAlgorithms.FaultLocationAlgorithm;
-using Line = FaultData.Database.Line;
+using Line = openXDA.Model.Line;
 
 namespace FaultData.DataResources
 {
@@ -57,8 +62,6 @@ namespace FaultData.DataResources
 
             // Fields
             public FaultLocationDataSet FaultLocationDataSet;
-
-            public FaultLocationInfoDataContext FaultLocationInfo;
             public Meter Meter;
             public Line Line;
 
@@ -68,62 +71,55 @@ namespace FaultData.DataResources
 
             public bool TryExtractImpedances()
             {
-                LineImpedance lineImpedance;
-                int lineID;
-
-                List<SourceImpedance> sourceImpedances;
-                List<SourceImpedance> remoteImpedances;
-                SourceImpedance localImpedance;
-
-                List<int> linkIDs;
-                int localMeterLocationID;
-                int localLinkID;
-
-                lineID = Line.ID;
-
-                lineImpedance = FaultLocationInfo.LineImpedances
-                    .FirstOrDefault(impedance => impedance.LineID == lineID);
-
-                if ((object)lineImpedance != null)
+                using (AdoDataConnection connection = Meter.ConnectionFactory())
                 {
-                    localMeterLocationID = Meter.MeterLocationID;
+                    int lineID = Line.ID;
+                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+                    LineImpedance lineImpedance = lineImpedanceTable.QueryRecordWhere("LineID = {0}", lineID);
 
-                    linkIDs = Line.MeterLocationLines
-                        .Select(link => link.ID)
-                        .ToList();
+                    if ((object)lineImpedance != null)
+                    {
+                        int localMeterLocationID = Meter.MeterLocationID;
 
-                    localLinkID = Line.MeterLocationLines
-                        .Where(link => link.MeterLocationID == localMeterLocationID)
-                        .Select(link => link.ID)
-                        .FirstOrDefault();
+                        List<int> linkIDs = Line.MeterLocationLines
+                            .Select(link => link.ID)
+                            .ToList();
 
-                    sourceImpedances = FaultLocationInfo.SourceImpedances
-                        .Where(impedance => linkIDs.Contains(impedance.MeterLocationLineID))
-                        .ToList();
+                        int localLinkID = Line.MeterLocationLines
+                            .Where(link => link.MeterLocationID == localMeterLocationID)
+                            .Select(link => link.ID)
+                            .FirstOrDefault();
 
-                    localImpedance = sourceImpedances
-                        .FirstOrDefault(impedance => impedance.MeterLocationLineID == localLinkID);
+                        TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
 
-                    remoteImpedances = sourceImpedances
-                        .Where(impedance => impedance.MeterLocationLineID != localMeterLocationID)
-                        .ToList();
+                        List<SourceImpedance> sourceImpedances = sourceImpedanceTable
+                            .QueryRecordsWhere($"MeterLocationLineID IN ({string.Join(",", linkIDs)})")
+                            .ToList();
 
-                    if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
-                        return false;
+                        SourceImpedance localImpedance = sourceImpedances
+                            .FirstOrDefault(impedance => impedance.MeterLocationLineID == localLinkID);
 
-                    FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-                    FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+                        List<SourceImpedance> remoteImpedances = sourceImpedances
+                            .Where(impedance => impedance.MeterLocationLineID != localMeterLocationID)
+                            .ToList();
 
-                    if ((object)localImpedance != null)
-                        FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
+                        if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
+                            return false;
 
-                    if (remoteImpedances.Count == 1)
-                        FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
+                        FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
+                        FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
 
-                    return true;
+                        if ((object)localImpedance != null)
+                            FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
+
+                        if (remoteImpedances.Count == 1)
+                            FaultLocationDataSet.ZRem = new ComplexNumber(remoteImpedances[0].RSrc, remoteImpedances[0].XSrc);
+
+                        return true;
+                    }
+
+                    return false;
                 }
-
-                return false;
             }
 
             #endregion
@@ -224,8 +220,6 @@ namespace FaultData.DataResources
         }
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
         private double m_systemFrequency;
         private double m_maxVoltage;
         private double m_maxCurrent;
@@ -238,9 +232,8 @@ namespace FaultData.DataResources
 
         #region [ Constructors ]
 
-        public FaultDataResource(DbAdapterContainer dbAdapterContainer)
+        public FaultDataResource()
         {
-            m_dbAdapterContainer = dbAdapterContainer;
             m_faultLocationSettings = new FaultLocationSettings();
             m_breakerSettings = new BreakerSettings();
             m_faultLookup = new Dictionary<DataGroup, FaultGroup>();
@@ -346,8 +339,13 @@ namespace FaultData.DataResources
             Stopwatch stopwatch;
 
             stopwatch = new Stopwatch();
-            cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
-            faultLocationAlgorithms = GetFaultLocationAlgorithms(m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>());
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                TableOperations<openXDA.Model.FaultLocationAlgorithm> faultLocationAlgorithmTable = new TableOperations<openXDA.Model.FaultLocationAlgorithm>(connection);
+                faultLocationAlgorithms = GetFaultLocationAlgorithms(faultLocationAlgorithmTable);
+            }
 
             Log.Info(string.Format("Executing fault location analysis on {0} events.", cycleDataResource.DataGroups.Count));
 
@@ -399,7 +397,6 @@ namespace FaultData.DataResources
                 // and into the fault location data set
                 impedanceExtractor = new ImpedanceExtractor();
                 impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
-                impedanceExtractor.FaultLocationInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
                 impedanceExtractor.Meter = meterDataSet.Meter;
                 impedanceExtractor.Line = dataGroup.Line;
 
@@ -470,9 +467,6 @@ namespace FaultData.DataResources
 
         private bool? CheckFaultDetectionLogic(MeterDataSet meterDataSet, DataGroup dataGroup)
         {
-            MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
-            FaultLocationInfoDataContext faultInfo = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
-
             string expressionText;
             int meterLineID;
 
@@ -480,19 +474,23 @@ namespace FaultData.DataResources
 
             // Find MeterLine record corresponding to the meter that produced
             // the data and the line associated with the data group
-            meterLineID = meterInfo.MeterLines
-                .Where(meterLine => meterLine.MeterID == meterDataSet.Meter.ID)
+            meterLineID = meterDataSet.Meter.MeterLines
                 .Where(meterLine => meterLine.LineID == dataGroup.Line.ID)
                 .Select(meterLine => (int?)meterLine.ID)
                 .FirstOrDefault() ?? -1;
 
             if (meterLineID > 0)
             {
-                // Find fault detection logic defined for the meter and line
-                expressionText = faultInfo.FaultDetectionLogics
-                    .Where(logic => logic.MeterLineID == meterLineID)
-                    .Select(logic => logic.Expression)
-                    .FirstOrDefault();
+                using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                {
+                    TableOperations<FaultDetectionLogic> faultDetectionLogicTable = new TableOperations<FaultDetectionLogic>(connection);
+
+                    // Find fault detection logic defined for the meter and line
+                    expressionText = faultDetectionLogicTable
+                        .QueryRecordsWhere("MeterLineID = {0}", meterLineID)
+                        .Select(logic => logic.Expression)
+                        .FirstOrDefault();
+                }
             }
 
             try
@@ -543,11 +541,10 @@ namespace FaultData.DataResources
             return faults.Any(fault => !fault.IsSuppressed && fault.Summaries.Any(summary => summary.IsValid));
         }
 
-        private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(FaultLocationInfoDataContext faultLocationInfo)
+        private List<FaultLocationAlgorithm> GetFaultLocationAlgorithms(TableOperations<openXDA.Model.FaultLocationAlgorithm> faultLocationAlgorithmTable)
         {
-            return faultLocationInfo.FaultLocationAlgorithms
-                .OrderBy(dbAlgorithm => dbAlgorithm.ExecutionOrder)
-                .ThenBy(dbAlgorithm => dbAlgorithm.ID)
+            return faultLocationAlgorithmTable
+                .QueryRecords("ExecutionOrder, ID")
                 .Select(dbAlgorithm => LoadAlgorithm<FaultLocationAlgorithm>(dbAlgorithm.AssemblyName, dbAlgorithm.TypeName, dbAlgorithm.MethodName))
                 .ToList();
         }

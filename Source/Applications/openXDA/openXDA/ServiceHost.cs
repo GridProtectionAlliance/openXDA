@@ -137,6 +137,26 @@ namespace openXDA
 
         #endregion
 
+        #region [ Constructors ]
+
+        public ServiceHost()
+        {
+            InitializeComponent();
+
+            // Register event handlers.
+            m_serviceHelper.ServiceStarted += ServiceHelper_ServiceStarted;
+            m_serviceHelper.ServiceStopping += ServiceHelper_ServiceStopping;
+        }
+
+        public ServiceHost(IContainer container)
+            : this()
+        {
+            if (container != null)
+                container.Add(this);
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -164,26 +184,6 @@ namespace openXDA
 
         #endregion
 
-        #region [ Constructors ]
-
-        public ServiceHost()
-        {
-            InitializeComponent();
-
-            // Register event handlers.
-            m_serviceHelper.ServiceStarted += ServiceHelper_ServiceStarted;
-            m_serviceHelper.ServiceStopping += ServiceHelper_ServiceStopping;
-        }
-
-        public ServiceHost(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
-
-        #endregion
-
         #region [ Methods ]
 
         private void WebServer_StatusMessage(object sender, EventArgs<string> e)
@@ -194,7 +194,8 @@ namespace openXDA
         private void ServiceHelper_ServiceStarted(object sender, EventArgs e)
         {
             ServiceHelperAppender serviceHelperAppender;
-            RollingFileAppender fileAppender;
+            RollingFileAppender debugLogAppender;
+            RollingFileAppender skippedFilesAppender;
 
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
@@ -204,30 +205,44 @@ namespace openXDA
             // Set up logging
             serviceHelperAppender = new ServiceHelperAppender(m_serviceHelper);
 
-            fileAppender = new RollingFileAppender();
-            fileAppender.StaticLogFileName = false;
-            fileAppender.AppendToFile = true;
-            fileAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
-            fileAppender.MaxSizeRollBackups = 10;
-            fileAppender.PreserveLogFileNameExtension = true;
-            fileAppender.MaximumFileSize = "1MB";
-            fileAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+            debugLogAppender = new RollingFileAppender();
+            debugLogAppender.StaticLogFileName = false;
+            debugLogAppender.AppendToFile = true;
+            debugLogAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
+            debugLogAppender.MaxSizeRollBackups = 10;
+            debugLogAppender.PreserveLogFileNameExtension = true;
+            debugLogAppender.MaximumFileSize = "1MB";
+            debugLogAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+            debugLogAppender.AddFilter(new FileSkippedExceptionFilter());
+
+            skippedFilesAppender = new RollingFileAppender();
+            skippedFilesAppender.StaticLogFileName = false;
+            skippedFilesAppender.AppendToFile = true;
+            skippedFilesAppender.RollingStyle = RollingFileAppender.RollingMode.Composite;
+            skippedFilesAppender.MaxSizeRollBackups = 10;
+            skippedFilesAppender.PreserveLogFileNameExtension = true;
+            skippedFilesAppender.MaximumFileSize = "1MB";
+            skippedFilesAppender.Layout = new PatternLayout("%date [%thread] %-5level %logger - %message%newline");
+            skippedFilesAppender.AddFilter(new FileSkippedExceptionFilter(false));
 
             try
             {
                 if (!Directory.Exists("Debug"))
                     Directory.CreateDirectory("Debug");
 
-                fileAppender.File = @"Debug\openXDA.log";
+                debugLogAppender.File = @"Debug\openXDA.log";
+                skippedFilesAppender.File = @"Debug\SkippedFiles.log";
             }
             catch (Exception ex)
             {
-                fileAppender.File = "openXDA.log";
+                debugLogAppender.File = "openXDA.log";
+                skippedFilesAppender.File = "SkippedFiles.log";
                 m_serviceHelper.ErrorLogger.Log(ex);
             }
 
-            fileAppender.ActivateOptions();
-            BasicConfigurator.Configure(serviceHelperAppender, fileAppender);
+            debugLogAppender.ActivateOptions();
+            skippedFilesAppender.ActivateOptions();
+            BasicConfigurator.Configure(serviceHelperAppender, debugLogAppender, skippedFilesAppender);
 
             // Set up heartbeat and client request handlers
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
@@ -261,19 +276,17 @@ namespace openXDA
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-            DataHub.ReprocessFileEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2, Args.Argument3);
-            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument);
             DataHub.ReloadSystemSettingsEvent += (obj, Args) => OnReloadSystemSettingsRequestHandler();
 
             //Set up DataPusherEngine callbacks
             DataPusherEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataPusherEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-            DataPusherEngine.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
             DataPusherEngine.UpdateProgressForMeter += (obj, Args) => DataHub.ProgressUpdatedByMeter(obj, Args);
             DataPusherEngine.UpdateProgressForInstance += (obj, Args) => DataHub.ProgressUpdatedByInstance(obj, Args);
 
             //Set up PQMarkController callbacks
-            PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFiles(Args.Argument);
+            PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument);
 
             //Set up DataAggregationEngine callbacks
             DataAggregationEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
@@ -932,19 +945,10 @@ namespace openXDA
         /// <summary>
         /// Sends a command request to the service to reprocess files.
         /// </summary>
-        /// <param name="fileGroups">List of fileGroups to reprocess files for.</param>
-        public void ReprocessFiles(Dictionary<int,int> fileGroups)
+        /// <param name="dataFiles">Identifier for the file group to be reprocessed.</param>
+        public void ReprocessFile(int fileGroupID)
         {
-            m_extensibleDisturbanceAnalysisEngine.ReprocessFiles(fileGroups);
-        }
-
-        /// <summary>
-        /// Sends a command request to the service to reprocess a file.
-        /// </summary>
-        /// <param name="events">List of events to reprocess files for.</param>
-        public void ReprocessFile(int dataFileId, int fileGroupId, int meterId)
-        {
-            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(dataFileId ,fileGroupId, meterId);
+            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(fileGroupID);
         }
 
         public void DisconnectClient(Guid clientID)

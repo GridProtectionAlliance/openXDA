@@ -32,14 +32,14 @@ namespace openXDA.Model
 
         public int ChannelID { get; set; }
 
-        public double High { get; set; }
+        public double? High { get; set; }
 
-        public double Low { get; set; }
+        public double? Low { get; set; }
 
-        public int RangeInclusive { get; set; }
+        public bool RangeInclusive { get; set; }
 
-        public int PerUnit { get; set; }
+        public bool PerUnit { get; set; }
 
-        public int Enabled { get; set; }
+        public bool Enabled { get; set; }
     }
 }

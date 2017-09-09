@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Transactions;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -33,5 +34,38 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static SegmentType GetOrAdd(this TableOperations<SegmentType> segmentTypeTable, string name, string description = null)
+        {
+            TransactionScopeOption required = TransactionScopeOption.Required;
+
+            TransactionOptions transactionOptions = new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+
+            SegmentType segmentType;
+
+            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
+            {
+                segmentType = segmentTypeTable.QueryRecordWhere("Name = {0}", name);
+
+                if ((object)segmentType == null)
+                {
+                    segmentType = new SegmentType();
+                    segmentType.Name = name;
+                    segmentType.Description = description ?? name;
+                    segmentTypeTable.AddNewRecord(segmentType);
+
+                    segmentType.ID = segmentTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                }
+            }
+
+            return segmentType;
+        }
     }
 }

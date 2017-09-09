@@ -23,13 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using openXDA.Model;
+using GSF;
+using GSF.Scheduling;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
-using GSF;
-using System.IO;
-using GSF.Scheduling;
+using openXDA.Model;
 
 namespace openXDA.DataPusher
 {
@@ -71,13 +71,6 @@ namespace openXDA.DataPusher
         private static void OnLogExceptionMessage(string message)
         {
             LogExceptionMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
-        }
-
-        public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
-
-        private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
-        {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
         }
 
         public static event EventHandler<EventArgs<string, string,int>> UpdateProgressForMeter;

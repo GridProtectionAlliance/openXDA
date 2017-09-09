@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataOperation.cs - Gbtc
+//  DefaultDataQualityRangeLimit.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/24/2017 - Billy Ernest
+//  09/06/2017 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,20 +25,21 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class DataOperation
+    public class DefaultDataQualityRangeLimit
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public string AssemblyName { get; set; }
+        public int MeasurementTypeID { get; set; }
 
-        public string TypeName { get; set; }
+        public int MeasurementCharacteristicID { get; set; }
 
-        public int LoadOrder { get; set; }
+        public double? High { get; set; }
 
-        [NonRecordField]
-        public string UnqualifiedTypeName => TypeName.Contains(".")
-            ? TypeName.Remove(TypeName.LastIndexOf('.'))
-            : TypeName;
+        public double? Low { get; set; }
+
+        public bool RangeInclusive { get; set; }
+
+        public bool PerUnit { get; set; }
     }
 }

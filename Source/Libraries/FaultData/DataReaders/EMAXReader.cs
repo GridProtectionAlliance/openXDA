@@ -26,10 +26,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF.EMAX;
 using GSF.IO;
+using openXDA.Model;
 
 namespace FaultData.DataReaders
 {
@@ -99,25 +99,25 @@ namespace FaultData.DataReaders
 
         public void Parse(string filePath)
         {
-            ControlFile controlFile;
-            string identityString;
-            string deviceName;
+            ControlFile controlFile = m_parser.ControlFile;
+            string identityString = controlFile.IdentityString.value;
+            string deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
 
-            Channel channel;
-            DataSeries series;
+            Meter meter = new Meter();
+            meter.MeterLocation = new MeterLocation();
+            meter.Channels = new List<Channel>();
+            meter.AssetKey = deviceName;
+            meter.Name = deviceName;
+            meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
 
-            List<ANLG_CHNL_NEW> analogChannels;
+            MeterLocation meterLocation = meter.MeterLocation;
+            meterLocation.Meters = new List<Meter>() { meter };
+            meterLocation.AssetKey = deviceName;
+            meterLocation.Name = deviceName;
+            meterLocation.ShortName = meter.ShortName;
+            meterLocation.Description = deviceName;
 
-            controlFile = m_parser.ControlFile;
-            identityString = controlFile.IdentityString.value;
-            deviceName = identityString.Substring(0, IndexOf(identityString, "\r\n", "\n", "\r"));
-
-            m_meterDataSet.Meter = new Meter();
-            m_meterDataSet.Meter.AssetKey = deviceName;
-            m_meterDataSet.Meter.Name = deviceName;
-            m_meterDataSet.Meter.ShortName = deviceName.Substring(0, Math.Min(deviceName.Length, 50));
-
-            analogChannels = controlFile.AnalogChannelSettings
+            List<ANLG_CHNL_NEW> analogChannels = controlFile.AnalogChannelSettings
                 .OrderBy(kvp => kvp.Key)
                 .Select(kvp => kvp.Value)
                 .ToList();
@@ -127,12 +127,16 @@ namespace FaultData.DataReaders
 
             foreach (ANLG_CHNL_NEW analogChannel in analogChannels)
             {
-                channel = ParseSeries(analogChannel);
+                Channel channel = ParseSeries(analogChannel);
+                channel.Meter = meter;
                 channel.Series.Single().SourceIndexes = m_meterDataSet.DataSeries.Count.ToString();
-                series = new DataSeries();
-                series.SeriesInfo = channel.Series[0];
-                m_meterDataSet.Meter.Channels.Add(channel);
-                m_meterDataSet.DataSeries.Add(series);
+
+                DataSeries dataSeries = new DataSeries();
+                dataSeries.SeriesInfo = channel.Series[0];
+
+                meter.Channels.Add(channel);
+
+                m_meterDataSet.DataSeries.Add(dataSeries);
             }
 
             while (m_parser.ReadNext())
@@ -140,6 +144,8 @@ namespace FaultData.DataReaders
                 for (int i = 0; i < analogChannels.Count; i++)
                     m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
             }
+
+            m_meterDataSet.Meter = meter;
         }
 
         public void Dispose()
@@ -163,22 +169,18 @@ namespace FaultData.DataReaders
 
         private Channel ParseSeries(ANLG_CHNL_NEW analogChannel)
         {
-            Channel channel = new Channel();
             Series series = new Series();
+            series.Channel = new Channel();
+            series.SeriesType = new SeriesType() { Name = "Instantaneous" };
+            series.SourceIndexes = analogChannel.chanlnum;
 
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType() { Name = "Unknown" };
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Unknown" };
+            channel.Phase = new Phase() { Name = "Unknown" };
             channel.Name = analogChannel.title;
             channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Unknown";
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Unknown";
-            channel.Phase = new Phase();
-            channel.Phase.Name = "Unknown";
-
-            series.Channel = channel;
-            series.SeriesType = new SeriesType();
-            series.SeriesType.Name = "Instantaneous";
-            series.SourceIndexes = analogChannel.chanlnum;
 
             return channel;
         }

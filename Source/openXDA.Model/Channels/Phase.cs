@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
+using System.Transactions;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -35,5 +36,38 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static Phase GetOrAdd(this TableOperations<Phase> phaseTable, string name, string description = null)
+        {
+            TransactionScopeOption required = TransactionScopeOption.Required;
+
+            TransactionOptions transactionOptions = new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+
+            Phase phase;
+
+            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
+            {
+                phase = phaseTable.QueryRecordWhere("Name = {0}", name);
+
+                if ((object)phase == null)
+                {
+                    phase = new Phase();
+                    phase.Name = name;
+                    phase.Description = description ?? name;
+                    phaseTable.AddNewRecord(phase);
+
+                    phase.ID = phaseTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                }
+            }
+
+            return phase;
+        }
     }
 }

@@ -454,10 +454,7 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 9)
 GO
 
-INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.XMLWriter', 1)
-GO
-
-INSERT INTO DataWriter(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.EventEmailWriter', 1)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.EventEmailWriter', 10)
 GO
 
 INSERT INTO MeterGroup(Name) VALUES('AllMeters')
@@ -709,11 +706,10 @@ CREATE TABLE SentEmail
 GO
 
 CREATE TABLE [dbo].[FileBlob](
-    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [Blob] [varbinary](max) NOT NULL,
-    [DataFileID] [int] NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    DataFileID INT NOT NULL,
+    Blob VARBINARY(MAX) NOT NULL
 )
-
 GO
 
 CREATE TABLE [dbo].[DeviceFilter](
@@ -3754,7 +3750,7 @@ SET Template = '<?xml version="1.0"?>
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">DFRs:</xsl:if></td>
-                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/openSeeStack.aspx?eventid=<xsl:value-of select="EventID" /></xsl:attribute>click for waveform</a>)</td>
+                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&faultcurves=1</xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
 

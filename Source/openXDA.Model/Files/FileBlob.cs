@@ -28,25 +28,10 @@ namespace openXDA.Model
     public class FileBlob
     {
         [PrimaryKey(true)]
-        public int ID { get; set;}
-
-        public byte[] Blob { get; set; }
-
-        public int DataFileID { get; set; }
-    }
-
-    [TableName("DataReader")]
-    public class DataReader
-    {
-        [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public string FilePattern { get; set; }
+        public int DataFileID { get; set; }
 
-        public string AssemblyName { get; set; }
-
-        public string TypeName { get; set; }
-
-        public int LoadOrder { get; set; }
+        public byte[] Blob { get; set; }
     }
 }

@@ -22,6 +22,10 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -151,5 +155,46 @@ namespace openXDA.Model
         public string thecurrentdistance { get; set; }
 
         public bool pqiexists { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static List<Event> GetSystemEvent(this TableOperations<Event> eventTable, DateTime startTime, DateTime endTime, double timeTolerance)
+        {
+            AdoDataConnection connection = eventTable.Connection;
+
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                command.CommandText = "GetSystemEvent";
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandTimeout = connection.DefaultTimeout;
+                AddParameter(command, "startTime", startTime, DbType.DateTime2);
+                AddParameter(command, "endTime", endTime, DbType.DateTime2);
+                AddParameter(command, "timeTolerance", timeTolerance, DbType.Double);
+
+                IDataAdapter adapter = (IDataAdapter)Activator.CreateInstance(connection.AdapterType, command);
+
+                using (adapter as IDisposable)
+                {
+                    DataSet dataSet = new DataSet();
+
+                    adapter.Fill(dataSet);
+
+                    return dataSet.Tables[0].Rows
+                        .Cast<DataRow>()
+                        .Select(row => eventTable.LoadRecord(row))
+                        .ToList();
+                }
+            }
+        }
+
+        private static void AddParameter(IDbCommand command, string name, object value, DbType dbType)
+        {
+            IDbDataParameter parameter = command.CreateParameter();
+            parameter.ParameterName = name;
+            parameter.Value = value;
+            parameter.DbType = dbType;
+            command.Parameters.Add(parameter);
+        }
     }
 }

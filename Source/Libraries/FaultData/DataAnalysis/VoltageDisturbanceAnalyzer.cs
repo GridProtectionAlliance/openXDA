@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Linq;
-using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
@@ -94,7 +93,7 @@ namespace FaultData.DataAnalysis
 
         #region [ Methods ]
 
-        public void Initialize(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
+        public void Initialize(MeterDataSet meterDataSet)
         {
             DataGroup dataGroup;
             VICycleDataGroup viCycleDataGroup;
@@ -104,7 +103,7 @@ namespace FaultData.DataAnalysis
 
             m_disturbances = new Dictionary<DataGroup, List<Disturbance>>();
 
-            cycleDataResource = CycleDataResource.GetResource(meterDataSet, dbAdapterContainer);
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {

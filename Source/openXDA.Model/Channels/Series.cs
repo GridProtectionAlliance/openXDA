@@ -21,12 +21,91 @@
 //
 //******************************************************************************************************
 
+using System;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
+    public class SeriesKey : IEquatable<SeriesKey>
+    {
+        #region [ Members ]
+
+        // Fields
+        private Tuple<ChannelKey, string> m_tuple;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public SeriesKey(ChannelKey channelKey, string seriesType)
+        {
+            m_tuple = Tuple.Create(channelKey, seriesType);
+        }
+
+        public SeriesKey(Series series)
+            : this(new ChannelKey(series.Channel), series.SeriesType.Name)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        public ChannelKey ChannelKey
+        {
+            get
+            {
+                return m_tuple.Item1;
+            }
+        }
+
+        public string SeriesType
+        {
+            get
+            {
+                return m_tuple.Item2;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public override int GetHashCode()
+        {
+            return m_tuple.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as SeriesKey);
+        }
+
+        public bool Equals(SeriesKey other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return m_tuple.Equals(other.m_tuple);
+        }
+
+        #endregion
+    }
+
     public class Series
     {
+        #region [ Members ]
+
+        // Fields
+        private SeriesType m_seriesType;
+        private Channel m_channel;
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -35,5 +114,102 @@ namespace openXDA.Model
         public int SeriesTypeID { get; set; }
 
         public string SourceIndexes { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public SeriesType SeriesType
+        {
+            get
+            {
+                return m_seriesType ?? (m_seriesType = QuerySeriesType());
+            }
+            set
+            {
+                m_seriesType = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Channel Channel
+        {
+            get
+            {
+                return m_channel ?? (m_channel = QueryChannel());
+            }
+            set
+            {
+                m_channel = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public SeriesType GetSeriesType(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
+            return seriesTypeTable.QueryRecordWhere("ID = {0}", SeriesTypeID);
+        }
+
+        public Channel GetChannel(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+            return channelTable.QueryRecordWhere("ID = {0}", ChannelID);
+        }
+
+        private SeriesType QuerySeriesType()
+        {
+            SeriesType seriesType;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                seriesType = GetSeriesType(connection);
+            }
+
+            return LazyContext.GetSeriesType(seriesType);
+        }
+
+        private Channel QueryChannel()
+        {
+            Channel channel;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                channel = GetChannel(connection);
+            }
+
+            if ((object)channel != null)
+                channel.LazyContext = LazyContext;
+
+            return LazyContext.GetChannel(channel);
+        }
+
+        #endregion
     }
 }

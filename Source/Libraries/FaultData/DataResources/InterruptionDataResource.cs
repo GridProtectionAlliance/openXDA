@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF.Collections;
 
@@ -36,20 +35,9 @@ namespace FaultData.DataResources
         #region [ Members ]
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
         private double m_systemFrequency;
         private double m_interruptionThreshold;
         private Dictionary<DataGroup, List<Disturbance>> m_interruptions;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        private InterruptionDataResource(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
 
         #endregion
 
@@ -98,7 +86,7 @@ namespace FaultData.DataResources
             VoltageDisturbanceAnalyzer voltageDisturbanceAnalyzer;
 
             voltageDisturbanceAnalyzer = new VoltageDisturbanceAnalyzer(IsInterruption, IsMoreSevere, EventClassification.Interruption);
-            voltageDisturbanceAnalyzer.Initialize(meterDataSet, m_dbAdapterContainer);
+            voltageDisturbanceAnalyzer.Initialize(meterDataSet);
 
             m_interruptions = voltageDisturbanceAnalyzer.Disturbances;
         }
@@ -111,16 +99,6 @@ namespace FaultData.DataResources
         private bool IsMoreSevere(double mag1, double mag2)
         {
             return mag1 < mag2;
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-        public static InterruptionDataResource GetResource(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
-        {
-            return meterDataSet.GetResource(() => new InterruptionDataResource(dbAdapterContainer));
         }
 
         #endregion

@@ -24,80 +24,63 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FaultData.Database;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF.Data;
+using GSF.Data.Model;
 using log4net;
-using GSF.Web.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
     public class DailySummaryOperation : DataOperationBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
-        #endregion
-
-        #region [ Methods ]
-
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-        }
-
-
         public override void Execute(MeterDataSet meterDataSet)
         {
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries;
-            IEnumerable<IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary>> dailySummaryGroups;
 
-            DailyTrendingSummaryTableAdapter dailySummaryAdapter;
-            MeterData.DailyTrendingSummaryDataTable dailySummaryTable;
-            MeterData.DailyTrendingSummaryRow row;
+            int count = trendingDataSummaries.Values
+                .SelectMany(channelSummaries => channelSummaries)
+                .Count(trendingDataSummary => !trendingDataSummary.IsDuplicate);
 
-            Log.Info("Executing operation to load daily summary data into the database...");
+            if (count == 0)
+                return;
 
-            dailySummaryAdapter = m_dbAdapterContainer.GetAdapter<DailyTrendingSummaryTableAdapter>();
-            dailySummaryTable = new MeterData.DailyTrendingSummaryDataTable();
-
-            foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                dailySummaryGroups = channelSummaries.Value
-                    .Where(summary => !summary.IsDuplicate)
-                    .GroupBy(summary => GetDate(summary.Time));
+                TableOperations<DailyTrendingSummary> dailyTrendingSummaryTable = new TableOperations<DailyTrendingSummary>(connection);
 
-                foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> dailySummaryGroup in dailySummaryGroups)
+                foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
                 {
-                    validSummaries = dailySummaryGroup.Where(summary => summary.IsValid).ToList();
+                    IEnumerable<IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary>> dailySummaryGroups = channelSummaries.Value
+                        .Where(summary => !summary.IsDuplicate)
+                        .GroupBy(summary => GetDate(summary.Time));
 
-                    row = dailySummaryTable.NewDailyTrendingSummaryRow();
-
-                    row.BeginEdit();
-                    row.ChannelID = channelSummaries.Key.ID;
-                    row.Date = dailySummaryGroup.Key;
-                    row.Minimum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Min();
-                    row.Maximum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Max();
-                    row.Average = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Average();
-                    row.ValidCount = validSummaries.Count;
-                    row.InvalidCount = dailySummaryGroup.Count() - validSummaries.Count;
-                    row.EndEdit();
-
-                    dailySummaryAdapter.Upsert(row);
+                    foreach (IGrouping<DateTime, TrendingDataSummaryResource.TrendingDataSummary> dailySummaryGroup in dailySummaryGroups)
+                    {
+                        DailyTrendingSummary dailyTrendingSummary = CreateDailyTrendingSummary(channelSummaries.Key.ID, dailySummaryGroup.Key, dailySummaryGroup.ToList());
+                        dailyTrendingSummaryTable.Upsert(dailyTrendingSummary);
+                    }
                 }
             }
         }
 
-        public override void Load(DbAdapterContainer dbAdapterContainer)
+        private DailyTrendingSummary CreateDailyTrendingSummary(int channelID, DateTime date, List<TrendingDataSummaryResource.TrendingDataSummary> trendingDataSummaries)
         {
+            List<TrendingDataSummaryResource.TrendingDataSummary> validSummaries = trendingDataSummaries
+                .Where(summary => summary.IsValid)
+                .ToList();
+
+            return new DailyTrendingSummary()
+            {
+                ChannelID = channelID,
+                Date = date,
+                Minimum = validSummaries.Select(summary => summary.Minimum).DefaultIfEmpty(0.0D).Min(),
+                Maximum = validSummaries.Select(summary => summary.Maximum).DefaultIfEmpty(0.0D).Max(),
+                Average = validSummaries.Select(summary => summary.Average).DefaultIfEmpty(0.0D).Average(),
+                ValidCount = validSummaries.Count,
+                InvalidCount = trendingDataSummaries.Count - validSummaries.Count
+            };
         }
 
         private DateTime GetDate(DateTime time)
@@ -105,13 +88,7 @@ namespace FaultData.DataOperations
             return new DateTime(time.Year, time.Month, time.Day);
         }
 
-        #endregion
-
-        #region [ Static ]
-
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(DailySummaryOperation));
-
-        #endregion
     }
 }

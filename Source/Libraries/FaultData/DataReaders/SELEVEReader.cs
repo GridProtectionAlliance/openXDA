@@ -27,11 +27,11 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 using GSF.SELEventParser;
 using GSF.Units;
+using openXDA.Model;
 
 namespace FaultData.DataReaders
 {
@@ -110,12 +110,6 @@ namespace FaultData.DataReaders
         /// <returns>List of meter data sets, one per meter.</returns>
         public void Parse(string filePath)
         {
-            Header header;
-            Channel channel;
-            DataSeries series;
-            List<DateTime> timeSamples;
-            List<double> valueSamples;
-            List<bool?> digitalSamples;
 
             if ((object)m_eventFile == null)
                 m_eventFile = EventFile.Parse(filePath, SystemFrequency);
@@ -123,61 +117,69 @@ namespace FaultData.DataReaders
             if (!m_eventFile.EventReports.Any() && !m_eventFile.CommaSeparatedEventReports.Any())
                 return;
 
-            header = m_eventFile.EventReports.FirstOrDefault()?.Header
+            Header header = m_eventFile.EventReports.FirstOrDefault()?.Header
                 ?? m_eventFile.CommaSeparatedEventReports[0].Header;
 
-            m_meterDataSet.Meter = new Meter();
-            m_meterDataSet.Meter.AssetKey = header.RelayID;
-            m_meterDataSet.Meter.Name = header.RelayID;
-            m_meterDataSet.Meter.ShortName = new string(header.RelayID.ToNonNullString().Take(50).ToArray());
+            Meter meter = new Meter();
+            meter.MeterLocation = new MeterLocation();
+            meter.Channels = new List<Channel>();
+            meter.AssetKey = header.RelayID;
+            meter.Name = header.RelayID;
+            meter.ShortName = new string(header.RelayID.ToNonNullString().Take(50).ToArray());
 
-            m_meterDataSet.Meter.MeterLocation = new MeterLocation();
-            m_meterDataSet.Meter.MeterLocation.AssetKey = header.StationID;
-            m_meterDataSet.Meter.MeterLocation.Name = header.StationID;
-            m_meterDataSet.Meter.MeterLocation.ShortName = new string(header.StationID.ToNonNullString().Take(50).ToArray());
-            m_meterDataSet.Meter.MeterLocation.Description = header.StationID;
+            MeterLocation meterLocation = meter.MeterLocation;
+            meterLocation.Meters = new List<Meter>() { meter };
+            meterLocation.AssetKey = header.StationID;
+            meterLocation.Name = header.StationID;
+            meterLocation.ShortName = new string(header.StationID.ToNonNullString().Take(50).ToArray());
+            meterLocation.Description = header.StationID;
 
             foreach (EventReport report in m_eventFile.EventReports)
             {
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
-                    channel = MakeParsedAnalog(report, i);
-                    series = new DataSeries();
+                    Channel channel = MakeParsedAnalog(report, i);
+                    channel.Meter = meter;
+                    meter.Channels.Add(channel);
 
-                    timeSamples = report.AnalogSection.TimeChannel.Samples;
-                    valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
+                    List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    List<double> valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
+                    DataSeries dataSeries = new DataSeries();
 
-                    series.DataPoints = timeSamples
+                    dataSeries.DataPoints = timeSamples
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
                     if (new string[] { "VA", "VB", "VC", "VS" }.Contains(report.AnalogSection.AnalogChannels[i].Name))
-                        series = series.Multiply(1000.0D);
+                        dataSeries = dataSeries.Multiply(1000.0D);
 
-                    series.SeriesInfo = channel.Series[0];
-                    m_meterDataSet.DataSeries.Add(series);
+                    dataSeries.SeriesInfo = channel.Series[0];
+                    m_meterDataSet.DataSeries.Add(dataSeries);
                 }
 
                 for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
                 {
-                    channel = MakeParsedDigital(report, i);
-                    series = new DataSeries();
+                    Channel channel = MakeParsedDigital(report, i);
 
                     if (channel.Name == "*")
                         continue;
 
-                    timeSamples = report.AnalogSection.TimeChannel.Samples;
-                    digitalSamples = report.AnalogSection.DigitalChannels[i].Samples;
+                    channel.Meter = meter;
+                    meter.Channels.Add(channel);
 
-                    series.SeriesInfo = channel.Series[0];
+                    List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    List<bool?> digitalSamples = report.AnalogSection.DigitalChannels[i].Samples;
+                    DataSeries dataSeries = new DataSeries();
 
-                    series.DataPoints = timeSamples
+                    dataSeries.SeriesInfo = channel.Series[0];
+
+                    dataSeries.DataPoints = timeSamples
                         .Zip(digitalSamples, (time, value) => new { Time = time, Value = value })
                         .Where(x => x.Value != null)
                         .Select(x => new DataPoint { Time = x.Time, Value = Convert.ToDouble(x.Value) })
                         .ToList();
 
-                    m_meterDataSet.Digitals.Add(series);
+                    m_meterDataSet.Digitals.Add(dataSeries);
                 }
 
                 ComplexNumber z1 = new ComplexNumber(0.0D, 0.0D);
@@ -212,61 +214,66 @@ namespace FaultData.DataReaders
             {
                 for (int i = 0; i < report.AnalogSection.AnalogChannels.Count; i++)
                 {
-                    channel = MakeParsedAnalog(report, i);
-                    series = new DataSeries();
+                    Channel channel = MakeParsedAnalog(report, i);
+                    channel.Meter = meter;
+                    meter.Channels.Add(channel);
 
-                    timeSamples = report.AnalogSection.TimeChannel.Samples;
-                    valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
+                    List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    List<double> valueSamples = report.AnalogSection.AnalogChannels[i].Samples;
+                    DataSeries dataSeries = new DataSeries();
 
-                    series.DataPoints = timeSamples
+                    dataSeries.DataPoints = timeSamples
                         .Zip(valueSamples, (time, value) => new DataPoint() { Time = time, Value = value })
                         .ToList();
 
-                    series.SeriesInfo = channel.Series[0];
-                    m_meterDataSet.DataSeries.Add(series);
+                    dataSeries.SeriesInfo = channel.Series[0];
+                    m_meterDataSet.DataSeries.Add(dataSeries);
                 }
 
                 for (int i = 0; i < report.AnalogSection.DigitalChannels.Count; i++)
                 {
-                    channel = MakeParsedDigital(report, i);
-                    series = new DataSeries();
+                    Channel channel = MakeParsedDigital(report, i);
 
                     if (channel.Name == "*")
                         continue;
 
-                    timeSamples = report.AnalogSection.TimeChannel.Samples;
-                    digitalSamples = report.AnalogSection.DigitalChannels[i].Samples;
+                    channel.Meter = meter;
+                    meter.Channels.Add(channel);
 
-                    series.SeriesInfo = channel.Series[0];
+                    List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples;
+                    List<bool?> digitalSamples = report.AnalogSection.DigitalChannels[i].Samples;
+                    DataSeries dataSeries = new DataSeries();
 
-                    series.DataPoints = timeSamples
+                    dataSeries.SeriesInfo = channel.Series[0];
+
+                    dataSeries.DataPoints = timeSamples
                         .Zip(digitalSamples, (time, value) => new { Time = time, Value = value })
                         .Where(x => x.Value != null )
                         .Select(x => new DataPoint { Time= x.Time, Value = Convert.ToDouble(x.Value)})
                         .ToList();
 
-                    m_meterDataSet.Digitals.Add(series);
+                    m_meterDataSet.Digitals.Add(dataSeries);
                 }
             }
         }
 
         private Channel MakeParsedAnalog(EventReport report, int channelIndex)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
             Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
 
-            channel.Name = analogChannel.Name;
-            channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Instantaneous";
-            channel.Phase = new Phase();
-
-            series.Channel = channel;
+            Series series = new Series();
+            series.Channel = new Channel();
             series.SeriesType = new SeriesType();
             series.SeriesType.Name = "Values";
             series.SourceIndexes = channelIndex.ToString();
+
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType();
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Instantaneous" };
+            channel.Phase = new Phase();
+            channel.Name = analogChannel.Name;
+            channel.HarmonicGroup = 0;
 
             switch (analogChannel.Name)
             {
@@ -335,23 +342,21 @@ namespace FaultData.DataReaders
 
         private Channel MakeParsedDigital(EventReport report, int channelIndex)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
             Channel<bool?> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
 
-            channel.Name = digitalChannel.Name;
-            channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Digital";
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Instantaneous";
-            channel.Phase = new Phase();
-            channel.Phase.Name = "None";
-
-            series.Channel = channel;
+            Series series = new Series();
+            series.Channel = new Channel();
             series.SeriesType = new SeriesType();
             series.SeriesType.Name = "Values";
             series.SourceIndexes = channelIndex.ToString();
+
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType() { Name = "Digital" };
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Instantaneous" };
+            channel.Phase = new Phase() { Name = "None" };
+            channel.Name = digitalChannel.Name;
+            channel.HarmonicGroup = 0;
 
             channel.MeasurementType.Description = channel.MeasurementType.Name;
             channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;
@@ -363,21 +368,21 @@ namespace FaultData.DataReaders
 
         private Channel MakeParsedAnalog(CommaSeparatedEventReport report, int channelIndex)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
             Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
 
-            channel.Name = analogChannel.Name;
-            channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Instantaneous";
-            channel.Phase = new Phase();
-
-            series.Channel = channel;
+            Series series = new Series();
+            series.Channel = new Channel();
             series.SeriesType = new SeriesType();
             series.SeriesType.Name = "Values";
             series.SourceIndexes = channelIndex.ToString();
+
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType();
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Instantaneous" };
+            channel.Phase = new Phase();
+            channel.Name = analogChannel.Name;
+            channel.HarmonicGroup = 0;
 
             switch (analogChannel.Name)
             {
@@ -443,23 +448,22 @@ namespace FaultData.DataReaders
 
         private Channel MakeParsedDigital(CommaSeparatedEventReport report, int channelIndex)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
             Channel<bool?> digitalChannel = report.AnalogSection.DigitalChannels[channelIndex];
 
-            channel.Name = digitalChannel.Name;
-            channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Digital";
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Instantaneous";
-            channel.Phase = new Phase();
-            channel.Phase.Name = "None";
-
-            series.Channel = channel;
+            Series series = new Series();
+            series.Channel = new Channel();
             series.SeriesType = new SeriesType();
             series.SeriesType.Name = "Values";
             series.SourceIndexes = channelIndex.ToString();
+
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType() { Name = "Digital" };
+            channel.MeasurementType.Name = "Digital";
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Instantaneous" };
+            channel.Phase = new Phase() { Name = "None" };
+            channel.Name = digitalChannel.Name;
+            channel.HarmonicGroup = 0;
 
             channel.MeasurementType.Description = channel.MeasurementType.Name;
             channel.MeasurementCharacteristic.Description = channel.MeasurementCharacteristic.Name;

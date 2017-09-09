@@ -23,10 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using GSF;
+using GSF.Data.Model;
 using Ionic.Zlib;
-using FaultData.Database;
+using openXDA.Model;
 
 namespace FaultData.DataAnalysis
 {
@@ -436,5 +439,40 @@ namespace FaultData.DataAnalysis
         }
 
         #endregion
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static Event GetEvent(this TableOperations<Event> eventTable, FileGroup fileGroup, DataGroup dataGroup)
+        {
+            int fileGroupID = fileGroup.ID;
+            int lineID = dataGroup.Line.ID;
+            DateTime startTime = dataGroup.StartTime;
+            DateTime endTime = dataGroup.EndTime;
+            int samples = dataGroup.Samples;
+
+            IDbDataParameter startTimeParameter = new SqlParameter()
+            {
+                ParameterName = nameof(dataGroup.StartTime),
+                DbType = DbType.DateTime2,
+                Value = startTime
+            };
+
+            IDbDataParameter endTimeParameter = new SqlParameter()
+            {
+                ParameterName = nameof(dataGroup.EndTime),
+                DbType = DbType.DateTime2,
+                Value = endTime
+            };
+
+            RecordRestriction recordRestriction =
+                new RecordRestriction("FileGroupID = {0}", fileGroupID) &
+                new RecordRestriction("LineID = {0}", lineID) &
+                new RecordRestriction("StartTime = {0}", startTimeParameter) &
+                new RecordRestriction("EndTime = {0}", endTimeParameter) &
+                new RecordRestriction("Samples = {0}", samples);
+
+            return eventTable.QueryRecord(recordRestriction);
+        }
     }
 }

@@ -20,49 +20,18 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-using FaultData.Database;
+
 using GSF.Data;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace FaultData.DataWriters
 {
-    class PQIEquipmentAffectedGenerator
+    public class PQIEquipmentAffectedGenerator
     {
-        #region Members
-
-
-
-        #endregion
-
-        #region Constructors
-
-
-
-        #endregion
-
-        #region Properties
-
-
-
-        #endregion
-
-        #region Methods
-
-
-
-        #endregion
-
-        #region Static
-
-        public static XElement GetEquipmentAffected(DbAdapterContainer dbAdapterContainer, XElement equipmentAffectedElement)
+        public static XElement GetEquipmentAffected(AdoDataConnection connection, XElement equipmentAffectedElement)
         {
             int faultID;
             Lazy<DataRow> faultSummary;
@@ -70,9 +39,8 @@ namespace FaultData.DataWriters
 
             faultID = Convert.ToInt32((string)equipmentAffectedElement.Attribute("faultID") ?? "-1");
 
-            using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+            using (IDbCommand command = connection.Connection.CreateCommand())
             {
-                IDbCommand command = connection.Connection.CreateCommand();
                 command.CommandText = "dbo.GetAllImpactedComponents";
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandTimeout = 600;
@@ -84,13 +52,14 @@ namespace FaultData.DataWriters
                 command.Parameters.Add(param1);
 
                 faultSummary = new Lazy<DataRow>(() => connection.RetrieveData("SELECT * FROM FaultSummary WHERE ID = {0}", faultID).Select().FirstOrDefault());
-                IDataReader rdr = command.ExecuteReader();
-                table.Load(rdr);
+
+                using (IDataReader rdr = command.ExecuteReader())
+                {
+                    table.Load(rdr);
+                }
             }
 
             return equipmentAffectedElement;
         }
-
-        #endregion
     }
 }

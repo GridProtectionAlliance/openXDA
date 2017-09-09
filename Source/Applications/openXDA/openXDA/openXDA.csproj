@@ -313,6 +313,7 @@
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
+    <Compile Include="Logging\FileSkippedExceptionFilter.cs" />
     <Compile Include="ServiceConnection.cs" />
     <Compile Include="ServiceHub.cs" />
     <Compile Include="wwwroot\Config\EmailTemplateHandler.ashx.cs">
