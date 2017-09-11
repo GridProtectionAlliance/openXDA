@@ -42,6 +42,7 @@ using GSF.Web.Hosting;
 using GSF.Web.Model;
 using GSF.Xml;
 using Supremes;
+using FaultData.DataWriters;
 
 namespace openXDA
 {
@@ -257,7 +258,13 @@ namespace openXDA
             doc.TransformAll("chart", (element, index) => ToImgTag(element, index));
             doc.TransformAll("structure", element => GetStructureNumber(element));
 
-            string html = doc.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
+            using (DataContext dataContext = new DataContext())
+            using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer((SqlConnection)dataContext.Connection.Connection))
+            {
+                doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dbAdapterContainer, element));
+            }
+
+            string html = doc.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
             response.Content = new StringContent(html);
             response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
         }

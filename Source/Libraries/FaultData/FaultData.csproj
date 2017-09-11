@@ -197,7 +197,7 @@
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EventEmailWriter.cs" />
     <Compile Include="DataWriters\IDataWriter.cs" />
-    <Compile Include="DataWriters\PQIEquipmentAffectedGenerator.cs" />
+    <Compile Include="DataWriters\PQIGenerator.cs" />
     <Compile Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
     <Compile Include="Configuration\IConfigurationLoader.cs" />

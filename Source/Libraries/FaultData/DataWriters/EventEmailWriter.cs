@@ -406,7 +406,7 @@ namespace FaultData.DataWriters
 
                     htmlDocument.TransformAll("equipmentAndCustomersAffected", (element, index) =>
                     {
-                        return PQIEquipmentAffectedGenerator.GetEquipmentAffected(s_dbAdapterContainer, element);
+                        return PQIGenerator.GetPqiInformation(s_dbAdapterContainer, element);
                     });
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
