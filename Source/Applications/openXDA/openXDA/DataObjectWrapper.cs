@@ -22,9 +22,9 @@
 //******************************************************************************************************
 
 using System;
+using FaultData.Configuration;
 using FaultData.DataOperations;
 using FaultData.DataReaders;
-using FaultData.DataWriters;
 using log4net;
 
 namespace openXDA
@@ -145,6 +145,22 @@ namespace openXDA
     }
 
     /// <summary>
+    /// Defines a wrapper around the <see cref="IConfigurationLoader"/> interface.
+    /// </summary>
+    public class ConfigurationLoaderWrapper : DataObjectWrapper<IConfigurationLoader>
+    {
+        /// <summary>
+        /// Creates a new instance of the <see cref="ConfigurationLoaderWrapper"/> class.
+        /// </summary>
+        /// <param name="id">The ID of the configuration loader.</param>
+        /// <param name="dataReaderType">The actual type of the configuration loader.</param>
+        public ConfigurationLoaderWrapper(int id, Type configurationLoaderType)
+            : base(id, configurationLoaderType)
+        {
+        }
+    }
+
+    /// <summary>
     /// Defines a wrapper around the <see cref="IDataReader"/> interface.
     /// </summary>
     public class DataReaderWrapper : DataObjectWrapper<IDataReader>
@@ -172,22 +188,6 @@ namespace openXDA
         /// <param name="dataOperationType">The actual type of the data operation.</param>
         public DataOperationWrapper(int id, Type dataOperationType)
             : base(id, dataOperationType)
-        {
-        }
-    }
-
-    /// <summary>
-    /// Defines a wrapper around the <see cref="IDataWriter"/> interface.
-    /// </summary>
-    public class DataWriterWrapper : DataObjectWrapper<IDataWriter>
-    {
-        /// <summary>
-        /// Creates a new instance of the <see cref="DataWriterWrapper"/> class.
-        /// </summary>
-        /// <param name="id">The ID of the data writer.</param>
-        /// <param name="dataWriterType">The actual type of the data writer.</param>
-        public DataWriterWrapper(int id, Type dataWriterType)
-            : base(id, dataWriterType)
         {
         }
     }

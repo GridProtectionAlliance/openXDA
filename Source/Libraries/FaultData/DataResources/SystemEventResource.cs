@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF;
 
@@ -56,19 +55,8 @@ namespace FaultData.DataResources
         }
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
         private double m_timeTolerance;
         private List<SystemEvent> m_systemEvents;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        private SystemEventResource(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
 
         #endregion
 
@@ -101,7 +89,7 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             m_systemEvents = GetSystemEvents(cycleDataResource.DataGroups);
         }
 
@@ -125,16 +113,6 @@ namespace FaultData.DataResources
 
                     return list;
                 });
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-        public static SystemEventResource GetResource(MeterDataSet meterDataSet, DbAdapterContainer dbAdapterContainer)
-        {
-            return meterDataSet.GetResource(() => new SystemEventResource(dbAdapterContainer));
         }
 
         #endregion

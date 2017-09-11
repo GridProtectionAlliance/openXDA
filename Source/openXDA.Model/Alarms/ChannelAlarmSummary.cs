@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -38,5 +39,28 @@ namespace openXDA.Model
         public DateTime Date { get; set; } 
 
         public int AlarmPoints { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static void Upsert(this TableOperations<ChannelAlarmSummary> channelAlarmSummaryTable, ChannelAlarmSummary channelAlarmSummary)
+        {
+            const string UpsertQuery =
+                "MERGE ChannelAlarmSummary WITH (HOLDLOCK) AS Target " +
+                "USING (VALUES({0}, {1}, {2}, {3})) AS Source(ChannelID, AlarmTypeID, Date, AlarmPoints) " +
+                "ON Target.ChannelID = Source.ChannelID AND Target.AlarmTypeID = Source.AlarmTypeID AND Target.Date = Source.Date " +
+                "WHEN MATCHED THEN " +
+                "    UPDATE SET " +
+                "        Target.AlarmPoints = Source.AlarmPoints " +
+                "WHEN NOT MATCHED THEN " +
+                "    INSERT VALUES(Source.ChannelID, Source.AlarmTypeID, Source.Date, Source.AlarmPoints);";
+
+            int channelID = channelAlarmSummary.ChannelID;
+            int alarmTypeID = channelAlarmSummary.AlarmTypeID;
+            DateTime date = channelAlarmSummary.Date;
+            int alarmPoints = channelAlarmSummary.AlarmPoints;
+
+            channelAlarmSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, channelID, alarmTypeID, date, alarmPoints);
+        }
     }
 }

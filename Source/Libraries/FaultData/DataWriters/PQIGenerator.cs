@@ -20,16 +20,11 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-using FaultData.Database;
+
 using GSF.Data;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace FaultData.DataWriters
@@ -38,7 +33,7 @@ namespace FaultData.DataWriters
     {
         #region [ Static ]
 
-        public static XElement GetPqiInformation(DbAdapterContainer dbAdapterContainer, XElement element)
+        public static XElement GetPqiInformation(AdoDataConnection connection, XElement element)
         {
             int eventID;
             string type = (string)element.Attribute("type") ?? "";
@@ -55,9 +50,8 @@ namespace FaultData.DataWriters
             if (commandText != "dbo.")
             {
                 DataTable table = new DataTable();
-                using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+                using (IDbCommand command = connection.Connection.CreateCommand())
                 {
-                    IDbCommand command = connection.Connection.CreateCommand();
                     command.CommandText = "dbo.GetAllImpactedComponents";
                     command.CommandType = CommandType.StoredProcedure;
                     command.CommandTimeout = 600;
@@ -94,7 +88,7 @@ namespace FaultData.DataWriters
 
             return returnTable;
         }
-
-        #endregion
     }
 }
+
+#endregion

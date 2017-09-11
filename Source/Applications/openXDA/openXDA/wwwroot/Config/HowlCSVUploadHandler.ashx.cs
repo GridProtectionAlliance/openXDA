@@ -43,8 +43,7 @@ namespace openXDA
     /// </summary>
     public class HowlCSVUploadHandler : IHostedHttpHandler
     {
-
-        #region [Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Determines if client cache should be enabled for rendered handler content.
@@ -65,7 +64,7 @@ namespace openXDA
 
         #endregion
 
-        #region [Methods]
+        #region [ Methods ]
 
         /// <summary>
         /// Gets hash of response content based on any <paramref name="request"/> parameters.
@@ -122,6 +121,7 @@ namespace openXDA
                         for (int i = 1; i < csvRows.Length; ++i)
                         {
                             string[] row = csvRows[i].Split(',');
+
                             HourOfWeekLimit newRecord = new HourOfWeekLimit()
                             {
                                 ID = int.Parse(row[fieldIndexes[0]]),
@@ -129,8 +129,8 @@ namespace openXDA
                                 AlarmTypeID = int.Parse(row[fieldIndexes[2]]),
                                 HourOfWeek = int.Parse(row[fieldIndexes[3]]),
                                 Severity = int.Parse(row[fieldIndexes[4]]),
-                                High = float.Parse(row[fieldIndexes[5]]),
-                                Low = float.Parse(row[fieldIndexes[6]]),
+                                High = double.Parse(row[fieldIndexes[5]]),
+                                Low = double.Parse(row[fieldIndexes[6]]),
                                 Enabled = int.Parse(row[fieldIndexes[7]])
                             };
 

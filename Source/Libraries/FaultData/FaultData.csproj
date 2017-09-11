@@ -47,10 +47,6 @@
     <Reference Include="GSF.SELEventParser">
       <HintPath>..\..\Dependencies\GSF\GSF.SELEventParser.dll</HintPath>
     </Reference>
-    <Reference Include="GSF.Web, Version=2.2.72.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
-    </Reference>
     <Reference Include="Ionic.Zlib">
       <HintPath>..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
     </Reference>
@@ -177,7 +173,6 @@
     <Compile Include="DataResources\DataResourceBase.cs" />
     <Compile Include="DataOperations\EventOperation.cs" />
     <Compile Include="DataOperations\FaultLocationOperation.cs" />
-    <Compile Include="DataOperations\HourlySummaryOperation.cs" />
     <Compile Include="DataOperations\IDataOperation.cs" />
     <Compile Include="DataResources\FaultDataResource.cs" />
     <Compile Include="DataResources\IDataResource.cs" />
@@ -194,11 +189,10 @@
     <Compile Include="DataReaders\IDataReader.cs" />
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
-    <Compile Include="DataWriters\COMTRADEWriter.cs" />
+    <None Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EventEmailWriter.cs" />
-    <Compile Include="DataWriters\IDataWriter.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />
-    <Compile Include="DataWriters\XMLWriter.cs" />
+    <None Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
     <Compile Include="Configuration\IConfigurationLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -300,6 +294,10 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\openXDA.Model\openXDA.Model.csproj">
+      <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
+      <Name>openXDA.Model</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FaultAlgorithms\FaultAlgorithms.csproj">
       <Project>{24eb0e7b-9f79-4e3a-94fb-87bd4d06a400}</Project>
       <Name>FaultAlgorithms</Name>

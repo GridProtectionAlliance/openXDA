@@ -24,25 +24,21 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
-using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using FaultData.Database;
 using FaultData.DataWriters;
-using GSF.Security;
 using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Model;
 using GSF.Xml;
 using Supremes;
 using FaultData.DataWriters;
+using GSF.Data;
 
 namespace openXDA
 {
@@ -259,9 +255,8 @@ namespace openXDA
             doc.TransformAll("structure", element => GetStructureNumber(element));
 
             using (DataContext dataContext = new DataContext())
-            using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer((SqlConnection)dataContext.Connection.Connection))
             {
-                doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dbAdapterContainer, element));
+                doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dataContext.Connection, element));
             }
 
             string html = doc.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
@@ -298,9 +293,8 @@ namespace openXDA
             title = (string)chartElement.Attribute("yAxisTitle");
 
             using (DataContext dataContext = new DataContext())
-            using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer((SqlConnection)dataContext.Connection.Connection))
             {
-                response.Content = new StreamContent(ChartGenerator.ConvertToChartImageStream(dbAdapterContainer, chartElement));
+                response.Content = new StreamContent(ChartGenerator.ConvertToChartImageStream(dataContext.Connection, chartElement));
                 response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment");
                 response.Content.Headers.ContentDisposition.FileName = title + ".png";
                 response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/png");

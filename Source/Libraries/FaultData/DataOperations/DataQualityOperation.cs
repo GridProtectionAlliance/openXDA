@@ -25,11 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using FaultData.Database;
-using FaultData.Database.DataQualityTableAdapters;
+using System.Transactions;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using GSF.Web.Model;
+using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
@@ -89,43 +90,19 @@ namespace FaultData.DataOperations
             #endregion
         }
 
-        // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
         #endregion
 
         #region [ Methods ]
 
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-        }
-
-
         public override void Execute(MeterDataSet meterDataSet)
         {
-            List<ChannelSummary> channelSummaries;
-
-            ChannelDataQualitySummaryTableAdapter channelSummaryAdapter = m_dbAdapterContainer.GetAdapter<ChannelDataQualitySummaryTableAdapter>();
-            MeterDataQualitySummaryTableAdapter meterSummaryAdapter = m_dbAdapterContainer.GetAdapter<MeterDataQualitySummaryTableAdapter>();
-            DataQuality.MeterDataQualitySummaryDataTable meterSummaryTable = new DataQuality.MeterDataQualitySummaryDataTable();
-            DataQuality.ChannelDataQualitySummaryDataTable channelSummaryTable = new DataQuality.ChannelDataQualitySummaryDataTable();
-            DataQuality.ChannelDataQualitySummaryRow channelSummaryRow = null;
-            DataQuality.MeterDataQualitySummaryRow meterSummaryRow = null;
-
-            double meterSamplesPerHour;
-
             // Process the data quality range limits to identify unreasonable values
             ProcessDataQualityRangeLimits(meterDataSet);
 
             // Get the total cumulative samples per hour
             // of each of the enabled channels in the meter
-            meterSamplesPerHour = meterDataSet.Meter.Channels
-                .Where(channel => channel.Enabled != 0)
+            double meterSamplesPerHour = meterDataSet.Meter.Channels
+                .Where(channel => channel.Enabled)
                 .Where(channel => channel.SamplesPerHour <= 60.0D)
                 .Select(channel => channel.SamplesPerHour)
                 .DefaultIfEmpty(0.0D)
@@ -133,242 +110,225 @@ namespace FaultData.DataOperations
 
             // Convert trending data summaries to channel summaries
             // so that we can order by date to make processing easier
-            channelSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries
+            List<ChannelSummary> channelSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries
                 .SelectMany(kvp => kvp.Value.Select(summary => new ChannelSummary(kvp.Key, summary)))
-                .Where(channelSummary => channelSummary.Channel.Enabled != 0)
+                .Where(channelSummary => channelSummary.Channel.Enabled)
                 .OrderBy(channelSummary => channelSummary.Date)
                 .ThenBy(channelSummary => channelSummary.Channel.ID)
                 .ToList();
 
-            foreach (ChannelSummary channelSummary in channelSummaries)
+            if (channelSummaries.Count == 0)
+                return;
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                // If the current channel summary's data does not belong in the same aggregate as the previous channel summary,
-                // update the meter summary record, submit the current channel summary record, and create a new channel summary record
-                if ((object)channelSummaryRow != null && (channelSummary.Channel.ID != channelSummaryRow.ChannelID || channelSummary.Date != channelSummaryRow.Date))
-                {
-                    meterSummaryRow.GoodPoints += channelSummaryRow.GoodPoints;
-                    meterSummaryRow.LatchedPoints += channelSummaryRow.LatchedPoints;
-                    meterSummaryRow.UnreasonablePoints += channelSummaryRow.UnreasonablePoints;
-                    meterSummaryRow.NoncongruentPoints += channelSummaryRow.NoncongruentPoints;
-                    meterSummaryRow.DuplicatePoints += channelSummaryRow.DuplicatePoints;
+                TableOperations<ChannelDataQualitySummary> channelDataQualitySummaryTable = new TableOperations<ChannelDataQualitySummary>(connection);
+                TableOperations<MeterDataQualitySummary> meterDataQualitySummaryTable = new TableOperations<MeterDataQualitySummary>(connection);
 
-                    channelSummaryRow.EndEdit();
-                    channelSummaryAdapter.Upsert(channelSummaryRow);
-                    channelSummaryRow = null;
+                ChannelDataQualitySummary channelDataQualitySummary = null;
+                MeterDataQualitySummary meterDataQualitySummary = null;
+
+                foreach (ChannelSummary channelSummary in channelSummaries)
+                {
+                    // If the current channel summary's data does not belong in the same aggregate as the previous channel summary,
+                    // update the meter summary record, submit the current channel summary record, and create a new channel summary record
+                    if ((object)channelDataQualitySummary != null && (channelSummary.Channel.ID != channelDataQualitySummary.ChannelID || channelSummary.Date != channelDataQualitySummary.Date))
+                    {
+                        meterDataQualitySummary.GoodPoints += channelDataQualitySummary.GoodPoints;
+                        meterDataQualitySummary.LatchedPoints += channelDataQualitySummary.LatchedPoints;
+                        meterDataQualitySummary.UnreasonablePoints += channelDataQualitySummary.UnreasonablePoints;
+                        meterDataQualitySummary.NoncongruentPoints += channelDataQualitySummary.NoncongruentPoints;
+                        meterDataQualitySummary.DuplicatePoints += channelDataQualitySummary.DuplicatePoints;
+
+                        channelDataQualitySummaryTable.Upsert(channelDataQualitySummary);
+                        channelDataQualitySummary = null;
+                    }
+
+                    // If the current channel summary's data does not fall on the same date as the previous
+                    // channel summary's data, submit the current meter summary record and create a new one
+                    if ((object)meterDataQualitySummary != null && channelSummary.Date != meterDataQualitySummary.Date)
+                    {
+                        meterDataQualitySummaryTable.Upsert(meterDataQualitySummary);
+                        meterDataQualitySummary = null;
+                    }
+
+                    // If there is no existing record to aggregate
+                    // channel summary data, create a new one
+                    if ((object)channelDataQualitySummary == null)
+                    {
+                        channelDataQualitySummary = new ChannelDataQualitySummary();
+                        channelDataQualitySummary.ChannelID = channelSummary.Channel.ID;
+                        channelDataQualitySummary.Date = channelSummary.Date;
+                        channelDataQualitySummary.ExpectedPoints = (int)Math.Round(24.0D * channelSummary.Channel.SamplesPerHour);
+                        channelDataQualitySummary.GoodPoints = 0;
+                        channelDataQualitySummary.LatchedPoints = 0;
+                        channelDataQualitySummary.UnreasonablePoints = 0;
+                        channelDataQualitySummary.NoncongruentPoints = 0;
+                        channelDataQualitySummary.DuplicatePoints = 0;
+                    }
+
+                    // If there is no existing record to aggregate
+                    // meter summary data, create a new one
+                    if ((object)meterDataQualitySummary == null)
+                    {
+                        meterDataQualitySummary = new MeterDataQualitySummary();
+                        meterDataQualitySummary.MeterID = meterDataSet.Meter.ID;
+                        meterDataQualitySummary.Date = channelSummary.Date;
+                        meterDataQualitySummary.ExpectedPoints = (int)Math.Round(24.0D * meterSamplesPerHour);
+                        meterDataQualitySummary.GoodPoints = 0;
+                        meterDataQualitySummary.LatchedPoints = 0;
+                        meterDataQualitySummary.UnreasonablePoints = 0;
+                        meterDataQualitySummary.NoncongruentPoints = 0;
+                        meterDataQualitySummary.DuplicatePoints = 0;
+                    }
+
+                    // Update the channel summary aggregates
+                    // based on the current channel summary
+                    if (channelSummary.TrendingSummary.IsDuplicate)
+                        channelDataQualitySummary.DuplicatePoints++;
+                    else if (channelSummary.TrendingSummary.Latched)
+                        channelDataQualitySummary.LatchedPoints++;
+                    else if (channelSummary.TrendingSummary.Unreasonable)
+                        channelDataQualitySummary.UnreasonablePoints++;
+                    else if (channelSummary.TrendingSummary.NonCongruent)
+                        channelDataQualitySummary.NoncongruentPoints++;
+                    else
+                        channelDataQualitySummary.GoodPoints++;
                 }
 
-                // If the current channel summary's data does not fall on the same date as the previous
-                // channel summary's data, submit the current meter summary record and create a new one
-                if ((object)meterSummaryRow != null && channelSummary.Date != meterSummaryRow.Date)
+                // Make sure the last channel and meter summary
+                // records get submitted to the database
+                if ((object)channelDataQualitySummary != null)
                 {
-                    meterSummaryRow.EndEdit();
-                    meterSummaryAdapter.Upsert(meterSummaryRow);
-                    meterSummaryRow = null;
+                    meterDataQualitySummary.GoodPoints += channelDataQualitySummary.GoodPoints;
+                    meterDataQualitySummary.LatchedPoints += channelDataQualitySummary.LatchedPoints;
+                    meterDataQualitySummary.UnreasonablePoints += channelDataQualitySummary.UnreasonablePoints;
+                    meterDataQualitySummary.NoncongruentPoints += channelDataQualitySummary.NoncongruentPoints;
+                    meterDataQualitySummary.DuplicatePoints += channelDataQualitySummary.DuplicatePoints;
+
+                    channelDataQualitySummaryTable.Upsert(channelDataQualitySummary);
+                    meterDataQualitySummaryTable.Upsert(meterDataQualitySummary);
                 }
-
-                // If there is no existing record to aggregate
-                // channel summary data, create a new one
-                if ((object)channelSummaryRow == null)
-                {
-                    channelSummaryRow = channelSummaryTable.NewChannelDataQualitySummaryRow();
-
-                    channelSummaryRow.BeginEdit();
-                    channelSummaryRow.ChannelID = channelSummary.Channel.ID;
-                    channelSummaryRow.Date = channelSummary.Date;
-                    channelSummaryRow.ExpectedPoints = (int)Math.Round(24.0D * channelSummary.Channel.SamplesPerHour);
-                    channelSummaryRow.GoodPoints = 0;
-                    channelSummaryRow.LatchedPoints = 0;
-                    channelSummaryRow.UnreasonablePoints = 0;
-                    channelSummaryRow.NoncongruentPoints = 0;
-                    channelSummaryRow.DuplicatePoints = 0;
-                }
-
-                // If there is no existing record to aggregate
-                // meter summary data, create a new one
-                if ((object)meterSummaryRow == null)
-                {
-                    meterSummaryRow = meterSummaryTable.NewMeterDataQualitySummaryRow();
-
-                    meterSummaryRow.BeginEdit();
-                    meterSummaryRow.MeterID = meterDataSet.Meter.ID;
-                    meterSummaryRow.Date = channelSummary.Date;
-                    meterSummaryRow.ExpectedPoints = (int)Math.Round(24.0D * meterSamplesPerHour);
-                    meterSummaryRow.GoodPoints = 0;
-                    meterSummaryRow.LatchedPoints = 0;
-                    meterSummaryRow.UnreasonablePoints = 0;
-                    meterSummaryRow.NoncongruentPoints = 0;
-                    meterSummaryRow.DuplicatePoints = 0;
-                }
-
-                // Update the channel summary aggregates
-                // based on the current channel summary
-                if (channelSummary.TrendingSummary.IsDuplicate)
-                    channelSummaryRow.DuplicatePoints++;
-                else if (channelSummary.TrendingSummary.Latched)
-                    channelSummaryRow.LatchedPoints++;
-                else if (channelSummary.TrendingSummary.Unreasonable)
-                    channelSummaryRow.UnreasonablePoints++;
-                else if (channelSummary.TrendingSummary.NonCongruent)
-                    channelSummaryRow.NoncongruentPoints++;
-                else
-                    channelSummaryRow.GoodPoints++;
             }
-
-            // Make sure the last channel and meter summary
-            // records get submitted to the database
-            if ((object)channelSummaryRow != null)
-            {
-                meterSummaryRow.GoodPoints += channelSummaryRow.GoodPoints;
-                meterSummaryRow.LatchedPoints += channelSummaryRow.LatchedPoints;
-                meterSummaryRow.UnreasonablePoints += channelSummaryRow.UnreasonablePoints;
-                meterSummaryRow.NoncongruentPoints += channelSummaryRow.NoncongruentPoints;
-                meterSummaryRow.DuplicatePoints += channelSummaryRow.DuplicatePoints;
-
-                channelSummaryRow.EndEdit();
-                channelSummaryAdapter.Upsert(channelSummaryRow);
-
-                meterSummaryRow.EndEdit();
-                meterSummaryAdapter.Upsert(meterSummaryRow);
-            }
-        }
-
-        public override void Load(DbAdapterContainer dbAdapterContainer)
-        {
         }
 
         private void ProcessDataQualityRangeLimits(MeterDataSet meterDataSet)
         {
-            DataQuality.DataQualityRangeLimitDataTable rangeLimitTable;
-
-            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries;
-            Channel channel;
-
+            TrendingDataSummaryResource trendingDataSummaryResource = meterDataSet.GetResource<TrendingDataSummaryResource>();
+            Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = trendingDataSummaryResource.TrendingDataSummaries;
             TrendingDataSummaryResource.TrendingDataSummary previousSummary = null;
 
-            double perUnitValue;
-            double lowLimit;
-            double highLimit;
-            bool minValid;
-            bool maxValid;
+            if (trendingDataSummaries.Count == 0)
+                return;
 
-            trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
-            rangeLimitTable = new DataQuality.DataQualityRangeLimitDataTable();
-
-            foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> keyValuePair in trendingDataSummaries)
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                channel = keyValuePair.Key;
-                perUnitValue = channel.PerUnitValue ?? 1.0D;
-                InitializeRangeLimitTable(rangeLimitTable, channel);
-
-                foreach (TrendingDataSummaryResource.TrendingDataSummary trendingDataSummary in keyValuePair.Value)
+                foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> keyValuePair in trendingDataSummaries)
                 {
-                    if ((object)previousSummary != null && trendingDataSummary.Minimum == previousSummary.Minimum && trendingDataSummary.Average == previousSummary.Average && trendingDataSummary.Maximum == previousSummary.Maximum)
-                        trendingDataSummary.Latched = true;
+                    Channel channel = keyValuePair.Key;
+                    double perUnitValue = channel.PerUnitValue ?? 1.0D;
 
-                    if (trendingDataSummary.Average < trendingDataSummary.Minimum || trendingDataSummary.Average > trendingDataSummary.Maximum)
-                        trendingDataSummary.NonCongruent = true;
+                    List<DataQualityRangeLimit> dataQualityRangeLimits = InitializeRangeLimitTable(connection, channel);
 
-                    foreach (DataQuality.DataQualityRangeLimitRow row in rangeLimitTable.Where(row => row.Enabled != 0))
+                    foreach (TrendingDataSummaryResource.TrendingDataSummary trendingDataSummary in keyValuePair.Value)
                     {
-                        highLimit = 0.0D;
-                        lowLimit = 0.0D;
-                        maxValid = true;
-                        minValid = true;
+                        if ((object)previousSummary != null && trendingDataSummary.Minimum == previousSummary.Minimum && trendingDataSummary.Average == previousSummary.Average && trendingDataSummary.Maximum == previousSummary.Maximum)
+                            trendingDataSummary.Latched = true;
 
-                        if (!row.IsHighNull())
+                        if (trendingDataSummary.Average < trendingDataSummary.Minimum || trendingDataSummary.Average > trendingDataSummary.Maximum)
+                            trendingDataSummary.NonCongruent = true;
+
+                        foreach (DataQualityRangeLimit dataQualityRangeLimit in dataQualityRangeLimits.Where(row => row.Enabled))
                         {
-                            highLimit = Convert.ToBoolean(row.PerUnit) ? row.High * perUnitValue : row.High;
-                            maxValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Maximum < highLimit);
+                            double highLimit = 0.0D;
+                            double lowLimit = 0.0D;
+                            bool maxValid = true;
+                            bool minValid = true;
+
+                            double factor = dataQualityRangeLimit.PerUnit ? perUnitValue : 1.0D;
+
+                            if ((object)dataQualityRangeLimit.High != null)
+                            {
+                                highLimit = factor * dataQualityRangeLimit.High.GetValueOrDefault();
+                                maxValid = Convert.ToBoolean(dataQualityRangeLimit.RangeInclusive) ^ (trendingDataSummary.Maximum < highLimit);
+                            }
+
+                            if ((object)dataQualityRangeLimit.Low != null)
+                            {
+                                lowLimit = factor * dataQualityRangeLimit.Low.GetValueOrDefault();
+                                minValid = Convert.ToBoolean(dataQualityRangeLimit.RangeInclusive) ^ (trendingDataSummary.Minimum > lowLimit);
+                            }
+
+                            if (!minValid || !maxValid)
+                            {
+                                trendingDataSummary.Unreasonable = true;
+                                trendingDataSummary.HighLimit = highLimit;
+                                trendingDataSummary.LowLimit = lowLimit;
+
+                                if (!maxValid)
+                                    trendingDataSummary.UnreasonableValue = trendingDataSummary.Maximum;
+                                else
+                                    trendingDataSummary.UnreasonableValue = trendingDataSummary.Minimum;
+
+                                break;
+                            }
                         }
 
-                        if (!row.IsLowNull())
-                        {
-                            lowLimit = Convert.ToBoolean(row.PerUnit) ? row.Low * perUnitValue : row.Low;
-                            minValid = Convert.ToBoolean(row.RangeInclusive) ^ (trendingDataSummary.Minimum > lowLimit);
-                        }
-
-                        if (!minValid || !maxValid)
-                        {
-                            trendingDataSummary.Unreasonable = true;
-                            trendingDataSummary.HighLimit = highLimit;
-                            trendingDataSummary.LowLimit = lowLimit;
-
-                            if (!maxValid)
-                                trendingDataSummary.UnreasonableValue = trendingDataSummary.Maximum;
-                            else
-                                trendingDataSummary.UnreasonableValue = trendingDataSummary.Minimum;
-
-                            break;
-                        }
+                        previousSummary = trendingDataSummary;
                     }
-
-                    previousSummary = trendingDataSummary;
                 }
             }
         }
 
-        private void InitializeRangeLimitTable(DataQuality.DataQualityRangeLimitDataTable rangeLimitTable, Channel channel)
+        private List<DataQualityRangeLimit> InitializeRangeLimitTable(AdoDataConnection connection, Channel channel)
         {
-            DataQualityRangeLimitTableAdapter rangeLimitAdapter;
-            DefaultDataQualityRangeLimitTableAdapter defaultRangeLimitAdapter;
-            DataQuality.DefaultDataQualityRangeLimitDataTable defaultRangeLimitTable;
-            DataQuality.DataQualityRangeLimitRow rangeLimitRow;
-
-            // Clear existing rows from the range limit table
-            rangeLimitTable.Clear();
-
-            // Fill the range limit table with range limits for the given channel
-            rangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DataQualityRangeLimitTableAdapter>();
-            rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
-
-            // If limits exist for the given channel,
-            // range limit table has been successfully initialized
-            if (rangeLimitTable.Count != 0)
-                return;
-
-            // Get the default range limits for the measurement type and characteristic of this channel
-            defaultRangeLimitAdapter = m_dbAdapterContainer.GetAdapter<DefaultDataQualityRangeLimitTableAdapter>();
-            defaultRangeLimitTable = defaultRangeLimitAdapter.GetDataBy(channel.MeasurementTypeID, channel.MeasurementCharacteristicID);
-
-            // If there are no default limits for the channel,
-            // then the range limit table has been successfully initialized
-            if (defaultRangeLimitTable.Count == 0)
-                return;
-
-            lock (RangeLimitLock)
+            using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
             {
-                // Fill the range limit table one more time inside the lock to
-                // ensure that no other threads have written limits for this channel
-                rangeLimitAdapter.FillBy(rangeLimitTable, channel.ID);
+                // Query the range limits for the given channel
+                TableOperations<DataQualityRangeLimit> dataQualityRangeLimitTable = new TableOperations<DataQualityRangeLimit>(connection);
 
-                // If there are still no limits defined for this channel,
-                // update the table to include this channel's default limits
-                if (rangeLimitTable.Count == 0)
+                List<DataQualityRangeLimit> dataQualityRangeLimits = dataQualityRangeLimitTable
+                    .QueryRecordsWhere("ChannelID = {0}", channel.ID)
+                    .ToList();
+
+                // If limits exist for the given channel,
+                // range limit table has been successfully initialized
+                if (dataQualityRangeLimits.Count != 0)
+                    return dataQualityRangeLimits;
+
+                // Get the default range limits for the measurement type and characteristic of this channel
+                TableOperations<DefaultDataQualityRangeLimit> defaultDataQualityRangeLimitTable = new TableOperations<DefaultDataQualityRangeLimit>(connection);
+                int measurementTypeID = channel.MeasurementTypeID;
+                int measurementCharacteristicID = channel.MeasurementCharacteristicID;
+
+                List<DefaultDataQualityRangeLimit> defaultDataQualityRangeLimits = defaultDataQualityRangeLimitTable
+                    .QueryRecordsWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", measurementTypeID, measurementCharacteristicID)
+                    .ToList();
+
+                // If there are no default limits for the channel,
+                // then the range limit table has been successfully initialized
+                if (defaultDataQualityRangeLimits.Count == 0)
+                    return dataQualityRangeLimits;
+
+                // Update the table to include this channel's default limits
+                foreach (DefaultDataQualityRangeLimit defaultDataQualityRangeLimit in defaultDataQualityRangeLimits)
                 {
-                    foreach (DataQuality.DefaultDataQualityRangeLimitRow row in defaultRangeLimitTable)
+                    DataQualityRangeLimit dataQualityRangeLimit = new DataQualityRangeLimit()
                     {
-                        rangeLimitRow = rangeLimitTable.NewDataQualityRangeLimitRow();
-                        rangeLimitRow.ChannelID = channel.ID;
-                        rangeLimitRow.RangeInclusive = row.RangeInclusive;
-                        rangeLimitRow.PerUnit = row.PerUnit;
-                        rangeLimitRow.Enabled = 1;
+                        ChannelID = channel.ID,
+                        High = defaultDataQualityRangeLimit.High,
+                        Low = defaultDataQualityRangeLimit.Low,
+                        RangeInclusive = defaultDataQualityRangeLimit.RangeInclusive,
+                        PerUnit = defaultDataQualityRangeLimit.PerUnit,
+                        Enabled = true
+                    };
 
-                        if (!row.IsHighNull())
-                            rangeLimitRow.High = row.High;
-
-                        if (!row.IsLowNull())
-                            rangeLimitRow.Low = row.Low;
-
-                        rangeLimitTable.AddDataQualityRangeLimitRow(rangeLimitRow);
-                    }
-
-                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(m_dbAdapterContainer.Connection))
-                    {
-                        bulkCopy.BulkCopyTimeout = 0;
-                        bulkCopy.DestinationTableName = rangeLimitTable.TableName;
-                        bulkCopy.WriteToServer(rangeLimitTable);
-                    }
+                    dataQualityRangeLimitTable.AddNewRecord(dataQualityRangeLimit);
                 }
+
+                transactionScope.Complete();
+
+                return dataQualityRangeLimits;
             }
         }
 
@@ -376,8 +336,19 @@ namespace FaultData.DataOperations
 
         #region [ Static ]
 
-        // Static Fields
-        private static readonly object RangeLimitLock = new object();
+        // Static Methods
+
+        /// <summary>
+        /// Gets the default set of transaction options used for data operation transactions.
+        /// </summary>
+        private static TransactionOptions GetTransactionOptions()
+        {
+            return new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+        }
 
         #endregion
     }

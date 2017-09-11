@@ -25,23 +25,28 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+
+using System.Data;
 using System.Linq;
+using System.Transactions;
 using FaultAlgorithms;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
-using FaultData.Database.FaultLocationDataTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
-using static FaultData.Database.FaultLocationData;
-using GSF.Web.Model;
+using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
+using CycleData = FaultAlgorithms.CycleData;
+using Fault = FaultData.DataAnalysis.Fault;
+using FaultGroup = openXDA.Model.FaultGroup;
+using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace FaultData.DataOperations
 {
-    public class DoubleEndedFaultOperation : DataOperationBase<MeterDataSet>, IDisposable
+    public class DoubleEndedFaultOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
 
@@ -49,7 +54,7 @@ namespace FaultData.DataOperations
         private class FaultTimeline
         {
             public Meter Meter;
-            public List<FaultLocationData.FaultSummaryRow> Faults;
+            public List<FaultSummary> Faults;
         }
 
         private class Mapping
@@ -57,7 +62,7 @@ namespace FaultData.DataOperations
             public MappingNode Left;
             public MappingNode Right;
 
-            public Mapping(FaultLocationData.FaultSummaryRow left, FaultLocationData.FaultSummaryRow right)
+            public Mapping(FaultSummary left, FaultSummary right)
             {
                 Left = new MappingNode(left);
                 Right = new MappingNode(right);
@@ -69,7 +74,7 @@ namespace FaultData.DataOperations
             #region [ Members ]
 
             // Fields
-            public FaultLocationData.FaultSummaryRow Fault;
+            public FaultSummary Fault;
             public VICycleDataGroup CycleDataGroup;
             public Fault.Curve DistanceCurve;
             public Fault.Curve AngleCurve;
@@ -82,7 +87,7 @@ namespace FaultData.DataOperations
 
             #region [ Constructors ]
 
-            public MappingNode(FaultLocationData.FaultSummaryRow fault)
+            public MappingNode(FaultSummary fault)
             {
                 Fault = fault;
                 DistanceCurve = new Fault.Curve();
@@ -96,14 +101,18 @@ namespace FaultData.DataOperations
 
             #region [ Methods ]
 
-            public void Initialize(DbAdapterContainer dbAdapterContainer, VICycleDataGroup viCycleDataGroup, double systemFrequency)
+            public void Initialize(AdoDataConnection connection, VICycleDataGroup viCycleDataGroup, double systemFrequency)
             {
                 int samplesPerCycle = Transform.CalculateSamplesPerCycle(viCycleDataGroup.VA.RMS, systemFrequency);
 
-                FaultSegment faultSegment = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().FaultSegments
-                    .Where(segment => segment.EventID == Fault.EventID)
-                    .Where(segment => segment.StartTime == Fault.Inception)
-                    .FirstOrDefault(segment => segment.SegmentType.Name == "Fault");
+                TableOperations<FaultSegment> faultSegmentTable = new TableOperations<FaultSegment>(connection);
+
+                RecordRestriction recordRestriction =
+                    new RecordRestriction("EventID = {0}", Fault.EventID) &
+                    new RecordRestriction("StartTime = {0}", Fault.Inception) &
+                    new RecordRestriction("(SELECT Name FROM SegmentType WHERE ID = SegmentTypeID) = 'Fault'");
+
+                FaultSegment faultSegment = faultSegmentTable.QueryRecord(recordRestriction);
 
                 if ((object)faultSegment != null)
                 {
@@ -186,17 +195,9 @@ namespace FaultData.DataOperations
         }
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-
         private double m_timeTolerance;
         private double m_systemFrequency;
         private FaultLocationSettings m_faultLocationSettings;
-
-        private List<MappingNode> m_processedMappingNodes;
-        private FaultLocationData.FaultCurveDataTable m_faultCurveTable;
-        private FaultLocationData.DoubleEndedFaultDistanceDataTable m_doubleEndedFaultDistanceTable;
-
-        private bool m_disposed;
 
         #endregion
 
@@ -205,9 +206,6 @@ namespace FaultData.DataOperations
         public DoubleEndedFaultOperation()
         {
             m_faultLocationSettings = new FaultLocationSettings();
-            m_processedMappingNodes = new List<MappingNode>();
-            m_faultCurveTable = new FaultLocationData.FaultCurveDataTable();
-            m_doubleEndedFaultDistanceTable = new FaultLocationData.DoubleEndedFaultDistanceDataTable();
         }
 
         #endregion
@@ -254,190 +252,163 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-        }
-
-
         public override void Execute(MeterDataSet meterDataSet)
         {
-            MeterInfoDataContext meterInfo;
-            DoubleEndedFaultDistanceTableAdapter doubleEndedFaultDistanceAdapter;
-            List<SystemEventResource.SystemEvent> systemEvents;
-            MeterData.EventDataTable systemEventTable;
-
-            double lineLength;
-            ComplexNumber nominalImpedance;
-            List<Mapping> mappings;
-
-            int leftEventID;
-            int rightEventID;
-            VICycleDataGroup leftCycleDataGroup;
-            VICycleDataGroup rightCycleDataGroup;
-
-            meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
-            doubleEndedFaultDistanceAdapter = m_dbAdapterContainer.GetAdapter<DoubleEndedFaultDistanceTableAdapter>();
-
             // Get a time range for querying each system event that contains events in this meter data set
-            systemEvents = SystemEventResource.GetResource(meterDataSet, m_dbAdapterContainer).SystemEvents;
+            SystemEventResource systemEventResource = meterDataSet.GetResource<SystemEventResource>();
+            List<SystemEventResource.SystemEvent> systemEvents = systemEventResource.SystemEvents;
 
-            foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
+            if (systemEvents.Count == 0)
+                return;
+
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                // Get the full collection of events from the database that comprise the system event that overlaps this time range
-                systemEventTable = m_dbAdapterContainer.GetAdapter<EventTableAdapter>().GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
+                TableOperations<openXDA.Model.Line> lineTable = new TableOperations<openXDA.Model.Line>(connection);
+                TableOperations<MeterLocationLine> meterLocationLineTable = new TableOperations<MeterLocationLine>(connection);
+                TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                TableOperations<DoubleEndedFaultDistance> doubleEndedFaultDistanceTable = new TableOperations<DoubleEndedFaultDistance>(connection);
+                TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
 
-                foreach (IGrouping<int, MeterData.EventRow> lineGrouping in systemEventTable.GroupBy(evt => evt.LineID))
+                List<MappingNode> processedMappingNodes = new List<MappingNode>();
+
+                foreach (SystemEventResource.SystemEvent systemEvent in systemEvents)
                 {
-                    // Make sure this line connects two known meter locations
-                    if (meterInfo.MeterLocationLines.Count(mll => mll.LineID == lineGrouping.Key) != 2)
-                        continue;
+                    // Get the full collection of events from the database that comprise the system event that overlaps this time range
+                    List<Event> dbSystemEvent = eventTable.GetSystemEvent(systemEvent.StartTime, systemEvent.EndTime, m_timeTolerance);
 
-                    // Determine the length of the line
-                    lineLength = meterInfo.Lines
-                        .Where(line => line.ID == lineGrouping.Key)
-                        .Select(line => (double?)line.Length)
-                        .FirstOrDefault() ?? double.NaN;
-
-                    if (double.IsNaN(lineLength))
-                        continue;
-
-                    // Determine the nominal impedance of the line
-                    nominalImpedance = m_dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().LineImpedances
-                        .Where(lineImpedance => lineImpedance.LineID == lineGrouping.Key)
-                        .Select(lineImpedance => new ComplexNumber(lineImpedance.R1, lineImpedance.X1))
-                        .FirstOrDefault();
-
-                    if (!nominalImpedance.AllAssigned)
-                        continue;
-
-                    leftEventID = 0;
-                    rightEventID = 0;
-                    leftCycleDataGroup = null;
-                    rightCycleDataGroup = null;
-
-                    // Attempt to match faults during this system event that occurred
-                    // on one end of the line with faults that occurred during this
-                    // system even on the other end of the line
-                    mappings = GetMappings(lineGrouping);
-
-                    foreach (Mapping mapping in mappings)
+                    foreach (IGrouping<int, Event> lineGrouping in dbSystemEvent.GroupBy(evt => evt.LineID))
                     {
-                        if (mapping.Left.FaultType == FaultType.None || mapping.Right.FaultType == FaultType.None)
+                        // Make sure this line connects two known meter locations
+                        int meterLocationCount = meterLocationLineTable.QueryRecordCountWhere("LineID = {0}", lineGrouping.Key);
+
+                        if (meterLocationCount != 2)
                             continue;
 
-                        // Get the cycle data for each of the two mapped faults
-                        if (mapping.Left.Fault.EventID != leftEventID)
-                        {
-                            leftEventID = mapping.Left.Fault.EventID;
-                            leftCycleDataGroup = GetCycleData(leftEventID);
-                        }
+                        // Determine the length of the line
+                        double lineLength = lineTable
+                            .QueryRecordsWhere("ID = {0}", lineGrouping.Key)
+                            .Select(line => line.Length)
+                            .DefaultIfEmpty(double.NaN)
+                            .First();
 
-                        if (mapping.Right.Fault.EventID != rightEventID)
-                        {
-                            rightEventID = mapping.Right.Fault.EventID;
-                            rightCycleDataGroup = GetCycleData(rightEventID);
-                        }
-
-                        if ((object)leftCycleDataGroup == null || (object)rightCycleDataGroup == null)
+                        if (double.IsNaN(lineLength))
                             continue;
 
-                        // Make sure there are no other threads calculating double-ended fault distance for this mapping,
-                        // and that double-ended distance has not already been calculated and entered into the database
-                        lock (FaultSummaryIDLock)
+                        // Determine the nominal impedance of the line
+                        ComplexNumber nominalImpedance = lineImpedanceTable
+                            .QueryRecordsWhere("LineID = {0}", lineGrouping.Key)
+                            .Select(lineImpedance => new ComplexNumber(lineImpedance.R1, lineImpedance.X1))
+                            .FirstOrDefault();
+
+                        if (!nominalImpedance.AllAssigned)
+                            continue;
+
+                        int leftEventID = 0;
+                        int rightEventID = 0;
+                        VICycleDataGroup leftCycleDataGroup = null;
+                        VICycleDataGroup rightCycleDataGroup = null;
+
+                        // Attempt to match faults during this system event that occurred
+                        // on one end of the line with faults that occurred during this
+                        // system even on the other end of the line
+                        List<Mapping> mappings = GetMappings(connection, lineGrouping);
+
+                        foreach (Mapping mapping in mappings)
                         {
-                            if (FaultSummaryIDs.Contains(mapping.Left.Fault.ID))
+                            if (mapping.Left.FaultType == FaultType.None || mapping.Right.FaultType == FaultType.None)
                                 continue;
 
-                            if (FaultSummaryIDs.Contains(mapping.Right.Fault.ID))
+                            // Get the cycle data for each of the two mapped faults
+                            if (mapping.Left.Fault.EventID != leftEventID)
+                            {
+                                leftEventID = mapping.Left.Fault.EventID;
+                                leftCycleDataGroup = GetCycleData(connection, leftEventID);
+                            }
+
+                            if (mapping.Right.Fault.EventID != rightEventID)
+                            {
+                                rightEventID = mapping.Right.Fault.EventID;
+                                rightCycleDataGroup = GetCycleData(connection, rightEventID);
+                            }
+
+                            if ((object)leftCycleDataGroup == null || (object)rightCycleDataGroup == null)
                                 continue;
 
-                            if (doubleEndedFaultDistanceAdapter.GetCountBy(mapping.Left.Fault.ID) > 0)
-                                continue;
+                            TransactionScopeOption transactionScopeOption = TransactionScopeOption.Required;
 
-                            if (doubleEndedFaultDistanceAdapter.GetCountBy(mapping.Right.Fault.ID) > 0)
-                                continue;
+                            TransactionOptions transactionOptions = new TransactionOptions()
+                            {
+                                IsolationLevel = IsolationLevel.ReadCommitted,
+                                Timeout = TransactionManager.MaximumTimeout
+                            };
 
-                            FaultSummaryIDs.Add(mapping.Left.Fault.ID);
-                            FaultSummaryIDs.Add(mapping.Right.Fault.ID);
+                            // Make sure there are no other threads calculating double-ended fault distance for this mapping,
+                            // and that double-ended distance has not already been calculated and entered into the database
+                            using (TransactionScope transactionScope = new TransactionScope(transactionScopeOption, transactionOptions))
+                            {
+                                RecordRestriction recordRestriction =
+                                    new RecordRestriction("LocalFaultSummaryID = {0}", mapping.Left.Fault.ID) |
+                                    new RecordRestriction("RemoteFaultSummaryID = {0}", mapping.Left.Fault.ID) |
+                                    new RecordRestriction("LocalFaultSummaryID = {0}", mapping.Right.Fault.ID) |
+                                    new RecordRestriction("RemoteFaultSummaryID = {0}", mapping.Right.Fault.ID);
+
+                                if (doubleEndedFaultDistanceTable.QueryRecordCount(recordRestriction) > 0)
+                                    continue;
+
+                                // Initialize the mappings with additional data needed for double-ended fault location
+                                mapping.Left.Initialize(connection, leftCycleDataGroup, m_systemFrequency);
+                                mapping.Right.Initialize(connection, rightCycleDataGroup, m_systemFrequency);
+
+                                // Execute the double-ended fault location algorithm
+                                ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);
+                                ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Right, mapping.Left);
+
+                                // Create rows in the DoubleEndedFaultDistance table
+                                DoubleEndedFaultDistance leftDistance = CreateDoubleEndedFaultDistance(lineLength, mapping.Left, mapping.Right);
+                                DoubleEndedFaultDistance rightDistance = CreateDoubleEndedFaultDistance(lineLength, mapping.Right, mapping.Left);
+                                doubleEndedFaultDistanceTable.AddNewRecord(leftDistance);
+                                doubleEndedFaultDistanceTable.AddNewRecord(rightDistance);
+                            }
+
+                            // Add these nodes to the collection of processed mapping nodes
+                            processedMappingNodes.Add(mapping.Left);
+                            processedMappingNodes.Add(mapping.Right);
                         }
+                    }
 
-                        // Initialize the mappings with additional data needed for double-ended fault location
-                        mapping.Left.Initialize(m_dbAdapterContainer, leftCycleDataGroup, m_systemFrequency);
-                        mapping.Right.Initialize(m_dbAdapterContainer, rightCycleDataGroup, m_systemFrequency);
-
-                        // Execute the double-ended fault location algorithm
-                        ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);
-                        ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Right, mapping.Left);
-
-                        // Create rows in the DoubleEndedFaultDistance table
-                        CreateFaultDistanceRow(lineLength, mapping.Left, mapping.Right);
-                        CreateFaultDistanceRow(lineLength, mapping.Right, mapping.Left);
-
-                        // Add these nodes to the collection of processed mapping nodes
-                        m_processedMappingNodes.Add(mapping.Left);
-                        m_processedMappingNodes.Add(mapping.Right);
+                    // Create a row in the FaultCurve table for every event that now has double-ended fault distance curves
+                    foreach (IGrouping<int, MappingNode> grouping in processedMappingNodes.GroupBy(node => node.Fault.EventID))
+                    {
+                        FaultCurve faultCurve = CreateFaultCurve(connection, grouping);
+                        faultCurveTable.AddNewRecord(faultCurve);
                     }
                 }
             }
-
-            // Create a row in the FaultCurve table for every event that now has double-ended fault distance curves
-            foreach (IGrouping<int, MappingNode> grouping in m_processedMappingNodes.GroupBy(node => node.Fault.EventID))
-                CreateFaultCurveRow(grouping);
         }
 
-        public override void Load(DbAdapterContainer dbAdapterContainer)
+        private List<Mapping> GetMappings(AdoDataConnection connection, IGrouping<int, Event> lineGrouping)
         {
-            BulkLoader loader = new BulkLoader();
-            loader.Connection = dbAdapterContainer.Connection;
-            loader.CommandTimeout = dbAdapterContainer.CommandTimeout;
-            loader.Load(m_doubleEndedFaultDistanceTable);
-            loader.Load(m_faultCurveTable);
-        }
+            TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+            TableOperations<FaultGroup> faultGroupTable = new TableOperations<FaultGroup>(connection);
+            TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
 
-        public void Dispose()
-        {
-            if (!m_disposed)
+            Func<FaultSummary, bool> filter = fault =>
             {
-                try
-                {
-                    lock (FaultSummaryIDLock)
-                    {
-                        foreach (MappingNode node in m_processedMappingNodes)
-                            FaultSummaryIDs.Remove(node.Fault.ID);
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;
-                }
-            }
-        }
-
-        private List<Mapping> GetMappings(IGrouping<int, MeterData.EventRow> lineGrouping)
-        {
-            Func<FaultSummaryRow, bool> filter = fault =>
-            {
-                FaultGroupTableAdapter faultGroupAdapter;
-
                 if (!Convert.ToBoolean(fault.IsSelectedAlgorithm))
                     return false;
 
-                faultGroupAdapter = m_dbAdapterContainer.GetAdapter<FaultGroupTableAdapter>();
+                List<FaultGroup> faultGroups = faultGroupTable
+                    .QueryRecordsWhere("EventID = {0}", fault.EventID)
+                    .ToList();
 
-                foreach (FaultGroupRow faultGroup in faultGroupAdapter.GetDataByEvent(fault.EventID))
+                foreach (FaultGroup faultGroup in faultGroups)
                 {
-                    bool? faultDetectionResult = !faultGroup.IsFaultDetectionLogicResultNull()
-                        ? Convert.ToBoolean(faultGroup.FaultDetectionLogicResult)
-                        : (bool?)null;
+                    bool? faultDetectionResult = faultGroup.FaultDetectionLogicResult;
 
                     // Fault validation (based on line length) doesn't apply because the fault may have been
                     // invalidated due to a high impedance so we only check whether it has been suppressed
-                    bool faultValidationResult = !Convert.ToBoolean(fault.IsSuppressed);
+                    bool faultValidationResult = !fault.IsSuppressed;
 
                     if (faultDetectionResult == false || (m_faultLocationSettings.UseDefaultFaultDetectionLogic && !faultValidationResult))
                         return false;
@@ -450,8 +421,8 @@ namespace FaultData.DataOperations
                 .GroupBy(evt => evt.MeterID)
                 .Select(meterGrouping => new FaultTimeline()
                 {
-                    Meter = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>().Meters.SingleOrDefault(meter => meter.ID == meterGrouping.Key),
-                    Faults = meterGrouping.SelectMany(evt => m_dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>().GetDataBy(evt.ID)).Where(filter).OrderBy(fault => fault.Inception).ToList()
+                    Meter = meterTable.QueryRecordWhere("ID = {0}", meterGrouping.Key),
+                    Faults = meterGrouping.SelectMany(evt => faultSummaryTable.QueryRecordsWhere("EventID = {0}", evt.ID)).Where(filter).OrderBy(fault => fault.Inception).ToList()
                 })
                 .Where(meterGrouping => meterGrouping.Faults.Any())
                 .ToList();
@@ -468,9 +439,9 @@ namespace FaultData.DataOperations
                 .ToList();
         }
 
-        private void CreateFaultCurveRow(IGrouping<int, MappingNode> grouping)
+        private FaultCurve CreateFaultCurve(AdoDataConnection connection, IGrouping<int, MappingNode> grouping)
         {
-            VICycleDataGroup viCycleDataGroup = GetCycleData(grouping.Key);
+            VICycleDataGroup viCycleDataGroup = GetCycleData(connection, grouping.Key);
             DataGroup faultCurveGroup = new DataGroup();
 
             faultCurveGroup.Add(viCycleDataGroup.VA.RMS.Multiply(double.NaN));
@@ -485,21 +456,26 @@ namespace FaultData.DataOperations
                 }
             }
 
-            m_faultCurveTable.AddFaultCurveRow(grouping.Key, "DoubleEnded", faultCurveGroup.ToData());
+            return new FaultCurve()
+            {
+                EventID = grouping.Key,
+                Algorithm = "DoubleEnded",
+                Data = faultCurveGroup.ToData()
+            };
         }
 
-        private void CreateFaultDistanceRow(double lineLength, MappingNode local, MappingNode remote)
+        private DoubleEndedFaultDistance CreateDoubleEndedFaultDistance(double lineLength, MappingNode local, MappingNode remote)
         {
-            FaultLocationData.DoubleEndedFaultDistanceRow row;
+            double distance = local.DistanceCurve[local.Fault.CalculationCycle].Value;
 
-            row = m_doubleEndedFaultDistanceTable.NewDoubleEndedFaultDistanceRow();
-            row.LocalFaultSummaryID = local.Fault.ID;
-            row.RemoteFaultSummaryID = remote.Fault.ID;
-            row.Distance = local.DistanceCurve[local.Fault.CalculationCycle].Value;
-            row.Angle = local.AngleCurve[local.Fault.CalculationCycle].Value;
-            row.IsValid = IsValid(row.Distance, lineLength) ? 1 : 0;
-
-            m_doubleEndedFaultDistanceTable.AddDoubleEndedFaultDistanceRow(row);
+            return new DoubleEndedFaultDistance()
+            {
+                LocalFaultSummaryID = local.Fault.ID,
+                RemoteFaultSummaryID = remote.Fault.ID,
+                Distance = distance,
+                Angle = local.AngleCurve[local.Fault.CalculationCycle].Value,
+                IsValid = IsValid(distance, lineLength)
+            };
         }
 
         private void ExecuteFaultLocationAlgorithm(double lineLength, ComplexNumber nominalImpedance, MappingNode local, MappingNode remote)
@@ -541,30 +517,29 @@ namespace FaultData.DataOperations
             }
         }
 
-        private VICycleDataGroup GetCycleData(int eventID)
+        private VICycleDataGroup GetCycleData(AdoDataConnection connection, int eventID)
         {
-            MeterData.EventDataDataTable eventDataTable;
-            DataGroup dataGroup;
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            Event evt = eventTable.QueryRecordWhere("ID = {0}", eventID);
 
-            eventDataTable = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>().GetDataBy(eventID);
-
-            if (eventDataTable.Count == 0)
+            if ((object)evt == null)
                 return null;
 
-            int meterID = m_dbAdapterContainer.GetAdapter<EventTableAdapter>()
-                .GetDataByID(eventID)
-                .Select(row => row.MeterID)
-                .FirstOrDefault();
+            byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
 
-            Meter meter = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>().Meters
-                .FirstOrDefault(m => m.ID == meterID);
+            if ((object)frequencyDomainData == null)
+                return null;
+
+            TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+            Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
 
             if ((object)meter == null)
                 return null;
 
-            dataGroup = new DataGroup();
-            dataGroup.FromData(meter, eventDataTable[0].FrequencyDomainData);
+            meter.ConnectionFactory = () => new AdoDataConnection(connection.Connection, connection.AdapterType, false);
 
+            DataGroup dataGroup = new DataGroup();
+            dataGroup.FromData(meter, frequencyDomainData);
             return new VICycleDataGroup(dataGroup);
         }
 
@@ -609,14 +584,6 @@ namespace FaultData.DataOperations
             double minDistance = m_faultLocationSettings.MinFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly HashSet<int> FaultSummaryIDs = new HashSet<int>();
-        private static readonly object FaultSummaryIDLock = new object();
 
         #endregion
     }

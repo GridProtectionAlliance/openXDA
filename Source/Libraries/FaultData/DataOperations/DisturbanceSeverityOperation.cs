@@ -23,85 +23,70 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using FaultData.Database;
-using FaultData.Database.MeterDataTableAdapters;
 using FaultData.DataResources;
 using FaultData.DataSets;
-using static FaultData.Database.MeterData;
-using GSF.Web.Model;
+using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
     public class DisturbanceSeverityOperation : DataOperationBase<MeterDataSet>
     {
-        #region [ Members ]
-
-        // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
-        private DisturbanceSeverityDataTable m_disturbanceSeverityTable;
-
-        #endregion
-
-        #region [ Methods ]
-
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_dbAdapterContainer = dbAdapterContainer;
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-        }
-
         public override void Execute(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
-            SagDataResource sagDataResource = SagDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
-            SwellDataResource swellDataResource = SwellDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
-            InterruptionDataResource interruptionDataResource = InterruptionDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
+            SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
+            InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
 
-            DisturbanceTableAdapter disturbanceAdapter = m_dbAdapterContainer.GetAdapter<DisturbanceTableAdapter>();
-            DisturbanceDataTable disturbanceTable = disturbanceAdapter.GetDataByFileGroup(meterDataSet.FileGroup.ID);
-
-            SystemInfoDataContext systemInfo = m_dbAdapterContainer.GetAdapter<SystemInfoDataContext>();
-
-            m_disturbanceSeverityTable = new DisturbanceSeverityDataTable();
-
-            foreach (VoltageEnvelope envelope in systemInfo.VoltageEnvelopes)
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                foreach (DisturbanceRow disturbance in disturbanceTable)
+                TableOperations<Disturbance> disturbanceTable = new TableOperations<Disturbance>(connection);
+                TableOperations<DisturbanceSeverity> disturbanceSeverityTable = new TableOperations<DisturbanceSeverity>(connection);
+                TableOperations<VoltageEnvelope> voltageEnvelopeTable = new TableOperations<VoltageEnvelope>(connection);
+                TableOperations<VoltageCurve> voltageCurveTable = new TableOperations<VoltageCurve>(connection);
+                TableOperations<VoltageCurvePoint> voltageCurvePointTable = new TableOperations<VoltageCurvePoint>(connection);
+
+                List<Disturbance> disturbances = disturbanceTable
+                    .QueryRecordsWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0})", meterDataSet.FileGroup.ID)
+                    .ToList();
+
+                foreach (VoltageEnvelope voltageEnvelope in voltageEnvelopeTable.QueryRecords().ToList())
                 {
-                    IEnumerable<VoltageCurvePoint> points = envelope.VoltageCurves.Select(curve => curve.VoltageCurvePoints
-                        .Where(p => p.DurationSeconds <= disturbance.DurationSeconds)
-                        .OrderBy(p => p.LoadOrder)
-                        .LastOrDefault());
+                    List<VoltageCurve> voltageCurves = voltageCurveTable
+                        .QueryRecordsWhere("ID IN (SELECT VoltageCurveID FROM VoltageEnvelopeCurve WHERE VoltageEnvelopeID = {0})", voltageEnvelope.ID)
+                        .ToList();
 
-                    IEnumerable<int> severityCodes = points.Select(point => ((object)point != null)
-                        ? (int)((1.0D - disturbance.PerUnitMagnitude) / (1.0D - point.PerUnitMagnitude))
-                        : 0);
+                    foreach (VoltageCurve voltageCurve in voltageCurves)
+                    {
+                        voltageCurve.VoltageCurvePoints = voltageCurvePointTable
+                            .QueryRecordsWhere("VoltageCurveID = {0}", voltageCurve.ID)
+                            .ToList();
+                    }
 
-                    int maxSeverityCode = severityCodes
-                        .DefaultIfEmpty(0)
-                        .Max();
+                    foreach (Disturbance disturbance in disturbances)
+                    {
+                        int maxSeverityCode = voltageCurves
+                            .Select(voltageCurve => voltageCurve.GetMagnitude(disturbance.DurationSeconds))
+                            .Select(curveMagnitude => (int)((1.0D - disturbance.PerUnitMagnitude) / (1.0D - curveMagnitude)))
+                            .DefaultIfEmpty(0)
+                            .Max();
 
-                    if (maxSeverityCode < 0)
-                        maxSeverityCode = 0;
-                    else if (maxSeverityCode > 5)
-                        maxSeverityCode = 5;
+                        if (maxSeverityCode < 0)
+                            maxSeverityCode = 0;
+                        else if (maxSeverityCode > 5)
+                            maxSeverityCode = 5;
 
-                    m_disturbanceSeverityTable.AddDisturbanceSeverityRow(envelope.ID, disturbance.ID, maxSeverityCode);
+                        disturbanceSeverityTable.AddNewRecord(new DisturbanceSeverity()
+                        {
+                            VoltageEnvelopeID = voltageEnvelope.ID,
+                            DisturbanceID = disturbance.ID,
+                            SeverityCode = maxSeverityCode
+                        });
+                    }
                 }
             }
         }
-
-        public override void Load(DbAdapterContainer dbAdapterContainer)
-        {
-            BulkLoader loader = new BulkLoader();
-            loader.Connection = dbAdapterContainer.Connection;
-            loader.CommandTimeout = dbAdapterContainer.CommandTimeout;
-            loader.Load(m_disturbanceSeverityTable);
-        }
-
-        #endregion
     }
 }

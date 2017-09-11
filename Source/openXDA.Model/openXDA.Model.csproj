@@ -33,9 +33,13 @@
     <Reference Include="GSF.Core">
       <HintPath>..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Dependencies\NuGet\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,20 +48,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
     <Compile Include="Alarms\AlarmType.cs" />
     <Compile Include="Emails\EmailGroupType.cs" />
     <Compile Include="Emails\EmailType.cs" />
+    <Compile Include="Events\Disturbances\VoltageCurve.cs" />
+    <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
+    <Compile Include="Events\Faults\FaultCurve.cs" />
+    <Compile Include="Events\Faults\FaultDetectionLogic.cs" />
+    <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
+    <Compile Include="LazyContext.cs" />
     <Compile Include="Links\EmailGroupLineGroup.cs" />
     <Compile Include="Links\EmailGroupMeterGroup.cs" />
     <Compile Include="Links\EmailGroupSecurityGroup.cs" />
     <Compile Include="Links\EmailGroupUserAccount.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="System\AuditLog.cs" />
-    <Compile Include="System\DataWriter.cs" />
-    <Compile Include="TransmissionElements\Breaker.cs" />
+    <Compile Include="System\ConfigurationLoader.cs" />
+    <Compile Include="System\DataReader.cs" />
+    <Compile Include="TransmissionElements\BreakerOperation.cs" />
     <Compile Include="Channels\BreakerChannel.cs" />
     <Compile Include="Channels\Channel.cs" />
     <Compile Include="Channels\ChannelNormal.cs" />
@@ -66,6 +78,7 @@
     <Compile Include="Events\CycleDataSOEPointView.cs" />
     <Compile Include="System\DataOperation.cs" />
     <Compile Include="Alarms\DataQualityRangeLimit.cs" />
+    <Compile Include="TransmissionElements\BreakerOperationType.cs" />
     <Compile Include="Trending\DailyTrendingSummary.cs" />
     <Compile Include="Alarms\DefaultAlarmRangeLimit.cs" />
     <Compile Include="Events\Disturbances\Disturbance.cs" />

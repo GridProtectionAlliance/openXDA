@@ -21,13 +21,28 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     public class MeterLocation
     {
+        #region [ Members ]
+
+        // Fields
+        private List<Meter> m_meters;
+        private List<MeterLocationLine> m_meterLocationLines;
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
@@ -57,5 +72,121 @@ namespace openXDA.Model
         public float Longitude { get; set; }
 
         public string Description { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<Meter> Meters
+        {
+            get
+            {
+                return m_meters ?? (m_meters = QueryMeters());
+            }
+            set
+            {
+                m_meters = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<MeterLocationLine> MeterLocationLines
+        {
+            get
+            {
+                return m_meterLocationLines ?? (m_meterLocationLines = QueryMeterLocationLines());
+            }
+            set
+            {
+                m_meterLocationLines = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public IEnumerable<Meter> GetMeters(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+            return meterTable.QueryRecordsWhere("MeterLocationID = {0}", ID);
+        }
+
+        public IEnumerable<MeterLocationLine> GetMeterLocationLines(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeterLocationLine> meterLocationLineTable = new TableOperations<MeterLocationLine>(connection);
+            return meterLocationLineTable.QueryRecordsWhere("MeterLocationID = {0}", ID);
+        }
+
+        private List<Meter> QueryMeters()
+        {
+            List<Meter> meters;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meters = GetMeters(connection)?
+                    .Select(LazyContext.GetMeter)
+                    .ToList();
+            }
+
+            if ((object)meters != null)
+            {
+                foreach (Meter meter in meters)
+                {
+                    meter.MeterLocation = this;
+                    meter.LazyContext = LazyContext;
+                }
+            }
+
+            return meters;
+        }
+
+        private List<MeterLocationLine> QueryMeterLocationLines()
+        {
+            List<MeterLocationLine> meterLocationLines;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meterLocationLines = GetMeterLocationLines(connection)?
+                    .Select(LazyContext.GetMeterLocationLine)
+                    .ToList();
+            }
+
+            if ((object)meterLocationLines != null)
+            {
+                foreach (MeterLocationLine meterLocationLine in meterLocationLines)
+                {
+                    meterLocationLine.MeterLocation = this;
+                    meterLocationLine.LazyContext = LazyContext;
+                }
+            }
+
+            return meterLocationLines;
+        }
+
+        #endregion
     }
 }

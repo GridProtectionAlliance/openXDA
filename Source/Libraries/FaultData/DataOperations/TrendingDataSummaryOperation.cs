@@ -25,13 +25,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using FaultData.Configuration;
-using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
 using log4net;
 using openHistorian.XDALink;
-using GSF.Web.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
@@ -71,21 +70,6 @@ namespace FaultData.DataOperations
         #endregion
 
         #region [ Methods ]
-
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            // Not doing anything with database
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-            // Not doing anything with database
-        }
-
-        public override void Load(DbAdapterContainer dbAdapterContainer)
-        {
-            // Not doing anything with database
-        }
 
         public override void Execute(MeterDataSet meterDataSet)
         {

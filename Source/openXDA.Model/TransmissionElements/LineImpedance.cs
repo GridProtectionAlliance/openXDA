@@ -32,12 +32,12 @@ namespace openXDA.Model
 
         public int LineID { get; set; }
 
-        public float R0 { get; set; }
+        public double R0 { get; set; }
 
-        public float R1 { get; set; }
+        public double R1 { get; set; }
 
-        public float X0 { get; set; }
+        public double X0 { get; set; }
 
-        public float X1 { get; set; }
+        public double X1 { get; set; }
     }
 }

@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -38,5 +39,28 @@ namespace openXDA.Model
         public DateTime Date { get; set; } 
 
         public int AlarmPoints { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static void Upsert(this TableOperations<MeterAlarmSummary> meterAlarmSummaryTable, MeterAlarmSummary meterAlarmSummary)
+        {
+            const string UpsertQuery =
+                "MERGE MeterAlarmSummary WITH (HOLDLOCK) AS Target " +
+                "USING (VALUES({0}, {1}, {2}, {3})) AS Source(MeterID, AlarmTypeID, Date, AlarmPoints) " +
+                "ON Target.MeterID = Source.MeterID AND Target.AlarmTypeID = Source.AlarmTypeID AND Target.Date = Source.Date " +
+                "WHEN MATCHED THEN " +
+                "    UPDATE SET " +
+                "        Target.AlarmPoints = Source.AlarmPoints " +
+                "WHEN NOT MATCHED THEN " +
+                "    INSERT VALUES(Source.MeterID, Source.AlarmTypeID, Source.Date, Source.AlarmPoints);";
+
+            int meterID = meterAlarmSummary.MeterID;
+            int alarmTypeID = meterAlarmSummary.AlarmTypeID;
+            DateTime date = meterAlarmSummary.Date;
+            int alarmPoints = meterAlarmSummary.AlarmPoints;
+
+            meterAlarmSummaryTable.Connection.ExecuteNonQuery(UpsertQuery, meterID, alarmTypeID, date, alarmPoints);
+        }
     }
 }

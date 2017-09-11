@@ -21,16 +21,120 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    public class Channel
+    public class ChannelKey : IEquatable<ChannelKey>
+    {
+        #region [ Members ]
+
+        // Fields
+        private readonly Tuple<int, int, string, string, string, string> m_tuple;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public ChannelKey(int lineID, int harmonicGroup, string name, string measurementType, string measurementCharacteristic, string phase)
+        {
+            m_tuple = Tuple.Create(lineID, harmonicGroup, name, measurementType, measurementCharacteristic, phase);
+        }
+
+        public ChannelKey(Channel channel)
+            : this(channel.LineID, channel.HarmonicGroup, channel.Name, channel.MeasurementType.Name, channel.MeasurementCharacteristic.Name, channel.Phase.Name)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        public int LineID
+        {
+            get
+            {
+                return m_tuple.Item1;
+            }
+        }
+
+        public int HarmonicGroup
+        {
+            get
+            {
+                return m_tuple.Item2;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return m_tuple.Item3;
+            }
+        }
+
+        public string MeasurementType
+        {
+            get
+            {
+                return m_tuple.Item4;
+            }
+        }
+
+        public string MeasurementCharacteristic
+        {
+            get
+            {
+                return m_tuple.Item5;
+            }
+        }
+
+        public string Phase
+        {
+            get
+            {
+                return m_tuple.Item6;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        public override int GetHashCode()
+        {
+            return m_tuple.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ChannelKey);
+        }
+
+        public bool Equals(ChannelKey other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return m_tuple.Equals(other.m_tuple);
+        }
+
+        #endregion
+    }
+
+    [TableName("Channel")]
+    public class ChannelBase
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        
+
         public int MeterID { get; set; }
 
         public int LineID { get; set; }
@@ -45,15 +149,283 @@ namespace openXDA.Model
         [Searchable]
         public string Name { get; set; }
 
-        public float SamplesPerHour { get; set; }
+        public double SamplesPerHour { get; set; }
 
-        public float PerUnitValue { get; set; }
+        public double? PerUnitValue { get; set; }
 
         public int HarmonicGroup { get; set; }
 
         public string Description { get; set; }
 
         public bool Enabled { get; set; }
+    }
+
+    public class Channel : ChannelBase
+    {
+        #region [ Members ]
+
+        // Fields
+        private MeasurementType m_measurementType;
+        private MeasurementCharacteristic m_measurementCharacteristic;
+        private Phase m_phase;
+        private Meter m_meter;
+        private Line m_line;
+        private List<Series> m_series;
+
+        #endregion
+
+        #region [ Properties ]
+
+        [JsonIgnore]
+        [NonRecordField]
+        public MeasurementType MeasurementType
+        {
+            get
+            {
+                return m_measurementType ?? (m_measurementType = QueryMeasurementType());
+            }
+            set
+            {
+                m_measurementType = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public MeasurementCharacteristic MeasurementCharacteristic
+        {
+            get
+            {
+                return m_measurementCharacteristic ?? (m_measurementCharacteristic = QueryMeasurementCharacteristic());
+            }
+            set
+            {
+                m_measurementCharacteristic = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Phase Phase
+        {
+            get
+            {
+                return m_phase ?? (m_phase = QueryPhase());
+            }
+            set
+            {
+                m_phase = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Meter Meter
+        {
+            get
+            {
+                return m_meter ?? (m_meter = QueryMeter());
+            }
+            set
+            {
+                m_meter = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Line Line
+        {
+            get
+            {
+                return m_line ?? (m_line = QueryLine());
+            }
+            set
+            {
+                m_line = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<Series> Series
+        {
+            get
+            {
+                return m_series ?? (m_series = QuerySeries());
+            }
+            set
+            {
+                m_series = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public MeasurementType GetMeasurementType(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
+            return measurementTypeTable.QueryRecordWhere("ID = {0}", MeasurementTypeID);
+        }
+
+        public MeasurementCharacteristic GetMeasurementCharacteristic(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+            return measurementCharacteristicTable.QueryRecordWhere("ID = {0}", MeasurementCharacteristicID);
+        }
+
+        public Phase GetPhase(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
+            return phaseTable.QueryRecordWhere("ID = {0}", PhaseID);
+        }
+
+        public Meter GetMeter(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+            return meterTable.QueryRecordWhere("ID = {0}", MeterID);
+        }
+
+        public Line GetLine(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
+            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+        }
+
+        public IEnumerable<Series> GetSeries(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+            return seriesTable.QueryRecordsWhere("ChannelID = {0}", ID);
+        }
+
+        private MeasurementType QueryMeasurementType()
+        {
+            MeasurementType measurementType;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                measurementType = GetMeasurementType(connection);
+            }
+
+            return LazyContext.GetMeasurementType(measurementType);
+        }
+
+        private MeasurementCharacteristic QueryMeasurementCharacteristic()
+        {
+            MeasurementCharacteristic measurementCharacteristic;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                measurementCharacteristic = GetMeasurementCharacteristic(connection);
+            }
+
+            return LazyContext.GetMeasurementCharacteristic(measurementCharacteristic);
+        }
+
+        private Phase QueryPhase()
+        {
+            Phase phase;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                phase = GetPhase(connection);
+            }
+
+            return LazyContext.GetPhase(phase);
+        }
+
+        private Meter QueryMeter()
+        {
+            Meter meter;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meter = GetMeter(connection);
+            }
+
+            if ((object)meter != null)
+                meter.LazyContext = LazyContext;
+
+            return LazyContext.GetMeter(meter);
+        }
+
+        private Line QueryLine()
+        {
+            Line line;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                line = GetLine(connection);
+            }
+
+            if ((object)line != null)
+                line.LazyContext = LazyContext;
+
+            return LazyContext.GetLine(line);
+        }
+
+        private List<Series> QuerySeries()
+        {
+            List<Series> seriesList;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                seriesList = GetSeries(connection)?
+                    .Select(LazyContext.GetSeries)
+                    .ToList();
+            }
+
+            if ((object)seriesList != null)
+            {
+                foreach (Series series in seriesList)
+                {
+                    series.Channel = this;
+                    series.LazyContext = LazyContext;
+                }
+            }
+
+            return seriesList;
+        }
+
+        #endregion
     }
 
     public class ChannelDetail : Channel
@@ -65,13 +437,13 @@ namespace openXDA.Model
         public string LineName { get; set; }
 
         [Searchable]
-        public string MeasurementType { get; set; }
+        public new string MeasurementType { get; set; }
 
         [Searchable]
-        public string MeasurementCharacteristic { get; set; }
+        public new string MeasurementCharacteristic { get; set; }
 
         [Searchable]
-        public string Phase { get; set; }
+        public new string Phase { get; set; }
 
         public string Mapping { get; set; }
 
@@ -80,7 +452,6 @@ namespace openXDA.Model
         public string SeriesType { get; set; }
     }
 
-    [TableName("ChannelInfo")]
     public class ChannelInfo
     {
         [PrimaryKey(true)]

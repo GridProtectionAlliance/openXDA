@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using FaultData.Database;
+using GSF.Data;
 
 namespace FaultData.Configuration
 {
@@ -30,6 +30,6 @@ namespace FaultData.Configuration
     /// </summary>
     public interface IConfigurationLoader
     {
-        void UpdateConfiguration(DbAdapterContainer dbAdapterContainer);
+        void UpdateConfiguration(AdoDataConnection connection);
     }
 }

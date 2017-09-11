@@ -27,12 +27,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Transactions;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -48,6 +46,7 @@ using openXDA.DataPusher;
 using openXDA.Model;
 using Channel = openXDA.Model.Channel;
 using ChannelDetail = openXDA.Model.ChannelDetail;
+using DataFile = openXDA.Model.DataFile;
 using Disturbance = openXDA.Model.Disturbance;
 using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
@@ -83,18 +82,11 @@ namespace openXDA.Hubs
             LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string>(message));
         }
 
-        public static event EventHandler<EventArgs<int, int, int>> ReprocessFileEvent;
-        public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
+        public static event EventHandler<EventArgs<int>> ReprocessFilesEvent;
 
-        private static void OnReprocessFile(int dataFieldId, int fileGroupId, int meterId)
+        private static void OnReprocessFile(int fileGroupID)
         {
-            ReprocessFileEvent?.Invoke(new object(), new EventArgs<int,int,int>(dataFieldId, fileGroupId,meterId));
-        }
-
-
-        private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
-        {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int>(fileGroupID));
         }
 
         public static string LocalXDAInstance
@@ -871,34 +863,6 @@ namespace openXDA.Hubs
             return csv;
         }
 
-        public void ImportAlarmTableCSV(string csv)
-        {
-            string[] csvRows = csv.Split('\n');
-            string[] tableFields = csvRows[0].Split(',');
-
-            TableOperations<AlarmRangeLimit> table = DataContext.Table<AlarmRangeLimit>();
-
-            if (table.GetFieldNames() == tableFields)
-            {
-                for (int i = 1; i < csvRows.Length; ++i)
-                {
-                    string[] row = csvRows[i].Split(',');
-
-                    AlarmRangeLimit newRecord = DataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
-
-                    newRecord.Severity = int.Parse(row[4]);
-                    newRecord.High = float.Parse(row[5]);
-                    newRecord.Low = float.Parse(row[6]);
-                    newRecord.RangeInclusive = int.Parse(row[7]);
-                    newRecord.PerUnit = int.Parse(row[8]);
-                    newRecord.Enabled = int.Parse(row[9]);
-                    newRecord.IsDefault = bool.Parse(row[17]);
-
-                    table.UpdateRecord(newRecord);
-                }
-            }
-        }
-
         #endregion
 
         #region [ MetersWithHourlyLimits Table Operations ]
@@ -906,7 +870,6 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.QueryRecordCount)]
         public int QueryMetersWithHourlyLimitsCount(string filterText)
         {
-
             return DataContext.Table<MetersWithHourlyLimits>().QueryRecordCount(filterText);
         }
 
@@ -1083,36 +1046,6 @@ namespace openXDA.Hubs
         public void AddNewOrUpdateHourOfWeekLimit(HourOfWeekLimit record)
         {
             DataContext.Table<HourOfWeekLimit>().AddNewOrUpdateRecord(record);
-        }
-
-
-
-        public void ImportHourOfWeekLimitTableCSV(string csv)
-        {
-            string[] csvRows = csv.Split('\n');
-            string[] tableFields = csvRows[0].Split(',');
-
-            TableOperations<AlarmRangeLimit> table = DataContext.Table<AlarmRangeLimit>();
-
-            if (table.GetFieldNames() == tableFields)
-            {
-                for (int i = 1; i < csvRows.Length; ++i)
-                {
-                    string[] row = csvRows[i].Split(',');
-
-                    AlarmRangeLimit newRecord = DataContext.Connection.ExecuteScalar<AlarmRangeLimit>("Select * FROM AlarmRangeLimit WHERE ID ={0}", row[0]);
-
-                    newRecord.Severity = int.Parse(row[4]);
-                    newRecord.High = float.Parse(row[5]);
-                    newRecord.Low = float.Parse(row[6]);
-                    newRecord.RangeInclusive = int.Parse(row[7]);
-                    newRecord.PerUnit = int.Parse(row[8]);
-                    newRecord.Enabled = int.Parse(row[9]);
-                    newRecord.IsDefault = bool.Parse(row[17]);
-
-                    table.UpdateRecord(newRecord);
-                }
-            }
         }
 
         #endregion
@@ -2460,7 +2393,7 @@ namespace openXDA.Hubs
         public bool UpdateEvent(EventView record, bool propagate)
         {
             DateTime oldStartTime = DataContext.Connection.ExecuteScalar<DateTime>($"SELECT StartTime FROM Event WHERE ID = {record.ID}");
-            if(oldStartTime != record.StartTime)
+            if (oldStartTime != record.StartTime)
             {
                 // Get Time Stamp shift
                 Ticks ticks = record.StartTime - oldStartTime;
@@ -2503,7 +2436,7 @@ namespace openXDA.Hubs
                 // if propagate is false update all assocaited with the event id
                 IEnumerable<Fault> faults;
 
-                if(propagate)
+                if (propagate)
                     faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID IN (Select ID from Event WHERE FileGroupID = {0})", record.FileGroupID));
                 else
                     faults = DataContext.Table<Fault>().QueryRecords(restriction: new RecordRestriction("EventID = {0}", record.ID));
@@ -2514,66 +2447,64 @@ namespace openXDA.Hubs
                     DataContext.Table<Fault>().UpdateRecord(fault);
                 }
 
-                using(MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                DataGroup dataTimeGroup = new DataGroup();
+                DataGroup dataFreqGroup = new DataGroup();
+                DataGroup dataFaultAlgo = new DataGroup();
+
+                Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
+                byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
+
+                try
                 {
-
-                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
-
-                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID  == record.MeterID);
-                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
-
-                    try
+                    if (timeSeries != null && freqSeries != null)
                     {
-                        if (timeSeries != null && freqSeries != null)
+                        dataTimeGroup.FromData(meter, timeSeries);
+                        foreach (var dataSeries in dataTimeGroup.DataSeries)
                         {
-                            dataTimeGroup.FromData(meter, timeSeries);
-                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            dataFreqGroup.FromData(meter, freqSeries);
-                            foreach (var dataSeries in dataFreqGroup.DataSeries)
-                            {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            byte[] newFreqData = dataFreqGroup.ToData();
-                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
-
                         }
 
-                        if (faultCurve != null)
+                        dataFreqGroup.FromData(meter, freqSeries);
+                        foreach (var dataSeries in dataFreqGroup.DataSeries)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
-                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
-
-                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
+
+                        byte[] newTimeData = dataTimeGroup.ToData();
+                        byte[] newFreqData = dataFreqGroup.ToData();
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
                     }
-                    catch(Exception ex)
+
+                    if (faultCurve != null)
                     {
-                        OnLogStatusMessage(ex.ToString());
+                        dataFaultAlgo.FromData(meter, faultCurve);
+                        foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                        {
+                            foreach (var dataPoint in dataSeries.DataPoints)
+                            {
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                            }
+                        }
+
+                        byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                        DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                     }
+                }
+                catch (Exception ex)
+                {
+                    OnLogStatusMessage(ex.ToString());
                 }
             }
 
@@ -2743,66 +2674,64 @@ namespace openXDA.Hubs
                     DataContext.Table<Fault>().UpdateRecord(fault);
                 }
 
-                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                DataGroup dataTimeGroup = new DataGroup();
+                DataGroup dataFreqGroup = new DataGroup();
+                DataGroup dataFaultAlgo = new DataGroup();
+
+                Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
+                byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
+
+                try
                 {
-
-                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
-
-                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
-                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
-
-                    try
+                    if (timeSeries != null && freqSeries != null)
                     {
-                        if (timeSeries != null && freqSeries != null)
+                        dataTimeGroup.FromData(meter, timeSeries);
+                        foreach (var dataSeries in dataTimeGroup.DataSeries)
                         {
-                            dataTimeGroup.FromData(meter, timeSeries);
-                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            dataFreqGroup.FromData(meter, freqSeries);
-                            foreach (var dataSeries in dataFreqGroup.DataSeries)
-                            {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            byte[] newFreqData = dataFreqGroup.ToData();
-                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
-
                         }
 
-                        if (faultCurve != null)
+                        dataFreqGroup.FromData(meter, freqSeries);
+                        foreach (var dataSeries in dataFreqGroup.DataSeries)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
-                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
-
-                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
+
+                        byte[] newTimeData = dataTimeGroup.ToData();
+                        byte[] newFreqData = dataFreqGroup.ToData();
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
                     }
-                    catch (Exception ex)
+
+                    if (faultCurve != null)
                     {
-                        OnLogStatusMessage(ex.ToString());
+                        dataFaultAlgo.FromData(meter, faultCurve);
+                        foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                        {
+                            foreach (var dataPoint in dataSeries.DataPoints)
+                            {
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                            }
+                        }
+
+                        byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                        DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                     }
+                }
+                catch (Exception ex)
+                {
+                    OnLogStatusMessage(ex.ToString());
                 }
             }
 
@@ -3013,66 +2942,64 @@ namespace openXDA.Hubs
                     DataContext.Table<Fault>().UpdateRecord(fault);
                 }
 
-                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                DataGroup dataTimeGroup = new DataGroup();
+                DataGroup dataFreqGroup = new DataGroup();
+                DataGroup dataFaultAlgo = new DataGroup();
+
+                Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
+                byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
+
+                try
                 {
-
-                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
-
-                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
-                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
-
-                    try
+                    if (timeSeries != null && freqSeries != null)
                     {
-                        if (timeSeries != null && freqSeries != null)
+                        dataTimeGroup.FromData(meter, timeSeries);
+                        foreach (var dataSeries in dataTimeGroup.DataSeries)
                         {
-                            dataTimeGroup.FromData(meter, timeSeries);
-                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            dataFreqGroup.FromData(meter, freqSeries);
-                            foreach (var dataSeries in dataFreqGroup.DataSeries)
-                            {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            byte[] newFreqData = dataFreqGroup.ToData();
-                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
-
                         }
 
-                        if (faultCurve != null)
+                        dataFreqGroup.FromData(meter, freqSeries);
+                        foreach (var dataSeries in dataFreqGroup.DataSeries)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
-                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
-
-                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
+
+                        byte[] newTimeData = dataTimeGroup.ToData();
+                        byte[] newFreqData = dataFreqGroup.ToData();
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
                     }
-                    catch (Exception ex)
+
+                    if (faultCurve != null)
                     {
-                        OnLogStatusMessage(ex.ToString());
+                        dataFaultAlgo.FromData(meter, faultCurve);
+                        foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                        {
+                            foreach (var dataPoint in dataSeries.DataPoints)
+                            {
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                            }
+                        }
+
+                        byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                        DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                     }
+                }
+                catch (Exception ex)
+                {
+                    OnLogStatusMessage(ex.ToString());
                 }
             }
 
@@ -3275,66 +3202,65 @@ namespace openXDA.Hubs
                     DataContext.Table<Fault>().UpdateRecord(fault);
                 }
 
-                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+
+                DataGroup dataTimeGroup = new DataGroup();
+                DataGroup dataFreqGroup = new DataGroup();
+                DataGroup dataFaultAlgo = new DataGroup();
+
+                Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
+                byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
+
+                try
                 {
-
-                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
-
-                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
-                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
-
-                    try
+                    if (timeSeries != null && freqSeries != null)
                     {
-                        if (timeSeries != null && freqSeries != null)
+                        dataTimeGroup.FromData(meter, timeSeries);
+                        foreach (var dataSeries in dataTimeGroup.DataSeries)
                         {
-                            dataTimeGroup.FromData(meter, timeSeries);
-                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            dataFreqGroup.FromData(meter, freqSeries);
-                            foreach (var dataSeries in dataFreqGroup.DataSeries)
-                            {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            byte[] newFreqData = dataFreqGroup.ToData();
-                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
-
                         }
 
-                        if (faultCurve != null)
+                        dataFreqGroup.FromData(meter, freqSeries);
+                        foreach (var dataSeries in dataFreqGroup.DataSeries)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
-                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
-
-                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
+
+                        byte[] newTimeData = dataTimeGroup.ToData();
+                        byte[] newFreqData = dataFreqGroup.ToData();
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
                     }
-                    catch (Exception ex)
+
+                    if (faultCurve != null)
                     {
-                        OnLogStatusMessage(ex.ToString());
+                        dataFaultAlgo.FromData(meter, faultCurve);
+                        foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                        {
+                            foreach (var dataPoint in dataSeries.DataPoints)
+                            {
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                            }
+                        }
+
+                        byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                        DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                     }
+                }
+                catch (Exception ex)
+                {
+                    OnLogStatusMessage(ex.ToString());
                 }
             }
 
@@ -3521,66 +3447,64 @@ namespace openXDA.Hubs
                     DataContext.Table<Fault>().UpdateRecord(fault);
                 }
 
-                using (MeterInfoDataContext midc = new MeterInfoDataContext(DataContext.Connection.Connection))
+                DataGroup dataTimeGroup = new DataGroup();
+                DataGroup dataFreqGroup = new DataGroup();
+                DataGroup dataFaultAlgo = new DataGroup();
+
+                Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
+                byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
+                byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
+
+                meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
+
+                try
                 {
-
-                    FaultData.DataAnalysis.DataGroup dataTimeGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFreqGroup = new DataGroup();
-                    FaultData.DataAnalysis.DataGroup dataFaultAlgo = new DataGroup();
-
-                    FaultData.Database.Meter meter = midc.Meters.Single(m => m.ID == record.MeterID);
-                    byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                    byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
-
-                    try
+                    if (timeSeries != null && freqSeries != null)
                     {
-                        if (timeSeries != null && freqSeries != null)
+                        dataTimeGroup.FromData(meter, timeSeries);
+                        foreach (var dataSeries in dataTimeGroup.DataSeries)
                         {
-                            dataTimeGroup.FromData(meter, timeSeries);
-                            foreach (var dataSeries in dataTimeGroup.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            dataFreqGroup.FromData(meter, freqSeries);
-                            foreach (var dataSeries in dataFreqGroup.DataSeries)
-                            {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
-                            }
-
-                            byte[] newTimeData = dataTimeGroup.ToData();
-                            byte[] newFreqData = dataFreqGroup.ToData();
-                            DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
-
                         }
 
-                        if (faultCurve != null)
+                        dataFreqGroup.FromData(meter, freqSeries);
+                        foreach (var dataSeries in dataFreqGroup.DataSeries)
                         {
-                            dataFaultAlgo.FromData(meter, faultCurve);
-                            foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                            foreach (var dataPoint in dataSeries.DataPoints)
                             {
-                                foreach (var dataPoint in dataSeries.DataPoints)
-                                {
-                                    dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                                }
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
                             }
-
-                            byte[] newFaultAlgo = dataFaultAlgo.ToData();
-
-                            DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                         }
+
+                        byte[] newTimeData = dataTimeGroup.ToData();
+                        byte[] newFreqData = dataFreqGroup.ToData();
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+
                     }
-                    catch (Exception ex)
+
+                    if (faultCurve != null)
                     {
-                        OnLogStatusMessage(ex.ToString());
+                        dataFaultAlgo.FromData(meter, faultCurve);
+                        foreach (var dataSeries in dataFaultAlgo.DataSeries)
+                        {
+                            foreach (var dataPoint in dataSeries.DataPoints)
+                            {
+                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
+                            }
+                        }
+
+                        byte[] newFaultAlgo = dataFaultAlgo.ToData();
+
+                        DataContext.Connection.ExecuteNonQuery("Update FaultCurve SET Data = {0} WHERE EventID = {1}", newFaultAlgo, record.ID);
                     }
+                }
+                catch (Exception ex)
+                {
+                    OnLogStatusMessage(ex.ToString());
                 }
             }
 
@@ -5378,31 +5302,34 @@ namespace openXDA.Hubs
         }
 
 
-        public void ReprocessFiles(List<int> meterIds, Tuple<DateTime, DateTime> dateRange)
+        public void ReprocessFiles(List<int> meterIDs, Tuple<DateTime, DateTime> dateRange)
         {
-            IEnumerable<Event> events = DataContext.Table<Event>().QueryRecords(restriction: new RecordRestriction($"MeterID IN ({meterIds.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + "," + s2)}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'")).ToList();
-            Dictionary<int,int> dictionary = new Dictionary<int, int>();
-            foreach (var e in events)
-            {
-                if (dictionary.ContainsKey(e.FileGroupID))
-                    dictionary[e.FileGroupID] = e.MeterID;
-                else
-                    dictionary.Add(e.FileGroupID, e.MeterID); 
-            }
-            foreach (var kvPair in dictionary)
-            {
-                CascadeDelete("Event", $"FileGroupID = {kvPair.Key}");
-                CascadeDelete("EventData", $"FileGroupID ={kvPair.Key}");
-            }
+            string commaSeparatedMeters = string.Join(",", meterIDs);
+            string eventFilter = $"MeterID IN ({commaSeparatedMeters}) AND StartTime >= '{dateRange.Item1}' AND StartTime <= '{dateRange.Item2}'";
 
-            OnReprocessFiles(dictionary);
+            List<Event> events = DataContext
+                .Table<Event>()
+                .QueryRecords(new RecordRestriction(eventFilter))
+                .ToList();
+
+            List<int> fileGroupIDs = events
+                .Select(evt => evt.FileGroupID)
+                .Distinct()
+                .ToList();
+
+            foreach (int fileGroupID in fileGroupIDs)
+            {
+                CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
+                CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
+                OnReprocessFile(fileGroupID);
+            }
         }
 
-        public void ReprocessFile(int dataFileId, int fileGroupId, int meterId)
+        public void ReprocessFile(int dataFileID, int fileGroupID, int meterID)
         { 
-            CascadeDelete("Event", $"FileGroupID = {fileGroupId}");
-            CascadeDelete("EventData", $"FileGroupID ={fileGroupId}");
-            OnReprocessFile(dataFileId, fileGroupId, meterId);
+            CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
+            CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
+            OnReprocessFile(fileGroupID);
         }
 
         #endregion

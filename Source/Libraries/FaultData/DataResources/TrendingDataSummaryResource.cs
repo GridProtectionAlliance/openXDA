@@ -27,12 +27,13 @@ using System.ComponentModel;
 using System.Linq;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF.Collections;
 using GSF.Configuration;
 using log4net;
 using openHistorian.XDALink;
+using openXDA.Model;
+using TrendingDataPoint = openHistorian.XDALink.TrendingDataPoint;
 
 namespace FaultData.DataResources
 {

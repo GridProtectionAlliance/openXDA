@@ -27,10 +27,12 @@ using System.Configuration;
 using System.Linq;
 using System.Transactions;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
+using GSF.Collections;
+using GSF.Data;
+using GSF.Data.Model;
 using log4net;
-using GSF.Web.Model;
+using openXDA.Model;
 
 namespace FaultData.DataOperations
 {
@@ -81,9 +83,6 @@ namespace FaultData.DataOperations
         private string m_filePattern;
         private double m_systemFrequency;
 
-        private MeterInfoDataContext m_meterInfo;
-        private FaultLocationInfoDataContext m_faultLocationInfo;
-
         #endregion
 
         #region [ Properties ]
@@ -118,16 +117,6 @@ namespace FaultData.DataOperations
 
         #region [ Methods ]
 
-        public override void Prepare(DbAdapterContainer dbAdapterContainer)
-        {
-            m_meterInfo = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
-            m_faultLocationInfo = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>();
-        }
-
-        public override void Prepare(DataContext dataContext)
-        {
-        }
-
         public override void Execute(MeterDataSet meterDataSet)
         {
             Meter parsedMeter;
@@ -140,7 +129,12 @@ namespace FaultData.DataOperations
             parsedMeter = meterDataSet.Meter;
 
             // Search the database for a meter definition that matches the parsed meter
-            dbMeter = m_meterInfo.Meters.SingleOrDefault(m => m.AssetKey == parsedMeter.AssetKey);
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+                dbMeter = meterTable.QueryRecordWhere("AssetKey = {0}", parsedMeter.AssetKey);
+                dbMeter.ConnectionFactory = meterDataSet.CreateDbConnection;
+            }
 
             if ((object)dbMeter == null)
             {
@@ -158,8 +152,8 @@ namespace FaultData.DataOperations
             meterDataSet.Meter = dbMeter;
 
             // Get the list of series associated with the meter in the database
-            seriesList = m_meterInfo.Series
-                .Where(series => series.Channel.MeterID == dbMeter.ID)
+            seriesList = dbMeter.Channels
+                .SelectMany(channel => channel.Series)
                 .ToList();
 
             // Create data series for series which
@@ -196,10 +190,6 @@ namespace FaultData.DataOperations
 
             // Update line parameters pulled from the input data
             UpdateConfigurationData(meterDataSet);
-        }
-
-        public override void Load(DbAdapterContainer dbAdapterContainer)
-        {
         }
 
         private void AddCalculatedDataSeries(MeterDataSet meterDataSet, Series series)
@@ -242,18 +232,7 @@ namespace FaultData.DataOperations
 
         private void AddUndefinedChannels(MeterDataSet meterDataSet)
         {
-            DataContextLookup<SeriesKey, Series> seriesLookup;
-            DataContextLookup<ChannelKey, Channel> channelLookup;
-            DataContextLookup<string, MeasurementType> measurementTypeLookup;
-            DataContextLookup<string, MeasurementCharacteristic> measurementCharacteristicLookup;
-            DataContextLookup<string, SeriesType> seriesTypeLookup;
-            DataContextLookup<string, Phase> phaseLookup;
-
-            List<DataSeries> undefinedDataSeries;
-
-            Line line;
-
-            undefinedDataSeries = meterDataSet.DataSeries
+            List<DataSeries> undefinedDataSeries = meterDataSet.DataSeries
                 .Concat(meterDataSet.Digitals)
                 .Where(dataSeries => (object)dataSeries.SeriesInfo.Channel.Line == null)
                 .ToList();
@@ -261,124 +240,214 @@ namespace FaultData.DataOperations
             if (undefinedDataSeries.Count <= 0)
                 return;
 
-            if (meterDataSet.Meter.MeterLines.Count == 0)
+            Meter meter = meterDataSet.Meter;
+
+            if (meter.MeterLines.Count == 0)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are no lines associated with that meter.");
                 return;
             }
 
-            if (meterDataSet.Meter.MeterLines.Count > 1)
+            if (meter.MeterLines.Count > 1)
             {
                 Log.Warn($"Unable to automatically add channels to meter {meterDataSet.Meter.Name} because there are too many lines associated with that meter.");
                 return;
             }
 
-            line = meterDataSet.Meter.MeterLines
+            Line line = meter.MeterLines
                 .Select(meterLine => meterLine.Line)
                 .Single();
 
             foreach (DataSeries series in undefinedDataSeries)
-                series.SeriesInfo.Channel.Line = new Line() { ID = line.ID };
+                series.SeriesInfo.Channel.LineID = line.ID;
 
-            seriesLookup = new DataContextLookup<SeriesKey, Series>(m_meterInfo, series => new SeriesKey(series))
-                .WithFilterExpression(series => series.Channel.MeterID == meterDataSet.Meter.ID)
-                .WithFilterExpression(series => series.SourceIndexes == "");
-
-            channelLookup = new DataContextLookup<ChannelKey, Channel>(m_meterInfo, channel => new ChannelKey(channel))
-                .WithFilterExpression(channel => channel.MeterID == meterDataSet.Meter.ID);
-
-            measurementTypeLookup = new DataContextLookup<string, MeasurementType>(m_meterInfo, type => type.Name);
-            measurementCharacteristicLookup = new DataContextLookup<string, MeasurementCharacteristic>(m_meterInfo, characteristic => characteristic.Name);
-            seriesTypeLookup = new DataContextLookup<string, SeriesType>(m_meterInfo, type => type.Name);
-            phaseLookup = new DataContextLookup<string, Phase>(m_meterInfo, phase => phase.Name);
-
-            for (int i = 0; i < undefinedDataSeries.Count; i++)
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                DataSeries dataSeries = undefinedDataSeries[i];
+                TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
+                TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
+                TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
+                TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
 
-                // Search for an existing series info object
-                dataSeries.SeriesInfo = seriesLookup.GetOrAdd(new SeriesKey(dataSeries.SeriesInfo), seriesKey =>
-                {
-                    Series clonedSeries = dataSeries.SeriesInfo.Clone();
+                Dictionary<string, MeasurementType> measurementTypeLookup = undefinedDataSeries
+                    .Select(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType)
+                    .DistinctBy(measurementType => measurementType.Name)
+                    .Select(measurementType => measurementTypeTable.GetOrAdd(measurementType.Name, measurementType.Description))
+                    .ToDictionary(measurementType => measurementType.Name);
 
-                    // Search for an existing series type object to associate with the new series
-                    SeriesType seriesType = seriesTypeLookup.GetOrAdd(dataSeries.SeriesInfo.SeriesType.Name, name => dataSeries.SeriesInfo.SeriesType.Clone());
+                Dictionary<string, MeasurementCharacteristic> measurementCharacteristicLookup = undefinedDataSeries
+                    .Select(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic)
+                    .DistinctBy(measurementCharacteristic => measurementCharacteristic.Name)
+                    .Select(measurementCharacteristic => measurementCharacteristicTable.GetOrAdd(measurementCharacteristic.Name, measurementCharacteristic.Description))
+                    .ToDictionary(measurementCharacteristic => measurementCharacteristic.Name);
 
-                    // Search for an existing channel object to associate with the new series
-                    Channel channel = channelLookup.GetOrAdd(seriesKey.ChannelKey, channelKey =>
+                Dictionary<string, Phase> phaseLookup = undefinedDataSeries
+                    .Select(dataSeries => dataSeries.SeriesInfo.Channel.Phase)
+                    .DistinctBy(phase => phase.Name)
+                    .Select(phase => phaseTable.GetOrAdd(phase.Name, phase.Description))
+                    .ToDictionary(phase => phase.Name);
+
+                Dictionary<string, SeriesType> seriesTypeLookup = undefinedDataSeries
+                    .Select(dataSeries => dataSeries.SeriesInfo.SeriesType)
+                    .DistinctBy(seriesType => seriesType.Name)
+                    .Select(seriesType => seriesTypeTable.GetOrAdd(seriesType.Name, seriesType.Description))
+                    .ToDictionary(seriesType => seriesType.Name);
+
+                Dictionary<ChannelKey, Channel> channelLookup = meter.Channels
+                    .GroupBy(channel => new ChannelKey(channel))
+                    .ToDictionary(grouping =>
                     {
-                        Channel clonedChannel = dataSeries.SeriesInfo.Channel.Clone();
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Detected duplicate channel key: {grouping.First().ID}");
 
-                        // Search for an existing measurement type object to associate with the new channel
-                        MeasurementType measurementType = measurementTypeLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementType.Name, name => dataSeries.SeriesInfo.Channel.MeasurementType.Clone());
+                        return grouping.Key;
+                    }, grouping => grouping.First());
 
-                        // Search for an existing measurement characteristic object to associate with the new channel
-                        MeasurementCharacteristic measurementCharacteristic = measurementCharacteristicLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Name, name => dataSeries.SeriesInfo.Channel.MeasurementCharacteristic.Clone());
+                List<Channel> undefinedChannels = undefinedDataSeries
+                    .Select(dataSeries => dataSeries.SeriesInfo.Channel)
+                    .GroupBy(channel => new ChannelKey(channel))
+                    .Where(grouping => !channelLookup.ContainsKey(grouping.Key))
+                    .Select(grouping => grouping.First())
+                    .ToList();
 
-                        // Search for an existing phase object to associate with the new channel
-                        Phase phase = phaseLookup.GetOrAdd(dataSeries.SeriesInfo.Channel.Phase.Name, name => dataSeries.SeriesInfo.Channel.Phase.Clone());
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
 
-                        // Assign the foreign keys of the channel
-                        // to reference the objects from the lookup
-                        clonedChannel.Meter = meterDataSet.Meter;
-                        clonedChannel.Line = line;
-                        clonedChannel.MeasurementType = measurementType;
-                        clonedChannel.MeasurementCharacteristic = measurementCharacteristic;
-                        clonedChannel.Phase = phase;
-                        clonedChannel.Enabled = 1;
+                // Add all undefined channels to the database
+                foreach (Channel channel in undefinedChannels)
+                {
+                    string measurementTypeName = channel.MeasurementType.Name;
+                    string measurementCharacteristicName = channel.MeasurementCharacteristic.Name;
+                    string phaseName = channel.Phase.Name;
 
-                        // If the per-unit value was not specified in the input file,
-                        // we can obtain the per-unit value from the line configuration
-                        // if the channel happens to be an instantaneous or RMS voltage
-                        if (!clonedChannel.PerUnitValue.HasValue)
+                    channel.MeterID = meter.ID;
+                    channel.LineID = line.ID;
+                    channel.MeasurementTypeID = measurementTypeLookup[measurementTypeName].ID;
+                    channel.MeasurementCharacteristicID = measurementCharacteristicLookup[measurementCharacteristicName].ID;
+                    channel.PhaseID = phaseLookup[phaseName].ID;
+                    channel.Enabled = true;
+
+                    // If the per-unit value was not specified in the input file,
+                    // we can obtain the per-unit value from the line configuration
+                    // if the channel happens to be an instantaneous or RMS voltage
+                    if (!channel.PerUnitValue.HasValue)
+                    {
+                        if (IsVoltage(channel))
                         {
-                            if (IsVoltage(clonedChannel))
-                            {
-                                if (IsLineToNeutral(clonedChannel))
-                                    clonedChannel.PerUnitValue = (line.VoltageKV * 1000.0D) / Sqrt3;
-                                else if (IsLineToLine(clonedChannel))
-                                    clonedChannel.PerUnitValue = line.VoltageKV * 1000.0D;
-                            }
+                            if (IsLineToNeutral(channel))
+                                channel.PerUnitValue = (line.VoltageKV * 1000.0D) / Sqrt3;
+                            else if (IsLineToLine(channel))
+                                channel.PerUnitValue = line.VoltageKV * 1000.0D;
                         }
+                    }
 
-                        return clonedChannel;
-                    });
+                    channelTable.AddNewRecord(channel);
+                }
 
-                    // Assign the foreign keys of the series
-                    // to reference the objects from the lookup
-                    clonedSeries.SeriesType = seriesType;
-                    clonedSeries.Channel = channel;
+                if (undefinedChannels.Count > 0)
+                {
+                    // Refresh the channel lookup to
+                    // include all the new channels
+                    meter.Channels = null;
 
-                    // The filter expression for this DataContextLookup only
-                    // looks at series that do not have source indexes
-                    clonedSeries.SourceIndexes = "";
+                    channelLookup = meter.Channels
+                        .GroupBy(channel => new ChannelKey(channel))
+                        .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
+                }
 
-                    return clonedSeries;
-                });
+                Dictionary<SeriesKey, Series> seriesLookup = meter.Channels
+                    .SelectMany(channel => channel.Series)
+                    .Where(series => series.SourceIndexes == "")
+                    .GroupBy(series => new SeriesKey(series))
+                    .ToDictionary(grouping =>
+                    {
+                        if (grouping.Count() > 1)
+                            Log.Warn($"Detected duplicate series key: {grouping.First().ID}");
+
+                        return grouping.Key;
+                    }, grouping => grouping.First());
+
+                List<Series> undefinedSeries = undefinedDataSeries
+                    .SelectMany(dataSeries => dataSeries.SeriesInfo.Channel.Series)
+                    .GroupBy(series => new SeriesKey(series))
+                    .Where(grouping => !seriesLookup.ContainsKey(grouping.Key))
+                    .Select(grouping => grouping.First())
+                    .ToList();
+
+                TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
+
+                // Add all undefined series objects to the database
+                foreach (Series series in undefinedSeries)
+                {
+                    ChannelKey channelKey = new ChannelKey(series.Channel);
+                    string seriesTypeName = series.SeriesType.Name;
+
+                    series.ChannelID = channelLookup[channelKey].ID;
+                    series.SeriesTypeID = seriesTypeLookup[seriesTypeName].ID;
+                    series.SourceIndexes = "";
+
+                    seriesTable.AddNewRecord(series);
+                }
+
+                if (undefinedSeries.Count > 0)
+                {
+                    // Refresh the series lookup to
+                    // include all the new series
+                    foreach (Channel channel in meter.Channels)
+                        channel.Series = null;
+
+                    seriesLookup = meter.Channels
+                        .SelectMany(channel => channel.Series)
+                        .GroupBy(series => new SeriesKey(series))
+                        .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
+                }
+
+                // Update all undefined data series to reference the new database objects
+                foreach (DataSeries dataSeries in undefinedDataSeries)
+                {
+                    SeriesKey seriesKey = new SeriesKey(dataSeries.SeriesInfo);
+                    Series series = seriesLookup[seriesKey];
+                    dataSeries.SeriesInfo = series;
+                }
             }
         }
 
         private void UpdateConfigurationData(MeterDataSet meterDataSet)
         {
+            bool updateLineLength = meterDataSet.Configuration.LineLength.HasValue;
+
+            bool updateLineImpedance =
+                meterDataSet.Configuration.R1.HasValue &&
+                meterDataSet.Configuration.X1.HasValue &&
+                meterDataSet.Configuration.R0.HasValue &&
+                meterDataSet.Configuration.X0.HasValue;
+
+            if (!updateLineLength && !updateLineImpedance)
+                return;
+
             using (TransactionScope transaction = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                if (meterDataSet.Meter.MeterLines.Count != 1)
+                TableOperations<Line> lineTable = new TableOperations<Line>(connection);
+
+                List<Line> lines = lineTable.QueryRecordsWhere("ID IN (SELECT LineID FROM MeterLocationLine WHERE MeterLocationID = {0})", meterDataSet.Meter.MeterLocationID).ToList();
+
+                if (lines.Count != 1)
                     return;
 
-                Line line = meterDataSet.Meter.MeterLines
-                    .Select(meterLine => meterLine.Line)
-                    .Single();
+                Line line = lines[0];
 
-                if (meterDataSet.Configuration.LineLength.HasValue)
+                if (updateLineLength)
                 {
                     line.Length = meterDataSet.Configuration.LineLength.GetValueOrDefault();
-                    m_meterInfo.SubmitChanges();
+                    lineTable.UpdateRecord(line);
                 }
 
-                if (meterDataSet.Configuration.R1.HasValue && meterDataSet.Configuration.X1.HasValue && meterDataSet.Configuration.R0.HasValue && meterDataSet.Configuration.X0.HasValue)
+                if (updateLineImpedance)
                 {
-                    DataContextLookup<int, LineImpedance> lookup = new DataContextLookup<int, LineImpedance>(m_faultLocationInfo, impedance => impedance.LineID);
-                    LineImpedance lineImpedance = lookup.GetOrAdd(line.ID, id => new LineImpedance() { LineID = id });
+                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+                    LineImpedance lineImpedance = lineImpedanceTable.QueryRecordWhere("LineID = {0}", line.ID);
+
+                    if ((object)lineImpedance == null)
+                        lineImpedance = new LineImpedance() { ID = line.ID };
 
                     if (meterDataSet.Configuration.R1.HasValue)
                         lineImpedance.R1 = meterDataSet.Configuration.R1.GetValueOrDefault();
@@ -392,7 +461,7 @@ namespace FaultData.DataOperations
                     if (meterDataSet.Configuration.X0.HasValue)
                         lineImpedance.X0 = meterDataSet.Configuration.X0.GetValueOrDefault();
 
-                    m_faultLocationInfo.SubmitChanges();
+                    lineImpedanceTable.AddNewOrUpdateRecord(lineImpedance);
                 }
 
                 transaction.Complete();
@@ -401,32 +470,42 @@ namespace FaultData.DataOperations
 
         private void FixUpdatedChannelInfo(MeterDataSet meterDataSet, Meter parsedMeter)
         {
-            foreach (DataSeries dataSeries in meterDataSet.DataSeries)
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
-                if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
+                TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
+
+                foreach (DataSeries dataSeries in meterDataSet.DataSeries)
                 {
-                    double samplesPerHour = (dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D);
-                    double roundedSamplesPerHour = Math.Round(samplesPerHour);
+                    if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
+                    {
+                        double samplesPerHour = (dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D);
+                        double roundedSamplesPerHour = Math.Round(samplesPerHour);
 
-                    if (Math.Abs(samplesPerHour - roundedSamplesPerHour) < 0.1D)
-                        samplesPerHour = roundedSamplesPerHour;
+                        if (Math.Abs(samplesPerHour - roundedSamplesPerHour) < 0.1D)
+                            samplesPerHour = roundedSamplesPerHour;
 
-                    if (samplesPerHour <= 60.0D)
-                        dataSeries.SeriesInfo.Channel.SamplesPerHour = samplesPerHour;
+                        if (samplesPerHour <= 60.0D)
+                        {
+                            Channel channel = dataSeries.SeriesInfo.Channel;
+                            channel.SamplesPerHour = samplesPerHour;
+                            channelTable.UpdateRecord(channel);
+                        }
+                    }
+                }
+
+                IEnumerable<ChannelKey> parsedChannelKeys = parsedMeter.Channels
+                    .Concat(meterDataSet.DataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
+                    .Where(channel => (object)channel.Line != null)
+                    .Select(channel => new ChannelKey(channel));
+
+                HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(parsedChannelKeys);
+
+                foreach (Channel channel in meterDataSet.Meter.Channels)
+                {
+                    channel.Enabled = parsedChannelLookup.Contains(new ChannelKey(channel));
+                    channelTable.UpdateRecord(channel);
                 }
             }
-
-            IEnumerable<ChannelKey> parsedChannelKeys = parsedMeter.Channels
-                .Concat(meterDataSet.DataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
-                .Where(channel => (object)channel.Line != null)
-                .Select(channel => new ChannelKey(channel));
-
-            HashSet<ChannelKey> parsedChannelLookup = new HashSet<ChannelKey>(parsedChannelKeys);
-
-            foreach (Channel dbChannel in meterDataSet.Meter.Channels)
-                dbChannel.Enabled = parsedChannelLookup.Contains(new ChannelKey(dbChannel)) ? 1 : 0;
-
-            m_meterInfo.SubmitChanges();
         }
 
         private void RemoveUnknownChannelTypes(MeterDataSet meterDataSet)

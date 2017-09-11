@@ -44,15 +44,15 @@ namespace openXDA.Model
         [Required]
         public int Severity { get; set; }
 
-        public float High { get; set; }
+        public double? High { get; set; }
 
-        public float Low { get; set; }
-
-        [Required]
-        public int RangeInclusive { get; set; }
+        public double? Low { get; set; }
 
         [Required]
-        public int PerUnit { get; set; }
+        public bool RangeInclusive { get; set; }
+
+        [Required]
+        public bool PerUnit { get; set; }
     }
 
     [TableName("DefaultAlarmRangeLimitView")]

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  SeriesType.cs - Gbtc
+//  BreakerOperationType.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  09/08/2017 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -27,8 +27,7 @@ using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    [TableName("SeriesType")]
-    public class SeriesType
+    public class BreakerOperationType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -41,7 +40,7 @@ namespace openXDA.Model
 
     public static partial class TableOperationsExtensions
     {
-        public static SeriesType GetOrAdd(this TableOperations<SeriesType> seriesTypeTable, string name, string description = null)
+        public static BreakerOperationType GetOrAdd(this TableOperations<BreakerOperationType> breakerOperationTypeTable, string name, string description = null)
         {
             TransactionScopeOption required = TransactionScopeOption.Required;
 
@@ -51,24 +50,24 @@ namespace openXDA.Model
                 Timeout = TransactionManager.MaximumTimeout
             };
 
-            SeriesType seriesType;
+            BreakerOperationType breakerOperationType;
 
             using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
             {
-                seriesType = seriesTypeTable.QueryRecordWhere("Name = {0}", name);
+                breakerOperationType = breakerOperationTypeTable.QueryRecordWhere("Name = {0}", name);
 
-                if ((object)seriesType == null)
+                if ((object)breakerOperationType == null)
                 {
-                    seriesType = new SeriesType();
-                    seriesType.Name = name;
-                    seriesType.Description = description ?? name;
-                    seriesTypeTable.AddNewRecord(seriesType);
+                    breakerOperationType = new BreakerOperationType();
+                    breakerOperationType.Name = name;
+                    breakerOperationType.Description = description ?? name;
+                    breakerOperationTypeTable.AddNewRecord(breakerOperationType);
 
-                    seriesType.ID = seriesTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    breakerOperationType.ID = breakerOperationTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
             }
 
-            return seriesType;
+            return breakerOperationType;
         }
     }
 }

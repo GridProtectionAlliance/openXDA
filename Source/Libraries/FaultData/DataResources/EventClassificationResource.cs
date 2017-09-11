@@ -26,8 +26,11 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
+using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
+using FaultGroup = FaultData.DataAnalysis.FaultGroup;
 
 namespace FaultData.DataResources
 {
@@ -47,7 +50,6 @@ namespace FaultData.DataResources
         #region [ Members ]
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
         private Dictionary<DataGroup, EventClassification> m_classifications;
 
         private double m_systemFrequency;
@@ -59,9 +61,8 @@ namespace FaultData.DataResources
 
         #region [ Constructors ]
 
-        public EventClassificationResource(DbAdapterContainer dbAdapterContainer)
+        public EventClassificationResource()
         {
-            m_dbAdapterContainer = dbAdapterContainer;
             m_classifications = new Dictionary<DataGroup, EventClassification>();
         }
 
@@ -135,8 +136,8 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource = CycleDataResource.GetResource(meterDataSet, m_dbAdapterContainer);
-            FaultDataResource faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(m_dbAdapterContainer));
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            FaultDataResource faultDataResource = meterDataSet.GetResource<FaultDataResource>();
             FaultGroup faultGroup;
 
             DataGroup dataGroup;
@@ -158,7 +159,7 @@ namespace FaultData.DataResources
 
         private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup, FaultGroup faultGroup)
         {
-            if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && dataGroup.DataSeries.SelectMany(series => series.SeriesInfo.Channel.BreakerChannels).Any())
+            if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
                 return EventClassification.Breaker;
 
             if ((object)faultGroup != null && (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult))
@@ -273,6 +274,25 @@ namespace FaultData.DataResources
                    channel.Phase.Name == "BC" ||
                    channel.Phase.Name == "CA" ||
                    channel.Phase.Name == "LineToLineAverage";
+        }
+
+        private static bool HasBreakerChannels(DataGroup dataGroup)
+        {
+            using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
+            {
+                TableOperations<BreakerChannel> breakerChannelTable = new TableOperations<BreakerChannel>(connection);
+
+                List<int> channelIDs = dataGroup.DataSeries
+                    .Select(dataSeries => dataSeries.SeriesInfo.Channel.ID)
+                    .ToList();
+
+                int count = breakerChannelTable.QueryRecordCountWhere($"ChannelID IN ({string.Join(",", channelIDs)})");
+
+                if (count > 0)
+                    return true;
+            }
+
+            return false;
         }
 
         #endregion

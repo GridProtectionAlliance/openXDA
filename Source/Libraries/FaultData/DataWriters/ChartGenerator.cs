@@ -31,11 +31,10 @@ using System.Linq;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Xml.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
-using FaultData.Database.FaultLocationDataTableAdapters;
-using FaultData.Database.MeterDataTableAdapters;
 using GSF.Data;
+using GSF.Data.Model;
 using log4net;
+using openXDA.Model;
 using DataPoint = FaultData.DataAnalysis.DataPoint;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 
@@ -46,7 +45,7 @@ namespace FaultData.DataWriters
         #region [ Members ]
 
         // Fields
-        private DbAdapterContainer m_dbAdapterContainer;
+        private AdoDataConnection m_connection;
         private int m_eventID;
 
         private Lazy<VIDataGroup> m_viDataGroup;
@@ -58,9 +57,9 @@ namespace FaultData.DataWriters
 
         #region [ Constructors ]
 
-        public ChartGenerator(DbAdapterContainer dbAdapterContainer, int eventID)
+        public ChartGenerator(AdoDataConnection connection, int eventID)
         {
-            m_dbAdapterContainer = dbAdapterContainer;
+            m_connection = connection;
             m_eventID = eventID;
 
             m_viDataGroup = new Lazy<VIDataGroup>(GetVIDataGroup);
@@ -217,40 +216,41 @@ namespace FaultData.DataWriters
 
         private VIDataGroup GetVIDataGroup()
         {
-            MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
-            EventTableAdapter eventAdapter = m_dbAdapterContainer.GetAdapter<EventTableAdapter>();
-            EventDataTableAdapter eventDataAdapter = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
+            TableOperations<Meter> meterTable = new TableOperations<Meter>(m_connection);
+            TableOperations<Event> eventTable = new TableOperations<Event>(m_connection);
 
-            MeterData.EventRow eventRow = eventAdapter.GetDataByID(m_eventID)[0];
-            MeterData.EventDataRow eventDataRow = eventDataAdapter.GetDataBy(m_eventID)[0];
+            Event evt = eventTable.QueryRecordWhere("ID = {0}", m_eventID);
+            Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
+            byte[] timeDomainData = m_connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
 
-            Meter meter = meterInfo.Meters.Single(m => m.ID == eventRow.MeterID);
+            meter.ConnectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);
 
             DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(meter, eventDataRow.TimeDomainData);
+            dataGroup.FromData(meter, timeDomainData);
             return new VIDataGroup(dataGroup);
         }
 
         private VICycleDataGroup GetVICycleDataGroup()
         {
-            MeterInfoDataContext meterInfo = m_dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
-            EventTableAdapter eventAdapter = m_dbAdapterContainer.GetAdapter<EventTableAdapter>();
-            EventDataTableAdapter eventDataAdapter = m_dbAdapterContainer.GetAdapter<EventDataTableAdapter>();
-            MeterData.EventRow eventRow = eventAdapter.GetDataByID(m_eventID)[0];
-            MeterData.EventDataRow eventDataRow = eventDataAdapter.GetDataBy(m_eventID)[0];
-            Meter meter = meterInfo.Meters.Single(m => m.ID == eventRow.MeterID);
+            TableOperations<Meter> meterTable = new TableOperations<Meter>(m_connection);
+            TableOperations<Event> eventTable = new TableOperations<Event>(m_connection);
+
+            Event evt = eventTable.QueryRecordWhere("ID = {0}", m_eventID);
+            Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
+            byte[] frequencyDomainData = m_connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
+
+            meter.ConnectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);
 
             DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(meter, eventDataRow.FrequencyDomainData);
+            dataGroup.FromData(meter, frequencyDomainData);
             return new VICycleDataGroup(dataGroup);
         }
 
         private Dictionary<string, DataSeries> GetFaultCurveLookup()
         {
-            FaultCurveTableAdapter faultCurveAdapter = m_dbAdapterContainer.GetAdapter<FaultCurveTableAdapter>();
-            FaultLocationData.FaultCurveDataTable faultCurveTable = faultCurveAdapter.GetDataBy(m_eventID);
+            TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(m_connection);
 
-            Func<FaultLocationData.FaultCurveRow, DataSeries> toDataSeries = faultCurve =>
+            Func<FaultCurve, DataSeries> toDataSeries = faultCurve =>
             {
                 DataGroup dataGroup = new DataGroup();
                 dataGroup.FromData(faultCurve.Data);
@@ -258,6 +258,7 @@ namespace FaultData.DataWriters
             };
 
             return faultCurveTable
+                .QueryRecordsWhere("EventID = {0}", m_eventID)
                 .GroupBy(faultCurve => faultCurve.Algorithm)
                 .ToDictionary(grouping => grouping.Key, grouping =>
                 {
@@ -276,7 +277,7 @@ namespace FaultData.DataWriters
         private static readonly ILog Log = LogManager.GetLogger(typeof(ChartGenerator));
 
         // Static Methods
-        public static Stream ConvertToChartImageStream(DbAdapterContainer dbAdapterContainer, XElement chartElement)
+        public static Stream ConvertToChartImageStream(AdoDataConnection connection, XElement chartElement)
         {
             ChartGenerator chartGenerator;
 
@@ -315,72 +316,69 @@ namespace FaultData.DataWriters
             startTime = DateTime.MinValue;
             endTime = DateTime.MaxValue;
 
-            using (AdoDataConnection connection = new AdoDataConnection(dbAdapterContainer.Connection, typeof(SqlDataAdapter), false))
+            faultSummary = new Lazy<DataRow>(() => connection.RetrieveData("SELECT * FROM FaultSummary WHERE ID = {0}", faultID).Select().FirstOrDefault());
+            systemFrequency = new Lazy<double>(() => connection.ExecuteScalar(60.0D, "SELECT Value FROM Setting WHERE Name = 'SystemFrequency'"));
+
+            // If prefaultCycles is specified and we have a fault summary we can use,
+            // we can determine the start time of the chart based on fault inception
+            if (!double.IsNaN(prefaultCycles) && (object)faultSummary.Value != null)
             {
-                faultSummary = new Lazy<DataRow>(() => connection.RetrieveData("SELECT * FROM FaultSummary WHERE ID = {0}", faultID).Select().FirstOrDefault());
-                systemFrequency = new Lazy<double>(() => connection.ExecuteScalar(60.0D, "SELECT Value FROM Setting WHERE Name = 'SystemFrequency'"));
+                inception = faultSummary.Value.ConvertField<DateTime>("Inception");
+                startTime = inception.AddSeconds(-prefaultCycles / systemFrequency.Value);
+            }
 
-                // If prefaultCycles is specified and we have a fault summary we can use,
-                // we can determine the start time of the chart based on fault inception
-                if (!double.IsNaN(prefaultCycles) && (object)faultSummary.Value != null)
+            // If postfaultCycles is specified and we have a fault summary we can use,
+            // we can determine the start time of the chart based on fault clearing
+            if (!double.IsNaN(postfaultCycles) && (object)faultSummary.Value != null)
+            {
+                inception = faultSummary.Value.ConvertField<DateTime>("Inception");
+                clearing = inception.AddSeconds(faultSummary.Value.ConvertField<double>("DurationSeconds"));
+                endTime = clearing.AddSeconds(postfaultCycles / systemFrequency.Value);
+            }
+
+            // Create the chart generator to generate the chart
+            chartGenerator = new ChartGenerator(connection, eventID);
+
+            using (Chart chart = chartGenerator.GenerateChart(title, keys, names, startTime, endTime))
+            {
+                // Set the chart size based on the specified width and height;
+                // this allows us to dynamically change font sizes and line
+                // widths before converting the chart to an image
+                SetChartSize(chart, width, height);
+
+                // Determine if either the minimum or maximum of the y-axis is specified explicitly
+                if ((object)chartElement.Attribute("yAxisMaximum") != null)
+                    chart.ChartAreas[0].AxisY.Maximum = Convert.ToDouble((string)chartElement.Attribute("yAxisMaximum"));
+
+                if ((object)chartElement.Attribute("yAxisMinimum") != null)
+                    chart.ChartAreas[0].AxisY.Minimum = Convert.ToDouble((string)chartElement.Attribute("yAxisMinimum"));
+
+                // If the calculation cycle is to be highlighted, determine whether the highlight should be in the range of a single index or a full cycle.
+                // If we have a fault summary we can use, apply the appropriate highlight based on the calculation cycle
+                if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "index", StringComparison.OrdinalIgnoreCase))
                 {
-                    inception = faultSummary.Value.ConvertField<DateTime>("Inception");
-                    startTime = inception.AddSeconds(-prefaultCycles / systemFrequency.Value);
-                }
-
-                // If postfaultCycles is specified and we have a fault summary we can use,
-                // we can determine the start time of the chart based on fault clearing
-                if (!double.IsNaN(postfaultCycles) && (object)faultSummary.Value != null)
-                {
-                    inception = faultSummary.Value.ConvertField<DateTime>("Inception");
-                    clearing = inception.AddSeconds(faultSummary.Value.ConvertField<double>("DurationSeconds"));
-                    endTime = clearing.AddSeconds(postfaultCycles / systemFrequency.Value);
-                }
-
-                // Create the chart generator to generate the chart
-                chartGenerator = new ChartGenerator(dbAdapterContainer, eventID);
-
-                using (Chart chart = chartGenerator.GenerateChart(title, keys, names, startTime, endTime))
-                {
-                    // Set the chart size based on the specified width and height;
-                    // this allows us to dynamically change font sizes and line
-                    // widths before converting the chart to an image
-                    SetChartSize(chart, width, height);
-
-                    // Determine if either the minimum or maximum of the y-axis is specified explicitly
-                    if ((object)chartElement.Attribute("yAxisMaximum") != null)
-                        chart.ChartAreas[0].AxisY.Maximum = Convert.ToDouble((string)chartElement.Attribute("yAxisMaximum"));
-
-                    if ((object)chartElement.Attribute("yAxisMinimum") != null)
-                        chart.ChartAreas[0].AxisY.Minimum = Convert.ToDouble((string)chartElement.Attribute("yAxisMinimum"));
-
-                    // If the calculation cycle is to be highlighted, determine whether the highlight should be in the range of a single index or a full cycle.
-                    // If we have a fault summary we can use, apply the appropriate highlight based on the calculation cycle
-                    if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "index", StringComparison.OrdinalIgnoreCase))
+                    if ((object)faultSummary.Value != null)
                     {
-                        if ((object)faultSummary.Value != null)
-                        {
-                            int calculationCycle = faultSummary.Value.ConvertField<int>("CalculationCycle");
-                            DateTime calculationTime = chartGenerator.ToDateTime(calculationCycle);
-                            double calculationPosition = chart.ChartAreas[0].AxisX.Minimum + (calculationTime - startTime).TotalSeconds;
-                            chart.ChartAreas[0].CursorX.Position = calculationPosition;
-                        }
+                        int calculationCycle = faultSummary.Value.ConvertField<int>("CalculationCycle");
+                        DateTime calculationTime = chartGenerator.ToDateTime(calculationCycle);
+                        double calculationPosition = chart.ChartAreas[0].AxisX.Minimum + (calculationTime - startTime).TotalSeconds;
+                        chart.ChartAreas[0].CursorX.Position = calculationPosition;
                     }
-                    else if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "cycle", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if ((object)faultSummary.Value != null)
-                        {
-                            int calculationCycle = faultSummary.Value.ConvertField<int>("CalculationCycle");
-                            DateTime calculationTime = chartGenerator.ToDateTime(calculationCycle);
-                            double calculationPosition = chart.ChartAreas[0].AxisX.Minimum + (calculationTime - startTime).TotalSeconds;
-                            chart.ChartAreas[0].CursorX.SelectionStart = calculationPosition;
-                            chart.ChartAreas[0].CursorX.SelectionEnd = calculationPosition + 1.0D / 60.0D;
-                        }
-                    }
-
-                    // Convert the generated chart to an image
-                    return ConvertToImageStream(chart, ChartImageFormat.Png);
                 }
+                else if (string.Equals((string)chartElement.Attribute("highlightCalculation"), "cycle", StringComparison.OrdinalIgnoreCase))
+                {
+                    if ((object)faultSummary.Value != null)
+                    {
+                        int calculationCycle = faultSummary.Value.ConvertField<int>("CalculationCycle");
+                        DateTime calculationTime = chartGenerator.ToDateTime(calculationCycle);
+                        double calculationPosition = chart.ChartAreas[0].AxisX.Minimum + (calculationTime - startTime).TotalSeconds;
+                        chart.ChartAreas[0].CursorX.SelectionStart = calculationPosition;
+                        chart.ChartAreas[0].CursorX.SelectionEnd = calculationPosition + 1.0D / 60.0D;
+                    }
+                }
+
+                // Convert the generated chart to an image
+                return ConvertToImageStream(chart, ChartImageFormat.Png);
             }
         }
 

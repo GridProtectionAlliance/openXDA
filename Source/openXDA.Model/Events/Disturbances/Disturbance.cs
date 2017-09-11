@@ -37,9 +37,9 @@ namespace openXDA.Model
 
         public int PhaseID { get; set; }
 
-        public float Magnitude { get; set; }
+        public double Magnitude { get; set; }
 
-        public float PerUnitMagnitude { get; set; }
+        public double PerUnitMagnitude { get; set; }
 
         [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime StartTime { get; set; }
@@ -47,9 +47,9 @@ namespace openXDA.Model
         [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime EndTime { get; set; }
 
-        public float DurationSeconds { get; set; }
+        public double DurationSeconds { get; set; }
 
-        public float DurationCycles { get; set; }
+        public double DurationCycles { get; set; }
 
         public int StartIndex { get; set; }
 
@@ -71,17 +71,17 @@ namespace openXDA.Model
 
         public int PhaseID { get; set; }
 
-        public float Magnitude { get; set; }
+        public double Magnitude { get; set; }
 
-        public float PerUnitMagnitude { get; set; }
+        public double PerUnitMagnitude { get; set; }
 
         public DateTime StartTime { get; set; }
 
         public DateTime EndTime { get; set; }
 
-        public float DurationSeconds { get; set; }
+        public double DurationSeconds { get; set; }
 
-        public float DurationCycles { get; set; }
+        public double DurationCycles { get; set; }
 
         public int StartIndex { get; set; }
 

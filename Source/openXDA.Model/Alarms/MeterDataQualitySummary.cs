@@ -47,4 +47,36 @@ namespace openXDA.Model
 
         public int DuplicatePoints { get; set; }
     }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static void Upsert(this TableOperations<MeterDataQualitySummary> meterDataQualitySummaryTable, MeterDataQualitySummary meterDataQualitySummary)
+        {
+            const string UpsertQuery =
+                "MERGE MeterDataQualitySummary WITH (HOLDLOCK) AS Target " +
+                "USING (VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})) AS Source(MeterID, Date, ExpectedPoints, GoodPoints, LatchedPoints, UnreasonablePoints, NoncongruentPoints, DuplicatePoints) " +
+                "ON Target.MeterID = Source.MeterID AND Target.Date = Source.Date " +
+                "WHEN MATCHED THEN " +
+                "    UPDATE SET " +
+                "        Target.ExpectedPoints = Source.ExpectedPoints, " +
+                "        Target.GoodPoints = Target.GoodPoints + Source.GoodPoints, " +
+                "        Target.LatchedPoints = Target.LatchedPoints + Source.LatchedPoints, " +
+                "        Target.UnreasonablePoints = Target.UnreasonablePoints + Source.UnreasonablePoints, " +
+                "        Target.NoncongruentPoints = Target.NoncongruentPoints + Source.NoncongruentPoints, " +
+                "        Target.DuplicatePoints = Target.DuplicatePoints + Source.DuplicatePoints " +
+                "WHEN NOT MATCHED THEN " +
+                "    INSERT VALUES(Source.MeterID, Source.Date, Source.ExpectedPoints, Source.GoodPoints, Source.LatchedPoints, Source.UnreasonablePoints, Source.NoncongruentPoints, Source.DuplicatePoints);";
+
+            int meterID = meterDataQualitySummary.MeterID;
+            DateTime date = meterDataQualitySummary.Date;
+            int expectedPoints = meterDataQualitySummary.ExpectedPoints;
+            int goodPoints = meterDataQualitySummary.GoodPoints;
+            int latchedPoints = meterDataQualitySummary.LatchedPoints;
+            int unreasonablePoints = meterDataQualitySummary.UnreasonablePoints;
+            int noncongruentPoints = meterDataQualitySummary.NoncongruentPoints;
+            int duplicatePoints = meterDataQualitySummary.DuplicatePoints;
+
+            meterDataQualitySummaryTable.Connection.ExecuteNonQuery(UpsertQuery, meterID, date, expectedPoints, goodPoints, latchedPoints, unreasonablePoints, noncongruentPoints, duplicatePoints);
+        }
+    }
 }

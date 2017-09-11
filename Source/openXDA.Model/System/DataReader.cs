@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  IDataWriter.cs - Gbtc
+//  DataReader.cs - Gbtc
 //
-//  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,18 +16,32 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/01/2015 - Stephen C. Wills
+//  09/01/2017 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using FaultData.Database;
-using FaultData.DataSets;
+using GSF.Data.Model;
 
-namespace FaultData.DataWriters
+namespace openXDA.Model
 {
-    public interface IDataWriter
+    [TableName("DataReader")]
+    public class DataReader
     {
-        void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet);
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public string FilePattern { get; set; }
+
+        public string AssemblyName { get; set; }
+
+        public string TypeName { get; set; }
+
+        public int LoadOrder { get; set; }
+
+        [NonRecordField]
+        public string UnqualifiedTypeName => TypeName.Contains(".")
+            ? TypeName.Remove(TypeName.LastIndexOf('.'))
+            : TypeName;
     }
 }

@@ -26,11 +26,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using GSF.PQDIF.Logical;
 using GSF.PQDIF.Physical;
 using log4net;
+using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataReaders
@@ -137,7 +137,6 @@ namespace FaultData.DataReaders
 
             // Create a meter from the parsed data source
             meter = ParseDataSource(dataSources.First());
-            m_meterDataSet.Meter = meter;
 
             // Build the list of all channel instances in the PQDIF file
             channelInstances = observationRecords
@@ -180,6 +179,7 @@ namespace FaultData.DataReaders
                     dataSeries.SeriesInfo = channel.Series[0];
 
                     // Add the new channel to the meter's channel list
+                    channel.Meter = meter;
                     meter.Channels.Add(channel);
                     m_meterDataSet.DataSeries.Add(dataSeries);
                 }
@@ -196,6 +196,8 @@ namespace FaultData.DataReaders
             // Add each of the series definitions which were not instanced to the meter's list of channels
             foreach (SeriesDefinition seriesDefinition in seriesDefinitions)
                 meter.Channels.Add(ParseSeries(seriesDefinition));
+
+            m_meterDataSet.Meter = meter;
         }
 
         public void Dispose()
@@ -244,21 +246,21 @@ namespace FaultData.DataReaders
 
         private static Meter ParseDataSource(DataSourceRecord dataSource)
         {
-            Meter meter;
-            MeterLocation meterLocation;
-
             string name = dataSource.DataSourceName;
             Guid vendorID = dataSource.VendorID;
             Guid equipmentID = dataSource.EquipmentID;
 
-            meter = new Meter();
+            Meter meter = new Meter();
+            meter.MeterLocation = new MeterLocation();
+            meter.Channels = new List<Channel>();
             meter.Name = name;
             meter.AssetKey = name;
             meter.ShortName = name.Substring(0, Math.Min(name.Length, 50));
 
-            meterLocation = new MeterLocation();
-            meterLocation.AssetKey = meter.Name;
-            meterLocation.Name = string.Format("{0} location", meter.Name);
+            MeterLocation meterLocation = meter.MeterLocation;
+            meterLocation.Meters = new List<Meter>() { meter };
+            meterLocation.AssetKey = name;
+            meterLocation.Name = string.Format("{0} location", name);
             meterLocation.ShortName = meterLocation.Name.Substring(0, Math.Min(meterLocation.Name.Length, 50));
             meterLocation.Description = meterLocation.Name;
 
@@ -273,27 +275,28 @@ namespace FaultData.DataReaders
 
         private static Channel ParseSeries(SeriesDefinition seriesDefinition)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
-
             ChannelDefinition channelDefinition = seriesDefinition.ChannelDefinition;
             QuantityMeasured quantityMeasured = channelDefinition.QuantityMeasured;
             Phase phase = channelDefinition.Phase;
 
+            // Populate series properties
+            Series series = new Series();
+            series.Channel = new Channel();
+            series.SeriesType = new SeriesType();
+            series.SourceIndexes = string.Empty;
+
             // Populate channel properties
-            channel.Name = channelDefinition.ChannelName;
-            channel.HarmonicGroup = 0;
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.Phase = new Database.Phase();
+            channel.Phase = new openXDA.Model.Phase();
+            channel.Name = channelDefinition.ChannelName;
+            channel.HarmonicGroup = 0;
+            channel.Series.Add(series);
 
             if (seriesDefinition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
                 channel.PerUnitValue = seriesDefinition.SeriesNominalQuantity;
-
-            // Populate series properties
-            series.SeriesType = new SeriesType();
-            series.Channel = channel;
-            series.SourceIndexes = string.Empty;
 
             // Populate measurement type properties
             channel.MeasurementType.Name = quantityMeasured.ToString();

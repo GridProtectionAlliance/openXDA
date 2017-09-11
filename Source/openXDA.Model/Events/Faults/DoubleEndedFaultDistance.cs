@@ -38,6 +38,6 @@ namespace openXDA.Model
 
         public double Angle { get; set; }
 
-        public int IsValid { get; set; }
+        public bool IsValid { get; set; }
     }
 }

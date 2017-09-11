@@ -26,9 +26,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataResources;
 using GSF.Configuration;
+using GSF.Data;
+using openXDA.Model;
 
 namespace FaultData.DataSets
 {
@@ -37,6 +38,7 @@ namespace FaultData.DataSets
         #region [ Members ]
 
         // Fields
+        private Func<AdoDataConnection> m_createDbConnection;
         private string m_connectionString;
         private Dictionary<Type, object> m_resources;
 
@@ -62,6 +64,18 @@ namespace FaultData.DataSets
         #endregion
 
         #region [ Properties ]
+
+        public Func<AdoDataConnection> CreateDbConnection
+        {
+            get
+            {
+                return m_createDbConnection;
+            }
+            set
+            {
+                m_createDbConnection = value;
+            }
+        }
 
         public string ConnectionString
         {

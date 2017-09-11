@@ -41,11 +41,11 @@ namespace openXDA.Adapters
     {
         #region [ Static Event Handlers ]
 
-        public static event EventHandler<EventArgs<Dictionary<int, int>>> ReprocessFilesEvent;
+        public static event EventHandler<EventArgs<int>> ReprocessFilesEvent;
 
-        private static void OnReprocessFiles(Dictionary<int, int> fileGroups)
+        private static void OnReprocessFiles(int fileGroupID)
         {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<Dictionary<int, int>>(fileGroups));
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int>(fileGroupID));
         }
 
         #endregion
@@ -351,9 +351,7 @@ namespace openXDA.Adapters
         [HttpPost]
         public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
         {
-            Dictionary<int, int> dictionary = new Dictionary<int, int>();
-            dictionary.Add(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
-            OnReprocessFiles(dictionary);
+            OnReprocessFiles(record["FileGroupID"].Value<int>());
 
             return Ok();
         }

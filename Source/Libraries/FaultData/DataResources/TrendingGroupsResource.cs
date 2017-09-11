@@ -25,8 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
+using openXDA.Model;
 
 namespace FaultData.DataResources
 {

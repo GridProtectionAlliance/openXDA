@@ -22,21 +22,21 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using GSF.COMTRADE;
 using GSF.IO;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataSets;
 using log4net;
+using openXDA.Model;
+using System.Collections.Generic;
 
 namespace FaultData.DataReaders
 {
     /// <summary>
-    /// Reads a COMTRADE file to produce a <see cref="DataSets.MeterDataSet"/>.
+    /// Reads a COMTRADE file to produce a <see cref="MeterDataSet"/>.
     /// </summary>
     public class COMTRADEReader : IDataReader, IDisposable
     {
@@ -127,51 +127,52 @@ namespace FaultData.DataReaders
 
         public void Parse(string filePath)
         {
-            Schema schema;
-            Channel channel;
-            DataSeries series;
+            Schema schema = m_parser.Schema;
 
-            schema = m_parser.Schema;
+            Meter meter = new Meter();
+            meter.MeterLocation = new MeterLocation();
+            meter.Channels = new List<Channel>();
+            meter.AssetKey = schema.DeviceID;
+            meter.Name = schema.DeviceID;
+            meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
 
-            m_meterDataSet.Meter = new Meter();
-            m_meterDataSet.Meter.AssetKey = schema.DeviceID;
-            m_meterDataSet.Meter.Name = schema.DeviceID;
-            m_meterDataSet.Meter.ShortName = schema.DeviceID.Substring(0, Math.Min(schema.DeviceID.Length, 50));
-
-            m_meterDataSet.Meter.MeterLocation = new MeterLocation();
-            m_meterDataSet.Meter.MeterLocation.AssetKey = schema.StationName;
-            m_meterDataSet.Meter.MeterLocation.Name = schema.StationName;
-            m_meterDataSet.Meter.MeterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
-            m_meterDataSet.Meter.MeterLocation.Description = schema.StationName;
+            MeterLocation meterLocation = meter.MeterLocation;
+            meterLocation.Meters = new List<Meter>() { meter };
+            meterLocation.AssetKey = schema.StationName;
+            meterLocation.Name = schema.StationName;
+            meterLocation.ShortName = schema.StationName.Substring(0, Math.Min(schema.StationName.Length, 50));
+            meterLocation.Description = schema.StationName;
 
             foreach (AnalogChannel analogChannel in schema.AnalogChannels)
             {
-                channel = ParseSeries(analogChannel);
+                Channel channel = ParseSeries(analogChannel);
+                channel.Meter = meter;
 
-                series = new DataSeries();
-                series.SeriesInfo = channel.Series[0];
+                DataSeries dataSeries = new DataSeries();
+                dataSeries.SeriesInfo = channel.Series[0];
 
-                m_meterDataSet.Meter.Channels.Add(channel);
+                meter.Channels.Add(channel);
 
                 while (m_meterDataSet.DataSeries.Count <= analogChannel.Index)
                     m_meterDataSet.DataSeries.Add(new DataSeries());
 
-                m_meterDataSet.DataSeries[analogChannel.Index] = series;
+                m_meterDataSet.DataSeries[analogChannel.Index] = dataSeries;
             }
 
             foreach (DigitalChannel digitalChannel in schema.DigitalChannels)
             {
-                channel = ParseSeries(digitalChannel);
+                Channel channel = ParseSeries(digitalChannel);
+                channel.Meter = meter;
 
-                series = new DataSeries();
-                series.SeriesInfo = channel.Series[0];
+                DataSeries dataSeries = new DataSeries();
+                dataSeries.SeriesInfo = channel.Series[0];
 
-                m_meterDataSet.Meter.Channels.Add(channel);
+                meter.Channels.Add(channel);
 
                 while (m_meterDataSet.Digitals.Count <= digitalChannel.Index)
                     m_meterDataSet.Digitals.Add(new DataSeries());
 
-                m_meterDataSet.Digitals[digitalChannel.Index] = series;
+                m_meterDataSet.Digitals[digitalChannel.Index] = dataSeries;
             }
 
             try
@@ -198,6 +199,8 @@ namespace FaultData.DataReaders
             {
                 Log.Warn(ex.Message, ex);
             }
+
+            m_meterDataSet.Meter = meter;
         }
 
         public void Dispose()
@@ -221,46 +224,42 @@ namespace FaultData.DataReaders
 
         private Channel ParseSeries(AnalogChannel analogChannel)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
+            string phaseName = !string.IsNullOrEmpty(analogChannel.PhaseID) ? analogChannel.PhaseID : "Unknown";
 
+            Series series = new Series();
+            series.Channel = new Channel();
+            series.SeriesType = new SeriesType() { Name = "Values" };
+            series.SourceIndexes = analogChannel.Index.ToString();
+
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType() { Name = "Unknown" };
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Unknown" };
+            channel.Phase = new Phase() { Name = phaseName };
             channel.Name = analogChannel.Name;
             channel.Description = analogChannel.CircuitComponent;
             channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Unknown";
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Unknown";
-            channel.Phase = new Phase();
-            channel.Phase.Name = !string.IsNullOrEmpty(analogChannel.PhaseID) ? analogChannel.PhaseID : "Unknown";
-
-            series.Channel = channel;
-            series.SeriesType = new SeriesType();
-            series.SeriesType.Name = "Values";
-            series.SourceIndexes = analogChannel.Index.ToString();
 
             return channel;
         }
 
         private Channel ParseSeries(DigitalChannel digitalChannel)
         {
-            Channel channel = new Channel();
-            Series series = new Series();
+            string phaseName = !string.IsNullOrEmpty(digitalChannel.PhaseID) ? digitalChannel.PhaseID : "Unknown";
 
+            Series series = new Series();
+            series.Channel = new Channel();
+            series.SeriesType = new SeriesType() { Name = "Values" };
+            series.SourceIndexes = digitalChannel.Index.ToString();
+
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType() { Name = "Digital" };
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Unknown" };
+            channel.Phase = new Phase() { Name = phaseName };
             channel.Name = digitalChannel.Name;
             channel.Description = digitalChannel.CircuitComponent;
             channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Digital";
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Unknown";
-            channel.Phase = new Phase();
-            channel.Phase.Name = !string.IsNullOrEmpty(digitalChannel.PhaseID) ? digitalChannel.PhaseID : "Unknown";
-
-            series.Channel = channel;
-            series.SeriesType = new SeriesType();
-            series.SeriesType.Name = "Values";
-            series.SourceIndexes = digitalChannel.Index.ToString();
 
             return channel;
         }

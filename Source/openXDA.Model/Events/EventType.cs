@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Transactions;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -33,5 +34,38 @@ namespace openXDA.Model
         public string Name { get; set; }
 
         public string Description { get; set; }
+    }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static EventType GetOrAdd(this TableOperations<EventType> eventTypeTable, string name, string description = null)
+        {
+            TransactionScopeOption required = TransactionScopeOption.Required;
+
+            TransactionOptions transactionOptions = new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+
+            EventType eventType;
+
+            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
+            {
+                eventType = eventTypeTable.QueryRecordWhere("Name = {0}", name);
+
+                if ((object)eventType == null)
+                {
+                    eventType = new EventType();
+                    eventType.Name = name;
+                    eventType.Description = description ?? name;
+                    eventTypeTable.AddNewRecord(eventType);
+
+                    eventType.ID = eventTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                }
+            }
+
+            return eventType;
+        }
     }
 }

@@ -21,17 +21,130 @@
 //
 //******************************************************************************************************
 
+using System;
+using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
     public class MeterLocationLine
     {
+        #region [ Members ]
+
+        // Fields
+        private MeterLocation m_meterLocation;
+        private Line m_line;
+
+        #endregion
+
+        #region [ Properties ]
+
         [PrimaryKey(true)]
         public int ID { get; set; }
 
         public int MeterLocationID { get; set; }
 
         public int LineID { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public MeterLocation MeterLocation
+        {
+            get
+            {
+                return m_meterLocation ?? (m_meterLocation = QueryMeterLocation());
+            }
+            set
+            {
+                m_meterLocation = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Line Line
+        {
+            get
+            {
+                return m_line ?? (m_line ?? QueryLine());
+            }
+            set
+            {
+                m_line = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory
+        {
+            get
+            {
+                return LazyContext.ConnectionFactory;
+            }
+            set
+            {
+                LazyContext.ConnectionFactory = value;
+            }
+        }
+
+        [JsonIgnore]
+        [NonRecordField]
+        internal LazyContext LazyContext { get; set; } = new LazyContext();
+
+        #endregion
+
+        #region [ Methods ]
+
+        public MeterLocation GetMeterLocation(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<MeterLocation> meterLocationTable = new TableOperations<MeterLocation>(connection);
+            return meterLocationTable.QueryRecordWhere("ID = {0}", MeterLocationID);
+        }
+
+        public Line GetLine(AdoDataConnection connection)
+        {
+            if ((object)connection == null)
+                return null;
+
+            TableOperations<Line> lineTable = new TableOperations<Line>(connection);
+            return lineTable.QueryRecordWhere("ID = {0}", LineID);
+        }
+
+        private MeterLocation QueryMeterLocation()
+        {
+            MeterLocation meterLocation;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                meterLocation = GetMeterLocation(connection);
+            }
+
+            if ((object)meterLocation != null)
+                meterLocation.LazyContext = LazyContext;
+
+            return LazyContext.GetMeterLocation(meterLocation);
+        }
+
+        private Line QueryLine()
+        {
+            Line line;
+
+            using (AdoDataConnection connection = ConnectionFactory?.Invoke())
+            {
+                line = GetLine(connection);
+            }
+
+            if ((object)line != null)
+                line.LazyContext = LazyContext;
+
+            return LazyContext.GetLine(line);
+        }
+
+        #endregion
     }
 }

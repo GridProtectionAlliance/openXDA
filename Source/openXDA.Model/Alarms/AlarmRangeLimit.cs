@@ -42,18 +42,18 @@ namespace openXDA.Model
         [Required]
         public int Severity { get; set; }
 
-        public float High { get; set; }
+        public double? High { get; set; }
 
-        public float Low { get; set; }
-
-        [Required]
-        public int RangeInclusive { get; set; }
+        public double? Low { get; set; }
 
         [Required]
-        public int PerUnit { get; set; }
+        public bool RangeInclusive { get; set; }
 
         [Required]
-        public int Enabled { get; set; }
+        public bool PerUnit { get; set; }
+
+        [Required]
+        public bool Enabled { get; set; }
 
         [Required]
         public bool IsDefault { get; set; }
@@ -80,15 +80,15 @@ namespace openXDA.Model
         [Label("Alarm Type ID")]
         public int AlarmTypeID { get; set; }
         public int Severity { get; set; }
-        public float High { get; set; }
-        public float Low { get; set; }
+        public double? High { get; set; }
+        public double? Low { get; set; }
 
         [Label("Range Inclusive")]
-        public int RangeInclusive { get; set; }
+        public bool RangeInclusive { get; set; }
 
         [Label("Per Unit")]
-        public int PerUnit { get; set; }
-        public int Enabled { get; set; }
+        public bool PerUnit { get; set; }
+        public bool Enabled { get; set; }
 
         [Label("Measurement Type")]
         public string MeasurementType { get; set; }
