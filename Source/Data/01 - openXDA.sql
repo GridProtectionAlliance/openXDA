@@ -1999,19 +1999,20 @@ CREATE TABLE [dbo].[LinesToDataPush](
 	[LocalXDAAssetKey] [varchar](200) NOT NULL,
 	[RemoteXDAAssetKey] varchar(200) NOT NULL,
 )
+GO
 CREATE TABLE [dbo].RemoteXDAInstance(
 	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	Name varchar(200) NOT NULL,
 	Address varchar(200) NULL,
 	Frequency [varchar](20) NOT NULL
 )
-
+GO
 CREATE TABLE RemoteXDAInstanceMeter(
 	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	RemoteXDAInstanceID INT NOT NULL,
 	MetersToDataPushID INT NOT NULL
 )
-
+GO
 ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(RemoteXDAInstanceID)
 REFERENCES [dbo].RemoteXDAInstance ([ID])
 GO
@@ -2025,7 +2026,7 @@ CREATE TABLE FileGroupLocalToRemote(
 	LocalFileGroupID INT not null,
 	RemoteFileGroupID INT not null
 )
-
+GO
 ALTER TABLE [dbo].FileGroupLocalToRemote  WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
 REFERENCES [dbo].FileGroup ([ID])
 GO
