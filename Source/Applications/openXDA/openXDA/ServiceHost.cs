@@ -514,6 +514,8 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/UserDashSettings.cshtml", new Tuple<Type, Type>(typeof(UserDashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/ChannelsWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithHourlyLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MetersWithNormalLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithNormalLimits), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/ChannelsWithNormalLimits.cshtml", new Tuple<Type, Type>(typeof(ChannelsWithNormalLimits), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/HourOfWeekLimits.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));

@@ -1,0 +1,333 @@
+﻿@*//******************************************************************************************************
+//  Settings.cshtml - Gbtc
+//
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  05/02/2017 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using openXDA
+@using openXDA.Model
+@using openXDA.Hubs
+@using GSF.Web.Model
+@using GSF.Web
+@using System.Collections.Generic;
+
+@inherits ExtendedTemplateBase<AppModel>
+@section StyleSheets {
+    <style>
+        .ui-notify {
+            height: 200px;
+        }
+    </style>
+}
+@{
+    DataContext dataContext = ViewBag.DataContext;
+
+    Layout = "Config/Layout.cshtml";
+    string title = ViewBag.CustomTitle = "Meters With Normal Alarm Limits";
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-Left" },
+        new[] { "Limits", "Channels", "text-center"}
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.HideAddNewButton = false;
+
+}
+@helper BodyRows()
+{
+    <td width="90%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/ChannelsWithNormalLimits.cshtml?MeterID=' +ID +'&Name=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: Limits, attr: {id: Name + 'Count' + ID}"></span></a></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext)
+{
+    <p>Use this screen to calculate and apply smart alarm limits.  You can choose the number of standard deviations to use and whether you want to include zero values in the calculation.</p>
+
+    <div id="metersFrame" class="form-group">
+        <label>Meters</label>
+        <select id="meters" class="form-control mobileSelect" multiple></select>
+    </div>
+
+    <div id="typesFrame" class="form-group">
+        <label>Channel Types</label>
+        <select id="types" class="form-control mobileSelect" multiple></select>
+    </div>
+
+    <label>Date Range</label>
+    <input id="dateRange" type="text" class="form-control">
+    <br />
+    <label>Sigma Level</label>
+    <select class="form-control" id="sigmaValue">
+        <option value="4">4 (99.994%)</option>
+        <option value="3"  selected="selected">3 (99.7%)</option>
+        <option value="2">2 (95%)</option>
+        <option value="1">1 (68%)</option>
+    </select>
+    <br />
+    <div><label><input type="checkbox" id="ignoreValuesAlarms" onclick="doSomething()" checked="checked"/>Remove values beyond given deviations</label></div>
+    <select class="form-control" id="ignoreValue">
+        <option value="7">7 (99.9999999997%)</option>
+        <option value="6" selected="selected">6 (99.9999998%)</option>
+        <option value="5">5 (99.99994%)</option>
+    </select>
+    <br />
+    <label>Decimals in Result</label>
+    <select class="form-control" id="significance">
+        <option>9</option>
+        <option>8</option>
+        <option>7</option>
+        <option>6</option>
+        <option>5</option>
+        <option selected="selected">4</option>
+        <option>3</option>
+        <option>2</option>
+        <option>1</option>
+        <option>0</option>
+    </select>
+    <br />
+    <div><label><input type="checkbox" id="overwrightOldAlarms" class="" checked="checked" />Overwrite Old Alarms</label></div>
+
+}
+<div id="notify">
+    <h4 id="meterName"></h4>
+    <div id="meterProgress" class="progress"></div>
+    <h4 id="instanceName"></h4>
+    <div id="instanceProgress" class="progress"></div>
+</div>
+
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+<form id="uploadCSVFile" action="HowlCSVUploadHandler.ashx" method="post" enctype="multipart/form-data" style="display: none">
+    <input id="importCSVFile" name="importCSVFile" type="file" accept=".csv" multiple>
+    <input type="submit" />
+</form>
+@section Scripts{
+<script>
+@Raw(dataContext.RenderViewModelConfiguration<MetersWithNormalLimits, DataHub>(ViewBag, "Name"))
+
+    $(function () {
+        $('#addRecordButton').text('Configure Alarms');
+        $('#notify').puinotify({ position: 'bottom' });
+
+        dataHubClient.updateProgressBarForOverall = function (instanceName, update) {
+            $('#instanceName').text(instanceName);
+            $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+
+        }
+
+        dataHubClient.updateProgressBarForMeter = function (meterName, update) {
+            $('#meterName').text(meterName);
+            $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+        }
+
+        viewModel.saveNewRecord = function (record) {
+            var meterIds = $('#meters').val();
+            var typeIds = $('#types').val();
+            var startDate = $('#dateRange').data('daterangepicker').startDate._d.toISOString();
+            var endDate = $('#dateRange').data('daterangepicker').endDate._d.toISOString();
+            var sigmaLevel = $('#sigmaValue').val();
+            var sigmaLevel = $('#sigmaValue').val();
+            var decimals = $('#significance').val();
+            var ignoreLargeValues = $('#ignoreValuesAlarms').prop('checked');
+            var overwriteOld = $('#overwrightOldAlarms').prop('checked');
+            var largeValueLevel = $('#ignoreValue').val();
+            if (!viewModel.canAddNew()) return;
+            if (meterIds == null) return;
+
+            if (viewModel.dataHubIsConnected()) {
+                $('#notify').puinotify('show');
+                dataHub.processSmartAlarmsNormal(meterIds, typeIds, startDate, endDate, sigmaLevel, decimals, ignoreLargeValues, overwriteOld, largeValueLevel).done(function () {
+                    // Raise event to allow any new record initialization
+                    $('#notify').puinotify('hide');
+                    viewModel.queryPageRecords();
+
+                    (viewModel).trigger("recordSaved", [record, true]);
+                    showInfoMessage("Saved new record...");
+                }).fail(function (error) {
+                    showErrorMessage(error);
+                });
+            }
+        }
+    });
+    var mobileSelectOptions = {
+        padding: {
+            top: '5%',
+            left: '15%',
+            right: '15%',
+            bottom: '5%'
+        },
+        title: "",
+        onOpen: function () {
+            $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
+            $('.selectAllBtn').click(function () {
+                $('.mobileSelect-container :visible .list-container').children().addClass('selected');
+            });
+
+
+        },
+        onClose: function () {
+            $('.selectAllBtn').remove();
+        }
+    };
+
+    var dateRangeOptions = {
+        "timePicker": false,
+        "locale": {
+            "format": 'MM/DD/YYYY '
+        },
+        "autoApply": true,
+        "ranges": {
+            '1 Day': [moment().utc().startOf('day'), moment().utc().endOf('day')],
+            'Last 3 Days': [moment().utc().startOf('day').subtract(2, 'days'), moment().utc().endOf('day')],
+            'Last 7 Days': [moment().utc().startOf('day').subtract(6, 'days'), moment().utc().endOf('day')],
+            'Last 30 Days': [moment().utc().startOf('day').subtract(29, 'days'), moment().utc().endOf('day')],
+            'Last 90 Days': [moment().utc().startOf('day').subtract(89, 'days'), moment().utc().endOf('day')],
+            'Last 365 Days': [moment().utc().startOf('day').subtract(364, 'days'), moment().utc().endOf('day')]
+        },
+        "startDate": moment().utc().subtract(29, 'days').startOf('day'),
+        "endDate": moment.utc().endOf('day')
+    };
+
+    $('#addNewEditDialog').on('shown.bs.modal', function (event) {
+        $('#saveRecordButton').text('Process');
+        $('#addNewEditDialog .modal-header h4 :visible').text('Configure Alarms')
+        $('#dateRange').daterangepicker(dateRangeOptions);
+
+        mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
+        $('#meters').mobileSelect(mobileSelectOptions);
+        $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
+
+        $('#metersFrame .btn-mobileSelect-gen').off('click');
+        $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
+            event.preventDefault();
+            $('#meters').mobileSelect('show');
+        });
+
+        $('#meterfilter').on('keyup', function () {
+            var string = $('#meterfilter').val();
+            if (string === "") {
+                $('.mobileSelect-container :visible .list-container').children().show();
+
+            }
+            else {
+                $('.mobileSelect-container :visible .list-container').children().hide();
+                $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                    if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
+                        $(item).show();
+                });
+            }
+        });
+
+        dataHub.getMetersForSelect().done(function (data) {
+            $.each(data, function (index, type) {
+                $('#meters').append($(new Option(type.Name, type.ID, false, true)));
+            });
+            $('#meters').mobileSelect('refresh');
+
+        });
+
+        mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Characteristics' /></div>";
+        $('#types').mobileSelect(mobileSelectOptions);
+        $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
+
+        $('#typesFrame .btn-mobileSelect-gen').off('click');
+        $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
+            event.preventDefault();
+            $('#types').mobileSelect('show');
+        });
+
+        $('#typefilter').on('keyup', function () {
+            var string = $('#typefilter').val();
+            if (string === "") {
+                $('.mobileSelect-container :visible .list-container').children().show();
+
+            }
+            else {
+                $('.mobileSelect-container :visible .list-container').children().hide();
+                $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
+                    if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
+                        $(item).show();
+                });
+            }
+        });
+
+
+        dataHub.getCharacteristicsForSelect().done(function (data) {
+            $.each(data, function (index, type) {
+                $('#types').append($(new Option(type.Name, type.ID, false, true)));
+            });
+            $('#types').mobileSelect('refresh');
+
+        });
+
+
+
+    });
+
+    function doSomething() {
+        $('#ignoreValue').attr('disabled', !$('#ignoreValuesAlarms').prop('checked'))
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $('#exportCSVButton').off('click');
+        $('#exportCSVButton').click(function () {
+            if (!hubIsConnected)
+                return;
+
+            dataHub.getConnectionID().done(function (connectionID) {
+                $("#exportCSVLink").attr("href", "/HowlCSVDownloadHandler.ashx" +
+                    "?ModelName=" + encodeURIComponent(viewModel.modelName) +
+                    "&HubName=" + encodeURIComponent(viewModel.hubName) +
+                    "&ConnectionID=" + encodeURIComponent(connectionID) +
+                    "&CallingFrom=MetersWithNormalLimits" +
+                    "&ID=0" +
+                    "&FilterText=" + encodeURIComponent(viewModel.filterText) +
+                    "&SortField=" + encodeURIComponent(viewModel.sortField()) +
+                    "&SortAscending=" + encodeURIComponent(viewModel.sortAscending()) +
+                    "&ShowDeleted=False&ParentKeys=");
+
+                $("#exportCSVLink")[0].click();
+            }).
+            fail(function (error) {
+                showErrorMessage(error);
+            });
+        });
+    });
+
+    $(function () {
+        $('#pageControlsRow').prepend('<button class="btn btn-sm btn-primary" onclick="importCSV()" id="importBtn"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp;Import&nbsp;CSV</button>');
+        $('#pageControlsRow').prepend('<input type="file" id="fileInput" accept=".csv, text/csv " style="display: none"/>');
+
+        $("#importCSVFile").on("change", function (event) {
+            $("#uploadCSVFile").submit();
+        });
+    });
+
+    function importCSV() {
+        $('#importCSVFile').click();
+    }
+</script>
+}

@@ -63,6 +63,9 @@
     <link href="/Content/jquery.jspanel@(min).css" rel="stylesheet">
     <link href="/Content/primeui@(min).css" rel="stylesheet">
     <link href="/Content/Site.css" rel="stylesheet">
+    <link href="/Content/daterangepicker.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
+
     @RenderSection("StyleSheets", false)
     <style>
         @@media (max-width: 995px) {
@@ -180,7 +183,7 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Alarms<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="AlarmSettings.cshtml">Alarm Limit Settings</a></li>
+                            <li><a href="MetersWithNormalLimits.cshtml">Normal Alarm Limit Settings</a></li>
                             <li><a href="MetersWithHourlyLimits.cshtml">Hourly Off Normal Alarm Limit Settings</a></li>
                             <li><a href="DefaultAlarmSettings.cshtml">Default Settings</a></li>
                         </ul>
@@ -236,10 +239,13 @@ else {
     <script src="/Scripts/jquery-2.2.1@(min).js"></script>
     <script src="/Scripts/jquery-ui@(min).js"></script>
     <script src="/Scripts/bootstrap@(min).js"></script>
+    <script src="/Scripts/moment.min.js"></script>
     <script src="/Scripts/ie10-viewport-bug-workaround.js"></script>
     <script src="/Scripts/respond@(min).js"></script>
     <script src="/Scripts/bootstrap-datepicker@(min).js"></script>
+    <script src="/Scripts/daterangepicker.js"></script>
     <script src="/Scripts/bootstrap-toolkit@(min).js"></script>
+    <script src="/Scripts/fullscreenselect/bootstrap-fullscreen-select@(min).js"></script>
     <script src="/Scripts/jquery.signalR-2.2.0@(min).js"></script>
     <script src="/@("@GSF/Web/Model/Scripts/gsf.web.client.js")"></script>
     <script src="/signalr/hubs"></script>

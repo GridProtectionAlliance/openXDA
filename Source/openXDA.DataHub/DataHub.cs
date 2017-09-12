@@ -142,6 +142,17 @@ namespace openXDA.Hubs
                 GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForInstance(e.Argument2, e.Argument3);
         }
 
+        public void ProgressUpdatedByMeter(string meterName, int value)
+        {
+            GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForMeter(meterName, value);
+        }
+
+        public static void ProgressUpdatedOverall(string meterName, int value)
+        {
+            GlobalHost.ConnectionManager.GetHubContext<DataHub>().Clients.All.updateProgressBarForOverall(meterName, value);
+        }
+
+
         #endregion
 
         #region [Config Page]
@@ -991,6 +1002,252 @@ namespace openXDA.Hubs
         public void AddNewOrUpdateChannelsWithHourlyLimits(ChannelsWithHourlyLimits record)
         {
             DataContext.Table<ChannelsWithHourlyLimits>().AddNewOrUpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ MetersWithNormalLimits Table Operations ]
+
+        public class RunningAvgStdDev
+        {
+            public int ChannelID { get; set; }
+            public int HourOfWeek { get; set; }
+            public double Sum { get; set; }
+            public double Count { get; set; }
+            public double SumOfSquares { get; set; }
+            public double FirstPassStdDev { get; set; }
+        }
+
+        public IEnumerable<MeasurementCharacteristic> GetCharacteristicsForSelect()
+        {
+            return DataContext.Table<MeasurementCharacteristic>().QueryRecords("Name");
+        }
+
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.QueryRecordCount)]
+        public int QueryMetersWithNormalLimitsCount(string filterText)
+        {
+
+            return DataContext.Table<MetersWithNormalLimits>().QueryRecordCount(filterText);
+        }
+
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.QueryRecords)]
+        public IEnumerable<MetersWithNormalLimits> QueryMetersWithNormalLimits(string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            return DataContext.Table<MetersWithNormalLimits>().QueryRecords(sortField, ascending, page, pageSize, filterText);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.DeleteRecord)]
+        public void DeleteMetersWithNormalLimits(int id)
+        {
+            DataContext.Table<MetersWithNormalLimits>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.CreateNewRecord)]
+        public MetersWithNormalLimits NewMetersWithNormalLimits()
+        {
+            return DataContext.Table<MetersWithNormalLimits>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.AddNewRecord)]
+        public void AddNewMetersWithNormalLimits(MetersWithNormalLimits record)
+        {
+            DataContext.Table<MetersWithNormalLimits>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.UpdateRecord)]
+        public void UpdateMetersWithNormalLimits(MetersWithNormalLimits record)
+        {
+            DataContext.Table<MetersWithNormalLimits>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateMetersWithNormalLimits(MetersWithNormalLimits record)
+        {
+            DataContext.Table<MetersWithNormalLimits>().AddNewOrUpdateRecord(record);
+        }
+
+        public void ProcessSmartAlarmsNormal(IEnumerable<int> meterIds, IEnumerable<int> typeIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool ignoreLargeValues, bool overwriteOldAlarms, int largeValueLevel)
+        {
+
+            int progressTotal = (meterIds.Any() ? meterIds.Count() : 1);
+            int progressCount = 0;
+            ProgressUpdatedOverall("", (int)(100 * (progressCount) / progressTotal));
+
+            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+            foreach (int meterId in meterIds)
+            {
+                string characteristicList = "(" + string.Join(",", typeIds) + ")";
+                IEnumerable<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID IN " + characteristicList, meterId).Select(x => x.ID);
+                string meterName = DataContext.Connection.ExecuteScalar<string>("Select Name from Meter where ID = {0}", meterId);
+                ProgressUpdatedOverall(meterName, (int)(100 * (progressCount) / progressTotal));
+                List<TrendingData> trendingData = new List<TrendingData>();
+                List<RunningAvgStdDev> normalRunningData = new List<RunningAvgStdDev>();
+                ProgressUpdatedByMeter("Querying openHistorian...", 0);
+                using (openHistorian.XDALink.Historian historian = new Historian(historianServer, historianInstance))
+                {
+                    foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                    {
+                        RunningAvgStdDev normalRecord = normalRunningData.FirstOrDefault(x => x.ChannelID == point.ChannelID);
+                        if (normalRecord == null)
+                        {
+                            normalRecord = new RunningAvgStdDev()
+                            {
+                                ChannelID = point.ChannelID,
+                                Count = 0,
+                                Sum = 0,
+                                SumOfSquares = 0
+                            };
+                            normalRunningData.Add(normalRecord);
+                        }
+
+                        if (point.SeriesID.ToString() == "Average")
+                        {
+                            normalRecord.Sum += point.Value;
+                            normalRecord.SumOfSquares += (point.Value * point.Value);
+                            ++normalRecord.Count;
+
+                        }
+                    }
+
+                    if (ignoreLargeValues)
+                    {
+
+                        normalRunningData = normalRunningData.Select(x =>
+                        {
+                            double average = x.Sum / (x.Count != 0 ? x.Count : 1);
+
+                            x.FirstPassStdDev = Math.Sqrt(Math.Abs((x.SumOfSquares - 2 * average * x.Sum + x.Count * average * average) / ((x.Count != 1 ? x.Count : 2) - 1)));
+                            x.Count = 0;
+                            x.Sum = 0;
+                            x.SumOfSquares = 0;
+                            return x;
+                        }).ToList();
+
+
+
+                        ProgressUpdatedByMeter("Querying openHistorian for second pass...", 0);
+                        foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                        {
+                            int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
+                            RunningAvgStdDev normalRecord = normalRunningData.FirstOrDefault(x => x.ChannelID == point.ChannelID);
+                            if ((point.SeriesID.ToString() == "Average" && point.Value > (normalRecord.FirstPassStdDev * largeValueLevel)) || (point.SeriesID.ToString() == "Average" && point.Value < (normalRecord.FirstPassStdDev * largeValueLevel))) continue;
+                            if (point.SeriesID.ToString() == "Average")
+                            {
+                                normalRecord.Sum += point.Value;
+                                normalRecord.SumOfSquares += (point.Value * point.Value);
+                                ++normalRecord.Count;
+                            }
+                        }
+                    }
+                }
+
+                int innerProgressTotal = (channelIds.Any() ? channelIds.Count() : 1);
+                int innerProgressCount = 0;
+
+                foreach (int channelId in channelIds)
+                {
+                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", channelId);
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (innerProgressCount) / innerProgressTotal));
+                    RunningAvgStdDev record = normalRunningData.Where(x => x.ChannelID == channelId).FirstOrDefault();
+                    if (record != null)
+                    {
+                        double average = record.Sum / (record.Count != 0 ? record.Count : 1);
+
+                        double stdDev = Math.Sqrt(Math.Abs((record.SumOfSquares - 2 * average * record.Sum + record.Count * average * average) / ((record.Count != 1 ? record.Count : 2) - 1)));
+                        float high = (float)Math.Round(average + stdDev * sigmaLevel, decimals);
+                        float low = (float)Math.Round(average - stdDev * sigmaLevel, decimals);
+
+                        AlarmRangeLimit hwl = DataContext.Table<AlarmRangeLimit>().QueryRecordWhere("ChannelID = {0}", record.ChannelID);
+
+                        if (hwl == null)
+                        {
+                            AlarmRangeLimit newRecord = new AlarmRangeLimit()
+                            {
+                                ChannelID = record.ChannelID,
+                                AlarmTypeID = 5,
+                                Severity = 1,
+                                High = high,
+                                Low = low,
+                                RangeInclusive = false,
+                                PerUnit = false,
+                                Enabled = true,
+                                IsDefault = false
+                            };
+                            DataContext.Table<AlarmRangeLimit>().AddNewRecord(newRecord);
+                        }
+                        else if (hwl != null && overwriteOldAlarms)
+                        {
+                            hwl.High = high;
+                            hwl.Low = low;
+                            DataContext.Table<AlarmRangeLimit>().UpdateRecord(hwl);
+                        }
+
+                    }
+
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
+                }
+                ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
+            }
+        }
+
+        #endregion
+
+        #region [ ChannelsWithNormalLimits Table Operations ]
+
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.QueryRecordCount)]
+        public int QueryChannelsWithNormalLimitsCount(int meterId, string filterText)
+        {
+            TableOperations<ChannelsWithNormalLimits> table = DataContext.Table<ChannelsWithNormalLimits>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecordCount(new RecordRestriction("MeterID = {0}", meterId) + restriction);
+        }
+
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.QueryRecords)]
+        public IEnumerable<ChannelsWithNormalLimits> QueryChannelsWithNormalLimits(int meterId, string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            TableOperations<ChannelsWithNormalLimits> table = DataContext.Table<ChannelsWithNormalLimits>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterID = {0}", meterId) + restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.DeleteRecord)]
+        public void DeleteChannelsWithNormalLimits(int id)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.CreateNewRecord)]
+        public ChannelsWithNormalLimits NewChannelsWithNormalLimits()
+        {
+            return DataContext.Table<ChannelsWithNormalLimits>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.AddNewRecord)]
+        public void AddNewChannelsWithNormalLimits(ChannelsWithNormalLimits record)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.UpdateRecord)]
+        public void UpdateChannelsWithNormalLimits(ChannelsWithNormalLimits record)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateChannelsWithNormalLimits(ChannelsWithNormalLimits record)
+        {
+            DataContext.Table<ChannelsWithNormalLimits>().AddNewOrUpdateRecord(record);
         }
 
         #endregion

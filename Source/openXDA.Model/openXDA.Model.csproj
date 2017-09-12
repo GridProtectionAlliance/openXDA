@@ -48,7 +48,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
+    <Compile Include="Alarms\MetersWithNormalLimits.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />

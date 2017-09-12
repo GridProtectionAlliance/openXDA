@@ -440,6 +440,7 @@
     <Content Include="wwwroot\Config\UserDashSettings.cshtml" />
     <Content Include="wwwroot\Config\EmailGroupLineGroup.cshtml" />
     <Content Include="wwwroot\Config\ChannelsWithHourlyLimits.cshtml" />
+    <Content Include="wwwroot\Config\ChannelsWithNormalLimits.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
@@ -454,6 +455,7 @@
     <Content Include="wwwroot\Config\MetersWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\HowlCSVDownloadHandler.ashx" />
     <Content Include="wwwroot\Config\HowlCSVUploadHandler.ashx" />
+    <Content Include="wwwroot\Config\MetersWithNormalLimits.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />
