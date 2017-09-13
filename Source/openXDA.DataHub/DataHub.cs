@@ -1015,7 +1015,8 @@ namespace openXDA.Hubs
             public double Sum { get; set; }
             public double Count { get; set; }
             public double SumOfSquares { get; set; }
-            public double FirstPassStdDev { get; set; }
+            public double FirstPassHigh { get; set; }
+            public double FirstPassLow { get; set; }
         }
 
         public IEnumerable<MeasurementCharacteristic> GetCharacteristicsForSelect()
@@ -1121,7 +1122,9 @@ namespace openXDA.Hubs
                         {
                             double average = x.Sum / (x.Count != 0 ? x.Count : 1);
 
-                            x.FirstPassStdDev = Math.Sqrt(Math.Abs((x.SumOfSquares - 2 * average * x.Sum + x.Count * average * average) / ((x.Count != 1 ? x.Count : 2) - 1)));
+                            double stddev = Math.Sqrt(Math.Abs((x.SumOfSquares - 2 * average * x.Sum + x.Count * average * average) / ((x.Count != 1 ? x.Count : 2) - 1)));
+                            x.FirstPassHigh = average + stddev * largeValueLevel;
+                            x.FirstPassLow = average - stddev * largeValueLevel; 
                             x.Count = 0;
                             x.Sum = 0;
                             x.SumOfSquares = 0;
@@ -1134,7 +1137,7 @@ namespace openXDA.Hubs
                         foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
                         {
                             RunningAvgStdDev normalRecord = normalRunningData.FirstOrDefault(x => x.ChannelID == point.ChannelID);
-                            if ((point.SeriesID.ToString() == "Average" && point.Value > (normalRecord.FirstPassStdDev * largeValueLevel)) || (point.SeriesID.ToString() == "Average" && point.Value < (normalRecord.FirstPassStdDev * largeValueLevel))) continue;
+                            if ((point.SeriesID.ToString() == "Average" && point.Value > normalRecord.FirstPassHigh) || (point.SeriesID.ToString() == "Average" && point.Value < normalRecord.FirstPassLow)) continue;
                             if (point.SeriesID.ToString() == "Average")
                             {
                                 normalRecord.Sum += point.Value;
