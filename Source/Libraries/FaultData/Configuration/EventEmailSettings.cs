@@ -31,28 +31,48 @@ namespace FaultData.Configuration
         #region [ Members ]
 
         // Fields
-        private double m_waitPeriod;
+        private double m_minWaitPeriod;
+        private double m_maxWaitPeriod;
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the amount of time, in seconds,
+        /// Gets or sets the minimum amount of time, in seconds,
         /// between the time a file is received and the time
         /// an email should be sent out by the system.
         /// </summary>
         [Setting]
         [DefaultValue(10.0D)]
-        public double WaitPeriod
+        public double MinWaitPeriod
         {
             get
             {
-                return m_waitPeriod;
+                return m_minWaitPeriod;
             }
             set
             {
-                m_waitPeriod = value;
+                m_minWaitPeriod = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum amount of time, in seconds,
+        /// between the time a file is received and the time
+        /// an email should be sent out by the system.
+        /// </summary>
+        [Setting]
+        [DefaultValue(60.0D)]
+        public double MaxWaitPeriod
+        {
+            get
+            {
+                return m_maxWaitPeriod;
+            }
+            set
+            {
+                m_maxWaitPeriod = value;
             }
         }
 

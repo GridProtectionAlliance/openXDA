@@ -2385,11 +2385,16 @@ AS BEGIN
     DECLARE @minStartTime DATETIME2
     DECLARE @maxEndTime DATETIME2
 
-    SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
-    FROM Event
+    SELECT
+        @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)),
+        @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+    FROM
+        Event JOIN
+        FileGroup ON Event.FileGroupID = FileGroup.ID
     WHERE
         StartTime <= @adjustedEndTime AND
-        @adjustedStartTime <= EndTime
+        @adjustedStartTime <= EndTime AND
+        ProcessingEndTime > '0001-01-01'
 
     WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
     BEGIN
@@ -2398,11 +2403,16 @@ AS BEGIN
         SET @adjustedStartTime = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
         SET @adjustedEndTime = dbo.AdjustDateTime2(@endTime, @timeTolerance)
 
-        SELECT @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)), @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
-        FROM Event
+        SELECT
+            @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)),
+            @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+        FROM
+            Event JOIN
+            FileGroup ON Event.FileGroupID = FileGroup.ID
         WHERE
             StartTime <= @adjustedEndTime AND
-            @adjustedStartTime <= EndTime
+            @adjustedStartTime <= EndTime AND
+            ProcessingEndTime > '0001-01-01'
     END
 
     INSERT INTO @systemEvent

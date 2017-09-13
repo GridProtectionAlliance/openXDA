@@ -56,6 +56,49 @@ namespace FaultData.DataWriters
     {
         #region [ Members ]
 
+        // Nested Types
+        private class LineEvent
+        {
+            public int LineID { get; }
+            public Range<DateTime> TimeRange { get; }
+            public DateTime TimeCreated { get; }
+
+            public LineEvent(Event evt)
+                : this(evt.LineID, new Range<DateTime>(evt.StartTime, evt.EndTime))
+            {
+            }
+
+            public LineEvent(int lineID, Range<DateTime> timeRange)
+                : this(lineID, timeRange, DateTime.UtcNow)
+            {
+            }
+
+            private LineEvent(int lineID, Range<DateTime> timeRange, DateTime timeCreated)
+            {
+                LineID = lineID;
+                TimeRange = timeRange;
+                TimeCreated = timeCreated;
+            }
+
+            public bool Overlaps(LineEvent other)
+            {
+                if (LineID != other.LineID)
+                    return false;
+
+                return TimeRange.Overlaps(other.TimeRange);
+            }
+
+            public LineEvent Merge(LineEvent other)
+            {
+                if (LineID != other.LineID)
+                    throw new ArgumentException("Unable to merge line events on separate lines.", nameof(other));
+
+                Range<DateTime> mergedTimeRange = TimeRange.Merge(other.TimeRange);
+                DateTime timeCreated = Common.Min(TimeCreated, other.TimeCreated);
+                return new LineEvent(LineID, mergedTimeRange, timeCreated);
+            }
+        }
+
         // Fields
         private string m_dbConnectionString;
         private double m_timeTolerance;
@@ -173,19 +216,13 @@ namespace FaultData.DataWriters
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-                TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
 
                 List<Event> events = eventTable
                     .QueryRecordsWhere("FileGroupID = {0}", meterDataSet.FileGroup.ID)
                     .ToList();
 
                 foreach (Event evt in events)
-                {
-                    int emailCount = eventSentEmailTable.QueryRecordCountWhere("EventID = {0}", evt.ID);
-
-                    if (emailCount == 0)
-                        QueueEventID(evt.ID);
-                }
+                    QueueLineEvent(new LineEvent(evt));
             }
         }
 
@@ -194,7 +231,7 @@ namespace FaultData.DataWriters
         #region [ Static ]
 
         // Static Fields
-        private static readonly HashSet<int> QueuedEventIDs;
+        private static readonly HashSet<LineEvent> QueuedLineEvents;
         private static readonly LogicalThread EmailProcessingThread;
 
         private static string s_dbConnectionString;
@@ -204,7 +241,8 @@ namespace FaultData.DataWriters
         private static SecureString s_password;
         private static bool s_enableSSL;
         private static double s_timeTolerance;
-        private static TimeSpan s_waitPeriod;
+        private static TimeSpan s_minWaitPeriod;
+        private static TimeSpan s_maxWaitPeriod;
         private static TimeZoneInfo s_timeZone;
         private static Func<AdoDataConnection> s_connectionFactory;
 
@@ -213,7 +251,7 @@ namespace FaultData.DataWriters
         // Static Constructor
         static EventEmailWriter()
         {
-            QueuedEventIDs = new HashSet<int>();
+            QueuedLineEvents = new HashSet<LineEvent>();
             EmailProcessingThread = new LogicalThread();
             EmailProcessingThread.UnhandledException += (sender, args) => Log.Error(args.Argument.Message, args.Argument);
         }
@@ -229,7 +267,8 @@ namespace FaultData.DataWriters
                 s_username != writer.EmailSettings.Username ||
                 s_password != writer.EmailSettings.SecurePassword ||
                 s_enableSSL != writer.EmailSettings.EnableSSL ||
-                s_waitPeriod != TimeSpan.FromSeconds(writer.FaultEmailSettings.WaitPeriod) ||
+                s_minWaitPeriod != TimeSpan.FromSeconds(writer.FaultEmailSettings.MinWaitPeriod) ||
+                s_maxWaitPeriod != TimeSpan.FromSeconds(writer.FaultEmailSettings.MaxWaitPeriod) ||
                 s_timeZone.Id != writer.XDATimeZone;
 
             if (configurationChanged)
@@ -243,61 +282,95 @@ namespace FaultData.DataWriters
                     s_username = writer.EmailSettings.Username;
                     s_password = writer.EmailSettings.SecurePassword;
                     s_enableSSL = writer.EmailSettings.EnableSSL;
-                    s_waitPeriod = TimeSpan.FromSeconds(writer.FaultEmailSettings.WaitPeriod);
+                    s_minWaitPeriod = TimeSpan.FromSeconds(writer.FaultEmailSettings.MinWaitPeriod);
+                    s_maxWaitPeriod = TimeSpan.FromSeconds(writer.FaultEmailSettings.MaxWaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
                     s_connectionFactory = meterDataSet.CreateDbConnection;
                 });
             }
         }
 
-        private static void QueueEventID(int eventID)
+        private static void QueueLineEvent(LineEvent lineEvent)
         {
             EmailProcessingThread.Push(() =>
             {
-                EventArgs<RegisteredWaitHandle> args;
-                ManualResetEvent waitHandle;
-                WaitOrTimerCallback callback;
-
-                args = new EventArgs<RegisteredWaitHandle>(null);
-                waitHandle = new ManualResetEvent(false);
-
-                callback = (state, timedOut) =>
-                {
-                    DequeueEventID(eventID);
-
-                    if ((object)args.Argument != null)
-                        args.Argument.Unregister(null);
-
-                    waitHandle.Dispose();
-                };
-
-                QueuedEventIDs.Add(eventID);
-
-                args.Argument = ThreadPool.RegisterWaitForSingleObject(waitHandle, callback, null, s_waitPeriod, true);
+                TimeSpan delaySpan = s_minWaitPeriod;
+                int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
+                QueuedLineEvents.Add(lineEvent);
+                new Action(() => DequeueLineEvent(lineEvent)).DelayAndExecute(delay);
             });
         }
 
-        private static void DequeueEventID(int eventID)
+        private static void DequeueLineEvent(LineEvent lineEvent)
         {
             EmailProcessingThread.Push(() =>
             {
-                QueuedEventIDs.Remove(eventID);
+                if (!QueuedLineEvents.Remove(lineEvent))
+                    return;
 
                 using (AdoDataConnection connection = s_connectionFactory())
                 {
                     TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-                    Event dequeuedEvent = eventTable.QueryRecordWhere("ID = {0}", eventID);
-                    List<Event> systemEvent = eventTable.GetSystemEvent(dequeuedEvent.StartTime, dequeuedEvent.EndTime, s_timeTolerance);
 
-                    if (systemEvent.Any(evt => evt.LineID == dequeuedEvent.LineID && QueuedEventIDs.Contains(evt.ID)))
-                        return;
+                    LineEvent newLineEvent = eventTable
+                            .GetSystemEvent(lineEvent.TimeRange.Start, lineEvent.TimeRange.End, s_timeTolerance)
+                            .Where(evt => evt.LineID == lineEvent.LineID)
+                            .Select(evt => new LineEvent(evt))
+                            .Aggregate(lineEvent, (mergedLineEvent, queuedLineEvent) => mergedLineEvent.Merge(queuedLineEvent));
 
-                    TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
+                    List<LineEvent> queuedLineEvents = QueuedLineEvents
+                        .Where(queuedLineEvent => newLineEvent.Overlaps(queuedLineEvent))
+                        .ToList();
 
-                    if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0}", eventID) == 0)
-                        GenerateEmail(connection, eventID);
+                    QueuedLineEvents.ExceptWith(queuedLineEvents);
+                    newLineEvent = queuedLineEvents.Aggregate(lineEvent, (mergedLineEvent, queuedLineEvent) => mergedLineEvent.Merge(queuedLineEvent));
+
+                    DateTime now = DateTime.UtcNow;
+                    DateTime maxDequeueTime = newLineEvent.TimeCreated + s_maxWaitPeriod;
+                    DateTime minDequeueTime = now + s_minWaitPeriod;
+
+                    if (now >= maxDequeueTime)
+                    {
+                        GenerateEmail(connection, newLineEvent);
+                    }
+                    else
+                    {
+                        DateTime dequeueTime = Common.Min(maxDequeueTime, minDequeueTime);
+                        TimeSpan delaySpan = dequeueTime - now;
+                        int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
+
+                        QueuedLineEvents.Add(newLineEvent);
+
+                        new Action(() => DequeueLineEvent(newLineEvent)).DelayAndExecute(delay);
+                    }
                 }
             });
+        }
+
+        private static void GenerateEmail(AdoDataConnection connection, LineEvent lineEvent)
+        {
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            Event evt;
+
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                IDbDataParameter startTimeParameter = command.CreateParameter();
+                startTimeParameter.DbType = DbType.DateTime2;
+                startTimeParameter.Value = lineEvent.TimeRange.Start;
+
+                IDbDataParameter endTimeParameter = command.CreateParameter();
+                endTimeParameter.DbType = DbType.DateTime2;
+                endTimeParameter.Value = lineEvent.TimeRange.End;
+
+                RecordRestriction recordRestriction =
+                    new RecordRestriction("LineID = {0}", lineEvent.LineID) &
+                    new RecordRestriction("StartTime >= {0}", startTimeParameter) &
+                    new RecordRestriction("EndTime >= {0}", endTimeParameter);
+
+                evt = eventTable.QueryRecord(recordRestriction);
+            }
+
+            GenerateEmail(connection, evt.ID);
         }
 
         private static void GenerateEmail(AdoDataConnection connection, int eventID)
@@ -312,7 +385,6 @@ namespace FaultData.DataWriters
             TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
             EventType faultEventType = eventTypeTable.QueryRecordWhere("Name = 'Fault'");
 
-            // Load the system event before the eventDetail record to avoid race conditions causing missed emails
             TableOperations<Event> eventTable = new TableOperations<Event>(connection);
             string eventDetail = connection.ExecuteScalar<string>("SELECT EventDetail FROM EventDetail WHERE EventID = {0}", eventID);
 
