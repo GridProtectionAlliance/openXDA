@@ -1133,7 +1133,6 @@ namespace openXDA.Hubs
                         ProgressUpdatedByMeter("Querying openHistorian for second pass...", 0);
                         foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
                         {
-                            int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
                             RunningAvgStdDev normalRecord = normalRunningData.FirstOrDefault(x => x.ChannelID == point.ChannelID);
                             if ((point.SeriesID.ToString() == "Average" && point.Value > (normalRecord.FirstPassStdDev * largeValueLevel)) || (point.SeriesID.ToString() == "Average" && point.Value < (normalRecord.FirstPassStdDev * largeValueLevel))) continue;
                             if (point.SeriesID.ToString() == "Average")
@@ -1249,6 +1248,37 @@ namespace openXDA.Hubs
         {
             DataContext.Table<ChannelsWithNormalLimits>().AddNewOrUpdateRecord(record);
         }
+
+        public void ResetAlarmToDefault2(int id)
+        {
+            IEnumerable<DefaultAlarmRangeLimit> defaultLimits = DataContext.Table<DefaultAlarmRangeLimit>().QueryRecords(restriction: new RecordRestriction("MeasurementTypeID = (SELECT MeasurementTypeID FROM Channel WHERE ID = {0}) AND MeasurementCharacteristicID = (SELECT MeasurementCharacteristicID FROM Channel WHERE ID = {0})", id));
+            AlarmRangeLimit record = DataContext.Table<AlarmRangeLimit>().QueryRecordWhere("ChannelID = {0}", id);
+            if (defaultLimits.Any())
+            {
+                record.Severity = defaultLimits.First().Severity;
+                record.High = defaultLimits.First().High;
+                record.Low = defaultLimits.First().Low;
+                record.RangeInclusive = defaultLimits.First().RangeInclusive;
+                record.PerUnit = defaultLimits.First().PerUnit;
+                record.IsDefault = true;
+
+                DataContext.Table<AlarmRangeLimit>().UpdateRecord(record);
+            }
+        }
+
+        public void UpdateAlarmRangeLimit(int id, double high, double low)
+        {
+            AlarmRangeLimit record = DataContext.Table<AlarmRangeLimit>().QueryRecordWhere("ChannelID = {0}", id);
+
+            record.High = high;
+            record.Low = low;
+            record.IsDefault = false;
+            DataContext.Table<AlarmRangeLimit>().UpdateRecord(record);
+        }
+
+
+
+
 
         #endregion
 

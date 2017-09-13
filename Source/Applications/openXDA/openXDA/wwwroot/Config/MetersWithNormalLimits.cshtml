@@ -163,7 +163,7 @@
                     $('#notify').puinotify('hide');
                     viewModel.queryPageRecords();
 
-                    (viewModel).trigger("recordSaved", [record, true]);
+                    $(viewModel).trigger("recordSaved", [record, true]);
                     showInfoMessage("Saved new record...");
                 }).fail(function (error) {
                     showErrorMessage(error);

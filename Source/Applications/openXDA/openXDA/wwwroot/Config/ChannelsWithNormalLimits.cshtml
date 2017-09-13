@@ -407,27 +407,17 @@
         }
 
         function applyLimits() {
-            currentRecord.High = $('#upperLimit').val();
-            currentRecord.Low = $('#lowerLimit').val();
-            currentRecord.IsDefault = false;
-            dataHub.updateAlarmRangeLimitView(currentRecord).done(function () {
+            var high = $('#upperLimit').val();
+            var low = $('#lowerLimit').val();
+
+            dataHub.updateAlarmRangeLimit(currentRecord.ID, high, low).done(function () {
                 viewModel.queryPageRecords();
             });
         }
 
         function resetLimits(record) {
-            dataHub.resetAlarmToDefault(record).
-                done(function () {
-                    if ($('#channelfilter').val().length + $('#typefilter').val().length + $('#characteristicfilter').val().length == 0) {
-                        viewModel.filterText = '%';
-                        viewModel.queryPageRecords();
-                    } else {
-                        viewModel.filterText = $('#channelfilter').val() + ';' + $('#typefilter').val() + ';' + $('#characteristicfilter').val();
-                        viewModel.queryPageRecords();
-
-                    }
-
-
+            dataHub.resetAlarmToDefault2(record.ID).done(function () {
+                    viewModel.queryPageRecords();
                 });
         }
 
