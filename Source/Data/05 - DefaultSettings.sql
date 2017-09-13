@@ -166,6 +166,9 @@ GO
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsOverviewYesterday', 0)
 GO
 
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsMeterActivity', 1)
+GO
+
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsEvents', 1)
 GO
 
@@ -180,7 +183,6 @@ GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsExtensions', 1)
 GO
-
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsTrending', 1)
 GO
