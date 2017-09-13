@@ -165,7 +165,7 @@ namespace FaultData.DataOperations
             Log.Info(string.Format("Finished processing {0} events.", count));
         }
 
-        private void LoadDisturbances(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
+        private void s(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
         {
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
             SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
@@ -211,7 +211,14 @@ namespace FaultData.DataOperations
                         foreach (Disturbance interruption in disturbances)
                             AddDisturbanceRow(connection, evt.ID, interruption);
                     }
+
+                    connection.ExecuteNonQuery(@"
+                        IF dbo.EventHasImpactedComponents({0}) = 1
+	                        INSERT INTO PQIResult VALUES ({0})                
+                    ", evt.ID);
+
                 }
+
             }
         }
         
