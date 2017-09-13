@@ -192,7 +192,39 @@
     <WixTasksPath>$(WixToolPath)WixTasks.dll</WixTasksPath>
   </PropertyGroup>
   <Import Project="$(WixTargetsPath)" Condition="Exists($(WixTargetsPath))" />
-  <Target Name="BeforeBuild">
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" Outputs="$(TargetPath)">
+    <OnError ExecuteTargets="RestoreBitmap" />
+  </Target>
+  <PropertyGroup>
+  <BeforeBuildDependsOn>
+	VersionBitmap
+  </BeforeBuildDependsOn>
+  </PropertyGroup>
+  <Target Name="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
+  </Target>
+  <PropertyGroup>
+	<AfterBuildDependsOn>
+		RestoreBitmap;
+		CopyLicenseAndReadme;
+		SignBuild
+	</AfterBuildDependsOn>
+  </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="$(AfterBuildDependsOn)">
+  </Target>
+  <Target Name="CopyLicenseAndReadme">
+    <ItemGroup>
+      <CopyFiles Include="LICENSE.txt" />
+      <CopyFiles Include="README.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CopyFiles)" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
+    <PropertyGroup>
+      <SignToolNameArg Condition="'$(SIGNTOOLNAMEFLAG)' != ''">$(SIGNTOOLNAMEFLAG) $(TargetFileName)</SignToolNameArg>
+    </PropertyGroup>
+    <Exec Command="$(SIGNTOOL) $(SignToolNameArg) $(TargetPath)" />
+  </Target>
+  <Target Name="VersionBitmap">
     <PropertyGroup>
       <VersionFile>$(SolutionDir)\..\Build\Scripts\openXDA.version</VersionFile>
     </PropertyGroup>
@@ -201,20 +233,8 @@
     </ReadLinesFromFile>
     <Exec Command="Powershell -ExecutionPolicy ByPass -File &quot;$(ProjectDir)\VersionBitmap.ps1&quot; &quot;$(ProjectDir)\openXDASetupDialog.bmp&quot; &quot;@(VersionNumber)&quot;" />
   </Target>
-  <Target Name="AfterBuild">
-    <ItemGroup>
-      <CopyFiles Include="LICENSE.txt" />
-      <CopyFiles Include="README.txt" />
-    </ItemGroup>
-    <Copy SourceFiles="@(CopyFiles)" DestinationFolder="$(OutDir)" />
-    <CallTarget Targets="SignBuild" />
+  <Target Name="RestoreBitmap">
     <Exec Command="Powershell -ExecutionPolicy ByPass -File &quot;$(ProjectDir)\RestoreBitmap.ps1&quot; &quot;$(ProjectDir)\openXDASetupDialog.bmp&quot;" />
-  </Target>
-  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
-    <PropertyGroup>
-      <SignToolNameArg Condition="'$(SIGNTOOLNAMEFLAG)' != ''">$(SIGNTOOLNAMEFLAG) $(TargetFileName)</SignToolNameArg>
-    </PropertyGroup>
-    <Exec Command="$(SIGNTOOL) $(SignToolNameArg) $(TargetPath)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>"$(SolutionDir)\Tools\SqlClrAssemblyEncoder\bin\$(ConfigurationName)\SqlClrAssemblyEncoder.exe" -o %27$(ProjectDir)\obj\SqlClr.wxi%27 %27$(SolutionDir)\Dependencies\openHistorian\GSF.Core.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\GSF.SortedTreeStore.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.Core.SqlClr.dll%27 %27$(SolutionDir)\Dependencies\openHistorian\openHistorian.SqlClr.dll%27 %27$(TargetDir)\..\Libraries\openHistorian.XDALink.SqlClr.dll%27 %27$(TargetDir)\..\Libraries\openXDA.SqlClr.dll%27</PreBuildEvent>

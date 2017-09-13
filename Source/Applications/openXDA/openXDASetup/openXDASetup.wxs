@@ -639,10 +639,10 @@
         <File Id="Microsoft.Owin.Host.HttpListener.dll" Name="Microsoft.Owin.Host.HttpListener.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Host.HttpListener.3.0.1\lib\net45\Microsoft.Owin.Host.HttpListener.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Hosting">
-        <File Id="Microsoft.Owin.Hosting.dll" Name="Microsoft.Owin.Hosting.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Hosting.2.1.0\lib\net45\Microsoft.Owin.Hosting.dll" />
+        <File Id="Microsoft.Owin.Hosting.dll" Name="Microsoft.Owin.Hosting.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Hosting.3.1.0\lib\net45\Microsoft.Owin.Hosting.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Security">
-        <File Id="Microsoft.Owin.Security.dll" Name="Microsoft.Owin.Security.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Security.2.1.0\lib\net45\Microsoft.Owin.Security.dll" />
+        <File Id="Microsoft.Owin.Security.dll" Name="Microsoft.Owin.Security.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Security.3.1.0\lib\net45\Microsoft.Owin.Security.dll" />
       </Component>
       <Component Id="Newtonsoft.Json">
         <File Id="Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll" />

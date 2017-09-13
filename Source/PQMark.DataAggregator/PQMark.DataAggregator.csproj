@@ -38,7 +38,7 @@
       <HintPath>..\Dependencies\GSF\GSF.ServiceProcess.dll</HintPath>
     </Reference>
     <Reference Include="GSF.Web">
-      <HintPath>..\Dependencies\Nuget\GSF.Web.2.2.56-beta\lib\net46\GSF.Web.dll</HintPath>
+      <HintPath>..\Dependencies\GSF\GSF.Web.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
