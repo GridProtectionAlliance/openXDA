@@ -881,6 +881,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MetersWithHourlyLimits), RecordOperation.QueryRecordCount)]
         public int QueryMetersWithHourlyLimitsCount(string filterText)
         {
+
             return DataContext.Table<MetersWithHourlyLimits>().QueryRecordCount(filterText);
         }
 
@@ -922,31 +923,157 @@ namespace openXDA.Hubs
         {
             DataContext.Table<MetersWithHourlyLimits>().AddNewOrUpdateRecord(record);
         }
-        
-        [AuthorizeHubRole("Administrator")]
-        public string SendHourOfWeekLimitTableToCSV(int meterID, int channelID)
+
+        public IEnumerable<Meter> GetMetersForSelect()
         {
-            string csv = "";
+            return DataContext.Table<Meter>().QueryRecords("Name", new RecordRestriction("ID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0})", GetCurrentUserSID()));
+        }
 
+        public IEnumerable<MeasurementCharacteristic> GetCharacteristicsForSelect()
+        {
+            return DataContext.Table<MeasurementCharacteristic>().QueryRecords("Name");
+        }
 
-            string[] headers = DataContext.Table<AlarmRangeLimitView>().GetFieldNames();
+        public void ProcessSmartAlarms(IEnumerable<int> meterIds, IEnumerable<int> typeIds, DateTime startDate, DateTime endDate, int sigmaLevel, int decimals, bool ignoreLargeValues, bool overwriteOldAlarms, int largeValueLevel)
+        {
 
-            foreach (string h in headers)
+            int progressTotal = (meterIds.Any() ? meterIds.Count() : 1);
+            int progressCount = 0;
+            ProgressUpdatedOverall("", (int)(100 * (progressCount) / progressTotal));
+
+            string historianServer = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
+            string historianInstance = DataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
+
+            foreach (int meterId in meterIds)
             {
-                if (csv == "")
-                    csv = '[' + h + ']';
-                else
-                    csv += ",[" + h + ']';
+                string characteristicList = "(" + string.Join(",", typeIds) + ")";
+                IEnumerable<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID IN " + characteristicList, meterId).Select(x => x.ID);
+                string meterName = DataContext.Connection.ExecuteScalar<string>("Select Name from Meter where ID = {0}", meterId);
+                ProgressUpdatedOverall(meterName, (int)(100 * (progressCount) / progressTotal));
+                List<TrendingData> trendingData = new List<TrendingData>();
+                List<RunningAvgStdDev> runningData = new List<RunningAvgStdDev>();
+                ProgressUpdatedByMeter("Querying openHistorian...", 0);
+                using (openHistorian.XDALink.Historian historian = new Historian(historianServer, historianInstance))
+                {
+                    foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                    {
+                        int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
+                        RunningAvgStdDev record = runningData.FirstOrDefault(x => x.ChannelID == point.ChannelID && x.HourOfWeek == hourOfWeek);
+                        if (record == null)
+                        {
+                            record = new RunningAvgStdDev()
+                            {
+                                ChannelID = point.ChannelID,
+                                HourOfWeek = hourOfWeek,
+                                Count = 0,
+                                Sum = 0,
+                                SumOfSquares = 0
+                            };
+                            runningData.Add(record);
+                        }
+
+                        if (point.SeriesID.ToString() == "Average")
+                        {
+                            record.Sum += point.Value;
+                            record.SumOfSquares += (point.Value * point.Value);
+                            ++record.Count;
+
+                        }
+                    }
+
+                    if (ignoreLargeValues)
+                    {
+                        runningData = runningData.Select(x =>
+                        {
+                            double average = x.Sum / (x.Count != 0 ? x.Count : 1);
+                            double stdDev = Math.Sqrt(Math.Abs((x.SumOfSquares - 2 * average * x.Sum + x.Count * average * average) / ((x.Count != 1 ? x.Count : 2) - 1)));
+                            x.FirstPassHigh = average + stdDev * largeValueLevel;
+                            x.FirstPassLow = average - stdDev * largeValueLevel;
+                            x.Sum = 0;
+                            x.SumOfSquares = 0;
+                            x.Count = 0;
+                            return x;
+                        }).ToList();
+
+                        ProgressUpdatedByMeter("Querying openHistorian for second pass...", 0);
+                        foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channelIds, startDate, endDate))
+                        {
+                            int hourOfWeek = (int)point.Timestamp.DayOfWeek * 24 + point.Timestamp.Hour;
+                            RunningAvgStdDev record = runningData.FirstOrDefault(x => x.ChannelID == point.ChannelID && x.HourOfWeek == hourOfWeek);
+                            if ((point.SeriesID.ToString() == "Average" && point.Value > record.FirstPassHigh) || (point.SeriesID.ToString() == "Average" && point.Value < record.FirstPassLow)) continue;
+                            if (record == null)
+                            {
+                                record = new RunningAvgStdDev()
+                                {
+                                    ChannelID = point.ChannelID,
+                                    Count = 0,
+                                    Sum = 0,
+                                    SumOfSquares = 0
+                                };
+                                runningData.Add(record);
+                            }
+
+                            if (point.SeriesID.ToString() == "Average")
+                            {
+                                record.Sum += point.Value;
+                                record.SumOfSquares += (point.Value * point.Value);
+                                ++record.Count;
+
+                            }
+                        }
+                    }
+                }
+
+
+                int innerProgressTotal = (channelIds.Any() ? channelIds.Count() : 1);
+                int innerProgressCount = 0;
+
+                foreach (int channelId in channelIds)
+                {
+                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", channelId);
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (innerProgressCount) / innerProgressTotal));
+                    foreach (RunningAvgStdDev data in runningData.Where(x => x.ChannelID == channelId))
+                    {
+                        double average = data.Sum / (data.Count != 0 ? data.Count : 1);
+
+                        double stdDev = Math.Sqrt(Math.Abs((data.SumOfSquares - 2 * average * data.Sum + data.Count * average * average) / ((data.Count != 1 ? data.Count : 2) - 1)));
+                        float high = (float)Math.Round(average + stdDev * sigmaLevel, decimals);
+                        float low = (float)Math.Round(average - stdDev * sigmaLevel, decimals);
+
+
+                        HourOfWeekLimit hwl = DataContext.Table<HourOfWeekLimit>().QueryRecordWhere("ChannelID = {0} AND HourOfWeek = {1}", data.ChannelID, data.HourOfWeek);
+
+                        if (hwl == null)
+                        {
+                            HourOfWeekLimit newrecord = new HourOfWeekLimit()
+                            {
+                                ChannelID = data.ChannelID,
+                                AlarmTypeID = 4,
+                                HourOfWeek = data.HourOfWeek,
+                                Severity = 1,
+                                High = high,
+                                Low = low,
+                                Enabled = 1
+                            };
+                            DataContext.Table<HourOfWeekLimit>().AddNewRecord(newrecord);
+                        }
+                        else if (hwl != null && overwriteOldAlarms)
+                        {
+                            hwl.ChannelID = data.ChannelID;
+                            hwl.AlarmTypeID = 4;
+                            hwl.HourOfWeek = data.HourOfWeek;
+                            hwl.Severity = 1;
+                            hwl.High = high;
+                            hwl.Low = low;
+                            hwl.Enabled = 1;
+                            DataContext.Table<HourOfWeekLimit>().UpdateRecord(hwl);
+                        }
+                    }
+
+                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
+                }
+                ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
             }
-
-            csv += "\n";
-
-            IEnumerable<AlarmRangeLimitView> limits = DataContext.Table<AlarmRangeLimitView>().QueryRecords();
-
-            foreach (AlarmRangeLimitView limit in limits)
-                csv += limit.ToCSV() + '\n';
-
-            return csv;
         }
 
         #endregion
@@ -1006,6 +1133,62 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ HourOfWeekLimit Table Operations ]
+
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecordCount)]
+        public int QueryHourOfWeekLimitCount(int channelId, string filterText)
+        {
+            TableOperations<HourOfWeekLimit> table = DataContext.Table<HourOfWeekLimit>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecordCount(new RecordRestriction("ChannelID = {0}", channelId) + restriction);
+        }
+
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecords)]
+        public IEnumerable<HourOfWeekLimitView> QueryHourOfWeekLimit(int channelId, string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            TableOperations<HourOfWeekLimitView> table = DataContext.Table<HourOfWeekLimitView>();
+            RecordRestriction restriction = table.GetSearchRestriction(filterText);
+
+            return table.QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ChannelID = {0}", channelId) + restriction);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.DeleteRecord)]
+        public void DeleteHourOfWeekLimit(int id)
+        {
+            DataContext.Table<HourOfWeekLimit>().DeleteRecord(id);
+        }
+
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.CreateNewRecord)]
+        public HourOfWeekLimit NewHourOfWeekLimit()
+        {
+            return DataContext.Table<HourOfWeekLimit>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.AddNewRecord)]
+        public void AddNewHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.UpdateRecord)]
+        public void UpdateHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator, Editor")]
+        public void AddNewOrUpdateHourOfWeekLimit(HourOfWeekLimit record)
+        {
+            DataContext.Table<HourOfWeekLimit>().AddNewOrUpdateRecord(record);
+        }
+
+        #endregion
+
+
         #region [ MetersWithNormalLimits Table Operations ]
 
         public class RunningAvgStdDev
@@ -1017,11 +1200,6 @@ namespace openXDA.Hubs
             public double SumOfSquares { get; set; }
             public double FirstPassHigh { get; set; }
             public double FirstPassLow { get; set; }
-        }
-
-        public IEnumerable<MeasurementCharacteristic> GetCharacteristicsForSelect()
-        {
-            return DataContext.Table<MeasurementCharacteristic>().QueryRecords("Name");
         }
 
         [RecordOperation(typeof(MetersWithNormalLimits), RecordOperation.QueryRecordCount)]
@@ -1282,61 +1460,6 @@ namespace openXDA.Hubs
 
 
 
-
-        #endregion
-
-        #region [ HourOfWeekLimit Table Operations ]
-
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecordCount)]
-        public int QueryHourOfWeekLimitCount(int channelId, string filterText)
-        {
-            TableOperations<HourOfWeekLimit> table = DataContext.Table<HourOfWeekLimit>();
-            RecordRestriction restriction = table.GetSearchRestriction(filterText);
-
-            return table.QueryRecordCount(new RecordRestriction("ChannelID = {0}", channelId) + restriction);
-        }
-
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.QueryRecords)]
-        public IEnumerable<HourOfWeekLimitView> QueryHourOfWeekLimit(int channelId, string sortField, bool ascending, int page, int pageSize, string filterText)
-        {
-            TableOperations<HourOfWeekLimitView> table = DataContext.Table<HourOfWeekLimitView>();
-            RecordRestriction restriction = table.GetSearchRestriction(filterText);
-
-            return table.QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("ChannelID = {0}", channelId) + restriction);
-        }
-
-        [AuthorizeHubRole("Administrator, Editor")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.DeleteRecord)]
-        public void DeleteHourOfWeekLimit(int id)
-        {
-            DataContext.Table<HourOfWeekLimit>().DeleteRecord(id);
-        }
-
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.CreateNewRecord)]
-        public HourOfWeekLimit NewHourOfWeekLimit()
-        {
-            return DataContext.Table<HourOfWeekLimit>().NewRecord();
-        }
-
-        [AuthorizeHubRole("Administrator, Editor")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.AddNewRecord)]
-        public void AddNewHourOfWeekLimit(HourOfWeekLimit record)
-        {
-            DataContext.Table<HourOfWeekLimit>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Editor")]
-        [RecordOperation(typeof(HourOfWeekLimit), RecordOperation.UpdateRecord)]
-        public void UpdateHourOfWeekLimit(HourOfWeekLimit record)
-        {
-            DataContext.Table<HourOfWeekLimit>().UpdateRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Editor")]
-        public void AddNewOrUpdateHourOfWeekLimit(HourOfWeekLimit record)
-        {
-            DataContext.Table<HourOfWeekLimit>().AddNewOrUpdateRecord(record);
-        }
 
         #endregion
 
@@ -2573,11 +2696,6 @@ namespace openXDA.Hubs
         public IEnumerable<EventType> GetEventTypesForSelect()
         {
             return DataContext.Table<EventType>().QueryRecords();
-        }
-
-        public IEnumerable<Meter> GetMetersForSelect()
-        {
-            return DataContext.Table<Meter>().QueryRecords("Name", new RecordRestriction("ID IN (SELECT MeterID FROM UserMeter WHERE UserName = {0})", GetCurrentUserSID()));
         }
 
         public IEnumerable<Line> GetLinesForSelect()
