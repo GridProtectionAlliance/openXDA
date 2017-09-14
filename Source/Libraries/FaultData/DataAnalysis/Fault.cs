@@ -285,6 +285,7 @@ namespace FaultData.DataAnalysis
         private double m_currentLag;
         private double m_prefaultCurrent;
         private double m_postfaultCurrent;
+        private double m_reactanceRatio;
 
         private bool m_isSuppressed;
 
@@ -438,6 +439,19 @@ namespace FaultData.DataAnalysis
                 m_postfaultCurrent = value;
             }
         }
+
+        public double ReactanceRatio
+        {
+            get
+            {
+                return m_reactanceRatio;
+            }
+            set
+            {
+                m_reactanceRatio = value;
+            }
+        }
+
 
         public bool IsSuppressed
         {

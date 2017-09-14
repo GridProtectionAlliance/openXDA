@@ -173,6 +173,7 @@ namespace FaultData.DataOperations
                         CurrentLag = ToDbFloat(fault.CurrentLag),
                         PrefaultCurrent = ToDbFloat(fault.PrefaultCurrent),
                         PostfaultCurrent = ToDbFloat(fault.PostfaultCurrent),
+                        ReactanceRatio = ToDbFloat(fault.ReactanceRatio),
                         Inception = fault.InceptionTime,
                         DurationSeconds = durationSeconds,
                         DurationCycles = durationSeconds * m_systemFrequency,

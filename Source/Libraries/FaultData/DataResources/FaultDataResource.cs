@@ -931,7 +931,7 @@ namespace FaultData.DataResources
             return FaultType.None;
         }
 
-        private CycleData FirstCycle(VICycleDataGroup viCycleDataGroup)
+        private CycleData GetCycle(VICycleDataGroup viCycleDataGroup, int index)
         {
             CycleData cycle = new CycleData();
 
@@ -957,13 +957,18 @@ namespace FaultData.DataResources
 
             for (int i = 0; i < cycles.Length; i++)
             {
-                cycles[i].RMS = cycleDataGroups[i].RMS.DataPoints[0].Value;
-                cycles[i].Phase = cycleDataGroups[i].Phase.DataPoints[0].Value;
-                cycles[i].Peak = cycleDataGroups[i].Peak.DataPoints[0].Value;
-                cycles[i].Error = cycleDataGroups[i].Error.DataPoints[0].Value;
+                cycles[i].RMS = cycleDataGroups[i].RMS.DataPoints[index].Value;
+                cycles[i].Phase = cycleDataGroups[i].Phase.DataPoints[index].Value;
+                cycles[i].Peak = cycleDataGroups[i].Peak.DataPoints[index].Value;
+                cycles[i].Error = cycleDataGroups[i].Error.DataPoints[index].Value;
             }
 
             return cycle;
+        }
+
+        private CycleData FirstCycle(VICycleDataGroup viCycleDataGroup)
+        {
+            return GetCycle(viCycleDataGroup, 0);
         }
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup)
@@ -992,6 +997,14 @@ namespace FaultData.DataResources
 
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
                 fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
+
+                CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
+                ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
+                ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
+
+                double impedanceMagnitude = (voltage / current).Magnitude;
+                double impedanceReactance = (voltage / current).Imaginary;
+                fault.ReactanceRatio = impedanceMagnitude / impedanceReactance;
             }
 
             bool mostly60 = CheckThreePhaseFFT(fault, viDataGroup);

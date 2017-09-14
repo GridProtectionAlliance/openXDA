@@ -29,59 +29,69 @@ using System.Xml.Linq;
 
 namespace FaultData.DataWriters
 {
+    /// <summary>
+    /// Class containing logic to query the PQI database 
+    /// </summary>
     public class PQIGenerator
     {
         #region [ Static ]
 
         public static XElement GetPqiInformation(AdoDataConnection connection, XElement element)
         {
+            string queryType = ((string)element.Attribute("type") ?? "").ToLower();
+
+            return queryType == "customerequipment" ? GetCustomerEquipmentAffected(connection, element) : element;
+        }
+
+        private static XElement GetCustomerEquipmentAffected(AdoDataConnection connection, XElement element)
+        {
             int eventID;
-            string type = (string)element.Attribute("type") ?? "";
 
             XElement returnTable = new XElement("table");
             returnTable.SetAttributeValue("class", "left");
             string returnTableContent = "";
 
-            string commandText = "dbo.";
-            commandText += type == "equipment" ? "GetAllImpactedComponenets" : type == "customers" ? "GetAllImpactedCustomers" : "";
-
-            eventID = Convert.ToInt32((string)element.Attribute("eventID") ?? "-1");
-
-            if (commandText != "dbo.")
+            try
             {
-                DataTable table = new DataTable();
-                using (IDbCommand command = connection.Connection.CreateCommand())
-                {
-                    command.CommandText = "dbo.GetAllImpactedComponents";
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandTimeout = 600;
+                eventID = Convert.ToInt32((string)element.Attribute("eventID") ?? "-1");
+            }
+            catch
+            {
+                return element;
+            }
 
-                    IDbDataParameter param1 = command.CreateParameter();
-                    param1.ParameterName = "@eventID";
-                    param1.Value = eventID;
+            DataTable table = new DataTable();
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                command.CommandText = "dbo.GetAllImpactedComponents";
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandTimeout = 600;
 
-                    command.Parameters.Add(param1);
+                IDbDataParameter param1 = command.CreateParameter();
+                param1.ParameterName = "@eventID";
+                param1.Value = eventID;
 
-                    IDataReader rdr = command.ExecuteReader();
-                    table.Load(rdr);
-                }
+                command.Parameters.Add(param1);
 
-                returnTableContent = "<tr>";
+                IDataReader rdr = command.ExecuteReader();
+                table.Load(rdr);
+            }
+
+            returnTableContent = "<tr>";
+            foreach (DataColumn column in table.Columns)
+            {
+                returnTableContent += "<th>" + column.ColumnName + "</th>";
+            }
+            returnTableContent += "</tr>";
+
+            foreach (DataRow row in table.Rows)
+            {
+                returnTableContent += "<tr>";
                 foreach (DataColumn column in table.Columns)
                 {
-                    returnTableContent += "<th>" + column.ColumnName + "</th>";
+                    returnTableContent += "<td>" + row[column] + "</td>";
                 }
                 returnTableContent += "</tr>";
-
-                foreach (DataRow row in table.Rows)
-                {
-                    returnTableContent += "<tr>";
-                    foreach (DataColumn column in table.Columns)
-                    {
-                        returnTableContent += "<td>" + row[column] + "</td>";
-                    }
-                    returnTableContent += "</tr>";
-                }
             }
 
             returnTable.Value = returnTableContent;
