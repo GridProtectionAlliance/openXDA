@@ -245,19 +245,19 @@ if (typeof jQuery === 'undefined') {
                 $(window).trigger('mobileSelectCancel');
             });
             this.$c.find('.mobileSelect-filter').on('keyup', function (e) {
-                var string = $(this).val().toLowerCase()
-                if (string === "") {
-                    that.$listcontainer.find($('.mobileSelect-control')).show();
+                    var string = $(this).val().toLowerCase()
+                    if (string === "") {
+                        that.$listcontainer.find($('.mobileSelect-control')).show();
 
-                }
-                else {
-                    that.$listcontainer.find($('.mobileSelect-control')).hide();
-                    $.each(that.$listcontainer.find($('.mobileSelect-control')), function (i, item) {
-                        if ($(item).text().toLowerCase().indexOf(string) >= 0)
-                            $(item).show();
-                    });
-                }
-            });
+                    }
+                    else {
+                        that.$listcontainer.find($('.mobileSelect-control')).hide();
+                        $.each(that.$listcontainer.find($('.mobileSelect-control')), function (i, item) {
+                            if ($(item).text().toLowerCase().indexOf(string) >= 0)
+                                $(item).show();
+                        });
+                    }
+                });
             this.$c.find('.mobileSelect-control').on('click', function (e) {
                 e.preventDefault();
                 var $this = $(this);
@@ -271,6 +271,31 @@ if (typeof jQuery === 'undefined') {
                     $this.siblings().removeClass('selected').end().addClass('selected');
                 }
             });
+            this.$c.on('mobileSelectShow', function (event) {
+                if (navigator.appName == 'Microsoft Internet Explorer' || !!(navigator.userAgent.match(/Trident/) || navigator.userAgent.match(/rv:11/)) || (typeof $.browser !== "undefined" && $.browser.msie == 1)) {
+                    $(window).off('keyup');
+                    $(window).on('keyup', function (evt) {
+                        var string = that.$c.find('.mobileSelect-filter').val().toLowerCase()
+                        if (string === "") {
+                            that.$listcontainer.find($('.mobileSelect-control')).show();
+
+                        }
+                        else {
+                            that.$listcontainer.find($('.mobileSelect-control')).hide();
+                            $.each(that.$listcontainer.find($('.mobileSelect-control')), function (i, item) {
+                                if ($(item).text().toLowerCase().indexOf(string) >= 0)
+                                    $(item).show();
+                            });
+                        }
+                    })
+                }
+            });
+            this.$c.on('mobileSelectHide', function (event, object) {
+                if (navigator.appName == 'Microsoft Internet Explorer' || !!(navigator.userAgent.match(/Trident/) || navigator.userAgent.match(/rv:11/)) || (typeof $.browser !== "undefined" && $.browser.msie == 1)) {
+                    $(window).off('keyup');
+                }
+            });
+
            
         },
         _unbindEvents: function () {
@@ -282,6 +307,9 @@ if (typeof jQuery === 'undefined') {
             this.$c.find('.mobileSelect-clearbtn').unbind('click');
             this.$c.find('.mobileSelect-cancelbtn').unbind('click');
             this.$c.find('.mobileSelect-control').unbind('click');
+            this.$c.find('.mobileSelect-filter').unbind('keyup');
+            this.$c.unbind('mobileSelectShow');
+            this.$c.unbind('mobileSelectHide');
         },
         sync: function () {
 
@@ -319,6 +347,7 @@ if (typeof jQuery === 'undefined') {
                 that.$c.hide();
                 $('body').removeClass('mobileSelect-noscroll');
                 that.onClose.apply(that.$e);
+                that.$c.trigger('mobileSelectHide');
             }, this.animationSpeed);
         },
         show: function () {
@@ -334,6 +363,8 @@ if (typeof jQuery === 'undefined') {
                 that.$c.children('div').removeClass($.mobileSelect.animations.join(' '));
             }, 10);
             this.onOpen.apply(this.$e);
+            this.$c.trigger('mobileSelectShow');
+
         },
         _setUserOptions: function () {
 
@@ -441,7 +472,7 @@ if (typeof jQuery === 'undefined') {
      */
     $.fn.mobileSelect.defaults = {
         template: '<div><div class="mobileSelect-title"></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
-        templateFilterable:'<div><div class="mobileSelect-title"><div class="right-inner-addon"><i class="glyphicon glyphicon-search"></i><input class="form-control mobileSelect-filter" type="search" /></div></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
+        templateFilterable:'<div><div class="mobileSelect-title"><div class="right-inner-addon"><i class="glyphicon glyphicon-search"></i><input class="form-control mobileSelect-filter"/></div></div><div class="list-container"></div><div class="mobileSelect-buttons"><a href="#" class="mobileSelect-selectallbtn"></a><a href="#" class="mobileSelect-savebtn"></a><a href="#" class="mobileSelect-clearbtn"></a><a href="#" class="mobileSelect-cancelbtn"></a></div></div>',
         title: 'Select an option',
         buttonSelectAll: 'Select All Visible',
         buttonSave: 'Save',

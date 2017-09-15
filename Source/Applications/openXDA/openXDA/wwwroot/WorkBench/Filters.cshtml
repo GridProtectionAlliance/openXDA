@@ -127,7 +127,8 @@
             },
             onClose: function () {
                 $('.selectAllBtn').remove();
-            }
+            },
+            filterable: true
         };
         var dateRangeOptions = {
             "timePicker": true,
@@ -179,7 +180,6 @@
                 $('#dateRange').daterangepicker(dateRangeOptions);
             }
 
-            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Event Types' /></div>";
             $('#types').mobileSelect(mobileSelectOptions);
             $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -190,22 +190,7 @@
             });
 
 
-            $('#typefilter').on('keypress', function () {
-                var string = $('#typefilter').val();
-                if (string === "") {
-                    $('.mobileSelect-container :visible .list-container').children().show();
 
-                }
-                else {
-                    $('.mobileSelect-container :visible .list-container').children().hide();
-                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                        if ($(item).text().toLowerCase().indexOf($('#typefilter').val()) >= 0)
-                            $(item).show();
-                    });
-                }
-            });
-
-            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
             $('#meters').mobileSelect(mobileSelectOptions);
             $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -215,22 +200,7 @@
                 $('#meters').mobileSelect('show');
             });
 
-            $('#meterfilter').on('keypress', function () {
-                var string = $('#meterfilter').val();
-                if (string === "") {
-                    $('.mobileSelect-container :visible .list-container').children().show();
 
-                }
-                else {
-                    $('.mobileSelect-container :visible .list-container').children().hide();
-                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                        if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
-                            $(item).show();
-                    });
-                }
-            });
-
-            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='linefilter' placeholder='Search Lines' /></div>";
             $('#lines').mobileSelect(mobileSelectOptions);
             $('#linesFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -238,23 +208,6 @@
             $('#linesFrame .btn-mobileSelect-gen').on('click', function (event) {
                 event.preventDefault();
                 $('#lines').mobileSelect('show');
-            });
-
-
-
-            $('#linefilter').on('keyup', function () {
-                var string = $('#linefilter').val();
-                if (string === "") {
-                    $('.mobileSelect-container :visible .list-container').children().show();
-
-                }
-                else {
-                    $('.mobileSelect-container :visible .list-container').children().hide();
-                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                        if ($(item).text().toLowerCase().indexOf($('#linefilter').val()) >= 0)
-                            $(item).show();
-                    });
-                }
             });
 
 
@@ -312,6 +265,15 @@
                 else $('#metersFrame button').prop("disabled", false);
 
             });
+        });
+
+        $('#addNewEditDialog').on('hidden.bs.modal', function (event) {
+            if ($('#meters').mobileSelect('exists'))
+                $('#meters').mobileSelect('destroy');
+            if ($('#types').mobileSelect('exists'))
+                $('#types').mobileSelect('destroy')
+            if ($('#lines').mobileSelect('exists'))
+                $('#lines').mobileSelect('destroy')
         });
 
         $(viewModel).on('beforeSave', function (event, observableRecord) {
