@@ -302,7 +302,7 @@ namespace FaultData.DataWriters
         {
             EmailProcessingThread.Push(() =>
             {
-                TimeSpan delaySpan = s_minWaitPeriod;
+                TimeSpan delaySpan = Common.Min(s_minWaitPeriod, s_maxWaitPeriod);
                 int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
                 QueuedLineEvents.Add(lineEvent);
                 new Action(() => DequeueLineEvent(lineEvent)).DelayAndExecute(delay);
