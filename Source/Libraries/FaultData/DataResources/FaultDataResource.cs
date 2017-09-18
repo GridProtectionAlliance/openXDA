@@ -41,7 +41,6 @@ using GSF.Data.Model;
 using GSF.Parsing;
 using GSF.Units;
 using log4net;
-using MathNet.Numerics.IntegralTransforms;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -970,6 +969,7 @@ namespace FaultData.DataResources
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
+            double prefaultPeak = GetPrefaultPeak(fault, dataGroup, viCycleDataGroup);
             double postfaultPeak = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup);
 
             List<Fault.Summary> validSummaries;
@@ -982,6 +982,12 @@ namespace FaultData.DataResources
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold;
+
+            fault.IsReclose =
+                !double.IsNaN(prefaultPeak) &&
+                !double.IsNaN(postfaultPeak) &&
+                prefaultPeak <= m_breakerSettings.OpenBreakerThreshold &&
+                postfaultPeak <= m_breakerSettings.OpenBreakerThreshold;
 
             if (fault.Segments.Any())
             {
@@ -1044,7 +1050,7 @@ namespace FaultData.DataResources
         private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
-            int start = Math.Max(0, fault.StartSample - samplesPerCycle);
+            int start = fault.StartSample - samplesPerCycle;
             int end = fault.StartSample;
 
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
@@ -1058,7 +1064,7 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
-            int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int end = fault.EndSample + samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
@@ -1067,11 +1073,24 @@ namespace FaultData.DataResources
             return Common.Min(ia, ib, ic);
         }
 
+        private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int start = fault.StartSample - 5 * samplesPerCycle;
+            int end = fault.StartSample - 1;
+
+            double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
+            double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
+            double ic = viCycleDataGroup.IC.Peak.ToSubSeries(start, end).Minimum;
+
+            return Common.Min(ia, ib, ic);
+        }
+
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
-            int end = Math.Min(start + 5 * samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int end = fault.EndSample + 5 * samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;

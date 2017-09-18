@@ -333,6 +333,7 @@ namespace FaultData.DataAnalysis
         private double m_postfaultCurrent;
 
         private bool m_isSuppressed;
+        private bool m_isReclose;
 
         private List<Summary> m_summaries;
         private List<Segment> m_segments;
@@ -494,6 +495,18 @@ namespace FaultData.DataAnalysis
             set
             {
                 m_isSuppressed = value;
+            }
+        }
+
+        public bool IsReclose
+        {
+            get
+            {
+                return m_isReclose;
+            }
+            set
+            {
+                m_isReclose = value;
             }
         }
 

@@ -1028,6 +1028,9 @@ GO
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
 GO
 
+INSERT INTO EventType(Name, Description) VALUES ('RecloseIntoFault', 'RecloseIntoFault')
+GO
+
 INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption')
 GO
 
