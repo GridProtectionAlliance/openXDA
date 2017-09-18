@@ -1459,6 +1459,22 @@ CREATE NONCLUSTERED INDEX IX_FaultCurve_EventID
 ON FaultCurve(EventID ASC)
 GO
 
+CREATE TABLE FaultCurveStatistic
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	FaultCurveID INT NOT NULL REFERENCES FaultCurve(ID),
+	FaultNumber INT NOT NULL,
+	Maximum FLOAT NOT NULL,
+	Minimum FLOAT NOT NULL,
+	Average FLOAT NOT NULL,
+	StandardDeviation FLOAT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultCurveStatistic_FaultCurveID
+ON FaultCurveStatistic(FaultCurveID ASC)
+GO
+
 CREATE TABLE FaultGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
