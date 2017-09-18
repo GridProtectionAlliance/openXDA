@@ -290,9 +290,6 @@ namespace FaultData.DataResources
             }
         }
 
-        [Setting]
-        public double SagThreshold { get; set;}
-
         [Category]
         [SettingName("FaultLocation")]
         public FaultLocationSettings FaultLocationSettings
@@ -973,6 +970,7 @@ namespace FaultData.DataResources
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
+            double postfaultPeak = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup);
 
             List<Fault.Summary> validSummaries;
             Fault.Summary summary;
@@ -983,6 +981,8 @@ namespace FaultData.DataResources
             fault.Duration = endTime - startTime;
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
+            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold;
+
             if (fault.Segments.Any())
             {
                 fault.Type = fault.Segments
@@ -994,13 +994,6 @@ namespace FaultData.DataResources
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
                 fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
             }
-
-            bool mostly60 = CheckThreePhaseFFT(fault, viDataGroup);
-            bool threePhaseWithNoSag = (Common.Min(viCycleDataGroup.VA.ToSubGroup(fault.StartSample, fault.EndSample).RMS.Minimum, viCycleDataGroup.VB.ToSubGroup(fault.StartSample, fault.EndSample).RMS.Minimum, viCycleDataGroup.VC.ToSubGroup(fault.StartSample, fault.EndSample).RMS.Minimum) / 1000 / (dataGroup.Line.VoltageKV / Math.Sqrt(3)) > SagThreshold);
-
-            fault.IsSuppressed = !mostly60 || threePhaseWithNoSag  || GetPostfaultPeak(fault, dataGroup, viCycleDataGroup) > m_breakerSettings.OpenBreakerThreshold;
-
-
 
             if (calculationCycle >= 0)
             {
@@ -1271,37 +1264,6 @@ namespace FaultData.DataResources
             Angle angle = cycleDataGroup.Phase[cycle].Value;
             double magnitude = cycleDataGroup.RMS[cycle].Value;
             return new ComplexNumber(angle, magnitude);
-        }
-
-        private bool CheckThreePhaseFFT(Fault fault, VIDataGroup viDataGroup)
-        {
-            bool returnValue = true;
-            double samplesPerCycle = Math.Round(viDataGroup.IA.SampleRate / m_systemFrequency);
-            int cycles = (int)Math.Ceiling(viDataGroup.IA.DataPoints.Count / samplesPerCycle);
-            int arraySize = cycles*(int)samplesPerCycle;
-
-            Complex[] iAsresult = FFT(viDataGroup.IA.DataPoints.Select(x => x.Value).Concat(Enumerable.Repeat(0.0,arraySize-viDataGroup.IA.DataPoints.Count)).ToArray());
-            Complex[] iBsresult = FFT(viDataGroup.IB.DataPoints.Select(x => x.Value).Concat(Enumerable.Repeat(0.0, arraySize - viDataGroup.IA.DataPoints.Count)).ToArray());
-            Complex[] iCsresult = FFT(viDataGroup.IC.DataPoints.Select(x => x.Value).Concat(Enumerable.Repeat(0.0, arraySize - viDataGroup.IA.DataPoints.Count)).ToArray());
-            double ratioIa = iAsresult[cycles].Magnitude / iAsresult.Take(arraySize / 2).Sum(x => x.Magnitude);
-            double ratioIb = iBsresult[cycles].Magnitude / iBsresult.Take(arraySize / 2).Sum(x => x.Magnitude);
-            double ratioIc = iCsresult[cycles].Magnitude / iCsresult.Take(arraySize / 2).Sum(x => x.Magnitude);
-            double ratio = ratioIa + ratioIb + ratioIc;
-            if (ratio < 0.03)
-                returnValue = false;
-
-            return returnValue;
-        }
-
-        static Complex[] FFT(double[] samples)
-        {
-            Complex[] complexSamples = samples
-                .Select(sample => new Complex(sample, 0))
-                .ToArray();
-
-            Fourier.BluesteinForward(complexSamples, FourierOptions.Default);
-
-            return complexSamples;
         }
 
         #endregion
