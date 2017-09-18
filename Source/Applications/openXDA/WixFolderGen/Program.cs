@@ -46,8 +46,8 @@ namespace WixFolderGen
         {
             List<Solution> solutions = new List<Solution>()
             {
-                new Solution("openXDA", "wwwroot", "Applications\\openXDA", ""),
-                new Solution("XDAAlarmCreationApp", "wwwrootXDAAlarm", "Tools", "XDAAlarm")
+                new Solution("openXDA", "wwwroot", "Applications\\openXDA", "")
+                //new Solution("XDAAlarmCreationApp", "wwwrootXDAAlarm", "Tools", "XDAAlarm")
             };
 
             foreach(Solution solution in solutions)
