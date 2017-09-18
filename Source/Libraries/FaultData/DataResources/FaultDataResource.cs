@@ -577,7 +577,8 @@ namespace FaultData.DataResources
             Fault currentFault = null;
 
             bool[] faultApparent = rms.DataPoints
-                .Select(dataPoint => dataPoint.Value / rms[0].Value)
+                .Select(dataPoint => dataPoint.Value - m_faultLocationSettings.PrefaultTriggerAdjustment)
+                .Select(value => value / rms[0].Value)
                 .Select(ratio => ratio > m_faultLocationSettings.PrefaultTrigger)
                 .ToArray();
 
