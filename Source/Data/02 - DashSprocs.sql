@@ -3247,7 +3247,7 @@ BEGIN
                         '''+ t.ServiceName + ''' as ServiceType,
                         MeterLine.LineName + '' '' + [Line].[AssetKey] AS LineName,
                         Line.VoltageKV AS Voltage,
-                        dbo.'+ t.HasResultFunction+'(Event.ID) as Confidence
+						CAST(dbo.'+ t.HasResultFunction+'(Event.ID) as varchar(max)) as Confidence
                 FROM    #temp as Event JOIN
                         Meter ON Meter.ID = Event.MeterID JOIN
                         Line ON Event.LineID = Line.ID JOIN
