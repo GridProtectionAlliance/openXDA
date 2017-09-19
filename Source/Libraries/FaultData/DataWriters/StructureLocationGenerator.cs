@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Net;
+using HtmlAgilityPack;
 
 namespace FaultData.DataWriters
 {
@@ -39,8 +40,9 @@ namespace FaultData.DataWriters
         private static List<List<string>> FromCsvToIntermediate(string input, string[] returnFields, string[] returnFieldNames)
         {
             List<List<string>> result = new List<List<string>>();
+            input = input.Trim();
 
-            string[] rows = input.Split('\n');
+            string[] rows = input.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             string[] receivedColumns = rows[0].Split(',');
             List<int> returnFieldIndexes = new List<int>();
 
@@ -58,16 +60,19 @@ namespace FaultData.DataWriters
             {
                 string[] rowValues = rows[row].Split(',');
                 result.Add(new List<string>());
-
-                foreach (int index in returnFieldIndexes)
+                if (rowValues.Length == receivedColumns.Length)
                 {
-                    if (index != -1)
-                        result.ElementAt(row).Add(rowValues[index]);
-                    else
-                        result.ElementAt(row).Add("field not found");
+                    foreach (int index in returnFieldIndexes)
+                    {
+                        if (index != -1)
+                            result.ElementAt(row).Add(rowValues[index]);
+                        else
+                            result.ElementAt(row).Add("field not found");
+                    }
                 }
             }
 
+            result = result.Where(list => list.Count > 0).ToList();
             return result;
         }
 
@@ -118,16 +123,17 @@ namespace FaultData.DataWriters
 
         static private string GetStructureInfo(string url, bool decode)
         {
-            using (HttpClient client = new HttpClient())
-            using (HttpResponseMessage response = client.GetAsync(url).Result)
-            using (HttpContent content = response.Content)
-            {
-                string result = content.ReadAsStringAsync().Result;
-                if (decode)
-                    result = WebUtility.HtmlDecode(result);
+            HtmlWeb webClient = new HtmlWeb();
+            HtmlDocument doc = webClient.Load(url);
 
-                return result;
-           }
+            string result;
+
+            if (decode)
+                result = doc.DocumentNode.Descendants("html").FirstOrDefault().InnerText.Trim();
+            else
+                result = doc.DocumentNode.InnerText;
+
+            return result;
         }
 
         #endregion
