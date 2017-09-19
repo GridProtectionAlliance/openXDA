@@ -203,8 +203,6 @@ namespace FaultData.DataOperations
                     m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
                 else
                     m_timing = double.NaN;
-
-                m_dcOffsetDetected = false;
             }
 
             #endregion
