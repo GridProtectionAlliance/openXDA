@@ -2859,7 +2859,10 @@ SummaryData AS
     SELECT
         SelectedSummary.ID AS FaultSummaryID,
         Meter.AssetKey AS MeterKey,
+		Meter.Name AS MeterName,
+		MeterLocation.AssetKey as StationKey,
         MeterLocation.Name AS StationName,
+		Line.AssetKey AS LineKey,
         MeterLine.LineName,
         SelectedSummary.FaultType,
         SelectedSummary.Inception,
@@ -2885,7 +2888,8 @@ SummaryData AS
         DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
         Meter ON Event.MeterID = Meter.ID JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID LEFT OUTER JOIN
+        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
+		Line ON Line.ID=MeterLine.LineID LEFT OUTER JOIN
         DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = SelectedSummary.ID LEFT OUTER JOIN
         DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
     WHERE
@@ -2965,7 +2969,10 @@ SELECT
                     (
                         SELECT
                             MeterKey,
+							MeterName,
+							StationKey,
                             StationName,
+							LineKey,
                             LineName,
                             FaultType,
                             Inception,
