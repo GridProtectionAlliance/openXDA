@@ -79,6 +79,12 @@ namespace FaultData.DataResources
 
                     if ((object)lineImpedance != null)
                     {
+                        if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
+                            return false;
+
+                        FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
+                        FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+
                         int localMeterLocationID = Meter.MeterLocationID;
 
                         List<int> linkIDs = Line.MeterLocationLines
@@ -92,6 +98,9 @@ namespace FaultData.DataResources
 
                         TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
 
+                        if (linkIDs.Count == 0)
+                            return true;
+
                         List<SourceImpedance> sourceImpedances = sourceImpedanceTable
                             .QueryRecordsWhere($"MeterLocationLineID IN ({string.Join(",", linkIDs)})")
                             .ToList();
@@ -102,12 +111,6 @@ namespace FaultData.DataResources
                         List<SourceImpedance> remoteImpedances = sourceImpedances
                             .Where(impedance => impedance.MeterLocationLineID != localMeterLocationID)
                             .ToList();
-
-                        if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
-                            return false;
-
-                        FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-                        FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
 
                         if ((object)localImpedance != null)
                             FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
@@ -1004,7 +1007,7 @@ namespace FaultData.DataResources
 
                 double impedanceMagnitude = (voltage / current).Magnitude;
                 double impedanceReactance = (voltage / current).Imaginary;
-                fault.ReactanceRatio = impedanceMagnitude / impedanceReactance;
+                fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
             }
 
             bool mostly60 = CheckThreePhaseFFT(fault, viDataGroup);
