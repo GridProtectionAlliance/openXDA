@@ -27,7 +27,6 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using FaultAlgorithms;
 using FaultData.Configuration;
@@ -1008,13 +1007,16 @@ namespace FaultData.DataResources
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
                 fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
 
-                CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
-                ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
-                ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
+                if (calculationCycle >= 0)
+                {
+                    CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
+                    ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
+                    ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
 
-                double impedanceMagnitude = (voltage / current).Magnitude;
-                double impedanceReactance = (voltage / current).Imaginary;
-                fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
+                    double impedanceMagnitude = (voltage / current).Magnitude;
+                    double impedanceReactance = (voltage / current).Imaginary;
+                    fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
+                }
             }
 
             if (calculationCycle >= 0)
