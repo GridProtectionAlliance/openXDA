@@ -168,10 +168,10 @@ namespace FaultData.DataResources
                 if (faultGroup.FaultDetectionLogicResult ?? false)
                     return EventClassification.Fault;
 
-                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsReclose))
+                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && !fault.IsReclose))
                     return EventClassification.Fault;
 
-                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => fault.IsReclose))
+                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && fault.IsReclose))
                     return EventClassification.RecloseIntoFault;
             }
 
