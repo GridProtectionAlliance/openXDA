@@ -19,7 +19,7 @@ SELECT
 		(
 			SELECT
 				Line.AssetKey AS [@id],
-				MeterLine.LineName AS name,
+				COALESCE(MeterLine.LineName, Line.AssetKey) AS name,
 				CAST(Line.VoltageKV AS VARCHAR(10)) AS voltage,
 				CAST(Line.ThermalRating AS VARCHAR(10)) AS rating50F,
 				CAST(Line.Length AS VARCHAR(10)) AS length,
