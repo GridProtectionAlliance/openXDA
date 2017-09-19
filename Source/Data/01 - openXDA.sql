@@ -1028,6 +1028,9 @@ GO
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
 GO
 
+INSERT INTO EventType(Name, Description) VALUES ('RecloseIntoFault', 'RecloseIntoFault')
+GO
+
 INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption')
 GO
 
@@ -1457,6 +1460,22 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_FaultCurve_EventID
 ON FaultCurve(EventID ASC)
+GO
+
+CREATE TABLE FaultCurveStatistic
+(
+	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+	FaultCurveID INT NOT NULL REFERENCES FaultCurve(ID),
+	FaultNumber INT NOT NULL,
+	Maximum FLOAT NOT NULL,
+	Minimum FLOAT NOT NULL,
+	Average FLOAT NOT NULL,
+	StandardDeviation FLOAT NOT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultCurveStatistic_FaultCurveID
+ON FaultCurveStatistic(FaultCurveID ASC)
 GO
 
 CREATE TABLE FaultGroup
@@ -3777,7 +3796,7 @@ SET Template = '<?xml version="1.0"?>
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">DFRs:</xsl:if></td>
-                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&faultcurves=1</xsl:attribute>click for waveform</a>)</td>
+                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&amp;faultcurves=1</xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
 

@@ -64,6 +64,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.PrefaultTrigger', '5.0', '5.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.PrefaultTriggerAdjustment', '50.0', '50.0')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.UseDefaultFaultDetectionLogic', 'True', 'True')
 GO
 
@@ -205,6 +208,9 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Fault', 1)
 GO
 
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'RecloseIntoFault', 1)
+GO
+
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Sag', 1)
 GO
 
@@ -227,6 +233,9 @@ INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Breaker'
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Fault,#FF2800', 1)
+GO
+
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'RecloseIntoFault,#323232', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Sag,#FF9600', 1)

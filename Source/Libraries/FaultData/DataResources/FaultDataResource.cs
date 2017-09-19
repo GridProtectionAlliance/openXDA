@@ -41,7 +41,6 @@ using GSF.Data.Model;
 using GSF.Parsing;
 using GSF.Units;
 using log4net;
-using MathNet.Numerics.IntegralTransforms;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -292,9 +291,6 @@ namespace FaultData.DataResources
                 m_maxCurrent = value;
             }
         }
-
-        [Setting]
-        public double SagThreshold { get; set;}
 
         [Category]
         [SettingName("FaultLocation")]
@@ -580,7 +576,8 @@ namespace FaultData.DataResources
             Fault currentFault = null;
 
             bool[] faultApparent = rms.DataPoints
-                .Select(dataPoint => dataPoint.Value / rms[0].Value)
+                .Select(dataPoint => dataPoint.Value - m_faultLocationSettings.PrefaultTriggerAdjustment)
+                .Select(value => value / rms[0].Value)
                 .Select(ratio => ratio > m_faultLocationSettings.PrefaultTrigger)
                 .ToArray();
 
@@ -980,6 +977,8 @@ namespace FaultData.DataResources
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
+            double prefaultPeak = GetPrefaultPeak(fault, dataGroup, viCycleDataGroup);
+            double postfaultPeak = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup);
 
             List<Fault.Summary> validSummaries;
             Fault.Summary summary;
@@ -990,6 +989,14 @@ namespace FaultData.DataResources
             fault.Duration = endTime - startTime;
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
+            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold;
+
+            fault.IsReclose =
+                !double.IsNaN(prefaultPeak) &&
+                !double.IsNaN(postfaultPeak) &&
+                prefaultPeak <= m_breakerSettings.OpenBreakerThreshold &&
+                postfaultPeak <= m_breakerSettings.OpenBreakerThreshold;
+
             if (fault.Segments.Any())
             {
                 fault.Type = fault.Segments
@@ -1009,13 +1016,6 @@ namespace FaultData.DataResources
                 double impedanceReactance = (voltage / current).Imaginary;
                 fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
             }
-
-            bool mostly60 = CheckThreePhaseFFT(fault, viDataGroup);
-            bool threePhaseWithNoSag = (Common.Min(viCycleDataGroup.VA.ToSubGroup(fault.StartSample, fault.EndSample).RMS.Minimum, viCycleDataGroup.VB.ToSubGroup(fault.StartSample, fault.EndSample).RMS.Minimum, viCycleDataGroup.VC.ToSubGroup(fault.StartSample, fault.EndSample).RMS.Minimum) / 1000 / (dataGroup.Line.VoltageKV / Math.Sqrt(3)) > SagThreshold);
-
-            fault.IsSuppressed = !mostly60 || threePhaseWithNoSag  || GetPostfaultPeak(fault, dataGroup, viCycleDataGroup) > m_breakerSettings.OpenBreakerThreshold;
-
-
 
             if (calculationCycle >= 0)
             {
@@ -1066,7 +1066,7 @@ namespace FaultData.DataResources
         private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
-            int start = Math.Max(0, fault.StartSample - samplesPerCycle);
+            int start = fault.StartSample - samplesPerCycle;
             int end = fault.StartSample;
 
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
@@ -1080,7 +1080,7 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
-            int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int end = fault.EndSample + samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
@@ -1089,11 +1089,24 @@ namespace FaultData.DataResources
             return Common.Min(ia, ib, ic);
         }
 
+        private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int start = fault.StartSample - 5 * samplesPerCycle;
+            int end = fault.StartSample - 1;
+
+            double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
+            double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
+            double ic = viCycleDataGroup.IC.Peak.ToSubSeries(start, end).Minimum;
+
+            return Common.Min(ia, ib, ic);
+        }
+
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
-            int end = Math.Min(start + 5 * samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int end = fault.EndSample + 5 * samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
@@ -1286,37 +1299,6 @@ namespace FaultData.DataResources
             Angle angle = cycleDataGroup.Phase[cycle].Value;
             double magnitude = cycleDataGroup.RMS[cycle].Value;
             return new ComplexNumber(angle, magnitude);
-        }
-
-        private bool CheckThreePhaseFFT(Fault fault, VIDataGroup viDataGroup)
-        {
-            bool returnValue = true;
-            double samplesPerCycle = Math.Round(viDataGroup.IA.SampleRate / m_systemFrequency);
-            int cycles = (int)Math.Ceiling(viDataGroup.IA.DataPoints.Count / samplesPerCycle);
-            int arraySize = cycles*(int)samplesPerCycle;
-
-            Complex[] iAsresult = FFT(viDataGroup.IA.DataPoints.Select(x => x.Value).Concat(Enumerable.Repeat(0.0,arraySize-viDataGroup.IA.DataPoints.Count)).ToArray());
-            Complex[] iBsresult = FFT(viDataGroup.IB.DataPoints.Select(x => x.Value).Concat(Enumerable.Repeat(0.0, arraySize - viDataGroup.IA.DataPoints.Count)).ToArray());
-            Complex[] iCsresult = FFT(viDataGroup.IC.DataPoints.Select(x => x.Value).Concat(Enumerable.Repeat(0.0, arraySize - viDataGroup.IA.DataPoints.Count)).ToArray());
-            double ratioIa = iAsresult[cycles].Magnitude / iAsresult.Take(arraySize / 2).Sum(x => x.Magnitude);
-            double ratioIb = iBsresult[cycles].Magnitude / iBsresult.Take(arraySize / 2).Sum(x => x.Magnitude);
-            double ratioIc = iCsresult[cycles].Magnitude / iCsresult.Take(arraySize / 2).Sum(x => x.Magnitude);
-            double ratio = ratioIa + ratioIb + ratioIc;
-            if (ratio < 0.03)
-                returnValue = false;
-
-            return returnValue;
-        }
-
-        static Complex[] FFT(double[] samples)
-        {
-            Complex[] complexSamples = samples
-                .Select(sample => new Complex(sample, 0))
-                .ToArray();
-
-            Fourier.BluesteinForward(complexSamples, FourierOptions.Default);
-
-            return complexSamples;
         }
 
         #endregion

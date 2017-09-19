@@ -146,10 +146,13 @@ namespace FaultData.DataAnalysis
                 if (m_maximum.HasValue)
                     return m_maximum.Value;
 
-                if (!m_dataPoints.Any())
+                if (!m_dataPoints.Any(dataPoint => !double.IsNaN(dataPoint.Value)))
                     return double.NaN;
 
-                m_maximum = m_dataPoints.Max(point => point.Value);
+                m_maximum = m_dataPoints
+                    .Select(point => point.Value)
+                    .Where(value => !double.IsNaN(value))
+                    .Max();
 
                 return m_maximum.Value;
             }
@@ -165,10 +168,13 @@ namespace FaultData.DataAnalysis
                 if (m_minimum.HasValue)
                     return m_minimum.Value;
 
-                if (!m_dataPoints.Any())
+                if (!m_dataPoints.Any(dataPoint => !double.IsNaN(dataPoint.Value)))
                     return double.NaN;
 
-                m_minimum = m_dataPoints.Min(point => point.Value);
+                m_minimum = m_dataPoints
+                    .Select(dataPoint => dataPoint.Value)
+                    .Where(value => !double.IsNaN(value))
+                    .Min();
 
                 return m_minimum.Value;
             }
@@ -184,10 +190,13 @@ namespace FaultData.DataAnalysis
                 if (m_average.HasValue)
                     return m_average.Value;
 
-                if (!m_dataPoints.Any())
+                if (!m_dataPoints.Any(dataPoint => !double.IsNaN(dataPoint.Value)))
                     return double.NaN;
 
-                m_average = m_dataPoints.Average(point => point.Value);
+                m_average = m_dataPoints
+                    .Select(dataPoint => dataPoint.Value)
+                    .Where(value => !double.IsNaN(value))
+                    .Average();
 
                 return m_average.Value;
             }

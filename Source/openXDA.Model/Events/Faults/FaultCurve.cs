@@ -38,4 +38,22 @@ namespace openXDA.Model
 
         public byte[] Data { get; set; }
     }
+
+    public class FaultCurveStatistic
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+
+        public int FaultCurveID { get; set; }
+
+        public int FaultNumber { get; set; }
+
+        public double Maximum { get; set; }
+
+        public double Minimum { get; set; }
+        
+        public double Average { get; set; }
+
+        public double StandardDeviation { get; set; }
+    }
 }

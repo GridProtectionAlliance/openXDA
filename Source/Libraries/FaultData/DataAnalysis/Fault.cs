@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FaultAlgorithms;
 
 namespace FaultData.DataAnalysis
@@ -204,6 +205,9 @@ namespace FaultData.DataAnalysis
             private string m_algorithm;
             private DataSeries m_series;
 
+            private double? m_average;
+            private double? m_standardDeviation;
+
             #endregion
 
             #region [ Constructors ]
@@ -257,6 +261,48 @@ namespace FaultData.DataAnalysis
                 }
             }
 
+            public double Maximum
+            {
+                get
+                {
+                    return m_series.Maximum;
+                }
+            }
+
+            public double Minimum
+            {
+                get
+                {
+                    return m_series.Minimum;
+                }
+            }
+
+            public double Average
+            {
+                get
+                {
+                    return m_series.Average;
+                }
+            }
+
+            public double StandardDeviation
+            {
+                get
+                {
+                    double average = Average;
+
+                    double numerator = m_series.DataPoints
+                        .Select(dataPoint => dataPoint.Value)
+                        .Select(value => value - average)
+                        .Select(diff => diff * diff)
+                        .Sum();
+
+                    int denominator = m_series.DataPoints.Count;
+
+                    return Math.Sqrt(numerator / denominator);
+                }
+            }
+
             #endregion
 
             #region [ Methods ]
@@ -288,6 +334,7 @@ namespace FaultData.DataAnalysis
         private double m_reactanceRatio;
 
         private bool m_isSuppressed;
+        private bool m_isReclose;
 
         private List<Summary> m_summaries;
         private List<Segment> m_segments;
@@ -462,6 +509,18 @@ namespace FaultData.DataAnalysis
             set
             {
                 m_isSuppressed = value;
+            }
+        }
+
+        public bool IsReclose
+        {
+            get
+            {
+                return m_isReclose;
+            }
+            set
+            {
+                m_isReclose = value;
             }
         }
 

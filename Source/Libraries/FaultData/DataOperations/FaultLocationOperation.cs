@@ -79,14 +79,15 @@ namespace FaultData.DataOperations
 
                     Event evt = eventTable.GetEvent(MeterDataSet.FileGroup, DataGroup);
                     SegmentType faultSegmentType = segmentTypeTable.GetOrAdd("Fault");
-                    int faultNumber = 1;
 
                     // Create a fault group row for the whole group of faults
                     if (FaultGroup.FaultDetectionLogicResult != false || FaultGroup.FaultValidationLogicResult != false)
                         faultGroupTable.AddNewRecord(CreateFaultGroup(evt.ID, FaultGroup));
 
-                    foreach (Fault fault in FaultGroup.Faults)
+                    for (int faultIndex = 0; faultIndex < FaultGroup.Faults.Count; faultIndex++)
                     {
+                        Fault fault = FaultGroup.Faults[faultIndex];
+
                         // Create a fault segment for the fault itself
                         faultSegmentTable.AddNewRecord(CreateFaultSegment(evt.ID, fault, faultSegmentType));
 
@@ -99,20 +100,42 @@ namespace FaultData.DataOperations
                         }
 
                         // Create the fault summary rows for this fault
-                        foreach (FaultSummary faultSummary in CreateFaultSummaries(evt.ID, faultNumber, fault))
+                        foreach (FaultSummary faultSummary in CreateFaultSummaries(evt.ID, faultIndex + 1, fault))
                             faultSummaryTable.AddNewRecord(faultSummary);
-
-                        // Increment the fault number
-                        faultNumber++;
                     }
 
                     // Generate fault curves for each algorithm used to analyze the fault
                     TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
+                    TableOperations<FaultCurveStatistic> faultCurveStatisticTable = new TableOperations<FaultCurveStatistic>(connection);
 
                     if (FaultGroup.Faults.Any())
                     {
                         for (int i = 0; i < FaultGroup.Faults[0].Curves.Count; i++)
-                            faultCurveTable.AddNewRecord(CreateFaultCurve(evt.ID, i));
+                        {
+                            FaultCurve faultCurve = CreateFaultCurve(evt.ID, i);
+                            faultCurveTable.AddNewRecord(faultCurve);
+                            faultCurve.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
+                            for (int faultIndex = 0; faultIndex < FaultGroup.Faults.Count; faultIndex++)
+                            {
+                                Fault fault = FaultGroup.Faults[faultIndex];
+
+                                if (fault.Curves[i].Series.DataPoints.Count == 0)
+                                    continue;
+
+                                FaultCurveStatistic faultCurveStatistic = new FaultCurveStatistic()
+                                {
+                                    FaultCurveID = faultCurve.ID,
+                                    FaultNumber = faultIndex + 1,
+                                    Maximum = ToDbFloat(fault.Curves[i].Maximum),
+                                    Minimum = ToDbFloat(fault.Curves[i].Minimum),
+                                    Average = ToDbFloat(fault.Curves[i].Average),
+                                    StandardDeviation = ToDbFloat(fault.Curves[i].StandardDeviation)
+                                };
+
+                                faultCurveStatisticTable.AddNewRecord(faultCurveStatistic);
+                            }
+                        }
                     }
                 }
             }
@@ -200,6 +223,7 @@ namespace FaultData.DataOperations
 
                 return new FaultCurve()
                 {
+                    EventID = eventID,
                     Algorithm = FaultGroup.Faults[0].Curves[curveIndex].Algorithm,
                     Data = Serialize(series)
                 };

@@ -180,7 +180,8 @@
             },
             onClose: function () {
                 $('.selectAllBtn').remove();
-            }
+            },
+            filterable: true
         };
         var dateRangeOptions = {
             "timePicker": true,
@@ -212,7 +213,6 @@
                 $('#dateRange').daterangepicker(dateRangeOptions);
             });
 
-            mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
             $('#meters').mobileSelect(mobileSelectOptions);
             $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -222,20 +222,6 @@
                 $('#meters').mobileSelect('show');
             });
 
-            $('#meterfilter').on('keyup', function () {
-                var string = $('#meterfilter').val();
-                if (string === "") {
-                    $('.mobileSelect-container :visible .list-container').children().show();
-
-                }
-                else {
-                    $('.mobileSelect-container :visible .list-container').children().hide();
-                    $.each($('.mobileSelect-container :visible .list-container').children(), function (i, item) {
-                        if ($(item).text().toLowerCase().indexOf($('#meterfilter').val()) >= 0)
-                            $(item).show();
-                    });
-                }
-            });
 
             dataHub.getMetersForSelect().done(function (data) {
                 $.each(data, function (index, type) {
@@ -245,6 +231,12 @@
             });
 
         });
+
+        $('#addNewEditDialog').on('hidden.bs.modal', function () {
+            if ($('#meters').mobileSelect('exists'))
+                $('#meters').mobileSelect('destroy');
+        });
+
 
         $('#reprocessModal').on('shown.bs.modal', function (event) {
             $('#DataFileID').text($(event.relatedTarget.parentElement.parentElement.children).first().text())

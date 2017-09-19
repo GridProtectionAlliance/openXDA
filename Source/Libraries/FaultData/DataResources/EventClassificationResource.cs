@@ -37,6 +37,7 @@ namespace FaultData.DataResources
     public enum EventClassification
     {
         Fault,
+        RecloseIntoFault,
         Interruption,
         Sag,
         Swell,
@@ -162,8 +163,17 @@ namespace FaultData.DataResources
             if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
                 return EventClassification.Breaker;
 
-            if ((object)faultGroup != null && (faultGroup.FaultDetectionLogicResult ?? faultGroup.FaultValidationLogicResult))
-                return EventClassification.Fault;
+            if ((object)faultGroup != null)
+            {
+                if (faultGroup.FaultDetectionLogicResult ?? false)
+                    return EventClassification.Fault;
+
+                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsReclose))
+                    return EventClassification.Fault;
+
+                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => fault.IsReclose))
+                    return EventClassification.RecloseIntoFault;
+            }
 
             DataSeries[] rms =
             {

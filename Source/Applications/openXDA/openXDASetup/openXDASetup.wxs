@@ -42,12 +42,6 @@
         <ComponentGroupRef Id="ConsoleComponents" />
       </Feature>
       
-      <!-- XDAAlarmCreationApp -->
-      <Feature Id="XDAAlarmCreationAppFeature" Title="XDA Alarm Creation Application" AllowAdvertise="no" Description="Installs the XDA Alarm Creation Application used to add off normal alarms to the openXDA service.">
-        <ComponentGroupRef Id="XDAAlarmComponents" />
-        <!-- Web Files -->
-        <?include WebFeaturesXDAAlarm.wxi ?>
-      </Feature>
 
     </Feature>
 
@@ -132,8 +126,6 @@
 
     <CustomAction Id="UpdateConfigFileAction.SetProperty" Property="UpdateConfigFileAction" Value="FilePath=[#openXDA.exe.config];Mode=WRITE;PropertyMappings=[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING];XDACONNECTIONSTRING=[XDACONNECTIONSTRING];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM]" />
     <CustomAction Id="UpdateConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="UpdateXDAAlarmConfigFileAction.SetProperty" Property="UpdateXDAAlarmConfigFileAction" Value="FilePath=[#XDAAlarmCreationApp.exe.config];Mode=WRITE;PropertyMappings=[CONNECTIONSTRINGMAPPING];XDACONNECTIONSTRING=[XDACONNECTIONSTRING]" />
-    <CustomAction Id="UpdateXDAAlarmConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="deferred" Impersonate="no" />
 
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
@@ -215,8 +207,6 @@
     <InstallExecuteSequence>
       <Custom Action="UpdateConfigFileAction.SetProperty" After="InstallFiles"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
       <Custom Action="UpdateConfigFileAction" After="UpdateConfigFileAction.SetProperty"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
-      <Custom Action="UpdateXDAAlarmConfigFileAction.SetProperty" After="UpdateConfigFileAction"><![CDATA[&XDAAlarmCreationAppFeature=3 OR (!XDAAlarmCreationAppFeature=3 AND &XDAAlarmCreationAppFeature=-1)]]></Custom>
-      <Custom Action="UpdateXDAAlarmConfigFileAction" After="UpdateXDAAlarmConfigFileAction.SetProperty"><![CDATA[&XDAAlarmCreationAppFeature=3 OR (!XDAAlarmCreationAppFeature=3 AND &XDAAlarmCreationAppFeature=-1)]]></Custom>
 
       <Custom Action="ConfigureServiceAction.SetProperty" After="InstallServices"><![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[&ServiceFeature=3]]></Custom>
@@ -287,7 +277,6 @@
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
             <?include WebFolders.wxi ?>
-            <?include WebFoldersXDAAlarm.wxi ?>
           </Directory>
         </Directory>
       <?else ?>
@@ -304,7 +293,6 @@
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
             <?include WebFolders.wxi ?>
-            <?include WebFoldersXDAAlarm.wxi ?>
           </Directory>
         </Directory>
       <?endif ?>
@@ -317,7 +305,6 @@
 
   <Fragment>
     <?include WebFiles.wxi ?>
-    <?include WebFilesXDAAlarm.wxi ?>
 
   </Fragment>
 
@@ -476,23 +463,6 @@
       <ComponentRef Id="GSF.ServiceProcess" />
     </ComponentGroup>
 
-    <!-- Console Components -->
-    <ComponentGroup Id="XDAAlarmComponents" Directory="INSTALLFOLDER">
-      <!-- Remote Console Applications -->
-      <Component Id="XDAAlarmCreationApp">
-        <File Id="XDAAlarmCreationApp.exe" Name="$(var.XDAAlarmCreationApp.TargetFileName)" Source="$(var.XDAAlarmCreationApp.TargetPath)" />
-        <Shortcut Id="XDAAlarmCreationAppStartMenuShortcut" Name="XDAAlarmCreationApp" Icon="openXDAConsole.ico.exe" Description="Application to add off normal alarm limits to the openXDA service." WorkingDirectory="INSTALLFOLDER" Directory="ApplicationProgramsFolder" Advertise="yes" />
-      </Component>
-      <Component Id="XDAAlarmCreationAppConfig">
-        <File Id="XDAAlarmCreationApp.exe.config" Name="$(var.XDAAlarmCreationApp.TargetFileName).config" Source="$(var.XDAAlarmCreationApp.ProjectDir)\app.config" />
-      </Component>
-
-      <!-- GSF Dependencies -->
-      <ComponentRef Id="GSF.Communication" />
-      <ComponentRef Id="GSF.Core" />
-      <ComponentRef Id="GSF.Security" />
-      <ComponentRef Id="GSF.ServiceProcess" />
-    </ComponentGroup>
 
     <!-- Library Components -->
     <ComponentGroup Id="LibraryComponents" Directory="INSTALLFOLDER">
@@ -627,7 +597,7 @@
         <File Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Name="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
       </Component>
       <Component Id="Microsoft.Owin">
-        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll" />
+        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.3.1.0\lib\net45\Microsoft.Owin.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Cors">
         <File Id="Microsoft.Owin.Cors.dll" Name="Microsoft.Owin.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll" />

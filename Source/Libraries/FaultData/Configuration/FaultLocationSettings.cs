@@ -32,6 +32,7 @@ namespace FaultData.Configuration
 
         // Fields
         private double m_prefaultTrigger;
+        private double m_prefaultTriggerAdjustment;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
         private bool m_warnMissingDetectionLogic;
@@ -52,6 +53,20 @@ namespace FaultData.Configuration
             set
             {
                 m_prefaultTrigger = value;
+            }
+        }
+
+        [Setting]
+        [DefaultValue(50.0D)]
+        public double PrefaultTriggerAdjustment
+        {
+            get
+            {
+                return m_prefaultTriggerAdjustment;
+            }
+            set
+            {
+                m_prefaultTriggerAdjustment = value;
             }
         }
 

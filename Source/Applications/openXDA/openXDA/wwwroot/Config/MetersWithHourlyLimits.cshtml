@@ -195,7 +195,8 @@
         },
         onClose: function () {
             $('.selectAllBtn').remove();
-        }
+        },
+        filterable: true
     };
 
     var dateRangeOptions = {
@@ -221,7 +222,6 @@
         $('#addNewEditDialog .modal-header h4 :visible').text('Configure Alarms')
         $('#dateRange').daterangepicker(dateRangeOptions);
 
-        mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' placeholder='Search Meters' /></div>";
         $('#meters').mobileSelect(mobileSelectOptions);
         $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -254,7 +254,6 @@
 
         });
 
-        mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Characteristics' /></div>";
         $('#types').mobileSelect(mobileSelectOptions);
         $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -291,6 +290,11 @@
 
 
     });
+    $('#addNewEditDialog').on('hidden.bs.modal', function (event) {
+        $('#meters').mobileSelect('destroy');
+        $('#types').mobileSelect('destroy')
+    });
+
 
     function doSomething() {
         $('#ignoreValue').attr('disabled', !$('#ignoreValuesAlarms').prop('checked'))

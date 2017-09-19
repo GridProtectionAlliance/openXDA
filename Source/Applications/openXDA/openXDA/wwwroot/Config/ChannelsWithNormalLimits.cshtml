@@ -65,16 +65,17 @@
 }
 @helper BodyRows()
 {
-    <td width="30%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: MeasurementType"></td>
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: MeasurementCharacteristic"></td>
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: Phase"></td>
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: HarmonicGroup"></td>
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: High"></td>
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: Low"></td>
-    <td width="5%" class="text-center valign-middle" nowrap>
+    <td width="10%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" title="Generate Smart Alarm Limits" data-bind="click: smartLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-stats"></span></button>
         <button type="button" class="btn btn-xs" title="Reset to Default Limits" data-bind="click: resetLimits.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
+        <a type="button" title="View Limits against trending data." target="_blank" data-bind="attr: { href: '/Config/AlarmViewer.cshtml?ChannelID=' +ID }, enable: $parent.dataHubIsConnected" style="color:black; background-color:ButtonFace" class="btn btn-xs"><i class="glyphicon glyphicon-eye-open"></i></a>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>

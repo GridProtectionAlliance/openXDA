@@ -69,6 +69,7 @@
     <td width="10%" class="text-left valign-middle" nowrap data-bind="text: Phase"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/HourOfWeekLimits.cshtml?ChannelID=' +ID + '&MeterName=@ViewBag.name' + '&ChannelName='+ Name}, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: Limits, attr: {id: Name + 'Count' + ID}"></span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
+        <a type="button" title="View Limits against trending data." target="_blank" data-bind="attr: { href: '/Config/AlarmViewer.cshtml?ChannelID=' +ID }, enable: $parent.dataHubIsConnected" style="color:black; background-color:ButtonFace" class="btn btn-xs"><i class="glyphicon glyphicon-eye-open"></i></a>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>

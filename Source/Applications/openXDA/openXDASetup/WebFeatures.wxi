@@ -17,8 +17,6 @@
   <ComponentGroupRef Id="wwwroot_Scripts_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_D3_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_flot_Components" />
-  <ComponentGroupRef Id="wwwroot_Scripts_flot_examples_Components" />
-  <ComponentGroupRef Id="wwwroot_Scripts_flot_examples_gauge_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_fonts_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_fullscreenselect_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_Components" />
