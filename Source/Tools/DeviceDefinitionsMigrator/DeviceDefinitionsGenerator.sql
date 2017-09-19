@@ -23,8 +23,8 @@ SELECT
 				CAST(Line.VoltageKV AS VARCHAR(10)) AS voltage,
 				CAST(Line.ThermalRating AS VARCHAR(10)) AS rating50F,
 				CAST(Line.Length AS VARCHAR(10)) AS length,
-				EndStation.AssetKey AS endStationID,
-				EndStation.Name AS endStationName,
+				RemoteMeterLocation.AssetKey AS endStationID,
+				RemoteMeterLocation.Name AS endStationName,
 				CAST(LineImpedance.R1 AS VARCHAR(10)) AS [impedances/R1],
 				CAST(LineImpedance.X1 AS VARCHAR(10)) AS [impedances/X1],
 				CAST(LineImpedance.R0 AS VARCHAR(10)) AS [impedances/R0],
@@ -42,17 +42,27 @@ SELECT
 					FOR XML PATH(''), TYPE
 				) AS channels
 			FROM
-				MeterLocation Station JOIN
-				MeterLocationLine StationLine ON StationLine.MeterLocationID = Station.ID JOIN
-				Line ON StationLine.LineID = Line.ID JOIN
-				MeterLocationLine EndStationLine ON EndStationLine.LineID = Line.ID JOIN
-				MeterLocation EndStation ON EndStationLine.MeterLocationID = EndStation.ID JOIN
-				MeterLine ON MeterLine.LineID = Line.ID JOIN
-				LineImpedance ON LineImpedance.LineID = Line.ID
+				Line JOIN
+				LineImpedance ON LineImpedance.LineID = Line.ID LEFT OUTER JOIN
+				MeterLocationLine ON
+					MeterLocationLine.LineID = Line.ID AND
+					MeterLocationLine.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+				MeterLine ON
+					MeterLine.LineID = Line.ID AND
+					MeterLine.MeterID = Meter.ID LEFT OUTER JOIN
+				MeterLocationLine RemoteMeterLocationLine ON
+					RemoteMeterLocationLine.LineID = Line.ID AND
+					RemoteMeterLocationLine.MeterLocationID <> MeterLocation.ID LEFT OUTER JOIN
+				MeterLine RemoteMeterLine ON
+					RemoteMeterLine.LineID = Line.ID AND
+					RemoteMeterLine.MeterID <> Meter.ID LEFT OUTER JOIN
+				Meter RemoteMeter ON RemoteMeterLine.MeterID = Meter.ID LEFT OUTER JOIN
+				MeterLocation RemoteMeterLocation ON
+					RemoteMeterLocationLine.MeterLocationID = RemoteMeterLocation.ID OR
+					RemoteMeter.MeterLocationID = RemoteMeterLocation.ID
 			WHERE
-				Station.ID = MeterLocation.ID AND
-				EndStation.ID <> MeterLocation.ID AND
-				MeterLine.MeterID = Meter.ID
+				MeterLocationLine.ID IS NOT NULL OR
+				MeterLine.ID IS NOT NULL
 			FOR XML PATH('line'), TYPE
 		) AS lines
 	FROM
