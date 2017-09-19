@@ -429,27 +429,6 @@ namespace FaultData.DataWriters
 
                 htmlDocument = XDocument.Parse(eventDetail.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
                 htmlDocument.TransformAll("format", element => element.Format());
-                htmlDocument.TransformAll("structure", element =>
-                {
-                    string structureString = "";
-                    string lat = "0";
-                    string lng = "0";
-                    try
-                    {
-                        var doc = Dcsoup.Parse(new Uri(element.Attribute("url").Value + $"?id={element.Value}"), 5000);
-                        structureString = doc.Select("span[id=strno]").Text;
-                        lat = structureString.Split('(', ',', ')')[1];
-                        lng = structureString.Split('(', ',', ')')[2];
-
-                    }
-                    catch (Exception ex)
-                    {
-                        structureString = "Structure and location unavailable...";
-                        return new XElement("span", structureString);
-                    }
-                    return new XElement(new XElement("a", new XAttribute("href", $"http://www.google.com/maps/place/{lat},{lng}"), new XElement("span", structureString)));
-
-                });
 
                 attachments = new List<Attachment>();
 
@@ -470,6 +449,21 @@ namespace FaultData.DataWriters
                     htmlDocument.TransformAll("equipmentAndCustomersAffected", (element, index) =>
                     {
                         return PQIGenerator.GetPqiInformation(connection, element);
+                    });
+
+                    htmlDocument.TransformAll("structure", (element, index) =>
+                    {
+                        return StructureLocationGenerator.GetStructureLocationInformation(connection, element);
+                    });
+
+                    htmlDocument.TransformAll("lightning", (element, index) =>
+                    {
+                        return LightningGenerator.GetLightningInfo(connection, element);
+                    });
+
+                    htmlDocument.TransformAll("treeProbability", (element, index) =>
+                    {
+                        return TreeProbabilityGenerator.GetTreeProbability(connection, element);
                     });
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";

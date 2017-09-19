@@ -252,11 +252,14 @@ namespace openXDA
             XDocument doc = XDocument.Parse(ApplyTemplate(request), LoadOptions.PreserveWhitespace);
             doc.TransformAll("format", element => element.Format());
             doc.TransformAll("chart", (element, index) => ToImgTag(element, index));
-            doc.TransformAll("structure", element => GetStructureNumber(element));
 
             using (DataContext dataContext = new DataContext())
             {
                 doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dataContext.Connection, element));
+                doc.TransformAll("structure", (element) => StructureLocationGenerator.GetStructureLocationInformation(dataContext.Connection, element));
+                doc.TransformAll("lightning", (element) => LightningGenerator.GetLightningInfo(dataContext.Connection, element));
+                doc.TransformAll("treeProbability", (element) => TreeProbabilityGenerator.GetTreeProbability(dataContext.Connection, element));
+
             }
 
             string html = doc.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
