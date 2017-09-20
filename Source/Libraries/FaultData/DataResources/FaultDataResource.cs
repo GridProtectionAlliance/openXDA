@@ -1095,7 +1095,7 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.StartSample - 5 * samplesPerCycle;
-            int end = fault.StartSample - 1;
+            int end = fault.StartSample - samplesPerCycle - 1;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
@@ -1107,7 +1107,7 @@ namespace FaultData.DataResources
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
-            int start = fault.EndSample + 1;
+            int start = fault.EndSample + samplesPerCycle + 1;
             int end = fault.EndSample + 5 * samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
