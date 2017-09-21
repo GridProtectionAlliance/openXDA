@@ -178,7 +178,6 @@
             right: '15%',
             bottom: '5%'
         },
-        title: "",
         onOpen: function () {
             $('.mobileSelect-container :visible .mobileSelect-buttons').prepend("<a href='#' class='selectAllBtn'>Select All </a>");
             $('.selectAllBtn').click(function () {
@@ -212,23 +211,16 @@
     };
 
     $('#addNewEditDialog').on('shown.bs.modal', function (event) {
-        var evt = event ? event : window.event;
-        if (evt.preventDefault) evt.preventDefault();
-        if (evt.stopPropagation) evt.stopImmediatePropagation();
-        if (evt.cancelBubble != null) evt.cancelBubble = true;
-        evt.returnValue = false;
-
         $('#saveRecordButton').text('Process');
         $('#addNewEditDialog .modal-header h4 :visible').text('Configure Alarms')
         $('#dateRange').daterangepicker(dateRangeOptions);
 
-        //mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='meterfilter' /></div>";
         $('#meters').mobileSelect(mobileSelectOptions);
         $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
 
         $('#metersFrame .btn-mobileSelect-gen').off('click');
         $('#metersFrame .btn-mobileSelect-gen').on('click', function (e) {
-            e.preventDefault();
+            e.preventDefault ? e.preventDefault() : (e.returnValue = false);
             $('#meters').mobileSelect('show');
         });
 
@@ -240,13 +232,12 @@
 
         });
 
-        //mobileSelectOptions.title = "<div class='right-inner-addon'><i class='glyphicon glyphicon-search'></i><input class='form-control' type='search' id='typefilter' placeholder='Search Characteristics' /></div>";
         $('#types').mobileSelect(mobileSelectOptions);
         $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
 
         $('#typesFrame .btn-mobileSelect-gen').off('click');
         $('#typesFrame .btn-mobileSelect-gen').on('click', function (e) {
-            e.preventDefault();
+            e.preventDefault ? e.preventDefault() : (e.returnValue = false);
             $('#types').mobileSelect('show');
         });
 
@@ -257,8 +248,6 @@
             $('#types').mobileSelect('refresh');
 
         });
-
-        return false;
 
     });
 
