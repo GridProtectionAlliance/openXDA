@@ -1064,14 +1064,17 @@ namespace openXDA
                             .QueryRecordsWhere("FilePathHash = {0} AND FilePath = {1}", filePath.GetHashCode(), filePath)
                             .MaxBy(file => file.ID);
 
-                        FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", dataFile.FileGroupID);
-
-                        // This will tell us whether the service was stopped in the middle
-                        // of processing the last time it attempted to process the file
-                        if ((object)dataFile != null && fileGroup.ProcessingEndTime > DateTime.MinValue)
+                        if ((object)dataFile != null)
                         {
-                            Log.Debug($"Skipped file \"{filePath}\" because it has already been processed.");
-                            return;
+                            FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", dataFile.FileGroupID);
+
+                            // This will tell us whether the service was stopped in the middle
+                            // of processing the last time it attempted to process the file
+                            if (fileGroup.ProcessingEndTime > DateTime.MinValue)
+                            {
+                                Log.Debug($"Skipped file \"{filePath}\" because it has already been processed.");
+                                return;
+                            }
                         }
                     }
                 }
