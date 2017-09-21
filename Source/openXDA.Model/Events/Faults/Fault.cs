@@ -50,6 +50,8 @@ namespace openXDA.Model
 
         public double PostfaultCurrent { get; set; }
 
+        public double ReactanceRatio { get; set; }
+
         [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime Inception { get; set; }
 

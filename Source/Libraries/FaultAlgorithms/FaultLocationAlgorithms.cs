@@ -327,7 +327,7 @@ namespace FaultAlgorithms
         #region [ Helper Methods ]
 
         // Get the voltage to use in fault calculations for this cycle, based on the fault type.
-        private static ComplexNumber GetFaultVoltage(CycleData cycle, FaultType viFaultType)
+        public static ComplexNumber GetFaultVoltage(CycleData cycle, FaultType viFaultType)
         {
             switch (viFaultType)
             {
@@ -367,7 +367,7 @@ namespace FaultAlgorithms
         }
 
         // Get the current to use in fault calculations for this cycle, based on the fault type.
-        private static ComplexNumber GetFaultCurrent(CycleData cycle, FaultType viFaultType)
+        public static ComplexNumber GetFaultCurrent(CycleData cycle, FaultType viFaultType)
         {
             switch (viFaultType)
             {

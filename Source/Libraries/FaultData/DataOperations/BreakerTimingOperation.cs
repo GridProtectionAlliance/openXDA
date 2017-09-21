@@ -203,8 +203,6 @@ namespace FaultData.DataOperations
                     m_timing = (m_timeCleared.Time - breakerTiming.TimeEnergized.Time).TotalSeconds * systemFrequency;
                 else
                     m_timing = double.NaN;
-
-                m_dcOffsetDetected = false;
             }
 
             #endregion
@@ -454,9 +452,14 @@ namespace FaultData.DataOperations
 
                 // Look up the breaker numbers for the lines
                 // that represent groupings of breaker current data
-                m_breakerCurrents = new HashSet<string>(breakerChannelTable
-                    .QueryRecordsWhere($"ChannelID IN ({string.Join(",", channelsIDs)})")
-                    .Select(breakerChannel => breakerChannel.BreakerNumber));
+                m_breakerCurrents = new HashSet<string>();
+                if (channelsIDs.Count > 0)
+                {
+                    m_breakerCurrents.UnionWith(breakerChannelTable
+                        .QueryRecordsWhere($"ChannelID IN ({string.Join(",", channelsIDs)})")
+                        .Select(breakerChannel => breakerChannel.BreakerNumber));
+                }
+
 
                 FileGroup fileGroup = meterDataSet.FileGroup;
 
@@ -480,6 +483,9 @@ namespace FaultData.DataOperations
                 .Select(dataSeries => dataSeries.SeriesInfo.ChannelID)
                 .Distinct()
                 .ToList();
+
+            if (channelIDs.Count == 0)
+                return;
 
             List<string> breakerNumbers = breakerChannelTable
                 .QueryRecordsWhere($"ChannelID IN ({string.Join(",", channelIDs)})")

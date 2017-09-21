@@ -331,8 +331,10 @@ namespace FaultData.DataAnalysis
         private double m_currentLag;
         private double m_prefaultCurrent;
         private double m_postfaultCurrent;
+        private double m_reactanceRatio;
 
         private bool m_isSuppressed;
+        private bool m_isReclose;
 
         private List<Summary> m_summaries;
         private List<Segment> m_segments;
@@ -485,6 +487,19 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public double ReactanceRatio
+        {
+            get
+            {
+                return m_reactanceRatio;
+            }
+            set
+            {
+                m_reactanceRatio = value;
+            }
+        }
+
+
         public bool IsSuppressed
         {
             get
@@ -494,6 +509,18 @@ namespace FaultData.DataAnalysis
             set
             {
                 m_isSuppressed = value;
+            }
+        }
+
+        public bool IsReclose
+        {
+            get
+            {
+                return m_isReclose;
+            }
+            set
+            {
+                m_isReclose = value;
             }
         }
 

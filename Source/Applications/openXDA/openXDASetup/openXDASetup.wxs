@@ -597,7 +597,7 @@
         <File Id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Name="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
       </Component>
       <Component Id="Microsoft.Owin">
-        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll" />
+        <File Id="Microsoft.Owin.dll" Name="Microsoft.Owin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.3.1.0\lib\net45\Microsoft.Owin.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Cors">
         <File Id="Microsoft.Owin.Cors.dll" Name="Microsoft.Owin.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll" />

@@ -47,6 +47,10 @@
     <Reference Include="GSF.SELEventParser">
       <HintPath>..\..\Dependencies\GSF\GSF.SELEventParser.dll</HintPath>
     </Reference>
+    <Reference Include="HtmlAgilityPack, Version=1.5.5.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\HtmlAgilityPack.1.5.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Ionic.Zlib">
       <HintPath>..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
     </Reference>
@@ -191,10 +195,13 @@
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <None Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EventEmailWriter.cs" />
+    <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />
     <None Include="DataWriters\XMLWriter.cs" />
     <Compile Include="DataSets\MeterDataSet.cs" />
     <Compile Include="Configuration\IConfigurationLoader.cs" />
+    <Compile Include="DataWriters\StructureLocationGenerator.cs" />
+    <Compile Include="DataWriters\TreeProbabilityGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

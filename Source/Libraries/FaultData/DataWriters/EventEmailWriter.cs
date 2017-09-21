@@ -62,6 +62,7 @@ namespace FaultData.DataWriters
             public int LineID { get; }
             public Range<DateTime> TimeRange { get; }
             public DateTime TimeCreated { get; }
+            public DateTime TimeUpdated { get; }
 
             public LineEvent(Event evt)
                 : this(evt.LineID, new Range<DateTime>(evt.StartTime, evt.EndTime))
@@ -74,10 +75,16 @@ namespace FaultData.DataWriters
             }
 
             private LineEvent(int lineID, Range<DateTime> timeRange, DateTime timeCreated)
+                : this(lineID, timeRange, timeCreated, timeCreated)
+            {
+            }
+
+            private LineEvent(int lineID, Range<DateTime> timeRange, DateTime timeCreated, DateTime timeUpdated)
             {
                 LineID = lineID;
                 TimeRange = timeRange;
                 TimeCreated = timeCreated;
+                TimeUpdated = timeUpdated;
             }
 
             public bool Overlaps(LineEvent other)
@@ -95,7 +102,8 @@ namespace FaultData.DataWriters
 
                 Range<DateTime> mergedTimeRange = TimeRange.Merge(other.TimeRange);
                 DateTime timeCreated = Common.Min(TimeCreated, other.TimeCreated);
-                return new LineEvent(LineID, mergedTimeRange, timeCreated);
+                DateTime timeUpdated = Common.Max(TimeUpdated, other.TimeUpdated);
+                return new LineEvent(LineID, mergedTimeRange, timeCreated, timeUpdated);
             }
         }
 
@@ -294,7 +302,7 @@ namespace FaultData.DataWriters
         {
             EmailProcessingThread.Push(() =>
             {
-                TimeSpan delaySpan = s_minWaitPeriod;
+                TimeSpan delaySpan = Common.Min(s_minWaitPeriod, s_maxWaitPeriod);
                 int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
                 QueuedLineEvents.Add(lineEvent);
                 new Action(() => DequeueLineEvent(lineEvent)).DelayAndExecute(delay);
@@ -327,22 +335,19 @@ namespace FaultData.DataWriters
 
                     DateTime now = DateTime.UtcNow;
                     DateTime maxDequeueTime = newLineEvent.TimeCreated + s_maxWaitPeriod;
-                    DateTime minDequeueTime = now + s_minWaitPeriod;
+                    DateTime minDequeueTime = newLineEvent.TimeUpdated + s_minWaitPeriod;
+                    DateTime dequeueTime = Common.Min(maxDequeueTime, minDequeueTime);
 
-                    if (now >= maxDequeueTime)
+                    if (now < dequeueTime)
                     {
-                        GenerateEmail(connection, newLineEvent);
-                    }
-                    else
-                    {
-                        DateTime dequeueTime = Common.Min(maxDequeueTime, minDequeueTime);
                         TimeSpan delaySpan = dequeueTime - now;
                         int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
-
                         QueuedLineEvents.Add(newLineEvent);
-
                         new Action(() => DequeueLineEvent(newLineEvent)).DelayAndExecute(delay);
+                        return;
                     }
+
+                    GenerateEmail(connection, newLineEvent);
                 }
             });
         }
@@ -365,7 +370,7 @@ namespace FaultData.DataWriters
                 RecordRestriction recordRestriction =
                     new RecordRestriction("LineID = {0}", lineEvent.LineID) &
                     new RecordRestriction("StartTime >= {0}", startTimeParameter) &
-                    new RecordRestriction("EndTime >= {0}", endTimeParameter);
+                    new RecordRestriction("EndTime <= {0}", endTimeParameter);
 
                 evt = eventTable.QueryRecord(recordRestriction);
             }
@@ -429,27 +434,6 @@ namespace FaultData.DataWriters
 
                 htmlDocument = XDocument.Parse(eventDetail.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
                 htmlDocument.TransformAll("format", element => element.Format());
-                htmlDocument.TransformAll("structure", element =>
-                {
-                    string structureString = "";
-                    string lat = "0";
-                    string lng = "0";
-                    try
-                    {
-                        var doc = Dcsoup.Parse(new Uri(element.Attribute("url").Value + $"?id={element.Value}"), 5000);
-                        structureString = doc.Select("span[id=strno]").Text;
-                        lat = structureString.Split('(', ',', ')')[1];
-                        lng = structureString.Split('(', ',', ')')[2];
-
-                    }
-                    catch (Exception ex)
-                    {
-                        structureString = "Structure and location unavailable...";
-                        return new XElement("span", structureString);
-                    }
-                    return new XElement(new XElement("a", new XAttribute("href", $"http://www.google.com/maps/place/{lat},{lng}"), new XElement("span", structureString)));
-
-                });
 
                 attachments = new List<Attachment>();
 
@@ -470,6 +454,21 @@ namespace FaultData.DataWriters
                     htmlDocument.TransformAll("equipmentAndCustomersAffected", (element, index) =>
                     {
                         return PQIGenerator.GetPqiInformation(connection, element);
+                    });
+
+                    htmlDocument.TransformAll("structure", (element, index) =>
+                    {
+                        return StructureLocationGenerator.GetStructureLocationInformation(connection, element);
+                    });
+
+                    htmlDocument.TransformAll("lightning", (element, index) =>
+                    {
+                        return LightningGenerator.GetLightningInfo(connection, element);
+                    });
+
+                    htmlDocument.TransformAll("treeProbability", (element, index) =>
+                    {
+                        return TreeProbabilityGenerator.GetTreeProbability(connection, element);
                     });
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";

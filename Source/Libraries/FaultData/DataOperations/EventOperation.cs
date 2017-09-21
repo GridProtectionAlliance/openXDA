@@ -90,6 +90,7 @@ namespace FaultData.DataOperations
             cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
             LoadEvents(meterDataSet, cycleDataResource.DataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
+            LoadDisturbances(meterDataSet, cycleDataResource.DataGroups);
         }
 
         private void LoadEvents(MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications)
@@ -165,7 +166,7 @@ namespace FaultData.DataOperations
             Log.Info(string.Format("Finished processing {0} events.", count));
         }
 
-        private void s(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
+        private void LoadDisturbances(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
         {
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
             SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();

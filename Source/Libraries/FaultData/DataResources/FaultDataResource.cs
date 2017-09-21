@@ -27,7 +27,6 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using FaultAlgorithms;
 using FaultData.Configuration;
@@ -41,7 +40,6 @@ using GSF.Data.Model;
 using GSF.Parsing;
 using GSF.Units;
 using log4net;
-using MathNet.Numerics.IntegralTransforms;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -79,6 +77,12 @@ namespace FaultData.DataResources
 
                     if ((object)lineImpedance != null)
                     {
+                        if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
+                            return false;
+
+                        FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
+                        FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+
                         int localMeterLocationID = Meter.MeterLocationID;
 
                         List<int> linkIDs = Line.MeterLocationLines
@@ -92,6 +96,9 @@ namespace FaultData.DataResources
 
                         TableOperations<SourceImpedance> sourceImpedanceTable = new TableOperations<SourceImpedance>(connection);
 
+                        if (linkIDs.Count == 0)
+                            return true;
+
                         List<SourceImpedance> sourceImpedances = sourceImpedanceTable
                             .QueryRecordsWhere($"MeterLocationLineID IN ({string.Join(",", linkIDs)})")
                             .ToList();
@@ -102,12 +109,6 @@ namespace FaultData.DataResources
                         List<SourceImpedance> remoteImpedances = sourceImpedances
                             .Where(impedance => impedance.MeterLocationLineID != localMeterLocationID)
                             .ToList();
-
-                        if (lineImpedance.R0 == 0.0D && lineImpedance.X0 == 0.0D && lineImpedance.R1 == 0.0D && lineImpedance.X1 == 0.0D)
-                            return false;
-
-                        FaultLocationDataSet.Z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
-                        FaultLocationDataSet.Z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
 
                         if ((object)localImpedance != null)
                             FaultLocationDataSet.ZSrc = new ComplexNumber(localImpedance.RSrc, localImpedance.XSrc);
@@ -929,7 +930,7 @@ namespace FaultData.DataResources
             return FaultType.None;
         }
 
-        private CycleData FirstCycle(VICycleDataGroup viCycleDataGroup)
+        private CycleData GetCycle(VICycleDataGroup viCycleDataGroup, int index)
         {
             CycleData cycle = new CycleData();
 
@@ -955,13 +956,18 @@ namespace FaultData.DataResources
 
             for (int i = 0; i < cycles.Length; i++)
             {
-                cycles[i].RMS = cycleDataGroups[i].RMS.DataPoints[0].Value;
-                cycles[i].Phase = cycleDataGroups[i].Phase.DataPoints[0].Value;
-                cycles[i].Peak = cycleDataGroups[i].Peak.DataPoints[0].Value;
-                cycles[i].Error = cycleDataGroups[i].Error.DataPoints[0].Value;
+                cycles[i].RMS = cycleDataGroups[i].RMS.DataPoints[index].Value;
+                cycles[i].Phase = cycleDataGroups[i].Phase.DataPoints[index].Value;
+                cycles[i].Peak = cycleDataGroups[i].Peak.DataPoints[index].Value;
+                cycles[i].Error = cycleDataGroups[i].Error.DataPoints[index].Value;
             }
 
             return cycle;
+        }
+
+        private CycleData FirstCycle(VICycleDataGroup viCycleDataGroup)
+        {
+            return GetCycle(viCycleDataGroup, 0);
         }
 
         private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup)
@@ -970,6 +976,7 @@ namespace FaultData.DataResources
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
             DateTime startTime = dataGroup[0][fault.StartSample].Time;
             DateTime endTime = dataGroup[0][fault.EndSample].Time;
+            double prefaultPeak = GetPrefaultPeak(fault, dataGroup, viCycleDataGroup);
             double postfaultPeak = GetPostfaultPeak(fault, dataGroup, viCycleDataGroup);
 
             List<Fault.Summary> validSummaries;
@@ -983,6 +990,12 @@ namespace FaultData.DataResources
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold;
 
+            fault.IsReclose =
+                !double.IsNaN(prefaultPeak) &&
+                !double.IsNaN(postfaultPeak) &&
+                prefaultPeak <= m_breakerSettings.OpenBreakerThreshold &&
+                postfaultPeak <= m_breakerSettings.OpenBreakerThreshold;
+
             if (fault.Segments.Any())
             {
                 fault.Type = fault.Segments
@@ -993,6 +1006,17 @@ namespace FaultData.DataResources
 
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
                 fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
+
+                if (calculationCycle >= 0)
+                {
+                    CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
+                    ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
+                    ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
+
+                    double impedanceMagnitude = (voltage / current).Magnitude;
+                    double impedanceReactance = (voltage / current).Imaginary;
+                    fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
+                }
             }
 
             if (calculationCycle >= 0)
@@ -1044,7 +1068,7 @@ namespace FaultData.DataResources
         private double GetPrefaultCurrent(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
-            int start = Math.Max(0, fault.StartSample - samplesPerCycle);
+            int start = fault.StartSample - samplesPerCycle;
             int end = fault.StartSample;
 
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
@@ -1058,7 +1082,7 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.EndSample + 1;
-            int end = Math.Min(start + samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int end = fault.EndSample + samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.RMS.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.RMS.ToSubSeries(start, end).Minimum;
@@ -1067,11 +1091,24 @@ namespace FaultData.DataResources
             return Common.Min(ia, ib, ic);
         }
 
+        private double GetPrefaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
+            int start = fault.StartSample - 5 * samplesPerCycle;
+            int end = fault.StartSample - samplesPerCycle - 1;
+
+            double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
+            double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
+            double ic = viCycleDataGroup.IC.Peak.ToSubSeries(start, end).Minimum;
+
+            return Common.Min(ia, ib, ic);
+        }
+
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
-            int start = fault.EndSample + 1;
-            int end = Math.Min(start + 5 * samplesPerCycle, viCycleDataGroup.IA.RMS.DataPoints.Count) - 1;
+            int start = fault.EndSample + samplesPerCycle + 1;
+            int end = fault.EndSample + 5 * samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;

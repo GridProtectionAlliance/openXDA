@@ -682,7 +682,8 @@ GO
 CREATE TABLE FaultEmailCriterion
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID)
+    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    EmailOnReclose INT NOT NULL DEFAULT 0
 )
 GO
 
@@ -1003,7 +1004,7 @@ CREATE TABLE BreakerOperation
     APhaseBreakerTiming FLOAT NOT NULL,
     BPhaseBreakerTiming FLOAT NOT NULL,
     CPhaseBreakerTiming FLOAT NOT NULL,
-	DcOffsetDetected INT NOT NULL,
+    DcOffsetDetected INT NOT NULL,
     BreakerSpeed FLOAT NOT NULL,
     UpdatedBy VARCHAR(50) NULL
 )
@@ -1026,6 +1027,9 @@ ON EventSentEmail(ID ASC)
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('RecloseIntoFault', 'RecloseIntoFault')
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Interruption', 'Interruption')
@@ -1461,13 +1465,13 @@ GO
 
 CREATE TABLE FaultCurveStatistic
 (
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	FaultCurveID INT NOT NULL REFERENCES FaultCurve(ID),
-	FaultNumber INT NOT NULL,
-	Maximum FLOAT NOT NULL,
-	Minimum FLOAT NOT NULL,
-	Average FLOAT NOT NULL,
-	StandardDeviation FLOAT NOT NULL
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FaultCurveID INT NOT NULL REFERENCES FaultCurve(ID),
+    FaultNumber INT NOT NULL,
+    Maximum FLOAT NOT NULL,
+    Minimum FLOAT NOT NULL,
+    Average FLOAT NOT NULL,
+    StandardDeviation FLOAT NOT NULL
 )
 GO
 
@@ -1501,6 +1505,7 @@ CREATE TABLE FaultSummary
     CurrentLag FLOAT NOT NULL,
     PrefaultCurrent FLOAT NOT NULL,
     PostfaultCurrent FLOAT NOT NULL,
+    ReactanceRatio FLOAT NOT NULL,
     Inception DATETIME2 NOT NULL,
     DurationSeconds FLOAT NOT NULL,
     DurationCycles FLOAT NOT NULL,
@@ -2000,33 +2005,33 @@ CREATE TABLE MetersToDataPush
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     LocalXDAMeterID INT NOT NULL,
-	RemoteXDAMeterID INT NULL,
-	LocalXDAAssetKey varchar(200) NOT NULL,
-	RemoteXDAAssetKey varchar(200) NOT NULL,
-	RemoteXDAName varchar(20) NOT NULL,
-	Obsfucate bit NOT NULL,
-	Synced bit NOT NULL
+    RemoteXDAMeterID INT NULL,
+    LocalXDAAssetKey varchar(200) NOT NULL,
+    RemoteXDAAssetKey varchar(200) NOT NULL,
+    RemoteXDAName varchar(20) NOT NULL,
+    Obsfucate bit NOT NULL,
+    Synced bit NOT NULL
 )
 GO
 CREATE TABLE [dbo].[LinesToDataPush](
-	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	[LocalXDALineID] [int] NOT NULL,
-	[RemoteXDALineID] [int] NULL,
-	[LocalXDAAssetKey] [varchar](200) NOT NULL,
-	[RemoteXDAAssetKey] varchar(200) NOT NULL,
+    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [LocalXDALineID] [int] NOT NULL,
+    [RemoteXDALineID] [int] NULL,
+    [LocalXDAAssetKey] [varchar](200) NOT NULL,
+    [RemoteXDAAssetKey] varchar(200) NOT NULL,
 )
 GO
 CREATE TABLE [dbo].RemoteXDAInstance(
-	[ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name varchar(200) NOT NULL,
-	Address varchar(200) NULL,
-	Frequency [varchar](20) NOT NULL
+    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name varchar(200) NOT NULL,
+    Address varchar(200) NULL,
+    Frequency [varchar](20) NOT NULL
 )
 GO
 CREATE TABLE RemoteXDAInstanceMeter(
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	RemoteXDAInstanceID INT NOT NULL,
-	MetersToDataPushID INT NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    RemoteXDAInstanceID INT NOT NULL,
+    MetersToDataPushID INT NOT NULL
 )
 GO
 ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(RemoteXDAInstanceID)
@@ -2038,9 +2043,9 @@ REFERENCES [dbo].MetersToDataPush ([ID])
 GO
 
 CREATE TABLE FileGroupLocalToRemote(
-	ID INT IDENTITY(1,1) Primary key not null,
-	LocalFileGroupID INT not null,
-	RemoteFileGroupID INT not null
+    ID INT IDENTITY(1,1) Primary key not null,
+    LocalFileGroupID INT not null,
+    RemoteFileGroupID INT not null
 )
 GO
 ALTER TABLE [dbo].FileGroupLocalToRemote  WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
@@ -2079,11 +2084,11 @@ CREATE TABLE EASExtension
 )
 GO
 
-CREATE TABLE PQIResult(
-	ID int IDENTITY(1,1) NOT NULL
+CREATE TABLE PQIResult
+(
+    ID INT NOT NULL PRIMARY KEY REFERENCES Event(ID)
 )
 GO
-
 
 CREATE TABLE ContourColorScale
 (
@@ -2143,25 +2148,25 @@ ON ContourAnimationFrame(ContourAnimationID ASC)
 GO
 
 CREATE TABLE [dbo].[PQMarkCompany](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[Name] [varchar](200) NOT NULL
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [Name] [varchar](200) NOT NULL
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
 GO
 
 CREATE TABLE [dbo].[PQMarkCompanyMeter](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[PQMarkCompanyID] [int] NOT NULL,
-	[MeterID] [int] NOT NULL,
-	DisplayName varchar(200) NOT NULL,
-	Enabled bit NOT NULL
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [PQMarkCompanyID] [int] NOT NULL,
+    [MeterID] [int] NOT NULL,
+    DisplayName varchar(200) NOT NULL,
+    Enabled bit NOT NULL
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -2176,20 +2181,20 @@ REFERENCES [dbo].[PQMarkCompany] ([ID])
 GO
 
 CREATE TABLE [dbo].[PQMarkAggregate](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[MeterID] [int] NOT NULL,
-	[Year] [int] NOT NULL,
-	[Month] [int] NOT NULL,
-	[ITIC] [int] NOT NULL,
-	[SEMI] [int] NOT NULL,
-	[SARFI90] [int] NOT NULL,
-	[SARFI70] [int] NOT NULL,
-	[SARFI50] [int] NOT NULL,
-	[SARFI10] [int] NOT NULL,
-	[THDJson] varchar(max) NULL
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [MeterID] [int] NOT NULL,
+    [Year] [int] NOT NULL,
+    [Month] [int] NOT NULL,
+    [ITIC] [int] NOT NULL,
+    [SEMI] [int] NOT NULL,
+    [SARFI90] [int] NOT NULL,
+    [SARFI70] [int] NOT NULL,
+    [SARFI50] [int] NOT NULL,
+    [SARFI10] [int] NOT NULL,
+    [THDJson] varchar(max) NULL
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
@@ -2215,11 +2220,11 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].PQMarkDuration(
-	[ID] [int] NOT NULL,
-	[Label] [nvarchar](50) NOT NULL,
-	[Min] [float] NOT NULL,
-	[Max] [float] NOT NULL,
-	[LoadOrder] [int] NOT NULL
+    [ID] [int] NOT NULL,
+    [Label] [nvarchar](50) NOT NULL,
+    [Min] [float] NOT NULL,
+    [Max] [float] NOT NULL,
+    [LoadOrder] [int] NOT NULL
 ) ON [PRIMARY]
 
 GO
@@ -2229,23 +2234,23 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[PQMarkVoltageBin](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[Label] [nvarchar](50) NOT NULL,
-	[Min] [float] NOT NULL,
-	[Max] [float] NOT NULL,
-	[LoadOrder] [int] NOT NULL
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [Label] [nvarchar](50) NOT NULL,
+    [Min] [float] NOT NULL,
+    [Max] [float] NOT NULL,
+    [LoadOrder] [int] NOT NULL
 ) ON [PRIMARY]
 
 GO
 
 CREATE TABLE [dbo].[PQMarkRestrictedTableUserAccount](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[PrimaryID] [int] NOT NULL,
-	[TableName] [varchar](max) NOT NULL,
-	[UserAccount] [varchar](max) NOT NULL,
-PRIMARY KEY CLUSTERED 
+    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [PrimaryID] [int] NOT NULL,
+    [TableName] [varchar](max) NOT NULL,
+    [UserAccount] [varchar](max) NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[ID] ASC
+    [ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 
@@ -2283,7 +2288,7 @@ INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1
 GO
 INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (16, N'1 to 2 min', 60, 119.9999999999, 15)
 GO
-SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] ON 
+SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] ON
 
 GO
 INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1, N'00-10', 0, 9.999999999, 0)
@@ -2874,7 +2879,10 @@ SummaryData AS
     SELECT
         SelectedSummary.ID AS FaultSummaryID,
         Meter.AssetKey AS MeterKey,
+        Meter.Name AS MeterName,
+        MeterLocation.AssetKey as StationKey,
         MeterLocation.Name AS StationName,
+        Line.AssetKey AS LineKey,
         MeterLine.LineName,
         SelectedSummary.FaultType,
         SelectedSummary.Inception,
@@ -2882,6 +2890,7 @@ SummaryData AS
         SelectedSummary.DurationSeconds * 1000.0 AS DurationMilliseconds,
         SelectedSummary.PrefaultCurrent,
         SelectedSummary.PostfaultCurrent,
+        SelectedSummary.ReactanceRatio,
         SelectedSummary.CurrentMagnitude AS FaultCurrent,
         SelectedSummary.Algorithm,
         SelectedSummary.Distance AS SingleEndedDistance,
@@ -2899,7 +2908,8 @@ SummaryData AS
         DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
         Meter ON Event.MeterID = Meter.ID JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID LEFT OUTER JOIN
+        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
+        Line ON Line.ID=MeterLine.LineID LEFT OUTER JOIN
         DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = SelectedSummary.ID LEFT OUTER JOIN
         DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
     WHERE
@@ -2979,7 +2989,10 @@ SELECT
                     (
                         SELECT
                             MeterKey,
+                            MeterName,
+                            StationKey,
                             StationName,
+                            LineKey,
                             LineName,
                             FaultType,
                             Inception,
@@ -2987,6 +3000,7 @@ SELECT
                             DurationMilliseconds,
                             PrefaultCurrent,
                             PostfaultCurrent,
+                            ReactanceRatio,
                             FaultCurrent,
                             Algorithm,
                             SingleEndedDistance,
@@ -3258,7 +3272,7 @@ GO
 
 CREATE VIEW [dbo].[HourOfWeekLimitView]
 AS
-SELECT        dbo.HourOfWeekLimit.ID, dbo.HourOfWeekLimit.ChannelID, dbo.HourOfWeekLimit.AlarmTypeID, dbo.HourOfWeekLimit.HourOfWeek, dbo.HourOfWeekLimit.Severity, dbo.HourOfWeekLimit.High, dbo.HourOfWeekLimit.Low, 
+SELECT        dbo.HourOfWeekLimit.ID, dbo.HourOfWeekLimit.ChannelID, dbo.HourOfWeekLimit.AlarmTypeID, dbo.HourOfWeekLimit.HourOfWeek, dbo.HourOfWeekLimit.Severity, dbo.HourOfWeekLimit.High, dbo.HourOfWeekLimit.Low,
                          dbo.HourOfWeekLimit.Enabled, dbo.AlarmType.Name AS AlarmTypeName
 FROM            dbo.HourOfWeekLimit INNER JOIN
                          dbo.AlarmType ON dbo.HourOfWeekLimit.AlarmTypeID = dbo.AlarmType.ID
@@ -3267,7 +3281,7 @@ GO
 
 CREATE VIEW [dbo].[ChannelsWithHourlyLimits]
 AS
-SELECT        dbo.Channel.Name, COUNT(DISTINCT dbo.HourOfWeekLimit.HourOfWeek) AS Limits, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName, 
+SELECT        dbo.Channel.Name, COUNT(DISTINCT dbo.HourOfWeekLimit.HourOfWeek) AS Limits, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName,
                          dbo.MeasurementCharacteristic.Name AS MeasurementCharacteristic, dbo.MeasurementType.Name AS MeasurementType, dbo.Channel.HarmonicGroup, dbo.Phase.Name AS Phase
 FROM            dbo.HourOfWeekLimit INNER JOIN
                          dbo.Channel ON dbo.HourOfWeekLimit.ChannelID = dbo.Channel.ID INNER JOIN
@@ -3292,7 +3306,7 @@ GO
 
 CREATE VIEW [dbo].[ChannelsWithNormalLimits]
 AS
-SELECT        dbo.Channel.Name, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName, 
+SELECT        dbo.Channel.Name, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName,
                          dbo.MeasurementCharacteristic.Name AS MeasurementCharacteristic, dbo.MeasurementType.Name AS MeasurementType, dbo.Channel.HarmonicGroup, dbo.Phase.Name AS Phase, High, Low
 FROM            dbo.AlarmRangeLimit INNER JOIN
                          dbo.Channel ON dbo.AlarmRangeLimit.ChannelID = dbo.Channel.ID INNER JOIN
@@ -3327,90 +3341,91 @@ AS BEGIN
         Setting ON Setting.Name = 'TimeTolerance'
     WHERE Event.ID = @eventID
 
+    ; WITH cte AS
+    (
+        SELECT
+            EmailGroupID,
+            UserAccountID
+        FROM EmailGroupUserAccount
+        UNION
+        SELECT
+            EmailGroupSecurityGroup.EmailGroupID,
+            UserAccount.ID
+        FROM
+            EmailGroupSecurityGroup JOIN
+            SecurityGroupUserAccount ON EmailGroupSecurityGroup.SecurityGroupID = SecurityGroupUserAccount.SecurityGroupID JOIN
+            UserAccount on SecurityGroupUserAccount.UserAccountID = UserAccount.ID
+    )
     SELECT DISTINCT
         EmailGroupUserAccount.UserAccountID,
         EmailType.XSLTemplateID AS TemplateID
     FROM
         GetSystemEventIDs(@startTime, @endTime, @timeTolerance) SystemEventID JOIN
-        Event ON SystemEventID.EventID = Event.ID JOIN
-        Meter ON Event.MeterID = Meter.ID left JOIN
-        MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID left JOIN
-        LineLineGroup ON LineLineGroup.LineID = Event.LineID Left JOIN
-        EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID Left JOIN
+        Event ON
+            SystemEventID.EventID = Event.ID AND
+            Event.LineID = @lineID JOIN
+        EventType ON Event.EventTypeID = EventType.ID JOIN
+        Meter ON Event.MeterID = Meter.ID LEFT OUTER JOIN
+        MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID LEFT OUTER JOIN
+        LineLineGroup ON LineLineGroup.LineID = Event.LineID LEFT OUTER JOIN
+        EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID LEFT OUTER JOIN
         EmailGroupLineGroup ON LineLineGroup.LineGroupID = EmailGroupLineGroup.LineGroupID JOIN
-        (
-            SELECT
-                EmailGroupID,
-                UserAccountID
-            FROM EmailGroupUserAccount
-            UNION ALL
-            SELECT
-                EmailGroupSecurityGroup.EmailGroupID,
-                UserAccount.ID
-            FROM
-                EmailGroupSecurityGroup JOIN
-                SecurityGroupUserAccount ON EmailGroupSecurityGroup.SecurityGroupID = SecurityGroupUserAccount.SecurityGroupID JOIN
-                UserAccount on SecurityGroupUserAccount.UserAccountID = UserAccount.ID
-        ) EmailGroupUserAccount ON EmailGroupMeterGroup.EmailGroupID = EmailGroupUserAccount.EmailGroupID OR EmailGroupLineGroup.EmailGroupID = EmailGroupUserAccount.EmailGroupID JOIN
-        EmailGroupType ON EmailGroupMeterGroup.EmailGroupID = EmailGroupType.EmailGroupID JOIN
+        EmailGroup ON
+            EmailGroupMeterGroup.EmailGroupID = EmailGroup.ID OR
+            EmailGroupLineGroup.EmailGroupID = EmailGroup.ID JOIN
+        cte EmailGroupUserAccount ON EmailGroupUserAccount.EmailGroupID = EmailGroup.ID JOIN
+        EmailGroupType ON EmailGroupType.EmailGroupID = EmailGroup.ID JOIN
         EmailType ON EmailGroupType.EmailTypeID = EmailType.ID JOIN
         EmailCategory ON
             EmailType.EmailCategoryID = EmailCategory.ID AND
             EmailCategory.Name = 'Event'
     WHERE
-        Event.LineID = @lineID AND
         (
             NOT EXISTS
             (
                 SELECT *
                 FROM FaultEmailCriterion
-                WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+                WHERE FaultEmailCriterion.EmailGroupID = EmailGroup.ID
             )
-            OR EXISTS
-            (
-                SELECT *
-                FROM FaultGroup
-                WHERE
-                    EventID = Event.ID AND
-                    (
-                        (
-                            FaultDetectionLogicResult IS NOT NULL AND
-                            FaultDetectionLogicResult <> 0
-                        )
-                        OR
-                        (
-                            FaultDetectionLogicResult IS NULL AND
-                            FaultValidationLogicResult <> 0 AND
-                            (
-                                SELECT COALESCE(Value, 1)
-                                FROM
-                                    (VALUES('UseDefaultFaultDetectionLogic')) SettingName(Name) LEFT OUTER JOIN
-                                    Setting ON SettingName.Name = Setting.Name
-                                WHERE SettingName.Name = 'UseDefaultFaultDetectionLogic'
-                            ) <> 0
-                        )
-                    )
-            )
-        )
-        AND
-        (
-            NOT EXISTS
+            AND NOT EXISTS
             (
                 SELECT *
                 FROM DisturbanceEmailCriterion
-                WHERE EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+                WHERE DisturbanceEmailCriterion.EmailGroupID = EmailGroup.ID
             )
-            OR EXISTS
+        )
+        OR
+        (
+            EventType.Name = 'Fault' AND
+            EXISTS
             (
                 SELECT *
-                FROM
-                    Disturbance JOIN
-                    DisturbanceSeverity ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
-                    DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
-                WHERE
-                    Disturbance.EventID = Event.ID AND
-                    DisturbanceEmailCriterion.EmailGroupID = EmailGroupMeterGroup.EmailGroupID
+                FROM FaultEmailCriterion
+                WHERE FaultEmailCriterion.EmailGroupID = EmailGroup.ID
             )
+        )
+        OR
+        (
+            EventType.Name = 'RecloseIntoFault' AND
+            EXISTS
+            (
+                SELECT *
+                FROM FaultEmailCriterion
+                WHERE
+                    FaultEmailCriterion.EmailGroupID = EmailGroup.ID AND
+                    FaultEmailCriterion.EmailOnReclose <> 0
+            )
+        )
+        OR EXISTS
+        (
+            SELECT *
+            FROM
+                Disturbance JOIN
+                DisturbanceSeverity ON DisturbanceSeverity.DisturbanceID = Disturbance.ID JOIN
+                DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
+            WHERE
+                Disturbance.EventID = Event.ID AND
+                DisturbanceEmailCriterion.EmailGroupID = EmailGroup.ID
         )
 END
 GO
@@ -3783,7 +3798,7 @@ SET Template = '<?xml version="1.0"?>
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">DFRs:</xsl:if></td>
-                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&faultcurves=1</xsl:attribute>click for waveform</a>)</td>
+                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&amp;faultcurves=1</xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
 
