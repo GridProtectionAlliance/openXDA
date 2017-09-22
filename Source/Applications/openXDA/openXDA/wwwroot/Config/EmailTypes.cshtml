@@ -46,7 +46,7 @@
     }
     else
     {
-        ViewBag.EmailTypeID = '%';
+        ViewBag.EmailTypeID = "-1";
     }
 
 
@@ -86,10 +86,9 @@
 {
     <script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EmailType, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<EmailType, DataHub>(ViewBag, null, null, int.Parse(ViewBag.EmailTypeID)))
 
         $(function () {
-            viewModel.filterText = '@ViewBag.EmailTypeID';
             viewModel.queryPageRecords();
         });
 

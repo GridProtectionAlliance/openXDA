@@ -315,16 +315,32 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
-        public int QueryGroupCount(string filterString)
+        public int QueryGroupCount(int meterGroupID, string filterString)
         {
-            return DataContext.Table<MeterGroup>().QueryRecordCount(filterString);
+            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            RecordRestriction restriction;
+
+            if (meterGroupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", meterGroupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<MeterGroup>().QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterGroup> QueryGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<MeterGroup> QueryGroups(int meterGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            RecordRestriction restriction;
+
+            if (meterGroupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", meterGroupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1555,16 +1571,32 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecordCount)]
-        public int QueryEmailTypeCount(string filterString)
+        public int QueryEmailTypeCount(int emailTypeID, string filterString)
         {
-            return DataContext.Table<EmailTypeView>().QueryRecordCount(filterString);
+            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            RecordRestriction restriction;
+
+            if (emailTypeID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", emailTypeID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<EmailTypeView>().QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailTypeView> QueryEmailType(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<EmailTypeView> QueryEmailType(int emailTypeID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<EmailTypeView>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            RecordRestriction restriction;
+
+            if (emailTypeID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", emailTypeID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<EmailTypeView>().QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1611,16 +1643,32 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecordCount)]
-        public int QueryEmailGroupCount(string filterString)
+        public int QueryEmailGroupCount(int emailGroupID, string filterString)
         {
-            return DataContext.Table<EmailGroup>().QueryRecordCount(filterString);
+            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            RecordRestriction restriction;
+
+            if (emailGroupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", emailGroupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<EmailGroup>().QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailGroup> QueryEmailGroup(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<EmailGroup> QueryEmailGroup(int emailGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            RecordRestriction restriction;
+
+            if (emailGroupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", emailGroupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
