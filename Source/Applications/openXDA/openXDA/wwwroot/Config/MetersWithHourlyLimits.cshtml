@@ -226,8 +226,8 @@
         $('#metersFrame .btn-mobileSelect-gen').addClass('form-control');
 
         $('#metersFrame .btn-mobileSelect-gen').off('click');
-        $('#metersFrame .btn-mobileSelect-gen').on('click', function (event) {
-            event.preventDefault();
+        $('#metersFrame .btn-mobileSelect-gen').on('click', function (e) {
+            e.preventDefault ? e.preventDefault() : (e.returnValue = false);
             $('#meters').mobileSelect('show');
         });
 
@@ -258,8 +258,8 @@
         $('#typesFrame .btn-mobileSelect-gen').addClass('form-control');
 
         $('#typesFrame .btn-mobileSelect-gen').off('click');
-        $('#typesFrame .btn-mobileSelect-gen').on('click', function (event) {
-            event.preventDefault();
+        $('#typesFrame .btn-mobileSelect-gen').on('click', function (e) {
+            e.preventDefault ? e.preventDefault() : (e.returnValue = false);
             $('#types').mobileSelect('show');
         });
 

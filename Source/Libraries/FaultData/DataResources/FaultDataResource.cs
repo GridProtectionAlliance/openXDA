@@ -27,7 +27,6 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using FaultAlgorithms;
 using FaultData.Configuration;
@@ -1008,13 +1007,16 @@ namespace FaultData.DataResources
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
                 fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
 
-                CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
-                ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
-                ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
+                if (calculationCycle >= 0)
+                {
+                    CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
+                    ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
+                    ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
 
-                double impedanceMagnitude = (voltage / current).Magnitude;
-                double impedanceReactance = (voltage / current).Imaginary;
-                fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
+                    double impedanceMagnitude = (voltage / current).Magnitude;
+                    double impedanceReactance = (voltage / current).Imaginary;
+                    fault.ReactanceRatio = impedanceReactance / impedanceMagnitude;
+                }
             }
 
             if (calculationCycle >= 0)
@@ -1093,7 +1095,7 @@ namespace FaultData.DataResources
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int start = fault.StartSample - 5 * samplesPerCycle;
-            int end = fault.StartSample - 1;
+            int end = fault.StartSample - samplesPerCycle - 1;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;
             double ib = viCycleDataGroup.IB.Peak.ToSubSeries(start, end).Minimum;
@@ -1105,7 +1107,7 @@ namespace FaultData.DataResources
         private double GetPostfaultPeak(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
-            int start = fault.EndSample + 1;
+            int start = fault.EndSample + samplesPerCycle + 1;
             int end = fault.EndSample + 5 * samplesPerCycle;
 
             double ia = viCycleDataGroup.IA.Peak.ToSubSeries(start, end).Minimum;

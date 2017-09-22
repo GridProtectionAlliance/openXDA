@@ -38,6 +38,7 @@ using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -109,20 +110,20 @@ namespace FaultData.DataOperations
 
                 RecordRestriction recordRestriction =
                     new RecordRestriction("EventID = {0}", Fault.EventID) &
-                    new RecordRestriction("StartTime = {0}", Fault.Inception) &
+                    new RecordRestriction("StartTime = {0}", ToDateTime2(connection, Fault.Inception)) &
                     new RecordRestriction("(SELECT Name FROM SegmentType WHERE ID = SegmentTypeID) = 'Fault'");
 
                 FaultSegment faultSegment = faultSegmentTable.QueryRecord(recordRestriction);
 
-                if ((object)faultSegment != null)
-                {
-                    StartSample = faultSegment.StartSample;
-                    EndSample = faultSegment.EndSample - samplesPerCycle + 1;
-                    CycleDataGroup = Rotate(viCycleDataGroup.ToSubSet(StartSample, EndSample));
+                if ((object)faultSegment == null)
+                    throw new InvalidOperationException($"Unable to find fault segment that matches fault summary for event {Fault.EventID}.");
 
-                    DistanceCurve.StartIndex = StartSample;
-                    AngleCurve.StartIndex = StartSample;
-                }
+                StartSample = faultSegment.StartSample;
+                EndSample = faultSegment.EndSample - samplesPerCycle + 1;
+                CycleDataGroup = Rotate(viCycleDataGroup.ToSubSet(StartSample, EndSample));
+
+                DistanceCurve.StartIndex = StartSample;
+                AngleCurve.StartIndex = StartSample;
             }
 
             private VICycleDataGroup Rotate(VICycleDataGroup viCycleDataGroup)
@@ -189,6 +190,17 @@ namespace FaultData.DataOperations
                     .ToList();
 
                 return shiftedPhaseSeries;
+            }
+
+            private IDbDataParameter ToDateTime2(AdoDataConnection connection, DateTime dateTime)
+            {
+                using (IDbCommand command = connection.Connection.CreateCommand())
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
+                    parameter.DbType = DbType.DateTime2;
+                    parameter.Value = dateTime;
+                    return parameter;
+                }
             }
 
             #endregion
@@ -422,7 +434,11 @@ namespace FaultData.DataOperations
                 .Select(meterGrouping => new FaultTimeline()
                 {
                     Meter = meterTable.QueryRecordWhere("ID = {0}", meterGrouping.Key),
-                    Faults = meterGrouping.SelectMany(evt => faultSummaryTable.QueryRecordsWhere("EventID = {0}", evt.ID)).Where(filter).OrderBy(fault => fault.Inception).ToList()
+                    Faults = meterGrouping
+                        .SelectMany(evt => faultSummaryTable.QueryRecordsWhere("EventID = {0}", evt.ID))
+                        .Where(filter)
+                        .OrderBy(fault => fault.Inception)
+                        .ToList()
                 })
                 .Where(meterGrouping => meterGrouping.Faults.Any())
                 .ToList();
@@ -584,6 +600,13 @@ namespace FaultData.DataOperations
             double minDistance = m_faultLocationSettings.MinFaultDistanceMultiplier * lineLength;
             return faultDistance >= minDistance && faultDistance <= maxDistance;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DoubleEndedFaultOperation));
 
         #endregion
     }
