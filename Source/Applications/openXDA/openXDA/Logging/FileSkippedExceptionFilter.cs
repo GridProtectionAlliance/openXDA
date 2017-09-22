@@ -67,7 +67,7 @@ namespace openXDA.Logging
             if (m_excludeFileSkippedExceptions && fileSkipped)
                 return FilterDecision.Deny;
 
-            if (!m_excludeEverythingElse && !fileSkipped)
+            if (m_excludeEverythingElse && !fileSkipped)
                 return FilterDecision.Deny;
 
             return FilterDecision.Neutral;

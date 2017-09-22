@@ -1072,7 +1072,10 @@ namespace openXDA
                             // of processing the last time it attempted to process the file
                             if (fileGroup.ProcessingEndTime > DateTime.MinValue)
                             {
-                                Log.Debug($"Skipped file \"{filePath}\" because it has already been processed.");
+                                // Explicitly use Log.Debug() so that the message does not appear on the remote console,
+                                // but include a FileSkippedException so that the message gets routed to the skipped files log
+                                FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
+                                Log.Debug(ex.Message, ex);
                                 return;
                             }
                         }
