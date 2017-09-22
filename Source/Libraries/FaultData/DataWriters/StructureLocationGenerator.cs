@@ -17,21 +17,16 @@ namespace FaultData.DataWriters
 
         public static XElement GetStructureLocationInformation(AdoDataConnection connection, XElement element)
         {
-            string url = (string)element.Attribute("url") ?? "";
+            string url = element.Value.Trim();
             string queryResultType = (string)element.Attribute("queryResultType") ?? "htmlcsv";
             string elementType = (string)element.Attribute("returnElementType") ?? "table";
 
             string[] returnFields = ((string)element.Attribute("returnFields")).Split(',') ?? new string[0];
-            string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? new string[0];
+            string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? returnFields;
             
-            // Build query url
-            string tvaSite = url;
-            string testSite = "http://gridprotectionalliance.org/dev/structureTest.asp";
-            string site = testSite;
-
             // If queryResult is formatted in html, we should decode that to a regular string
             bool decode = queryResultType.ToLower().Contains("html");
-            string structureInfo = GetStructureInfo(site, decode);
+            string structureInfo = GetStructureInfo(url, decode);
 
             List<List<string>> intermediateResult = queryResultType == "csv" ? FromCsvToIntermediate(structureInfo, returnFields, returnFieldNames) : new List<List<string>>();
             return elementType == "table" ? IntermediateToTable(intermediateResult) : elementType == "span" ? ToSpan(intermediateResult) : element;

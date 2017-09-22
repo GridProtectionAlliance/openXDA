@@ -472,7 +472,7 @@ namespace FaultData.DataWriters
                     });
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
-                    html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&");
+                    html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
                     alreadySent = false;
 
                     try

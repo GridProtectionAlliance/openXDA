@@ -47,6 +47,9 @@ namespace FaultData.DataWriters
         {
             int eventID;
 
+            string[] returnFields = ((string)element.Attribute("returnFields")).Split(',') ?? new string[0];
+            string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? returnFields;
+
             XElement returnTable = new XElement("table");
             returnTable.SetAttributeValue("class", "left");
             string returnTableContent = "";
@@ -77,10 +80,13 @@ namespace FaultData.DataWriters
                 table.Load(rdr);
             }
 
+            int returnFieldIndex;
             returnTableContent = "<tr>";
             foreach (DataColumn column in table.Columns)
             {
-                returnTableContent += "<th>" + column.ColumnName + "</th>";
+                returnFieldIndex = Array.IndexOf(returnFields, column.ColumnName);
+                if (returnFieldIndex != -1)
+                    returnTableContent += "<th>" + returnFieldNames[returnFieldIndex] + "</th>";
             }
             returnTableContent += "</tr>";
 
@@ -89,7 +95,8 @@ namespace FaultData.DataWriters
                 returnTableContent += "<tr>";
                 foreach (DataColumn column in table.Columns)
                 {
-                    returnTableContent += "<td>" + row[column] + "</td>";
+                    if (Array.IndexOf(returnFields, column.ColumnName) != -1)
+                        returnTableContent += "<td>" + row[column] + "</td>";
                 }
                 returnTableContent += "</tr>";
             }
