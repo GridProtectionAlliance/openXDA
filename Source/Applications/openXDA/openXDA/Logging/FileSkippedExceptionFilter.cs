@@ -62,7 +62,7 @@ namespace openXDA.Logging
         public override FilterDecision Decide(LoggingEvent loggingEvent)
         {
             Exception ex = loggingEvent.ExceptionObject ?? DefaultException;
-            bool fileSkipped = ex is FileSkippedException;
+            bool fileSkipped = ExtensibleDisturbanceAnalysisEngine.IsFileSkippedException(ex);
 
             if (m_excludeFileSkippedExceptions && fileSkipped)
                 return FilterDecision.Deny;

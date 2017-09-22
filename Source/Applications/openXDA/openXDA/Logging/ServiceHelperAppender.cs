@@ -90,7 +90,7 @@ namespace openXDA.Logging
 
             // Do not log FileSkippedExceptions
             // to the error log or the status log
-            if (ex is FileSkippedException)
+            if (ExtensibleDisturbanceAnalysisEngine.IsFileSkippedException(ex))
             {
                 if (meterKey == null)
                     m_serviceHelper.UpdateStatus(updateType, false, "[{0}] {1}{2}", threadID, renderedMessage, Environment.NewLine);
