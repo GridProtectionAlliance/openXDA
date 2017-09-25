@@ -195,7 +195,7 @@ namespace FaultData.DataWriters
 
         [Category]
         [SettingName("EventEmail")]
-        public EventEmailSettings FaultEmailSettings
+        public EventEmailSettings EventEmailSettings
         {
             get
             {
@@ -275,8 +275,8 @@ namespace FaultData.DataWriters
                 s_username != writer.EmailSettings.Username ||
                 s_password != writer.EmailSettings.SecurePassword ||
                 s_enableSSL != writer.EmailSettings.EnableSSL ||
-                s_minWaitPeriod != TimeSpan.FromSeconds(writer.FaultEmailSettings.MinWaitPeriod) ||
-                s_maxWaitPeriod != TimeSpan.FromSeconds(writer.FaultEmailSettings.MaxWaitPeriod) ||
+                s_minWaitPeriod != TimeSpan.FromSeconds(writer.EventEmailSettings.MinWaitPeriod) ||
+                s_maxWaitPeriod != TimeSpan.FromSeconds(writer.EventEmailSettings.MaxWaitPeriod) ||
                 s_timeZone.Id != writer.XDATimeZone;
 
             if (configurationChanged)
@@ -290,8 +290,8 @@ namespace FaultData.DataWriters
                     s_username = writer.EmailSettings.Username;
                     s_password = writer.EmailSettings.SecurePassword;
                     s_enableSSL = writer.EmailSettings.EnableSSL;
-                    s_minWaitPeriod = TimeSpan.FromSeconds(writer.FaultEmailSettings.MinWaitPeriod);
-                    s_maxWaitPeriod = TimeSpan.FromSeconds(writer.FaultEmailSettings.MaxWaitPeriod);
+                    s_minWaitPeriod = TimeSpan.FromSeconds(writer.EventEmailSettings.MinWaitPeriod);
+                    s_maxWaitPeriod = TimeSpan.FromSeconds(writer.EventEmailSettings.MaxWaitPeriod);
                     s_timeZone = TimeZoneInfo.FindSystemTimeZoneById(writer.XDATimeZone);
                     s_connectionFactory = meterDataSet.CreateDbConnection;
                 });
