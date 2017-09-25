@@ -33,6 +33,7 @@ namespace FaultData.Configuration
         // Fields
         private bool m_applyTimestampCorrection;
         private bool m_applyValueCorrection;
+        private string m_comtradeExportDirectory;
 
         #endregion
 
@@ -71,6 +72,24 @@ namespace FaultData.Configuration
             set
             {
                 m_applyValueCorrection = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the directory where COMTRADE
+        /// exports should be located after reading an EMAX file.
+        /// </summary>
+        [Setting]
+        [DefaultValue("")]
+        public string COMTRADEExportDirectory
+        {
+            get
+            {
+                return m_comtradeExportDirectory;
+            }
+            set
+            {
+                m_comtradeExportDirectory = value;
             }
         }
 

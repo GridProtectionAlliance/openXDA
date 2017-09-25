@@ -49,6 +49,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.ApplyValueCorrection', 'True', 'True')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.COMTRADEExportDirectory', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EnableDataPusher', 'False', 'False')
 GO
 
