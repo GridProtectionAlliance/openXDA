@@ -249,7 +249,7 @@ namespace openXDA
                 }
                 catch (Exception ex)
                 {
-                    string html = $"<html><body>Fix your stuff:<br/>{ex}</body></html>";
+                    string html = $"<html><body><b>Internal server error:</b><br/><pre>{ex}</pre></body></html>";
                     response.Content = new StringContent(html);
                     response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
                 }
