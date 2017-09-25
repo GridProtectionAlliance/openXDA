@@ -83,6 +83,7 @@
   <ItemGroup>
     <Compile Include="Configuration\BreakerSettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
+    <Compile Include="Configuration\EMAXSettings.cs" />
     <Compile Include="Configuration\EventEmailSettings.cs" />
     <Compile Include="Configuration\FaultLocationSettings.cs" />
     <Compile Include="Configuration\HistorianSettings.cs" />

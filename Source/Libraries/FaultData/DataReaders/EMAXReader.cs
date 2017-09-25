@@ -23,10 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF.Configuration;
 using GSF.EMAX;
 using GSF.IO;
 using openXDA.Model;
@@ -38,6 +41,7 @@ namespace FaultData.DataReaders
         #region [ Members ]
 
         // Fields
+        private EMAXSettings m_emaxSettings;
         private CorrectiveParser m_parser;
         private MeterDataSet m_meterDataSet;
         private bool m_disposed;
@@ -51,12 +55,26 @@ namespace FaultData.DataReaders
         /// </summary>
         public EMAXReader()
         {
+            m_emaxSettings = new EMAXSettings();
             m_meterDataSet = new MeterDataSet();
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Settings to configure native EMAX file format integration.
+        /// </summary>
+        [Category]
+        [SettingName("EMAX")]
+        public EMAXSettings EMAXSettings
+        {
+            get
+            {
+                return m_emaxSettings;
+            }
+        }
 
         /// <summary>
         /// Gets the data set produced by the Parse method of the data reader.
@@ -142,7 +160,11 @@ namespace FaultData.DataReaders
             while (m_parser.ReadNext())
             {
                 for (int i = 0; i < analogChannels.Count; i++)
-                    m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = m_parser.CalculatedTimestamp, Value = m_parser.CorrectedValues[i] });
+                {
+                    DateTime timestamp = m_emaxSettings.ApplyTimestampCorrection ? m_parser.CalculatedTimestamp : m_parser.ParsedTimestamp;
+                    double value = m_emaxSettings.ApplyValueCorrection ? m_parser.CorrectedValues[i] : m_parser.Values[i];
+                    m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
+                }
             }
 
             m_meterDataSet.Meter = meter;
