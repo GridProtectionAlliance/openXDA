@@ -65,6 +65,8 @@ namespace openXDA.Model
 
                     phase.ID = phaseTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return phase;

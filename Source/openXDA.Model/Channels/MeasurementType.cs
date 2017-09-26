@@ -65,6 +65,8 @@ namespace openXDA.Model
 
                     measurementType.ID = measurementTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return measurementType;

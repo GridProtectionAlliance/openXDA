@@ -66,6 +66,8 @@ namespace openXDA.Model
 
                     seriesType.ID = seriesTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return seriesType;

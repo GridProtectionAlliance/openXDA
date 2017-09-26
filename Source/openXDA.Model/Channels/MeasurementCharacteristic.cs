@@ -67,6 +67,8 @@ namespace openXDA.Model
 
                     measurementCharacteristic.ID = measurementCharacteristicTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return measurementCharacteristic;

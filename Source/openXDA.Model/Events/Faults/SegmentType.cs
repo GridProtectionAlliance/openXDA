@@ -63,6 +63,8 @@ namespace openXDA.Model
 
                     segmentType.ID = segmentTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return segmentType;
