@@ -35,8 +35,10 @@ namespace openXDA.Model
 
         public int SegmentTypeID { get; set; }
 
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime StartTime { get; set; }
 
+        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime EndTime { get; set; }
 
         public int StartSample { get; set; }

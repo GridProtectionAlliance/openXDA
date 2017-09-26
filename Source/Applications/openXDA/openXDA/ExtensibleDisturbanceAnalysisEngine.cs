@@ -99,38 +99,6 @@ using FileShare = openXDA.Configuration.FileShare;
 namespace openXDA
 {
     /// <summary>
-    /// Exception thrown when a file is skipped by the file processing engine.
-    /// </summary>
-    public class FileSkippedException : Exception
-    {
-        /// <summary>
-        /// Creates a new instance of the <see cref="FileSkippedException"/> class.
-        /// </summary>
-        public FileSkippedException()
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="FileSkippedException"/> class.
-        /// </summary>
-        /// <param name="message">The error message that explains the reason for the exception.</param>
-        public FileSkippedException(string message)
-            : base(message)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="FileSkippedException"/> class.
-        /// </summary>
-        /// <param name="message">The error message that explains the reason for the exception.</param>
-        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
-        public FileSkippedException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-    }
-
-    /// <summary>
     /// Represents an engine that processes power quality data
     /// to determine the locations of faults along power lines.
     /// </summary>
@@ -273,6 +241,23 @@ namespace openXDA
             }
 
             #endregion
+        }
+
+        private class FileSkippedException : Exception
+        {
+            public FileSkippedException()
+            {
+            }
+
+            public FileSkippedException(string message)
+                : base(message)
+            {
+            }
+
+            public FileSkippedException(string message, Exception innerException)
+                : base(message, innerException)
+            {
+            }
         }
 
         // Constants
@@ -1064,14 +1049,20 @@ namespace openXDA
                             .QueryRecordsWhere("FilePathHash = {0} AND FilePath = {1}", filePath.GetHashCode(), filePath)
                             .MaxBy(file => file.ID);
 
-                        FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", dataFile.FileGroupID);
-
-                        // This will tell us whether the service was stopped in the middle
-                        // of processing the last time it attempted to process the file
-                        if ((object)dataFile != null && fileGroup.ProcessingEndTime > DateTime.MinValue)
+                        if ((object)dataFile != null)
                         {
-                            Log.Debug($"Skipped file \"{filePath}\" because it has already been processed.");
-                            return;
+                            FileGroup fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", dataFile.FileGroupID);
+
+                            // This will tell us whether the service was stopped in the middle
+                            // of processing the last time it attempted to process the file
+                            if (fileGroup.ProcessingEndTime > DateTime.MinValue)
+                            {
+                                // Explicitly use Log.Debug() so that the message does not appear on the remote console,
+                                // but include a FileSkippedException so that the message gets routed to the skipped files log
+                                FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
+                                Log.Debug(ex.Message, ex);
+                                return;
+                            }
                         }
                     }
                 }
@@ -1448,6 +1439,16 @@ namespace openXDA
         private static readonly ILog Log = LogManager.GetLogger(typeof(ExtensibleDisturbanceAnalysisEngine));
 
         // Static Methods
+
+        /// <summary>
+        /// Determines if the given exception is a file skipped exception.
+        /// </summary>
+        /// <param name="ex">The exception to be tested.</param>
+        /// <returns>True if it is a file skipped exception; false otherwise.</returns>
+        public static bool IsFileSkippedException(Exception ex)
+        {
+            return ex is FileSkippedException;
+        }
 
         // Attempts to create the directory at the given path.
         private static void TryCreateDirectory(string path)

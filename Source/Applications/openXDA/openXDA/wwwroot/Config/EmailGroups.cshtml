@@ -45,7 +45,7 @@
     }
     else
     {
-        ViewBag.GroupID = '%';
+        ViewBag.GroupID = "-1";
     }
 
     // Define column headers, use null for field name to make column non-sortable
@@ -134,7 +134,7 @@
 @section Scripts
 {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EmailGroup, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<EmailGroup, DataHub>(ViewBag, null, null, int.Parse(ViewBag.GroupID)))
         
         function getTypesCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
@@ -212,7 +212,6 @@
         }
         
         $(function () {
-            viewModel.filterText = '@ViewBag.GroupID';
             viewModel.queryPageRecords();
             
             $("#manageEventCriterion").modal({ show: false, backdrop: "static", keyboard: false });

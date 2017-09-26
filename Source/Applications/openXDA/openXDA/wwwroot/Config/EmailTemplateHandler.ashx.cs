@@ -235,15 +235,24 @@ namespace openXDA
         {
             return Task.Run(() =>
             {
-                NameValueCollection parameters = request.RequestUri.ParseQueryString();
+                try
+                {
+                    NameValueCollection parameters = request.RequestUri.ParseQueryString();
 
-                m_eventID = Convert.ToInt32(parameters["EventID"]);
-                m_templateID = Convert.ToInt32(parameters["TemplateID"]);
+                    m_eventID = Convert.ToInt32(parameters["EventID"]);
+                    m_templateID = Convert.ToInt32(parameters["TemplateID"]);
 
-                if ((object)parameters["chartID"] == null)
-                    ProcessEmailRequest(request, response);
-                else
-                    ProcessChartRequest(request, response);
+                    if ((object)parameters["chartID"] == null)
+                        ProcessEmailRequest(request, response);
+                    else
+                        ProcessChartRequest(request, response);
+                }
+                catch (Exception ex)
+                {
+                    string html = $"<html><body><b>Internal server error:</b><br/><pre>{ex}</pre></body></html>";
+                    response.Content = new StringContent(html);
+                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("text/html");
+                }
             });
         }
 

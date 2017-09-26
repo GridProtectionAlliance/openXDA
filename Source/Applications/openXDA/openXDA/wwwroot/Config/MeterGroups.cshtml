@@ -54,7 +54,7 @@
     }
     else
     {
-        ViewBag.MeterGroupID = '%';
+        ViewBag.MeterGroupID = "-1";
     }
 
 
@@ -128,7 +128,7 @@
 {
     <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterGroup, DataHub>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<MeterGroup, DataHub>(ViewBag, null, null, ViewBag.MeterGroupID))
                 
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
@@ -344,7 +344,6 @@
         });
 
         $(function () {
-            viewModel.filterText = '@ViewBag.MeterGroupID';
             viewModel.queryPageRecords();
             $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
             $("#usersDialog").modal({ show: false, backdrop: "static", keyboard: false });

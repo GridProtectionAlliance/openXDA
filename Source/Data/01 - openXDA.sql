@@ -3242,14 +3242,17 @@ FROM            dbo.EmailGroupLineGroup INNER JOIN
 
 GO
 
-CREATE VIEW [dbo].[EmailGroupUserAccountView]
-AS
-SELECT        dbo.EmailGroupUserAccount.ID, dbo.EmailGroupUserAccount.EmailGroupID, dbo.EmailGroupUserAccount.UserAccountID, dbo.EmailGroup.Name AS EmailGroup,
-                         dbo.UserAccount.FirstName + ' ' + dbo.UserAccount.LastName AS UserName
-FROM            dbo.EmailGroupUserAccount INNER JOIN
-                         dbo.EmailGroup ON dbo.EmailGroupUserAccount.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
-                         dbo.UserAccount ON dbo.EmailGroupUserAccount.UserAccountID = dbo.UserAccount.ID
-
+CREATE VIEW EmailGroupUserAccountView AS
+SELECT
+    EmailGroupUserAccount.ID,
+    EmailGroupUserAccount.EmailGroupID,
+    EmailGroupUserAccount.UserAccountID,
+    EmailGroup.Name AS EmailGroup,
+    COALESCE(UserAccount.FirstName + ' ' + UserAccount.LastName, UserAccount.FirstName, UserAccount.Name) AS UserName
+FROM
+    EmailGroupUserAccount JOIN
+    EmailGroup ON EmailGroupUserAccount.EmailGroupID = EmailGroup.ID JOIN
+    UserAccount ON EmailGroupUserAccount.UserAccountID = UserAccount.ID
 GO
 
 CREATE VIEW [dbo].[AuditLogView]
