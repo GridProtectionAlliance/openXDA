@@ -360,22 +360,18 @@ namespace FaultData.DataReaders
 
         private Channel ParseSeries(EVNT_CHNL_NEW digitalChannel)
         {
-            Channel channel = new Channel();
             Series series = new Series();
+            series.Channel = new Channel();
+            series.SeriesType = new SeriesType() { Name = "Instantaneous" };
+            series.SourceIndexes = digitalChannel.eventnum;
 
+            Channel channel = series.Channel;
+            channel.Series = new List<Series>() { series };
+            channel.MeasurementType = new MeasurementType() { Name = "Digital" };
+            channel.MeasurementCharacteristic = new MeasurementCharacteristic() { Name = "Unknown" };
+            channel.Phase = new Phase() { Name = "Unknown" };
             channel.Name = digitalChannel.e_title;
             channel.HarmonicGroup = 0;
-            channel.MeasurementType = new MeasurementType();
-            channel.MeasurementType.Name = "Digital";
-            channel.MeasurementCharacteristic = new MeasurementCharacteristic();
-            channel.MeasurementCharacteristic.Name = "Unknown";
-            channel.Phase = new Phase();
-            channel.Phase.Name = "Unknown";
-
-            series.Channel = channel;
-            series.SeriesType = new SeriesType();
-            series.SeriesType.Name = "Instantaneous";
-            series.SourceIndexes = digitalChannel.eventnum;
 
             return channel;
         }
