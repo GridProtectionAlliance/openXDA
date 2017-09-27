@@ -727,15 +727,20 @@ CREATE TABLE [dbo].SavedViews(
     [ID] [int] IDENTITY(1,1) PRIMARY KEY NOT NULL,
     [UserAccount] [varchar](500) NOT NULL,
     [Name] [nvarchar](500) NOT NULL,
+	DateRange int NOT NULL,
     FromDate DateTime NOT NULL,
     ToDate DateTime NOT NULL,
     Tab nvarchar(20) NOT NULL,
     DeviceFilterID INT NOT NULL,
-    MapGrid nvarchar(5) NOT NULL
+    MapGrid nvarchar(5) NOT NULL,
+	IsDefault bit NOT NULL
 )
 
 GO
 
+
+INSERT INTO SavedViews(UserAccount, Name, DateRange, FromDate, ToDate, Tab, DeviceFilterID, MapGrid, IsDefault) VALUES('Default', 'Home', 2, GETDATE(), GETDATE(), 'Events', 0, 'Grid', 'true')
+GO
 
 
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
@@ -862,6 +867,11 @@ CREATE NONCLUSTERED INDEX IX_Event_EndTime
 ON Event(EndTime ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime_ID_EventID_PhaseID 
+ON Event ( MeterID ASC, StartTime ASC ) INCLUDE ( EventTypeID)
+GO
+
+
 CREATE TABLE Disturbance
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -894,6 +904,10 @@ GO
 
 CREATE NONCLUSTERED INDEX IX_Disturbance_EndTime
 ON Disturbance(EndTime ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID 
+ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
 CREATE TABLE VoltageEnvelope

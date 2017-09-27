@@ -949,31 +949,37 @@ FROM #TEMP WHERE Name != 0 ORDER BY Name desc
 SET @ReturnColumns = @ReturnColumns + 'COALESCE([0],0) as [0]'
 
 SET @SQLStatement =
-N' SELECT DisturbanceDate as thedate, ' + @ReturnColumns + '
- FROM (
-    SELECT
-        ' + @dateStatement + ' AS DisturbanceDate,
-        SeverityCode,
-        COUNT(*) AS DisturbanceCount
-    FROM
-        DisturbanceSeverity JOIN
-        Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN
-        Event ON Event.ID = Disturbance.EventID JOIN
-        Phase ON Disturbance.PhaseID = Phase.ID
-    WHERE
-        (
-            @MeterID = ''0'' OR
-            MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, '',''))
-        ) AND
-        MeterID IN (SELECT * FROM authMeters(@username)) AND
-        Phase.Name = ''Worst'' AND
-        Disturbance.StartTime BETWEEN @startDate AND @endDate AND
-        Disturbance.StartTime <> @endDate
-    GROUP BY ' + @groupByStatement + ', SeverityCode
-    ) As DisturbanceDate
+N' 
+DECLARE @user varchar(max) = @username
+DECLARE @ids varchar(max) = @MeterID
+DECLARE @start DateTime = @startDate
+DECLARE @end DateTime = @endDate
+
+SELECT DisturbanceDate as thedate, ' + @ReturnColumns + '
+ FROM (																		 
+	SELECT                                                                       
+		' + @dateStatement + ' AS DisturbanceDate,                	 
+		SeverityCode,															 
+		COUNT(*) AS DisturbanceCount											 
+	FROM																		 
+		DisturbanceSeverity JOIN												 
+		Disturbance ON Disturbance.ID = DisturbanceSeverity.DisturbanceID JOIN	 
+		Event ON Event.ID = Disturbance.EventID JOIN							 
+		Phase ON Disturbance.PhaseID = Phase.ID									 
+	WHERE																		 
+		(																		 
+			@MeterID = ''0'' OR													 
+			MeterID IN (SELECT * FROM String_To_Int_Table(@ids, '',''))	     
+		) AND																	 
+		MeterID IN (SELECT * FROM authMeters(@user)) AND					 
+		Phase.Name = ''Worst'' AND												 
+		Disturbance.StartTime BETWEEN @start AND @end AND				 
+		Disturbance.StartTime <> @endDate										 
+	GROUP BY ' + @groupByStatement + ', SeverityCode 					 
+	) As DisturbanceDate														 
  PIVOT(
-        SUM(DisturbanceDate.DisturbanceCount)
-        FOR DisturbanceDate.SeverityCode IN(' + @PivotColumns + ')
+		SUM(DisturbanceDate.DisturbanceCount) 
+		FOR DisturbanceDate.SeverityCode IN(' + @PivotColumns + ')
  ) as pvt
  ORDER BY DisturbanceDate '
 print @sqlstatement
@@ -1208,21 +1214,27 @@ SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + t.Name + '], 0) AS [' +
 FROM (Select Name FROM EventType) AS t
 
 SET @SQLStatement =
-' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+' 
+DECLARE @user varchar(max) = @username
+DECLARE @ids varchar(max) = @MeterID
+DECLARE @start DateTime = @startDate
+DECLARE @end DateTime = @endDate
+
+SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
 FROM (
-        SELECT ' + @dateStatement + ' as Date, COUNT(*) AS EventCount, EventType.Name as Name
-        FROM Event JOIN
-        EventType ON Event.EventTypeID = EventType.ID
-       WHERE
-            MeterID in (select * from authMeters(@username)) AND
-            MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND
-            StartTime <= @endDate AND @startDate <= EndTime
-       GROUP BY ' + @groupByStatement + ', EventType.Name
-       ) as ed
- PIVOT(
-        SUM(ed.EventCount)
-        FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
- ) as pvt
+		SELECT ' + @dateStatement + ' as Date, COUNT(*) AS EventCount, EventType.Name as Name
+		FROM Event JOIN
+		EventType ON Event.EventTypeID = EventType.ID 
+       WHERE 
+			MeterID in (select * from authMeters(@user)) AND 
+			MeterID IN (SELECT * FROM String_To_Int_Table( @ids,  '','')) AND 
+			 StartTime >= @start AND StartTime < @end  
+       GROUP BY ' + @groupByStatement + ', EventType.Name 
+       ) as ed 
+ PIVOT( 
+		SUM(ed.EventCount)
+		FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+ ) as pvt 
  ORDER BY Date '
 
 --print @startDate
@@ -2213,35 +2225,40 @@ SET @ReturnColumns = @ReturnColumns + 'COALESCE([0], 0) as [0]'
 DROP TABLE #TEMP
 
 SET @SQLStatement = N'
-SELECT Meter.ID,
-         Meter.Name,
-         MeterLocation.Longitude,
-         MeterLocation.Latitude,
-         ' + @CountColumns +' as Count,
-         ' + @ReturnColumns + '
-FROM
+DECLARE @user varchar(max) = @username
+DECLARE @ids varchar(max) = @MeterIds
+DECLARE @start DateTime = @startDate
+DECLARE @end DateTime = @endDate
+
+SELECT Meter.ID, 
+		 Meter.Name,
+		 MeterLocation.Longitude,
+		 MeterLocation.Latitude,
+		 ' + @CountColumns +' as Count,
+		 ' + @ReturnColumns + '		  
+FROM 
     Meter JOIN
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-    (
-        SELECT MeterID,
-               COUNT(*) AS EventCount,
-               SeverityCode
-        FROM Event JOIN
-             Disturbance ON Event.ID = Disturbance.EventID JOIN
-             Phase ON Phase.ID = Disturbance.PhaseID LEFT JOIN
-             DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID
-        WHERE
-             Phase.Name = ''Worst'' AND
-             Disturbance.StartTime >= @startDate AND Disturbance.StartTime < @endDate
-        GROUP BY Event.MeterID, SeverityCode
-       ) as ed
-       PIVOT(
-             SUM(ed.EventCount)
-             FOR ed.SeverityCode IN(' + @PivotColumns + ')
-       ) as pvt On pvt.MeterID = meter.ID
-    WHERE
-        Meter.ID in (select * from authMeters(@username)) AND
-        Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
+	(
+		SELECT MeterID, 
+			   COUNT(*) AS EventCount, 
+			   SeverityCode			   
+		FROM Event JOIN
+			 Disturbance ON Event.ID = Disturbance.EventID JOIN
+			 Phase ON Phase.ID = Disturbance.PhaseID LEFT JOIN
+			 DisturbanceSeverity ON Disturbance.ID = DisturbanceSeverity.DisturbanceID 
+        WHERE 
+			 Phase.Name = ''Worst'' AND 
+			 Disturbance.StartTime >= @start AND Disturbance.StartTime < @end  
+        GROUP BY Event.MeterID, SeverityCode 
+       ) as ed 
+	   PIVOT( 
+	   		 SUM(ed.EventCount)
+	   		 FOR ed.SeverityCode IN(' + @PivotColumns + ') 
+	   ) as pvt On pvt.MeterID = meter.ID
+	WHERE 
+		Meter.ID in (select * from authMeters(@user)) AND 
+		Meter.ID IN (SELECT * FROM String_To_Int_Table( @ids,  '',''))  
 
 Order By Name '
 
@@ -2310,33 +2327,39 @@ SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + t.Name + '], 0) AS [' +
 FROM (Select Name FROM EventType) AS t
 
 SET @SQLStatement =
-' SELECT Meter.ID,
-         Meter.Name,
-         MeterLocation.Longitude,
-         MeterLocation.Latitude,
-         ' + SUBSTRING(@CountColumns,0, LEN(@CountColumns)) +' as Count,
-         ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
-FROM
+' 
+DECLARE @user varchar(max) = @username
+DECLARE @ids varchar(max) = @MeterIds
+DECLARE @start DateTime = @startDate
+DECLARE @end DateTime = @endDate
+
+SELECT Meter.ID, 
+		 Meter.Name,
+		 MeterLocation.Longitude,
+		 MeterLocation.Latitude,
+		 ' + SUBSTRING(@CountColumns,0, LEN(@CountColumns)) +' as Count,
+		 ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
+FROM 
     Meter JOIN
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-    (
-        SELECT MeterID,
-               COUNT(*) AS EventCount,
-               EventType.Name as Name
-
-        FROM Event JOIN
-             EventType ON Event.EventTypeID = EventType.ID
-        WHERE
-             StartTime >= @startDate AND StartTime < @endDate
-        GROUP BY Event.MeterID, EventType.Name
-       ) as ed
-       PIVOT(
-             SUM(ed.EventCount)
-             FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
-       ) as pvt On pvt.MeterID = meter.ID
-    WHERE
-        Meter.ID in (select * from authMeters(@username)) AND
-        Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
+	(
+		SELECT MeterID, 
+			   COUNT(*) AS EventCount, 
+			   EventType.Name as Name
+			   
+		FROM Event JOIN
+			 EventType ON Event.EventTypeID = EventType.ID 
+        WHERE 
+			 StartTime >= @start AND StartTime < @end  
+        GROUP BY Event.MeterID, EventType.Name 
+       ) as ed 
+	   PIVOT( 
+	   		 SUM(ed.EventCount)
+	   		 FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
+	   ) as pvt On pvt.MeterID = meter.ID
+WHERE 
+	Meter.ID in (select * from authMeters(@user)) AND 
+	Meter.ID IN (SELECT * FROM String_To_Int_Table( @ids,  '',''))  
 
 ORDER BY Meter.Name'
 
@@ -2344,7 +2367,7 @@ ORDER BY Meter.Name'
 --print @endDate
 print @sqlstatement
 
-exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME, @EventDateFrom DATETIME ', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate, @EventDateFrom = @EventDateFrom
+exec sp_executesql @SQLStatement, N'@username nvarchar(4000), @MeterIds nvarchar(MAX), @startDate DATETIME, @endDate DATETIME', @username = @username, @MeterIds = @MeterIds, @startDate = @startDate, @endDate = @endDate
 END
 GO
 
