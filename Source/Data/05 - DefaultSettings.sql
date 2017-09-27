@@ -61,7 +61,10 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregationFrequency', '0 0 * * *', '0 0 1 * *')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.WaitPeriod', '10.0', '10.0')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.MinWaitPeriod', '10.0', '10.0')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.MaxWaitPeriod', '60.0', '60.0')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.MaxFaultDistanceMultiplier', '1.05', '1.05')
