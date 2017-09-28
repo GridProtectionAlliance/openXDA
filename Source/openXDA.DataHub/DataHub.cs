@@ -46,7 +46,6 @@ using openXDA.DataPusher;
 using openXDA.Model;
 using Channel = openXDA.Model.Channel;
 using ChannelDetail = openXDA.Model.ChannelDetail;
-using DataFile = openXDA.Model.DataFile;
 using Disturbance = openXDA.Model.Disturbance;
 using Event = openXDA.Model.Event;
 using Fault = openXDA.Model.Fault;
