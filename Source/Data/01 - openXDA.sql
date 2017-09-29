@@ -2750,6 +2750,7 @@ AS
 SELECT
     LineLineGroup.ID,
     Line.AssetKey AS LineName,
+	(SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
     Line.ID AS LineID,
     LineGroupID
 FROM

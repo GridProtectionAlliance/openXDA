@@ -66,7 +66,7 @@
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<UserAccountMeterGroup, DataHub>(ViewBag, "ID", null, groupID))
+        @Raw(dataContext.RenderViewModelConfiguration<UserAccountMeterGroup, DataHub>(ViewBag, "Username", null, groupID))
 
         $(viewModel).on("beforeSave", function (event, observableRecord) {
             observableRecord.MeterGroupID = @groupID;
