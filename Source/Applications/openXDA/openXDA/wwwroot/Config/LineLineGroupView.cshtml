@@ -47,21 +47,27 @@
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { "LineName", "Line Name", "text-Left" },
+        new[] { "LongLineName", "Long Name", "text-Left" },
+
     };
+
+    ViewBag.ShowSearchFilter = true;
+
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
 }
 @helper BodyRows()
 {
-    <td width="80%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LineName, click: $parent.viewPageRecord"></button></td>
+    <td width="25%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LineName, click: $parent.viewPageRecord"></button></td>
+    <td width="70%" class="text-left valign-middle" nowrap data-bind="text: LongLineName"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<LineLineGroupView>("LineName"))
+    @Raw(dataContext.AddInputField<LineLineGroupView>("LongLineName"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
@@ -71,22 +77,22 @@
         @Raw(dataContext.RenderViewModelConfiguration<LineLineGroup, DataHub>(ViewBag, "ID", null, groupID))
         
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            observableRecord.MeterGroupID = @groupID;
+            observableRecord.LineGroupID(@groupID);
         });
         
         $(function(){
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if (viewModel.dataHubIsConnected()) {
                     function searchLines(searchText, limit) {
-                        return dataHub.searchLinesByGroup(@groupID, searchText, limit);
+                        return dataHub.searchLinesForLineLineGroupByGroup(@groupID, searchText, limit);
                     }
 
-                    initializeAutoCompleteLookupField("LineName", searchLines, false);
+                    initializeAutoCompleteLookupField("LongLineName", searchLines, false);
 
-                    $('#inputMeterName').puiautocomplete({
+                    $('#inputLongLineName').puiautocomplete({
                         select: function (event, item) {
                             var id = Number(item.data("id"));
-                            viewModel.currentRecord().MeterID(id);
+                            viewModel.currentRecord().LineID(id);
                         }
                     });
                 }

@@ -171,6 +171,7 @@
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
     <Compile Include="DataOperations\TrendingDataSummaryOperation.cs" />
     <Compile Include="DataReaders\IGridPQIFReader.cs" />
+    <Compile Include="DataReaders\PQViewDIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />

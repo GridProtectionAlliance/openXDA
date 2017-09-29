@@ -428,6 +428,7 @@ namespace openXDA.Model
         #endregion
     }
 
+    [TableName("ChannelDetail")]
     public class ChannelDetail : Channel
     {
         public string MeterName { get; set; }

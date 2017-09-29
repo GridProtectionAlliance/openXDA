@@ -49,6 +49,7 @@
         new[] { "MeterName", "Meter Name", "text-Left" },
         new[] { "Location", "Site", "text-left"}
     };
+    ViewBag.ShowSearchFilter = true;
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
@@ -80,7 +81,7 @@
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if (viewModel.dataHubIsConnected()) {
                     function searchMeters(searchText, limit) {
-                        return dataHub.searchMetersByGroup(@groupID, searchText, limit);
+                        return dataHub.searchMeterMeterGroupByGroup(@groupID, searchText, limit);
                     }
 
                     initializeAutoCompleteLookupField("MeterName", searchMeters, false);

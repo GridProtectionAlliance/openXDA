@@ -65,6 +65,8 @@ namespace openXDA.Model
 
                     breakerOperationType.ID = breakerOperationTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return breakerOperationType;

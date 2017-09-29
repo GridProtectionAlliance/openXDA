@@ -63,6 +63,8 @@ namespace openXDA.Model
 
                     eventType.ID = eventTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
                 }
+
+                transactionScope.Complete();
             }
 
             return eventType;

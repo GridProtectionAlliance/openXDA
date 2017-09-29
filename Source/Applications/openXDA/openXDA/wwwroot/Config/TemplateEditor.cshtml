@@ -1,0 +1,109 @@
+﻿@*//******************************************************************************************************
+//  TemplateEditor.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  12/12/2016 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using System.Net.Http
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using openXDA.Hubs
+
+
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Config/Layout.cshtml";
+    ViewBag.Title = "Template Editor";
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+    string id;
+    parameters.TryGetValue("ID", out id);
+    int ID = int.Parse(id ?? "-1");
+    XSLTemplate template = dataContext.Table<XSLTemplate>().QueryRecordWhere("ID = {0}", ID);
+    if (template == null)
+    {
+        template = new XSLTemplate() { Name = "", Template = "" };
+    }
+
+}
+<style>
+    .modal-dialog {
+        width: 100%;
+    }
+</style>
+<div class="col-md-11">
+    <input id="name" type="text" class="form-control" value="@template.Name" />
+</div>
+<button class="btn btn-primary" onclick="submit()">Save</button>
+<div class="form-group">
+    <div id="template" class="form-control"></div>
+</div>
+<script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+@section Scripts
+{
+<script>
+    var template = '@Raw(template.Template.JavaScriptEncode())'
+    $(function () {
+        $('#bodyContainer').removeClass('container theme-showcase')
+        $('#template').height(calculateRemainingBodyHeight() *.97);
+        var editor = ace.edit("template");
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/xml");
+        editor.setFontSize("14px");
+        editor.setValue(template);
+    });
+
+    function truncate(str, length) {
+        if (str.length > length) {
+            return str.substring(0, length - 3) + '...';
+        } else {
+            return str;
+        }
+    }
+        
+    function submit(){
+        var record = {
+            ID: @template.ID,
+            Name: $('#name').val(),
+            Template: ace.edit('template').getValue()
+        }
+
+        if(record.ID != 0){
+            dataHub.updateXSLTemplate(record).done(function(msg){
+                showInfoMessage('Record Saved');
+            }).fail(function(msg){
+                showErrorMessage(msg)
+            });
+        }
+        else{
+            dataHub.addNewXSLTemplate(record).done(function(msg){
+                showInfoMessage('Record Saved');
+            }).fail(function(msg){
+                showErrorMessage(msg)
+            });
+
+        }
+
+    }
+
+</script>    
+}

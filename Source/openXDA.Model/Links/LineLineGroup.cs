@@ -39,6 +39,10 @@ namespace openXDA.Model
     [PrimaryLabel("MeterName")]
     public class LineLineGroupView: LineLineGroup
     {
+        [Searchable]
         public string LineName { get; set; }
+
+        [Searchable]
+        public string LongLineName { get; set; }
     }
 }

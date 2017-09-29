@@ -364,6 +364,8 @@ namespace openXDA
 
             // Save updated settings to the configuration file
             ConfigurationFile.Current.Save();
+
+            Dispose();
         }
 
         // Attempts to start the engine and logs startup errors.
