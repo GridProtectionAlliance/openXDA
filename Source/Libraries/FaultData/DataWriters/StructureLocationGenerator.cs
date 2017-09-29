@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Net;
 using HtmlAgilityPack;
+using log4net.Core;
+using log4net;
 
 namespace FaultData.DataWriters
 {
@@ -15,21 +17,51 @@ namespace FaultData.DataWriters
     {
         #region [ Static ]
 
+        private static readonly ILog Log = LogManager.GetLogger(typeof(StructureLocationGenerator));
+
         public static XElement GetStructureLocationInformation(AdoDataConnection connection, XElement element)
         {
-            string url = element.Value.Trim();
-            string queryResultType = (string)element.Attribute("queryResultType") ?? "htmlcsv";
-            string elementType = (string)element.Attribute("returnElementType") ?? "table";
+            try
+            {
+                string url = element.Value.Trim();
+                string userName = (string)element.Attribute("userName");
+                string password = (string)element.Attribute("password");
+                string domain = (string)element.Attribute("domain");
+                string authenticationType = (string)element.Attribute("authenticationType");
 
-            string[] returnFields = ((string)element.Attribute("returnFields")).Split(',') ?? new string[0];
-            string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? returnFields;
-            
-            // If queryResult is formatted in html, we should decode that to a regular string
-            bool decode = queryResultType.ToLower().Contains("html");
-            string structureInfo = GetStructureInfo(url, decode);
+                string queryResultType = (string)element.Attribute("queryResultType") ?? "htmlcsv";
+                string elementType = (string)element.Attribute("returnElementType") ?? "table";
 
-            List<List<string>> intermediateResult = queryResultType == "csv" ? FromCsvToIntermediate(structureInfo, returnFields, returnFieldNames) : new List<List<string>>();
-            return elementType == "table" ? IntermediateToTable(intermediateResult) : elementType == "span" ? ToSpan(intermediateResult) : element;
+                string[] returnFields = ((string)element.Attribute("returnFields")).Split(',') ?? new string[0];
+                string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? returnFields;
+
+                ICredentials credential = null;
+                if (userName != null && password != null && domain != null && authenticationType != null)
+                {
+                    NetworkCredential networkCredential = new NetworkCredential(userName, password, domain);
+
+                    Log.Debug($"userName: {userName}, password: {password}, domain: {domain}");
+
+                    CredentialCache cache = new CredentialCache();
+                    cache.Add(new Uri(url), authenticationType, networkCredential);
+                    credential = cache;
+                }
+
+                // If queryResult is formatted in html, we should decode that to a regular string
+                bool decode = queryResultType.ToLower().Contains("html");
+                string structureInfo = GetStructureInfo(url, decode, credential);
+
+                List<List<string>> intermediateResult = queryResultType.Contains("csv") ? FromCsvToIntermediate(structureInfo, returnFields, returnFieldNames) : new List<List<string>>();
+
+
+                return elementType == "table" ? IntermediateToTable(intermediateResult) : elementType == "span" ? ToSpan(intermediateResult) : element;
+            }
+            catch(Exception e)
+            {
+                Log.Debug(e.Message);
+                return element;
+            }
+
         }
 
         private static List<List<string>> FromCsvToIntermediate(string input, string[] returnFields, string[] returnFieldNames)
@@ -116,9 +148,10 @@ namespace FaultData.DataWriters
             return returnElement;
         }
 
-        static private string GetStructureInfo(string url, bool decode)
+        private static string GetStructureInfo(string url, bool decode, ICredentials credential = null)
         {
             HtmlWeb webClient = new HtmlWeb();
+            webClient.PreRequest += request => { request.Credentials = credential; return true; };
             HtmlDocument doc = webClient.Load(url);
 
             string result;
@@ -128,8 +161,11 @@ namespace FaultData.DataWriters
             else
                 result = doc.DocumentNode.InnerText;
 
+            Log.Debug(result);
             return result;
         }
+
+
 
         #endregion
     }
