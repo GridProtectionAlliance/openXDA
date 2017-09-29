@@ -629,6 +629,7 @@ CREATE TABLE EmailGroupUserAccount
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+	CONSTRAINT CU_EmailGroupUserAccount_EmailGroupID_UserAccountID UNIQUE (EmailGroupID,UserAccountID)
 )
 GO
 
@@ -637,6 +638,7 @@ CREATE TABLE EmailGroupSecurityGroup
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
     SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID)
+	CONSTRAINT CU_EmailGroupSecurityGroup_EmailGroupID_SecurityGroupID UNIQUE (EmailGroupID,SecurityGroupID)
 )
 GO
 
