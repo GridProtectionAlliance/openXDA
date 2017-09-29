@@ -23,6 +23,7 @@
 
 using System;
 using GSF.Data.Model;
+using GSF.Identity;
 
 namespace openXDA.Model
 {
@@ -43,5 +44,6 @@ namespace openXDA.Model
 
         [Searchable]
         public string UserName { get; set; }
+
     }
 }

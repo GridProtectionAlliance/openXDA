@@ -65,7 +65,7 @@
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
         new[] { "EmailGroup", "Group Name", "text-Left" },
-        new[] { "UserName", "User Account", "text-left valign-middle"},
+        new[] { "WindowsUserName", "User Account", "text-left valign-middle"},
 
     };
 
@@ -88,7 +88,7 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     @Raw(dataContext.AddSelectField<EmailGroupUserAccount, EmailGroup>("EmailGroupID", "ID", "Name"))
-    @Raw(dataContext.AddSelectField<EmailGroupUserAccount, UserAccount>("UserAccountID", "ID", "Name"))
+    @Raw(dataContext.AddSelectField<EmailGroupUserAccount, UserAccount>("UserAccountID", "ID", "AccountName","Name"))
 
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
@@ -97,23 +97,22 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<EmailGroupUserAccount, DataHub>(ViewBag, null, null, int.Parse(ViewBag.EmailGroupID)))
 
-        function lookupAccountName(UserAccountID, element) {
-            if (viewModel.dataHubIsConnected()) {
-                securityHub.sidToAccountName(lookupUserAccountName(UserAccountID)).done(function (accountName) {
-                   element.text(accountName);
-                });
-            }
-        }
-        
         $('#addNewEditDialog').on('shown.bs.modal', function () {
-            $.each($('#selectUserAccountID').children(), function (i, option) {
-                if (viewModel.dataHubIsConnected()) {
-                    securityHub.sidToAccountName($(option).text()).done(function (accountName) {
-                        $(option).text(accountName)
-
-                    });
-                }
+            $('#selectEmailGroupID').val('@ViewBag.EmailGroupID');
+            var options = $('#selectUserAccountID').children().remove()
+            options.sort(function (a, b) {
+                if (a.label.toLowerCase() < b.label.toLowerCase()) return -1;
+                if (a.label.toLowerCase() > b.label.toLowerCase()) return 1;
+                return 0;
             });
+            $.each(options, function (i, option) {
+                $('#selectUserAccountID').append(option);
+            });
+            $('#selectUserAccountID').val($('#selectUserAccountID option').first().val());
+        });
+
+        $(viewModel).on('beforeSave', function (event, record) {
+            record.EmailGroupID = $('#selectEmailGroupID').val();
         });
 
     </script>
