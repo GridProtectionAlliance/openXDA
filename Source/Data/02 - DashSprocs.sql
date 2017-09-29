@@ -2995,7 +2995,36 @@ BEGIN
 
     DECLARE @startDate DATETIME
     DECLARE @endDate DATETIME
+	
+	IF @context = '180d'
+    BEGIN
+		SET @startDate = DATEADD(HOUR, -180, @EventDate)
+		SET @endDate = @EventDate
+    END
 
+	IF @context = '90d'
+    BEGIN
+		SET @startDate = DATEADD(DAY, -90, @EventDate)
+		SET @endDate = @EventDate
+    END
+
+    IF @context = '30d'
+    BEGIN
+		SET @startDate = DATEADD(DAY, -30, @EventDate)
+		SET @endDate = @EventDate
+    END
+
+    IF @context = '7d'
+    BEGIN
+		SET @startDate = DATEADD(DAY, -7, @EventDate)
+		SET @endDate = @EventDate
+    END
+
+	IF @context = '24h'
+	BEGIN
+		SET @startDate = DATEADD(HOUR, -24, @EventDate)
+		SET @endDate = @EventDate
+	END
 
     IF @context = 'day'
     BEGIN
