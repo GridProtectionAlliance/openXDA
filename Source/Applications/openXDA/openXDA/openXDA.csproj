@@ -457,6 +457,7 @@
     <Content Include="wwwroot\Config\HowlCSVUploadHandler.ashx" />
     <Content Include="wwwroot\Config\MetersWithNormalLimits.cshtml" />
     <Content Include="wwwroot\Config\AlarmViewer.cshtml" />
+    <Content Include="wwwroot\Config\TemplateEditor.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Content\bootstrap.css.map" />

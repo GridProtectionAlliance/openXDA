@@ -62,7 +62,8 @@
     <td width="10%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
     <td width="85%" class="text-left valign-middle" data-bind="text: truncate(Template, 100)"></td>
     <td width="5%" class="text-center valign-middle" nowrap>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+        @*<button type="button" class="btn btn-xs" data-bind="attr: { href: '/Config/ChannelsWithHourlyLimits.cshtml?MeterID=' +ID +'&Name=' + Name }, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>*@
+        <a type="button" title="View Limits against trending data." target="_blank" data-bind="attr: { href: '/Config/TemplateEditor.cshtml?ID=' +ID }, enable: $parent.canEdit() && $parent.dataHubIsConnected" style="color:black; background-color:ButtonFace" class="btn btn-xs"><i class="glyphicon glyphicon-pencil"></i></a>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
@@ -84,6 +85,12 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<XSLTemplate, DataHub>(ViewBag))
         
+        $(function () {
+            $('#addRecordButton').off('click');
+            $('#addRecordButton').on('click', function () {
+                window.open('TemplateEditor.cshtml')
+            })
+        });
         function truncate(str, length) {
             if (str.length > length) {
                 return str.substring(0, length - 3) + '...';
