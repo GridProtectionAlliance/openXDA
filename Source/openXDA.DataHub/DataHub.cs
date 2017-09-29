@@ -496,14 +496,30 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MeterMeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupMeterViewCount(int groupID, string filterString)
         {
-            return DataContext.Table<MeterMeterGroupView>().QueryRecordCount(new RecordRestriction("MeterGroupID = {0}", groupID));
+            TableOperations<MeterMeterGroupView> tableOperations = DataContext.Table<MeterMeterGroupView>();
+            RecordRestriction restriction;
+
+            if (groupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterGroupID = {0}", groupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<MeterMeterGroupView>().QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterMeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<MeterMeterGroupView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<MeterMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID));
+            TableOperations<MeterMeterGroupView> tableOperations = DataContext.Table<MeterMeterGroupView>();
+            RecordRestriction restriction;
+
+            if (groupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterGroupID = {0}", groupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return DataContext.Table<MeterMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -588,14 +604,22 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryUserAccountMeterGroupCount(int groupID, string filterString)
         {
-            return DataContext.Table<UserAccountMeterGroupView>().QueryRecordCount(new RecordRestriction("MeterGroupID = {0}", groupID));
+            if (filterString != null && filterString != string.Empty)
+                return DataContext.Table<UserAccountMeterGroupView>().QueryRecordsWhere("MeterGroupID = {0}", groupID).Where(x => UserInfo.SIDToAccountName(x.Username).ToLower().Contains(filterString.ToLower())).Count();
+            else
+                return DataContext.Table<UserAccountMeterGroupView>().QueryRecordsWhere("MeterGroupID = {0}", groupID).Count();
+
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<UserAccountMeterGroupView> QueryUserAccountMeterGroups(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID));
+            if (filterString != null && filterString != string.Empty)
+                return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID)).Where(x => UserInfo.SIDToAccountName(x.Username).ToLower().Contains(filterString.ToLower()));
+            else
+                return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID));
+
         }
 
         [AuthorizeHubRole("Administrator")]

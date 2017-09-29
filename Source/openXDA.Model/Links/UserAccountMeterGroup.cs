@@ -47,8 +47,9 @@ namespace openXDA.Model
 
         public int MeterGroupID { get; set; }
 
+        [Searchable]
         public string Username { get; set; }
-
+        [Searchable]
         public string GroupName { get; set; }
     }
 }
