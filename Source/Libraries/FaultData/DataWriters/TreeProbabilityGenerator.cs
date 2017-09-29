@@ -16,18 +16,23 @@ namespace FaultData.DataWriters
 
             string faultType = (string)element.Attribute("faultType") ?? "AB";
             double reactanceRatio = Convert.ToDouble((string)element.Attribute("reactanceRatio") ?? "-1.0");
-            string[] probabilityNames = ((string)element.Attribute("probabilityNames") ?? "High,Medium,Low").Split(',');
-            string[] probabilityNumbersStrings = ((string)element.Attribute("probabilityNumbers") ?? ".64,.86,1.0").Split(',');
-            double[] cutoffs = probabilityNumbersStrings.Select(probabilityNumber => Convert.ToDouble(probabilityNumber)).ToArray();
+            reactanceRatio = Math.Abs(reactanceRatio);
+            double distance = Convert.ToDouble((string)element.Attribute("distance") ?? "-1.0");
+
+            double lowToMediumBorder = (1.27 * distance) / Math.Sqrt(Math.Pow((.31 * distance + 10), 2) + Math.Pow((1.27 * distance), 2));
+            double mediumToHighBorder = (1.27 * distance) / Math.Sqrt(Math.Pow((.31 * distance + 20), 2) + Math.Pow((1.27 * distance), 2));
 
             returnElement.Value = "Undetermined";
-            if (faultType.ToLower().Contains("n") && probabilityNames.Length == cutoffs.Length)
-                for (int i = 0; i < probabilityNames.Length; i++)
-                    if (reactanceRatio < cutoffs[i])
-                    {
-                        returnElement.Value = probabilityNames[i];
-                        break;
-                    }
+
+            if (faultType.ToLower().Contains("n"))
+            {
+                if (reactanceRatio <= mediumToHighBorder)
+                    returnElement.Value = "High";
+                else if (reactanceRatio <= lowToMediumBorder && reactanceRatio >= mediumToHighBorder)
+                    returnElement.Value = "Medium";
+                else
+                    returnElement.Value = "Low";
+            }
 
             return returnElement;
         }
