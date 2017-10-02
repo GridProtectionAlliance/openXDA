@@ -1499,7 +1499,6 @@
     <Content Include="wwwroot\Workbench\Layout.cshtml" />
     <Content Include="wwwroot\Workbench\Help.cshtml" />
     <Content Include="wwwroot\Workbench\Filters.cshtml" />
-    <Content Include="wwwroot\Workbench\EventsAngular.cshtml" />
     <Content Include="wwwroot\Workbench\Charts.cshtml" />
     <Content Include="wwwroot\Workbench\SiteSummary.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForDate.cshtml" />
@@ -1538,22 +1537,15 @@
     <Content Include="wwwroot\Workbench\DisturbancesForDay.cshtml" />
     <Content Include="wwwroot\Workbench\BreakersForDay.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsForDay.cshtml" />
-    <Content Include="wwwroot\Workbench\EventsForMeterAngular.cshtml" />
     <Content Include="wwwroot\Workbench\DisturbancesForMeter.cshtml" />
     <Content Include="wwwroot\Workbench\Events.cshtml" />
-    <Content Include="wwwroot\Workbench\SiteSummaryAngular.cshtml" />
-    <Content Include="wwwroot\Workbench\EventsForDateAngular.cshtml" />
-    <Content Include="wwwroot\Workbench\EventsForDayAngular.cshtml" />
-    <Content Include="wwwroot\Workbench\DisturbancesForDayAngular.cshtml" />
     <Content Include="wwwroot\Workbench\EventsForMeter.cshtml" />
-    <Content Include="wwwroot\Workbench\DisturbancesForMeterAngular.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsForMeter.cshtml" />
     <Content Include="wwwroot\Workbench\AuditLog.cshtml" />
     <Content Include="wwwroot\Workbench\Event.cshtml" />
     <Content Include="wwwroot\Workbench\DataFiles.cshtml" />
     <Content Include="wwwroot\Workbench\MeterEventsByLine.cshtml" />
     <Content Include="wwwroot\Workbench\Breaker.cshtml" />
-    <Content Include="wwwroot\Workbench\BreakersForDay - Angular.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsDetailsByDate.cshtml" />
   </ItemGroup>
   <ItemGroup>
