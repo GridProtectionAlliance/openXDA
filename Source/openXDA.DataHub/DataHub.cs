@@ -5607,7 +5607,7 @@ namespace openXDA.Hubs
 
             }
 
-            return table.Select().Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
+            return table.Select().OrderBy(x => x["RowNum"]).Select(x => DataContext.Table<SiteSummary>().LoadRecord(x));
         }
 
         [AuthorizeHubRole("Administrator, Engineer")]
