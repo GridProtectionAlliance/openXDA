@@ -5851,10 +5851,13 @@ namespace openXDA.Hubs
             }
         }
 
-        public void ReprocessFile(int dataFileID, int fileGroupID, int meterID)
+        public void ReprocessFile(int dataFileID, int fileGroupID, int meterID, bool useFile)
         { 
             CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
             CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
+            if (useFile)
+                CascadeDelete("FileBlob", $"DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {fileGroupID})");
+
             OnReprocessFile(fileGroupID);
         }
 
