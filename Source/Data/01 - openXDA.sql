@@ -2751,7 +2751,7 @@ GO
 
 CREATE VIEW UserMeter
 AS
-SELECT
+SELECT DISTINCT
     UserAccount.Name AS UserName,
     Meter.ID AS MeterID
 FROM
