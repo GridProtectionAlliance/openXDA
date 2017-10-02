@@ -133,7 +133,6 @@ CREATE TABLE Meter
     ShortName VARCHAR(50) NULL,
     Make VARCHAR(200) NOT NULL,
     Model VARCHAR(200) NOT NULL,
-    MeterTypeID INT NULL,
     TimeZone VARCHAR(200) NULL,
     Description VARCHAR(MAX) NULL
 )
@@ -152,13 +151,6 @@ CREATE TABLE MeterFacility
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
     FacilityID INT NOT NULL
-)
-GO
-
-CREATE TABLE MeterType
-(
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(25) NOT NULL
 )
 GO
 
@@ -459,21 +451,6 @@ INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.d
 GO
 
 INSERT INTO MeterGroup(Name) VALUES('AllMeters')
-GO
-
-INSERT MeterType (Name) VALUES (N'Breaker')
-GO
-
-INSERT MeterType (Name) VALUES (N'Capacitor')
-GO
-
-INSERT MeterType (Name) VALUES (N'Line')
-GO
-
-INSERT MeterType (Name) VALUES (N'Reactor')
-GO
-
-INSERT MeterType (Name) VALUES (N'Other')
 GO
 
 CREATE TRIGGER Meter_AugmentAllMetersGroup
@@ -2573,31 +2550,26 @@ GO
 
 CREATE VIEW MeterDetail
 AS
-SELECT
-    Meter.ID,
-    Meter.AssetKey,
-    Meter.MeterLocationID,
-    MeterLocation.AssetKey AS LocationKey,
-    MeterLocation.Name AS Location,
-    MeterLocation.Latitude,
-    MeterLocation.Longitude,
-    Meter.Name,
-    Meter.Alias,
-    Meter.ShortName,
-    Meter.Make,
-    Meter.Model,
-    CASE COALESCE(Meter.TimeZone, '')
-        WHEN '' THEN COALESCE(Setting.Value, 'UTC')
-        ELSE Meter.TimeZone
-    END AS TimeZone,
-    Meter.Description,
-    MeterType.Name AS MeterType,
-    Meter.MeterTypeID
-FROM
-    Meter JOIN
-    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID  LEFT OUTER JOIN
-    dbo.MeterType ON dbo.Meter.MeterTypeID = dbo.MeterType.ID LEFT OUTER JOIN
-    Setting ON Setting.Name = 'DefaultMeterTimeZone'
+SELECT	Meter.ID, 
+		Meter.AssetKey, 
+		Meter.MeterLocationID, 
+		MeterLocation.AssetKey AS LocationKey, 
+		MeterLocation.Name AS Location, 
+		MeterLocation.Latitude, 
+		MeterLocation.Longitude, 
+        Meter.Name, 
+		Meter.Alias, 
+		Meter.ShortName, 
+		Meter.Make, 
+		Meter.Model, 
+		CASE COALESCE (Meter.TimeZone, '') 
+			WHEN '' THEN COALESCE (Setting.Value, 'UTC') 
+            ELSE Meter.TimeZone END AS TimeZone, 
+		Meter.Description
+FROM    Meter INNER JOIN
+        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
+        Setting ON Setting.Name = 'DefaultMeterTimeZone'
+
 GO
 
 CREATE VIEW LineView

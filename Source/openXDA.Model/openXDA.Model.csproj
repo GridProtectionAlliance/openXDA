@@ -130,7 +130,6 @@
     <Compile Include="Links\MeterLocationLine.cs" />
     <Compile Include="Links\MeterMeterGroup.cs" />
     <Compile Include="MetersToDataPush.cs" />
-    <Compile Include="Meters\MeterType.cs" />
     <Compile Include="Channels\OutputChannel.cs" />
     <Compile Include="Channels\Phase.cs" />
     <Compile Include="PQMarkAggregate.cs" />

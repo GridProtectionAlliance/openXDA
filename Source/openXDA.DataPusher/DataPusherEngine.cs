@@ -344,7 +344,6 @@ namespace openXDA.DataPusher
                         Make = localMeterRecord.Make,
                         Model = localMeterRecord.Model,
                         Description = localMeterRecord.Description,
-                        MeterTypeID = localMeterRecord.MeterTypeID,
                         TimeZone = localMeterRecord.TimeZone
                     };
 

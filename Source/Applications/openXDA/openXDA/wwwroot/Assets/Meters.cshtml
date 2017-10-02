@@ -72,7 +72,6 @@
         new[] { "MeterLocationID", "Site", "text-left"},
         new[] { "Make", "Make", "text-left" },
         new[] { "Model", "Model", "text-left" },
-        new[] { "MeterType", "Meter Type", "text-left"},
         new[] { null, "Meter-to-Line", "text-center valign-middle"}
     };
     ViewBag.ShowSearchFilter = true;
@@ -87,7 +86,6 @@
     <td width="20%" class="text-left valign-middle" ><a class="btn btn-link" data-bind="text: Location, attr: { href: '/Assets/Sites.cshtml?Site=' + Location }"></a></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Make"></td>
     <td width="20%" class="text-left valign-middle" data-bind="text: Model"></td>
-    <td width="10%" class="text-left valign-middle" data-bind="text: MeterType"></td>
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -106,7 +104,6 @@
         }
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
-        @Raw(dataContext.AddSelectField<Meter, MeterType>("MeterTypeID", "ID", "Name", "ID"))
     </div>
 
     <div class="col-md-6">

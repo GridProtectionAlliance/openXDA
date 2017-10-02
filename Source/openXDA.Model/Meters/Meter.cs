@@ -78,8 +78,6 @@ namespace openXDA.Model
         [StringLength(200)]
         public string Model { get; set; }
 
-        [Label("Meter Type")]
-        public int MeterTypeID { get; set; }
 
         [StringLength(200)]
         public string TimeZone { get; set; }
@@ -253,9 +251,6 @@ namespace openXDA.Model
     {
         [Searchable]
         public string Location { get; set; }
-
-        [Searchable]
-        public string MeterType { get; set; }
 
         public string TimeZoneLabel
         {

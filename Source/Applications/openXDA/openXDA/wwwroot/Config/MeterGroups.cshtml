@@ -219,39 +219,26 @@
                 }
             }
         });
-        
+        var mobileSelectOptions = {
+            filterable: true,
+            padding: {
+                top: '5%',
+                left: '15%',
+                right: '15%',
+                bottom: '5%'
+            }
+        };
+
         $('#addNewEditDialog').on('shown.bs.modal', function () {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeters(-1, "Name", true, 1, 10000000, null).done(function (meters) {
-                    
-                    var dictionary = {};
-                    $.each(meters, function (i, m) {
-                        if (dictionary.hasOwnProperty(m.MeterType))
-                            dictionary[m.MeterType].push(m);
-                        else {
-                            dictionary[m.MeterType] = [];
-                            dictionary[m.MeterType].push(m);
-                        }
-                    });
-
+                   
                     $('#meterSelect').children().remove();
 
                     $.each(meters, function (i, d) {
-                        if(d.MeterType == null) d.MeterType = "Other"
-                        if ($('#meterSelect optgroup').filter('[label="' + d.MeterType + '"]').length == 0)
-                            $('#meterSelect').append('<optgroup label="' + d.MeterType + '"></optgroup>');
-                        $('#meterSelect optgroup').filter('[label="' +d.MeterType+'"]').append(new Option(d.Name, d.ID));
+                        $('#meterSelect').append(new Option(d.Name, d.ID));
                     });
 
-                    var mobileSelectOptions = {
-                        filterable: true,
-                        padding: {
-                            top: '5%',
-                            left: '15%',
-                            right: '15%',
-                            bottom: '5%'
-                        }
-                    };
 
                     if (viewModel.recordMode() === RecordMode.Edit) {
                         dataHub.queryGroupMeterViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (metersInGroup) {
@@ -285,18 +272,7 @@
                 });
 
                 securityHub.queryUserAccounts("Name", true, 1, 1000000, null).done(function (users) {
-                    $('#userSelect').children().remove();
-
-                    var mobileSelectOptions = {
-                        filterable: true,
-                        padding: {
-                            top: '5%',
-                            left: '15%',
-                            right: '15%',
-                            bottom: '5%'
-                        }
-                    };
-                    
+                    $('#userSelect').children().remove();                    
                     $.each(users, function (i, d) {
                         securityHub.sidToAccountName(d.Name).done(function (accountName) {
                             $('#userSelect').append(new Option(accountName, d.ID));
