@@ -43,12 +43,6 @@
         new[] { "FileGroupID", "File Group", "text-left"},
         new[] { "FilePath", "File Path", "text-left"},
         new[] { "CreationTime", "Creation", "text-left"},
-        //new[] { "ColumnName", "Column" , "text-left"},
-        //new[] { "OriginalValue", "Original Value", "text-center"},
-        //new[] { "NewValue", "New Value", "text-center" },
-        //new[] { "UpdatedBy", "Updated By", "text-center" },
-        //new[] { "UpdatedOn", "Updated On", "text-center" }
-
     };
     ViewBag.ShowSearchFilter = true;
 
@@ -71,14 +65,8 @@
     <td width="5%" class="text-left valign-middle" data-bind="text: FileGroupID"></td>
     <td width="75%" class="text-left valign-middle" data-bind="text: FilePath"></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: CreationTime.formatDate(DateTimeFormat)"></td>
-    @*<td width="12%" class="text-left valign-middle" data-bind="text: ColumnName"></td>
-    <td width="20%" class="text-center valign-middle" data-bind="text: OriginalValue"></td>
-    <td width="20%" class="text-center valign-middle" data-bind="text: NewValue"></td>
-    <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedBy"></td>
-    <td width="12%" class="text-center valign-middle" data-bind="text: UpdatedOn.formatDate(DateTimeFormat)"></td>*@
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-toggle="modal" data-target="#reprocessModal" title="Reprocess File" data-bind="enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-repeat"></span></button>
-        @*<button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>*@
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 
@@ -107,7 +95,13 @@
             <div class="modal-body">
                 <div hidden="hidden" id="FileGroupID"></div>
                 <div hidden="hidden" id="DataFileID"></div>
-                <label for="eventList">Events in File</label>
+                <label>Reprocess From:</label>
+                <select id="processSource" class="form-control">
+                    <option value="true">File</option>
+                    <option value="false">File Blob</option>
+                </select>
+                <br />
+                <label for="eventList">Events in File:</label>
                 <ul id="eventList"></ul>
             </div>
             <div class="modal-footer">
@@ -256,7 +250,7 @@
         }
         
         function reprocessSingleFileGroup(){
-            dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text(), $('#eventList').children().first().text().split(',')[1].split(':')[1].trim());
+            dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text(), $('#eventList').children().first().text().split(',')[1].split(':')[1].trim(), $('#processSource').val());
         }
         
         function selectAll(control) {

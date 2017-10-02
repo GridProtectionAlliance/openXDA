@@ -39,16 +39,16 @@
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
-
+    string meter = "";
     if (parameters.ContainsKey("MeterID"))
     {
-        ViewBag.MeterID = parameters["MeterID"];
+        meter = parameters["MeterID"];
     }
     if (parameters.ContainsKey("Filter"))
     {
         ViewBag.Filter = parameters["Filter"];
     }
-    string meter = Model.DataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", Convert.ToInt32(ViewBag.MeterID));
+    int meterId = Model.DataContext.Connection.ExecuteScalar<int>("Select ID FROM Meter WHERE Name = {0}", meter);
     ViewBag.Title = "Events for " + meter;
 
     // Define column headers, use null for field name to make column non-sortable
@@ -100,7 +100,7 @@
     @Raw(dataContext.AddInputField<EventView>("LineName", "string", customDataBinding: "enable: false"))
     @Raw(dataContext.AddSelectField<EventView, EventType>("EventTypeID", "ID", "Name"))
     @Raw(dataContext.AddInputField<EventView>("StartTime", "string", customDataBinding: "type: text, enable: true"))
-    @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: true"))
+    @Raw(dataContext.AddInputField<EventView>("EndTime", "string", customDataBinding: "enable: false"))
 
 }
 
@@ -125,7 +125,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts {
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<EventForMeter, DataHub>(ViewBag, "ID", null, ViewBag.MeterID, ViewBag.Filter))
+        @Raw(dataContext.RenderViewModelConfiguration<EventForMeter, DataHub>(ViewBag, "ID", null, meterId, ViewBag.Filter))
 
         $('#addNewEditDialog').on('shown.bs.modal', function () {
         });
