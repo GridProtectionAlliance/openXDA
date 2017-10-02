@@ -2919,7 +2919,7 @@ namespace openXDA.Hubs
             {
                 // Get Time Stamp shift
                 Ticks ticks = record.StartTime - oldStartTime;
-
+                record.EndTime = record.EndTime.AddTicks(ticks);
                 // Update event records
                 // IF propagate is true update all associated with the file
 
@@ -3146,6 +3146,7 @@ namespace openXDA.Hubs
             {
                 // Get Time Stamp shift
                 Ticks ticks = record.StartTime - oldStartTime;
+                record.EndTime = record.EndTime.AddTicks(ticks);
 
                 // Update event records
                 // IF propagate is true update all associated with the file
@@ -3414,6 +3415,7 @@ namespace openXDA.Hubs
             {
                 // Get Time Stamp shift
                 Ticks ticks = record.StartTime - oldStartTime;
+                record.EndTime = record.EndTime.AddTicks(ticks);
 
                 // Update event records
                 // IF propagate is true update all associated with the file
@@ -3674,6 +3676,7 @@ namespace openXDA.Hubs
             {
                 // Get Time Stamp shift
                 Ticks ticks = record.StartTime - oldStartTime;
+                record.EndTime = record.EndTime.AddTicks(ticks);
 
                 // Update event records
                 // IF propagate is true update all associated with the file
@@ -3919,6 +3922,7 @@ namespace openXDA.Hubs
             {
                 // Get Time Stamp shift
                 Ticks ticks = record.StartTime - oldStartTime;
+                record.EndTime = record.EndTime.AddTicks(ticks);
 
                 // Update event records
                 // IF propagate is true update all associated with the file
