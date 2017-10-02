@@ -353,6 +353,7 @@ CREATE TABLE EmailGroupLineGroup
     [ID] [int] IDENTITY(1,1) NOT NULL,
     [EmailGroupID] [int] NOT NULL,
     [LineGroupID] [int] NOT NULL,
+	CONSTRAINT CU_EmailGroupLineGroup_EmailGroupID_LineGroupID UNIQUE (EmailGroupID,LineGroupID),
 PRIMARY KEY CLUSTERED
 (
     [ID] ASC
@@ -646,7 +647,8 @@ CREATE TABLE EmailGroupMeterGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
-    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID)
+    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID),
+	CONSTRAINT CU_EmailGroupMeterGroup_EmailGroupID_MeterGroupID UNIQUE (EmailGroupID,MeterGroupID)
 )
 GO
 
@@ -669,7 +671,8 @@ CREATE TABLE EmailGroupType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
-    EmailTypeID INT NOT NULL REFERENCES EmailType(ID)
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
+	CONSTRAINT CU_EmailGroupType_EmailGroupID_EmailTypeID UNIQUE (EmailGroupID,EmailTypeID)
 )
 GO
 
