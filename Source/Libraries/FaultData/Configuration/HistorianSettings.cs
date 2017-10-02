@@ -24,6 +24,7 @@
 using System;
 using System.ComponentModel;
 using System.Configuration;
+using System.Security;
 using GSF;
 
 namespace FaultData.Configuration
@@ -43,6 +44,8 @@ namespace FaultData.Configuration
         private string m_hostName;
         private int m_port;
         private string m_instanceName;
+        private string m_url;
+        private SecureString m_securePassword;
 
         #endregion
 
@@ -86,6 +89,53 @@ namespace FaultData.Configuration
             set
             {
                 m_instanceName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the URL of the historian web management tool.
+        /// </summary>
+        [Setting]
+        [DefaultValue("http://127.0.0.1:8180")]
+        public string URL
+        {
+            get
+            {
+                return m_url;
+            }
+            set
+            {
+                m_url = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password used to create imported
+        /// measurements in the historian metadata database.
+        /// </summary>
+        [Setting]
+        [DefaultValue("")]
+        public string Password
+        {
+            get
+            {
+                return m_securePassword.ToUnsecureString();
+            }
+            set
+            {
+                m_securePassword = value.ToSecureString();
+            }
+        }
+
+        /// <summary>
+        /// Gets the password used to create imported
+        /// measurements in the historian metadata database.
+        /// </summary>
+        public SecureString SecurePassword
+        {
+            get
+            {
+                return m_securePassword;
             }
         }
 

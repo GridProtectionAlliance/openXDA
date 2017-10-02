@@ -185,11 +185,6 @@ namespace openHistorian.XDALink
             return SeriesIDs.Select(series => ToPointID(channel, (int)series));
         }
 
-        private ulong ToPointID(int channel, int series)
-        {
-            return Word.MakeQuadWord((uint)channel, (uint)series);
-        }
-
         #endregion
 
         #region [ Static ]
@@ -198,6 +193,13 @@ namespace openHistorian.XDALink
         private static readonly List<SeriesID> SeriesIDs = Enum.GetValues(typeof(SeriesID))
             .Cast<SeriesID>()
             .ToList();
+
+        // Static Methods
+
+        public static ulong ToPointID(int channel, int series)
+        {
+            return Word.MakeQuadWord((uint)channel, (uint)series);
+        }
 
         #endregion
     }
