@@ -136,6 +136,9 @@
   <Component Id="wwwroot_Config_Settings_cshtml">
     <File Id="wwwroot_Config_Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Settings.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_TemplateEditor_cshtml">
+    <File Id="wwwroot_Config_TemplateEditor.cshtml" Name="TemplateEditor.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\TemplateEditor.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_UserAccountMeterGroupView_cshtml">
     <File Id="wwwroot_Config_UserAccountMeterGroupView.cshtml" Name="UserAccountMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UserAccountMeterGroupView.cshtml" />
   </Component>
@@ -3977,9 +3980,6 @@
   <Component Id="wwwroot_WorkBench_Breaker_cshtml">
     <File Id="wwwroot_WorkBench_Breaker.cshtml" Name="Breaker.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Breaker.cshtml" />
   </Component>
-  <Component Id="wwwroot_WorkBench_BreakersForDay_Angular_cshtml">
-    <File Id="wwwroot_WorkBench_BreakersForDay_Angular.cshtml" Name="BreakersForDay - Angular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\BreakersForDay - Angular.cshtml" />
-  </Component>
   <Component Id="wwwroot_WorkBench_BreakersForDay_cshtml">
     <File Id="wwwroot_WorkBench_BreakersForDay.cshtml" Name="BreakersForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\BreakersForDay.cshtml" />
   </Component>
@@ -3992,14 +3992,8 @@
   <Component Id="wwwroot_WorkBench_DisturbancesForDay_cshtml">
     <File Id="wwwroot_WorkBench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDay.cshtml" />
   </Component>
-  <Component Id="wwwroot_WorkBench_DisturbancesForDayAngular_cshtml">
-    <File Id="wwwroot_WorkBench_DisturbancesForDayAngular.cshtml" Name="DisturbancesForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDayAngular.cshtml" />
-  </Component>
   <Component Id="wwwroot_WorkBench_DisturbancesForMeter_cshtml">
     <File Id="wwwroot_WorkBench_DisturbancesForMeter.cshtml" Name="DisturbancesForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForMeter.cshtml" />
-  </Component>
-  <Component Id="wwwroot_WorkBench_DisturbancesForMeterAngular_cshtml">
-    <File Id="wwwroot_WorkBench_DisturbancesForMeterAngular.cshtml" Name="DisturbancesForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForMeterAngular.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_Event_cshtml">
     <File Id="wwwroot_WorkBench_Event.cshtml" Name="Event.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Event.cshtml" />
@@ -4007,26 +4001,14 @@
   <Component Id="wwwroot_WorkBench_Events_cshtml">
     <File Id="wwwroot_WorkBench_Events.cshtml" Name="Events.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\Events.cshtml" />
   </Component>
-  <Component Id="wwwroot_WorkBench_EventsAngular_cshtml">
-    <File Id="wwwroot_WorkBench_EventsAngular.cshtml" Name="EventsAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsAngular.cshtml" />
-  </Component>
   <Component Id="wwwroot_WorkBench_EventsForDate_cshtml">
     <File Id="wwwroot_WorkBench_EventsForDate.cshtml" Name="EventsForDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDate.cshtml" />
-  </Component>
-  <Component Id="wwwroot_WorkBench_EventsForDateAngular_cshtml">
-    <File Id="wwwroot_WorkBench_EventsForDateAngular.cshtml" Name="EventsForDateAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDateAngular.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_EventsForDay_cshtml">
     <File Id="wwwroot_WorkBench_EventsForDay.cshtml" Name="EventsForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDay.cshtml" />
   </Component>
-  <Component Id="wwwroot_WorkBench_EventsForDayAngular_cshtml">
-    <File Id="wwwroot_WorkBench_EventsForDayAngular.cshtml" Name="EventsForDayAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForDayAngular.cshtml" />
-  </Component>
   <Component Id="wwwroot_WorkBench_EventsForMeter_cshtml">
     <File Id="wwwroot_WorkBench_EventsForMeter.cshtml" Name="EventsForMeter.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForMeter.cshtml" />
-  </Component>
-  <Component Id="wwwroot_WorkBench_EventsForMeterAngular_cshtml">
-    <File Id="wwwroot_WorkBench_EventsForMeterAngular.cshtml" Name="EventsForMeterAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\EventsForMeterAngular.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_FaultsDetailsByDate_cshtml">
     <File Id="wwwroot_WorkBench_FaultsDetailsByDate.cshtml" Name="FaultsDetailsByDate.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\FaultsDetailsByDate.cshtml" />
@@ -4054,9 +4036,6 @@
   </Component>
   <Component Id="wwwroot_WorkBench_SiteSummary_cshtml">
     <File Id="wwwroot_WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />
-  </Component>
-  <Component Id="wwwroot_WorkBench_SiteSummaryAngular_cshtml">
-    <File Id="wwwroot_WorkBench_SiteSummaryAngular.cshtml" Name="SiteSummaryAngular.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummaryAngular.cshtml" />
   </Component>
 </ComponentGroup>
 </Include>
