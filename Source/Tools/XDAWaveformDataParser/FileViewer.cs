@@ -542,7 +542,7 @@ namespace XDAWaveformDataParser
 
             ParsedChannel parsedChannel = new ParsedChannel()
             {
-                Name = string.Format("({0}) {1}", report.Command, channel.Name),
+                Name = string.Format("({0}) {1}", report.Event, channel.Name),
                 TimeValues = timeSamples,
                 XValues = xValues,
                 YValues = channel.Samples.Cast<object>().ToList()

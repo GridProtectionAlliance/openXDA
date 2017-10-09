@@ -1413,8 +1413,8 @@ namespace openXDA.Hubs
 
                 foreach (int channelId in channelIds)
                 {
-                    string channelName = DataContext.Connection.ExecuteScalar<string>("Select Name from Channel where ID = {0}", channelId);
-                    ProgressUpdatedByMeter(channelName, (int)(100 * (innerProgressCount) / innerProgressTotal));
+                    Channel channel = DataContext.Table<Channel>().QueryRecordWhere("ID = {0}", channelId);
+                    ProgressUpdatedByMeter(channel.Name, (int)(100 * (innerProgressCount) / innerProgressTotal));
                     RunningAvgStdDev record = normalRunningData.Where(x => x.ChannelID == channelId).FirstOrDefault();
                     if (record != null)
                     {
@@ -1436,7 +1436,7 @@ namespace openXDA.Hubs
                                 High = high,
                                 Low = low,
                                 RangeInclusive = false,
-                                PerUnit = false,
+                                PerUnit = (channel.PerUnitValue != null),
                                 Enabled = true,
                                 IsDefault = false
                             };
@@ -1451,7 +1451,7 @@ namespace openXDA.Hubs
 
                     }
 
-                    ProgressUpdatedByMeter(channelName, (int)(100 * (++innerProgressCount) / innerProgressTotal));
+                    ProgressUpdatedByMeter(channel.Name, (int)(100 * (++innerProgressCount) / innerProgressTotal));
                 }
                 ProgressUpdatedOverall(meterName, (int)(100 * (++progressCount) / progressTotal));
             }
