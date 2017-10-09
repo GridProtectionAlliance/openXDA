@@ -1436,7 +1436,7 @@ namespace openXDA.Hubs
                                 High = high,
                                 Low = low,
                                 RangeInclusive = false,
-                                PerUnit = (channel.PerUnitValue != null),
+                                PerUnit = false,
                                 Enabled = true,
                                 IsDefault = false
                             };
