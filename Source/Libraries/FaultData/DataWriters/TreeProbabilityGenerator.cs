@@ -15,12 +15,30 @@ namespace FaultData.DataWriters
             XElement returnElement = new XElement("span");
 
             string faultType = (string)element.Attribute("faultType") ?? "AB";
-            double reactanceRatio = Convert.ToDouble((string)element.Attribute("reactanceRatio") ?? "-1.0");
-            reactanceRatio = Math.Abs(reactanceRatio);
-            double distance = Convert.ToDouble((string)element.Attribute("distance") ?? "-1.0");
 
-            double lowToMediumBorder = (1.27 * distance) / Math.Sqrt(Math.Pow((.31 * distance + 10), 2) + Math.Pow((1.27 * distance), 2));
-            double mediumToHighBorder = (1.27 * distance) / Math.Sqrt(Math.Pow((.31 * distance + 20), 2) + Math.Pow((1.27 * distance), 2));
+            string reactanceRatioString = (string)element.Attribute("reactanceRatio") ?? "1.0";
+            double reactanceRatio;
+            if (!double.TryParse(reactanceRatioString, out reactanceRatio))
+                reactanceRatio = 1.0;
+            reactanceRatio = Math.Abs(reactanceRatio);
+
+            string distanceString = (string)element.Attribute("distance") ?? "-1.0";
+            double distance;
+            if (!double.TryParse(distanceString, out distance))
+                distance = -1.0;
+
+            string RsString = (string)element.Attribute("Rs") ?? "1.27";
+            double Rs;
+            if (!double.TryParse(RsString, out Rs))
+                Rs = 1.27;
+
+            string XsString = (string)element.Attribute("Xs") ?? ".31";
+            double Xs;
+            if (!double.TryParse(XsString, out Xs))
+                Xs = .31;
+
+            double lowToMediumBorder = (Rs * distance) / Math.Sqrt(Math.Pow((Xs * distance + 10), 2) + Math.Pow((Rs * distance), 2));
+            double mediumToHighBorder = (Rs * distance) / Math.Sqrt(Math.Pow((Xs * distance + 20), 2) + Math.Pow((Rs * distance), 2));
 
             returnElement.Value = "Undetermined";
 
