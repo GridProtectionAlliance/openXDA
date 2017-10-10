@@ -3982,7 +3982,7 @@ BEGIN
     DECLARE  @MeterIDs TABLE (ID int);
     DECLARE  @ChannelID AS nvarchar(MAX);
     DECLARE  @Date as DateTime2;
-    SET @Date = @EventDate;
+    SET  @Date = CAST(@EventDate AS DATE)
 
     -- Create MeterIDs Table
     INSERT INTO @MeterIDs(ID) SELECT Value FROM dbo.String_to_int_table(@MeterID, ',') where Value in (select * from authMeters(@username));
