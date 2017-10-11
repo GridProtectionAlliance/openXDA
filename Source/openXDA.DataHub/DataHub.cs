@@ -29,7 +29,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
-using System.Transactions;
 using FaultData.DataAnalysis;
 using GSF;
 using GSF.Collections;
@@ -2649,17 +2648,12 @@ namespace openXDA.Hubs
 
             if (!string.IsNullOrEmpty(record.Mapping))
             {
-                using (TransactionScope transaction = new TransactionScope())
-                {
-                    bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID) > 0;
+                bool seriesExists = DataContext.Connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", record.ID, record.SeriesTypeID) > 0;
 
-                    if (seriesExists)
-                        DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, record.SeriesTypeID);
-                    else
-                        DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
-
-                    transaction.Complete();
-                }
+                if (seriesExists)
+                    DataContext.Connection.ExecuteNonQuery("UPDATE Series SET SourceIndexes = {0} WHERE ChannelID = {1} AND SeriesTypeID = {2}", record.Mapping, record.ID, record.SeriesTypeID);
+                else
+                    DataContext.Connection.ExecuteNonQuery("INSERT INTO Series VALUES({0}, {1}, {2})", record.ID, record.SeriesTypeID, record.Mapping);
             }
             else
             {

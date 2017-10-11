@@ -24,8 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.SqlClient;
 using System.Linq;
-using System.Transactions;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF.Collections;
@@ -423,7 +423,6 @@ namespace FaultData.DataOperations
             if (!updateLineLength && !updateLineImpedance)
                 return;
 
-            using (TransactionScope transaction = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
                 TableOperations<Line> lineTable = new TableOperations<Line>(connection);
@@ -461,10 +460,20 @@ namespace FaultData.DataOperations
                     if (meterDataSet.Configuration.X0.HasValue)
                         lineImpedance.X0 = meterDataSet.Configuration.X0.GetValueOrDefault();
 
-                    lineImpedanceTable.AddNewOrUpdateRecord(lineImpedance);
-                }
+                    try
+                    {
+                        lineImpedanceTable.AddNewOrUpdateRecord(lineImpedance);
+                    }
+                    catch (SqlException ex)
+                    {
+                        // Ignore errors regarding unique key constraints
+                        // which can occur as a result of a race condition
+                        bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                transaction.Complete();
+                        if (!isUniqueViolation)
+                            throw;
+                    }
+                }
             }
         }
 
@@ -581,16 +590,6 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "BC" ||
                    channel.Phase.Name == "CA" ||
                    channel.Phase.Name == "LineToLineAverage";
-        }
-
-        // Gets the default set of transaction options used for data operation transactions.
-        private static TransactionOptions GetTransactionOptions()
-        {
-            return new TransactionOptions()
-            {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
         }
 
         #endregion

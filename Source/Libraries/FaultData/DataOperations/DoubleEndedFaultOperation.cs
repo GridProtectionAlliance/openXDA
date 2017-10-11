@@ -25,10 +25,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
-using System.Transactions;
 using FaultAlgorithms;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
@@ -43,7 +42,6 @@ using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
 using FaultGroup = openXDA.Model.FaultGroup;
-using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace FaultData.DataOperations
 {
@@ -347,45 +345,46 @@ namespace FaultData.DataOperations
                             if ((object)leftCycleDataGroup == null || (object)rightCycleDataGroup == null)
                                 continue;
 
-                            TransactionScopeOption transactionScopeOption = TransactionScopeOption.Required;
+                            // Make sure double-ended distance has not already been calculated and entered into the database
+                            RecordRestriction recordRestriction =
+                                new RecordRestriction("LocalFaultSummaryID = {0}", mapping.Left.Fault.ID) |
+                                new RecordRestriction("RemoteFaultSummaryID = {0}", mapping.Left.Fault.ID) |
+                                new RecordRestriction("LocalFaultSummaryID = {0}", mapping.Right.Fault.ID) |
+                                new RecordRestriction("RemoteFaultSummaryID = {0}", mapping.Right.Fault.ID);
 
-                            TransactionOptions transactionOptions = new TransactionOptions()
+                            if (doubleEndedFaultDistanceTable.QueryRecordCount(recordRestriction) > 0)
+                                continue;
+
+                            // Initialize the mappings with additional data needed for double-ended fault location
+                            mapping.Left.Initialize(connection, leftCycleDataGroup, m_systemFrequency);
+                            mapping.Right.Initialize(connection, rightCycleDataGroup, m_systemFrequency);
+
+                            // Execute the double-ended fault location algorithm
+                            ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);
+                            ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Right, mapping.Left);
+
+                            try
                             {
-                                IsolationLevel = IsolationLevel.ReadCommitted,
-                                Timeout = TransactionManager.MaximumTimeout
-                            };
-
-                            // Make sure there are no other threads calculating double-ended fault distance for this mapping,
-                            // and that double-ended distance has not already been calculated and entered into the database
-                            using (TransactionScope transactionScope = new TransactionScope(transactionScopeOption, transactionOptions))
-                            {
-                                RecordRestriction recordRestriction =
-                                    new RecordRestriction("LocalFaultSummaryID = {0}", mapping.Left.Fault.ID) |
-                                    new RecordRestriction("RemoteFaultSummaryID = {0}", mapping.Left.Fault.ID) |
-                                    new RecordRestriction("LocalFaultSummaryID = {0}", mapping.Right.Fault.ID) |
-                                    new RecordRestriction("RemoteFaultSummaryID = {0}", mapping.Right.Fault.ID);
-
-                                if (doubleEndedFaultDistanceTable.QueryRecordCount(recordRestriction) > 0)
-                                    continue;
-
-                                // Initialize the mappings with additional data needed for double-ended fault location
-                                mapping.Left.Initialize(connection, leftCycleDataGroup, m_systemFrequency);
-                                mapping.Right.Initialize(connection, rightCycleDataGroup, m_systemFrequency);
-
-                                // Execute the double-ended fault location algorithm
-                                ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Left, mapping.Right);
-                                ExecuteFaultLocationAlgorithm(lineLength, nominalImpedance, mapping.Right, mapping.Left);
-
                                 // Create rows in the DoubleEndedFaultDistance table
                                 DoubleEndedFaultDistance leftDistance = CreateDoubleEndedFaultDistance(lineLength, mapping.Left, mapping.Right);
                                 DoubleEndedFaultDistance rightDistance = CreateDoubleEndedFaultDistance(lineLength, mapping.Right, mapping.Left);
+
                                 doubleEndedFaultDistanceTable.AddNewRecord(leftDistance);
                                 doubleEndedFaultDistanceTable.AddNewRecord(rightDistance);
-                            }
 
-                            // Add these nodes to the collection of processed mapping nodes
-                            processedMappingNodes.Add(mapping.Left);
-                            processedMappingNodes.Add(mapping.Right);
+                                // Add these nodes to the collection of processed mapping nodes
+                                processedMappingNodes.Add(mapping.Left);
+                                processedMappingNodes.Add(mapping.Right);
+                            }
+                            catch (SqlException ex)
+                            {
+                                // Ignore errors regarding unique key constraints
+                                // which can occur as a result of a race condition
+                                bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+
+                                if (!isUniqueViolation)
+                                    throw;
+                            }
                         }
                     }
 

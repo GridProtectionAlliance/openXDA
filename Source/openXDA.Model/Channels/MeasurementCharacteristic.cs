@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -44,31 +44,31 @@ namespace openXDA.Model
     {
         public static MeasurementCharacteristic GetOrAdd(this TableOperations<MeasurementCharacteristic> measurementCharacteristicTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            MeasurementCharacteristic measurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)measurementCharacteristic == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                measurementCharacteristic = new MeasurementCharacteristic();
+                measurementCharacteristic.Name = name;
+                measurementCharacteristic.Description = description ?? name;
 
-            MeasurementCharacteristic measurementCharacteristic;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                measurementCharacteristic = measurementCharacteristicTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)measurementCharacteristic == null)
+                try
                 {
-                    measurementCharacteristic = new MeasurementCharacteristic();
-                    measurementCharacteristic.Name = name;
-                    measurementCharacteristic.Description = description ?? name;
                     measurementCharacteristicTable.AddNewRecord(measurementCharacteristic);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    measurementCharacteristic.ID = measurementCharacteristicTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return measurementCharacteristicTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                measurementCharacteristic.ID = measurementCharacteristicTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return measurementCharacteristic;

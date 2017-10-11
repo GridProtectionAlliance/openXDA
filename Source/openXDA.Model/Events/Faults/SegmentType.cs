@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -40,31 +40,31 @@ namespace openXDA.Model
     {
         public static SegmentType GetOrAdd(this TableOperations<SegmentType> segmentTypeTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            SegmentType segmentType = segmentTypeTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)segmentType == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                segmentType = new SegmentType();
+                segmentType.Name = name;
+                segmentType.Description = description ?? name;
 
-            SegmentType segmentType;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                segmentType = segmentTypeTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)segmentType == null)
+                try
                 {
-                    segmentType = new SegmentType();
-                    segmentType.Name = name;
-                    segmentType.Description = description ?? name;
                     segmentTypeTable.AddNewRecord(segmentType);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    segmentType.ID = segmentTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return segmentTypeTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                segmentType.ID = segmentTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return segmentType;

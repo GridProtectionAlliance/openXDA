@@ -23,9 +23,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Transactions;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Data;
@@ -282,72 +280,49 @@ namespace FaultData.DataOperations
 
         private List<DataQualityRangeLimit> InitializeRangeLimitTable(AdoDataConnection connection, Channel channel)
         {
-            using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-            {
-                // Query the range limits for the given channel
-                TableOperations<DataQualityRangeLimit> dataQualityRangeLimitTable = new TableOperations<DataQualityRangeLimit>(connection);
+            // Query the range limits for the given channel
+            TableOperations<DataQualityRangeLimit> dataQualityRangeLimitTable = new TableOperations<DataQualityRangeLimit>(connection);
 
-                List<DataQualityRangeLimit> dataQualityRangeLimits = dataQualityRangeLimitTable
-                    .QueryRecordsWhere("ChannelID = {0}", channel.ID)
-                    .ToList();
+            List<DataQualityRangeLimit> dataQualityRangeLimits = dataQualityRangeLimitTable
+                .QueryRecordsWhere("ChannelID = {0}", channel.ID)
+                .ToList();
 
-                // If limits exist for the given channel,
-                // range limit table has been successfully initialized
-                if (dataQualityRangeLimits.Count != 0)
-                    return dataQualityRangeLimits;
-
-                // Get the default range limits for the measurement type and characteristic of this channel
-                TableOperations<DefaultDataQualityRangeLimit> defaultDataQualityRangeLimitTable = new TableOperations<DefaultDataQualityRangeLimit>(connection);
-                int measurementTypeID = channel.MeasurementTypeID;
-                int measurementCharacteristicID = channel.MeasurementCharacteristicID;
-
-                List<DefaultDataQualityRangeLimit> defaultDataQualityRangeLimits = defaultDataQualityRangeLimitTable
-                    .QueryRecordsWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", measurementTypeID, measurementCharacteristicID)
-                    .ToList();
-
-                // If there are no default limits for the channel,
-                // then the range limit table has been successfully initialized
-                if (defaultDataQualityRangeLimits.Count == 0)
-                    return dataQualityRangeLimits;
-
-                // Update the table to include this channel's default limits
-                foreach (DefaultDataQualityRangeLimit defaultDataQualityRangeLimit in defaultDataQualityRangeLimits)
-                {
-                    DataQualityRangeLimit dataQualityRangeLimit = new DataQualityRangeLimit()
-                    {
-                        ChannelID = channel.ID,
-                        High = defaultDataQualityRangeLimit.High,
-                        Low = defaultDataQualityRangeLimit.Low,
-                        RangeInclusive = defaultDataQualityRangeLimit.RangeInclusive,
-                        PerUnit = defaultDataQualityRangeLimit.PerUnit,
-                        Enabled = true
-                    };
-
-                    dataQualityRangeLimitTable.AddNewRecord(dataQualityRangeLimit);
-                }
-
-                transactionScope.Complete();
-
+            // If limits exist for the given channel,
+            // range limit table has been successfully initialized
+            if (dataQualityRangeLimits.Count != 0)
                 return dataQualityRangeLimits;
-            }
-        }
 
-        #endregion
+            // Get the default range limits for the measurement type and characteristic of this channel
+            TableOperations<DefaultDataQualityRangeLimit> defaultDataQualityRangeLimitTable = new TableOperations<DefaultDataQualityRangeLimit>(connection);
+            int measurementTypeID = channel.MeasurementTypeID;
+            int measurementCharacteristicID = channel.MeasurementCharacteristicID;
 
-        #region [ Static ]
+            List<DefaultDataQualityRangeLimit> defaultDataQualityRangeLimits = defaultDataQualityRangeLimitTable
+                .QueryRecordsWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", measurementTypeID, measurementCharacteristicID)
+                .ToList();
 
-        // Static Methods
+            // If there are no default limits for the channel,
+            // then the range limit table has been successfully initialized
+            if (defaultDataQualityRangeLimits.Count == 0)
+                return dataQualityRangeLimits;
 
-        /// <summary>
-        /// Gets the default set of transaction options used for data operation transactions.
-        /// </summary>
-        private static TransactionOptions GetTransactionOptions()
-        {
-            return new TransactionOptions()
+            // Update the table to include this channel's default limits
+            foreach (DefaultDataQualityRangeLimit defaultDataQualityRangeLimit in defaultDataQualityRangeLimits)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                DataQualityRangeLimit dataQualityRangeLimit = new DataQualityRangeLimit()
+                {
+                    ChannelID = channel.ID,
+                    High = defaultDataQualityRangeLimit.High,
+                    Low = defaultDataQualityRangeLimit.Low,
+                    RangeInclusive = defaultDataQualityRangeLimit.RangeInclusive,
+                    PerUnit = defaultDataQualityRangeLimit.PerUnit,
+                    Enabled = true
+                };
+
+                dataQualityRangeLimitTable.AddNewRecord(dataQualityRangeLimit);
+            }
+
+            return dataQualityRangeLimits;
         }
 
         #endregion
