@@ -2884,6 +2884,7 @@ SummaryData AS
         SelectedSummary.PostfaultCurrent,
         SelectedSummary.ReactanceRatio,
         SelectedSummary.CurrentMagnitude AS FaultCurrent,
+		DisturbanceData.PerUnitMagnitude AS PerUnitMagnitude,
         SelectedSummary.Algorithm,
         SelectedSummary.Distance AS SingleEndedDistance,
         DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
@@ -2897,6 +2898,7 @@ SummaryData AS
     FROM
         SelectedSummary JOIN
         Event ON SelectedSummary.EventID = Event.ID JOIN
+		DisturbanceData ON DisturbanceData.EventID = SelectedSummary.EventID JOIN
         DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
         Meter ON Event.MeterID = Meter.ID JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
@@ -2994,6 +2996,7 @@ SELECT
                             PostfaultCurrent,
                             ReactanceRatio,
                             FaultCurrent,
+							PerUnitMagnitude,
                             Algorithm,
                             SingleEndedDistance,
                             DoubleEndedDistance,
@@ -3043,6 +3046,7 @@ SELECT
             SourceImpedance.XSrc AS [MeterLocation/XSrc],
             Line.AssetKey AS [Line/AssetKey],
             MeterLine.LineName AS [Line/Name],
+			Line.Description AS [Line/Description],
             FORMAT(Line.Length, '0.##########') AS [Line/Length],
             FORMAT(SQRT(LineImpedance.R1 * LineImpedance.R1 + LineImpedance.X1 * LineImpedance.X1), '0.##########') AS [Line/Z1],
             CASE LineImpedance.R1 WHEN 0 THEN '0' ELSE FORMAT(ATN2(LineImpedance.X1, LineImpedance.R1) * 180 / PI(), '0.##########') END AS [Line/A1],
