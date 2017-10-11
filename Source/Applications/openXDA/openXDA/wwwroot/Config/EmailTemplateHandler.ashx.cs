@@ -265,9 +265,10 @@ namespace openXDA
             using (DataContext dataContext = new DataContext())
             {
                 doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dataContext.Connection, element));
-                doc.TransformAll("structure", (element) => StructureLocationGenerator.GetStructureLocationInformation(dataContext.Connection, element));
+                doc.TransformAll("structure", (element) => StructureLocationGenerator.GetStructureLocationInformation(element));
                 doc.TransformAll("lightning", (element) => LightningGenerator.GetLightningInfo(dataContext.Connection, element));
-                doc.TransformAll("treeProbability", (element) => TreeProbabilityGenerator.GetTreeProbability(dataContext.Connection, element));
+                doc.TransformAll("treeProbability", (element) => TreeProbabilityGenerator.GetTreeProbability(element));
+                doc.TransformAll("faultType", (element) => FaultTypeGenerator.GetFaultType(element));
 
             }
 

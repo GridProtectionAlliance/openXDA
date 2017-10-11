@@ -1,10 +1,7 @@
 ﻿using GSF.Data;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using HtmlAgilityPack;
 using System.Net.Http;
@@ -21,7 +18,7 @@ namespace FaultData.DataWriters
             //string queryResultType = (string)element.Attribute("queryResultType") ?? "url,pdf";
             //string elementType = (string)element.Attribute("returnElementType") ?? "png";
 
-            returnElement.Value = "No lightning detected";
+            returnElement.Value = "No";
             return returnElement;
         }
 

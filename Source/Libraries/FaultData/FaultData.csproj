@@ -197,6 +197,7 @@
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <None Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EventEmailWriter.cs" />
+    <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />
     <None Include="DataWriters\XMLWriter.cs" />

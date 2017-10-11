@@ -458,7 +458,7 @@ namespace FaultData.DataWriters
 
                     htmlDocument.TransformAll("structure", (element, index) =>
                     {
-                        return StructureLocationGenerator.GetStructureLocationInformation(connection, element);
+                        return StructureLocationGenerator.GetStructureLocationInformation(element);
                     });
 
                     htmlDocument.TransformAll("lightning", (element, index) =>
@@ -468,7 +468,12 @@ namespace FaultData.DataWriters
 
                     htmlDocument.TransformAll("treeProbability", (element, index) =>
                     {
-                        return TreeProbabilityGenerator.GetTreeProbability(connection, element);
+                        return TreeProbabilityGenerator.GetTreeProbability(element);
+                    });
+
+                    htmlDocument.TransformAll("faultType", (element, index) =>
+                    {
+                        return FaultTypeGenerator.GetFaultType(element);
                     });
 
                     subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";

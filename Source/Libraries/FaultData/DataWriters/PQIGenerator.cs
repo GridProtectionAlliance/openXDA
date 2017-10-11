@@ -24,7 +24,6 @@
 using GSF.Data;
 using System;
 using System.Data;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace FaultData.DataWriters
@@ -45,40 +44,34 @@ namespace FaultData.DataWriters
 
         private static XElement GetCustomerEquipmentAffected(AdoDataConnection connection, XElement element)
         {
-            int eventID;
-
             string[] returnFields = ((string)element.Attribute("returnFields")).Split(',') ?? new string[0];
             string[] returnFieldNames = ((string)element.Attribute("returnFieldNames")).Split(',') ?? returnFields;
 
-            XElement returnTable = new XElement("table");
-            returnTable.SetAttributeValue("class", "left");
+            XElement returnTable = new XElement("span");
             string returnTableContent = "";
-
-            try
-            {
-                eventID = Convert.ToInt32((string)element.Attribute("eventID") ?? "-1");
-            }
-            catch
-            {
-                return element;
-            }
+            string eventsStrings = (string)element.Attribute("eventID") ?? "-1";
+            int[] events = Array.ConvertAll(eventsStrings.Split(','), Convert.ToInt32);
 
             DataTable table = new DataTable();
-            using (IDbCommand command = connection.Connection.CreateCommand())
+            foreach (int eventID in events)
             {
-                command.CommandText = "dbo.GetAllImpactedComponents";
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandTimeout = 600;
+                using (IDbCommand command = connection.Connection.CreateCommand())
+                {
+                    command.CommandText = "dbo.GetAllImpactedComponents";
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandTimeout = 600;
 
-                IDbDataParameter param1 = command.CreateParameter();
-                param1.ParameterName = "@eventID";
-                param1.Value = eventID;
+                    IDbDataParameter param1 = command.CreateParameter();
+                    param1.ParameterName = "@eventID";
+                    param1.Value = eventID;
 
-                command.Parameters.Add(param1);
+                    command.Parameters.Add(param1);
 
-                IDataReader rdr = command.ExecuteReader();
-                table.Load(rdr);
+                    IDataReader rdr = command.ExecuteReader();
+                    table.Load(rdr);
+                }
             }
+
 
             int returnFieldIndex;
             returnTableContent = "<tr>";

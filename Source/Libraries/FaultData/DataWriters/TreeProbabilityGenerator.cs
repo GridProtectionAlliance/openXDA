@@ -1,16 +1,11 @@
-﻿using GSF.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using System.Xml.Linq;
 
 namespace FaultData.DataWriters
 {
     public class TreeProbabilityGenerator
     {
-        public static XElement GetTreeProbability(AdoDataConnection connection, XElement element)
+        public static XElement GetTreeProbability(XElement element)
         {
             XElement returnElement = new XElement("span");
 
