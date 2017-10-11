@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -75,9 +76,79 @@ namespace FaultData.DataOperations
         {
             Log.Info("Executing operation to load trending summary data into the openHistorian...");
 
+            ImportedMeasurementsTable importedMeasurementsTable = null;
+
+            if ((m_historianSettings.SecurePassword?.Length ?? 0) > 0)
+            {
+                string url = m_historianSettings.URL;
+                string username = m_historianSettings.InstanceName;
+                string password = m_historianSettings.Password;
+                importedMeasurementsTable = new ImportedMeasurementsTable(url, username, password);
+            }
+
             using (Historian historian = new Historian(m_historianSettings.Server, m_historianSettings.InstanceName))
             {
                 Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
+
+                // Import measurement metadata into the historian metadata container
+                if ((object)importedMeasurementsTable != null)
+                {
+                    List<ImportedMeasurement> measurements = new List<ImportedMeasurement>();
+
+                    foreach (Channel channel in trendingDataSummaries.Keys)
+                    {
+                        int channelID = channel.ID;
+
+                        foreach (SeriesID seriesID in Enum.GetValues(typeof(SeriesID)))
+                        {
+                            long pointID = ToPointID(channelID, seriesID);
+                            ImportedMeasurement measurement = importedMeasurementsTable.FindByID(pointID).FirstOrDefault();
+
+                            if ((object)measurement == null)
+                            {
+                                Func<string, int, string> truncate = (str, len) => (str.Length > len) ? str.Substring(0, len) : str;
+
+                                Meter meter = meterDataSet.Meter;
+                                MeterLocation meterLocation = meter.MeterLocation;
+
+                                string measurementType = channel.MeasurementType.Name;
+                                string measurementCharacteristic = channel.MeasurementCharacteristic.Name;
+                                string phase = channel.Phase.Name;
+                                string seriesType = seriesID.ToString();
+
+                                string pointTag = $"{meter.AssetKey}:{measurementCharacteristic}";
+                                string alternateTag = channel.Name;
+                                string signalTypeAcronym = measurementCharacteristic.ToUpper();
+                                string signalReference = $"{meter.AssetKey}-{measurementCharacteristic}";
+
+                                measurement = new ImportedMeasurement()
+                                {
+                                    SignalID = Guid.NewGuid(),
+                                    PointID = pointID,
+                                    PointTag = truncate($"{meter.AssetKey}:{measurementCharacteristic}", 200),
+                                    AlternateTag = truncate(channel.Name, 200),
+                                    SignalTypeAcronym = truncate(measurementCharacteristic, 4).ToUpper(),
+                                    SignalReference = truncate($"{meter.AssetKey}-{measurementCharacteristic}", 200),
+                                    ProtocolAcronym = "TREND",
+                                    ProtocolType = "Trending",
+                                    Phase = phase[0],
+                                    Description = $"{seriesType} {measurementCharacteristic} ({phase} {measurementType})",
+                                    Enabled = true
+                                };
+
+                                if (meterLocation.Latitude != 0.0D && meterLocation.Longitude != 0.0D)
+                                {
+                                    measurement.Longitude = meterLocation.Longitude;
+                                    measurement.Latitude = meterLocation.Latitude;
+                                }
+
+                                measurements.Add(measurement);
+                            }
+                        }
+                    }
+
+                    importedMeasurementsTable.ImportMeasurements(measurements);
+                }
 
                 foreach (KeyValuePair<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> channelSummaries in trendingDataSummaries)
                 {
@@ -105,6 +176,12 @@ namespace FaultData.DataOperations
                 // to be processed
                 historian.Flush();
             }
+        }
+
+        private long ToPointID(int channelID, SeriesID seriesID)
+        {
+            ulong pointID = Historian.ToPointID(channelID, (int)seriesID);
+            return unchecked((long)pointID);
         }
 
         #endregion

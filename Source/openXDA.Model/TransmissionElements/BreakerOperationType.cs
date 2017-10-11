@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -42,31 +42,31 @@ namespace openXDA.Model
     {
         public static BreakerOperationType GetOrAdd(this TableOperations<BreakerOperationType> breakerOperationTypeTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            BreakerOperationType breakerOperationType = breakerOperationTypeTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)breakerOperationType == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                breakerOperationType = new BreakerOperationType();
+                breakerOperationType.Name = name;
+                breakerOperationType.Description = description ?? name;
 
-            BreakerOperationType breakerOperationType;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                breakerOperationType = breakerOperationTypeTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)breakerOperationType == null)
+                try
                 {
-                    breakerOperationType = new BreakerOperationType();
-                    breakerOperationType.Name = name;
-                    breakerOperationType.Description = description ?? name;
                     breakerOperationTypeTable.AddNewRecord(breakerOperationType);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    breakerOperationType.ID = breakerOperationTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return breakerOperationTypeTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                breakerOperationType.ID = breakerOperationTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return breakerOperationType;

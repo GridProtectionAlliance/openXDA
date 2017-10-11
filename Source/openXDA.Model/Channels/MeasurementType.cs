@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -42,31 +42,31 @@ namespace openXDA.Model
     {
         public static MeasurementType GetOrAdd(this TableOperations<MeasurementType> measurementTypeTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            MeasurementType measurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)measurementType == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                measurementType = new MeasurementType();
+                measurementType.Name = name;
+                measurementType.Description = description ?? name;
 
-            MeasurementType measurementType;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                measurementType = measurementTypeTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)measurementType == null)
+                try
                 {
-                    measurementType = new MeasurementType();
-                    measurementType.Name = name;
-                    measurementType.Description = description ?? name;
                     measurementTypeTable.AddNewRecord(measurementType);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    measurementType.ID = measurementTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return measurementTypeTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                measurementType.ID = measurementTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return measurementType;

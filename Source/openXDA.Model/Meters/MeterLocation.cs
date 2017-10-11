@@ -65,11 +65,11 @@ namespace openXDA.Model
         public string ShortName { get; set; }
 
         [Required]
-        public float Latitude { get; set; }
+        public double Latitude { get; set; }
 
         [StringLength(200)]
         [Required]
-        public float Longitude { get; set; }
+        public double Longitude { get; set; }
 
         public string Description { get; set; }
 

@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -42,31 +42,31 @@ namespace openXDA.Model
     {
         public static Phase GetOrAdd(this TableOperations<Phase> phaseTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            Phase phase = phaseTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)phase == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                phase = new Phase();
+                phase.Name = name;
+                phase.Description = description ?? name;
 
-            Phase phase;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                phase = phaseTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)phase == null)
+                try
                 {
-                    phase = new Phase();
-                    phase.Name = name;
-                    phase.Description = description ?? name;
                     phaseTable.AddNewRecord(phase);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    phase.ID = phaseTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return phaseTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                phase.ID = phaseTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return phase;

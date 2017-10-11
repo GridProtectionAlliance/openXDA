@@ -104,11 +104,11 @@ namespace openXDA.Adapters
 
                     if (type.TryGetAttribute(out thing))
                     {
-                        record = dataContext.Table(type).QueryRecordWhere( id + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                        record = dataContext.Table(type).QueryRecordsWhere( id + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
                     }
                     else
                     {
-                        record = dataContext.Table(type).QueryRecordWhere(id);
+                        record = dataContext.Table(type).QueryRecordsWhere(id);
                     }
                 }
                 catch (Exception ex)
@@ -160,7 +160,7 @@ namespace openXDA.Adapters
 
                         if (type.TryGetAttribute(out thing))
                         {
-                            record = dataContext.Table(type).QueryRecordWhere("ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                            record = dataContext.Table(type).QueryRecordsWhere("ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
                         }
                         else
                         {
@@ -172,7 +172,7 @@ namespace openXDA.Adapters
                     {
                         if (type.TryGetAttribute(out thing))
                         {
-                            record = dataContext.Table(type).QueryRecordWhere(idList + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                            record = dataContext.Table(type).QueryRecordsWhere(idList + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
                         }
                         else
                         {
@@ -326,7 +326,7 @@ namespace openXDA.Adapters
                     channel.PhaseID = phaseID;
                     channel.Name = record["Name"].Value<string>();
                     channel.SamplesPerHour = record["SamplesPerHour"].Value<float>();
-                    channel.PerUnitValue = record["PerUnitValue"].Value<float>();
+                    channel.PerUnitValue = record["PerUnitValue"].Value<double?>();
                     channel.HarmonicGroup = record["HarmonicGroup"].Value<int>();
                     channel.Description = record["Description"].Value<string>();
                     channel.Enabled = record["Enabled"].Value<bool>();

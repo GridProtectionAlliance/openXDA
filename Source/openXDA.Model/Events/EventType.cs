@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -40,31 +40,31 @@ namespace openXDA.Model
     {
         public static EventType GetOrAdd(this TableOperations<EventType> eventTypeTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            EventType eventType = eventTypeTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)eventType == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                eventType = new EventType();
+                eventType.Name = name;
+                eventType.Description = description ?? name;
 
-            EventType eventType;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                eventType = eventTypeTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)eventType == null)
+                try
                 {
-                    eventType = new EventType();
-                    eventType.Name = name;
-                    eventType.Description = description ?? name;
                     eventTypeTable.AddNewRecord(eventType);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    eventType.ID = eventTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return eventTypeTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                eventType.ID = eventTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return eventType;

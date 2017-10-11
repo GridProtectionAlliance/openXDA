@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System.ComponentModel.DataAnnotations;
-using System.Transactions;
+using System.Data.SqlClient;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -43,31 +43,31 @@ namespace openXDA.Model
     {
         public static SeriesType GetOrAdd(this TableOperations<SeriesType> seriesTypeTable, string name, string description = null)
         {
-            TransactionScopeOption required = TransactionScopeOption.Required;
+            SeriesType seriesType = seriesTypeTable.QueryRecordWhere("Name = {0}", name);
 
-            TransactionOptions transactionOptions = new TransactionOptions()
+            if ((object)seriesType == null)
             {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
+                seriesType = new SeriesType();
+                seriesType.Name = name;
+                seriesType.Description = description ?? name;
 
-            SeriesType seriesType;
-
-            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
-            {
-                seriesType = seriesTypeTable.QueryRecordWhere("Name = {0}", name);
-
-                if ((object)seriesType == null)
+                try
                 {
-                    seriesType = new SeriesType();
-                    seriesType.Name = name;
-                    seriesType.Description = description ?? name;
                     seriesTypeTable.AddNewRecord(seriesType);
+                }
+                catch (SqlException ex)
+                {
+                    // Ignore errors regarding unique key constraints
+                    // which can occur as a result of a race condition
+                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
 
-                    seriesType.ID = seriesTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    if (!isUniqueViolation)
+                        throw;
+
+                    return seriesTypeTable.QueryRecordWhere("Name = {0}", name);
                 }
 
-                transactionScope.Complete();
+                seriesType.ID = seriesTypeTable.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
             }
 
             return seriesType;

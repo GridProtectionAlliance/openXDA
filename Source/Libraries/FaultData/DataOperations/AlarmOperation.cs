@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Transactions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
@@ -215,56 +214,51 @@ namespace FaultData.DataOperations
 
         private List<AlarmRangeLimit> InitializeRangeLimitTable(AdoDataConnection connection, Channel channel)
         {
-            using (TransactionScope transactionScope = new TransactionScope(TransactionScopeOption.Required, GetTransactionOptions()))
-            {
-                // Fill the range limit table with range limits for the given channel
-                TableOperations<AlarmRangeLimit> alarmRangeLimitTable = new TableOperations<AlarmRangeLimit>(connection);
+            // Fill the range limit table with range limits for the given channel
+            TableOperations<AlarmRangeLimit> alarmRangeLimitTable = new TableOperations<AlarmRangeLimit>(connection);
 
-                List<AlarmRangeLimit> alarmRangeLimits = alarmRangeLimitTable
-                    .QueryRecordsWhere("ChannelID = {0}", channel.ID)
-                    .ToList();
+            List<AlarmRangeLimit> alarmRangeLimits = alarmRangeLimitTable
+                .QueryRecordsWhere("ChannelID = {0}", channel.ID)
+                .ToList();
 
-                // If limits exist for the given channel,
-                // range limit table has been successfully initialized
-                if (alarmRangeLimits.Count != 0)
-                    return alarmRangeLimits;
-
-                // Get the default range limits for the measurement type and characteristic of this channel
-                TableOperations<DefaultAlarmRangeLimit> defaultAlarmRangeLimitTable = new TableOperations<DefaultAlarmRangeLimit>(connection);
-                int measurementTypeID = channel.MeasurementTypeID;
-                int measurementCharacteristicID = channel.MeasurementCharacteristicID;
-
-                List<DefaultAlarmRangeLimit> defaultAlarmRangeLimits = defaultAlarmRangeLimitTable
-                    .QueryRecordsWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", measurementTypeID, measurementCharacteristicID)
-                    .ToList();
-
-                // If there are no default limits for the channel,
-                // then the range limit table has been successfully initialized
-                if (defaultAlarmRangeLimits.Count == 0)
-                    return alarmRangeLimits;
-
-                foreach (DefaultAlarmRangeLimit defaultAlarmRangeLimit in defaultAlarmRangeLimits)
-                {
-                    AlarmRangeLimit alarmRangeLimit = new AlarmRangeLimit()
-                    {
-                        ChannelID = channel.ID,
-                        AlarmTypeID = defaultAlarmRangeLimit.AlarmTypeID,
-                        Severity = defaultAlarmRangeLimit.Severity,
-                        High = defaultAlarmRangeLimit.High,
-                        Low = defaultAlarmRangeLimit.Low,
-                        RangeInclusive = defaultAlarmRangeLimit.RangeInclusive,
-                        PerUnit = defaultAlarmRangeLimit.PerUnit,
-                        IsDefault = true,
-                        Enabled = true
-                    };
-
-                    alarmRangeLimitTable.AddNewRecord(alarmRangeLimit);
-                }
-
-                transactionScope.Complete();
-
+            // If limits exist for the given channel,
+            // range limit table has been successfully initialized
+            if (alarmRangeLimits.Count != 0)
                 return alarmRangeLimits;
+
+            // Get the default range limits for the measurement type and characteristic of this channel
+            TableOperations<DefaultAlarmRangeLimit> defaultAlarmRangeLimitTable = new TableOperations<DefaultAlarmRangeLimit>(connection);
+            int measurementTypeID = channel.MeasurementTypeID;
+            int measurementCharacteristicID = channel.MeasurementCharacteristicID;
+
+            List<DefaultAlarmRangeLimit> defaultAlarmRangeLimits = defaultAlarmRangeLimitTable
+                .QueryRecordsWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1}", measurementTypeID, measurementCharacteristicID)
+                .ToList();
+
+            // If there are no default limits for the channel,
+            // then the range limit table has been successfully initialized
+            if (defaultAlarmRangeLimits.Count == 0)
+                return alarmRangeLimits;
+
+            foreach (DefaultAlarmRangeLimit defaultAlarmRangeLimit in defaultAlarmRangeLimits)
+            {
+                AlarmRangeLimit alarmRangeLimit = new AlarmRangeLimit()
+                {
+                    ChannelID = channel.ID,
+                    AlarmTypeID = defaultAlarmRangeLimit.AlarmTypeID,
+                    Severity = defaultAlarmRangeLimit.Severity,
+                    High = defaultAlarmRangeLimit.High,
+                    Low = defaultAlarmRangeLimit.Low,
+                    RangeInclusive = defaultAlarmRangeLimit.RangeInclusive,
+                    PerUnit = defaultAlarmRangeLimit.PerUnit,
+                    IsDefault = true,
+                    Enabled = true
+                };
+
+                alarmRangeLimitTable.AddNewRecord(alarmRangeLimit);
             }
+
+            return alarmRangeLimits;
         }
 
         private bool CheckAlarm(Channel channel, TrendingDataPoint trendingPoint, AlarmRangeLimit alarmRangeLimit)
@@ -317,24 +311,6 @@ namespace FaultData.DataOperations
                 Date = date,
                 AlarmPoints = alarmPoints
         };
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-
-        /// <summary>
-        /// Gets the default set of transaction options used for data operation transactions.
-        /// </summary>
-        private static TransactionOptions GetTransactionOptions()
-        {
-            return new TransactionOptions()
-            {
-                IsolationLevel = IsolationLevel.ReadCommitted,
-                Timeout = TransactionManager.MaximumTimeout
-            };
         }
 
         #endregion
