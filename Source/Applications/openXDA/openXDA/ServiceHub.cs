@@ -21,8 +21,6 @@
 //
 //******************************************************************************************************
 
-
-
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR;
@@ -86,7 +84,7 @@ namespace openXDA
         /// <param name="command">Command string.</param>
         public void SendCommand(string command)
         {
-            m_serviceConnection.SendCommand(Context.ConnectionId, command);
+            m_serviceConnection.SendCommand(Context.ConnectionId, Context.User, command);
         }
 
         #endregion
