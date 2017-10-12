@@ -683,8 +683,9 @@ namespace FaultData.DataResources
         private int FindFaultInception(DataSeries waveForm, int cycleIndex)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm, m_systemFrequency);
-            int prefaultIndex = Math.Max(0, cycleIndex - samplesPerCycle);
+            int startIndex = cycleIndex;
             int endIndex = cycleIndex + samplesPerCycle - 1;
+            int prefaultIndex = Math.Max(0, startIndex - samplesPerCycle);
 
             double largestPrefaultPeak;
             double largestFaultCyclePeak;
@@ -698,7 +699,7 @@ namespace FaultData.DataResources
 
             // Find the largest prefault peak as the absolute
             // peak of the cycle before the first faulted cycle
-            for (int i = prefaultIndex; i < cycleIndex; i++)
+            for (int i = prefaultIndex; i < startIndex; i++)
             {
                 value = Math.Abs(waveForm[i].Value);
 
@@ -707,7 +708,7 @@ namespace FaultData.DataResources
             }
 
             // Find the largest peak of the first faulted cycle
-            for (int i = cycleIndex; i <= endIndex; i++)
+            for (int i = startIndex; i <= endIndex; i++)
             {
                 value = Math.Abs(waveForm[i].Value);
 
@@ -717,7 +718,7 @@ namespace FaultData.DataResources
 
             // Find the first point where the value exceeds a point 25%
             // of the way from the prefault peak to the fault peak
-            for (int i = cycleIndex; i < endIndex; i++)
+            for (int i = startIndex; i <= endIndex; i++)
             {
                 value = Math.Abs(waveForm[i].Value);
 
@@ -728,7 +729,7 @@ namespace FaultData.DataResources
             // Starting from the point found in the previous loop and
             // scanning backwards, find either the first zero crossing
             // or the first point at which the slope changes drastically
-            for (int i = endIndex; i >= cycleIndex; i--)
+            for (int i = endIndex; i >= startIndex; i--)
             {
                 if (i - 1 < 0)
                     continue;

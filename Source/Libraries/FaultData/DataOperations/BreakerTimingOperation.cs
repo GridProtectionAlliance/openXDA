@@ -298,8 +298,9 @@ namespace FaultData.DataOperations
             private int FindIndexCleared(DataSeries waveform, int cycleIndex)
             {
                 int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform, m_systemFrequency);
-                int startIndex = Math.Max(0, cycleIndex - samplesPerCycle);
-                int endIndex = cycleIndex;
+                int startIndex = cycleIndex;
+                int endIndex = cycleIndex + samplesPerCycle - 1;
+                int preclearIndex = startIndex - 1;
                 int postclearIndex = Math.Min(endIndex + samplesPerCycle, waveform.DataPoints.Count - 1);
 
                 double largestPostclearPeak;
@@ -326,14 +327,22 @@ namespace FaultData.DataOperations
                         largestPostclearPeak = value;
                 }
 
-                // Find the largest peak of the last cycle before the breaker opened
-                for (int i = startIndex; i <= endIndex; i++)
+                // Extend backwards until we find the first point that falls
+                // below a moving threshold that is 25% of the way between
+                // the pre-clear peak and the post-clear peak
+                do
                 {
+                    int i = preclearIndex--;
+
+                    if (i < 0)
+                        break;
+
                     value = Math.Abs(waveform[i].Value);
 
                     if (value > largestPreclearPeak)
                         largestPreclearPeak = value;
                 }
+                while (value > (largestPostclearPeak * 0.75 + largestPreclearPeak * 0.25));
 
                 // Scanning backwards, find the first point where the value exceeds
                 // a point 25% of the way from the postclear peak to the preclear peak
