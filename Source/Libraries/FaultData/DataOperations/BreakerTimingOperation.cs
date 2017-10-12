@@ -299,7 +299,7 @@ namespace FaultData.DataOperations
             {
                 int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform, m_systemFrequency);
                 int startIndex = Math.Max(0, cycleIndex - samplesPerCycle);
-                int endIndex = startIndex;
+                int endIndex = cycleIndex;
                 int postclearIndex = Math.Min(endIndex + samplesPerCycle, waveform.DataPoints.Count - 1);
 
                 double largestPostclearPeak;
