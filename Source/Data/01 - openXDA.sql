@@ -2884,7 +2884,6 @@ SummaryData AS
         SelectedSummary.PostfaultCurrent,
         SelectedSummary.ReactanceRatio,
         SelectedSummary.CurrentMagnitude AS FaultCurrent,
-		DisturbanceData.PerUnitMagnitude AS PerUnitMagnitude,
         SelectedSummary.Algorithm,
         SelectedSummary.Distance AS SingleEndedDistance,
         DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
@@ -2898,7 +2897,6 @@ SummaryData AS
     FROM
         SelectedSummary JOIN
         Event ON SelectedSummary.EventID = Event.ID JOIN
-		DisturbanceData ON DisturbanceData.EventID = SelectedSummary.EventID JOIN
         DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
         Meter ON Event.MeterID = Meter.ID JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
@@ -2996,7 +2994,6 @@ SELECT
                             PostfaultCurrent,
                             ReactanceRatio,
                             FaultCurrent,
-							PerUnitMagnitude,
                             Algorithm,
                             SingleEndedDistance,
                             DoubleEndedDistance,
