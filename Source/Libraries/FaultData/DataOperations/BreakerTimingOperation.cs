@@ -513,9 +513,22 @@ namespace FaultData.DataOperations
             {
                 double breakerSpeed = connection.ExecuteScalar(double.NaN, "SELECT Speed FROM Breaker WHERE AssetKey = {0}", breakerNumber.TrimStart('0'));
 
+                Func<DataSeries, bool> digitalFilter = dataSeries =>
+                {
+                    int channelID = dataSeries.SeriesInfo.ChannelID;
+
+                    RecordRestriction recordRestriction =
+                        new RecordRestriction("ChannelID = {0}", channelID) &
+                        new RecordRestriction("BreakerNumber = {0}", breakerNumber);
+
+                    int breakerChannelCount = breakerChannelTable.QueryRecordCount(recordRestriction);
+
+                    return (breakerChannelCount > 0);
+                };
+
                 List<DataSeries> breakerDigitals = dataGroup.DataSeries
                     .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name == "Digital")
-                    .Where(dataSeries => breakerChannelTable.QueryRecordCountWhere("BreakerNumber = {0}", breakerNumber) > 0)
+                    .Where(digitalFilter)
                     .ToList();
 
                 List<DataSeries> tripCoilEnergizedChannels = breakerDigitals
