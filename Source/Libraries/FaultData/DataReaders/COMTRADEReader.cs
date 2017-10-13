@@ -115,6 +115,7 @@ namespace FaultData.DataReaders
                 m_parser.Schema = new Schema(schemaFileName);
                 m_parser.FileName = filePath;
                 m_parser.InferTimeFromSampleRates = true;
+                m_parser.AdjustToUTC = false;
                 m_parser.OpenFiles();
             }
             catch (IOException)

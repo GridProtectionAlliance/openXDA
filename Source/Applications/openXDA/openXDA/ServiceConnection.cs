@@ -23,9 +23,7 @@
 
 using System;
 using System.Security.Principal;
-using System.Threading;
 using GSF;
-using GSF.Identity;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 
@@ -56,15 +54,14 @@ namespace openXDA
         /// Sends a service command.
         /// </summary>
         /// <param name="connectionID">Client connection ID.</param>
+        /// <param name="principal">The principal used for role-based security.</param>
         /// <param name="command">Command string.</param>
-        public void SendCommand(string connectionID, string command)
+        public void SendCommand(string connectionID, IPrincipal principal, string command)
         {
             Guid clientID;
 
-            Thread.CurrentPrincipal = new GenericPrincipal(new GenericIdentity(UserInfo.CurrentUserID), new[] { "Administrator" });
-
             if (Guid.TryParse(connectionID, out clientID))
-                Program.Host.SendRequest(clientID, command);
+                Program.Host.SendRequest(clientID, principal, command);
         }
 
         public void Disconnect(string connectionID)

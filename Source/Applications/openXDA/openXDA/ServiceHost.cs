@@ -73,6 +73,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -84,6 +85,7 @@ using GSF.Data;
 using GSF.Identity;
 using GSF.IO;
 using GSF.Reflection;
+using GSF.Security;
 using GSF.Security.Model;
 using GSF.ServiceProcess;
 using GSF.Web.Hosting;
@@ -930,20 +932,35 @@ namespace openXDA
         /// Sends a command request to the service.
         /// </summary>
         /// <param name="clientID">Client ID of sender.</param>
+        /// <param name="principal">The principal used for role-based security.</param>
         /// <param name="userInput">Request string.</param>
-        public void SendRequest(Guid clientID, string userInput)
+        public void SendRequest(Guid clientID, IPrincipal principal, string userInput)
         {
             ClientRequest request = ClientRequest.Parse(userInput);
 
-            if ((object)request != null)
-            {
-                ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
+            if ((object)request == null)
+                return;
 
-                if ((object)requestHandler != null)
-                    requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo() { ClientID = clientID }, request));
-                else
-                    DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
+            if (SecurityProviderUtility.IsResourceSecurable(request.Command) && !SecurityProviderUtility.IsResourceAccessible(request.Command, principal))
+            {
+                m_serviceHelper.UpdateStatus(clientID, UpdateType.Alarm, $"Access to \"{request.Command}\" is denied.\r\n\r\n");
+                return;
             }
+
+            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
+
+            if ((object)requestHandler == null)
+            {
+                m_serviceHelper.UpdateStatus(clientID, UpdateType.Alarm, $"Command \"{request.Command}\" is not supported.\r\n\r\n");
+                return;
+            }
+
+            ClientInfo clientInfo = new ClientInfo();
+            clientInfo.ClientID = clientID;
+            clientInfo.SetClientUser(principal);
+
+            ClientRequestInfo requestInfo = new ClientRequestInfo(clientInfo, request);
+            requestHandler.HandlerMethod(requestInfo);
         }
 
         /// <summary>

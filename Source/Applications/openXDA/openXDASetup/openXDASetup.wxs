@@ -202,6 +202,8 @@
       <ProgressText Action="DefaultChannelTypes.sql">Defining default channel types...</ProgressText>
       <ProgressText Action="DefaultTrendingAlarms.sql">Defining default trending alarms...</ProgressText>
       <ProgressText Action="DefaultContours.sql">Adding default contour color scales...</ProgressText>
+
+      <ProgressText Action="UpgradeValidationAction">Executing upgrade validation process...</ProgressText>
     </UI>
 
     <InstallExecuteSequence>
