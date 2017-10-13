@@ -558,12 +558,12 @@ namespace FaultData.DataWriters
         {
             const int DefaultSMTPPort = 25;
 
+            if (string.IsNullOrEmpty(s_smtpServer))
+                return;
+
             string[] smtpServerParts = s_smtpServer.Split(':');
             string host = smtpServerParts[0];
             int port;
-
-            if (string.IsNullOrEmpty(s_smtpServer))
-                return;
 
             if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
                 port = DefaultSMTPPort;
