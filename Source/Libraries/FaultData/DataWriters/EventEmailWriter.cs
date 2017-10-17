@@ -31,7 +31,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Security;
-using System.Threading;
 using System.Xml.Linq;
 using FaultData.Configuration;
 using FaultData.DataOperations;
@@ -45,7 +44,6 @@ using GSF.Threading;
 using GSF.Xml;
 using log4net;
 using openXDA.Model;
-using Supremes;
 
 namespace FaultData.DataWriters
 {
