@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Data;
+using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -39,16 +41,21 @@ namespace openXDA.Model
 
         public string BreakerNumber { get; set; }
 
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime TripCoilEnergized { get; set; }
 
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime StatusBitSet { get; set; }
 
         public bool StatusBitChatter { get; set; }
 
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime APhaseCleared { get; set; }
 
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime BPhaseCleared { get; set; }
 
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime CPhaseCleared { get; set; }
 
         public double BreakerTiming { get; set; }
