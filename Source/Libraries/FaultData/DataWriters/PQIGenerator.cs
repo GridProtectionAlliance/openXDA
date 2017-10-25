@@ -72,7 +72,9 @@ namespace FaultData.DataWriters
                 }
             }
 
+            table = table.DefaultView.ToTable(true, returnFields);
 
+            // Create header row
             int returnFieldIndex;
             returnTableContent = "<tr>";
             foreach (DataColumn column in table.Columns)
@@ -83,6 +85,7 @@ namespace FaultData.DataWriters
             }
             returnTableContent += "</tr>";
 
+            // Create body rows
             foreach (DataRow row in table.Rows)
             {
                 returnTableContent += "<tr>";

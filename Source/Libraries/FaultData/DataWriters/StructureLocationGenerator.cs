@@ -115,6 +115,7 @@ namespace FaultData.DataWriters
             try
             {
                 string url = element.Value.Trim();
+                Log.Debug(url);
                 string userName = (string)element.Attribute("userName");
                 string password = (string)element.Attribute("password");
                 string domain = (string)element.Attribute("domain");
@@ -154,7 +155,7 @@ namespace FaultData.DataWriters
             }
             catch(Exception e)
             {
-                Log.Debug(e.Message);
+                Log.Debug(e.Message + "\nStackTrace\n" + e.StackTrace);
                 return element;
             }
 
