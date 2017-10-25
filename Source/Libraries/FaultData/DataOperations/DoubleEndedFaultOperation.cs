@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using FaultAlgorithms;
 using FaultData.Configuration;
@@ -376,11 +375,11 @@ namespace FaultData.DataOperations
                                 processedMappingNodes.Add(mapping.Left);
                                 processedMappingNodes.Add(mapping.Right);
                             }
-                            catch (SqlException ex)
+                            catch (Exception ex)
                             {
                                 // Ignore errors regarding unique key constraints
                                 // which can occur as a result of a race condition
-                                bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                                bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                                 if (!isUniqueViolation)
                                     throw;

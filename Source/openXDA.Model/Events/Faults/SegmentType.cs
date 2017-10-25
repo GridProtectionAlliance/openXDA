@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using System.Data.SqlClient;
+using System;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -52,11 +52,11 @@ namespace openXDA.Model
                 {
                     segmentTypeTable.AddNewRecord(segmentType);
                 }
-                catch (SqlException ex)
+                catch (Exception ex)
                 {
                     // Ignore errors regarding unique key constraints
                     // which can occur as a result of a race condition
-                    bool isUniqueViolation = (ex.Number == 2601) || (ex.Number == 2627);
+                    bool isUniqueViolation = ExceptionHandler.IsUniqueViolation(ex);
 
                     if (!isUniqueViolation)
                         throw;
