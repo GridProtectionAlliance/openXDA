@@ -3377,21 +3377,6 @@ AS BEGIN
             EmailCategory.Name = 'Event'
     WHERE
         (
-            NOT EXISTS
-            (
-                SELECT *
-                FROM FaultEmailCriterion
-                WHERE FaultEmailCriterion.EmailGroupID = EmailGroup.ID
-            )
-            AND NOT EXISTS
-            (
-                SELECT *
-                FROM DisturbanceEmailCriterion
-                WHERE DisturbanceEmailCriterion.EmailGroupID = EmailGroup.ID
-            )
-        )
-        OR
-        (
             EventType.Name = 'Fault' AND
             EXISTS
             (
