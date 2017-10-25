@@ -405,7 +405,6 @@
 
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
       <ComponentRef Id="AjaxMin" />
-      <ComponentRef Id="DCSoup" />
       <ComponentRef Id="MathNet.Numerics" />
       <ComponentRef Id="Microsoft.AspNet.Cors" />
       <ComponentRef Id="Microsoft.AspNet.SignalR.Core" />
@@ -570,9 +569,6 @@
       <!-- Self Hosting SignalR, WebAPI and Razor Engine Components (from NuGet) -->
       <Component Id="AjaxMin">
         <File Id="AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)Dependencies\NuGet\AjaxMin.5.14.5506.26202\lib\net40\AjaxMin.dll" />
-      </Component>
-      <Component Id="DCSoup">
-        <File Id="Supremes.dll" Name="Supremes.dll" Source="$(var.SolutionDir)Dependencies\NuGet\dcsoup.0.2.0\lib\net45\Supremes.dll" />
       </Component>
       <Component Id="MathNet.Numerics">
         <File Id="MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\MathNet.Numerics.3.17.0\lib\net40\MathNet.Numerics.dll" />
