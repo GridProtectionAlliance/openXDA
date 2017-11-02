@@ -1502,13 +1502,34 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(ChannelsWithNormalLimits), RecordOperation.UpdateRecord)]
         public void UpdateChannelsWithNormalLimits(ChannelsWithNormalLimits record)
         {
-            DataContext.Table<ChannelsWithNormalLimits>().UpdateRecord(record);
+
+            AlarmRangeLimit alarm = DataContext.Table<AlarmRangeLimit>().QueryRecordWhere("ChannelID = {0}", record.ID);
+
+            alarm.High = record.High;
+            alarm.Low = record.Low;
+            alarm.RangeInclusive = record.RangeInclusive;
+            alarm.PerUnit = record.PerUnit;
+            alarm.IsDefault = record.IsDefault;
+            alarm.Enabled = record.Enabled;
+
+            DataContext.Table<AlarmRangeLimit>().UpdateRecord(alarm);
+
         }
 
         [AuthorizeHubRole("Administrator, Editor")]
         public void AddNewOrUpdateChannelsWithNormalLimits(ChannelsWithNormalLimits record)
         {
-            DataContext.Table<ChannelsWithNormalLimits>().AddNewOrUpdateRecord(record);
+            AlarmRangeLimit alarm = DataContext.Table<AlarmRangeLimit>().QueryRecordWhere("ChannelID = {0}", record.ID);
+
+            alarm.High = record.High;
+            alarm.Low = record.Low;
+            alarm.RangeInclusive = record.RangeInclusive;
+            alarm.PerUnit = record.PerUnit;
+            alarm.IsDefault = record.IsDefault;
+            alarm.Enabled = record.Enabled;
+
+            DataContext.Table<AlarmRangeLimit>().AddNewOrUpdateRecord(alarm);
+
         }
 
         public void ResetAlarmToDefault2(int id)

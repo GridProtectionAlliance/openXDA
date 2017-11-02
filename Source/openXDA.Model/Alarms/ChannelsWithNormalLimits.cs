@@ -42,10 +42,14 @@ namespace openXDA.Model
         public string Phase { get; set; }
         public double High { get; set; }
         public double Low { get; set; }
+        public bool RangeInclusive { get; set; }
+        public bool PerUnit { get; set; }
+        public bool Enabled { get; set; }
+        public bool IsDefault { get; set; }
 
         public string ToCSV()
         {
-            string csv = $"{ID},{Name},{MeasurementCharacteristic},{MeasurementType},{MeterID},{HarmonicGroup},{Phase}, {High}, {Low}";
+            string csv = $"{ID},{Name},{MeasurementCharacteristic},{MeasurementType},{MeterID},{HarmonicGroup},{Phase},{High},{Low},{RangeInclusive},{PerUnit},{Enabled},{IsDefault}";
             return csv;
         }
     }
