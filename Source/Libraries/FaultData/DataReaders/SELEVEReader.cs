@@ -32,6 +32,7 @@ using GSF;
 using GSF.SELEventParser;
 using GSF.Units;
 using openXDA.Model;
+using System.Text.RegularExpressions;
 
 namespace FaultData.DataReaders
 {
@@ -74,6 +75,13 @@ namespace FaultData.DataReaders
         }
 
         [Setting]
+        public double MaxFileDuration
+        {
+            get;
+            set;
+        }
+
+        [Setting]
         public double SystemFrequency
         {
             get;
@@ -94,7 +102,7 @@ namespace FaultData.DataReaders
         {
             try
             {
-                m_eventFile = EventFile.Parse(filePath);
+                m_eventFile = EventFile.Parse(filePath, SystemFrequency, MaxFileDuration);
                 return true;
             }
             catch (IOException)
@@ -110,9 +118,8 @@ namespace FaultData.DataReaders
         /// <returns>List of meter data sets, one per meter.</returns>
         public void Parse(string filePath)
         {
-
             if ((object)m_eventFile == null)
-                m_eventFile = EventFile.Parse(filePath, SystemFrequency);
+                m_eventFile = EventFile.Parse(filePath, SystemFrequency, MaxFileDuration);
 
             if (!m_eventFile.EventReports.Any() && !m_eventFile.CommaSeparatedEventReports.Any())
                 return;
@@ -255,6 +262,8 @@ namespace FaultData.DataReaders
                     m_meterDataSet.Digitals.Add(dataSeries);
                 }
             }
+
+            m_meterDataSet.Meter = meter;
         }
 
         private Channel MakeParsedAnalog(EventReport report, int channelIndex)
@@ -368,6 +377,8 @@ namespace FaultData.DataReaders
 
         private Channel MakeParsedAnalog(CommaSeparatedEventReport report, int channelIndex)
         {
+            const string ChannelWithUnitsPattern = @"(?<Name>\S+)\s*\((?<Units>\S+)\)";
+
             Channel<double> analogChannel = report.AnalogSection.AnalogChannels[channelIndex];
 
             Series series = new Series();
@@ -384,7 +395,10 @@ namespace FaultData.DataReaders
             channel.Name = analogChannel.Name;
             channel.HarmonicGroup = 0;
 
-            switch (analogChannel.Name)
+            Match regexMatch = Regex.Match(analogChannel.Name, ChannelWithUnitsPattern);
+            string channelName = regexMatch.Success ? regexMatch.Groups["Name"].Value : analogChannel.Name;
+
+            switch (channelName)
             {
                 case "VA": case "VB": case "VC":
                 case "VS": case "VDC": case "Freq":
@@ -401,7 +415,7 @@ namespace FaultData.DataReaders
                     break;
             }
 
-            switch (analogChannel.Name)
+            switch (channelName)
             {
                 case "VA": case "IA": case "Freq":
                     channel.Phase.Name = "AN";
