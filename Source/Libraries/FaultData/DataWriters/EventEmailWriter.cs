@@ -449,7 +449,7 @@ namespace FaultData.DataWriters
                         return new XElement("img", new XAttribute("src", $"cid:{cid}"));
                     });
 
-                    htmlDocument.TransformAll("equipmentAndCustomersAffected", (element, index) =>
+                    htmlDocument.TransformAll("pqi", (element, index) =>
                     {
                         return PQIGenerator.GetPqiInformation(connection, element);
                     });
