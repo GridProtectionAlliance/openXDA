@@ -95,6 +95,7 @@ using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
 using FileShare = openXDA.Configuration.FileShare;
+using GSF.IO.Checksums;
 
 namespace openXDA
 {
@@ -726,7 +727,7 @@ namespace openXDA
         /// </summary>
         /// <param name="filePath">The path to the file to be processed.</param>
         /// <param name="priority">The priority at which to process the file.</param>
-        public void ProcessFile(string filePath, int priority)
+        public void ProcessFile(string filePath, int priority, int crc)
         {
             string connectionString = LoadSystemSettings();
             SystemSettings systemSettings = new SystemSettings(connectionString);
@@ -740,6 +741,7 @@ namespace openXDA
 
                 FileWrapper fileWrapper = new FileWrapper(filePath);
                 FileGroup fileGroup = new FileGroup();
+                fileGroup.FileHash = crc;
 
                 Action<DataProcessorState> processFileCallback = state =>
                 {
@@ -1067,7 +1069,32 @@ namespace openXDA
                     }
                 }
 
-                ProcessFile(filePath, priority);
+                Crc32 crc32 = new Crc32();
+                Byte[] buffer = File.ReadAllBytes(filePath);
+                crc32.Update(buffer);
+                int crc = (int)crc32.Value;
+#if !DEBUG
+                using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+                {
+                    TableOperations<FileGroup> to = new TableOperations<FileGroup>(connection);
+                    int fileGroupCount = to.QueryRecordCountWhere("FileHash = {0}", crc);
+                    if (fileGroupCount != 0)
+                    {
+                        TableOperations<FileBlob> to2 = new TableOperations<FileBlob>(connection);
+                        int fileBlobCount = to2.QueryRecordCountWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID IN (SELECT ID FROM FileGroup WHERE FileHash = {0})) AND Blob = {1}", crc, buffer);
+                        if (fileBlobCount != 0) {
+                            // Explicitly use Log.Debug() so that the message does not appear on the remote console,
+                            // but include a FileSkippedException so that the message gets routed to the skipped files log
+                            FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
+                            Log.Warn(ex.Message, ex);
+                            return;
+
+                        }
+                    }
+                }
+#endif
+
+                ProcessFile(filePath, priority, crc);
             }
             catch (FileSkippedException)
             {
@@ -1430,9 +1457,9 @@ namespace openXDA
             return SystemSettings.ToConnectionString(settings);
         }
 
-        #endregion
+#endregion
 
-        #region [ Static ]
+#region [ Static ]
 
         // Static Fields
         private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
@@ -1718,6 +1745,6 @@ namespace openXDA
             Log.Error(ex.Message, ex);
         }
 
-        #endregion
+#endregion
     }
 }

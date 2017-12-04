@@ -250,7 +250,8 @@ namespace openXDA.DataPusher
                         ProcessingStartTime = fileGroup.ProcessingStartTime,
                         DataEndTime = fileGroup.DataEndTime,
                         DataStartTime = fileGroup.DataStartTime,
-                        Error = fileGroup.Error
+                        Error = fileGroup.Error,
+                        FileHash = fileGroup.FileHash
                     };
                     int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, "FileGroup", JObject.FromObject(fg));
                     fileGroupLocalToRemote = new FileGroupLocalToRemote()
@@ -711,7 +712,8 @@ namespace openXDA.DataPusher
                     DataEndTime = local.DataEndTime,
                     ProcessingStartTime = local.ProcessingStartTime,
                     ProcessingEndTime = local.ProcessingEndTime,
-                    Error = local.Error
+                    Error = local.Error,
+                    FileHash = local.FileHash
                 };
                 id = WebAPIHub.CreateRecord(address, "FileGroup", JObject.FromObject(record));
             }

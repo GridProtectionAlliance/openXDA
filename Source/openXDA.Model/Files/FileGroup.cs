@@ -34,6 +34,8 @@ namespace openXDA.Model
 
         public int Error { get; set; }
 
+        public int FileHash { get; set; }
+
         [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
         public DateTime DataStartTime { get; set; }
 

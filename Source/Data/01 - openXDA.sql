@@ -85,7 +85,8 @@ CREATE TABLE FileGroup
     DataEndTime DATETIME2 NOT NULL,
     ProcessingStartTime DATETIME2 NOT NULL,
     ProcessingEndTime DATETIME2 NOT NULL,
-    Error INT NOT NULL DEFAULT 0
+    Error INT NOT NULL DEFAULT 0,
+	FileHash INT
 )
 GO
 
