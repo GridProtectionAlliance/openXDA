@@ -117,6 +117,7 @@ namespace FaultData.DataOperations
 
                 for (int i = 0; i < dataGroups.Count; i++)
                 {
+
                     DataGroup dataGroup = dataGroups[i];
                     EventClassification eventClassification;
 
@@ -127,6 +128,9 @@ namespace FaultData.DataOperations
                         continue;
 
                     if (!eventClassifications.TryGetValue(dataGroup, out eventClassification))
+                        continue;
+
+                    if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", dataGroup.StartTime, dataGroup.EndTime, dataGroup.Samples, meterDataSet.Meter.ID, dataGroup.Line.ID).Any())
                         continue;
                         
                     EventType eventType = eventTypeTable.GetOrAdd(eventClassification.ToString());
