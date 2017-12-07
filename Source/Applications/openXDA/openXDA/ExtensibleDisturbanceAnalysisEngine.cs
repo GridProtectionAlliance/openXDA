@@ -1457,9 +1457,9 @@ namespace openXDA
             return SystemSettings.ToConnectionString(settings);
         }
 
-#endregion
+        #endregion
 
-#region [ Static ]
+        #region [ Static ]
 
         // Static Fields
         private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
@@ -1745,6 +1745,6 @@ namespace openXDA
             Log.Error(ex.Message, ex);
         }
 
-#endregion
+        #endregion
     }
 }
