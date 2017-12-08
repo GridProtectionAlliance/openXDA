@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <Product Id="{A1314CC0-2D7E-44A1-AC32-5E475C68A9AB}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
+  <Product Id="{279D91B1-463F-4514-8497-69DF7C89EAC3}" Name="openXDA" Language="1033" Version="!(bind.FileVersion.openXDA.exe)" Manufacturer="Grid Protection Alliance" UpgradeCode="{EDB9D2AA-F21E-475F-9782-E2C95BF072C0}">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
