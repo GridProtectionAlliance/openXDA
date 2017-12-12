@@ -48,7 +48,6 @@ namespace openXDA.Configuration
         private string m_resultsPath;
         private string m_filePattern;
 
-        private double m_waitPeriod;
         private double m_timeTolerance;
         private string m_defaultMeterTimeZone;
         private string m_xdaTimeZone;
@@ -67,9 +66,9 @@ namespace openXDA.Configuration
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
         private int m_processingThreadCount;
+        private Guid m_fileProcessorID;
         private FileEnumerationStrategy m_fileWatcherEnumerationStrategy;
         private bool m_fileWatcherOrderedEnumeration;
-        private int m_maxQueuedFileCount;
         private int m_fileWatcherMaxFragmentation;
         private int m_fileWatcherInternalThreadCount;
         private int m_fileWatcherBufferSize;
@@ -498,6 +497,25 @@ namespace openXDA.Configuration
         }
 
         /// <summary>
+        /// Gets or sets the ID of the file processor which determines
+        /// the name of the file backed lookup table.
+        /// </summary>
+        [Setting]
+        [SettingName("FileProcessorID")]
+        [DefaultValue("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D")]
+        public string FileProcessorIDSetting
+        {
+            get
+            {
+                return m_fileProcessorID.ToString();
+            }
+            set
+            {
+                m_fileProcessorID = Guid.Parse(value);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the strategy used for enumeration of files in the file watcher.
         /// </summary>
         [Setting]
@@ -613,6 +631,18 @@ namespace openXDA.Configuration
                     .Select(kvp => kvp.Value)
                     .Select(fileShareString => new FileShare(fileShareString))
                     .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets the ID of the file processor which determines
+        /// the name of the file backed lookup table.
+        /// </summary>
+        public Guid FileProcessorID
+        {
+            get
+            {
+                return m_fileProcessorID;
             }
         }
 

@@ -88,6 +88,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FilePattern', '(?<AssetKey>[^\\]+)\\[^\\]+$', '(?<AssetKey>[^\\]+)\\[^\\]+$')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileProcessorID', '4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D', '4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherBufferSize', '65536', '65536')
 GO
 
@@ -128,9 +131,6 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxFileCreationTimeOffset
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxFileDuration', '0.0', '0.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxQueuedFileCount', '10', '10')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('MaxTimeOffset', '0.0', '0.0')
@@ -503,6 +503,9 @@ INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('CorrectnessChartColors'
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('CorrectnessChartColors', '0%,#0000FF', 1)
+GO
+
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('XDAInstance', 'http://localhost:8989', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('YearBeginDate', 'January 1', 1)

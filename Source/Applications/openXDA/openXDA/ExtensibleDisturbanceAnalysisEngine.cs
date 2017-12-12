@@ -267,11 +267,6 @@ namespace openXDA
         private const int FileWatcherPriority = 2;
         private const int RequeuePriority = 3;
 
-        /// <summary>
-        /// Globally unique identifier required by the file processor to identify its cached list of processed files.
-        /// </summary>
-        private static readonly Guid FileProcessorID = new Guid("4E3D3A90-6E7E-4AB7-96F3-3A5899081D0D");
-
         // Fields
         private string m_dbConnectionString;
         private SystemSettings m_systemSettings;
@@ -421,7 +416,7 @@ namespace openXDA
             // Setup new file processor to monitor the watch directories
             if ((object)m_fileProcessor == null)
             {
-                m_fileProcessor = new FileProcessor(FileProcessorID);
+                m_fileProcessor = new FileProcessor(m_systemSettings.FileProcessorID);
                 m_fileProcessor.InternalBufferSize = m_systemSettings.FileWatcherBufferSize;
                 m_fileProcessor.EnumerationStrategy = m_systemSettings.FileWatcherEnumerationStrategy;
                 m_fileProcessor.MaxThreadCount = m_systemSettings.FileWatcherInternalThreadCount;
