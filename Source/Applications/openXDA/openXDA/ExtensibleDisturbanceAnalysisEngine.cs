@@ -1069,10 +1069,10 @@ namespace openXDA
                 crc32.Update(buffer);
                 int crc = (int)crc32.Value;
 
-                using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+                if (m_systemSettings.SkipOnCRCHashMatch)
                 {
-                    bool setting = connection.ExecuteScalar<bool>(true, "SELECT Value FROM Setting WHERE Name = 'XDAEngine.SkipOnCRCHashMatch'");
-                    if (setting) {
+                    using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+                    {
                         TableOperations<FileGroup> to = new TableOperations<FileGroup>(connection);
                         int fileGroupCount = to.QueryRecordCountWhere("FileHash = {0}", crc);
                         if (fileGroupCount != 0)

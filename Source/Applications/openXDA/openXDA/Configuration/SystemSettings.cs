@@ -73,7 +73,7 @@ namespace openXDA.Configuration
         private int m_fileWatcherInternalThreadCount;
         private int m_fileWatcherBufferSize;
         private string m_fileShares;
-
+        private bool m_skipOnCRCHashMatch;
         private TimeZoneInfo m_defaultMeterTimeZoneInfo;
         private TimeZoneInfo m_xdaTimeZoneInfo;
         private List<string> m_watchDirectoryList;
@@ -631,6 +631,23 @@ namespace openXDA.Configuration
                     .Select(kvp => kvp.Value)
                     .Select(fileShareString => new FileShare(fileShareString))
                     .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean to skip on crc hash match.
+        /// </summary>
+        [Setting]
+        [DefaultValue(true)]
+        public bool SkipOnCRCHashMatch
+        {
+            get
+            {
+                return m_skipOnCRCHashMatch;
+            }
+            set
+            {
+                m_skipOnCRCHashMatch = value;
             }
         }
 
