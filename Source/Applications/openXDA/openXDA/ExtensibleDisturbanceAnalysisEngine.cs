@@ -1068,26 +1068,29 @@ namespace openXDA
                 Byte[] buffer = File.ReadAllBytes(filePath);
                 crc32.Update(buffer);
                 int crc = (int)crc32.Value;
-#if !DEBUG
+
                 using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
                 {
-                    TableOperations<FileGroup> to = new TableOperations<FileGroup>(connection);
-                    int fileGroupCount = to.QueryRecordCountWhere("FileHash = {0}", crc);
-                    if (fileGroupCount != 0)
-                    {
-                        TableOperations<FileBlob> to2 = new TableOperations<FileBlob>(connection);
-                        int fileBlobCount = to2.QueryRecordCountWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID IN (SELECT ID FROM FileGroup WHERE FileHash = {0})) AND Blob = {1}", crc, buffer);
-                        if (fileBlobCount != 0) {
-                            // Explicitly use Log.Debug() so that the message does not appear on the remote console,
-                            // but include a FileSkippedException so that the message gets routed to the skipped files log
-                            FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
-                            Log.Warn(ex.Message, ex);
-                            return;
+                    bool setting = connection.ExecuteScalar<bool>(true, "SELECT Value FROM Setting WHERE Name = 'XDAEngine.SkipOnCRCHashMatch'");
+                    if (setting) {
+                        TableOperations<FileGroup> to = new TableOperations<FileGroup>(connection);
+                        int fileGroupCount = to.QueryRecordCountWhere("FileHash = {0}", crc);
+                        if (fileGroupCount != 0)
+                        {
+                            TableOperations<FileBlob> to2 = new TableOperations<FileBlob>(connection);
+                            int fileBlobCount = to2.QueryRecordCountWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID IN (SELECT ID FROM FileGroup WHERE FileHash = {0})) AND Blob = {1}", crc, buffer);
+                            if (fileBlobCount != 0)
+                            {
+                                // Explicitly use Log.Debug() so that the message does not appear on the remote console,
+                                // but include a FileSkippedException so that the message gets routed to the skipped files log
+                                FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
+                                Log.Warn(ex.Message, ex);
+                                return;
 
+                            }
                         }
                     }
                 }
-#endif
 
                 ProcessFile(filePath, priority, crc);
             }

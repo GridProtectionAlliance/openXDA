@@ -172,6 +172,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WorkbenchTimeRangeInSeconds', '60', '60')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDAEngine.SkipOnCRCHashMatch', 'true', 'true')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
 GO
 
