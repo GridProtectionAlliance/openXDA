@@ -1064,8 +1064,21 @@ namespace openXDA
                     }
                 }
 
+                byte[] buffer;
+
+                try
+                {
+                    buffer = File.ReadAllBytes(filePath);
+                }
+                catch (IOException)
+                {
+                    // Couldn't read from the file, likely because the
+                    // process writing the file isn't finished writing
+                    fileProcessorEventArgs.Requeue = true;
+                    return;
+                }
+
                 Crc32 crc32 = new Crc32();
-                Byte[] buffer = File.ReadAllBytes(filePath);
                 crc32.Update(buffer);
                 int crc = (int)crc32.Value;
 
@@ -1075,10 +1088,12 @@ namespace openXDA
                     {
                         TableOperations<FileGroup> to = new TableOperations<FileGroup>(connection);
                         int fileGroupCount = to.QueryRecordCountWhere("FileHash = {0}", crc);
+
                         if (fileGroupCount != 0)
                         {
                             TableOperations<FileBlob> to2 = new TableOperations<FileBlob>(connection);
                             int fileBlobCount = to2.QueryRecordCountWhere("DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID IN (SELECT ID FROM FileGroup WHERE FileHash = {0})) AND Blob = {1}", crc, buffer);
+
                             if (fileBlobCount != 0)
                             {
                                 // Explicitly use Log.Debug() so that the message does not appear on the remote console,
@@ -1086,7 +1101,6 @@ namespace openXDA
                                 FileSkippedException ex = new FileSkippedException($"Skipped file \"{filePath}\" because it has already been processed.");
                                 Log.Warn(ex.Message, ex);
                                 return;
-
                             }
                         }
                     }

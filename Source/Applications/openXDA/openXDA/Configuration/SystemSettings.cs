@@ -55,6 +55,7 @@ namespace openXDA.Configuration
         private double m_minTimeOffset;
         private double m_maxFileDuration;
         private double m_maxFileCreationTimeOffset;
+        private bool m_skipOnCRCHashMatch;
 
         private double m_systemFrequency;
         private double m_maxVoltage;
@@ -73,7 +74,7 @@ namespace openXDA.Configuration
         private int m_fileWatcherInternalThreadCount;
         private int m_fileWatcherBufferSize;
         private string m_fileShares;
-        private bool m_skipOnCRCHashMatch;
+
         private TimeZoneInfo m_defaultMeterTimeZoneInfo;
         private TimeZoneInfo m_xdaTimeZoneInfo;
         private List<string> m_watchDirectoryList;
@@ -326,6 +327,23 @@ namespace openXDA.Configuration
             set
             {
                 m_maxFileCreationTimeOffset = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean to skip on crc hash match.
+        /// </summary>
+        [Setting]
+        [DefaultValue(true)]
+        public bool SkipOnCRCHashMatch
+        {
+            get
+            {
+                return m_skipOnCRCHashMatch;
+            }
+            set
+            {
+                m_skipOnCRCHashMatch = value;
             }
         }
 
@@ -631,23 +649,6 @@ namespace openXDA.Configuration
                     .Select(kvp => kvp.Value)
                     .Select(fileShareString => new FileShare(fileShareString))
                     .ToList();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean to skip on crc hash match.
-        /// </summary>
-        [Setting]
-        [DefaultValue(true)]
-        public bool SkipOnCRCHashMatch
-        {
-            get
-            {
-                return m_skipOnCRCHashMatch;
-            }
-            set
-            {
-                m_skipOnCRCHashMatch = value;
             }
         }
 
