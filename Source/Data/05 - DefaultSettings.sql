@@ -154,6 +154,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SagThreshold', '0.9', '0.9')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SkipOnCRCHashMatch', 'True', 'True')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SwellThreshold', '1.1', '1.1')
 GO
 
@@ -170,9 +173,6 @@ INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WatchDirectories', 'Watch
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('WorkbenchTimeRangeInSeconds', '60', '60')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SkipOnCRCHashMatch', 'true', 'true')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('XDATimeZone', 'UTC', 'UTC')
