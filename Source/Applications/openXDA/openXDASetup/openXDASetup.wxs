@@ -41,10 +41,7 @@
       <Feature Id="ConsoleFeature" Title="openXDA Remote Console" AllowAdvertise="no" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
         <ComponentGroupRef Id="ConsoleComponents" />
       </Feature>
-      
-
     </Feature>
-
     
     <UI>
       <!-- User Interface -->

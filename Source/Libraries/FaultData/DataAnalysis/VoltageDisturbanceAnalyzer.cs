@@ -30,6 +30,8 @@ using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;
 using GSF.Configuration;
+using GSF.PQDIF.Logical;
+using openXDA.Model;
 using Phase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataAnalysis
@@ -95,22 +97,93 @@ namespace FaultData.DataAnalysis
 
         public void Initialize(MeterDataSet meterDataSet)
         {
-            DataGroup dataGroup;
-            VICycleDataGroup viCycleDataGroup;
-            CycleDataResource cycleDataResource;
-
             ConnectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, this);
 
             m_disturbances = new Dictionary<DataGroup, List<Disturbance>>();
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+
+            int lineCount = meterDataSet.Meter.MeterLines.Count;
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
-                dataGroup = cycleDataResource.DataGroups[i];
-                viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
-                DetectDisturbances(dataGroup, viCycleDataGroup);
+                DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+                Range<DateTime> eventDateRange = new Range<DateTime>(dataGroup.StartTime, dataGroup.EndTime);
+
+                if (lineCount == 1 && dataGroup.Disturbances.Count > 0)
+                    ProcessReportedDisturbances(meterDataSet.Meter, dataGroup);
+                else
+                    DetectDisturbances(dataGroup, viCycleDataGroup);
             }
+
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
+
+            foreach (DataGroup dataGroup in dataGroupsResource.DataGroups)
+            {
+                if (dataGroup.DataSeries.Count > 0)
+                    continue;
+
+                if (lineCount == 1 && dataGroup.Disturbances.Count > 0)
+                    ProcessReportedDisturbances(meterDataSet.Meter, dataGroup);
+            }
+        }
+
+        private void ProcessReportedDisturbances(Meter meter, DataGroup dataGroup)
+        {
+            Line line = dataGroup.Line;
+
+            if ((object)line == null)
+            {
+                if (meter.MeterLocation.MeterLocationLines.Count != 1)
+                    return;
+
+                line = meter.MeterLocation.MeterLocationLines.Single().Line;
+            }
+
+            List<Disturbance> disturbanceList = dataGroup.Disturbances
+                .Select(disturbance => ToDisturbance(line, disturbance))
+                .Where(IsDisturbed)
+                .ToList();
+
+            if (dataGroup.Samples > 0)
+            {
+                DateTime startTime = dataGroup.StartTime;
+                DateTime endTime = dataGroup.EndTime;
+                TimeSpan duration = (endTime - startTime);
+
+                foreach (Disturbance disturbance in disturbanceList)
+                {
+                    TimeSpan startDuration = disturbance.StartTime - startTime;
+                    TimeSpan endDuration = disturbance.EndTime - startTime;
+                    disturbance.StartIndex = (int)((startDuration.TotalSeconds / duration.TotalSeconds) * dataGroup.Samples);
+                    disturbance.EndIndex = (int)((endDuration.TotalSeconds / duration.TotalSeconds) * dataGroup.Samples);
+                }
+            }
+
+            IEnumerable<Range<DateTime>> allDisturbanceRanges = disturbanceList
+                .Select(ToDateRange);
+
+            IEnumerable<Disturbance> worstDisturbances = Range<DateTime>.MergeAllOverlapping(allDisturbanceRanges)
+                .Select(range =>
+                {
+                    Disturbance worst = null;
+
+                    foreach (Disturbance disturbance in disturbanceList.Where(disturbance => ToDateRange(disturbance).Overlaps(range)))
+                    {
+                        if ((object)worst == null || m_isMoreSevere(disturbance.PerUnitMagnitude, worst.PerUnitMagnitude))
+                            worst = disturbance;
+                    }
+
+                    worst = worst.Clone();
+                    worst.Phase = Phase.Worst;
+                    return worst;
+                });
+
+            disturbanceList.AddRange(worstDisturbances);
+
+            if (disturbanceList.Any())
+                m_disturbances.Add(dataGroup, disturbanceList);
         }
 
         private void DetectDisturbances(DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
@@ -121,13 +194,13 @@ namespace FaultData.DataAnalysis
             List<Range<int>> abPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VAB?.RMS));
             List<Range<int>> bcPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VBC?.RMS));
             List<Range<int>> caPhaseDisturbanceRanges = DetectDisturbanceRanges(ToPerUnit(viCycleDataGroup.VCA?.RMS));
-            
-            List<Disturbance> disturbanceList = aPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VA?.RMS, range, Phase.AN))
-                .Concat(bPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VB?.RMS, range, Phase.BN)))
-                .Concat(cPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VC?.RMS, range, Phase.CN)))
-                .Concat(abPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VAB?.RMS, range, Phase.AB)))
-                .Concat(bcPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VBC?.RMS, range, Phase.BC)))
-                .Concat(caPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VCA?.RMS, range, Phase.CA)))
+
+            List<Disturbance> disturbanceList = aPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VA.RMS, range, Phase.AN))
+                .Concat(bPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VB.RMS, range, Phase.BN)))
+                .Concat(cPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VC.RMS, range, Phase.CN)))
+                .Concat(abPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VAB.RMS, range, Phase.AB)))
+                .Concat(bcPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VBC.RMS, range, Phase.BC)))
+                .Concat(caPhaseDisturbanceRanges.Select(range => ToDisturbance(viCycleDataGroup.VCA.RMS, range, Phase.CA)))
                 .ToList();
 
             IEnumerable<Range<int>> allDisturbanceRanges = aPhaseDisturbanceRanges
@@ -154,7 +227,9 @@ namespace FaultData.DataAnalysis
                 });
 
             disturbanceList.AddRange(worstDisturbances);
-            m_disturbances.Add(dataGroup, disturbanceList);
+
+            if (disturbanceList.Any())
+                m_disturbances.Add(dataGroup, disturbanceList);
         }
 
         private DataSeries ToPerUnit(DataSeries rms)
@@ -239,6 +314,34 @@ namespace FaultData.DataAnalysis
             return disturbanceRanges;
         }
 
+        private Disturbance ToDisturbance(Line line, ReportedDisturbance reportedDisturbance)
+        {
+            double nominalValue = line.VoltageKV * 1000.0D;
+
+            if (new[] { Phase.AN, Phase.BN, Phase.CN }.Contains(reportedDisturbance.Phase))
+                nominalValue /= Math.Sqrt(3.0D);
+
+            Disturbance disturbance = new Disturbance();
+
+            double value = m_isMoreSevere(reportedDisturbance.Maximum, reportedDisturbance.Minimum)
+                ? reportedDisturbance.Maximum
+                : reportedDisturbance.Minimum;
+
+            if (reportedDisturbance.Units == QuantityUnits.Percent)
+                value *= nominalValue / 100.0D;
+            else if (reportedDisturbance.Units == QuantityUnits.PerUnit)
+                value *= nominalValue;
+
+            disturbance.EventType = m_eventType;
+            disturbance.Phase = reportedDisturbance.Phase;
+            disturbance.StartTime = reportedDisturbance.Time;
+            disturbance.EndTime = reportedDisturbance.Time + reportedDisturbance.Duration;
+            disturbance.Magnitude = value;
+            disturbance.PerUnitMagnitude = value / nominalValue;
+
+            return disturbance;
+        }
+
         private Disturbance ToDisturbance(DataSeries rms, Range<int> range, Phase phase)
         {
             double nominalValue = rms.SeriesInfo.Channel.PerUnitValue ?? GetLineVoltage(rms);
@@ -256,9 +359,32 @@ namespace FaultData.DataAnalysis
             return disturbance;
         }
 
+        private Range<int> ToRange(DataGroup dataGroup, ReportedDisturbance disturbance)
+        {
+            if (dataGroup.Samples == 0)
+                return null;
+
+            DateTime startTime = disturbance.Time;
+            DateTime endTime = startTime + disturbance.Duration;
+
+            TimeSpan eventSpan = dataGroup.EndTime - dataGroup.StartTime;
+            TimeSpan startSpan = startTime - dataGroup.StartTime;
+            TimeSpan endSpan = endTime - dataGroup.EndTime;
+
+            int startIndex = (int)(startSpan.TotalSeconds / eventSpan.TotalSeconds * dataGroup.Samples);
+            int endIndex = (int)(endSpan.TotalSeconds / eventSpan.TotalSeconds * dataGroup.Samples);
+
+            return new Range<int>(startIndex, endIndex);
+        }
+
         private Range<int> ToRange(Disturbance disturbance)
         {
             return new Range<int>(disturbance.StartIndex, disturbance.EndIndex);
+        }
+
+        private Range<DateTime> ToDateRange(Disturbance disturbance)
+        {
+            return new Range<DateTime>(disturbance.StartTime, disturbance.EndTime);
         }
 
         private double GetMagnitude(DataSeries dataSeries)
@@ -272,6 +398,14 @@ namespace FaultData.DataAnalysis
             }
 
             return magnitude;
+        }
+
+        private bool IsDisturbed(Disturbance disturbance)
+        {
+            DataPoint dataPoint = new DataPoint();
+            dataPoint.Time = disturbance.StartTime;
+            dataPoint.Value = disturbance.Magnitude;
+            return m_isDisturbed(dataPoint);
         }
 
         #endregion

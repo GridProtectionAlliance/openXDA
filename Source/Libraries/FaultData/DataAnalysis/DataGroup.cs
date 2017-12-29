@@ -58,6 +58,7 @@ namespace FaultData.DataAnalysis
         private int m_samples;
 
         private List<DataSeries> m_dataSeries;
+        private List<ReportedDisturbance> m_disturbances;
         private DataClassification m_classification;
 
         #endregion
@@ -70,6 +71,7 @@ namespace FaultData.DataAnalysis
         public DataGroup()
         {
             m_dataSeries = new List<DataSeries>();
+            m_disturbances = new List<ReportedDisturbance>();
             m_classification = DataClassification.Unknown;
         }
 
@@ -186,6 +188,17 @@ namespace FaultData.DataAnalysis
         }
 
         /// <summary>
+        /// Gets the disturbances contained in this data group.
+        /// </summary>
+        public IReadOnlyList<ReportedDisturbance> Disturbances
+        {
+            get
+            {
+                return m_disturbances.AsReadOnly();
+            }
+        }
+
+        /// <summary>
         /// Gets the classification of this group of data as of the last call to <see cref="Classify()"/>.
         /// </summary>
         public DataClassification Classification
@@ -226,27 +239,42 @@ namespace FaultData.DataAnalysis
             DateTime endTime;
             int samples;
 
+            // Unable to add null data series
             if ((object)dataSeries == null)
                 return false;
 
-            if ((object)dataSeries.DataPoints == null)
-                return false;
-
+            // Data series without data is irrelevant to data grouping
             if (!dataSeries.DataPoints.Any())
                 return false;
 
+            // Do not add the same data series twice
             if (m_dataSeries.Contains(dataSeries))
                 return false;
 
+            // Get information about the line this data is associated with
             if ((object)dataSeries.SeriesInfo != null)
                 line = dataSeries.SeriesInfo.Channel.Line;
             else
                 line = null;
 
+            // Get the start time, end time, and number of samples
+            // for the data series passed into this function
             startTime = dataSeries.DataPoints[0].Time;
             endTime = dataSeries.DataPoints[dataSeries.DataPoints.Count - 1].Time;
             samples = dataSeries.DataPoints.Count;
 
+            // If there are any disturbances in this data group that do not overlap
+            // with the data series, do not include the data series in the data group
+            if (m_disturbances.Select(disturbance => disturbance.ToRange()).Any(range => range.Start > endTime || range.End < startTime))
+                return false;
+
+            // If there are any disturbances associated with the data in this group and the data
+            // to be added is trending data, do not include the trending data in the data group
+            if (m_disturbances.Any() && CalculateSamplesPerMinute(startTime, endTime, samples) <= TrendThreshold)
+                return false;
+
+            // At this point, if there is no existing data in the data
+            // group, add the data as the first series in the data group
             if (m_dataSeries.Count == 0)
             {
                 m_line = line;
@@ -255,13 +283,69 @@ namespace FaultData.DataAnalysis
                 m_samples = samples;
 
                 m_dataSeries.Add(dataSeries);
+                m_classification = DataClassification.Unknown;
 
                 return true;
             }
-
+            
+            // If the data being added matches the parameters for this data group, add the data to the data group
             if (line == m_line && startTime == m_startTime && endTime == m_endTime && samples == m_samples)
             {
                 m_dataSeries.Add(dataSeries);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Adds a disturbance to the group of data.
+        /// </summary>
+        /// <param name="disturbance">The disturbance to be added to the group.</param>
+        /// <returns>True if the disturbance was successfully added.</returns>
+        public bool Add(ReportedDisturbance disturbance)
+        {
+            // Unable to add null disturbance
+            if ((object)disturbance == null)
+                return false;
+
+            // Do not add the same disturbance twice
+            if (m_disturbances.Contains(disturbance))
+                return false;
+
+            // If the data in this data group is trending data,
+            // do not add the disturbance to the data group
+            if (Classification == DataClassification.Trend)
+                return false;
+
+            // Get the start time and end time of the disturbance.
+            DateTime startTime = disturbance.Time;
+            DateTime endTime = startTime + disturbance.Duration;
+
+            // If there are no data series and no other disturbances,
+            // make this the first piece of data to be added to the data group
+            if (!m_dataSeries.Any() && !m_disturbances.Any())
+            {
+                m_startTime = startTime;
+                m_endTime = endTime;
+                m_disturbances.Add(disturbance);
+                m_classification = DataClassification.Event;
+                return true;
+            }
+
+            // If the disturbance overlaps with
+            // this data group, add the disturbance
+            if (startTime <= m_endTime && m_startTime <= endTime)
+            {
+                // If the only data in the data group is disturbances,
+                // adjust the start time and end time
+                if (!m_dataSeries.Any() && startTime < m_startTime)
+                    m_startTime = startTime;
+
+                if (!m_dataSeries.Any() && endTime > m_endTime)
+                    m_endTime = endTime;
+
+                m_disturbances.Add(disturbance);
                 return true;
             }
 
@@ -277,7 +361,28 @@ namespace FaultData.DataAnalysis
         {
             if (m_dataSeries.Remove(dataSeries))
             {
-                m_classification = DataClassification.Unknown;
+                m_classification = m_disturbances.Any()
+                    ? DataClassification.Event
+                    : DataClassification.Unknown;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes a disturbance from the data group.
+        /// </summary>
+        /// <param name="disturbance">THe disturbance to be removed from the data group.</param>
+        /// <returns>True if the disturbance existed in the group and was removed; false otherwise.</returns>
+        public bool Remove(ReportedDisturbance disturbance)
+        {
+            if (m_disturbances.Remove(disturbance))
+            {
+                if (!m_disturbances.Any())
+                    m_classification = DataClassification.Unknown;
+
                 return true;
             }
 
@@ -407,12 +512,18 @@ namespace FaultData.DataAnalysis
 
         private bool IsTrend()
         {
-            double samplesPerMinute = (m_samples - 1) / (m_endTime - m_startTime).TotalMinutes;
+            if (!m_dataSeries.Any() || m_disturbances.Any())
+                return false;
+
+            double samplesPerMinute = CalculateSamplesPerMinute(m_startTime, m_endTime, m_samples);
             return samplesPerMinute <= TrendThreshold;
         }
 
         private bool IsEvent()
         {
+            if (m_disturbances.Any())
+                return true;
+
             return m_dataSeries
                 .Where(IsInstantaneous)
                 .Where(dataSeries => (object)dataSeries.SeriesInfo != null)
@@ -437,6 +548,11 @@ namespace FaultData.DataAnalysis
         private string GetPhase(DataSeries dataSeries)
         {
             return dataSeries.SeriesInfo.Channel.Phase.Name;
+        }
+
+        private double CalculateSamplesPerMinute(DateTime startTime, DateTime endTime, int samples)
+        {
+            return (samples - 1) / (endTime - startTime).TotalMinutes;
         }
 
         #endregion

@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
+using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
@@ -44,7 +45,7 @@ namespace openXDA.Model
 
         public int EventTypeID { get; set; }
 
-        public int EventDataID { get; set; }
+        public int? EventDataID { get; set; }
 
         public string Name { get; set; }
 
@@ -52,10 +53,10 @@ namespace openXDA.Model
 
         public string ShortName { get; set; }
 
-        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime StartTime { get; set; }
 
-        [FieldDataType(System.Data.DbType.DateTime2, GSF.Data.DatabaseType.SQLServer)]
+        [FieldDataType(DbType.DateTime2, DatabaseType.SQLServer)]
         public DateTime EndTime { get; set; }
 
         public int Samples { get; set; }
@@ -69,6 +70,14 @@ namespace openXDA.Model
         public string Description { get; set; }
 
         public string UpdatedBy { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public EventData EventData { get; set; }
+
+        [JsonIgnore]
+        [NonRecordField]
+        public List<Disturbance> Disturbances { get; set; } = new List<Disturbance>();
     }
 
     [TableName("EventView")]

@@ -23,10 +23,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF;
 using GSF.PQDIF.Logical;
 using GSF.PQDIF.Physical;
 using log4net;
@@ -40,6 +42,8 @@ namespace FaultData.DataReaders
         #region [ Members ]
 
         // Fields
+        private double m_systemFrequency;
+
         private LogicalParser m_parser;
         private MeterDataSet m_meterDataSet;
         private bool m_disposed;
@@ -59,6 +63,22 @@ namespace FaultData.DataReaders
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the system frequency.
+        /// </summary>
+        [Setting]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+            set
+            {
+                m_systemFrequency = value;
+            }
+        }
 
         /// <summary>
         /// Gets the data set produced by the Parse method of the data reader.
@@ -155,17 +175,13 @@ namespace FaultData.DataReaders
                 bool timeValueChannel =
                     channelInstance.Definition.QuantityTypeID == QuantityType.WaveForm ||
                     channelInstance.Definition.QuantityTypeID == QuantityType.ValueLog ||
-                    channelInstance.Definition.QuantityTypeID == QuantityType.Phasor ||
-                    channelInstance.Definition.QuantityTypeID == QuantityType.Flash ||
-                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurTime ||
-                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurCount;
+                    channelInstance.Definition.QuantityTypeID == QuantityType.Phasor;
 
-                // TODO: Create representation for quantity types that do not define time/value data
                 if (!timeValueChannel)
                     continue;
 
                 // Parse time data from the channel instance
-                timeData = ParseTimeData(channelInstance);
+                timeData = ParseTimeData(channelInstance, m_systemFrequency);
 
                 foreach (SeriesInstance seriesInstance in channelInstance.SeriesInstances.Skip(1))
                 {
@@ -182,6 +198,73 @@ namespace FaultData.DataReaders
                     channel.Meter = meter;
                     meter.Channels.Add(channel);
                     m_meterDataSet.DataSeries.Add(dataSeries);
+                }
+            }
+
+            foreach (ChannelInstance channelInstance in channelInstances)
+            {
+                bool magDurChannel =
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDur ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurCount ||
+                    channelInstance.Definition.QuantityTypeID == QuantityType.MagDurTime;
+
+                if (!magDurChannel)
+                    continue;
+
+                timeData = channelInstance.SeriesInstances
+                    .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == SeriesValueType.Time)
+                    .Select(seriesInstance => ParseTimeData(seriesInstance, m_systemFrequency))
+                    .FirstOrDefault();
+
+                Guid valType = SeriesValueType.Val;
+                Guid maxType = SeriesValueType.Max;
+                Guid minType = SeriesValueType.Min;
+                Guid avgType = SeriesValueType.Avg;
+
+                double[] valData = channelInstance.SeriesInstances
+                    .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == valType)
+                    .Select(seriesInstance => ParseValueData(seriesInstance))
+                    .FirstOrDefault();
+
+                double[] maxData = channelInstance.SeriesInstances
+                    .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == maxType)
+                    .Select(seriesInstance => ParseValueData(seriesInstance))
+                    .FirstOrDefault() ?? valData;
+
+                double[] minData = channelInstance.SeriesInstances
+                    .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == minType)
+                    .Select(seriesInstance => ParseValueData(seriesInstance))
+                    .FirstOrDefault() ?? valData;
+
+                double[] avgData = channelInstance.SeriesInstances
+                    .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == avgType)
+                    .Select(seriesInstance => ParseValueData(seriesInstance))
+                    .FirstOrDefault() ?? valData;
+
+                TimeSpan[] durData = channelInstance.SeriesInstances
+                    .Where(seriesInstance => seriesInstance.Definition.ValueTypeID == SeriesValueType.Duration)
+                    .Select(seriesInstance => ParseTimeSpanData(seriesInstance, m_systemFrequency))
+                    .FirstOrDefault();
+
+                int minLength = Common.Min(timeData.Length, maxData.Length, minData.Length, avgData.Length, durData.Length);
+
+                QuantityUnits units = channelInstance.SeriesInstances
+                    .Where(seriesInstance => new[] { valType, maxType, minType, avgType }.Contains(seriesInstance.Definition.ValueTypeID))
+                    .Select(seriesInstance => seriesInstance.Definition.QuantityUnits)
+                    .FirstOrDefault();
+
+                for (int i = 0; i < minLength; i++)
+                {
+                    DateTime time = ((object)timeData != null)
+                        ? timeData[i]
+                        : channelInstance.ObservationRecord.StartTime;
+
+                    double max = maxData[i];
+                    double min = minData[i];
+                    double avg = avgData[i];
+                    TimeSpan dur = durData[i];
+
+                    m_meterDataSet.ReportedDisturbances.Add(new ReportedDisturbance(channelInstance.Definition.Phase, time, max, min, avg, dur, units));
                 }
             }
 
@@ -322,38 +405,41 @@ namespace FaultData.DataReaders
             return channel;
         }
 
-        private static DateTime[] ParseTimeData(ChannelInstance channelInstance)
+        private static DateTime[] ParseTimeData(ChannelInstance channelInstance, double systemFrequency)
         {
-            SeriesInstance timeSeries;
-            SeriesDefinition timeSeriesDefinition;
-            VectorElement seriesValues;
-            DateTime[] timeData;
-            DateTime startTime;
-            double nominalFrequency;
+            SeriesInstance timeSeries = channelInstance.SeriesInstances
+                .FirstOrDefault(seriesInstance => seriesInstance.Definition.ValueTypeID == SeriesValueType.Time);
 
-            if (!channelInstance.SeriesInstances.Any())
+            if ((object)timeSeries == null)
                 return null;
 
-            timeSeries = channelInstance.SeriesInstances[0];
-            timeSeriesDefinition = timeSeries.Definition;
+            return ParseTimeData(timeSeries, systemFrequency);
+        }
+        
+        private static DateTime[] ParseTimeData(SeriesInstance seriesInstance, double systemFrequency)
+        {
+            DateTime[] timeData;
+
+            SeriesDefinition timeSeriesDefinition = seriesInstance.Definition;
 
             if (timeSeriesDefinition.ValueTypeID != SeriesValueType.Time)
                 return null;
 
-            seriesValues = timeSeries.SeriesValues;
+            VectorElement seriesValues = seriesInstance.SeriesValues;
 
             if (seriesValues.TypeOfValue == PhysicalType.Timestamp)
             {
-                timeData = timeSeries.OriginalValues
+                timeData = seriesInstance.OriginalValues
                     .Select(Convert.ToDateTime)
                     .ToArray();
             }
             else if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Cycles)
             {
-                startTime = channelInstance.ObservationRecord.StartTime;
-                nominalFrequency = channelInstance.ObservationRecord?.Settings.NominalFrequency ?? 60.0D;
+                ChannelInstance channelInstance = seriesInstance.Channel;
+                DateTime startTime = channelInstance.ObservationRecord.StartTime;
+                double nominalFrequency = channelInstance.ObservationRecord?.Settings.NominalFrequency ?? systemFrequency;
 
-                timeData = timeSeries.OriginalValues
+                timeData = seriesInstance.OriginalValues
                     .Select(Convert.ToDouble)
                     .Select(cycles => cycles / nominalFrequency)
                     .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
@@ -363,9 +449,10 @@ namespace FaultData.DataReaders
             }
             else
             {
-                startTime = channelInstance.ObservationRecord.StartTime;
+                ChannelInstance channelInstance = seriesInstance.Channel;
+                DateTime startTime = channelInstance.ObservationRecord.StartTime;
 
-                timeData = timeSeries.OriginalValues
+                timeData = seriesInstance.OriginalValues
                     .Select(Convert.ToDouble)
                     .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
                     .Select(TimeSpan.FromTicks)
@@ -386,6 +473,41 @@ namespace FaultData.DataReaders
             {
                 return null;
             }
+        }
+
+        private static TimeSpan[] ParseTimeSpanData(SeriesInstance seriesInstance, double systemFrequency)
+        {
+            TimeSpan[] timeSpanData;
+
+            SeriesDefinition timeSeriesDefinition = seriesInstance.Definition;
+
+            if (timeSeriesDefinition.ValueTypeID != SeriesValueType.Duration)
+                return null;
+
+            VectorElement seriesValues = seriesInstance.SeriesValues;
+
+            if (timeSeriesDefinition.QuantityUnits == QuantityUnits.Cycles)
+            {
+                ChannelInstance channelInstance = seriesInstance.Channel;
+                double nominalFrequency = channelInstance.ObservationRecord?.Settings.NominalFrequency ?? systemFrequency;
+
+                timeSpanData = seriesInstance.OriginalValues
+                    .Select(Convert.ToDouble)
+                    .Select(cycles => cycles / nominalFrequency)
+                    .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
+                    .Select(TimeSpan.FromTicks)
+                    .ToArray();
+            }
+            else
+            {
+                timeSpanData = seriesInstance.OriginalValues
+                    .Select(Convert.ToDouble)
+                    .Select(seconds => (long)(seconds * TimeSpan.TicksPerSecond))
+                    .Select(TimeSpan.FromTicks)
+                    .ToArray();
+            }
+
+            return timeSpanData;
         }
 
         #endregion

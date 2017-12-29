@@ -88,6 +88,7 @@
     <Compile Include="DataAnalysis\DataSeries.cs" />
     <Compile Include="DataAnalysis\Disturbance.cs" />
     <Compile Include="DataAnalysis\FaultGroup.cs" />
+    <Compile Include="DataAnalysis\ReportedDisturbance.cs" />
     <Compile Include="DataAnalysis\VoltageDisturbanceAnalyzer.cs" />
     <Compile Include="DataAnalysis\Fault.cs" />
     <Compile Include="DataAnalysis\Transform.cs" />

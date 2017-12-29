@@ -137,31 +137,38 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
             CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             FaultDataResource faultDataResource = meterDataSet.GetResource<FaultDataResource>();
-            FaultGroup faultGroup;
-
-            DataGroup dataGroup;
-            VIDataGroup viDataGroup;
-            VICycleDataGroup viCycleDataGroup;
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
-                dataGroup = cycleDataResource.DataGroups[i];
-                viDataGroup = cycleDataResource.VIDataGroups[i];
-                viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+                DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
+                FaultGroup faultGroup;
 
                 if (!faultDataResource.FaultLookup.TryGetValue(dataGroup, out faultGroup))
                     faultGroup = null;
 
-                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup, viDataGroup, viCycleDataGroup, faultGroup));
+                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup, viDataGroup, faultGroup));
+            }
+
+            foreach (DataGroup dataGroup in dataGroupsResource.DataGroups)
+            {
+                if (dataGroup.DataSeries.Count > 0)
+                    continue;
+
+                m_classifications.Add(dataGroup, Classify(meterDataSet, dataGroup));
             }
         }
 
-        private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup, FaultGroup faultGroup)
+        private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VIDataGroup viDataGroup = null, FaultGroup faultGroup = null)
         {
-            if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
-                return EventClassification.Breaker;
+            if ((object)viDataGroup != null)
+            {
+                if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
+                    return EventClassification.Breaker;
+            }
 
             if ((object)faultGroup != null)
             {
@@ -175,115 +182,20 @@ namespace FaultData.DataResources
                     return EventClassification.RecloseIntoFault;
             }
 
-            DataSeries[] rms =
-            {
-                viCycleDataGroup.VA?.RMS,
-                viCycleDataGroup.VB?.RMS,
-                viCycleDataGroup.VC?.RMS,
-                viCycleDataGroup.VAB?.RMS,
-                viCycleDataGroup.VBC?.RMS,
-                viCycleDataGroup.VCA?.RMS
-            };
+            InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+            SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
+            SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
 
-            List<DataSeries> perUnitRMS = rms
-                .Where(dataSeries => (object)dataSeries != null)
-                .Where(dataSeries => GetPerUnitValue(dataSeries) != 0.0D)
-                .Select(dataSeries => dataSeries.Multiply(1.0D / GetPerUnitValue(dataSeries)))
-                .ToList();
-
-            if (HasInterruption(perUnitRMS))
+            if (interruptionDataResource.Interruptions.ContainsKey(dataGroup))
                 return EventClassification.Interruption;
 
-            if (HasSag(perUnitRMS))
+            if (sagDataResource.Sags.ContainsKey(dataGroup))
                 return EventClassification.Sag;
 
-            if (HasSwell(perUnitRMS))
+            if (swellDataResource.Swells.ContainsKey(dataGroup))
                 return EventClassification.Swell;
 
             return EventClassification.Other;
-        }
-
-        private bool HasInterruption(IEnumerable<DataSeries> seriesList)
-        {
-            IEnumerable<double> values;
-
-            foreach (DataSeries series in seriesList)
-            {
-                values = series.DataPoints.Select(dataPoint => dataPoint.Value);
-
-                if (values.Any(value => value <= m_interruptionThreshold))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool HasSag(IEnumerable<DataSeries> seriesList)
-        {
-            IEnumerable<double> values;
-
-            foreach (DataSeries series in seriesList)
-            {
-                values = series.DataPoints.Select(dataPoint => dataPoint.Value);
-
-                if (values.Any(value => value <= m_sagThreshold))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool HasSwell(IEnumerable<DataSeries> seriesList)
-        {
-            IEnumerable<double> values;
-
-            foreach (DataSeries series in seriesList)
-            {
-                values = series.DataPoints.Select(dataPoint => dataPoint.Value);
-
-                if (values.Any(value => value >= m_swellThreshold))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private double GetPerUnitValue(DataSeries dataSeries)
-        {
-            if ((object)dataSeries.SeriesInfo.Channel.PerUnitValue != null)
-                return dataSeries.SeriesInfo.Channel.PerUnitValue.GetValueOrDefault();
-
-            if (dataSeries.SeriesInfo.Channel.MeasurementType.Name != "Voltage")
-                return 0.0D;
-
-            if (!IsLineToNeutral(dataSeries.SeriesInfo.Channel) && !IsLineToLine(dataSeries.SeriesInfo.Channel))
-                return 0.0D;
-
-            double voltageKV = dataSeries.SeriesInfo.Channel.Line.VoltageKV * 1000.0D;
-
-            double divisor = IsLineToNeutral(dataSeries.SeriesInfo.Channel)
-                ? Math.Sqrt(3.0D)
-                : 1.0D;
-
-            return voltageKV / divisor;
-        }
-
-        private static bool IsLineToNeutral(Channel channel)
-        {
-            return channel.Phase.Name == "AN" ||
-                   channel.Phase.Name == "BN" ||
-                   channel.Phase.Name == "CN" ||
-                   channel.Phase.Name == "RES" ||
-                   channel.Phase.Name == "NG" ||
-                   channel.Phase.Name == "LineToNeutralAverage";
-        }
-
-        private static bool IsLineToLine(Channel channel)
-        {
-            return channel.Phase.Name == "AB" ||
-                   channel.Phase.Name == "BC" ||
-                   channel.Phase.Name == "CA" ||
-                   channel.Phase.Name == "LineToLineAverage";
         }
 
         private static bool HasBreakerChannels(DataGroup dataGroup)

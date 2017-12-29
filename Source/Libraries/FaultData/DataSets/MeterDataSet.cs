@@ -48,6 +48,7 @@ namespace FaultData.DataSets
         private ConfigurationDataSet m_configuration;
         private List<DataSeries> m_dataSeries;
         private List<DataSeries> m_digitals;
+        private List<ReportedDisturbance> m_disturbanceStatistics;
 
         #endregion
 
@@ -59,6 +60,7 @@ namespace FaultData.DataSets
             m_configuration = new ConfigurationDataSet();
             m_dataSeries = new List<DataSeries>();
             m_digitals = new List<DataSeries>();
+            m_disturbanceStatistics = new List<ReportedDisturbance>();
         }
 
         #endregion
@@ -154,6 +156,18 @@ namespace FaultData.DataSets
             set
             {
                 m_digitals = value;
+            }
+        }
+
+        public List<ReportedDisturbance> ReportedDisturbances
+        {
+            get
+            {
+                return m_disturbanceStatistics;
+            }
+            set
+            {
+                m_disturbanceStatistics = value;
             }
         }
 
