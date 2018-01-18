@@ -439,7 +439,8 @@ namespace FaultData.DataWriters
                 {
                     htmlDocument.TransformAll("chart", (element, index) =>
                     {
-                        string cid = $"event{eventID}_chart{index:00}.png";
+                        string chartEventID = (string)element.Attribute("eventID") ?? "-1";
+                        string cid = $"event{chartEventID}_chart{index:00}.png";
 
                         Stream image = ChartGenerator.ConvertToChartImageStream(connection, element);
                         Attachment attachment = new Attachment(image, cid);
