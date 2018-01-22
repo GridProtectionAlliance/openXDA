@@ -250,6 +250,7 @@ namespace openXDA
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.AddScheduledProcess(ReloadConfigurationHandler, "ReloadConfiguration", "0 0 * * *");
             m_serviceHelper.AddProcess(EnumerateWatchDirectoriesHandler, "EnumWatchDirectories");
+            m_serviceHelper.AddProcess(AutoFileDeletionHandler, "AutoFileDeletion");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
@@ -620,6 +621,12 @@ namespace openXDA
         private void EnumerateWatchDirectoriesHandler(string s, object[] args)
         {
             m_extensibleDisturbanceAnalysisEngine.EnumerateWatchDirectories();
+        }
+
+        // Deletes old files from the XDA watch directories.
+        private void AutoFileDeletionHandler(string s, object[] args)
+        {
+            m_extensibleDisturbanceAnalysisEngine.AutoDeleteFiles();
         }
 
         // Reloads system settings from the database.
