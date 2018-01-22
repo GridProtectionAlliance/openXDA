@@ -175,9 +175,7 @@ namespace openXDA.Configuration
         {
             try
             {
-                if (!Directory.Exists(m_name))
-                    FilePath.ConnectToNetworkShare(m_name, m_username, Password, m_domain);
-
+                FilePath.ConnectToNetworkShare(m_name, m_username, Password, m_domain);
                 m_authenticationException = null;
             }
             catch (Exception ex)
