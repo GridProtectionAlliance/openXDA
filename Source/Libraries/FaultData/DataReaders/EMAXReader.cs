@@ -202,11 +202,22 @@ namespace FaultData.DataReaders
 
             while (m_parser.ReadNext())
             {
+                DateTime timestamp = m_emaxSettings.ApplyTimestampCorrection ? m_parser.CalculatedTimestamp : m_parser.ParsedTimestamp;
+
                 for (int i = 0; i < analogChannels.Count; i++)
                 {
-                    DateTime timestamp = m_emaxSettings.ApplyTimestampCorrection ? m_parser.CalculatedTimestamp : m_parser.ParsedTimestamp;
                     double value = m_emaxSettings.ApplyValueCorrection ? m_parser.CorrectedValues[i] : m_parser.Values[i];
                     m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
+                }
+
+                for (int i = 0; i < digitalChannels.Count; i++)
+                {
+                    int bitCount = sizeof(ushort) * 8;
+                    int groupIndex = i / bitCount;
+                    int bitIndex = i % bitCount;
+                    ushort mask = (ushort)~(0x8000u >> bitIndex);
+                    double value = m_parser.EventGroups[groupIndex] & mask;
+                    m_meterDataSet.Digitals[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
                 }
             }
 
