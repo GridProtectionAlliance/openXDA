@@ -222,9 +222,23 @@ namespace FaultData.DataReaders
             }
 
             if (!string.IsNullOrEmpty(m_emaxSettings.COMTRADEExportDirectory))
-                ExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
+                TryExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
 
             m_meterDataSet.Meter = meter;
+        }
+
+        private bool TryExportToCOMTRADE(string filePath, ControlFile controlFile, string identityString, List<ANLG_CHNL_NEW> analogChannels, List<EVNT_CHNL_NEW> digitalChannels)
+        {
+            try
+            {
+                ExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                return false;
+            }
         }
 
         private void ExportToCOMTRADE(string filePath, ControlFile controlFile, string identityString, List<ANLG_CHNL_NEW> analogChannels, List<EVNT_CHNL_NEW> digitalChannels)
@@ -414,6 +428,13 @@ namespace FaultData.DataReaders
 
             return meterKeyGroup.Value;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EMAXReader));
 
         #endregion
     }
