@@ -691,7 +691,7 @@ GO
 
 CREATE TABLE [dbo].[FileBlob](
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    DataFileID INT NOT NULL,
+    DataFileID INT NOT NULL REFERENCES DataFile(ID),
     Blob VARBINARY(MAX) NOT NULL
 )
 GO
@@ -701,7 +701,7 @@ CREATE TABLE [dbo].[DeviceFilter](
     [UserAccount] [varchar](500) NOT NULL,
     [Name] [nvarchar](500) NOT NULL,
     [FilterExpression] [nvarchar](max) NOT NULL,
-    [MeterGroupID] [int] NOT NULL,
+    [MeterGroupID] [int] NOT NULL
 )
 
 GO
@@ -724,7 +724,6 @@ GO
 
 INSERT INTO SavedViews(UserAccount, Name, DateRange, FromDate, ToDate, Tab, DeviceFilterID, MapGrid, IsDefault) VALUES('Default', 'Home', 2, GETDATE(), GETDATE(), 'Events', 0, 'Grid', 'true')
 GO
-
 
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
 GO
