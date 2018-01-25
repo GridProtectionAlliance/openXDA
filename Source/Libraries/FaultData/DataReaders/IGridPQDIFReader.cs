@@ -312,11 +312,13 @@ namespace FaultData.DataReaders
 
             // Populate channel properties
             Channel channel = series.Channel;
-            channel.Name = channelDefinition.ChannelName;
-            channel.HarmonicGroup = 0;
+            channel.Series = new List<Series>() { series };
             channel.MeasurementType = new MeasurementType();
             channel.MeasurementCharacteristic = new MeasurementCharacteristic();
             channel.Phase = new openXDA.Model.Phase();
+            channel.Name = channelDefinition.ChannelName;
+            channel.HarmonicGroup = 0;
+            channel.Series.Add(series);
 
             if (seriesDefinition.HasElement(SeriesDefinition.SeriesNominalQuantityTag))
                 channel.PerUnitValue = seriesDefinition.SeriesNominalQuantity;
