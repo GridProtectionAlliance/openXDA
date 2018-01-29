@@ -466,8 +466,8 @@ namespace openXDA
 
                 systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter", "Configuration database ADO.NET data provider assembly type creation string used when ConfigurationType=Database");
                 systemSettings.Add("NodeID", "00000000-0000-0000-0000-000000000000", "Unique Node ID");
-                systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openMIC.");
-                systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openMIC.");
+                systemSettings.Add("CompanyName", "Grid Protection Alliance", "The name of the company who owns this instance of the openXDA.");
+                systemSettings.Add("CompanyAcronym", "GPA", "The acronym representing the company who owns this instance of the openXDA.");
                 systemSettings.Add("WebHostURL", "http://+:8989", "The web hosting URL for remote system management.");
                 systemSettings.Add("DefaultWebPage", "index.cshtml", "The default web page for the hosted web server.");
                 systemSettings.Add("DateFormat", "MM/dd/yyyy", "The default date format to use when rendering timestamps.");
