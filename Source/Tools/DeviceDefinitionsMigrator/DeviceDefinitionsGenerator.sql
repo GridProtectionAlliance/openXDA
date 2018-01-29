@@ -30,14 +30,16 @@ SELECT
 				CAST(LineImpedance.R0 AS VARCHAR(10)) AS [impedances/R0],
 				CAST(LineImpedance.X0 AS VARCHAR(10)) AS [impedances/X0],
 				(
-					SELECT CAST('<' + OutputChannel.ChannelKey + '>' + Series.SourceIndexes + '</' + Outputchannel.ChannelKey + '>' AS XML)
+				SELECT CAST('<' + ChannelKey + '>' + SourceIndexes + '</' + ChannelKey + '>' AS XML)
+				FROM
+					(SELECT DISTINCT  ChannelKey, SourceIndexes, LoadOrder
 					FROM
 						Channel JOIN
 						Series ON Series.ChannelID = Channel.ID JOIN
 						OutputChannel ON OutputChannel.SeriesID = Series.ID
 					WHERE
 						Channel.MeterID = Meter.ID AND
-						Channel.LineID = Line.ID
+						Channel.LineID = Line.ID) Channels
 					ORDER BY LoadOrder
 					FOR XML PATH(''), TYPE
 				) AS channels
