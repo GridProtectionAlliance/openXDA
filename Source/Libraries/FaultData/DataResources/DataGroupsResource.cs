@@ -55,10 +55,7 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            List<DataGroup> dataGroups;
-            DataGroup dataGroup;
-
-            dataGroups = new List<DataGroup>();
+            List<DataGroup> dataGroups = new List<DataGroup>();
 
             foreach (IGrouping<Line, DataSeries> lineGroup in meterDataSet.DataSeries.Concat(meterDataSet.Digitals).GroupBy(GetLine))
             {
@@ -68,13 +65,28 @@ namespace FaultData.DataResources
                     {
                         foreach (IGrouping<int, DataSeries> sampleCountGroup in endTimeGroup.GroupBy(dataSeries => dataSeries.DataPoints.Count))
                         {
-                            dataGroup = new DataGroup();
+                            DataGroup dataGroup = new DataGroup();
 
                             foreach (DataSeries dataSeries in sampleCountGroup)
                                 dataGroup.Add(dataSeries);
 
                             dataGroups.Add(dataGroup);
                         }
+                    }
+                }
+            }
+
+            if (meterDataSet.Meter.MeterLines.Count == 1)
+            {
+                foreach (ReportedDisturbance disturbance in meterDataSet.ReportedDisturbances.OrderBy(dist => dist.Time))
+                {
+                    DataGroup dataGroup = dataGroups.FirstOrDefault(dg => dg.Add(disturbance));
+
+                    if ((object)dataGroup == null)
+                    {
+                        dataGroup = new DataGroup();
+                        dataGroup.Add(disturbance);
+                        dataGroups.Add(dataGroup);
                     }
                 }
             }

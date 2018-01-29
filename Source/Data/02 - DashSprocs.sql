@@ -67,7 +67,7 @@ BEGIN
                 Event JOIN
                 Meter ON Event.MeterID = Meter.ID
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime) AND
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND MeterLocationID = @meterLocationID) AND
                 MeterLocationID = @meterLocationID
         )
     )
@@ -90,7 +90,7 @@ BEGIN
                 Event JOIN
                 Meter ON Event.MeterID = Meter.ID
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime > @startTime) AND
+                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND MeterLocationID = @meterLocationID) AND
                 MeterLocationID = @meterLocationID
         )
     )
@@ -132,7 +132,7 @@ BEGIN
             SELECT MAX(Event.ID)
             FROM Event
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime) AND
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND MeterID = @meterID) AND
                 MeterID = @meterID
         )
     )
@@ -151,7 +151,7 @@ BEGIN
             SELECT MIN(Event.ID)
             FROM Event
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime > @startTime) AND
+                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND MeterID = @meterID) AND
                 MeterID = @meterID
         )
     )
@@ -193,7 +193,7 @@ BEGIN
             SELECT MAX(Event.ID)
             FROM Event
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime) AND
+                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime < @startTime AND LineID = @lineID) AND
                 LineID = @lineID
         )
     )
@@ -212,7 +212,7 @@ BEGIN
             SELECT MIN(Event.ID)
             FROM Event
             WHERE
-                StartTime = (SELECT MAX(StartTime) FROM Event WHERE StartTime > @startTime) AND
+                StartTime = (SELECT MIN(StartTime) FROM Event WHERE StartTime > @startTime AND LineID = @lineID) AND
                 LineID = @lineID
         )
     )
@@ -1458,11 +1458,11 @@ DECLARE @PivotColumns NVARCHAR(MAX) = N''
 DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
-SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],'
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '],'
 FROM (Select Distinct Line.VoltageKV
         FROM Line) AS t
 
-SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],'
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '],'
 FROM (Select Distinct Line.VoltageKV
         FROM Line) AS t
 
@@ -2431,15 +2431,15 @@ DECLARE @CountColumns NVARCHAR(MAX) = N''
 DECLARE @ReturnColumns NVARCHAR(MAX) = N''
 DECLARE @SQLStatement NVARCHAR(MAX) = N''
 
-SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],'
+SELECT @PivotColumns = @PivotColumns + '[' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '],'
 FROM (Select Distinct Line.VoltageKV
         FROM Line) AS t
 
-SELECT @CountColumns = @CountColumns + 'COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '], 0) + '
+SELECT @CountColumns = @CountColumns + 'COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '], 0) + '
 FROM (Select Distinct Line.VoltageKV
         FROM Line) AS t
 
-SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(5)), '') + '],'
+SELECT @ReturnColumns = @ReturnColumns + ' COALESCE([' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '], 0) AS [' + COALESCE(CAST(t.VoltageKV as varchar(max)), '') + '],'
 FROM (Select Distinct Line.VoltageKV
         FROM Line) AS t
 

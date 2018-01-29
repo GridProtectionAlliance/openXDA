@@ -156,9 +156,14 @@ namespace openXDA.Hubs
         {
             TableOperations<Series> seriesTable = new TableOperations<Series>(connection);
 
-            return seriesTable
-                .QueryRecords("ID", new RecordRestriction("ChannelID IN (SELECT ID FROM Channel WHERE MeterID = {0} AND LineID = {0})", meterID, lineID))
+            List<Series> seriesList = seriesTable
+                .QueryRecords("ID", new RecordRestriction("ChannelID IN (SELECT ID FROM Channel WHERE MeterID = {0} AND LineID = {1})", meterID, lineID))
                 .ToList();
+
+            foreach (Series series in seriesList)
+                series.ConnectionFactory = () => new AdoDataConnection(connection.Connection, typeof(SqlDataAdapter), false);
+
+            return seriesList;
         }
 
         private static List<string> GetFaultCurveInfo(AdoDataConnection connection, int eventID)

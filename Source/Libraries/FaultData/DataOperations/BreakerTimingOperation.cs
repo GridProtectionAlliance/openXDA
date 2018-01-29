@@ -342,7 +342,7 @@ namespace FaultData.DataOperations
                     if (value > largestPreclearPeak)
                         largestPreclearPeak = value;
                 }
-                while (value > (largestPostclearPeak * 0.75 + largestPreclearPeak * 0.25));
+                while (largestPreclearPeak < largestPostclearPeak || value > (largestPostclearPeak * 0.75 + largestPreclearPeak * 0.25));
 
                 // Scanning backwards, find the first point where the value exceeds
                 // a point 25% of the way from the postclear peak to the preclear peak

@@ -250,10 +250,12 @@ namespace openXDA
             m_serviceHelper.AddScheduledProcess(ServiceHeartbeatHandler, "ServiceHeartbeat", "* * * * *");
             m_serviceHelper.AddScheduledProcess(ReloadConfigurationHandler, "ReloadConfiguration", "0 0 * * *");
             m_serviceHelper.AddProcess(EnumerateWatchDirectoriesHandler, "EnumWatchDirectories");
+            m_serviceHelper.AddProcess(AutoFileDeletionHandler, "AutoFileDeletion");
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PurgeData", "Deletes data from database beyond a sepecified date", PurgeDataHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessAllData", "Creates aggregates for all data", OnProcessAllData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessEmptyData", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessMonthToDate", "Creates aggregates for month to date data", OnProcessMonthToDateData));
@@ -622,6 +624,12 @@ namespace openXDA
             m_extensibleDisturbanceAnalysisEngine.EnumerateWatchDirectories();
         }
 
+        // Deletes old files from the XDA watch directories.
+        private void AutoFileDeletionHandler(string s, object[] args)
+        {
+            m_extensibleDisturbanceAnalysisEngine.AutoDeleteFiles();
+        }
+
         // Reloads system settings from the database.
         private void ReloadSystemSettingsRequestHandler(ClientRequestInfo requestInfo)
         {
@@ -702,6 +710,21 @@ namespace openXDA
             string message = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(args);
             DisplayResponseMessage(requestInfo, message);
         }
+
+        private void PurgeDataHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_extensibleDisturbanceAnalysisEngine.PurgeData(new string[] { "-?" });
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
+            string message = m_extensibleDisturbanceAnalysisEngine.PurgeData(args);
+            DisplayResponseMessage(requestInfo, message);
+        }
+
 
         public void OnProcessAllData(ClientRequestInfo requestInfo)
         {

@@ -202,18 +202,43 @@ namespace FaultData.DataReaders
 
             while (m_parser.ReadNext())
             {
+                DateTime timestamp = m_emaxSettings.ApplyTimestampCorrection ? m_parser.CalculatedTimestamp : m_parser.ParsedTimestamp;
+
                 for (int i = 0; i < analogChannels.Count; i++)
                 {
-                    DateTime timestamp = m_emaxSettings.ApplyTimestampCorrection ? m_parser.CalculatedTimestamp : m_parser.ParsedTimestamp;
                     double value = m_emaxSettings.ApplyValueCorrection ? m_parser.CorrectedValues[i] : m_parser.Values[i];
                     m_meterDataSet.DataSeries[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
+                }
+
+                for (int i = 0; i < digitalChannels.Count; i++)
+                {
+                    int bitCount = sizeof(ushort) * 8;
+                    int groupIndex = i / bitCount;
+                    int bitIndex = i % bitCount;
+                    ushort mask = (ushort)~(0x8000u >> bitIndex);
+                    double value = m_parser.EventGroups[groupIndex] & mask;
+                    m_meterDataSet.Digitals[i + 1].DataPoints.Add(new DataPoint() { Time = timestamp, Value = value });
                 }
             }
 
             if (!string.IsNullOrEmpty(m_emaxSettings.COMTRADEExportDirectory))
-                ExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
+                TryExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
 
             m_meterDataSet.Meter = meter;
+        }
+
+        private bool TryExportToCOMTRADE(string filePath, ControlFile controlFile, string identityString, List<ANLG_CHNL_NEW> analogChannels, List<EVNT_CHNL_NEW> digitalChannels)
+        {
+            try
+            {
+                ExportToCOMTRADE(filePath, controlFile, identityString, analogChannels, digitalChannels);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+                return false;
+            }
         }
 
         private void ExportToCOMTRADE(string filePath, ControlFile controlFile, string identityString, List<ANLG_CHNL_NEW> analogChannels, List<EVNT_CHNL_NEW> digitalChannels)
@@ -403,6 +428,13 @@ namespace FaultData.DataReaders
 
             return meterKeyGroup.Value;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(EMAXReader));
 
         #endregion
     }

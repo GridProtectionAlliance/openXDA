@@ -85,6 +85,14 @@ namespace FaultData.DataWriters
                 TimeUpdated = timeUpdated;
             }
 
+            public bool Contains(LineEvent other)
+            {
+                if (LineID != other.LineID)
+                    return false;
+
+                return TimeRange.Contains(other.TimeRange);
+            }
+
             public bool Overlaps(LineEvent other)
             {
                 if (LineID != other.LineID)
@@ -104,6 +112,11 @@ namespace FaultData.DataWriters
                 return new LineEvent(LineID, mergedTimeRange, timeCreated, timeUpdated);
             }
         }
+
+        // Constants
+
+        // Purge old events from RecentLineEvents every 12 hours
+        private const int PurgeInterval = 12 * 60 * 60 * 1000;
 
         // Fields
         private string m_dbConnectionString;
@@ -228,7 +241,7 @@ namespace FaultData.DataWriters
                     .ToList();
 
                 foreach (Event evt in events)
-                    QueueLineEvent(new LineEvent(evt));
+                    QueueEvent(evt);
             }
         }
 
@@ -237,8 +250,10 @@ namespace FaultData.DataWriters
         #region [ Static ]
 
         // Static Fields
+        private static readonly HashSet<LineEvent> RecentLineEvents;
         private static readonly HashSet<LineEvent> QueuedLineEvents;
         private static readonly LogicalThread EmailProcessingThread;
+        private static readonly Action PurgeOldLineEventsAction;
 
         private static string s_dbConnectionString;
         private static string s_smtpServer;
@@ -257,9 +272,12 @@ namespace FaultData.DataWriters
         // Static Constructor
         static EventEmailWriter()
         {
+            RecentLineEvents = new HashSet<LineEvent>();
             QueuedLineEvents = new HashSet<LineEvent>();
             EmailProcessingThread = new LogicalThread();
             EmailProcessingThread.UnhandledException += (sender, args) => Log.Error(args.Argument.Message, args.Argument);
+
+            PurgeOldLineEventsAction = new Action(PurgeOldLineEvents);
         }
 
         // Static Methods
@@ -296,84 +314,189 @@ namespace FaultData.DataWriters
             }
         }
 
-        private static void QueueLineEvent(LineEvent lineEvent)
+        private static void QueueEvent(Event evt)
         {
+            LineEvent lineEvent = new LineEvent(evt);
+
             EmailProcessingThread.Push(() =>
             {
-                TimeSpan delaySpan = Common.Min(s_minWaitPeriod, s_maxWaitPeriod);
+                if (!RecentLineEvents.Any())
+                    QueryRecentLineEvents();
+
+                List<LineEvent> overlappingLineEvents = QueuedLineEvents
+                    .Where(queuedLineEvent => lineEvent.Overlaps(queuedLineEvent))
+                    .ToList();
+
+                if (overlappingLineEvents.Any())
+                {
+                    QueuedLineEvents.ExceptWith(overlappingLineEvents);
+                    lineEvent = overlappingLineEvents.Aggregate(lineEvent, (mergedLineEvent, queuedLineEvent) => mergedLineEvent.Merge(queuedLineEvent));
+                }
+                else
+                {
+                    DateTime twoDaysAgo = DateTime.UtcNow.AddDays(-2.0D);
+
+                    if (lineEvent.TimeRange.End > twoDaysAgo)
+                        lineEvent = MergeWithRecentLineEvents(lineEvent);
+
+                    if (lineEvent.TimeRange.Start < twoDaysAgo)
+                        lineEvent = MergeWithDatabase(lineEvent);
+                }
+
+                if (!QueueLineEvent(lineEvent))
+                    GenerateEmail(lineEvent);
+            });
+        }
+
+        private static bool QueueLineEvent(LineEvent lineEvent)
+        {
+            DateTime now = DateTime.UtcNow;
+            DateTime maxDequeueTime = lineEvent.TimeCreated + s_maxWaitPeriod;
+            DateTime minDequeueTime = lineEvent.TimeUpdated + s_minWaitPeriod;
+            DateTime dequeueTime = Common.Min(maxDequeueTime, minDequeueTime);
+
+            if (now < dequeueTime)
+            {
+                TimeSpan delaySpan = dequeueTime - now;
                 int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
                 QueuedLineEvents.Add(lineEvent);
                 new Action(() => DequeueLineEvent(lineEvent)).DelayAndExecute(delay);
-            });
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void QueryRecentLineEvents()
+        {
+            using (AdoDataConnection connection = s_connectionFactory())
+            {
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+                DateTime twoDaysAgo = DateTime.UtcNow.AddDays(-2.0D);
+                object twoDaysAgo2 = ToDateTime2(connection, twoDaysAgo);
+                List<Event> recentEvents = eventTable.QueryRecordsWhere("EndTime >= {0}", twoDaysAgo2).ToList();
+
+                foreach (IGrouping<int, Event> grouping in recentEvents.GroupBy(evt => evt.LineID))
+                {
+                    LineEvent mergedLineEvent = null;
+
+                    foreach (Event evt in grouping)
+                    {
+                        LineEvent lineEvent = new LineEvent(evt);
+
+                        if ((object)mergedLineEvent == null)
+                            mergedLineEvent = lineEvent;
+
+                        if (!mergedLineEvent.Overlaps(lineEvent))
+                        {
+                            RecentLineEvents.Add(mergedLineEvent);
+                            mergedLineEvent = lineEvent;
+                        }
+
+                        mergedLineEvent = mergedLineEvent.Merge(lineEvent);
+                    }
+
+                    RecentLineEvents.Add(mergedLineEvent);
+                }
+            }
+
+            PurgeOldLineEventsAction.DelayAndExecute(PurgeInterval);
+        }
+
+        private static LineEvent MergeWithRecentLineEvents(LineEvent lineEvent)
+        {
+            Func<LineEvent, LineEvent, LineEvent> merge = (lineEvent1, lineEvent2) => lineEvent1.Merge(lineEvent2);
+
+            List<LineEvent> overlappingEvents = RecentLineEvents
+                .Where(recentLineEvent => recentLineEvent.Overlaps(lineEvent))
+                .ToList();
+
+            LineEvent mergedLineEvent = overlappingEvents.Aggregate(lineEvent, merge);
+
+            RecentLineEvents.ExceptWith(overlappingEvents);
+            RecentLineEvents.Add(mergedLineEvent);
+
+            return mergedLineEvent;
+        }
+
+        private static LineEvent MergeWithDatabase(LineEvent lineEvent)
+        {
+            const string MinStartTimeFormat = "SELECT MIN(StartTime) FROM Event WHERE LineID = {0} AND {1} BETWEEN StartTime AND EndTime";
+            const string MaxEndTimeFormat = "SELECT MAX(EndTime) FROM Event WHERE LineID = {0} AND {1} BETWEEN StartTime AND EndTime";
+
+            Func<LineEvent, LineEvent, LineEvent> merge = (lineEvent1, lineEvent2) => lineEvent1.Merge(lineEvent2);
+            DateTime startTime = lineEvent.TimeRange.Start;
+            DateTime endTime = lineEvent.TimeRange.End;
+
+            using (AdoDataConnection connection = s_connectionFactory())
+            {
+                while (true)
+                {
+                    DateTime adjustedStartTime = startTime.AddSeconds(-s_timeTolerance);
+                    object adjustedStartTime2 = ToDateTime2(connection, adjustedStartTime);
+                    DateTime minStartTime = connection.ExecuteScalar(startTime, MinStartTimeFormat, lineEvent.LineID, adjustedStartTime2);
+
+                    if (startTime == minStartTime)
+                        break;
+
+                    startTime = minStartTime;
+                }
+
+                while (true)
+                {
+                    DateTime adjustedEndTime = endTime.AddSeconds(s_timeTolerance);
+                    object adjustedEndTime2 = ToDateTime2(connection, adjustedEndTime);
+                    DateTime maxEndTime = connection.ExecuteScalar(endTime, MaxEndTimeFormat, lineEvent.LineID, adjustedEndTime2);
+
+                    if (endTime == maxEndTime)
+                        break;
+
+                    endTime = maxEndTime;
+                }
+            }
+
+            if (startTime == lineEvent.TimeRange.Start && endTime == lineEvent.TimeRange.End)
+                return lineEvent;
+
+            Range<DateTime> dbTimeRange = new Range<DateTime>(startTime, endTime);
+            LineEvent dbLineEvent = new LineEvent(lineEvent.LineID, dbTimeRange);
+            return lineEvent.Merge(dbLineEvent);
+        }
+
+        private static void PurgeOldLineEvents()
+        {
+            DateTime twoDaysAgo = DateTime.UtcNow.AddDays(-2.0D);
+            RecentLineEvents.RemoveWhere(lineEvent => lineEvent.TimeRange.End < twoDaysAgo);
+            PurgeOldLineEventsAction.DelayAndExecute(PurgeInterval);
         }
 
         private static void DequeueLineEvent(LineEvent lineEvent)
         {
             EmailProcessingThread.Push(() =>
             {
-                if (!QueuedLineEvents.Remove(lineEvent))
-                    return;
-
-                using (AdoDataConnection connection = s_connectionFactory())
-                {
-                    TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-
-                    LineEvent newLineEvent = eventTable
-                            .GetSystemEvent(lineEvent.TimeRange.Start, lineEvent.TimeRange.End, s_timeTolerance)
-                            .Where(evt => evt.LineID == lineEvent.LineID)
-                            .Select(evt => new LineEvent(evt))
-                            .Aggregate(lineEvent, (mergedLineEvent, queuedLineEvent) => mergedLineEvent.Merge(queuedLineEvent));
-
-                    List<LineEvent> queuedLineEvents = QueuedLineEvents
-                        .Where(queuedLineEvent => newLineEvent.Overlaps(queuedLineEvent))
-                        .ToList();
-
-                    QueuedLineEvents.ExceptWith(queuedLineEvents);
-                    newLineEvent = queuedLineEvents.Aggregate(lineEvent, (mergedLineEvent, queuedLineEvent) => mergedLineEvent.Merge(queuedLineEvent));
-
-                    DateTime now = DateTime.UtcNow;
-                    DateTime maxDequeueTime = newLineEvent.TimeCreated + s_maxWaitPeriod;
-                    DateTime minDequeueTime = newLineEvent.TimeUpdated + s_minWaitPeriod;
-                    DateTime dequeueTime = Common.Min(maxDequeueTime, minDequeueTime);
-
-                    if (now < dequeueTime)
-                    {
-                        TimeSpan delaySpan = dequeueTime - now;
-                        int delay = (int)Math.Ceiling(delaySpan.TotalMilliseconds);
-                        QueuedLineEvents.Add(newLineEvent);
-                        new Action(() => DequeueLineEvent(newLineEvent)).DelayAndExecute(delay);
-                        return;
-                    }
-
-                    GenerateEmail(connection, newLineEvent);
-                }
+                if (QueuedLineEvents.Remove(lineEvent))
+                    GenerateEmail(lineEvent);
             });
         }
 
-        private static void GenerateEmail(AdoDataConnection connection, LineEvent lineEvent)
+        private static void GenerateEmail(LineEvent lineEvent)
         {
-            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-            Event evt;
-
-            using (IDbCommand command = connection.Connection.CreateCommand())
+            using (AdoDataConnection connection = s_connectionFactory())
             {
-                IDbDataParameter startTimeParameter = command.CreateParameter();
-                startTimeParameter.DbType = DbType.DateTime2;
-                startTimeParameter.Value = lineEvent.TimeRange.Start;
+                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
 
-                IDbDataParameter endTimeParameter = command.CreateParameter();
-                endTimeParameter.DbType = DbType.DateTime2;
-                endTimeParameter.Value = lineEvent.TimeRange.End;
+                object startTime2 = ToDateTime2(connection, lineEvent.TimeRange.Start);
+                object endTime2 = ToDateTime2(connection, lineEvent.TimeRange.End);
 
                 RecordRestriction recordRestriction =
                     new RecordRestriction("LineID = {0}", lineEvent.LineID) &
-                    new RecordRestriction("StartTime >= {0}", startTimeParameter) &
-                    new RecordRestriction("EndTime <= {0}", endTimeParameter);
+                    new RecordRestriction("StartTime >= {0}", startTime2) &
+                    new RecordRestriction("EndTime <= {0}", endTime2);
 
-                evt = eventTable.QueryRecord(recordRestriction);
+                Event evt = eventTable.QueryRecord(recordRestriction);
+
+                GenerateEmail(connection, evt.ID);
             }
-
-            GenerateEmail(connection, evt.ID);
         }
 
         private static void GenerateEmail(AdoDataConnection connection, int eventID)
@@ -439,7 +562,8 @@ namespace FaultData.DataWriters
                 {
                     htmlDocument.TransformAll("chart", (element, index) =>
                     {
-                        string cid = $"event{eventID}_chart{index:00}.png";
+                        string chartEventID = (string)element.Attribute("eventID") ?? "-1";
+                        string cid = $"event{chartEventID}_chart{index:00}.png";
 
                         Stream image = ChartGenerator.ConvertToChartImageStream(connection, element);
                         Attachment attachment = new Attachment(image, cid);
@@ -589,6 +713,17 @@ namespace FaultData.DataWriters
 
                 // Send the email
                 smtpClient.Send(emailMessage);
+            }
+        }
+
+        private static object ToDateTime2(AdoDataConnection connection, DateTime dateTime)
+        {
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                IDbDataParameter parameter = command.CreateParameter();
+                parameter.DbType = DbType.DateTime2;
+                parameter.Value = dateTime;
+                return parameter;
             }
         }
 

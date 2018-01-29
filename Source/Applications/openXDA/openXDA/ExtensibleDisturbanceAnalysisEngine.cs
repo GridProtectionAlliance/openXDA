@@ -96,6 +96,7 @@ using openXDA.Configuration;
 using openXDA.Model;
 using FileShare = openXDA.Configuration.FileShare;
 using GSF.IO.Checksums;
+using System.Threading.Tasks;
 
 namespace openXDA
 {
@@ -540,6 +541,39 @@ namespace openXDA
         }
 
         /// <summary>
+        /// Auto deletes old files.
+        /// </summary>
+        /// <param name="args">The arguments supplied to the command to tweak the settings.</param>
+        /// <returns></returns>
+        public void AutoDeleteFiles() {
+            using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+            {
+                TableOperations<Setting> settingTable = new TableOperations<Setting>(connection);
+                int days = int.Parse(settingTable.QueryRecordWhere("Name = 'AutoFileDeletionDays'")?.Value ?? "30");
+                DateTime date = DateTime.UtcNow.AddDays(days * -1);
+
+                foreach (string path in m_fileProcessor.TrackedDirectories)
+                {
+                    foreach(string filePath in FilePath.EnumerateFiles(path))
+                    {
+                        FileInfo file = new FileInfo(filePath);
+                        List<DateTime> list = new List<DateTime>();
+                        list.Add(file.CreationTimeUtc);
+                        list.Add(file.LastAccessTimeUtc);
+                        list.Add(file.LastWriteTimeUtc);
+                        DateTime max = list.Max();
+
+                        if (max < date)
+                        {
+                            OnStatusMessage("Deleting file - {0}", file.Name);
+                            file.Delete();
+                        }
+                    }
+                }
+            }
+
+        }
+        /// <summary>
         /// Tweaks the behavior of the file processor at runtime.
         /// </summary>
         /// <param name="args">The arguments supplied to the command to tweak the settings.</param>
@@ -704,6 +738,113 @@ namespace openXDA
             }
 
             throw new FormatException($"Malformed expression - Unrecognized option '{args[1]}' supplied to the 'TweakFileProcessor' command. Type 'TweakFileProcessor -?' to get help with this command.");
+        }
+
+        /// <summary>
+        /// Purges data from database beyond a specified date.
+        /// </summary>
+        /// <param name="args">The arguments supplied to the command to tweak the settings.</param>
+        /// <returns>A message describing the change that was made.</returns>
+        public string PurgeData(string[] args) {
+            if (args.Length == 0 || args[0] == "-?")
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Purges data from database beyond a specified date.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       PurgeData {  MM/DD/YY }");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("       PurgeData -?");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                return helpMessage.ToString();
+            }
+            else if (args.Length == 1) {
+                DateTime parseDate;
+
+                try
+                {
+                    parseDate = DateTime.Parse(args[0]);
+                }
+                catch (Exception)
+                {
+                    StringBuilder helpMessage = new StringBuilder();
+                    helpMessage.Append("Argument not a valid date time object, please use MM/DD/YY");
+                    return helpMessage.ToString();
+                }
+
+                using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+                {
+                    TableOperations<Event> table = new TableOperations<Event>(connection);
+                    int count = table.QueryRecordCountWhere("FileGroupID IN (SELECT ID FROM FileGroup WHERE ProcessingStartTime < {0})", parseDate);
+                    StringBuilder helpMessage = new StringBuilder();
+                    helpMessage.Append($"{count} events and subsequent data will be purged from the database...");
+                    helpMessage.Append($"Run command PurgeData {args[0]} -verify to execute.");
+
+                    return helpMessage.ToString();
+
+                }
+            }
+            else if (args.Length == 2 && args[1] == "-verify") {
+                DateTime parseDate;
+
+                try
+                {
+                    parseDate = DateTime.Parse(args[0]);
+                }
+                catch (Exception)
+                {
+                    StringBuilder helpMessage = new StringBuilder();
+                    helpMessage.Append("Argument not a valid date time object, please use MM/DD/YY");
+                    return helpMessage.ToString();
+                }
+
+                using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
+                {
+                    TableOperations<FileGroup> table = new TableOperations<FileGroup>(connection);
+                    IEnumerable<int> fileGroupIDs = table.QueryRecordsWhere($"ProcessingStartTime < '{parseDate.ToString()}'").Select(x => x.ID);
+                    connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete 'FileGroup','ProcessingStartTime < ''{parseDate.ToString()}'''");
+                    StringBuilder helpMessage = new StringBuilder();
+                    helpMessage.Append($"Preliminary data deleted.  Event data will continue deletion in the backgroup");
+
+                    Task.Run(() => {
+                        using(AdoDataConnection conn = CreateDbConnection(m_systemSettings))
+                        {
+                            while (fileGroupIDs.Any())
+                            {
+                                string stringOfIds = string.Join(",", fileGroupIDs.Take(50));
+                                fileGroupIDs = fileGroupIDs.Skip(50);
+                                conn.ExecuteNonQuery($"EXEC UniversalCascadeDelete 'EventData', 'FileGroupID IN ({stringOfIds})'");
+                            }
+                        }
+                    });
+
+                    return helpMessage.ToString();
+
+                }
+            }
+            else {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Improper use of command - PurgeData.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       PurgeData {  MM/DD/YY }");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("       PurgeData -?");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                return helpMessage.ToString();
+            }
         }
 
         /// <summary>

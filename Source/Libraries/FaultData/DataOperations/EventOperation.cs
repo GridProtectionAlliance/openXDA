@@ -29,11 +29,14 @@ using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
+using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
 using openXDA.Model;
+using DbDisturbance = openXDA.Model.Disturbance;
 using Disturbance = FaultData.DataAnalysis.Disturbance;
+using PQDPhase = GSF.PQDIF.Logical.Phase;
 
 namespace FaultData.DataOperations
 {
@@ -84,16 +87,21 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
-            CycleDataResource cycleDataResource;
-            EventClassificationResource eventClassificationResource;
+            DataGroupsResource dataGroupsResource = meterDataSet.GetResource<DataGroupsResource>();
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            EventClassificationResource eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
 
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
-            eventClassificationResource = meterDataSet.GetResource<EventClassificationResource>();
-            LoadEvents(meterDataSet, cycleDataResource.DataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
-            LoadDisturbances(meterDataSet, cycleDataResource.DataGroups);
+            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            {
+                List<DataGroup> dataGroups = new List<DataGroup>(cycleDataResource.DataGroups);
+                dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
+
+                List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
+                LoadEvents(connection, events);
+            }
         }
 
-        private void LoadEvents(MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications)
+        private List<Event> GetEvents(AdoDataConnection connection, MeterDataSet meterDataSet, List<DataGroup> dataGroups, List<VICycleDataGroup> viCycleDataGroups, Dictionary<DataGroup, EventClassification> eventClassifications)
         {
             int count = dataGroups
                 .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
@@ -104,38 +112,60 @@ namespace FaultData.DataOperations
             if (count == 0)
             {
                 Log.Info($"No events found for file '{meterDataSet.FilePath}'.");
-                return;
+                return new List<Event>();
             }
 
             Log.Info(string.Format("Processing {0} events...", count));
 
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            List<Event> events = new List<Event>(count);
+
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
+            TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
+
+            for (int i = 0; i < dataGroups.Count; i++)
             {
-                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-                TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
-                TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
+                DataGroup dataGroup = dataGroups[i];
+                EventClassification eventClassification;
 
-                for (int i = 0; i < dataGroups.Count; i++)
+                if (dataGroup.Classification == DataClassification.Trend)
+                    continue;
+
+                if (dataGroup.Classification == DataClassification.Unknown)
+                    continue;
+
+                if (!eventClassifications.TryGetValue(dataGroup, out eventClassification))
+                    continue;
+
+                if ((object)dataGroup.Line == null && meterDataSet.Meter.MeterLocation.MeterLocationLines.Count != 1)
+                    continue;
+
+                Line line = dataGroup.Line ?? meterDataSet.Meter.MeterLocation.MeterLocationLines.Single().Line;
+
+                if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", dataGroup.StartTime, dataGroup.EndTime, dataGroup.Samples, meterDataSet.Meter.ID, line.ID) > 0)
+                    continue;
+
+                EventType eventType = eventTypeTable.GetOrAdd(eventClassification.ToString());
+
+                Event evt = new Event()
                 {
+                    FileGroupID = meterDataSet.FileGroup.ID,
+                    MeterID = meterDataSet.Meter.ID,
+                    LineID = line.ID,
+                    EventTypeID = eventType.ID,
+                    EventDataID = null,
+                    Name = string.Empty,
+                    StartTime = dataGroup.StartTime,
+                    EndTime = dataGroup.EndTime,
+                    Samples = dataGroup.Samples,
+                    TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
+                    SamplesPerSecond = 0,
+                    SamplesPerCycle = 0
+                };
 
-                    DataGroup dataGroup = dataGroups[i];
-                    EventClassification eventClassification;
-
-                    if (dataGroup.Classification == DataClassification.Trend)
-                        continue;
-
-                    if (dataGroup.Classification == DataClassification.Unknown)
-                        continue;
-
-                    if (!eventClassifications.TryGetValue(dataGroup, out eventClassification))
-                        continue;
-
-                    if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", dataGroup.StartTime, dataGroup.EndTime, dataGroup.Samples, meterDataSet.Meter.ID, dataGroup.Line.ID).Any())
-                        continue;
-                        
-                    EventType eventType = eventTypeTable.GetOrAdd(eventClassification.ToString());
-
-                    EventData eventData = new EventData()
+                if (dataGroup.Samples > 0)
+                {
+                    evt.EventData = new EventData()
                     {
                         FileGroupID = meterDataSet.FileGroup.ID,
                         RunTimeID = i,
@@ -144,90 +174,97 @@ namespace FaultData.DataOperations
                         MarkedForDeletion = 0
                     };
 
-                    eventDataTable.AddNewRecord(eventData);
-                    eventData.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-
-                    Event evt = new Event()
-                    {
-                        FileGroupID = meterDataSet.FileGroup.ID,
-                        MeterID = meterDataSet.Meter.ID,
-                        LineID = dataGroup.Line.ID,
-                        EventTypeID = eventType.ID,
-                        EventDataID = eventData.ID,
-                        Name = string.Empty,
-                        StartTime = dataGroup.StartTime,
-                        EndTime = dataGroup.EndTime,
-                        Samples = dataGroup.Samples,
-                        TimeZoneOffset = (int)m_timeZone.GetUtcOffset(dataGroup.StartTime).TotalMinutes,
-                        SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond),
-                        SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency)
-                    };
-
-                    eventTable.AddNewRecord(evt);
+                    evt.SamplesPerSecond = (int)Math.Round(dataGroup.SamplesPerSecond);
+                    evt.SamplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
                 }
+
+                evt.Disturbances.AddRange(GetDisturbances(connection, meterDataSet, dataGroup));
+
+                events.Add(evt);
             }
 
             Log.Info(string.Format("Finished processing {0} events.", count));
+
+            return events;
         }
 
-        private void LoadDisturbances(MeterDataSet meterDataSet, List<DataGroup> dataGroups)
+        private void LoadEvents(AdoDataConnection connection, List<Event> events)
+        {
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
+            TableOperations<DbDisturbance> disturbanceTable = new TableOperations<DbDisturbance>(connection);
+
+            foreach (Event evt in events)
+            {
+                IDbDataParameter startTime2 = ToDateTime2(connection, evt.StartTime);
+                IDbDataParameter endTime2 = ToDateTime2(connection, evt.EndTime);
+
+                if (eventTable.QueryRecordsWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.LineID).Any())
+                    continue;
+
+                EventData eventData = evt.EventData;
+
+                if ((object)eventData != null)
+                {
+                    eventDataTable.AddNewRecord(eventData);
+                    eventData.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    evt.EventDataID = eventData.ID;
+                }
+
+                eventTable.AddNewRecord(evt);
+                evt.ID = eventTable.QueryRecordWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, evt.Samples, evt.MeterID, evt.LineID).ID;
+
+                foreach (DbDisturbance disturbance in evt.Disturbances)
+                {
+                    disturbance.EventID = evt.ID;
+                    disturbanceTable.AddNewRecord(disturbance);
+                }
+
+                connection.ExecuteNonQuery(@"
+                    IF dbo.EventHasImpactedComponents({0}) = 1
+	                    INSERT INTO PQIResult VALUES ({0})                
+                ", evt.ID);
+            }
+        }
+
+        private List<DbDisturbance> GetDisturbances(AdoDataConnection connection, MeterDataSet meterDataSet, DataGroup dataGroup)
         {
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
             SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+            List<DbDisturbance> dbDisturbances = new List<DbDisturbance>();
             List<Disturbance> disturbances;
 
-            int count = dataGroups
-                .Where(dataGroup => dataGroup.Classification != DataClassification.Trend)
-                .Where(dataGroup => dataGroup.Classification != DataClassification.Unknown)
-                .Count();
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
 
-            if (count == 0)
-                return;
+            if (dataGroup.Classification == DataClassification.Trend)
+                return dbDisturbances;
 
-            using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+            if (dataGroup.Classification == DataClassification.Unknown)
+                return dbDisturbances;
+
+            if (sagDataResource.Sags.TryGetValue(dataGroup, out disturbances))
             {
-                TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-
-                foreach (DataGroup dataGroup in dataGroups)
-                {
-                    if (dataGroup.Classification == DataClassification.Trend)
-                        continue;
-
-                    if (dataGroup.Classification == DataClassification.Unknown)
-                        continue;
-
-                    Event evt = eventTable.GetEvent(meterDataSet.FileGroup, dataGroup);
-
-                    if (sagDataResource.Sags.TryGetValue(dataGroup, out disturbances))
-                    {
-                        foreach (Disturbance sag in disturbances)
-                            AddDisturbanceRow(connection, evt.ID, sag);
-                    }
-
-                    if (swellDataResource.Swells.TryGetValue(dataGroup, out disturbances))
-                    {
-                        foreach (Disturbance swell in disturbances)
-                            AddDisturbanceRow(connection, evt.ID, swell);
-                    }
-
-                    if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out disturbances))
-                    {
-                        foreach (Disturbance interruption in disturbances)
-                            AddDisturbanceRow(connection, evt.ID, interruption);
-                    }
-
-                    connection.ExecuteNonQuery(@"
-                        IF dbo.EventHasImpactedComponents({0}) = 1
-	                        INSERT INTO PQIResult VALUES ({0})                
-                    ", evt.ID);
-
-                }
-
+                foreach (Disturbance sag in disturbances)
+                    dbDisturbances.Add(GetDisturbanceRow(connection, sag));
             }
+
+            if (swellDataResource.Swells.TryGetValue(dataGroup, out disturbances))
+            {
+                foreach (Disturbance swell in disturbances)
+                    dbDisturbances.Add(GetDisturbanceRow(connection, swell));
+            }
+
+            if (interruptionDataResource.Interruptions.TryGetValue(dataGroup, out disturbances))
+            {
+                foreach (Disturbance interruption in disturbances)
+                    dbDisturbances.Add(GetDisturbanceRow(connection, interruption));
+            }
+
+            return dbDisturbances;
         }
         
-        private void AddDisturbanceRow(AdoDataConnection connection, int eventID, Disturbance disturbance)
+        private DbDisturbance GetDisturbanceRow(AdoDataConnection connection, Disturbance disturbance)
         {
             TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
             EventType eventType = eventTypeTable.GetOrAdd(disturbance.EventType.ToString());
@@ -235,10 +272,8 @@ namespace FaultData.DataOperations
             TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
             Phase phase = phaseTable.GetOrAdd(disturbance.Phase.ToString());
 
-            TableOperations<openXDA.Model.Disturbance> disturbanceTable = new TableOperations<openXDA.Model.Disturbance>(connection);
-            openXDA.Model.Disturbance dbDisturbance = new openXDA.Model.Disturbance();
+            DbDisturbance dbDisturbance = new DbDisturbance();
 
-            dbDisturbance.EventID = eventID;
             dbDisturbance.EventTypeID = eventType.ID;
             dbDisturbance.PhaseID = phase.ID;
             dbDisturbance.Magnitude = disturbance.Magnitude;
@@ -250,7 +285,32 @@ namespace FaultData.DataOperations
             dbDisturbance.StartIndex = disturbance.StartIndex;
             dbDisturbance.EndIndex = disturbance.EndIndex;
 
-            disturbanceTable.AddNewRecord(dbDisturbance);
+            return dbDisturbance;
+        }
+
+        private double GetPerUnitMagnitude(Line line, ReportedDisturbance disturbance)
+        {
+            double nominalVoltage = GetLineVoltage(line, disturbance.Phase);
+            double puMax = disturbance.Maximum / nominalVoltage;
+            double puMin = disturbance.Minimum / nominalVoltage;
+            double maxDiff = Math.Abs(1.0D - puMax);
+            double minDiff = Math.Abs(1.0D - puMin);
+
+            if (maxDiff > minDiff)
+                return puMax;
+
+            return puMin;
+        }
+
+        private double GetLineVoltage(Line line, PQDPhase phase)
+        {
+            PQDPhase[] lnPhases = { PQDPhase.AN, PQDPhase.BN, PQDPhase.CN, PQDPhase.LineToNeutralAverage };
+            double lineVoltage = line.VoltageKV;
+
+            if (lnPhases.Contains(phase))
+                lineVoltage /= Math.Sqrt(3.0D);
+
+            return lineVoltage * 1000.0D;
         }
 
         private double ToDbFloat(double value)
@@ -261,6 +321,17 @@ namespace FaultData.DataOperations
                 return Invalid;
 
             return value;
+        }
+
+        private IDbDataParameter ToDateTime2(AdoDataConnection connection, DateTime dateTime)
+        {
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                IDbDataParameter parameter = command.CreateParameter();
+                parameter.DbType = DbType.DateTime2;
+                parameter.Value = dateTime;
+                return parameter;
+            }
         }
 
         #endregion
