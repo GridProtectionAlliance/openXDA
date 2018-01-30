@@ -2862,7 +2862,10 @@ DisturbanceData AS
         DataFile.FilePath LIKE '%.D00' OR
         DataFile.FilePath LIKE '%.PQD' OR
         DataFile.FilePath LIKE '%.RCD' OR
-        DataFile.FilePath LIKE '%.RCL'
+        DataFile.FilePath LIKE '%.RCL' OR
+        DataFile.FilePath LIKE '%.SEL' OR
+        DataFile.FilePath LIKE '%.EVE' OR
+        DataFile.FilePath LIKE '%.CEV'
 ),
 SelectedSummary AS
 (
@@ -2913,7 +2916,10 @@ SummaryData AS
         DataFile.FilePath LIKE '%.D00' OR
         DataFile.FilePath LIKE '%.PQD' OR
         DataFile.FilePath LIKE '%.RCD' OR
-        DataFile.FilePath LIKE '%.RCL'
+        DataFile.FilePath LIKE '%.RCL' OR
+        DataFile.FilePath LIKE '%.SEL' OR
+        DataFile.FilePath LIKE '%.EVE' OR
+        DataFile.FilePath LIKE '%.CEV'
 ),
 SummaryIDs AS
 (
