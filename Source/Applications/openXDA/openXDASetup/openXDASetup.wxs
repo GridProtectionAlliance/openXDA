@@ -423,7 +423,6 @@
       <ComponentRef Id="System.Net.Http.Extensions" />
       <ComponentRef Id="System.Net.Http.Formatting" />
       <ComponentRef Id="System.Net.Http.Primitives" />
-      <ComponentRef Id="System.Net.Http.WebRequest" />
       <ComponentRef Id="System.Web.Helpers" />
       <ComponentRef Id="System.Web.Mvc" />
       <ComponentRef Id="System.Web.WebPages.Deployment" />
@@ -574,7 +573,7 @@
         <File Id="System.Web.Cors.dll" Name="System.Web.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.Cors.5.2.3\lib\net45\System.Web.Cors.dll" />
       </Component>
       <Component Id="Microsoft.AspNet.SignalR.Core">
-        <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll" />
+        <File Id="Microsoft.AspNet.SignalR.Core.dll" Name="Microsoft.AspNet.SignalR.Core.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.SignalR.Core.2.2.2\lib\net45\Microsoft.AspNet.SignalR.Core.dll" />
       </Component>
       <Component Id="Microsoft.AspNet.WebApi.Cors">
         <File Id="System.Web.Http.Cors.dll" Name="System.Web.Http.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebApi.Cors.5.2.3\lib\net45\System.Web.Http.Cors.dll" />
@@ -598,10 +597,10 @@
         <File Id="Microsoft.Owin.Cors.dll" Name="Microsoft.Owin.Cors.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Cors.3.0.1\lib\net45\Microsoft.Owin.Cors.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Diagnostics">
-        <File Id="Microsoft.Owin.Diagnostics.dll" Name="Microsoft.Owin.Diagnostics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Diagnostics.2.1.0\lib\net40\Microsoft.Owin.Diagnostics.dll" />
+        <File Id="Microsoft.Owin.Diagnostics.dll" Name="Microsoft.Owin.Diagnostics.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Diagnostics.3.1.0\lib\net45\Microsoft.Owin.Diagnostics.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Host.HttpListener">
-        <File Id="Microsoft.Owin.Host.HttpListener.dll" Name="Microsoft.Owin.Host.HttpListener.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Host.HttpListener.3.0.1\lib\net45\Microsoft.Owin.Host.HttpListener.dll" />
+        <File Id="Microsoft.Owin.Host.HttpListener.dll" Name="Microsoft.Owin.Host.HttpListener.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Host.HttpListener.3.1.0\lib\net45\Microsoft.Owin.Host.HttpListener.dll" />
       </Component>
       <Component Id="Microsoft.Owin.Hosting">
         <File Id="Microsoft.Owin.Hosting.dll" Name="Microsoft.Owin.Hosting.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.Owin.Hosting.3.1.0\lib\net45\Microsoft.Owin.Hosting.dll" />
@@ -629,9 +628,6 @@
       </Component>
       <Component Id="System.Net.Http.Primitives">
         <File Id="System.Net.Http.Primitives.dll" Name="System.Net.Http.Primitives.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.Formatting.Extension.5.2.3.0\lib\System.Net.Http.Primitives.dll" />
-      </Component>
-      <Component Id="System.Net.Http.WebRequest">
-        <File Id="System.Net.Http.WebRequest.dll" Name="System.Net.Http.WebRequest.dll" Source="$(var.SolutionDir)Dependencies\NuGet\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.WebRequest.dll" />
       </Component>
       <Component Id="System.Web.Helpers">
         <File Id="System.Web.Helpers.dll" Name="System.Web.Helpers.dll" Source="$(var.SolutionDir)Dependencies\NuGet\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll" />
