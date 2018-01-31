@@ -300,7 +300,7 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\openXDA.Model\openXDA.Model.csproj">
+    <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
     </ProjectReference>

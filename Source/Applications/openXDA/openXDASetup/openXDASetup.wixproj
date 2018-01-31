@@ -82,7 +82,7 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\openXDA.DataHub\openXDA.Hubs.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.DataHub\openXDA.Hubs.csproj">
       <Name>openXDA.Hubs</Name>
       <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
       <Private>True</Private>
@@ -90,7 +90,7 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\openXDA.DataPusher\openXDA.DataPusher.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.DataPusher\openXDA.DataPusher.csproj">
       <Name>openXDA.DataPusher</Name>
       <Project>{666eb8a6-fba9-454c-8537-9113c2ee68d4}</Project>
       <Private>True</Private>
@@ -98,7 +98,7 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\openXDA.Model\openXDA.Model.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Model\openXDA.Model.csproj">
       <Name>openXDA.Model</Name>
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Private>True</Private>
@@ -106,7 +106,7 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
+    <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Name>PQMark.DataAggregator</Name>
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Private>True</Private>

@@ -110,13 +110,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAUpgradeValidation", "Too
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Adapters", "Libraries\openXDA.Adapters\openXDA.Adapters.csproj", "{EC5ADF62-C5C8-4A0A-955A-ABEB54E78816}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Model", "openXDA.Model\openXDA.Model.csproj", "{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Model", "Libraries\openXDA.Model\openXDA.Model.csproj", "{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Hubs", "openXDA.DataHub\openXDA.Hubs.csproj", "{63E2953C-1C57-41C8-A51D-08E52780BF8A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Hubs", "Libraries\openXDA.DataHub\openXDA.Hubs.csproj", "{63E2953C-1C57-41C8-A51D-08E52780BF8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.DataPusher", "openXDA.DataPusher\openXDA.DataPusher.csproj", "{666EB8A6-FBA9-454C-8537-9113C2EE68D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.DataPusher", "Libraries\openXDA.DataPusher\openXDA.DataPusher.csproj", "{666EB8A6-FBA9-454C-8537-9113C2EE68D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PQMark.DataAggregator", "PQMark.DataAggregator\PQMark.DataAggregator.csproj", "{9F5BACF2-025C-4A54-94BD-EC0CEB618BF0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PQMark.DataAggregator", "Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj", "{9F5BACF2-025C-4A54-94BD-EC0CEB618BF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

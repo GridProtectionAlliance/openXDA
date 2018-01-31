@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,20 +25,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="GSF.Core">
-      <HintPath>..\Dependencies\GSF\GSF.Core.dll</HintPath>
+      <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
     <Reference Include="GSF.ServiceProcess">
-      <HintPath>..\Dependencies\GSF\GSF.ServiceProcess.dll</HintPath>
+      <HintPath>..\..\Dependencies\GSF\GSF.ServiceProcess.dll</HintPath>
     </Reference>
     <Reference Include="GSF.Web">
-      <HintPath>..\Dependencies\GSF\GSF.Web.dll</HintPath>
+      <HintPath>..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -53,7 +53,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Libraries\openHistorian.XDALink\openHistorian.XDALink.csproj">
+    <ProjectReference Include="..\openHistorian.XDALink\openHistorian.XDALink.csproj">
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>

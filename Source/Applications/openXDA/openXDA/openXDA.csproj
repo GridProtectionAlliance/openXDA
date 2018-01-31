@@ -374,19 +374,19 @@
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\openXDA.DataHub\openXDA.Hubs.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.DataHub\openXDA.Hubs.csproj">
       <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
       <Name>openXDA.Hubs</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\openXDA.DataPusher\openXDA.DataPusher.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.DataPusher\openXDA.DataPusher.csproj">
       <Project>{666eb8a6-fba9-454c-8537-9113c2ee68d4}</Project>
       <Name>openXDA.DataPusher</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\openXDA.Model\openXDA.Model.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
+    <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Name>PQMark.DataAggregator</Name>
     </ProjectReference>
