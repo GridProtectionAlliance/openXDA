@@ -354,8 +354,8 @@
 </div>
 @section Scripts
 {
-    <script language="javascript" type="text/javascript" src="/Scripts/flot/jquery.flot.js"></script>
-    <script language="javascript" type="text/javascript" src="/Scripts/flot/jquery.flot.time.js"></script>
+    <script language="javascript" type="text/javascript" src="@("/@GSF/Web/Shared/Scripts/flot/jquery.flot.js")"></script>
+    <script language="javascript" type="text/javascript" src="@("/@GSF/Web/Shared/Scripts/flot/jquery.flot.time.js")"></script>
     <script language="javascript" type="text/javascript" src="/Scripts/spin.js"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AlarmRangeLimitView, DataHub>(ViewBag, "ID", null, ViewBag.meterID, ViewBag.lineID))

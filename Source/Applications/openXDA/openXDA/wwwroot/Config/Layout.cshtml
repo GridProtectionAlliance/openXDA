@@ -54,14 +54,14 @@
     <meta name="description" content="" />
     <meta name="keywords" content="@Model.Global.ApplicationKeywords" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <link href="/Content/bootstrap@(min).css" rel="stylesheet">
+    <link href="@("/@GSF/Web/Shared/Content/bootstrap.css")" rel="stylesheet">
     <link href="/@Model.Global.BootstrapTheme" rel="stylesheet">
     <link href="/Content/bootstrap-datepicker3@(min).css" rel="stylesheet">
-    <link href="/Content/jquery-ui@(min).css" rel="stylesheet">
-    <link href="/Content/primeui-theme.css" rel="stylesheet">
-    <link href="/Content/font-awesome@(min).css" rel="stylesheet">
+    <link href="@("/@GSF/Web/Shared/Content/jquery-ui.css")" rel="stylesheet">
+    <link href="@("/@GSF/Web/Shared/Content/primeui-theme.css")" rel="stylesheet">
+    <link href="@("/@GSF/Web/Shared/Content/font-awesome.css")" rel="stylesheet">
     <link href="/Content/jquery.jspanel@(min).css" rel="stylesheet">
-    <link href="/Content/primeui@(min).css" rel="stylesheet">
+    <link href="@("/@GSF/Web/Shared/Content/primeui.css")" rel="stylesheet">
     <link href="/Content/Site.css" rel="stylesheet">
     <link href="/Content/daterangepicker.css" rel="stylesheet">
     <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
@@ -236,22 +236,22 @@ else {
         @RenderBody()
 
     </div><!--/.container -->
-    <script src="/Scripts/jquery-2.2.1@(min).js"></script>
-    <script src="/Scripts/jquery-ui@(min).js"></script>
-    <script src="/Scripts/bootstrap@(min).js"></script>
-    <script src="/Scripts/moment.min.js"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/jquery.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/jquery-ui.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/bootstrap.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/moment.js")"></script>
     <script src="/Scripts/ie10-viewport-bug-workaround.js"></script>
     <script src="/Scripts/respond@(min).js"></script>
     <script src="/Scripts/bootstrap-datepicker@(min).js"></script>
     <script src="/Scripts/daterangepicker.js"></script>
     <script src="/Scripts/bootstrap-toolkit@(min).js"></script>
     <script src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
-    <script src="/Scripts/jquery.signalR-2.2.0@(min).js"></script>
-    <script src="/@("@GSF/Web/Model/Scripts/gsf.web.client.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/jquery.signalR.js")"></script>
+    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.client.js")"></script>
     <script src="/signalr/hubs"></script>
     <script src="/Scripts/jquery.jspanel-compiled@(min).js"></script>
     <script src="/Scripts/plugins-all.js"></script>
-    <script src="/Scripts/primeui@(min).js"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/primeui.js")"></script>
     <script src="/Scripts/Site.js"></script>
     @Raw(ViewBag.PageControlScripts.ToString())
     @RenderSection("Scripts", false)
