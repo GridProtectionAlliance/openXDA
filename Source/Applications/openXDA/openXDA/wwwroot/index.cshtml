@@ -29,6 +29,7 @@
 @using GSF.Reflection
 @using RazorEngine.Templating
 @using GSF.Web
+@using GSF.Web.Shared
 @using openXDA.Model
 
 <!DOCTYPE html>
@@ -43,13 +44,13 @@
     <meta name="description" content="@Model.Global.ApplicationDescription" />
     <meta name="keywords" content="@Model.Global.ApplicationKeywords" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link href="@("@GSF/Web/Shared/Content/bootstrap.css")" rel="stylesheet">
+    <link href="@Resources.Root/Shared/Content/bootstrap.css" rel="stylesheet">
     <link href="@Model.Global.BootstrapTheme" rel="stylesheet">
     <link href="Content/bootstrap-datepicker3.css" rel="stylesheet">
-    <link href="@("@GSF/Web/Shared/Content/jquery-ui.css")" rel="stylesheet">
-    <link href="@("@GSF/Web/Shared/Content/primeui-theme.css")" rel="stylesheet">
-    <link href="@("@GSF/Web/Shared/Content/font-awesome.css")" rel="stylesheet">
-    <link href="@("@GSF/Web/Shared/Content/primeui.css")" rel="stylesheet">
+    <link href="@Resources.Root/Content/jquery-ui.css" rel="stylesheet">
+    <link href="@Resources.Root/Content/primeui-theme.css" rel="stylesheet">
+    <link href="@Resources.Root/Content/font-awesome.css" rel="stylesheet">
+    <link href="@Resources.Root/Content/primeui.css" rel="stylesheet">
     <link href="Content/Site.css" rel="stylesheet">
     <style>
         .container {
@@ -93,7 +94,7 @@
         @*<div class="row"><a href="#"><img style="width: auto" src="Images/Impact Coming Soon.png" /></a></div>*@
     </div>
 </div>
-    <script src="@("@GSF/Web/Shared/Scripts/jquery.js")"></script>
+    <script src="@Resources.Root/Scripts/jquery.js"></script>
 
 <script>
 </script>

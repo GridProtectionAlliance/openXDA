@@ -30,6 +30,7 @@ using GSF.Web.Model.Handlers;
 using GSF.Web.Security;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Json;
+using Microsoft.Owin.Cors;
 using Microsoft.Owin.Extensions;
 using Newtonsoft.Json;
 using openXDA.Adapters;
@@ -88,9 +89,10 @@ namespace openXDA
             string allowedDomainList = ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value;
 
             if (allowedDomainList == "*")
-                app.UseCors(Microsoft.Owin.Cors.CorsOptions.AllowAll);
+                app.UseCors(CorsOptions.AllowAll);
             else if ((object)allowedDomainList != null)
                 httpConfig.EnableCors(new System.Web.Http.Cors.EnableCorsAttribute(allowedDomainList, "*", "*"));
+
 
             CsvDownloadHandler.LogExceptionHandler = Program.Host.HandleException;
             HowlCSVDownloadHandler.LogExceptionHandler = Program.Host.HandleException;
