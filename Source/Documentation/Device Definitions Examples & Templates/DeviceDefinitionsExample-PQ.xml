@@ -49,7 +49,7 @@
 				If no line is being monitored any name is ok. -->
 				<name>Station1-Station3</name>
                 
-                <!-- voltage is the nominal voltage for this line or location specified in kV. 
+                <!-- voltage is the line-to-line nominal voltage for this line or location specified in kV. 
 				i.e. 161,000V should be specified as 161 similarly 480V should be specified as .48 -->
 				<voltage>161</voltage>
                 

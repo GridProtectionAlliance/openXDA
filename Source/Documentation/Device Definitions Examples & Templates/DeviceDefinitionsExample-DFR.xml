@@ -46,7 +46,7 @@
                 <!-- name is a human readable name for the line used in reporting. -->
 				<name>Station1-Station3</name>
                 
-                <!-- voltage is the nominal voltage for this line specified in kV. -->
+                <!-- voltage is the line-to-line nominal voltage for this line specified in kV. -->
 				<voltage>161</voltage>
                
                 <!-- The length of the line must be correct to obtain accurate results. By default this value is
