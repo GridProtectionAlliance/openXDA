@@ -31,6 +31,7 @@ using Newtonsoft.Json.Linq;
 using openXDA.Model;
 using System.Threading;
 using GSF.Reflection;
+using ValidateAntiForgeryToken = System.Web.Mvc.ValidateAntiForgeryTokenAttribute;
 
 namespace openXDA.Adapters
 {
@@ -256,6 +257,7 @@ namespace openXDA.Adapters
         #region [ POST Operations ]
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IHttpActionResult CreateRecord( string modelName, [FromBody]JObject record)
         {
             int recordId;
@@ -289,6 +291,7 @@ namespace openXDA.Adapters
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IHttpActionResult CreateChannel([FromBody]JObject record)
         {
             int channelId;
@@ -349,6 +352,7 @@ namespace openXDA.Adapters
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
         {
             OnReprocessFiles(record["FileGroupID"].Value<int>());
@@ -361,6 +365,7 @@ namespace openXDA.Adapters
         #region [ DELETE Operations ]
 
         [HttpDelete]
+        [ValidateAntiForgeryToken]
         public IHttpActionResult DeleteRecord(int id, string modelName)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
