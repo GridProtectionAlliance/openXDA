@@ -103,8 +103,7 @@
     </StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime, Version=3.3.1.7705, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Antlr3.Runtime">
       <HintPath>..\..\..\Dependencies\GSF\Antlr3.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="GSF.Communication">
@@ -131,12 +130,10 @@
     <Reference Include="GSF.TimeSeries">
       <HintPath>..\..\..\Dependencies\GSF\GSF.TimeSeries.dll</HintPath>
     </Reference>
-    <Reference Include="GSF.Web, Version=2.2.75.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="GSF.Web">
       <HintPath>..\..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zlib, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Ionic.Zlib">
       <HintPath>..\..\..\Dependencies\DotNetZip\Ionic.Zlib.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
@@ -152,14 +149,16 @@
     <Reference Include="Microsoft.Owin.Cors">
       <HintPath>..\..\..\Dependencies\GSF\Microsoft.Owin.Cors.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Owin.Host.HttpListener">
+      <HintPath>..\..\..\Dependencies\GSF\Microsoft.Owin.Host.HttpListener.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Owin.Hosting">
       <HintPath>..\..\..\Dependencies\GSF\Microsoft.Owin.Hosting.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Owin.Security">
       <HintPath>..\..\..\Dependencies\GSF\Microsoft.Owin.Security.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Owin">
@@ -181,6 +180,9 @@
       <HintPath>..\..\..\Dependencies\GSF\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers">
+      <HintPath>..\..\..\Dependencies\GSF\System.Web.Helpers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.Http">
       <HintPath>..\..\..\Dependencies\GSF\System.Web.Http.dll</HintPath>
     </Reference>
