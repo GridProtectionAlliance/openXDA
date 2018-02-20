@@ -1,15 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B3493118-9437-497D-A716-24232CE0D4F2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{6AA858DD-E319-459F-A5A5-FBDB89D63214}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultAlgorithms", "Libraries\FaultAlgorithms\FaultAlgorithms.csproj", "{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotNetZip", "DotNetZip", "{847B0BE1-54CD-4A68-B0DB-6EA2CD8F672F}"
 	ProjectSection(SolutionItems) = preProject
@@ -49,8 +47,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WiX", "WiX", "{598B0FE9-B4E
 		Dependencies\WiX\WixUIExtension.dll = Dependencies\WiX\WixUIExtension.dll
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugServiceMonitor", "Libraries\DebugServiceMonitor\DebugServiceMonitor.csproj", "{953A5C0E-31C5-4C36-93E6-A0F2750F199C}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C3DF-4D8B-B3EF-7819B44BCE09}"
 	ProjectSection(SolutionItems) = preProject
 		Data\01 - openXDA.sql = Data\01 - openXDA.sql
@@ -65,25 +61,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{B554F6A4-C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{9DA625F5-5D02-4855-A891-5E059AE2BD83}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAWaveformDataParser", "Tools\XDAWaveformDataParser\XDAWaveformDataParser.csproj", "{79FBD416-8CFF-425E-A010-15E61B9D3BD7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultData", "Libraries\FaultData\FaultData.csproj", "{11AE594D-2B2B-473C-8550-6BF62914C3E2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceDefinitionsMigrator", "Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj", "{94E98B70-2F52-45A2-A805-3D6B62547149}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0C461E89-2430-4E47-B5C4-97FCA86E0E21} = {0C461E89-2430-4E47-B5C4-97FCA86E0E21}
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openXDA", "openXDA", "{DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA", "Applications\openXDA\openXDA\openXDA.csproj", "{0C461E89-2430-4E47-B5C4-97FCA86E0E21}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDAConsole", "Applications\openXDA\openXDAConsole\openXDAConsole.csproj", "{72F417E9-F592-4417-B87C-B681AE707294}"
-EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "openXDASetup", "Applications\openXDA\openXDASetup\openXDASetup.wixproj", "{36380070-81B6-4D71-A80A-C5AE76B0E357}"
-	ProjectSection(ProjectDependencies) = postProject
-		{CE674B18-F140-47E4-A22C-8E7C37FAA974} = {CE674B18-F140-47E4-A22C-8E7C37FAA974}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openHistorian", "openHistorian", "{947C5857-A97F-499E-BC07-4509132EAF52}"
 	ProjectSection(SolutionItems) = preProject
@@ -94,6 +72,28 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "openHistorian", "openHistor
 		Dependencies\openHistorian\openHistorian.Core.dll = Dependencies\openHistorian\openHistorian.Core.dll
 		Dependencies\openHistorian\openHistorian.Core.SqlClr.dll = Dependencies\openHistorian\openHistorian.Core.SqlClr.dll
 		Dependencies\openHistorian\openHistorian.SqlClr.dll = Dependencies\openHistorian\openHistorian.SqlClr.dll
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultAlgorithms", "Libraries\FaultAlgorithms\FaultAlgorithms.csproj", "{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugServiceMonitor", "Libraries\DebugServiceMonitor\DebugServiceMonitor.csproj", "{953A5C0E-31C5-4C36-93E6-A0F2750F199C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDAWaveformDataParser", "Tools\XDAWaveformDataParser\XDAWaveformDataParser.csproj", "{79FBD416-8CFF-425E-A010-15E61B9D3BD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaultData", "Libraries\FaultData\FaultData.csproj", "{11AE594D-2B2B-473C-8550-6BF62914C3E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceDefinitionsMigrator", "Tools\DeviceDefinitionsMigrator\DeviceDefinitionsMigrator.csproj", "{94E98B70-2F52-45A2-A805-3D6B62547149}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0C461E89-2430-4E47-B5C4-97FCA86E0E21} = {0C461E89-2430-4E47-B5C4-97FCA86E0E21}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA", "Applications\openXDA\openXDA\openXDA.csproj", "{0C461E89-2430-4E47-B5C4-97FCA86E0E21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDAConsole", "Applications\openXDA\openXDAConsole\openXDAConsole.csproj", "{72F417E9-F592-4417-B87C-B681AE707294}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "openXDASetup", "Applications\openXDA\openXDASetup\openXDASetup.wixproj", "{36380070-81B6-4D71-A80A-C5AE76B0E357}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE674B18-F140-47E4-A22C-8E7C37FAA974} = {CE674B18-F140-47E4-A22C-8E7C37FAA974}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openHistorian.XDALink.SqlClr", "Libraries\openHistorian.XDALink.SqlClr\openHistorian.XDALink.SqlClr.csproj", "{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF}"
@@ -355,19 +355,19 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{847B0BE1-54CD-4A68-B0DB-6EA2CD8F672F} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{F5BD3958-FFBE-415F-BC25-25C30DD7C26F} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{598B0FE9-B4EA-4797-982D-BF243F3C5BEC} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
+		{DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A} = {B3493118-9437-497D-A716-24232CE0D4F2}
+		{947C5857-A97F-499E-BC07-4509132EAF52} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
+		{24EB0E7B-9F79-4E3A-94FB-87BD4D06A400} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{953A5C0E-31C5-4C36-93E6-A0F2750F199C} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{79FBD416-8CFF-425E-A010-15E61B9D3BD7} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
 		{11AE594D-2B2B-473C-8550-6BF62914C3E2} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{94E98B70-2F52-45A2-A805-3D6B62547149} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}
-		{DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A} = {B3493118-9437-497D-A716-24232CE0D4F2}
 		{0C461E89-2430-4E47-B5C4-97FCA86E0E21} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
 		{72F417E9-F592-4417-B87C-B681AE707294} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
 		{36380070-81B6-4D71-A80A-C5AE76B0E357} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
-		{947C5857-A97F-499E-BC07-4509132EAF52} = {6AA858DD-E319-459F-A5A5-FBDB89D63214}
 		{C6C6E49B-4E72-4C3D-90AB-66152E7FEFBF} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{7F731255-FA83-4DBF-9E0F-C22AE4845E76} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{CE674B18-F140-47E4-A22C-8E7C37FAA974} = {9DA625F5-5D02-4855-A891-5E059AE2BD83}

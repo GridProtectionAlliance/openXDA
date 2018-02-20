@@ -14,9 +14,11 @@
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>XDA.ico</ApplicationIcon>
-    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
     <OldToolsVersion>12.0</OldToolsVersion>
-    <UpgradeBackupLocation>D:\Projects\openXDA\Source\Backup\</UpgradeBackupLocation>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
     <TargetFrameworkProfile />
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <NuGetPackageImportStamp>

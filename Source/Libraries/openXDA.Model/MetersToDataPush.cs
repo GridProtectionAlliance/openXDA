@@ -38,7 +38,7 @@ namespace openXDA.Model
         [StringLength(50)]
         public string LocalXDAAssetKey { get; set; }
 
-        [StringLength(20)]
+        [StringLength(200)]
         public string RemoteXDAName { get; set; }
 
         public string RemoteXDAAssetKey { get; set; }
