@@ -14,11 +14,6 @@
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>XDA.ico</ApplicationIcon>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>12.0</OldToolsVersion>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
     <TargetFrameworkProfile />
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <NuGetPackageImportStamp>
@@ -36,7 +31,8 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <AppConfig>AppDebug.config</AppConfig>
+    <AppConfig Condition="'$(Configuration)' == 'Debug'">AppDebug.config</AppConfig>
+    <AppConfig Condition="'$(Configuration)' != 'Debug'">App.config</AppConfig>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -928,7 +924,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ProjectDir)bin" />
   </Target>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v15.0\WebApplications\Microsoft.WebApplication.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
@@ -950,6 +946,9 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <PropertyGroup>
+    <PostBuildEvent>"$(SolutionDir)Dependencies\GSF\ValidateAssemblyBindings.exe" "$(TargetPath).config"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

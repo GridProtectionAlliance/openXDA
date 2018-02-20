@@ -346,7 +346,7 @@
         <ServiceControl Id="openXDAServiceControl" Name="openXDA" Start="install" Stop="both" Remove="uninstall" />
       </Component>
       <Component Id="openXDAConfig" Permanent="yes">
-        <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.ProjectDir)\app.config" />
+        <File Id="openXDA.exe.config" Name="$(var.openXDA.TargetFileName).config" Source="$(var.openXDA.TargetPath).config" />
       </Component>
       <Component Id="DeviceDefinitionsMigrator">
         <File Id="DeviceDefinitionsMigrator.exe" Name="$(var.DeviceDefinitionsMigrator.TargetFileName)" Source="$(var.DeviceDefinitionsMigrator.TargetPath)" />
