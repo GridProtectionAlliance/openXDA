@@ -70,6 +70,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -143,6 +144,16 @@ namespace openXDA
 
         public ServiceHost()
         {
+            // Make sure default service settings exist
+            ConfigurationFile configFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+            systemSettings.Add("DefaultCulture", "en-US", "Default culture to use for language, country/region and calendar formats.");
+
+            // Attempt to set default culture
+            string defaultCulture = systemSettings["DefaultCulture"].ValueAs("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture(defaultCulture);     // Defaults for date formatting, etc.
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture(defaultCulture);   // Culture for resource strings, etc.
+
             InitializeComponent();
 
             // Register event handlers.
