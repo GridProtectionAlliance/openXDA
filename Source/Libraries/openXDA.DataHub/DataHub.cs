@@ -5858,60 +5858,6 @@ namespace openXDA.Hubs
 
         #endregion
 
-        public  Tuple<DateTime,DateTime> GetTimeRange(int filterId)
-        {
-            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
-
-            string[] timeRangeSplit = timeRange.Split(';');
-            DateTime startDate;
-            DateTime endDate;
-            if (timeRangeSplit[0] == "-1")
-            {
-                startDate = DateTime.Parse(timeRangeSplit[1]);
-                endDate = DateTime.Parse(timeRangeSplit[2]);
-            }
-            else if (timeRangeSplit[0] == "0") // 1 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-1);
-            }
-            else if (timeRangeSplit[0] == "1") // 3 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-3);
-            }
-            else if (timeRangeSplit[0] == "2") // 7 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-7);
-            }
-            else if (timeRangeSplit[0] == "3") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-30);
-            }
-            else if (timeRangeSplit[0] == "4") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-90);
-            }
-
-            else if (timeRangeSplit[0] == "5") // 30 day time range
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-365);
-            }
-
-
-
-            else // default to 2 weeks
-            {
-                endDate = DateTime.UtcNow;
-                startDate = endDate.AddDays(-14);
-            }
-
-            return Tuple.Create(startDate,endDate);
-        }
         #endregion
 
         #region [ DataPusher Operations ]
@@ -6224,6 +6170,61 @@ namespace openXDA.Hubs
         public static string GetCurrentUserName()
         {
             return Thread.CurrentPrincipal.Identity.Name;
+        }
+
+        public Tuple<DateTime, DateTime> GetTimeRange(int filterId)
+        {
+            string timeRange = DataContext.Connection.ExecuteScalar<string>("SELECT TimeRange FROM WorkbenchFilter WHERE ID ={0}", filterId);
+
+            string[] timeRangeSplit = timeRange.Split(';');
+            DateTime startDate;
+            DateTime endDate;
+            if (timeRangeSplit[0] == "-1")
+            {
+                startDate = DateTime.Parse(timeRangeSplit[1]);
+                endDate = DateTime.Parse(timeRangeSplit[2]);
+            }
+            else if (timeRangeSplit[0] == "0") // 1 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-1);
+            }
+            else if (timeRangeSplit[0] == "1") // 3 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-3);
+            }
+            else if (timeRangeSplit[0] == "2") // 7 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-7);
+            }
+            else if (timeRangeSplit[0] == "3") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-30);
+            }
+            else if (timeRangeSplit[0] == "4") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-90);
+            }
+
+            else if (timeRangeSplit[0] == "5") // 30 day time range
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-365);
+            }
+
+
+
+            else // default to 2 weeks
+            {
+                endDate = DateTime.UtcNow;
+                startDate = endDate.AddDays(-14);
+            }
+
+            return Tuple.Create(startDate, endDate);
         }
 
         #endregion

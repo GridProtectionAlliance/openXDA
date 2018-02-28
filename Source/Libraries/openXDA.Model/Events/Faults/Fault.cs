@@ -118,7 +118,7 @@ namespace openXDA.Model
 
         public int voltage { get; set; }
 
-        public DateTime theinceptiontime { get; set; }
+        public string theinceptiontime { get; set; }
 
         public string thefaulttype { get; set; }
 
