@@ -3073,7 +3073,7 @@ BEGIN
             MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
             Line.VoltageKV AS voltage,
             COALESCE(FaultSummary.FaultType, Phase.Name, '') AS thefaulttype,
-            CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)) + ' mi', '') END AS thecurrentdistance,
+            CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE COALESCE(CAST(CAST(FaultSummary.Distance AS DECIMAL(16, 4)) AS NVARCHAR(19)), '') END AS thecurrentdistance,
             dbo.EventHasImpactedComponents(Event.ID) AS pqiexists,
             Event.StartTime,
             CASE EventType.Name
