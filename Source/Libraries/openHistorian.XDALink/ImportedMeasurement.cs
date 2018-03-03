@@ -145,6 +145,7 @@ namespace openHistorian.XDALink
 
         public void ImportMeasurements(IEnumerable<ImportedMeasurement> measurements)
         {
+            string antiForgeryToken = GenerateAntiForgeryToken();
             string url = GetURL("/api/importedmeasurements/importmeasurements");
 
             using (MemoryStream stream = new MemoryStream())
@@ -155,22 +156,28 @@ namespace openHistorian.XDALink
                 serializer.Serialize(jsonWriter, measurements);
                 jsonWriter.Flush();
 
+                using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url))
                 using (ByteArrayContent content = new ByteArrayContent(stream.ToArray()))
                 using (HttpClient client = CreateClient())
                 {
+                    request.Content = content;
+                    request.Headers.Add("X-GSF-Verify", antiForgeryToken);
                     content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    var result = client.PostAsync(url, content).Result;
+                    client.SendAsync(request).Result.Dispose();
                 }
             }
         }
 
         public void DeleteMeasurement(long pointID)
         {
+            string antiForgeryToken = GenerateAntiForgeryToken();
             string url = GetURL($"/api/importedmeasurements/deletemeasurement/{pointID}");
 
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, url))
             using (HttpClient client = CreateClient())
             {
-                client.DeleteAsync(url).Wait();
+                request.Headers.Add("X-GSF-Verify", antiForgeryToken);
+                client.SendAsync(request).Result.Dispose();
             }
         }
 
@@ -183,6 +190,16 @@ namespace openHistorian.XDALink
             {
                 JsonSerializer serializer = new JsonSerializer();
                 return serializer.Deserialize<IEnumerable<ImportedMeasurement>>(jsonReader);
+            }
+        }
+
+        private string GenerateAntiForgeryToken()
+        {
+            string url = GetURL($"/api/importedmeasurements/generaterequestverficationtoken");
+
+            using (HttpClient client = CreateClient())
+            {
+                return client.GetStringAsync(url).Result;
             }
         }
 
