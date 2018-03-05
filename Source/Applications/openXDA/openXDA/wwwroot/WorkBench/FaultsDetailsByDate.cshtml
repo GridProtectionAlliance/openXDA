@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System
 @using System.Collections.Specialized
 @using System.Net.Http
 @using GSF.Data.Model
@@ -70,6 +71,8 @@
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.HideAddNewButton = false;
     ViewBag.HidePaginationButtons = true;
+    ViewBag.CustomHeader = "Fault Details for " + (DateTime.Parse(date)).ToUniversalTime().ToString("MM/dd/yyyy");
+
 }
 
 @section StyleSheets{
