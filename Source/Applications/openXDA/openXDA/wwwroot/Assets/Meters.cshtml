@@ -100,7 +100,7 @@
             @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Site"))
         }
         else{
-            @Raw(dataContext.AddSelectField<Meter,MeterLocation>("MeterLocationID", "ID", "Alias", fieldLabel: "Site"))
+            @Raw(dataContext.AddSelectField<Meter,MeterLocation>("MeterLocationID", "ID", "AssetKey", fieldLabel: "Site"))
         }
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
@@ -117,13 +117,13 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
-    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<Meter, DataHub>(ViewBag, null, null, ViewBag.MeterLocationID))
 
         $(function () {
             $('#addNewEditDialog').on('shown.bs.modal', function () {
-                if (viewModel.dataHubIsConnected()) {
+                if (viewModel.dataHubIsConnected() && @ViewBag.MeterLocationID == -1) {
                     initializeAutoCompleteLookupField("Location", dataHub.searchMeterLocations, false);
 
                     $('#inputLocation').puiautocomplete({
