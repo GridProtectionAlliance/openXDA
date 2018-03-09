@@ -323,6 +323,7 @@
     <Content Include="wwwroot\Config\EmailGroupMeterGroup.cshtml" />
     <Content Include="wwwroot\Config\EmailGroupUserAccount.cshtml" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
+    <Content Include="PostBuildSetup.bat" />
     <None Include="Properties\PublishProfiles\Desktop Folder.pubxml" />
     <Content Include="wwwroot\Config\EmailRMarkdownViewer.cshtml" />
     <Content Include="wwwroot\Assets\index.cshtml" />
@@ -949,7 +950,13 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)Dependencies\GSF\ValidateAssemblyBindings.exe" "$(TargetPath).config"</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)Dependencies\GSF\ValidateAssemblyBindings.exe" "$(TargetPath).config"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "$(SolutionDir)Dependencies\GSF\*.*"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "$(TargetDir)*.dll"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Microsoft.NET\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Microsoft.NET\assembly\GAC_MSIL\System.Data.DataSetExtensions\v4.0_4.0.0.0__b77a5c561934e089\System.Data.DataSetExtensions.dll"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Microsoft.NET\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll"
+CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "%25SystemRoot%25\Microsoft.NET\assembly\GAC_MSIL\System.Data.Linq\v4.0_4.0.0.0__b77a5c561934e089\System.Data.Linq.dll"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

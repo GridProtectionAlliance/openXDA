@@ -37,7 +37,6 @@
 @using System.Web.Script.Serialization
 @using FaultData.Database
 @using GSF.Configuration
-@using RazorEngine.Templating
 @using GSF.Web
 @using FaultData.Database;
 @using FaultData.Database.MeterDataTableAdapters;
@@ -45,7 +44,7 @@
 @using Newtonsoft.Json
 @using openHistorian.XDALink;
 
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 
 @{
     HttpRequestMessage request = ViewBag.Request;

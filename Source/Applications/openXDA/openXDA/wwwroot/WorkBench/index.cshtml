@@ -27,13 +27,12 @@
 @using GSF.Identity
 @using GSF.IO
 @using GSF.Reflection
-@using RazorEngine.Templating
 @using GSF.Web
+@using GSF.Web.Model
 @using openXDA.Model
-
 @using openXDA.Hubs
 
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @{
     Layout = "Workbench/Layout.cshtml";
     ViewBag.Title = "Home";
@@ -89,7 +88,7 @@
                 font-size: 5.25px;
             }
         }
-        
+
         @@media screen and (min-width: 430px) {
             .performance-statistics {
                 font-size: 7px;
@@ -157,7 +156,7 @@
         }
 
         .badge-fixed {
-            display:inline-block;
+            display: inline-block;
             width: 150px;
         }
     </style>
@@ -196,9 +195,9 @@
             setInterval(updateTimestamps, 1000);
         });
 
-        //$(window).resize(function () {
-        //    $("#fontSizeLabel").html("Font Size: " + $("#performanceStatistics").css("font-size") + ", Window Size: " + $(window).width().toString());
-        //});
+            //$(window).resize(function () {
+            //    $("#fontSizeLabel").html("Font Size: " + $("#performanceStatistics").css("font-size") + ", Window Size: " + $(window).width().toString());
+            //});
 
     </script>
 }
@@ -215,18 +214,18 @@
 <div class="row">
     <div class="col-lg-4 col-md-4 col-sm-5">
         @*<div class="panel panel-default">
-            <div class="panel-heading">Quick Links</div>
-            <div class="panel-body">
-                <div class="btn-group-vertical btn-block">
-                    <a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
-                    <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
-                    <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
-                    <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
-                    <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>
-                    <button type="button" class="btn btn-default" id="restartButton" hub-dependent>Restart Service</button>
+                <div class="panel-heading">Quick Links</div>
+                <div class="panel-body">
+                    <div class="btn-group-vertical btn-block">
+                        <a href="Meters.cshtml" role="button" class="btn btn-primary">Meters</a>
+                        <a href="Status.cshtml" role="button" class="btn btn-default">Status</a>
+                        <a href="ConnectionProfiles.cshtml" role="button" class="btn btn-default">Connection Profiles</a>
+                        <a href="ModbusConfig.cshtml" role="button" class="btn btn-default">Add Modbus Mapping</a>
+                        <a href="GraphMeasurements.cshtml" role="button" class="btn btn-default">Graph Measurements</a>
+                        <button type="button" class="btn btn-default" id="restartButton" hub-dependent>Restart Service</button>
+                    </div>
                 </div>
-            </div>
-        </div>*@
+            </div>*@
         <ul class="list-group">
             <li class="list-group-item">
                 <span class="badge badge-fixed" id="serverTime">@DateTime.UtcNow.ToString(Model.Global.DateTimeFormat)</span>Server&nbsp;Time

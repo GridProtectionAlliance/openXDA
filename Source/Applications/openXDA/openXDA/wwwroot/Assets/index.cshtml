@@ -27,12 +27,12 @@
 @using GSF.Identity
 @using GSF.IO
 @using GSF.Reflection
-@using RazorEngine.Templating
 @using GSF.Web
+@using GSF.Web.Model
 @using openXDA.Model
 @using openXDA.Hubs
 
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @{
     Layout = "Assets/Layout.cshtml";
     ViewBag.Title = "Home";
