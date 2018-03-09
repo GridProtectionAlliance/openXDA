@@ -24,11 +24,11 @@
 @using System.Threading
 @using RazorEngine.Templating
 @using GSF.Web
+@using GSF.Web.Model
 @using openXDA.Model
-@using RazorEngine.Templating
 @using openXDA.Hubs
 
-@inherits TemplateBase<AppModel>
+@inherits ExtendedTemplateBase<AppModel>
 @{
     Layout = "Config/Layout.cshtml";
     ViewBag.Title = "Help";
