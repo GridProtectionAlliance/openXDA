@@ -23,6 +23,7 @@
 
 using GSF;
 using GSF.Configuration;
+using GSF.Net.Security;
 using GSF.Web;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
@@ -353,10 +354,28 @@ namespace openXDA.DataPusher
 #if DEBUG
             return true;
 #endif
-            if (sslPolicyErrors == SslPolicyErrors.None)
-                return true;
-            else
-                return false;
+            
+            SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
+
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            systemSettings.Add("CertFile", "", "This is a certfile.");
+            systemSettings.Add("ValidPolicyErrors", "None", "Password for PQMarkWeb API access.", true);
+            systemSettings.Add("ValidChainFlags", "NoError", "Password for PQMarkWeb API access.", true);
+
+
+            try
+            {
+                simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), systemSettings["ValidPolicyErrors"].Value);
+                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), systemSettings["ValidChainFlags"].Value);
+                simpleCertificateChecker.TrustedCertificates.Add(new X509Certificate2(systemSettings["CertFile"].Value));
+            }
+            catch (Exception ex)
+            {
+                OnLogExceptionMessage(ex.ToString());
+            }
+
+            return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);            
         }
         #endregion
 
