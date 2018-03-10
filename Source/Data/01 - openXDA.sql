@@ -2445,6 +2445,67 @@ AS BEGIN
 END
 GO
 
+CREATE FUNCTION GetLineEventIDs
+(
+    @lineID INT,
+    @startTime DATETIME2,
+    @endTime DATETIME2,
+    @timeTolerance FLOAT
+)
+RETURNS @lineEvent TABLE
+(
+    EventID INT
+)
+AS BEGIN
+    DECLARE @adjustedStartTime DATETIME2 = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
+    DECLARE @adjustedEndTime DATETIME2 = dbo.AdjustDateTime2(@endTime, @timeTolerance)
+    DECLARE @minStartTime DATETIME2
+    DECLARE @maxEndTime DATETIME2
+
+    SELECT
+        @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)),
+        @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+    FROM
+        Event JOIN
+        FileGroup ON Event.FileGroupID = FileGroup.ID
+    WHERE
+        LineID = @lineID AND
+        StartTime <= @adjustedEndTime AND
+        @adjustedStartTime <= EndTime AND
+        ProcessingEndTime > '0001-01-01'
+
+    WHILE @startTime != @minStartTime OR @endTime != @maxEndTime
+    BEGIN
+        SET @startTime = @minStartTime
+        SET @endTime = @maxEndTime
+        SET @adjustedStartTime = dbo.AdjustDateTime2(@startTime, -@timeTolerance)
+        SET @adjustedEndTime = dbo.AdjustDateTime2(@endTime, @timeTolerance)
+
+        SELECT
+            @minStartTime = MIN(dbo.AdjustDateTime2(StartTime, -@timeTolerance)),
+            @maxEndTime = MAX(dbo.AdjustDateTime2(EndTime, @timeTolerance))
+        FROM
+            Event JOIN
+            FileGroup ON Event.FileGroupID = FileGroup.ID
+        WHERE
+            LineID = @lineID AND
+            StartTime <= @adjustedEndTime AND
+            @adjustedStartTime <= EndTime AND
+            ProcessingEndTime > '0001-01-01'
+    END
+
+    INSERT INTO @lineEvent
+    SELECT ID
+    FROM Event
+    WHERE
+        LineID = @lineID AND
+        @adjustedStartTime <= StartTime AND
+        EndTime <= @adjustedEndTime
+
+    RETURN
+END
+GO
+
 CREATE FUNCTION GetDisturbancesInSystemEvent
 (
     @startTime DATETIME2,
@@ -3025,7 +3086,7 @@ SELECT
                             (
                                 SELECT FaultSummaryID, ROW_NUMBER() OVER(PARTITION BY PartitionID ORDER BY OrderID) AS FaultNumber
                                 FROM SummaryIDs
-                                WHERE SummaryIDs.LineID = Event.LineID AND SummaryIDs.EventID IN (SELECT * FROM dbo.GetSystemEventIDs(Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)))
+                                WHERE SummaryIDs.LineID = Event.LineID AND SummaryIDs.EventID IN (SELECT * FROM dbo.GetLineEventIDs(Event.LineID, Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)))
                             ) InnerFaultNumber
                             WHERE InnerFaultNumber.FaultNumber = OuterFaultNumber.FaultNumber
                         )
@@ -3035,7 +3096,7 @@ SELECT
                 (
                     SELECT DISTINCT ROW_NUMBER() OVER(PARTITION BY PartitionID ORDER BY OrderID) AS FaultNumber
                     FROM SummaryIDs
-                    WHERE SummaryIDs.LineID = Event.LineID AND SummaryIDs.EventID IN (SELECT * FROM dbo.GetSystemEventIDs(Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)))
+                    WHERE SummaryIDs.LineID = Event.LineID AND SummaryIDs.EventID IN (SELECT * FROM dbo.GetLineEventIDs(Event.LineID, Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)))
                 ) OuterFaultNumber
                 FOR XML PATH('Fault'), TYPE
             ) AS [Faults],
@@ -3380,10 +3441,8 @@ AS BEGIN
         EmailGroupUserAccount.UserAccountID,
         EmailType.XSLTemplateID AS TemplateID
     FROM
-        GetSystemEventIDs(@startTime, @endTime, @timeTolerance) SystemEventID JOIN
-        Event ON
-            SystemEventID.EventID = Event.ID AND
-            Event.LineID = @lineID JOIN
+        GetLineEventIDs(@lineID, @startTime, @endTime, @timeTolerance) LineEventID JOIN
+        Event ON LineEventID.EventID = Event.ID JOIN
         EventType ON Event.EventTypeID = EventType.ID JOIN
         Meter ON Event.MeterID = Meter.ID LEFT OUTER JOIN
         MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID LEFT OUTER JOIN
@@ -3443,6 +3502,18 @@ AS BEGIN
     SELECT *
     FROM Event
     WHERE ID IN (SELECT * FROM dbo.GetSystemEventIDs(@startTime, @endTime, @timeTolerance))
+END
+GO
+
+CREATE PROCEDURE GetLineEvent
+    @lineID INT,
+    @startTime DATETIME2,
+    @endTime DATETIME2,
+    @timeTolerance FLOAT
+AS BEGIN
+    SELECT *
+    FROM Event
+    WHERE ID IN (SELECT * FROM dbo.GetLineEventIDs(@lineID, @startTime, @endTime, @timeTolerance))
 END
 GO
 

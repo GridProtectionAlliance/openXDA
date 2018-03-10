@@ -501,19 +501,6 @@ namespace FaultData.DataWriters
 
         private static void GenerateEmail(AdoDataConnection connection, int eventID)
         {
-            XDocument htmlDocument;
-
-            List<Attachment> attachments;
-            string subject;
-            string html;
-            bool alreadySent;
-
-            TableOperations<EventType> eventTypeTable = new TableOperations<EventType>(connection);
-            EventType faultEventType = eventTypeTable.QueryRecordWhere("Name = 'Fault'");
-
-            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
-            string eventDetail = connection.ExecuteScalar<string>("SELECT EventDetail FROM EventDetail WHERE EventID = {0}", eventID);
-
             List<IGrouping<int, Guid>> templateGroups;
 
             using (IDbCommand command = connection.Connection.CreateCommand())
@@ -545,6 +532,13 @@ namespace FaultData.DataWriters
                 }
             }
 
+            if (!templateGroups.Any())
+                return;
+
+            TableOperations<Event> eventTable = new TableOperations<Event>(connection);
+            string eventDetail = connection.ExecuteScalar<string>("SELECT EventDetail FROM EventDetail WHERE EventID = {0}", eventID);
+            int sentEmailCount = 0;
+
             foreach (IGrouping<int, Guid> templateGroup in templateGroups)
             {
                 string template = connection.ExecuteScalar<string>("SELECT Template FROM XSLTemplate WHERE ID = {0}", templateGroup.Key);
@@ -553,10 +547,10 @@ namespace FaultData.DataWriters
                 DataTable emailTable = connection.RetrieveData(sql, templateGroup.Cast<object>().ToArray());
                 List<string> recipients = emailTable.Select().Select(row => row.ConvertField<string>("Email")).ToList();
 
-                htmlDocument = XDocument.Parse(eventDetail.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
-                htmlDocument.TransformAll("format", element => element.Format());
+                XDocument htmlDocument = XDocument.Parse(eventDetail.ApplyXSLTransform(template), LoadOptions.PreserveWhitespace);
+                List<Attachment> attachments = new List<Attachment>();
 
-                attachments = new List<Attachment>();
+                htmlDocument.TransformAll("format", element => element.Format());
 
                 try
                 {
@@ -598,20 +592,20 @@ namespace FaultData.DataWriters
                         return FaultTypeGenerator.GetFaultType(element);
                     });
 
-                    subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
-                    html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
-                    alreadySent = false;
+                    string subject = (string)htmlDocument.Descendants("title").FirstOrDefault() ?? "Fault detected by openXDA";
+                    string html = htmlDocument.ToString(SaveOptions.DisableFormatting).Replace("&amp;", "&").Replace("&lt;", "<").Replace("&gt;", ">");
+                    bool alreadySent = false;
 
                     try
                     {
                         Event dequeuedEvent = eventTable.QueryRecordWhere("ID = {0}", eventID);
 
-                        List<Event> systemEvent = eventTable
-                            .GetSystemEvent(dequeuedEvent.StartTime, dequeuedEvent.EndTime, s_timeTolerance)
+                        List<Event> lineEvent = eventTable
+                            .GetLineEvent(dequeuedEvent.LineID, dequeuedEvent.StartTime, dequeuedEvent.EndTime, s_timeTolerance)
                             .Where(evt => dequeuedEvent.LineID == evt.LineID)
                             .ToList();
 
-                        string systemEventIDs = string.Join(",", systemEvent.Where(row => row.LineID == dequeuedEvent.LineID).Select(row => row.ID));
+                        string lineEventIDs = string.Join(",", lineEvent.Where(row => row.LineID == dequeuedEvent.LineID).Select(row => row.ID));
 
                         string query =
                             $"SELECT SentEmail.ID " +
@@ -619,7 +613,7 @@ namespace FaultData.DataWriters
                             $"    SentEmail JOIN " +
                             $"    EventSentEmail ON EventSentEmail.SentEmailID = SentEmail.ID " +
                             $"WHERE " +
-                            $"    EventSentEmail.EventID IN ({systemEventIDs}) AND " +
+                            $"    EventSentEmail.EventID IN ({lineEventIDs}) AND " +
                             $"    SentEmail.Message = {{0}}";
 
                         int sentEmailID = connection.ExecuteScalar(-1, DataExtensions.DefaultTimeoutDuration, query, html);
@@ -629,7 +623,7 @@ namespace FaultData.DataWriters
                         if (!alreadySent)
                             sentEmailID = LoadSentEmail(connection, recipients, subject, html);
 
-                        LoadEventSentEmail(connection, systemEvent, sentEmailID);
+                        LoadEventSentEmail(connection, lineEvent, sentEmailID);
                     }
                     catch (Exception ex)
                     {
@@ -639,7 +633,10 @@ namespace FaultData.DataWriters
                     }
 
                     if (!alreadySent)
+                    {
                         SendEmail(recipients, subject, html, attachments);
+                        sentEmailCount++;
+                    }
                 }
                 finally
                 {
@@ -648,8 +645,11 @@ namespace FaultData.DataWriters
                 }
             }
 
-            if (templateGroups.Any())
-                Log.Info($"All emails sent for event ID {eventID}.");
+            if (sentEmailCount > 0)
+            {
+                string plurality = (sentEmailCount > 1) ? "s" : "";
+                Log.Info($"{sentEmailCount} email{plurality} sent for event ID {eventID}.");
+            }
         }
 
         private static int LoadSentEmail(AdoDataConnection connection, List<string> recipients, string subject, string body)
@@ -660,12 +660,15 @@ namespace FaultData.DataWriters
             return connection.ExecuteScalar<int>("SELECT @@IDENTITY");
         }
 
-        private static void LoadEventSentEmail(AdoDataConnection connection, List<Event> systemEvent, int sentEmailID)
+        private static void LoadEventSentEmail(AdoDataConnection connection, List<Event> lineEvent, int sentEmailID)
         {
             TableOperations<EventSentEmail> eventSentEmailTable = new TableOperations<EventSentEmail>(connection);
 
-            foreach (Event evt in systemEvent)
+            foreach (Event evt in lineEvent)
             {
+                if (eventSentEmailTable.QueryRecordCountWhere("EventID = {0} AND SentEmailID = {1}", evt.ID, sentEmailID) > 0)
+                    continue;
+
                 EventSentEmail eventSentEmail = new EventSentEmail()
                 {
                     EventID = evt.ID,

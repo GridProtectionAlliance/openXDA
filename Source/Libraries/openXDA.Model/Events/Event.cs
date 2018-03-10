@@ -197,6 +197,36 @@ namespace openXDA.Model
             }
         }
 
+        public static List<Event> GetLineEvent(this TableOperations<Event> eventTable, int lineID, DateTime startTime, DateTime endTime, double timeTolerance)
+        {
+            AdoDataConnection connection = eventTable.Connection;
+
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                command.CommandText = "GetLineEvent";
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandTimeout = connection.DefaultTimeout;
+                AddParameter(command, "lineID", lineID, DbType.Int32);
+                AddParameter(command, "startTime", startTime, DbType.DateTime2);
+                AddParameter(command, "endTime", endTime, DbType.DateTime2);
+                AddParameter(command, "timeTolerance", timeTolerance, DbType.Double);
+
+                IDataAdapter adapter = (IDataAdapter)Activator.CreateInstance(connection.AdapterType, command);
+
+                using (adapter as IDisposable)
+                {
+                    DataSet dataSet = new DataSet();
+
+                    adapter.Fill(dataSet);
+
+                    return dataSet.Tables[0].Rows
+                        .Cast<DataRow>()
+                        .Select(row => eventTable.LoadRecord(row))
+                        .ToList();
+                }
+            }
+        }
+
         private static void AddParameter(IDbCommand command, string name, object value, DbType dbType)
         {
             IDbDataParameter parameter = command.CreateParameter();
