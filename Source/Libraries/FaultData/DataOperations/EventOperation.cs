@@ -141,8 +141,11 @@ namespace FaultData.DataOperations
                     continue;
 
                 Line line = dataGroup.Line ?? meterDataSet.Meter.MeterLocation.MeterLocationLines.Single().Line;
+                IDbDataParameter startTime2 = ToDateTime2(connection, dataGroup.StartTime);
+                IDbDataParameter endTime2 = ToDateTime2(connection, dataGroup.EndTime);
 
-                if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", dataGroup.StartTime, dataGroup.EndTime, dataGroup.Samples, meterDataSet.Meter.ID, line.ID) > 0)
+
+                if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, dataGroup.Samples, meterDataSet.Meter.ID, line.ID) > 0)
                     continue;
 
                 EventType eventType = eventTypeTable.GetOrAdd(eventClassification.ToString());
