@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -50,8 +52,11 @@ namespace openXDA.Model
 
         public string Address { get; set; }
 
-        [Required]
+        
         [RegularExpression(CronPattern, ErrorMessage = "Please see syntax help for correct cron syntax.")]
+        [InitialValueScript("''")]
         public string Frequency { get; set; }
+
+        public Guid UserAccountID { get; set; }
     }
 }

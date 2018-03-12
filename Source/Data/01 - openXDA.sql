@@ -2025,7 +2025,8 @@ CREATE TABLE [dbo].RemoteXDAInstance(
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Name varchar(200) NOT NULL,
     Address varchar(200) NULL,
-    Frequency [varchar](20) NOT NULL
+    Frequency [varchar](20) NOT NULL,
+	UserAccountID uniqueidentifier FOREIGN KEY  REFERENCES UserAccount(ID) NOT NULL
 )
 GO
 CREATE TABLE RemoteXDAInstanceMeter(
