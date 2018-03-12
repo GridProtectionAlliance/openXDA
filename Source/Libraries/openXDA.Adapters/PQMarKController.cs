@@ -32,6 +32,11 @@ using openXDA.Model;
 using System.Threading;
 using GSF.Reflection;
 using ValidateAntiForgeryToken = System.Web.Mvc.ValidateAntiForgeryTokenAttribute;
+using System.Net.Http;
+using System.Net;
+using GSF.Web.Security;
+using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace openXDA.Adapters
 {
@@ -52,6 +57,22 @@ namespace openXDA.Adapters
         #endregion
 
         #region [ GET Operations ]
+        // This generates a request verification token that will need to be added to the headers
+        // of a web request before calling ImportMeasurements or DeleteMeasurement since these
+        // methods validate the header token to prevent CSRF attacks in a browser. Browsers will
+        // not allow this HTTP GET based method to be called from remote sites due to Same-Origin
+        // policies unless CORS has been configured to explicitly to allow it, as such posting to
+        // ImportMeasurements or DeleteMeasurement (which is allowed from any site) will fail
+        // unless this header token is made available. The actual header name used to store the
+        // verification token is controlled by the local configuration.
+        [HttpGet]
+        public HttpResponseMessage GenerateRequestVerficationToken()
+        {
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(Request.GenerateRequestVerficationHeaderToken(), Encoding.UTF8, "text/plain")
+            };
+        }
 
         /// <summary>
         /// Return single Record
@@ -233,6 +254,7 @@ namespace openXDA.Adapters
         #region [ PUT Operations ]
 
         [HttpPut]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult UpdateRecord(string modelName, [FromBody]JObject record)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))
@@ -257,7 +279,7 @@ namespace openXDA.Adapters
         #region [ POST Operations ]
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult CreateRecord( string modelName, [FromBody]JObject record)
         {
             int recordId;
@@ -291,7 +313,7 @@ namespace openXDA.Adapters
 
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult CreateChannel([FromBody]JObject record)
         {
             int channelId;
@@ -352,7 +374,7 @@ namespace openXDA.Adapters
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
         {
             OnReprocessFiles(record["FileGroupID"].Value<int>());
@@ -365,7 +387,7 @@ namespace openXDA.Adapters
         #region [ DELETE Operations ]
 
         [HttpDelete]
-        [ValidateAntiForgeryToken]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult DeleteRecord(int id, string modelName)
         {
             using (DataContext dataContext = new DataContext("systemSettings"))

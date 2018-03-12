@@ -100,7 +100,7 @@
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
-    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MetersToDataPush, DataHub>(ViewBag, "LocalXDAAssetKey", null, ViewBag.XDAInstance))
         var localMeters;

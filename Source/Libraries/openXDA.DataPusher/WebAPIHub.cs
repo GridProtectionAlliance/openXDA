@@ -73,6 +73,11 @@ namespace openXDA.DataPusher
 
         #region [ RESTful API Handlers ]
 
+        private static string GenerateAntiForgeryToken(HttpClient client)
+        {
+            return client.GetStringAsync("api/PQMark/GenerateRequestVerficationToken").Result;
+        }
+
         public dynamic GetRecordHub(string instance, string tableName, int id, UserAccount userAccount)
         {
             return GetRecord(instance, tableName, id, userAccount);
@@ -211,9 +216,12 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
+                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                     client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
                     HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/UpdateRecord/" + tableName, record).Result;
                     return response;
@@ -236,10 +244,13 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
+                    string antiForgeryToken = GenerateAntiForgeryToken(client);
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+
                     client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
                     HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateRecord/" + tableName, record).Result;
                     if (response.IsSuccessStatusCode)
@@ -266,10 +277,13 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
+                    string antiForgeryToken = GenerateAntiForgeryToken(client);
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+
                     client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
                     HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateChannel", record).Result;
                     if (response.IsSuccessStatusCode)
@@ -296,10 +310,14 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
+                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+
                     client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
                     HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/ProcessFileGroup", record).Result;
                     return response;
@@ -321,9 +339,12 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
+                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                     client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
                     HttpResponseMessage response = client.DeleteAsync("api/PQMark/DeleteRecord/" + tableName + "/" + id).Result;
                     return response;
@@ -332,11 +353,7 @@ namespace openXDA.DataPusher
         }
 
         private static bool HandleCertificateValidation(Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-#if DEBUG
-            return true;
-#endif
-            
+        {           
             SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
 
             CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
@@ -348,9 +365,9 @@ namespace openXDA.DataPusher
 
             try
             {
-                simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), systemSettings["ValidPolicyErrors"].Value);
-                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), systemSettings["ValidChainFlags"].Value);
-                simpleCertificateChecker.TrustedCertificates.Add(new X509Certificate2(systemSettings["CertFile"].Value));
+                simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), (systemSettings["ValidPolicyErrors"].Value != "All" ? systemSettings["ValidPolicyErrors"].Value : "7"));
+                simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), (systemSettings["ValidChainFlags"].Value != "All"? systemSettings["ValidChainFlags"].Value : (~0).ToString()));
+                simpleCertificateChecker.TrustedCertificates.Add((!string.IsNullOrEmpty(systemSettings["certFile"].Value) ? new X509Certificate2(systemSettings["CertFile"].Value) : certificate));
             }
             catch (Exception ex)
             {
