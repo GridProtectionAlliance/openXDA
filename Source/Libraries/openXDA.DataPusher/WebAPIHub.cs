@@ -73,9 +73,26 @@ namespace openXDA.DataPusher
 
         #region [ RESTful API Handlers ]
 
-        private static string GenerateAntiForgeryToken(HttpClient client)
+        private static string GenerateAntiForgeryToken(string instance, UserAccount userAccount)
         {
-            return client.GetStringAsync("api/PQMark/GenerateRequestVerficationToken").Result;
+            using (WebRequestHandler handler = new WebRequestHandler())
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                using (HttpClient client = new HttpClient(handler))
+                {
+                    client.BaseAddress = new Uri(instance);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+                    HttpResponseMessage response = client.GetAsync("api/PQMark/GenerateRequestVerficationToken").Result;
+                    if (response.IsSuccessStatusCode)
+                        return response.Content.ReadAsStringAsync().Result;
+                    else
+                        return "";
+
+                }
+            }
         }
 
         public dynamic GetRecordHub(string instance, string tableName, int id, UserAccount userAccount)
@@ -216,7 +233,7 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
-                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
@@ -244,7 +261,7 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
-                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
@@ -277,7 +294,7 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
-                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
@@ -310,7 +327,7 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
-                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
 
 
                     client.BaseAddress = new Uri(instance);
@@ -339,7 +356,7 @@ namespace openXDA.DataPusher
 
                 using (HttpClient client = new HttpClient(handler))
                 {
-                    string antiForgeryToken = GenerateAntiForgeryToken(client);
+                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
 
                     client.BaseAddress = new Uri(instance);
                     client.DefaultRequestHeaders.Accept.Clear();
@@ -367,7 +384,7 @@ namespace openXDA.DataPusher
             {
                 simpleCertificateChecker.ValidPolicyErrors = (SslPolicyErrors)Enum.Parse(typeof(SslPolicyErrors), (systemSettings["ValidPolicyErrors"].Value != "All" ? systemSettings["ValidPolicyErrors"].Value : "7"));
                 simpleCertificateChecker.ValidChainFlags = (X509ChainStatusFlags)Enum.Parse(typeof(X509ChainStatusFlags), (systemSettings["ValidChainFlags"].Value != "All"? systemSettings["ValidChainFlags"].Value : (~0).ToString()));
-                simpleCertificateChecker.TrustedCertificates.Add((!string.IsNullOrEmpty(systemSettings["certFile"].Value) ? new X509Certificate2(systemSettings["CertFile"].Value) : certificate));
+                simpleCertificateChecker.TrustedCertificates.Add((!string.IsNullOrEmpty(systemSettings["CertFile"].Value) ? new X509Certificate2(systemSettings["CertFile"].Value) : certificate));
             }
             catch (Exception ex)
             {
