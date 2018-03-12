@@ -5948,7 +5948,9 @@ namespace openXDA.Hubs
             {
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
-                engine.SyncMeterConfigurationForInstance(clientId, instanceId, meterId);
+                RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
+                UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                engine.SyncMeterConfigurationForInstance(clientId, instance, meterId, userAccount);
                 DataContext.Connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID ={0}", meterId);
             }
             finally
@@ -5966,7 +5968,9 @@ namespace openXDA.Hubs
             {
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
-                engine.SyncMeterFilesForInstance(clientId, instanceId, meterId);
+                RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
+                UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                engine.SyncMeterFilesForInstance( clientId, instance, meterId, userAccount);
             }
             finally
             {
@@ -6033,7 +6037,8 @@ namespace openXDA.Hubs
         {
             // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
             DataPusherEngine engine = new DataPusherEngine();
-            engine.SyncInstanceFiles(Context.ConnectionId, instanceId);
+            RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
+            engine.SyncInstanceFiles(Context.ConnectionId, instance);
         }
 
 
