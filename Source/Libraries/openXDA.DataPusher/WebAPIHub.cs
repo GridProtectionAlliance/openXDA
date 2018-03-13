@@ -376,8 +376,8 @@ namespace openXDA.DataPusher
             CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
 
             systemSettings.Add("CertFile", "", "This is a certfile.");
-            systemSettings.Add("ValidPolicyErrors", "None", "Password for PQMarkWeb API access.", true);
-            systemSettings.Add("ValidChainFlags", "NoError", "Password for PQMarkWeb API access.", true);
+            systemSettings.Add("ValidPolicyErrors", "None", "Password for PQMarkWeb API access.");
+            systemSettings.Add("ValidChainFlags", "NoError", "Password for PQMarkWeb API access.");
 
 
             try
