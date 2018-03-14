@@ -5969,8 +5969,7 @@ namespace openXDA.Hubs
                 // for now, create new instance of DataPusherEngine.  Later have one running in XDA ServiceHost and tie to it to ensure multiple updates arent happening simultaneously
                 DataPusherEngine engine = new DataPusherEngine();
                 RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
-                UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                engine.SyncMeterFilesForInstance( clientId, instance, meterId, userAccount);
+                engine.SyncMeterFilesForInstance( clientId, instance, meterId);
             }
             finally
             {

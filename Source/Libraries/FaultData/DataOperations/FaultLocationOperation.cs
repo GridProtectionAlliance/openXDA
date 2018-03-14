@@ -31,6 +31,7 @@ using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using log4net;
+using openXDA.DataPusher;
 using openXDA.Model;
 using Fault = FaultData.DataAnalysis.Fault;
 using FaultGroup = FaultData.DataAnalysis.FaultGroup;
@@ -136,9 +137,31 @@ namespace FaultData.DataOperations
                                 faultCurveStatisticTable.AddNewRecord(faultCurveStatistic);
                             }
                         }
+                        PushDataToRemoteInstances(connection, evt);
                     }
                 }
             }
+
+            private void PushDataToRemoteInstances(AdoDataConnection connection,Event evt){
+                // If file group has already been pushed to a remote instance, return
+                TableOperations<FileGroupLocalToRemote> fileGroupLocalToRemoteTable = new TableOperations<FileGroupLocalToRemote>(connection);
+                FileGroupLocalToRemote fileGroup = fileGroupLocalToRemoteTable.QueryRecordWhere("LocalFileGroupID = {0}", evt.FileGroupID);
+                if (fileGroup != null) return;
+
+                TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
+                TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
+                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*'");
+                DataPusherEngine engine = new DataPusherEngine();
+
+                foreach (RemoteXDAInstance instance in instances) {
+                    IEnumerable<MetersToDataPush> meters = meterTable.QueryRecordsWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", evt.MeterID, instance.ID);
+                    foreach (MetersToDataPush meter in meters)
+                    {
+                        engine.SyncMeterFileForInstance(instance, meter, evt.FileGroupID);
+                    }
+                }
+            }
+
 
             private openXDA.Model.FaultGroup CreateFaultGroup(int eventID, FaultGroup faultGroup)
             {

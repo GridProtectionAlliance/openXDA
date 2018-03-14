@@ -108,30 +108,34 @@
                             <tr>
                                 <td style="text-align: right" nowrap>Never:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('')"><code>&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;</code></button></td>
-                                <td style="text-align: right" nowrap>Every minute:</td>
-                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('* * * * *')"><code>* * * * *</code></button></td>
+                                <td style="text-align: right" nowrap>Instantaneous:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('*')"><code>&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;</code></button></td>
                             </tr>
 
                             <tr>
+                                <td style="text-align: right" nowrap>Every minute:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('* * * * *')"><code>* * * * *</code></button></td>
                                 <td style="text-align: right" nowrap>Every five minutes:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('*/5 * * * *')"><code>*/5 * * * *</code></button></td>
-                                <td style="text-align: right" nowrap>Every hour:</td>
-                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 * * * *')"><code>&nbsp;0 * * * *&nbsp;</code></button></td>
                             </tr>
                             <tr>
                                 <td style="text-align: right" nowrap>Every half-hour:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0,30 * * * *')"><code>0,30 * * * *</code></button></td>
+                                <td style="text-align: right" nowrap>Every hour:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 * * * *')"><code>&nbsp;0 * * * *&nbsp;</code></button></td>
+                            <tr>
                                 <td style="text-align: right" nowrap>Every four hours:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 */4 * * *')"><code>0 */4 * * *</code></button></td>
-                            <tr>
                                 <td style="text-align: right" nowrap>Every day:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 * * *')"><code>&nbsp;0 0 * * *&nbsp;</code></button></td>
-                                <td style="text-align: right" nowrap>Every month:</td>
-                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 * *')"><code>&nbsp;0 0 1 * *&nbsp;</code></button></td>
                             </tr>
                             <tr>
+                                <td style="text-align: right" nowrap>Every month:</td>
+                                <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 * *')"><code>&nbsp;0 0 1 * *&nbsp;</code></button></td>
                                 <td style="text-align: right" nowrap>Every six months:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 */6 *')"><code>&nbsp;0 0 1 */6 *&nbsp;</code></button></td>
+                            </tr>
+                            <tr>
                                 <td style="text-align: right" nowrap>Every year:</td>
                                 <td style="text-align: left" nowrap><button class="btn btn-default btn-block btn-xs" style="padding: 0" data-dismiss="modal" data-bind="enable: recordMode()!==RecordMode.View" onclick="updateSchedule('0 0 1 1 *')"><code>&nbsp;0 0 1 1 *&nbsp;</code></button></td>
                             </tr>

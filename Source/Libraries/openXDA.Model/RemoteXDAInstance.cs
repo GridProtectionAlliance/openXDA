@@ -36,13 +36,13 @@ namespace openXDA.Model
         private const string MonthPattern = "[1-9]|1[0-2]";
         private const string DayOfWeekPattern = "[0-6]";
 
-        private const string CronPattern = "^" +
+        private const string CronPattern = "(^[*]$)|(^" +
             @"(?:\*|(?:\*/)?0*(?:" + MinutePattern + ")) " +
             @"(?:\*|(?:\*/)?0*(?:" + HourPattern + ")) " +
             @"(?:\*|(?:\*/)?0*(?:" + DayOfMonthPattern + ")) " +
             @"(?:\*|(?:\*/)?0*(?:" + MonthPattern + ")) " +
             @"(?:\*|(?:\*/)?0*(?:" + DayOfWeekPattern + "))" +
-            "$";
+            "$)";
 
         [PrimaryKey(true)]
         public int ID { get; set; }
