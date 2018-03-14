@@ -339,7 +339,7 @@ namespace openXDA.DataPusher
             UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
             FileGroupLocalToRemote fileGroupLocalToRemote = DataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroupId);
-            FileGroup fileGroup = DataContext.Table<FileGroup>().QueryRecordWhere("ID = {0]", fileGroupId);
+            FileGroup fileGroup = DataContext.Table<FileGroup>().QueryRecordWhere("ID = {0}", fileGroupId);
 
             if (fileGroupLocalToRemote == null)
             {
