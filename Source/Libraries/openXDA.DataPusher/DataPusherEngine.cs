@@ -232,8 +232,16 @@ namespace openXDA.DataPusher
 
         public void SyncMeterFilesForInstance(string clientId, RemoteXDAInstance instance, int meterId, UserAccount userAccount, DateTime? startTime = null, DateTime? endTime = null)
         {
+            IEnumerable<FileGroup> localFileGroups;
+            int timeWindow = DataContext.Connection.ExecuteScalar<int?>("SELECT DataPusher.TimeWindow FROM Settings") ?? 72;
+            DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(timeWindow * -1);
+
             MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
-            IEnumerable<FileGroup> localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
+            if(timeWindow != 0)
+                localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
+            else
+                localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
+
             int progressTotal = (localFileGroups.Count() > 0 ? localFileGroups.Count() : 1 );
             int progressCount = 0;
             OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
