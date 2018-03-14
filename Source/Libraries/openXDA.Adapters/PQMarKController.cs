@@ -47,11 +47,11 @@ namespace openXDA.Adapters
     {
         #region [ Static Event Handlers ]
 
-        public static event EventHandler<EventArgs<int>> ReprocessFilesEvent;
+        public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
 
-        private static void OnReprocessFiles(int fileGroupID)
+        private static void OnReprocessFiles(int fileGroupID, int meterID)
         {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int>(fileGroupID));
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int,int>(fileGroupID, meterID));
         }
 
         #endregion
@@ -377,8 +377,7 @@ namespace openXDA.Adapters
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
         {
-            OnReprocessFiles(record["FileGroupID"].Value<int>());
-
+            OnReprocessFiles(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
             return Ok();
         }
 

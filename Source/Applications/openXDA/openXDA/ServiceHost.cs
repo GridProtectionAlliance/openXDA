@@ -291,7 +291,7 @@ namespace openXDA
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument);
+            DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
             DataHub.ReloadSystemSettingsEvent += (obj, Args) => OnReloadSystemSettingsRequestHandler();
 
             //Set up DataPusherEngine callbacks
@@ -301,7 +301,7 @@ namespace openXDA
             DataPusherEngine.UpdateProgressForInstance += (obj, Args) => DataHub.ProgressUpdatedByInstance(obj, Args);
 
             //Set up PQMarkController callbacks
-            PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument);
+            PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
 
             //Set up DataAggregationEngine callbacks
             DataAggregationEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
@@ -1001,9 +1001,9 @@ namespace openXDA
         /// Sends a command request to the service to reprocess files.
         /// </summary>
         /// <param name="dataFiles">Identifier for the file group to be reprocessed.</param>
-        public void ReprocessFile(int fileGroupID)
+        public void ReprocessFile(int fileGroupId, int meterId)
         {
-            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(fileGroupID);
+            m_extensibleDisturbanceAnalysisEngine.ReprocessFile(fileGroupId, meterId);
         }
 
         public void DisconnectClient(Guid clientID)

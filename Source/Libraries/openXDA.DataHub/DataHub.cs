@@ -80,11 +80,11 @@ namespace openXDA.Hubs
             LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string>(message));
         }
 
-        public static event EventHandler<EventArgs<int>> ReprocessFilesEvent;
+        public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
 
-        private static void OnReprocessFile(int fileGroupID)
+        private static void OnReprocessFile(int fileGroupId, int meterId)
         {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int>(fileGroupID));
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupId, meterId));
         }
 
         public static string LocalXDAInstance
@@ -5833,16 +5833,16 @@ namespace openXDA.Hubs
                 .QueryRecords(new RecordRestriction(eventFilter))
                 .ToList();
 
-            List<int> fileGroupIDs = events
-                .Select(evt => evt.FileGroupID)
+            List<Tuple<int,int>> fileGroupIDs = events
+                .Select(evt => Tuple.Create(evt.FileGroupID, evt.MeterID))
                 .Distinct()
                 .ToList();
 
-            foreach (int fileGroupID in fileGroupIDs)
+            foreach (Tuple<int,int> fileGroupID in fileGroupIDs)
             {
                 CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
                 CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
-                OnReprocessFile(fileGroupID);
+                OnReprocessFile(fileGroupID.Item1, fileGroupID.Item2);
             }
         }
 
@@ -5853,7 +5853,7 @@ namespace openXDA.Hubs
             if (useFile)
                 CascadeDelete("FileBlob", $"DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {fileGroupID})");
 
-            OnReprocessFile(fileGroupID);
+            OnReprocessFile(fileGroupID, meterID);
         }
 
         #endregion

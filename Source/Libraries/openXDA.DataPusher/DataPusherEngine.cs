@@ -39,7 +39,6 @@ namespace openXDA.DataPusher
         #region [ Members ]
 
         // Fields
-        private string m_dbConnectionString;
         private DataContext m_dataContext;
         private bool m_disposed;
         private ScheduleManager m_scheduler;
@@ -190,7 +189,7 @@ namespace openXDA.DataPusher
 
         public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, int meterId, UserAccount userAccount) {
 
-            MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
+            MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0} AND ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterId, instance.ID);
             Meter localMeterRecord = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
             // get MeterLine table 
             IEnumerable<MeterLine> localMeterLines = DataContext.Table<MeterLine>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);

@@ -955,70 +955,85 @@ namespace openXDA
         /// <summary>
         /// Processes a group of data files that have already been processed.
         /// </summary>
-        /// <param name="fileGroupID">The ID of the file group representing the group of files to be processed again.</param>
-        public void ReprocessFile(int fileGroupID)
+        /// <param name="fileGroupId">The ID of the file group representing the group of files to be processed again.</param>
+        /// <param name="meterId">The ID of the meter representing the group of files to be processed again.</param>
+        public void ReprocessFile(int fileGroupId, int meterId)
         {
+            FileGroup fileGroup;
+            string meterKey;
             string connectionString = LoadSystemSettings();
             SystemSettings systemSettings = new SystemSettings(connectionString);
-            FileGroup fileGroup;
+            string filePath;
 
-            // Get the list of data files in the file group
-            using (AdoDataConnection connection = CreateDbConnection(systemSettings))
+            try
             {
-                TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
-                TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
 
-                fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", fileGroupID);
-
-                fileGroup.DataFiles = dataFileTable
-                    .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
-                    .ToList();
-            }
-
-            // Get the first file that matches the file processor's filter
-            string filePath = fileGroup.DataFiles
-                .Select(dataFile => dataFile.FilePath)
-                .FirstOrDefault(m_fileProcessor.MatchesFilter);
-
-            if ((object)filePath == null)
-                throw new InvalidOperationException("There are no files in the file group that match the file processor's filter.");
-
-            // Determine which meter the file is associated with
-            string meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
-
-            GetThread(meterKey).Push(RequeuePriority, () =>
-            {
-                if (m_stopped || m_disposed)
-                    return;
-
-                DateTime maxFileCreationTime = fileGroup.DataFiles.Max(dataFile => dataFile.CreationTime);
-                FileWrapper fileWrapper = new FileWrapper(filePath, maxFileCreationTime);
-                string tempFolderPath = Path.Combine(Path.GetTempPath(), "openXDA", "Reprocessor", meterKey);
-
-                fileGroup.ProcessingEndTime = DateTime.MinValue;
-
+                // Get the list of data files in the file group
                 using (AdoDataConnection connection = CreateDbConnection(systemSettings))
                 {
+                    TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+                    TableOperations<FileGroup> fileGroupTable = new TableOperations<FileGroup>(connection);
+                    TableOperations<DataFile> dataFileTable = new TableOperations<DataFile>(connection);
+
+                    fileGroup = fileGroupTable.QueryRecordWhere("ID = {0}", fileGroupId);
+
+                    fileGroup.DataFiles = dataFileTable
+                        .QueryRecordsWhere("FileGroupID = {0}", fileGroupId)
+                        .ToList();
+
+                    // Determine which meter the file is associated with
+                    meterKey = meterTable.QueryRecordWhere("ID = {0}", meterId).AssetKey;
+
+                }
+
+                // Get the first file that matches the file processor's filter
+                filePath = fileGroup.DataFiles
+                    .Select(dataFile => dataFile.FilePath)
+                    .FirstOrDefault(dataFile => m_fileProcessor.Filter.Contains(new FileInfo(dataFile).Extension));
+
+                if ((object)filePath == null)
+                    throw new InvalidOperationException("There are no files in the file group that match the file processor's filter.");
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+                return;
+            }
+
+
+            GetThread(meterKey).Push(RequeuePriority, () =>
+                {
+                    if (m_stopped || m_disposed)
+                        return;
+
+                    DateTime maxFileCreationTime = fileGroup.DataFiles.Max(dataFile => dataFile.CreationTime);
+                    FileWrapper fileWrapper = new FileWrapper(filePath, maxFileCreationTime);
+                    string tempFolderPath = Path.Combine(Path.GetTempPath(), "openXDA", "Reprocessor", meterKey);
+
+                    fileGroup.ProcessingEndTime = DateTime.MinValue;
+
+                    using (AdoDataConnection connection = CreateDbConnection(systemSettings))
+                    {
                     // If the data files don't exist at their original location,
                     // write them out to a temp directory so they can be processed
                     if (fileGroup.DataFiles.Any(dataFile => !File.Exists(dataFile.FilePath)))
-                    {
-                        string fileName = Path.GetFileName(filePath);
-                        string tempFilePath = Path.Combine(tempFolderPath, fileName);
-                        Directory.CreateDirectory(tempFolderPath);
-
-                        foreach (DataFile dataFile in fileGroup.DataFiles)
                         {
-                            byte[] dataFileBlob = connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
-                            string dataFileName = Path.GetFileName(dataFile.FilePath);
-                            string tempDataFilePath = Path.Combine(tempFolderPath, dataFileName);
-                            File.WriteAllBytes(tempDataFilePath, dataFileBlob);
+                            string fileName = Path.GetFileName(filePath);
+                            string tempFilePath = Path.Combine(tempFolderPath, fileName);
+                            Directory.CreateDirectory(tempFolderPath);
+
+                            foreach (DataFile dataFile in fileGroup.DataFiles)
+                            {
+                                byte[] dataFileBlob = connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
+                                string dataFileName = Path.GetFileName(dataFile.FilePath);
+                                string tempDataFilePath = Path.Combine(tempFolderPath, dataFileName);
+                                File.WriteAllBytes(tempDataFilePath, dataFileBlob);
+                            }
+
+                            filePath = tempFilePath;
                         }
-
-                        filePath = tempFilePath;
                     }
-                }
-
                 Action<DataProcessorState> processFileCallback = state =>
                 {
                     try
