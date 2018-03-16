@@ -290,21 +290,24 @@ namespace openXDA
             m_dataAggregationEngine = new DataAggregationEngine();
 
             //Set up datahub callbacks
-            DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
             DataHub.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
             DataHub.ReloadSystemSettingsEvent += (obj, Args) => OnReloadSystemSettingsRequestHandler();
+            DataHub.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
 
             //Set up DataPusherEngine callbacks
-            DataPusherEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataPusherEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             DataPusherEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
             DataPusherEngine.UpdateProgressForMeter += (obj, Args) => DataHub.ProgressUpdatedByMeter(obj, Args);
             DataPusherEngine.UpdateProgressForInstance += (obj, Args) => DataHub.ProgressUpdatedByInstance(obj, Args);
 
             //Set up PQMarkController callbacks
             PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
+            PQMarkController.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
+            PQMarkController.LogStatusMessage += (obj, Args) => DisplayStatusMessage(Args.Argument2, Args.Argument3);
 
             //Set up DataAggregationEngine callbacks
-            DataAggregationEngine.LogExceptionMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+            DataAggregationEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             DataAggregationEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
 
             // Set up separate thread to start the engine

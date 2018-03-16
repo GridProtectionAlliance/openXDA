@@ -66,11 +66,11 @@ namespace openXDA.DataPusher
             LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
         }
 
-        public static event EventHandler<EventArgs<string>> LogExceptionMessageEvent;
+        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
 
-        private static void OnLogExceptionMessage(string message)
+        private static void OnLogExceptionMessage(Exception exception)
         {
-            LogExceptionMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
+            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
         }
 
         public static event EventHandler<EventArgs<string, string,int>> UpdateProgressForMeter;
@@ -311,7 +311,7 @@ namespace openXDA.DataPusher
                         }
                         catch (Exception ex)
                         {
-                            OnLogExceptionMessage(ex.ToString());
+                            OnLogExceptionMessage(ex);
                             process = false;
                         }
                         localFileBlob.DataFileID = remoteDataFileId;
@@ -402,7 +402,7 @@ namespace openXDA.DataPusher
                     }
                     catch (Exception ex)
                     {
-                        OnLogExceptionMessage(ex.ToString());
+                        OnLogExceptionMessage(ex);
                         process = false;
                     }
                     localFileBlob.DataFileID = remoteDataFileId;

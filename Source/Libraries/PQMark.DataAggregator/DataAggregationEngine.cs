@@ -65,11 +65,11 @@ namespace PQMark.DataAggregator
             LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
         }
 
-        public static event EventHandler<EventArgs<string>> LogExceptionMessageEvent;
+        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
 
-        private static void OnLogExceptionMessage(string message)
+        private static void OnLogExceptionMessage(Exception exception)
         {
-            LogExceptionMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
+            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
         }
 
         #endregion

@@ -54,6 +54,22 @@ namespace openXDA.Adapters
             ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int,int>(fileGroupID, meterID));
         }
 
+        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
+
+        private static void OnLogExceptionMessage(Exception exception)
+        {
+            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
+        }
+
+        public static event EventHandler<EventArgs<Guid,string, UpdateType>> LogStatusMessage;
+
+        private static void OnLogStatusMessage(string message)
+        {
+            LogStatusMessage?.Invoke(new object(), new EventArgs<Guid, string, UpdateType>(Guid.Empty, message, UpdateType.Information));
+        }
+
+
+
         #endregion
 
         #region [ GET Operations ]
@@ -101,6 +117,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    OnLogExceptionMessage(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -135,6 +152,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    OnLogExceptionMessage(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -167,6 +185,7 @@ namespace openXDA.Adapters
             }
             catch (Exception ex)
             {
+                OnLogExceptionMessage(ex);
                 return BadRequest("The id field must be a comma separated integer list.");
             }
 
@@ -242,6 +261,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    OnLogExceptionMessage(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -267,10 +287,11 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    OnLogExceptionMessage(ex);
                     return BadRequest(ex.ToString());
                 }
             }
-
+            OnLogStatusMessage($"Updated {modelName} table with {record.ToString()}");
             return Ok();
         }
 
@@ -304,9 +325,12 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    OnLogExceptionMessage(ex);
                     return BadRequest(ex.ToString());
                 }
             }
+
+            OnLogStatusMessage($"Added {record.ToString()} to {modelName} table");
 
             return Ok(recordId);
         }
@@ -366,10 +390,12 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    OnLogExceptionMessage(ex);
                     return BadRequest(ex.ToString());
                 }
             }
 
+            OnLogStatusMessage($"Added {record.ToString()} to Channel table");
             return Ok(channelId);
         }
 
@@ -377,7 +403,16 @@ namespace openXDA.Adapters
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult ProcessFileGroup([FromBody]JObject record)
         {
-            OnReprocessFiles(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
+            try
+            {
+                OnReprocessFiles(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
+            }
+            catch (Exception ex) {
+                OnLogExceptionMessage(ex);
+                return BadRequest("Failed to process file group.");
+            }
+
+            OnLogStatusMessage($"Processed file group {record["FileGroupID"].Value<int>()} for meter {record["MeterID"].Value<int>()}");
             return Ok();
         }
 
@@ -389,19 +424,28 @@ namespace openXDA.Adapters
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
         public IHttpActionResult DeleteRecord(int id, string modelName)
         {
-            using (DataContext dataContext = new DataContext("systemSettings"))
+            try
             {
-                Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
-                PQMarkRestrictedAttribute attribute;
-
-                if (type.TryGetAttribute(out attribute))
+                using (DataContext dataContext = new DataContext("systemSettings"))
                 {
-                    dataContext.Table(type).DeleteRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {1} AND UserAccount = {2})", id, modelName, Thread.CurrentPrincipal.Identity.Name);
-                    dataContext.Connection.ExecuteNonQuery("DELETE FROM [PQMarkRestrictedTableUserAccount] WHERE PrimaryID = {0} AND TableName = {1} AND UserAccount = {2}", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    PQMarkRestrictedAttribute attribute;
+
+                    if (type.TryGetAttribute(out attribute))
+                    {
+                        dataContext.Table(type).DeleteRecordWhere("ID = {0} AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {1} AND UserAccount = {2})", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                        dataContext.Connection.ExecuteNonQuery("DELETE FROM [PQMarkRestrictedTableUserAccount] WHERE PrimaryID = {0} AND TableName = {1} AND UserAccount = {2}", id, modelName, Thread.CurrentPrincipal.Identity.Name);
+                    }
+                    else
+                        dataContext.Table(type).DeleteRecordWhere("ID = {0}", id);
                 }
-                else
-                    dataContext.Table(type).DeleteRecordWhere("ID = {0}", id);
             }
+            catch (Exception ex) {
+                OnLogExceptionMessage(ex);
+                return BadRequest("Failed delete.");
+            }
+
+            OnLogStatusMessage($"Deleted {id} from {modelName} table");
 
             return Ok();
         }

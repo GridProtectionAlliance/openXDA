@@ -63,6 +63,10 @@ namespace openXDA.Hubs
     public class DataHub : RecordOperationsHub<DataHub>
     {
         // Client-side script functionality
+        #region [ Constructor ]
+        public DataHub() : base(OnLogStatusMessage, OnLogExceptionMessage) { }
+        #endregion
+
         #region [ Static ]
 
         public static event EventHandler ReloadSystemSettingsEvent;
@@ -73,11 +77,11 @@ namespace openXDA.Hubs
         }
 
 
-        public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
+        public static event EventHandler<EventArgs<string, UpdateType>> LogStatusMessageEvent;
                 
-        private static void OnLogStatusMessage(string message)
+        private static void OnLogStatusMessage(string message, UpdateType updateType = UpdateType.Information)
         {
-            LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string>(message));
+            LogStatusMessageEvent?.Invoke(new object(),new EventArgs<string, UpdateType>(message, updateType));
         }
 
         public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
@@ -86,6 +90,14 @@ namespace openXDA.Hubs
         {
             ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupId, meterId));
         }
+
+        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
+
+        private static void OnLogExceptionMessage(Exception exception)
+        {
+            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
+        }
+
 
         public static string LocalXDAInstance
         {
