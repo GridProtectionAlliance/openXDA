@@ -166,6 +166,20 @@
     <script src="@("/@GSF/Web/Shared/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<RemoteXDAInstance, DataHub>(ViewBag))
+
+        $(window).on('beforeHubConnected', function (e) {
+            dataHubClient.updateProgressBarForInstance = function (instanceName, update) {
+                $('#instanceName').text(instanceName);
+                $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+
+            }
+
+            dataHubClient.updateProgressBarForMeter = function (meterName, update) {
+                $('#meterName').text(meterName);
+                $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
+            }
+        });
+
         var localMeters;
         $(function () {
             $('#notify').puinotify({position: 'bottom'});
@@ -184,16 +198,6 @@
                 }
             });
 
-            dataHubClient.updateProgressBarForInstance = function (instanceName, update) {
-                $('#instanceName').text(instanceName);
-                $('#instanceProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
-
-            }
-
-            dataHubClient.updateProgressBarForMeter = function (meterName, update) {
-                $('#meterName').text(meterName);
-                $('#meterProgress').html('<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>');
-            }
 
 
         });

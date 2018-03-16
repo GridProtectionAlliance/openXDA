@@ -103,6 +103,18 @@
     <script src="@("/@GSF/Web/Shared/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MetersToDataPush, DataHub>(ViewBag, "LocalXDAAssetKey", null, ViewBag.XDAInstance))
+
+        $(window).on('beforeHubConnected', function (e) {
+            dataHubClient.updateProgressBarForMeter = function (meterName, update) {
+                $('#notify').puinotify('update',
+                    '<h4>' + meterName + '</h4>' +
+                    '<div class="progress">' +
+                    '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
+                    ' aria-valuenow="' + update + '" aria-valuemin="0" aria-valuemax="100" style="width:' + update + '%">' + update + '%</div>' +
+                    '</div>');
+            }
+        });
+
         var localMeters;
         $(function () {
             $('#addNewEditDialog').on('shown.bs.modal', function () {
@@ -133,15 +145,6 @@
             });
             $('#notify').puinotify({position: 'bottom'});
 
-            dataHubClient.updateProgressBarForMeter = function(meterName, update){
-                $('#notify').puinotify('update', 
-                                    '<h4>' + meterName + '</h4>' +
-                                    '<div class="progress">' +
-                                        '<div class="progress-bar progress-bar-striped active" role="progressbar"' +
-                                                ' aria-valuenow="'+update +'" aria-valuemin="0" aria-valuemax="100" style="width:'+update+'%">'+update+'%</div>' +
-                                    '</div>');
-
-            }
 
             
         });
