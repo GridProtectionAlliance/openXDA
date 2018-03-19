@@ -102,8 +102,14 @@ namespace FaultData.DataOperations
 
                         // Create the fault summary rows for this fault
                         foreach (FaultSummary faultSummary in CreateFaultSummaries(evt.ID, faultIndex + 1, fault))
+                        {
                             faultSummaryTable.AddNewRecord(faultSummary);
-                    }
+
+                            // if fault is valid, selected and not suppressed push data to remote instance if desired.
+                            if (faultSummary.IsSelectedAlgorithm && faultSummary.IsValid && !faultSummary.IsSuppressed)
+                                PushDataToRemoteInstances(connection, evt);
+                }
+            }
 
                     // Generate fault curves for each algorithm used to analyze the fault
                     TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
@@ -137,7 +143,6 @@ namespace FaultData.DataOperations
                                 faultCurveStatisticTable.AddNewRecord(faultCurveStatistic);
                             }
                         }
-                        PushDataToRemoteInstances(connection, evt);
                     }
                 }
             }
