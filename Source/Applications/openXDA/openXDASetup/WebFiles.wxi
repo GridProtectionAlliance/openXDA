@@ -133,6 +133,9 @@
   <Component Id="wwwroot_Config_MetersWithNormalLimits_cshtml">
     <File Id="wwwroot_Config_MetersWithNormalLimits.cshtml" Name="MetersWithNormalLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MetersWithNormalLimits.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_RemoteConsole_cshtml">
+    <File Id="wwwroot_Config_RemoteConsole.cshtml" Name="RemoteConsole.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\RemoteConsole.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_Settings_cshtml">
     <File Id="wwwroot_Config_Settings.cshtml" Name="Settings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Settings.cshtml" />
   </Component>
@@ -423,8 +426,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_dDAssets_png">
-    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
+  <Component Id="wwwroot_Images_ddAssets_png">
+    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
