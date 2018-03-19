@@ -897,6 +897,9 @@ namespace openXDA
                         if (state.Retry)
                             return;
 
+                        // Create the data file records to be saved to the database along with the file group
+                        state.FileGroup.DataFiles = state.FileWrapper.CreateDataFiles(state.SystemSettings.XDATimeZoneInfo);
+
                         // Determine whether the file duration is within a user-defined maximum tolerance
                         ValidateFileDuration(state.FilePath, state.FileGroup, state.SystemSettings);
 
@@ -906,7 +909,6 @@ namespace openXDA
                         // Save the file group in the database now that the data has been successfully parsed
                         using (AdoDataConnection connection = state.MeterDataSet.CreateDbConnection())
                         {
-                            state.FileGroup.DataFiles = state.FileWrapper.CreateDataFiles(state.SystemSettings.XDATimeZoneInfo);
                             SaveFileGroup(connection, fileGroup);
                         }
 

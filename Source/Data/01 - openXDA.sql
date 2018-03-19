@@ -700,6 +700,10 @@ CREATE TABLE [dbo].[FileBlob](
 )
 GO
 
+CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
+ON FileBlob(DataFileID ASC)
+GO
+
 CREATE TABLE [dbo].[DeviceFilter](
     [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [UserAccount] [varchar](500) NOT NULL,
