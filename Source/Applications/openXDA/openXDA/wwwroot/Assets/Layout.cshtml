@@ -139,39 +139,41 @@
     </script>
 </head>
 <body role="document">
-@if (ViewBag.ShowMenu ?? true) {
-    <div class="navbar navbar-inverse navbar-fixed-top" id="menuBar">
-        <div class="container">
-            <div class="navbar-header">
-                @*<img class="pull-left" style="padding: 10px" alt="@Model.Global.ApplicationName" src="/Images/@(Model.Global.ApplicationName).png">*@
-                <a href="/Index.cshtml" class="navbar-brand" style="padding: 0; margin: 0"><img class="pull-left" style="" alt="@programName" src="/Images/@(programName).png"></a>
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
+    @if (ViewBag.ShowMenu ?? true)
+    {
+        <div class="navbar navbar-inverse navbar-fixed-top" id="menuBar">
+            <div class="container">
+                <div class="navbar-header">
+                    @*<img class="pull-left" style="padding: 10px" alt="@Model.Global.ApplicationName" src="/Images/@(Model.Global.ApplicationName).png">*@
+                    <a href="/Index.cshtml" class="navbar-brand" style="padding: 0; margin: 0"><img class="pull-left" style="" alt="@programName" src="/Images/@(programName).png"></a>
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li @Raw(pageTitle == "Home" ? "class=\"active\"" : "")><a href="Index.cshtml">Home</a></li>
+                        <li><a href="Sites.cshtml">Sites</a></li>
+                        <li><a href="Meters.cshtml">Meters</a></li>
+                        <li><a href="Lines.cshtml">Lines</a></li>
+                    </ul>
+                    <p class="nav navbar-text navbar-right">
+                        <button type="button" class="btn btn-sm btn-info disabled">Log Out</button>
+                        <a href="https://www.gridprotectionalliance.org/" target="_blank" style="padding-left: 10px">
+                            <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png">
+                        </a>
+                    </p>
+                </div>
             </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li @Raw(pageTitle == "Home" ? "class=\"active\"" : "")><a href="Index.cshtml">Home</a></li>
-                    <li><a href="Sites.cshtml">Sites</a></li>
-                    <li><a href="Meters.cshtml">Meters</a></li>
-                    <li><a href="Lines.cshtml">Lines</a></li>
-                </ul>
-                <p class="nav navbar-text navbar-right">
-                    <button type="button" class="btn btn-sm btn-info disabled">Log Out</button>
-                    <a href="https://www.gridprotectionalliance.org/" target="_blank" style="padding-left: 10px">
-                        <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png">
-                    </a>
-                </p>
-            </div>
-        </div>
-    </div><!--/.navbar -->
-}
-else {
-    <div id="menuBar"></div>
-}
+        </div><!--/.navbar -->
+    }
+    else
+    {
+        <div id="menuBar"></div>
+    }
     <div class="container theme-showcase" role="main" id="bodyContainer">
         <div class="page-header" id="pageHeader">
             <span class="glyphicon glyphicon-refresh pre-cache"></span>
@@ -210,6 +212,8 @@ else {
     <script src="/Scripts/plugins-all.js"></script>
     <script src="/Scripts/jquery.jspanel-compiled@(min).js"></script>
     <script src="@("/@GSF/Web/Shared/Scripts/primeui.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/gsf.web.primeui.js")"></script>
+
     <script src="/Scripts/Site.js"></script>
     @Raw(ViewBag.PageControlScripts.ToString())
     @RenderSection("Scripts", false)
