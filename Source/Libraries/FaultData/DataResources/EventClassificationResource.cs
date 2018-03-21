@@ -23,10 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Linq;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using openXDA.Model;
@@ -57,6 +60,7 @@ namespace FaultData.DataResources
         private double m_sagThreshold;
         private double m_swellThreshold;
         private double m_interruptionThreshold;
+        private FaultLocationSettings m_faultLocationSettings;
 
         #endregion
 
@@ -65,6 +69,7 @@ namespace FaultData.DataResources
         public EventClassificationResource()
         {
             m_classifications = new Dictionary<DataGroup, EventClassification>();
+            m_faultLocationSettings = new FaultLocationSettings();
         }
 
         #endregion
@@ -131,6 +136,16 @@ namespace FaultData.DataResources
             }
         }
 
+        [Category]
+        [SettingName("FaultLocation")]
+        public FaultLocationSettings FaultLocationSettings
+        {
+            get
+            {
+                return m_faultLocationSettings;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -175,11 +190,14 @@ namespace FaultData.DataResources
                 if (faultGroup.FaultDetectionLogicResult ?? false)
                     return EventClassification.Fault;
 
-                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && !fault.IsReclose))
-                    return EventClassification.Fault;
+                if (!faultGroup.FaultDetectionLogicResult.HasValue && m_faultLocationSettings.UseDefaultFaultDetectionLogic)
+                {
+                    if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && !fault.IsReclose))
+                        return EventClassification.Fault;
 
-                if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && fault.IsReclose))
-                    return EventClassification.RecloseIntoFault;
+                    if (faultGroup.FaultValidationLogicResult && faultGroup.Faults.Any(fault => !fault.IsSuppressed && fault.IsReclose))
+                        return EventClassification.RecloseIntoFault;
+                }
             }
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
