@@ -5965,9 +5965,8 @@ namespace openXDA.Hubs
                 engine.SyncMeterConfigurationForInstance(clientId, instance, meterId, userAccount);
                 DataContext.Connection.ExecuteNonQuery("UPDATE MetersToDataPush SET Synced = 1 WHERE ID ={0}", meterId);
             }
-            finally
-            {
-
+            catch (Exception ex) {
+                LogException(ex);
             }
         }
 
@@ -5983,9 +5982,9 @@ namespace openXDA.Hubs
                 RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
                 engine.SyncMeterFilesForInstance( clientId, instance, meterId);
             }
-            finally
+            catch (Exception ex)
             {
-
+                LogException(ex);
             }
         }
 

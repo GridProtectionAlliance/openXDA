@@ -158,97 +158,242 @@ namespace openXDA.DataPusher
         }
 
         public void SyncInstanceConfiguration(string clientId, int instanceId) {
-            IEnumerable<int> meters = DataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId).Select(x => x.ID);
-            RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
-            UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
-
-            int progressTotal = meters.Count();
-            int progressCount = 0;
-            OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
-            foreach (int meter in meters)
+            try
             {
-                SyncMeterConfigurationForInstance(null, instance, meter, userAccount);
-                OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
+                IEnumerable<int> meters = DataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instanceId).Select(x => x.ID);
+                RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("ID = {0}", instanceId);
+                UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
 
+                int progressTotal = meters.Count();
+                int progressCount = 0;
+                OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
+                foreach (int meter in meters)
+                {
+                    SyncMeterConfigurationForInstance(null, instance, meter, userAccount);
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
+
+                }
             }
+            catch (Exception ex) {
+                OnLogExceptionMessage(ex);
+            }
+
         }
 
         public void SyncInstanceFiles(string clientId, RemoteXDAInstance instance)
         {
-            IEnumerable<int> meters = DataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID).Select(x => x.ID);
-            int progressTotal = meters.Count();
-            int progressCount = 0;
-            OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
-            foreach (int meter in meters)
+            try
             {
-                SyncMeterFilesForInstance(clientId, instance, meter);
-                OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
+                IEnumerable<int> meters = DataContext.Table<MetersToDataPush>().QueryRecordsWhere("ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0})", instance.ID).Select(x => x.ID);
+                int progressTotal = meters.Count();
+                int progressCount = 0;
+                OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (progressCount) / progressTotal));
+                foreach (int meter in meters)
+                {
+                    SyncMeterFilesForInstance(clientId, instance, meter);
+                    OnUpdateProgressForInstance(clientId, instance.Name, (int)(100 * (++progressCount) / progressTotal));
+                }
+            }
+            catch (Exception ex)
+            {
+                OnLogExceptionMessage(ex);
             }
         }
 
         public void SyncMeterConfigurationForInstance(string clientId, RemoteXDAInstance instance, int meterId, UserAccount userAccount) {
 
-            MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0} AND ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterId, instance.ID);
-            Meter localMeterRecord = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
-            // get MeterLine table 
-            IEnumerable<MeterLine> localMeterLines = DataContext.Table<MeterLine>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
-            int progressTotal = localMeterLines.Count() + 2;
-            int progressCount = 0;
-            int remoteMeterLocationId = SyncMeterLocations(instance.Address, meterToDataPush, localMeterRecord, userAccount);
-            int meterGroupId = AddMeterGroup(instance.Address, userAccount);
-            OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
-
-            // if meter doesnt exist remotely add it
-            AddMeter(instance.Address, meterToDataPush, localMeterRecord, remoteMeterLocationId, userAccount);
-            OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey,(int)(100*(++progressCount)/progressTotal));
-            AddMeterMeterGroup(instance.Address, meterGroupId, meterToDataPush.RemoteXDAMeterID, userAccount);
-            OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
-
-            // if there is a line for the meter ensure that its data has been uploaded remotely
-            foreach (MeterLine meterLine in localMeterLines)
+            try
             {
+                MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0} AND ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterId, instance.ID);
+                Meter localMeterRecord = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", meterToDataPush.LocalXDAMeterID);
+                // get MeterLine table 
+                IEnumerable<MeterLine> localMeterLines = DataContext.Table<MeterLine>().QueryRecordsWhere("MeterID = {0}", localMeterRecord.ID);
+                int progressTotal = localMeterLines.Count() + 2;
+                int progressCount = 0;
+                int remoteMeterLocationId = SyncMeterLocations(instance.Address, meterToDataPush, localMeterRecord, userAccount);
+                int meterGroupId = AddMeterGroup(instance.Address, userAccount);
+                OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
 
-                LinesToDataPush selectedLine = AddLine(instance.Address, meterLine, meterToDataPush.Obsfucate, userAccount);
-
-                // if MeterLine association has not been previously made, make it
-                AddMeterLine(instance.Address, meterToDataPush, selectedLine, userAccount);
-
-                // ensure remote and local line impedance matches
-                SyncLineImpedances(instance.Address, selectedLine, userAccount);
-
-                // add line to meterlocationline table
-                int meterLocationLineID = SyncMeterLocationLines(instance.Address, selectedLine.RemoteXDALineID, remoteMeterLocationId, userAccount);
-
-                // ensure remote and local Source Impedance records match for the current meter line location
-                SyncSourceImpedance(instance.Address, meterLocationLineID, userAccount);
-
-                // Sync Channel and channel dependant data
-                SyncChannel(instance.Address, meterToDataPush, selectedLine, userAccount);
-
+                // if meter doesnt exist remotely add it
+                AddMeter(instance.Address, meterToDataPush, localMeterRecord, remoteMeterLocationId, userAccount);
                 OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
+                AddMeterMeterGroup(instance.Address, meterGroupId, meterToDataPush.RemoteXDAMeterID, userAccount);
+                OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
+
+                // if there is a line for the meter ensure that its data has been uploaded remotely
+                foreach (MeterLine meterLine in localMeterLines)
+                {
+
+                    LinesToDataPush selectedLine = AddLine(instance.Address, meterLine, meterToDataPush.Obsfucate, userAccount);
+
+                    // if MeterLine association has not been previously made, make it
+                    AddMeterLine(instance.Address, meterToDataPush, selectedLine, userAccount);
+
+                    // ensure remote and local line impedance matches
+                    SyncLineImpedances(instance.Address, selectedLine, userAccount);
+
+                    // add line to meterlocationline table
+                    int meterLocationLineID = SyncMeterLocationLines(instance.Address, selectedLine.RemoteXDALineID, remoteMeterLocationId, userAccount);
+
+                    // ensure remote and local Source Impedance records match for the current meter line location
+                    SyncSourceImpedance(instance.Address, meterLocationLineID, userAccount);
+
+                    // Sync Channel and channel dependant data
+                    SyncChannel(instance.Address, meterToDataPush, selectedLine, userAccount);
+
+                    OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
+                }
             }
+            catch (Exception ex)
+            {
+                OnLogExceptionMessage(ex);
+            }
+
         }
 
         public void SyncMeterFilesForInstance(string clientId, RemoteXDAInstance instance, int meterId)
         {
-            IEnumerable<FileGroup> localFileGroups;
-            UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
-            int timeWindow = DataContext.Connection.ExecuteScalar<int?>("SELECT DataPusher.TimeWindow FROM Settings") ?? 72;
-            DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(timeWindow * -1);
-
-            MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
-            if(timeWindow != 0)
-                localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
-            else
-                localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
-
-            int progressTotal = (localFileGroups.Count() > 0 ? localFileGroups.Count() : 1 );
-            int progressCount = 0;
-            OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
-
-            foreach (FileGroup fileGroup in localFileGroups)
+            using (StreamWriter sw = new StreamWriter("DP.txt"))
             {
-                FileGroupLocalToRemote fileGroupLocalToRemote = DataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroup.ID);
+
+                try
+                {
+                    sw.WriteLine("Instance: " + instance.Name);
+
+                    IEnumerable<FileGroup> localFileGroups;
+                    UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
+                    sw.WriteLine("User Account: " + userAccount.AccountName);
+
+                    int timeWindow = DataContext.Connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.TimeWindow'") ?? 72;
+                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(timeWindow * -1);
+                    sw.WriteLine("Time Window Start: " + timeWindowStartDate);
+
+                    MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
+                    sw.WriteLine("Meter: " + meterToDataPush.LocalXDAAssetKey);
+
+                    if (timeWindow != 0)
+                        localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
+                    else
+                        localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
+
+                    int progressTotal = (localFileGroups.Count() > 0 ? localFileGroups.Count() : 1);
+                    int progressCount = 0;
+
+                    OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
+                    OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
+                    sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
+
+                    foreach (FileGroup fileGroup in localFileGroups)
+                    {
+                        OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}:Filegroup:{fileGroup.ID}...");
+
+                        FileGroupLocalToRemote fileGroupLocalToRemote = DataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroup.ID);
+
+                        if (fileGroupLocalToRemote == null)
+                        {
+                            FileGroup fg = new FileGroup()
+                            {
+                                ProcessingEndTime = fileGroup.ProcessingEndTime,
+                                ProcessingStartTime = fileGroup.ProcessingStartTime,
+                                DataEndTime = fileGroup.DataEndTime,
+                                DataStartTime = fileGroup.DataStartTime,
+                                Error = fileGroup.Error,
+                                FileHash = fileGroup.FileHash
+                            };
+                            int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, "FileGroup", JObject.FromObject(fg), userAccount);
+                            fileGroupLocalToRemote = new FileGroupLocalToRemote()
+                            {
+                                LocalFileGroupID = fileGroup.ID,
+                                RemoteFileGroupID = remoteFileGroupId
+                            };
+                            DataContext.Table<FileGroupLocalToRemote>().AddNewRecord(fileGroupLocalToRemote);
+                        }
+
+                        IEnumerable<DataFile> localDataFiles = DataContext.Table<DataFile>().QueryRecordsWhere("FileGroupID = {0}", fileGroupLocalToRemote.LocalFileGroupID);
+                        IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere(instance.Address, "DataFile", $"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}", userAccount).Select(x => (DataFile)x);
+
+                        bool process = false;
+                        foreach (DataFile localDataFile in localDataFiles)
+                        {
+                            int remoteDataFileId;
+                            if (!remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).Any())
+                            {
+                                DataFile df = new DataFile()
+                                {
+                                    CreationTime = localDataFile.CreationTime,
+                                    FileGroupID = fileGroupLocalToRemote.RemoteFileGroupID,
+                                    FilePath = localDataFile.FilePath,
+                                    FilePathHash = localDataFile.FilePathHash,
+                                    FileSize = localDataFile.FileSize,
+                                    LastAccessTime = localDataFile.LastAccessTime,
+                                    LastWriteTime = localDataFile.LastWriteTime
+                                };
+                                remoteDataFileId = WebAPIHub.CreateRecord(instance.Address, "DataFile", JObject.FromObject(df), userAccount);
+                                process = true;
+                            }
+                            else
+                                remoteDataFileId = remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).First().ID;
+
+                            FileBlob remoteFileBlob = (FileBlob)WebAPIHub.GetRecordsWhere(instance.Address, "FileBlob", $"DataFileID = {remoteDataFileId}", userAccount).FirstOrDefault();
+
+                            if (remoteFileBlob == null)
+                            {
+                                FileBlob localFileBlob = DataContext.Table<FileBlob>().QueryRecordWhere("DataFileID = {0}", localDataFile.ID);
+
+                                try
+                                {
+                                    if (localFileBlob == null)
+                                    {
+                                        localFileBlob = new FileBlob() { DataFileID = localDataFile.ID, Blob = File.ReadAllBytes(localDataFile.FilePath) };
+                                        DataContext.Table<FileBlob>().AddNewRecord(localFileBlob);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    OnLogExceptionMessage(ex);
+                                    process = false;
+                                }
+                                localFileBlob.DataFileID = remoteDataFileId;
+                                WebAPIHub.CreateRecord(instance.Address, "FileBlob", JObject.FromObject(new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }), userAccount);
+
+                            }
+                        }
+
+                        if (process)
+                        {
+                            Dictionary<string, int> dictionary = new Dictionary<string, int>();
+                            dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
+                            dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
+                            WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary), userAccount);
+
+                        }
+
+                        OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
+                        OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
+                        sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
+
+                    }
+
+
+                }
+                catch (Exception ex)
+                {
+                    sw.WriteLine(ex);
+                    OnLogExceptionMessage(ex);
+                }
+                sw.Close();
+            }
+
+        }
+
+        public void SyncMeterFileForInstance(RemoteXDAInstance instance, MetersToDataPush meterToDataPush, int fileGroupId)
+        {
+            try
+            {
+                UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
+
+                FileGroupLocalToRemote fileGroupLocalToRemote = DataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroupId);
+                FileGroup fileGroup = DataContext.Table<FileGroup>().QueryRecordWhere("ID = {0}", fileGroupId);
 
                 if (fileGroupLocalToRemote == null)
                 {
@@ -328,97 +473,12 @@ namespace openXDA.DataPusher
                     WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary), userAccount);
 
                 }
-
-                OnUpdateProgressForMeter(clientId,meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
-
             }
-        }
-
-        public void SyncMeterFileForInstance(RemoteXDAInstance instance, MetersToDataPush meterToDataPush, int fileGroupId)
-        {
-            UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
-
-            FileGroupLocalToRemote fileGroupLocalToRemote = DataContext.Table<FileGroupLocalToRemote>().QueryRecordWhere("LocalFileGroupID = {0}", fileGroupId);
-            FileGroup fileGroup = DataContext.Table<FileGroup>().QueryRecordWhere("ID = {0}", fileGroupId);
-
-            if (fileGroupLocalToRemote == null)
+            catch (Exception ex)
             {
-                FileGroup fg = new FileGroup()
-                {
-                    ProcessingEndTime = fileGroup.ProcessingEndTime,
-                    ProcessingStartTime = fileGroup.ProcessingStartTime,
-                    DataEndTime = fileGroup.DataEndTime,
-                    DataStartTime = fileGroup.DataStartTime,
-                    Error = fileGroup.Error,
-                    FileHash = fileGroup.FileHash
-                };
-                int remoteFileGroupId = WebAPIHub.CreateRecord(instance.Address, "FileGroup", JObject.FromObject(fg), userAccount);
-                fileGroupLocalToRemote = new FileGroupLocalToRemote()
-                {
-                    LocalFileGroupID = fileGroup.ID,
-                    RemoteFileGroupID = remoteFileGroupId
-                };
-                DataContext.Table<FileGroupLocalToRemote>().AddNewRecord(fileGroupLocalToRemote);
+                OnLogExceptionMessage(ex);
             }
 
-            IEnumerable<DataFile> localDataFiles = DataContext.Table<DataFile>().QueryRecordsWhere("FileGroupID = {0}", fileGroupLocalToRemote.LocalFileGroupID);
-            IEnumerable<DataFile> remoteDataFiles = WebAPIHub.GetRecordsWhere(instance.Address, "DataFile", $"FileGroupID = {fileGroupLocalToRemote.RemoteFileGroupID}", userAccount).Select(x => (DataFile)x);
-
-            bool process = false;
-            foreach (DataFile localDataFile in localDataFiles)
-            {
-                int remoteDataFileId;
-                if (!remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).Any())
-                {
-                    DataFile df = new DataFile()
-                    {
-                        CreationTime = localDataFile.CreationTime,
-                        FileGroupID = fileGroupLocalToRemote.RemoteFileGroupID,
-                        FilePath = localDataFile.FilePath,
-                        FilePathHash = localDataFile.FilePathHash,
-                        FileSize = localDataFile.FileSize,
-                        LastAccessTime = localDataFile.LastAccessTime,
-                        LastWriteTime = localDataFile.LastWriteTime
-                    };
-                    remoteDataFileId = WebAPIHub.CreateRecord(instance.Address, "DataFile", JObject.FromObject(df), userAccount);
-                    process = true;
-                }
-                else
-                    remoteDataFileId = remoteDataFiles.Where(x => x.FilePath == localDataFile.FilePath).First().ID;
-
-                FileBlob remoteFileBlob = (FileBlob)WebAPIHub.GetRecordsWhere(instance.Address, "FileBlob", $"DataFileID = {remoteDataFileId}", userAccount).FirstOrDefault();
-
-                if (remoteFileBlob == null)
-                {
-                    FileBlob localFileBlob = DataContext.Table<FileBlob>().QueryRecordWhere("DataFileID = {0}", localDataFile.ID);
-
-                    try
-                    {
-                        if (localFileBlob == null)
-                        {
-                            localFileBlob = new FileBlob() { DataFileID = localDataFile.ID, Blob = File.ReadAllBytes(localDataFile.FilePath) };
-                            DataContext.Table<FileBlob>().AddNewRecord(localFileBlob);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        OnLogExceptionMessage(ex);
-                        process = false;
-                    }
-                    localFileBlob.DataFileID = remoteDataFileId;
-                    WebAPIHub.CreateRecord(instance.Address, "FileBlob", JObject.FromObject(new FileBlob() { DataFileID = remoteDataFileId, Blob = localFileBlob.Blob }), userAccount);
-
-                }
-            }
-
-            if (process)
-            {
-                Dictionary<string, int> dictionary = new Dictionary<string, int>();
-                dictionary.Add("FileGroupID", fileGroupLocalToRemote.RemoteFileGroupID);
-                dictionary.Add("MeterID", meterToDataPush.RemoteXDAMeterID);
-                WebAPIHub.ProcessFileGroup(instance.Address, JObject.FromObject(dictionary), userAccount);
-
-            }
         }
 
         private void AddMeter(string address, MetersToDataPush meter, Meter localMeterRecord,int remoteMeterLocationId, UserAccount userAccount)
