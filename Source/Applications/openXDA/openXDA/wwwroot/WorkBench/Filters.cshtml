@@ -236,7 +236,7 @@
 
                 $('#meters').mobileSelect('refresh');
 
-                if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
+                if ($('#meters').val().length > 0) $('#linesFrame button').prop("disabled", true);
                 else $('#linesFrame button').prop("disabled", false);
             });
 
@@ -253,15 +253,15 @@
 
                 $('#lines').mobileSelect('refresh');
 
-                if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
+                if ($('#lines').val().length > 0) $('#metersFrame button').prop("disabled", true);
                 else $('#metersFrame button').prop("disabled", false);
             });
 
 
             $(window).on('mobileSelectSave mobileSelectClear', function () {
-                if ($('#meters').val()) $('#linesFrame button').prop("disabled", true);
+                if ($('#meters').val().length > 0) $('#linesFrame button').prop("disabled", true);
                 else $('#linesFrame button').prop("disabled", false);
-                if ($('#lines').val()) $('#metersFrame button').prop("disabled", true);
+                if ($('#lines').val().length > 0) $('#metersFrame button').prop("disabled", true);
                 else $('#metersFrame button').prop("disabled", false);
 
             });
