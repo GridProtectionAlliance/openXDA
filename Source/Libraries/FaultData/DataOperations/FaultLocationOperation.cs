@@ -104,12 +104,8 @@ namespace FaultData.DataOperations
                         foreach (FaultSummary faultSummary in CreateFaultSummaries(evt.ID, faultIndex + 1, fault))
                         {
                             faultSummaryTable.AddNewRecord(faultSummary);
-
-                            // if fault is valid, selected and not suppressed push data to remote instance if desired.
-                            if (faultSummary.IsSelectedAlgorithm && faultSummary.IsValid && !faultSummary.IsSuppressed)
-                                PushDataToRemoteInstances(connection, evt);
-                }
-            }
+                        }
+                    }
 
                     // Generate fault curves for each algorithm used to analyze the fault
                     TableOperations<FaultCurve> faultCurveTable = new TableOperations<FaultCurve>(connection);
@@ -146,27 +142,6 @@ namespace FaultData.DataOperations
                     }
                 }
             }
-
-            private void PushDataToRemoteInstances(AdoDataConnection connection,Event evt){
-                // If file group has already been pushed to a remote instance, return
-                TableOperations<FileGroupLocalToRemote> fileGroupLocalToRemoteTable = new TableOperations<FileGroupLocalToRemote>(connection);
-                FileGroupLocalToRemote fileGroup = fileGroupLocalToRemoteTable.QueryRecordWhere("LocalFileGroupID = {0}", evt.FileGroupID);
-                if (fileGroup != null) return;
-
-                TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
-                TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
-                IEnumerable<RemoteXDAInstance> instances = instanceTable.QueryRecordsWhere("Frequency ='*'");
-                DataPusherEngine engine = new DataPusherEngine();
-
-                foreach (RemoteXDAInstance instance in instances) {
-                    IEnumerable<MetersToDataPush> meters = meterTable.QueryRecordsWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", evt.MeterID, instance.ID);
-                    foreach (MetersToDataPush meter in meters)
-                    {
-                        engine.SyncMeterFileForInstance(instance, meter, evt.FileGroupID);
-                    }
-                }
-            }
-
 
             private openXDA.Model.FaultGroup CreateFaultGroup(int eventID, FaultGroup faultGroup)
             {

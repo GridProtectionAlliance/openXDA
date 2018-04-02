@@ -77,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\BreakerSettings.cs" />
+    <Compile Include="Configuration\DataPusherSettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
     <Compile Include="Configuration\EMAXSettings.cs" />
     <Compile Include="Configuration\EventEmailSettings.cs" />
@@ -162,6 +163,7 @@
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
     <Compile Include="DataOperations\DataOperationBase.cs" />
+    <Compile Include="DataOperations\DataPusherOperation.cs" />
     <Compile Include="DataOperations\DataQualityOperation.cs" />
     <Compile Include="DataOperations\DisturbanceSeverityOperation.cs" />
     <Compile Include="DataOperations\DoubleEndedFaultOperation.cs" />
