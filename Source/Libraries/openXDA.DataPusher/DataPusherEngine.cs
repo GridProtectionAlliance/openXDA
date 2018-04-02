@@ -253,23 +253,20 @@ namespace openXDA.DataPusher
 
         public void SyncMeterFilesForInstance(string clientId, RemoteXDAInstance instance, int meterId)
         {
-            using (StreamWriter sw = new StreamWriter("DP.txt"))
-            {
-
                 try
                 {
-                    sw.WriteLine("Instance: " + instance.Name);
+                    //sw.WriteLine("Instance: " + instance.Name);
 
                     IEnumerable<FileGroup> localFileGroups;
                     UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    sw.WriteLine("User Account: " + userAccount.AccountName);
+                    //sw.WriteLine("User Account: " + userAccount.AccountName);
 
                     int timeWindow = DataContext.Connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.TimeWindow'") ?? 72;
                     DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(timeWindow * -1);
-                    sw.WriteLine("Time Window Start: " + timeWindowStartDate);
+                    //sw.WriteLine("Time Window Start: " + timeWindowStartDate);
 
                     MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
-                    sw.WriteLine("Meter: " + meterToDataPush.LocalXDAAssetKey);
+                    //sw.WriteLine("Meter: " + meterToDataPush.LocalXDAAssetKey);
 
                     if (timeWindow != 0)
                         localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
@@ -281,7 +278,7 @@ namespace openXDA.DataPusher
 
                     OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
                     OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
-                    sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
+                    //sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
 
                     foreach (FileGroup fileGroup in localFileGroups)
                     {
@@ -370,7 +367,7 @@ namespace openXDA.DataPusher
 
                         OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
                         OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
-                        sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
+                        //sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
 
                     }
 
@@ -378,12 +375,9 @@ namespace openXDA.DataPusher
                 }
                 catch (Exception ex)
                 {
-                    sw.WriteLine(ex);
+                    //sw.WriteLine(ex);
                     OnLogExceptionMessage(ex);
                 }
-                sw.Close();
-            }
-
         }
 
         public void SyncMeterFileForInstance(RemoteXDAInstance instance, MetersToDataPush meterToDataPush, int fileGroupId)
