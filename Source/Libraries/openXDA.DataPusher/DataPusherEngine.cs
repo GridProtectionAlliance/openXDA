@@ -272,17 +272,13 @@ namespace openXDA.DataPusher
         {
                 try
                 {
-                    //sw.WriteLine("Instance: " + instance.Name);
 
                     IEnumerable<FileGroup> localFileGroups;
                     UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
-                    //sw.WriteLine("User Account: " + userAccount.AccountName);
 
                     DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(DataPusherSettings.TimeWindow * -1);
-                    //sw.WriteLine("Time Window Start: " + timeWindowStartDate);
 
                     MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
-                    //sw.WriteLine("Meter: " + meterToDataPush.LocalXDAAssetKey);
 
                     if (DataPusherSettings.TimeWindow != 0)
                         localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
@@ -294,7 +290,6 @@ namespace openXDA.DataPusher
 
                     OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
                     Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
-                    sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
 
                     foreach (FileGroup fileGroup in localFileGroups)
                     {
@@ -383,7 +378,6 @@ namespace openXDA.DataPusher
 
                         OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
                         Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
-                        sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
 
                     }
 
@@ -391,7 +385,6 @@ namespace openXDA.DataPusher
                 }
                 catch (Exception ex)
                 {
-                    sw.WriteLine(ex);
                     Log.Error(ex);
                 }
         }
