@@ -1743,7 +1743,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecordCount)]
         public int QueryEmailGroupCount(int emailGroupID, string filterString)
         {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            TableOperations<EmailGroup> tableOperations = DataContext.Table<EmailGroup>();
             RecordRestriction restriction;
 
             if (emailGroupID > 0)
@@ -1758,7 +1758,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecords)]
         public IEnumerable<EmailGroup> QueryEmailGroup(int emailGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            TableOperations<EmailGroup> tableOperations = DataContext.Table<EmailGroup>();
             RecordRestriction restriction;
 
             if (emailGroupID > 0)
