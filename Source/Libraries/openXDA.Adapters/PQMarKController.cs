@@ -48,6 +48,10 @@ namespace openXDA.Adapters
     {
         #region [ Static Event Handlers ]
         public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
+        private static void OnReprocessFiles(int fileGroupID, int meterID)
+        {
+            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int, int>(fileGroupID, meterID));
+        }
         public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
         public static event EventHandler<EventArgs<Guid,string, UpdateType>> LogStatusMessage;
         #endregion
