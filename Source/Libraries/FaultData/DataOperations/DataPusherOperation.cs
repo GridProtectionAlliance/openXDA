@@ -39,7 +39,7 @@ using System.Threading.Tasks;
 
 namespace FaultData.DataOperations
 {
-    class DataPusherOperation : DataOperationBase<MeterDataSet>
+    public class DataPusherOperation : DataOperationBase<MeterDataSet>
     {
         #region [ Members ]
         private DataPusherSettings m_dataPusherSettings;
@@ -69,16 +69,20 @@ namespace FaultData.DataOperations
         #region [ Methods ]
         public override void Execute(MeterDataSet meterDataSet)
         {
-            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            if (DataPusherSettings.Enabled)
             {
-                if (DataPusherSettings.OnlyValidFaults) {
-                    TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
-                    int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID);
-                    if(faultSummaryCount > 0)
+                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                {
+                    if (DataPusherSettings.OnlyValidFaults)
+                    {
+                        TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
+                        int faultSummaryCount = faultSummaryTable.QueryRecordCountWhere("EventID IN (SELECT ID FROM Event WHERE FileGroupID = {0}) AND IsValid = 1 AND IsSuppressed = 0", meterDataSet.FileGroup.ID);
+                        if (faultSummaryCount > 0)
+                            PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
+                    }
+                    else
                         PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
                 }
-                else
-                    PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
             }
         }
 

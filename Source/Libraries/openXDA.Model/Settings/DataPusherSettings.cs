@@ -21,30 +21,26 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace FaultData.Configuration
+namespace openXDA.Model
 {
-    class DataPusherSettings
+    public class DataPusherSettings
     {
         #region [ Members ]
 
         // Fields
+        private bool m_enable;
         private bool m_onlyValidFaults;
+        private int m_timeWindow;
 
         #endregion
         #region [ Properties ]
 
 
         /// <summary>
-        /// Indicates whether to use the default fault detection logic
-        /// when the line-specific fault detection logic fails.
+        /// Indicates whether to push on just faults
         /// </summary>
         [Setting]
         [DefaultValue(true)]
@@ -57,6 +53,41 @@ namespace FaultData.Configuration
             set
             {
                 m_onlyValidFaults = value;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether operation is enabled.
+        /// </summary>
+        [Setting]
+        [DefaultValue(false)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_enable;
+            }
+            set
+            {
+                m_enable = value;
+            }
+        }
+
+
+        /// <summary>
+        /// Indicates the hours to push
+        /// </summary>
+        [Setting]
+        [DefaultValue(72)]
+        public int TimeWindow
+        {
+            get
+            {
+                return m_timeWindow;
+            }
+            set
+            {
+                m_timeWindow = value;
             }
         }
 

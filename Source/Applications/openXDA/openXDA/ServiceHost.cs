@@ -131,13 +131,13 @@ namespace openXDA
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
         private DataPusherEngine m_dataPusherEngine;
+        private DataPusherSettings m_dataPusherSettings;
         private DataAggregationEngine m_dataAggregationEngine;
+        private PQMarkAggregationSettings m_pqMarkAggregationSettings;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
         private bool m_disposed;
-        private DataPusherEngine dataPusherEngine;
-
         #endregion
 
         #region [ Constructors ]
@@ -148,6 +148,8 @@ namespace openXDA
             ConfigurationFile configFile = ConfigurationFile.Current;
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
             systemSettings.Add("DefaultCulture", "en-US", "Default culture to use for language, country/region and calendar formats.");
+            m_dataPusherSettings = new DataPusherSettings();
+            m_pqMarkAggregationSettings = new PQMarkAggregationSettings();
 
             // Attempt to set default culture
             string defaultCulture = systemSettings["DefaultCulture"].ValueAs("en-US");
@@ -194,6 +196,26 @@ namespace openXDA
         /// Gets current performance statistics.
         /// </summary>
         public string PerformanceStatistics => m_extensibleDisturbanceAnalysisEngine.Status;
+
+        [Category]
+        [SettingName("DataPusher")]
+        public DataPusherSettings DataPusherSettings
+        {
+            get
+            {
+                return m_dataPusherSettings;
+            }
+        }
+
+        [Category]
+        [SettingName("PQMarkAggregation")]
+        public PQMarkAggregationSettings PQMarkAggregationSettings
+        {
+            get
+            {
+                return m_pqMarkAggregationSettings;
+            }
+        }
 
         #endregion
 
@@ -284,7 +306,7 @@ namespace openXDA
             m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
 
             // Set up data pusher engine
-            m_dataPusherEngine = new DataPusherEngine();
+            m_dataPusherEngine = new DataPusherEngine(m_dataPusherSettings);
 
             // Set up data aggregation engine
             m_dataAggregationEngine = new DataAggregationEngine();
@@ -415,13 +437,8 @@ namespace openXDA
         {
             try
             {
-                // Start the analysis engine
-                using(DataContext conn = new DataContext("systemSettings"))
-                {
-                    bool start = bool.Parse(conn.Table<Setting>().QueryRecordWhere("Name = 'EnableDataPusher'")?.Value ?? "false");
-                    if(start)
-                        m_dataPusherEngine.Start();
-                }
+                if (DataPusherSettings.Enabled)
+                    m_dataPusherEngine.Start();
                 return true;
             }
             catch (Exception ex)
@@ -445,12 +462,8 @@ namespace openXDA
             try
             {
                 // Start the analysis engine
-                using (DataContext conn = new DataContext("systemSettings"))
-                {
-                    bool start = bool.Parse(conn.Table<Setting>().QueryRecordWhere("Name = 'EnablePQMarkAggregator'")?.Value ?? "false");
-                    if (start)
-                        m_dataAggregationEngine.Start();
-                }
+                if (PQMarkAggregationSettings.Enabled)
+                    m_dataAggregationEngine.Start();
                 return true;
             }
             catch (Exception ex)
@@ -649,19 +662,14 @@ namespace openXDA
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
             
-            using(DataContext dataContext = new DataContext("systemSettings"))
-            {
-                bool flag = bool.Parse(dataContext.Table<Setting>().QueryRecordWhere("Name = 'EnableDataPusher'")?.Value ?? "false");
-
-                if (m_dataPusherEngine.Running && flag)
-                    m_dataPusherEngine.ReloadSystemSettings();
-                else if (!flag)
-                    m_dataPusherEngine.Stop();
-                else if (!m_dataPusherEngine.Running && flag)
-                    m_dataPusherEngine.Start();
-                else
-                    m_dataPusherEngine.Stop();
-            }
+            if (m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+                m_dataPusherEngine.ReloadSystemSettings();
+            else if (!DataPusherSettings.Enabled)
+                m_dataPusherEngine.Stop();
+            else if (!m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+                m_dataPusherEngine.Start();
+            else
+                m_dataPusherEngine.Stop();
 
             SendResponse(requestInfo, true);
         }
@@ -671,31 +679,24 @@ namespace openXDA
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
 
-            using (DataContext dataContext = new DataContext("systemSettings"))
-            {
-                bool flag = bool.Parse(dataContext.Table<Setting>().QueryRecordWhere("Name = 'EnableDataPusher'")?.Value ?? "false");
+            if (m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+                m_dataPusherEngine.ReloadSystemSettings();
+            else if (!DataPusherSettings.Enabled)
+                m_dataPusherEngine.Stop();
+            else if (!m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+                m_dataPusherEngine.Start();
+            else
+                m_dataPusherEngine.Stop();
 
-                if (m_dataPusherEngine.Running && flag)
-                    m_dataPusherEngine.ReloadSystemSettings();
-                else if (!flag)
-                    m_dataPusherEngine.Stop();
-                else if (!m_dataPusherEngine.Running && flag)
-                    m_dataPusherEngine.Start();
-                else
-                    m_dataPusherEngine.Stop();
+            if (m_dataAggregationEngine.Running && PQMarkAggregationSettings.Enabled)
+                m_dataAggregationEngine.ReloadSystemSettings();
+            else if (!PQMarkAggregationSettings.Enabled)
+                m_dataAggregationEngine.Stop();
+            else if (!m_dataPusherEngine.Running && PQMarkAggregationSettings.Enabled)
+                m_dataAggregationEngine.Start();
+            else
+                m_dataAggregationEngine.Stop();
 
-                bool flag2 = bool.Parse(dataContext.Table<Setting>().QueryRecordWhere("Name = 'EnablePQMarkAggregator'")?.Value ?? "false");
-
-                if (m_dataAggregationEngine.Running && flag2)
-                    m_dataAggregationEngine.ReloadSystemSettings();
-                else if (!flag2)
-                    m_dataAggregationEngine.Stop();
-                else if (!m_dataPusherEngine.Running && flag2)
-                    m_dataAggregationEngine.Start();
-                else
-                    m_dataAggregationEngine.Stop();
-
-            }
 
             LogStatusMessage("Reload system settings complete...");
         }

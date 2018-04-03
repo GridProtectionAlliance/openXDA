@@ -77,7 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\BreakerSettings.cs" />
-    <Compile Include="Configuration\DataPusherSettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
     <Compile Include="Configuration\EMAXSettings.cs" />
     <Compile Include="Configuration\EventEmailSettings.cs" />

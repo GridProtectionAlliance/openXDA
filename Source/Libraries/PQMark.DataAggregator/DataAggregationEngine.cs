@@ -43,10 +43,20 @@ namespace PQMark.DataAggregator
         private bool m_disposed;
         private ScheduleManager m_scheduler;
         private bool m_running = false;
+        private PQMarkAggregationSettings m_pqMarkAggregationSettings;
 
         #endregion
 
         #region [ Constructors ]
+        public DataAggregationEngine()
+        {
+            m_pqMarkAggregationSettings = new PQMarkAggregationSettings();
+        }
+
+        public DataAggregationEngine(PQMarkAggregationSettings settings)
+        {
+            m_pqMarkAggregationSettings = settings;
+        }
 
         #endregion
 
@@ -54,6 +64,15 @@ namespace PQMark.DataAggregator
         private DataContext DataContext => m_dataContext ?? (m_dataContext = new DataContext("systemSettings"));
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
+
+        public PQMarkAggregationSettings PQMarkAggregationSettings
+        {
+            get
+            {
+                return m_pqMarkAggregationSettings;
+            }
+        }
+
         #endregion
 
         #region [ Static ]
@@ -102,8 +121,7 @@ namespace PQMark.DataAggregator
                 Scheduler.Started += Scheduler_Started;
                 Scheduler.ScheduleDue += Scheduler_ScheduleDue;
                 Scheduler.Disposed += Scheduler_Disposed;
-                string schedule = DataContext.Table<Setting>().QueryRecordWhere("Name = 'PQMarkAggregationFrequency'")?.Value ?? "0 0 * * 0";
-                Scheduler.AddSchedule("PQMarkAggregation", schedule);
+                Scheduler.AddSchedule("PQMarkAggregation", PQMarkAggregationSettings.Frequency);
                 Scheduler.Start();
                 m_running = true;
             }

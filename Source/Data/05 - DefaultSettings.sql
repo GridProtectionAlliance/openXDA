@@ -19,6 +19,14 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADEMinWaitTime', '15.0', '15.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'false', 'false')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.OnlyValidFaults', 'true', 'true')
+GO
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'False', 'False')
+GO
+
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DbTimeout', '120', '120')
 GO
 
@@ -52,14 +60,6 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.COMTRADEExportDirectory', '', '')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EnableDataPusher', 'False', 'False')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EnablePQMarkAggregator', 'False', 'False')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregationFrequency', '0 0 * * *', '0 0 1 * *')
-GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.MinWaitPeriod', '10.0', '10.0')
 GO
@@ -144,6 +144,13 @@ GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ProcessingThreadCount', '0', '0')
 GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Enable', 'False', 'False')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Frequency', '0 0 * * *', '0 0 1 * *')
+GO
+
 
 INSERT INTO Setting (Name, Value, DefaultValue)VALUES ('RemoteXDAInstance', 'http://127.0.0.1:8989', 'http://127.0.0.1:8989')
 GO

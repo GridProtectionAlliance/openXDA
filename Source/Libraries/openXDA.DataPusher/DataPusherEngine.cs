@@ -43,17 +43,33 @@ namespace openXDA.DataPusher
         private bool m_disposed;
         private ScheduleManager m_scheduler;
         private bool m_running = false;
-
+        private DataPusherSettings m_dataPusherSettings;
         #endregion
 
         #region [ Constructors ]
+        public DataPusherEngine()
+        {
+            m_dataPusherSettings = new DataPusherSettings();
+        }
 
+        public DataPusherEngine(DataPusherSettings settings)
+        {
+            m_dataPusherSettings = settings;
+        }
         #endregion
 
         #region [ Properties ]
         private DataContext DataContext => m_dataContext ?? (m_dataContext = new DataContext("systemSettings"));
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
+
+        public DataPusherSettings DataPusherSettings
+        {
+            get
+            {
+                return m_dataPusherSettings;
+            }
+        }
         #endregion
 
         // Client-side script functionality
@@ -261,14 +277,13 @@ namespace openXDA.DataPusher
                     UserAccount userAccount = DataContext.Table<UserAccount>().QueryRecordWhere("ID = {0}", instance.UserAccountID);
                     //sw.WriteLine("User Account: " + userAccount.AccountName);
 
-                    int timeWindow = DataContext.Connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'DataPusher.TimeWindow'") ?? 72;
-                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(timeWindow * -1);
+                    DateTime timeWindowStartDate = DateTime.UtcNow.AddHours(DataPusherSettings.TimeWindow * -1);
                     //sw.WriteLine("Time Window Start: " + timeWindowStartDate);
 
                     MetersToDataPush meterToDataPush = DataContext.Table<MetersToDataPush>().QueryRecordWhere("ID = {0}", meterId);
                     //sw.WriteLine("Meter: " + meterToDataPush.LocalXDAAssetKey);
 
-                    if (timeWindow != 0)
+                    if (DataPusherSettings.TimeWindow != 0)
                         localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0} AND StartTime >= {1})", meterToDataPush.LocalXDAMeterID, timeWindowStartDate);
                     else
                         localFileGroups = DataContext.Table<FileGroup>().QueryRecordsWhere("ID IN (SELECT FileGroupID From Event WHERE MeterID = {0})", meterToDataPush.LocalXDAMeterID);
