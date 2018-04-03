@@ -29,6 +29,7 @@ using GSF;
 using GSF.Scheduling;
 using GSF.Security.Model;
 using GSF.Web.Model;
+using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
@@ -121,7 +122,7 @@ namespace openXDA.DataPusher
                 }
                 catch (Exception ex)
                 {
-                    OnLogStatusMessage(ex.ToString());
+                    Log.Error(ex.ToString());
                 }
             }
         }
@@ -191,7 +192,7 @@ namespace openXDA.DataPusher
                 }
             }
             catch (Exception ex) {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
             }
 
         }
@@ -212,7 +213,7 @@ namespace openXDA.DataPusher
             }
             catch (Exception ex)
             {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
             }
         }
 
@@ -262,7 +263,7 @@ namespace openXDA.DataPusher
             }
             catch (Exception ex)
             {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
             }
 
         }
@@ -292,8 +293,8 @@ namespace openXDA.DataPusher
                     int progressCount = 0;
 
                     OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (progressCount) / progressTotal));
-                    OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
-                    //sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
+                    Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
+                    sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}...");
 
                     foreach (FileGroup fileGroup in localFileGroups)
                     {
@@ -362,7 +363,7 @@ namespace openXDA.DataPusher
                                 }
                                 catch (Exception ex)
                                 {
-                                    OnLogExceptionMessage(ex);
+                                    Log.Error(ex);
                                     process = false;
                                 }
                                 localFileBlob.DataFileID = remoteDataFileId;
@@ -381,8 +382,8 @@ namespace openXDA.DataPusher
                         }
 
                         OnUpdateProgressForMeter(clientId, meterToDataPush.LocalXDAAssetKey, (int)(100 * (++progressCount) / progressTotal));
-                        OnLogStatusMessage($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
-                        //sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (++progressCount) / progressTotal)}");
+                        Log.Info($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
+                        sw.WriteLine($"Processing Remote data push for {meterToDataPush.LocalXDAAssetKey}: Completed Filegroup{fileGroup.ID}: Progress: { (int)(100 * (progressCount) / progressTotal)}");
 
                     }
 
@@ -390,8 +391,8 @@ namespace openXDA.DataPusher
                 }
                 catch (Exception ex)
                 {
-                    //sw.WriteLine(ex);
-                    OnLogExceptionMessage(ex);
+                    sw.WriteLine(ex);
+                    Log.Error(ex);
                 }
         }
 
@@ -465,7 +466,7 @@ namespace openXDA.DataPusher
                         }
                         catch (Exception ex)
                         {
-                            OnLogExceptionMessage(ex);
+                            Log.Error(ex);
                             process = false;
                         }
                         localFileBlob.DataFileID = remoteDataFileId;
@@ -485,7 +486,7 @@ namespace openXDA.DataPusher
             }
             catch (Exception ex)
             {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
             }
 
         }
@@ -954,25 +955,34 @@ namespace openXDA.DataPusher
 
         private void Scheduler_Started(object sender, EventArgs e)
         {
-            OnLogStatusMessage("DataPusher Scheduler has started successfully...");
+            Log.Info("DataPusher Scheduler has started successfully...");
         }
 
         private void Scheduler_Starting(object sender, EventArgs e)
         {
-            OnLogStatusMessage("DataPusher Scheduler is starting...");
+            Log.Info("DataPusher Scheduler is starting...");
         }
 
         private void Scheduler_Disposed(object sender, EventArgs e)
         {
-            OnLogStatusMessage("DataPusher Scheduler is disposed...");
+            Log.Info("DataPusher Scheduler is disposed...");
         }
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            OnLogStatusMessage(string.Format("DataPusher Scheduler: {0} schedule is due...", e.Argument.Name));
+            Log.Info(string.Format("DataPusher Scheduler: {0} schedule is due...", e.Argument.Name));
             RemoteXDAInstance instance = DataContext.Table<RemoteXDAInstance>().QueryRecordWhere("Name = {0}", e.Argument.Name);
             SyncInstanceFiles(string.Empty, instance);
         }
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DataPusherEngine));
+
+        #endregion        
+
+
     }
 }
