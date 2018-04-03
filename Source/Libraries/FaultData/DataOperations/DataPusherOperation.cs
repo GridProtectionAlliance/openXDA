@@ -91,7 +91,10 @@ namespace FaultData.DataOperations
             // If file group has already been pushed to a remote instance, return
             TableOperations<FileGroupLocalToRemote> fileGroupLocalToRemoteTable = new TableOperations<FileGroupLocalToRemote>(connection);
             FileGroupLocalToRemote fileGroup = fileGroupLocalToRemoteTable.QueryRecordWhere("LocalFileGroupID = {0}", fileGroupId);
-            if (fileGroup != null) return;
+            if (fileGroup != null) {
+                Log.Info("File has already been pushed previously.");
+                return;
+            }
 
             TableOperations<RemoteXDAInstance> instanceTable = new TableOperations<RemoteXDAInstance>(connection);
             TableOperations<MetersToDataPush> meterTable = new TableOperations<MetersToDataPush>(connection);
@@ -107,6 +110,8 @@ namespace FaultData.DataOperations
                     engine.SyncMeterFileForInstance(instance, meter, fileGroupId);
                 }
             }
+            Log.Info("Sync complete...");
+
         }
 
         #endregion

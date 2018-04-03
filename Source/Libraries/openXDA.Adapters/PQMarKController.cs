@@ -37,6 +37,7 @@ using System.Net;
 using GSF.Web.Security;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using log4net;
 
 namespace openXDA.Adapters
 {
@@ -46,31 +47,17 @@ namespace openXDA.Adapters
     public class PQMarkController : ApiController
     {
         #region [ Static Event Handlers ]
-
         public static event EventHandler<EventArgs<int, int>> ReprocessFilesEvent;
-
-        private static void OnReprocessFiles(int fileGroupID, int meterID)
-        {
-            ReprocessFilesEvent?.Invoke(new object(), new EventArgs<int,int>(fileGroupID, meterID));
-        }
-
         public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
-
-        private static void OnLogExceptionMessage(Exception exception)
-        {
-            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
-        }
-
         public static event EventHandler<EventArgs<Guid,string, UpdateType>> LogStatusMessage;
-
-        private static void OnLogStatusMessage(string message)
-        {
-            LogStatusMessage?.Invoke(new object(), new EventArgs<Guid, string, UpdateType>(Guid.Empty, message, UpdateType.Information));
-        }
-
-
-
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQMarkController));
+
+        #endregion        
 
         #region [ GET Operations ]
         // This generates a request verification token that will need to be added to the headers
@@ -117,7 +104,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
-                    OnLogExceptionMessage(ex);
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -152,7 +139,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
-                    OnLogExceptionMessage(ex);
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -185,7 +172,7 @@ namespace openXDA.Adapters
             }
             catch (Exception ex)
             {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
                 return BadRequest("The id field must be a comma separated integer list.");
             }
 
@@ -223,6 +210,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -261,7 +249,7 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
-                    OnLogExceptionMessage(ex);
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
@@ -287,11 +275,11 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
-                    OnLogExceptionMessage(ex);
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
-            OnLogStatusMessage($"Updated {modelName} table with {record.ToString()}");
+            Log.Info($"Updated {modelName} table with record...");
             return Ok();
         }
 
@@ -325,12 +313,12 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
-                    OnLogExceptionMessage(ex);
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
 
-            OnLogStatusMessage($"Added {record.ToString()} to {modelName} table");
+            Log.Info($"Added record to {modelName} table");
 
             return Ok(recordId);
         }
@@ -390,12 +378,12 @@ namespace openXDA.Adapters
                 }
                 catch (Exception ex)
                 {
-                    OnLogExceptionMessage(ex);
+                    Log.Error(ex);
                     return BadRequest(ex.ToString());
                 }
             }
 
-            OnLogStatusMessage($"Added {record.ToString()} to Channel table");
+            Log.Info($"Added record to Channel table");
             return Ok(channelId);
         }
 
@@ -408,11 +396,11 @@ namespace openXDA.Adapters
                 OnReprocessFiles(record["FileGroupID"].Value<int>(), record["MeterID"].Value<int>());
             }
             catch (Exception ex) {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
                 return BadRequest("Failed to process file group.");
             }
 
-            OnLogStatusMessage($"Processed file group {record["FileGroupID"].Value<int>()} for meter {record["MeterID"].Value<int>()}");
+            Log.Info($"Processed file group {record["FileGroupID"].Value<int>()} for meter {record["MeterID"].Value<int>()}");
             return Ok();
         }
 
@@ -441,11 +429,11 @@ namespace openXDA.Adapters
                 }
             }
             catch (Exception ex) {
-                OnLogExceptionMessage(ex);
+                Log.Error(ex);
                 return BadRequest("Failed delete.");
             }
 
-            OnLogStatusMessage($"Deleted {id} from {modelName} table");
+            Log.Info($"Deleted {id} from {modelName} table");
 
             return Ok();
         }
