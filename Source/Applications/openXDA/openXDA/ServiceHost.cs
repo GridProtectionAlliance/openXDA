@@ -309,7 +309,7 @@ namespace openXDA
             m_dataPusherEngine = new DataPusherEngine(m_dataPusherSettings);
 
             // Set up data aggregation engine
-            m_dataAggregationEngine = new DataAggregationEngine();
+            m_dataAggregationEngine = new DataAggregationEngine(m_pqMarkAggregationSettings);
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);

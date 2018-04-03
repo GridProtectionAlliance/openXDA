@@ -21,21 +21,15 @@
 //
 //******************************************************************************************************
 
-using FaultData.Configuration;
-using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using openXDA.DataPusher;
 using openXDA.Model;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FaultData.DataOperations
 {
@@ -71,6 +65,8 @@ namespace FaultData.DataOperations
         {
             if (DataPusherSettings.Enabled)
             {
+                Log.Info("Executing operation to push data to remote instances...");
+
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
                     if (DataPusherSettings.OnlyValidFaults)
@@ -84,6 +80,9 @@ namespace FaultData.DataOperations
                         PushDataToRemoteInstances(connection, meterDataSet.FileGroup.ID, meterDataSet.Meter.ID);
                 }
             }
+            else
+                Log.Info("Data Push Operation skipped because it is not enabled...");
+
         }
 
 
@@ -104,11 +103,20 @@ namespace FaultData.DataOperations
                 IEnumerable<MetersToDataPush> meters = meterTable.QueryRecordsWhere("LocalXDAMeterID = {0} AND ID IN (SELECT MetersToDataPushID From RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {1})", meterId, instance.ID);
                 foreach (MetersToDataPush meter in meters)
                 {
+                    Log.Info($"Sending data to intance: {instance.Name} for FileGroup: {fileGroupId}...");
                     engine.SyncMeterFileForInstance(instance, meter, fileGroupId);
                 }
             }
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(TrendingDataSummaryOperation));
+
+        #endregion        
+
     }
 }
