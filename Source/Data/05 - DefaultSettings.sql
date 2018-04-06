@@ -19,13 +19,14 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADEMinWaitTime', '15.0', '15.0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'false', 'false')
-GO
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.OnlyValidFaults', 'true', 'true')
-GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'False', 'False')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.OnlyValidFaults', 'True', 'True')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.TimeWindow', '72', '72')
+GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DbTimeout', '120', '120')
 GO
