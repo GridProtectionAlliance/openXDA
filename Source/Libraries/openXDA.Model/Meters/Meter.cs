@@ -68,12 +68,10 @@ namespace openXDA.Model
         [StringLength(12)]
         public string ShortName { get; set; }
 
-        [Required]
         [Searchable]
         [StringLength(200)]
         public string Make { get; set; }
 
-        [Required]
         [Searchable]
         [StringLength(200)]
         public string Model { get; set; }

@@ -636,19 +636,41 @@ namespace openXDA.DataPusher
 
         private void AddMeterLine(string address, MetersToDataPush meter, LinesToDataPush selectedLine, UserAccount userAccount)
         {
-            List<MeterLine> remoteMeterLines = WebAPIHub.GetRecordsWhere(address, "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {selectedLine.RemoteXDALineID}", userAccount).Select(x => (MeterLine)x).ToList();
+            MeterLine remoteMeterLine = (MeterLine)WebAPIHub.GetRecordsWhere(address, "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {selectedLine.RemoteXDALineID}", userAccount).FirstOrDefault();
+            MeterLine record = new MeterLine();
+            record.MeterID = meter.RemoteXDAMeterID;
+            record.LineID = selectedLine.RemoteXDALineID;
+            record.LineName = selectedLine.RemoteXDAAssetKey.ToString();
 
             // if MeterLine association has not been previously made, make it
-            if (!remoteMeterLines.Any())
+            if (remoteMeterLine == null)
+                record.ID = WebAPIHub.CreateRecord(address, "MeterLine", JObject.FromObject(record), userAccount);
+            else
             {
-                MeterLine record = new MeterLine()
-                {
-                    MeterID = meter.RemoteXDAMeterID,
-                    LineID = selectedLine.RemoteXDALineID,
-                    LineName = selectedLine.RemoteXDAAssetKey.ToString()
-                };
+                record.ID = remoteMeterLine.ID;
+                WebAPIHub.UpdateRecord(address, "MeterLine", JObject.FromObject(record), userAccount);
+            }
 
-                WebAPIHub.CreateRecord(address, "MeterLine", JObject.FromObject(record), userAccount);
+            AddFaultDetectionLogic(address, meter, selectedLine, record, userAccount);
+        }
+
+        private void AddFaultDetectionLogic(string address, MetersToDataPush meter, LinesToDataPush selectedLine, MeterLine meterLine, UserAccount userAccount)
+        {
+            FaultDetectionLogic faultDetectionLogic = DataContext.Table<FaultDetectionLogic>().QueryRecordWhere("MeterLineID IN (SELECT ID FORM MeterLine WHERE MeterID = [0} AND LineID = {1})", meter.LocalXDAMeterID, selectedLine.LocalXDALineID);
+            if (faultDetectionLogic == null) return;
+
+            FaultDetectionLogic remoteFaultDetectionLogic = (FaultDetectionLogic)WebAPIHub.GetRecordsWhere(address, "FaultDetectionLogic", $"MeterLineID = {meterLine.ID}", userAccount).FirstOrDefault();
+
+            FaultDetectionLogic record = new FaultDetectionLogic();
+            record.MeterLineID = meterLine.ID;
+            record.Expression = faultDetectionLogic.Expression;
+
+            if (remoteFaultDetectionLogic == null)
+                WebAPIHub.CreateRecord(address, "FaultDetectionLogic", JObject.FromObject(record), userAccount);
+            else
+            {
+                record.ID = remoteFaultDetectionLogic.ID;
+                WebAPIHub.UpdateRecord(address, "FaultDetectionLogic", JObject.FromObject(record), userAccount);
             }
         }
 
@@ -656,19 +678,22 @@ namespace openXDA.DataPusher
         {
             // ensure remote and local line impedance matches
             LineImpedance localLineImpedance = DataContext.Table<LineImpedance>().QueryRecordWhere("LineID = {0}",selectedLine.LocalXDALineID);
+            if (localLineImpedance == null) return;
+
             LineImpedance remoteLineImpedance = (LineImpedance)WebAPIHub.GetRecordsWhere(address, "LineImpedance", $"LineID = {selectedLine.RemoteXDALineID}", userAccount).FirstOrDefault();
+            LineImpedance record = new LineImpedance();
+            record.LineID = selectedLine.RemoteXDALineID;
+            record.R0 = localLineImpedance.R0;
+            record.R1 = localLineImpedance.R1;
+            record.X0 = localLineImpedance.X0;
+            record.X1 = localLineImpedance.X1;
 
             // if there is a local record but not a remote record
-            if (localLineImpedance != null && remoteLineImpedance == null)
-            {
-                JObject record = new JObject();
-                record.Add("LineID", selectedLine.RemoteXDALineID);
-                record.Add("R0", localLineImpedance.R0);
-                record.Add("R1", localLineImpedance.R1);
-                record.Add("X0", localLineImpedance.X0);
-                record.Add("X1", localLineImpedance.X1);
-
-                WebAPIHub.CreateRecord(address, "LineImpedance", record, userAccount);
+            if (remoteLineImpedance == null)
+                WebAPIHub.CreateRecord(address, "LineImpedance", JObject.FromObject(record), userAccount);
+            else {
+                record.ID = remoteLineImpedance.ID;
+                WebAPIHub.UpdateRecord(address, "LineImpedance", JObject.FromObject(record), userAccount);
             }
         }
 
@@ -707,45 +732,6 @@ namespace openXDA.DataPusher
 
         }
 
-        private void SyncMeterAlarmSummary(string address, MetersToDataPush meter, UserAccount userAccount)
-        {
-            // ensure remote and local line impedance matches
-            IEnumerable<MeterAlarmSummary> local = DataContext.Table<MeterAlarmSummary>().QueryRecordsWhere("MeterID = {0}", meter.LocalXDAMeterID);
-            List<MeterAlarmSummary> remote = WebAPIHub.GetRecordsWhere(address, "MeterAlarmSummary", $"MeterID = {meter.RemoteXDAMeterID}", userAccount).Select(x => (MeterAlarmSummary)x).ToList();
-
-            // if there is a local record but not a remote record
-            foreach (MeterAlarmSummary summary in local)
-            {
-                if (!remote.Where(x => x.Date == summary.Date).Any())
-                {
-                    JObject record = new JObject();
-                    record.Add("MeterID", meter.RemoteXDAMeterID);
-                    record.Add("AlarmTypeID", summary.AlarmTypeID);
-                    record.Add("Date", summary.Date);
-                    record.Add("AlarmPoints", summary.AlarmPoints);
-
-                    WebAPIHub.CreateRecord(address, "MeterAlarmSummary", record, userAccount);
-                }
-            }
-        }
-
-        private void SyncMeterFacility(string address, MetersToDataPush meter, UserAccount userAccount)
-        {
-            // ensure remote and local line impedance matches
-            MeterFacility local = DataContext.Table<MeterFacility>().QueryRecordWhere("MeterID = {0}", meter.LocalXDAMeterID);
-            MeterFacility remote = WebAPIHub.GetRecordsWhere(address, "MeterFacility", $"MeterID = {meter.RemoteXDAMeterID}", userAccount).Select(x => (MeterFacility)x).FirstOrDefault();
-
-            // if there is a local record but not a remote record
-            if (local != null && remote == null)
-            {
-                JObject record = new JObject();
-                record.Add("MeterID", meter.RemoteXDAMeterID);
-                record.Add("FacilityID", local.FacilityID);
-
-                WebAPIHub.CreateRecord(address, "MeterFacility", record, userAccount);
-            }
-        }
-
         private void SyncChannel(string address, MetersToDataPush meter, LinesToDataPush line, UserAccount userAccount)
         {
             // ensure remote and local line impedance matches
@@ -773,13 +759,6 @@ namespace openXDA.DataPusher
                     int remoteChannelId = WebAPIHub.CreateChannel(address, record, userAccount);
 
                     SyncSeries(address, summary.ID, remoteChannelId, userAccount);
-                    //SyncAlarmLogs(address, summary.ID, remoteChannelId);
-                    //SyncAlarmRangeLimit(address, summary.ID, remoteChannelId);
-                    //SyncBreakerChannel(address, summary.ID, remoteChannelId);
-                    //SyncChannelAlarmSummary(address, summary.ID, remoteChannelId);
-                    //SyncChannelDataQualitySummary(address, summary.ID, remoteChannelId);
-                    //SyncDailyTrendingSummary(address, summary.ID, remoteChannelId);
-                    //SyncDailyQualityRangeLimit(address, summary.ID, remoteChannelId);
                 }
             }
         }
