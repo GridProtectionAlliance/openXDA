@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 using GSF;
@@ -31,7 +30,6 @@ using Newtonsoft.Json.Linq;
 using openXDA.Model;
 using System.Threading;
 using GSF.Reflection;
-using ValidateAntiForgeryToken = System.Web.Mvc.ValidateAntiForgeryTokenAttribute;
 using System.Net.Http;
 using System.Net;
 using GSF.Web.Security;
@@ -61,16 +59,16 @@ namespace openXDA.Adapters
         // Static Fields
         private static readonly ILog Log = LogManager.GetLogger(typeof(PQMarkController));
 
-        #endregion        
+        #endregion
 
         #region [ GET Operations ]
         // This generates a request verification token that will need to be added to the headers
-        // of a web request before calling ImportMeasurements or DeleteMeasurement since these
-        // methods validate the header token to prevent CSRF attacks in a browser. Browsers will
-        // not allow this HTTP GET based method to be called from remote sites due to Same-Origin
-        // policies unless CORS has been configured to explicitly to allow it, as such posting to
-        // ImportMeasurements or DeleteMeasurement (which is allowed from any site) will fail
-        // unless this header token is made available. The actual header name used to store the
+        // of a web request before calling PUT, POST, or DELETE operations since these methods
+        // validate the header token to prevent CSRF attacks in a browser. Browsers will not
+        // allow this HTTP GET based method to be called from remote sites due to Same-Origin
+        // policies unless CORS has been configured to explicitly to allow it; as such PUT,
+        // POST, and DELETE operations (which are allowed from any site) will fail unless
+        // this header token is made available. The actual header name used to store the
         // verification token is controlled by the local configuration.
         [HttpGet]
         public HttpResponseMessage GenerateRequestVerficationToken()
