@@ -656,7 +656,7 @@ namespace openXDA.DataPusher
 
         private void AddFaultDetectionLogic(string address, MetersToDataPush meter, LinesToDataPush selectedLine, MeterLine meterLine, UserAccount userAccount)
         {
-            FaultDetectionLogic faultDetectionLogic = DataContext.Table<FaultDetectionLogic>().QueryRecordWhere("MeterLineID IN (SELECT ID FORM MeterLine WHERE MeterID = [0} AND LineID = {1})", meter.LocalXDAMeterID, selectedLine.LocalXDALineID);
+            FaultDetectionLogic faultDetectionLogic = DataContext.Table<FaultDetectionLogic>().QueryRecordWhere("MeterLineID IN (SELECT ID FROM MeterLine WHERE MeterID = {0} AND LineID = {1})", meter.LocalXDAMeterID, selectedLine.LocalXDALineID);
             if (faultDetectionLogic == null) return;
 
             FaultDetectionLogic remoteFaultDetectionLogic = (FaultDetectionLogic)WebAPIHub.GetRecordsWhere(address, "FaultDetectionLogic", $"MeterLineID = {meterLine.ID}", userAccount).FirstOrDefault();
