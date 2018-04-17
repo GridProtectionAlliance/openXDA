@@ -68,17 +68,6 @@
 //
 //*********************************************************************************************************************
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data.SqlClient;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
 using FaultData.DataOperations;
@@ -90,13 +79,24 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.IO;
+using GSF.IO.Checksums;
 using GSF.Threading;
 using log4net;
 using openXDA.Configuration;
 using openXDA.Model;
-using FileShare = openXDA.Configuration.FileShare;
-using GSF.IO.Checksums;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using FileShare = openXDA.Configuration.FileShare;
 
 namespace openXDA
 {
@@ -355,13 +355,29 @@ namespace openXDA
                 statusBuilder.AppendLine($"   Max thread pool size: {m_fileProcessor.MaxThreadCount}");
                 statusBuilder.AppendLine($"      Max fragmentation: {m_fileProcessor.MaxFragmentation}");
                 statusBuilder.AppendLine($"   Enumeration strategy: {m_fileProcessor.EnumerationStrategy}");
-                statusBuilder.AppendLine($"    Enumeration threads: {m_fileProcessor.EnumerationThreads}");
+                statusBuilder.AppendLine($"         Is Enumerating: {m_fileProcessor.IsEnumerating}");
                 statusBuilder.AppendLine($"        Processed files: {m_fileProcessor.ProcessedFileCount}");
                 statusBuilder.AppendLine($"          Skipped files: {m_fileProcessor.SkippedFileCount}");
                 statusBuilder.AppendLine($"         Requeued files: {m_fileProcessor.RequeuedFileCount}");
+                statusBuilder.AppendLine($"            Is Cleaning: {m_fileProcessor.IsCleaning}");
                 statusBuilder.AppendLine($"      Last Compact Time: {m_fileProcessor.LastCompactTime}");
                 statusBuilder.AppendLine($"  Last Compact Duration: {m_fileProcessor.LastCompactDuration}");
                 statusBuilder.AppendLine();
+
+                if (m_fileProcessor.IsEnumerating)
+                {
+                    IList<string> activelyEnumeratedPaths = m_fileProcessor.ActivelyEnumeratedPaths;
+
+                    statusBuilder.AppendLine("  Actively enumerated paths:");
+
+                    foreach (string path in activelyEnumeratedPaths.Take(5))
+                        statusBuilder.AppendLine($"    {path}");
+
+                    if (activelyEnumeratedPaths.Count > 5)
+                        statusBuilder.AppendLine($"    {activelyEnumeratedPaths.Count - 5} more...");
+
+                    statusBuilder.AppendLine();
+                }
 
                 statusBuilder.AppendLine("  Watch directories:");
 
@@ -852,9 +868,6 @@ namespace openXDA
         /// </summary>
         public void EnumerateWatchDirectories()
         {
-            if (m_fileProcessor.EnumerationThreads > 0)
-                throw new InvalidOperationException("Enumeration of watch directories already in progress.");
-
             m_fileProcessor.EnumerateWatchDirectories();
         }
 

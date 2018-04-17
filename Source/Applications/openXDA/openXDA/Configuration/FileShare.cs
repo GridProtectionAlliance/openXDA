@@ -24,7 +24,6 @@
 using System;
 using System.ComponentModel;
 using System.Configuration;
-using System.IO;
 using System.Security;
 using GSF;
 using GSF.Configuration;
