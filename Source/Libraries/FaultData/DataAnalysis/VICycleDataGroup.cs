@@ -152,6 +152,12 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        public List<CycleDataGroup> CycleDataGroups {
+            get {
+                return m_cycleDataGroups;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
