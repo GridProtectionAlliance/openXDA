@@ -27,6 +27,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using GSF;
+using GSF.Data;
 using GSF.Data.Model;
 using Ionic.Zlib;
 using openXDA.Model;
@@ -508,11 +509,7 @@ namespace FaultData.DataAnalysis
                 offset += sizeof(int);
 
                 if (seriesID > 0 && (object)meter != null)
-                {
-                    series.SeriesInfo = meter.Channels
-                        .SelectMany(channel => channel.Series)
-                        .FirstOrDefault(seriesInfo => seriesInfo.ID == seriesID);
-                }
+                    series.SeriesInfo = GetSeriesInfo(meter, seriesID);
 
                 for (int i = 0; i < m_samples; i++)
                 {
@@ -565,11 +562,7 @@ namespace FaultData.DataAnalysis
                 offset += sizeof(int);
 
                 if (seriesID > 0 && (object)meter != null)
-                {
-                    dataSeries.SeriesInfo = meter.Channels
-                        .SelectMany(channel => channel.Series)
-                        .FirstOrDefault(seriesInfo => seriesInfo.ID == seriesID);
-                }
+                    dataSeries.SeriesInfo = GetSeriesInfo(meter, seriesID);
 
                 double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
                 double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
@@ -639,6 +632,45 @@ namespace FaultData.DataAnalysis
         private string GetPhase(DataSeries dataSeries)
         {
             return dataSeries.SeriesInfo.Channel.Phase.Name;
+        }
+
+        // Gets the series info data for the series with the given identifier.
+        // Optimized to prevent loading series data for irrelevant channels.
+        private Series GetSeriesInfo(Meter meter, int seriesID)
+        {
+            List<Channel> channels = meter.Channels;
+
+            // Disable lazy loading
+            var connectionFactory = meter.ConnectionFactory;
+            meter.ConnectionFactory = null;
+
+            // Search for a series that has already been loaded
+            Series seriesInfo = channels
+                .Where(channel => (object)channel.Series != null)
+                .SelectMany(channel => channel.Series)
+                .FirstOrDefault(series => series.ID == seriesID);
+
+            // Restore lazy loading
+            meter.ConnectionFactory = connectionFactory;
+
+            // If the series was found without
+            // lazy loading, return that series
+            if ((object)seriesInfo != null)
+                return seriesInfo;
+
+            int channelID;
+
+            using (AdoDataConnection connection = meter.ConnectionFactory())
+            {
+                // Get the channel ID of the series so we can skip lazy loading series collections for irrelevant channels
+                channelID = connection.ExecuteScalar<int>("SELECT ChannelID FROM Series WHERE ID = {0}", seriesID);
+            }
+
+            // Now filter to the appropriate channel and search its series collection
+            return channels
+                .Where(channel => channel.ID == channelID)
+                .SelectMany(channel => channel.Series)
+                .FirstOrDefault(series => series.ID == seriesID);
         }
 
         private double CalculateSamplesPerMinute(DateTime startTime, DateTime endTime, int samples)
