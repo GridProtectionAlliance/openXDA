@@ -32,7 +32,6 @@ using Newtonsoft.Json;
 
 namespace openXDA.Model
 {
-    [PQMarkRestricted]
     public class Meter
     {
         #region [ Members ]

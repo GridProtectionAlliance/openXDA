@@ -95,6 +95,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherBufferSize', '65536', '65536')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherEnabled', 'True', 'True')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FileWatcherEnumerationStrategy', 'ParallelSubdirectories', 'ParallelSubdirectories')
 GO
 

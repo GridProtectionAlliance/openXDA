@@ -348,41 +348,44 @@ namespace openXDA
                     statusBuilder.AppendLine();
                 }
 
-                statusBuilder.AppendLine("File Processor Status:");
-                statusBuilder.AppendLine(new string('=', 50));
-                statusBuilder.AppendLine($"                 Filter: {m_fileProcessor.Filter}");
-                statusBuilder.AppendLine($"   Internal buffer size: {m_fileProcessor.InternalBufferSize}");
-                statusBuilder.AppendLine($"   Max thread pool size: {m_fileProcessor.MaxThreadCount}");
-                statusBuilder.AppendLine($"      Max fragmentation: {m_fileProcessor.MaxFragmentation}");
-                statusBuilder.AppendLine($"   Enumeration strategy: {m_fileProcessor.EnumerationStrategy}");
-                statusBuilder.AppendLine($"         Is Enumerating: {m_fileProcessor.IsEnumerating}");
-                statusBuilder.AppendLine($"        Processed files: {m_fileProcessor.ProcessedFileCount}");
-                statusBuilder.AppendLine($"          Skipped files: {m_fileProcessor.SkippedFileCount}");
-                statusBuilder.AppendLine($"         Requeued files: {m_fileProcessor.RequeuedFileCount}");
-                statusBuilder.AppendLine($"            Is Cleaning: {m_fileProcessor.IsCleaning}");
-                statusBuilder.AppendLine($"      Last Compact Time: {m_fileProcessor.LastCompactTime}");
-                statusBuilder.AppendLine($"  Last Compact Duration: {m_fileProcessor.LastCompactDuration}");
-                statusBuilder.AppendLine();
-
-                if (m_fileProcessor.IsEnumerating)
+                if (systemSettings.FileWatcherEnabled)
                 {
-                    IList<string> activelyEnumeratedPaths = m_fileProcessor.ActivelyEnumeratedPaths;
-
-                    statusBuilder.AppendLine("  Actively enumerated paths:");
-
-                    foreach (string path in activelyEnumeratedPaths.Take(5))
-                        statusBuilder.AppendLine($"    {path}");
-
-                    if (activelyEnumeratedPaths.Count > 5)
-                        statusBuilder.AppendLine($"    {activelyEnumeratedPaths.Count - 5} more...");
-
+                    statusBuilder.AppendLine("File Processor Status:");
+                    statusBuilder.AppendLine(new string('=', 50));
+                    statusBuilder.AppendLine($"                 Filter: {m_fileProcessor.Filter}");
+                    statusBuilder.AppendLine($"   Internal buffer size: {m_fileProcessor.InternalBufferSize}");
+                    statusBuilder.AppendLine($"   Max thread pool size: {m_fileProcessor.MaxThreadCount}");
+                    statusBuilder.AppendLine($"      Max fragmentation: {m_fileProcessor.MaxFragmentation}");
+                    statusBuilder.AppendLine($"   Enumeration strategy: {m_fileProcessor.EnumerationStrategy}");
+                    statusBuilder.AppendLine($"         Is Enumerating: {m_fileProcessor.IsEnumerating}");
+                    statusBuilder.AppendLine($"        Processed files: {m_fileProcessor.ProcessedFileCount}");
+                    statusBuilder.AppendLine($"          Skipped files: {m_fileProcessor.SkippedFileCount}");
+                    statusBuilder.AppendLine($"         Requeued files: {m_fileProcessor.RequeuedFileCount}");
+                    statusBuilder.AppendLine($"            Is Cleaning: {m_fileProcessor.IsCleaning}");
+                    statusBuilder.AppendLine($"      Last Compact Time: {m_fileProcessor.LastCompactTime}");
+                    statusBuilder.AppendLine($"  Last Compact Duration: {m_fileProcessor.LastCompactDuration}");
                     statusBuilder.AppendLine();
+
+                    if (m_fileProcessor.IsEnumerating)
+                    {
+                        IList<string> activelyEnumeratedPaths = m_fileProcessor.ActivelyEnumeratedPaths;
+
+                        statusBuilder.AppendLine("  Actively enumerated paths:");
+
+                        foreach (string path in activelyEnumeratedPaths.Take(5))
+                            statusBuilder.AppendLine($"    {path}");
+
+                        if (activelyEnumeratedPaths.Count > 5)
+                            statusBuilder.AppendLine($"    {activelyEnumeratedPaths.Count - 5} more...");
+
+                        statusBuilder.AppendLine();
+                    }
+
+                    statusBuilder.AppendLine("  Watch directories:");
+
+                    foreach (string path in m_fileProcessor.TrackedDirectories)
+                        statusBuilder.AppendLine($"    {path}");
                 }
-
-                statusBuilder.AppendLine("  Watch directories:");
-
-                foreach (string path in m_fileProcessor.TrackedDirectories)
-                    statusBuilder.AppendLine($"    {path}");
 
                 return statusBuilder.ToString().TrimEnd();
             }
@@ -447,8 +450,11 @@ namespace openXDA
 
             m_stopped = false;
 
-            foreach (string path in m_systemSettings.WatchDirectoryList)
-                m_fileProcessor.AddTrackedDirectory(path);
+            if (m_systemSettings.FileWatcherEnabled)
+            {
+                foreach (string path in m_systemSettings.WatchDirectoryList)
+                    m_fileProcessor.AddTrackedDirectory(path);
+            }
         }
 
         /// <summary>
@@ -545,14 +551,22 @@ namespace openXDA
 
                 UpdateFileProcessorFilter(m_systemSettings);
 
-                foreach (string directory in m_fileProcessor.TrackedDirectories.ToList())
+                if (m_systemSettings.FileWatcherEnabled)
                 {
-                    if (!m_systemSettings.WatchDirectoryList.Contains(directory, StringComparer.OrdinalIgnoreCase))
+                    foreach (string directory in m_fileProcessor.TrackedDirectories.ToList())
+                    {
+                        if (!m_systemSettings.WatchDirectoryList.Contains(directory, StringComparer.OrdinalIgnoreCase))
+                            m_fileProcessor.RemoveTrackedDirectory(directory);
+                    }
+
+                    foreach (string directory in m_systemSettings.WatchDirectoryList)
+                        m_fileProcessor.AddTrackedDirectory(directory);
+                }
+                else
+                {
+                    foreach (string directory in m_fileProcessor.TrackedDirectories.ToList())
                         m_fileProcessor.RemoveTrackedDirectory(directory);
                 }
-
-                foreach (string directory in m_systemSettings.WatchDirectoryList)
-                    m_fileProcessor.AddTrackedDirectory(directory);
             }
         }
 
@@ -561,7 +575,8 @@ namespace openXDA
         /// </summary>
         /// <param name="args">The arguments supplied to the command to tweak the settings.</param>
         /// <returns></returns>
-        public void AutoDeleteFiles() {
+        public void AutoDeleteFiles()
+        {
             using (AdoDataConnection connection = CreateDbConnection(m_systemSettings))
             {
                 TableOperations<Setting> settingTable = new TableOperations<Setting>(connection);
@@ -587,8 +602,8 @@ namespace openXDA
                     }
                 }
             }
-
         }
+
         /// <summary>
         /// Tweaks the behavior of the file processor at runtime.
         /// </summary>
@@ -761,7 +776,8 @@ namespace openXDA
         /// </summary>
         /// <param name="args">The arguments supplied to the command to tweak the settings.</param>
         /// <returns>A message describing the change that was made.</returns>
-        public string PurgeData(string[] args) {
+        public string PurgeData(string[] args)
+        {
             if (args.Length == 0 || args[0] == "-?")
             {
                 StringBuilder helpMessage = new StringBuilder();
