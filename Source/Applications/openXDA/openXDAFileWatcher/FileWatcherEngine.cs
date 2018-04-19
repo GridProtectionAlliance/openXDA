@@ -80,8 +80,6 @@ using System.Text.RegularExpressions;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
-using GSF.Data;
-using GSF.Data.Model;
 using GSF.IO;
 using GSF.IO.Checksums;
 using GSF.Security.Model;

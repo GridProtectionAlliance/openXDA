@@ -12,34 +12,48 @@
     </Condition>
 
     <Feature Id="AllProducts" Title="All Products" Level="1" Display="expand" ConfigurableDirectory="INSTALLFOLDER" AllowAdvertise="no" Description="All components of the openXDA installation.">
-      <!-- openXDA Database-->
-      <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
-        <Feature Id="EnableEventDataSqlClrFeature" Title="EnableEventDataSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying event data from the openXDA database (requires installation of SAFE assemblies).">
-          <ComponentRef Id="EnableEventDataSqlClr" />
+      <Feature Id="openXDA" Title="openXDA" AllowAdvertise="no" Description="Includes the openXDA database, service, and remote console components.">
+        <!-- openXDA Database-->
+        <Feature Id="DatabaseFeature" Title="openXDA Database" AllowAdvertise="no" Description="Installs the openXDA database schema to a SQL Server database.">
+          <Feature Id="EnableEventDataSqlClrFeature" Title="EnableEventDataSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying event data from the openXDA database (requires installation of SAFE assemblies).">
+            <ComponentRef Id="EnableEventDataSqlClr" />
+          </Feature>
+          <Feature Id="EnableHistorianSqlClrFeature" Title="EnableHistorianSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying trending data from the openHistorian (requires installation of UNSAFE assemblies)." Level="2">
+            <ComponentRef Id="EnableHistorianSqlClr" />
+          </Feature>
+
+          <ComponentRef Id="DBScript" />
+          <ComponentRef Id="DashScript" />
+          <ComponentRef Id="DefaultSettings" />
+          <ComponentRef Id="DefaultChannelTypes" />
+          <ComponentRef Id="DefaultTrendingAlarms" />
+          <ComponentRef Id="DefaultContours" />
         </Feature>
-        <Feature Id="EnableHistorianSqlClrFeature" Title="EnableHistorianSqlClr.sql" AllowAdvertise="no" Description="Installs the SQLCLR interface for querying trending data from the openHistorian (requires installation of UNSAFE assemblies)." Level="2">
-          <ComponentRef Id="EnableHistorianSqlClr" />
+
+        <!-- openXDA Service -->
+        <Feature Id="ServiceFeature" Title="openXDA Service" AllowAdvertise="no" Description="Installs the openXDA Windows service to perform data analytics.">
+          <ComponentGroupRef Id="ServiceComponents" />
+
+          <!-- Web Files -->
+          <?include WebFeatures.wxi ?>
         </Feature>
 
-        <ComponentRef Id="DBScript" />
-        <ComponentRef Id="DashScript" />
-        <ComponentRef Id="DefaultSettings" />
-        <ComponentRef Id="DefaultChannelTypes" />
-        <ComponentRef Id="DefaultTrendingAlarms" />
-        <ComponentRef Id="DefaultContours" />
-      </Feature>
-      
-      <!-- openXDA Service -->
-      <Feature Id="ServiceFeature" Title="openXDA Service" AllowAdvertise="no" Description="Installs the openXDA Windows service to perform data analytics.">
-        <ComponentGroupRef Id="ServiceComponents" />
-
-        <!-- Web Files -->
-        <?include WebFeatures.wxi ?>
+        <!-- openXDA Console -->
+        <Feature Id="ConsoleFeature" Title="openXDA Remote Console" AllowAdvertise="no" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
+          <ComponentGroupRef Id="ConsoleComponents" />
+        </Feature>
       </Feature>
 
-      <!-- openXDA Console -->
-      <Feature Id="ConsoleFeature" Title="openXDA Remote Console" AllowAdvertise="no" Description="Installs the openXDA remote console used to monitor and interact with the openXDA service.">
-        <ComponentGroupRef Id="ConsoleComponents" />
+      <Feature Id="openXDAFileWatcher" Title="File Watcher" AllowAdvertise="no" Description="Includes the file watcher service for loading file data into a remote openXDA instance." Level="2">
+        <!-- File Watcher Service -->
+        <Feature Id="FileWatcherServiceFeature" Title="openXDA Service" AllowAdvertise="no" Description="Installs the File Watcher Windows service to load file data into openXDA remotely.">
+          <ComponentGroupRef Id="FileWatcherServiceComponents" />
+        </Feature>
+
+        <!-- File Watcher Console -->
+        <Feature Id="FileWatcherConsoleFeature" Title="File Watcher Remote Console" AllowAdvertise="no" Description="Installs the remote console used to monitor and interact with the File Watcher service.">
+          <ComponentGroupRef Id="FileWatcherConsoleComponents" />
+        </Feature>
       </Feature>
     </Feature>
     
@@ -71,6 +85,7 @@
     
     <Icon Id="openXDA.ico.exe" SourceFile="$(var.openXDA.TargetPath)" />
     <Icon Id="openXDAConsole.ico.exe" SourceFile="$(var.openXDAConsole.TargetPath)" />
+    <Icon Id="openXDAFileWatcherConsole.ico.exe" SourceFile="$(var.openXDAFileWatcherConsole.TargetPath)" />
 
     <Property Id="SERVICEACCOUNT" Secure="yes" />
     <Property Id="SERVICENAME" Value="$(var.openXDA.TargetName)" />
@@ -271,7 +286,8 @@
                 <util:PermissionEx User="[SERVICENAME] Admins" CreateFile="yes" CreateChild="yes" GenericRead="yes" GenericWrite="yes" GenericExecute="yes" Delete="yes" DeleteChild="yes" />
               </CreateFolder>
             </Component>
-            
+
+            <Directory Id="FILEWATCHERFOLDER" Name="FileWatcher" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
@@ -287,7 +303,8 @@
                 <util:PermissionEx User="[SERVICENAME] Admins" CreateFile="yes" CreateChild="yes" GenericRead="yes" GenericWrite="yes" GenericExecute="yes" Delete="yes" DeleteChild="yes" />
               </CreateFolder>
             </Component>
-            
+
+            <Directory Id="FILEWATCHERFOLDER" Name="FileWatcher" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
             <Directory Id="RESULTSFOLDER" Name="Results" />
             <Directory Id="WATCHFOLDER" Name="Watch" />
@@ -337,7 +354,7 @@
       </Component>
     </ComponentGroup>
     
-    <!-- Service Components -->
+    <!-- openXDA Service Components -->
     <ComponentGroup Id="ServiceComponents" Directory="INSTALLFOLDER">
       <!-- Service Applications -->
       <Component Id="openXDA">
@@ -432,6 +449,7 @@
       <!-- Cleanup -->
       <Component Id="Cleanup" Guid="{C8EBB158-C708-4C94-87C1-F5DBC77D7BDE}">
         <CreateFolder />
+        <RemoveFolder Id="RemoveFileWatcherFolder" Directory="FILEWATCHERFOLDER" On="uninstall" />
         <RemoveFolder Id="RemoveDebugFolder" Directory="DEBUGFOLDER" On="uninstall" />
         <RemoveFolder Id="RemoveResultsFolder" Directory="RESULTSFOLDER" On="uninstall" />
         <RemoveFolder Id="RemoveWatchFolder" Directory="WATCHFOLDER" On="uninstall" />
@@ -440,7 +458,7 @@
       </Component>
     </ComponentGroup>
 
-    <!-- Console Components -->
+    <!-- openXDA Console Components -->
     <ComponentGroup Id="ConsoleComponents" Directory="INSTALLFOLDER">
       <!-- Remote Console Applications -->
       <Component Id="openXDAConsole">
@@ -458,8 +476,7 @@
       <ComponentRef Id="GSF.ServiceProcess" />
     </ComponentGroup>
 
-
-    <!-- Library Components -->
+    <!-- openXDA Library Components -->
     <ComponentGroup Id="LibraryComponents" Directory="INSTALLFOLDER">
       <!-- XDA Libraries -->
       <Component Id="FaultAlgorithms">
@@ -631,6 +648,109 @@
       </Component>
       <Component Id="System.Web.WebPages.Razor">
         <File Id="System.Web.WebPages.Razor.dll" Name="System.Web.WebPages.Razor.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.WebPages.Razor.dll" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- File Watcher Service Components -->
+    <ComponentGroup Id="FileWatcherServiceComponents" Directory="FILEWATCHERFOLDER">
+      <!-- Service Applications -->
+      <Component Id="openXDAFileWatcher">
+        <File Id="openXDAFileWatcher.exe" Name="$(var.openXDAFileWatcher.TargetFileName)" Source="$(var.openXDAFileWatcher.TargetPath)" />
+        <ServiceInstall Id="openXDAFileWatcherService" Name="openXDAFileWatcher" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Engine for processing files and pushing data into openXDA." />
+        <ServiceControl Id="openXDAFileWatcherServiceControl" Name="openXDAFileWatcher" Start="install" Stop="both" Remove="uninstall" />
+      </Component>
+      <Component Id="openXDAFileWatcherConfig" Permanent="yes">
+        <File Id="openXDAFileWatcher.exe.config" Name="$(var.openXDAFileWatcher.TargetFileName).config" Source="$(var.openXDAFileWatcher.TargetPath).config" />
+      </Component>
+
+      <!-- XDA Libraries -->
+      <ComponentRef Id="FW.openXDA.Model" />
+      <ComponentRef Id="FW.openXDA.DataPusher" />
+
+      <!-- log4net Dependencies -->
+      <ComponentRef Id="FW.log4net" />
+
+      <!-- GSF Dependencies -->
+      <ComponentRef Id="FW.AjaxMin"/>
+      <ComponentRef Id="FW.Antlr3.Runtime" />
+      <ComponentRef Id="FW.ExpressionEvaluator" />
+      <ComponentRef Id="FW.GSF.Communication" />
+      <ComponentRef Id="FW.GSF.Core" />
+      <ComponentRef Id="FW.GSF.Security" />
+      <ComponentRef Id="FW.GSF.ServiceProcess" />
+      <ComponentRef Id="FW.GSF.Web" />
+      <ComponentRef Id="FW.Newtonsoft.Json" />
+      <ComponentRef Id="FW.System.Net.Http.Formatting" />
+
+      <ComponentRef Id="InstallFolderPermissions"/>
+
+      <!-- Cleanup -->
+      <ComponentRef Id="Cleanup" />
+    </ComponentGroup>
+
+    <!-- File Watcher Console Components -->
+    <ComponentGroup Id="FileWatcherConsoleComponents" Directory="FILEWATCHERFOLDER">
+      <!-- Remote Console Applications -->
+      <Component Id="openXDAFileWatcherConsole">
+        <File Id="openXDAFileWatcherConsole.exe" Name="$(var.openXDAFileWatcherConsole.TargetFileName)" Source="$(var.openXDAFileWatcherConsole.TargetPath)" />
+        <Shortcut Id="openXDAFileWatcherConsoleStartMenuShortcut" Name="openXDA File Watcher Console" Icon="openXDAFileWatcherConsole.ico.exe" Description="Console application to monitor the openXDAFileWatcher service." WorkingDirectory="FILEWATCHERFOLDER" Directory="ApplicationProgramsFolder" Advertise="yes" />
+      </Component>
+      <Component Id="openXDAFileWatcherConsoleConfig">
+        <File Id="openXDAFileWatcherConsole.exe.config" Name="$(var.openXDAFileWatcherConsole.TargetFileName).config" Source="$(var.openXDAFileWatcherConsole.TargetPath).config" />
+      </Component>
+
+      <!-- GSF Dependencies -->
+      <ComponentRef Id="FW.GSF.Communication" />
+      <ComponentRef Id="FW.GSF.Core" />
+      <ComponentRef Id="FW.GSF.Security" />
+      <ComponentRef Id="FW.GSF.ServiceProcess" />
+    </ComponentGroup>
+
+    <!-- File Watcher Library Components -->
+    <ComponentGroup Id="FileWatcherLibraryComponents" Directory="FILEWATCHERFOLDER">
+      <!-- XDA Libraries -->
+      <Component Id="FW.openXDA.Model">
+        <File Id="FW.openXDA.Model.dll" Name="$(var.openXDA.Model.TargetFileName)" Source="$(var.openXDA.Model.TargetPath)" />
+      </Component>
+      <Component Id="FW.openXDA.DataPusher">
+        <File Id="FW.openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
+      </Component>
+
+      <!-- log4net Dependencies -->
+      <Component Id="FW.log4net">
+        <File Id="FW.log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll" />
+      </Component>
+
+      <!-- GSF Dependencies -->
+      <Component Id="FW.AjaxMin">
+        <File Id="FW.AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\AjaxMin.dll" />
+      </Component>
+      <Component Id="FW.Antlr3.Runtime">
+        <File Id="FW.Antlr3.Runtime.dll" Name="Antlr3.Runtime.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Antlr3.Runtime.dll" />
+      </Component>
+      <Component Id="FW.ExpressionEvaluator">
+        <File Id="FW.ExpressionEvaluator.dll" Name="ExpressionEvaluator.dll" Source="$(var.SolutionDir)\Dependencies\GSF\ExpressionEvaluator.dll" />
+      </Component>
+      <Component Id="FW.GSF.Communication">
+        <File Id="FW.GSF.Communication.dll" Name="GSF.Communication.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Communication.dll" />
+      </Component>
+      <Component Id="FW.GSF.Core">
+        <File Id="FW.GSF.Core.dll" Name="GSF.Core.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Core.dll" />
+      </Component>
+      <Component Id="FW.GSF.Security">
+        <File Id="FW.GSF.Security.dll" Name="GSF.Security.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Security.dll" />
+      </Component>
+      <Component Id="FW.GSF.ServiceProcess">
+        <File Id="FW.GSF.ServiceProcess.dll" Name="GSF.ServiceProcess.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.ServiceProcess.dll" />
+      </Component>
+      <Component Id="FW.GSF.Web">
+        <File Id="FW.GSF.Web.dll" Name="GSF.Web.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GSF.Web.dll" />
+      </Component>
+      <Component Id="FW.Newtonsoft.Json">
+        <File Id="FW.Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="$(var.SolutionDir)\Dependencies\GSF\Newtonsoft.Json.dll" />
+      </Component>
+      <Component Id="FW.System.Net.Http.Formatting">
+        <File Id="FW.System.Net.Http.Formatting.dll" Name="System.Net.Http.Formatting.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Net.Http.Formatting.dll" />
       </Component>
     </ComponentGroup>
   </Fragment>

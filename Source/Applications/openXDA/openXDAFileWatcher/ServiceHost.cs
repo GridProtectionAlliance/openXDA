@@ -200,7 +200,7 @@ namespace openXDAFileWatcher
                 m_fileWatcherEngine.Stop();
 
                 // Log the exception
-                message = "Failed to start XDA engine due to exception: " + ex.Message;
+                message = "Failed to start File Watcher engine due to exception: " + ex.Message;
                 HandleException(new InvalidOperationException(message, ex));
 
                 return false;
