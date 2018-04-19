@@ -445,10 +445,12 @@ namespace FaultData.DataAnalysis
 
             foreach (DataSeries dataSeries in m_dataSeries)
             {
+                const ushort NaNValue = ushort.MaxValue;
+                const ushort MaxCompressedValue = ushort.MaxValue - 1;
                 int seriesID = dataSeries.SeriesInfo?.ID ?? 0;
                 double range = dataSeries.Maximum - dataSeries.Minimum;
                 double decompressionOffset = dataSeries.Minimum;
-                double decompressionScale = range / ushort.MaxValue;
+                double decompressionScale = range / MaxCompressedValue;
                 double compressionScale = (decompressionScale != 0.0D) ? 1.0D / decompressionScale : 0.0D;
 
                 offset += LittleEndian.CopyBytes(seriesID, data, offset);
@@ -458,6 +460,13 @@ namespace FaultData.DataAnalysis
                 foreach (DataPoint dataPoint in dataSeries.DataPoints)
                 {
                     ushort compressedValue = (ushort)Math.Round((dataPoint.Value - decompressionOffset) * compressionScale);
+
+                    if (compressedValue == NaNValue)
+                        compressedValue--;
+
+                    if (double.IsNaN(dataPoint.Value))
+                        compressedValue = NaNValue;
+
                     offset += LittleEndian.CopyBytes(compressedValue, data, offset);
                 }
             }
@@ -474,14 +483,82 @@ namespace FaultData.DataAnalysis
             FromData(null, data);
         }
 
-        public void FromData(Meter meter, byte[] data) {
+        public void FromData(Meter meter, byte[] data)
+        {
+            // If the blob contains the GZip header,
+            // use the legacy deserialization algorithm
             if (data[0] == 0x1F && data[1] == 0x8B)
-                JustGzipped(meter, data);
-            else
-                NewCompression(meter, data);
+            {
+                FromData_Legacy(meter, data);
+                return;
+            }
+
+            // Restore the GZip header before uncompressing
+            data[0] = 0x1F;
+            data[1] = 0x8B;
+
+            byte[] uncompressedData = GZipStream.UncompressBuffer(data);
+            int offset = 0;
+
+            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            List<DateTime> times = new List<DateTime>();
+
+            while (times.Count < m_samples)
+            {
+                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
+                offset += sizeof(long);
+                times.Add(new DateTime(currentValue));
+
+                for (int i = 1; i < timeValues; i++)
+                {
+                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+                    times.Add(new DateTime(currentValue));
+                }
+            }
+
+            while (offset < uncompressedData.Length)
+            {
+                DataSeries dataSeries = new DataSeries();
+                int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                if (seriesID > 0 && (object)meter != null)
+                    dataSeries.SeriesInfo = GetSeriesInfo(meter, seriesID);
+
+                const ushort NaNValue = ushort.MaxValue;
+                double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
+                double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
+                offset += 2 * sizeof(double);
+
+                for (int i = 0; i < m_samples; i++)
+                {
+                    ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
+                    offset += sizeof(ushort);
+
+                    double decompressedValue = decompressionScale * compressedValue + decompressionOffset;
+
+                    if (compressedValue == NaNValue)
+                        decompressedValue = double.NaN;
+
+                    dataSeries.DataPoints.Add(new DataPoint()
+                    {
+                        Time = times[i],
+                        Value = decompressedValue
+                    });
+                }
+
+                Add(dataSeries);
+            }
         }
 
-        private void JustGzipped(Meter meter, byte[] data) {
+        private void FromData_Legacy(Meter meter, byte[] data)
+        {
             byte[] uncompressedData;
             int offset;
             DateTime[] times;
@@ -523,64 +600,6 @@ namespace FaultData.DataAnalysis
                 }
 
                 Add(series);
-            }
-        }
-
-        private void NewCompression(Meter meter, byte[] data) {
-            data[0] = 0x1F;
-            data[1] = 0x8B;
-
-            byte[] uncompressedData = GZipStream.UncompressBuffer(data);
-            int offset = 0;
-
-            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            List<DateTime> times = new List<DateTime>();
-
-            while (times.Count < m_samples)
-            {
-                int timeValues = LittleEndian.ToInt32(uncompressedData, offset);
-                offset += sizeof(int);
-
-                long currentValue = LittleEndian.ToInt64(uncompressedData, offset);
-                offset += sizeof(long);
-                times.Add(new DateTime(currentValue));
-
-                for (int i = 1; i < timeValues; i++)
-                {
-                    currentValue += LittleEndian.ToUInt16(uncompressedData, offset);
-                    offset += sizeof(ushort);
-                    times.Add(new DateTime(currentValue));
-                }
-            }
-
-            while (offset < uncompressedData.Length)
-            {
-                DataSeries dataSeries = new DataSeries();
-                int seriesID = LittleEndian.ToInt32(uncompressedData, offset);
-                offset += sizeof(int);
-
-                if (seriesID > 0 && (object)meter != null)
-                    dataSeries.SeriesInfo = GetSeriesInfo(meter, seriesID);
-
-                double decompressionOffset = LittleEndian.ToDouble(uncompressedData, offset);
-                double decompressionScale = LittleEndian.ToDouble(uncompressedData, offset + sizeof(double));
-                offset += 2 * sizeof(double);
-
-                for (int i = 0; i < m_samples; i++)
-                {
-                    ushort compressedValue = LittleEndian.ToUInt16(uncompressedData, offset);
-                    offset += sizeof(ushort);
-
-                    dataSeries.DataPoints.Add(new DataPoint()
-                    {
-                        Time = times[i],
-                        Value = decompressionScale * compressedValue + decompressionOffset
-                    });
-                }
-
-                Add(dataSeries);
             }
         }
 
