@@ -3001,10 +3001,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @startDate DATETIME
-    DECLARE @endDate DATETIME
-	
-	IF @context = '180d'
+	DECLARE @startDate DATETIME = @EventDate 
+	DECLARE @endDate DATETIME
+
+    IF @context = '180d'
     BEGIN
 		SET @startDate = DATEADD(HOUR, -180, @EventDate)
 		SET @endDate = @EventDate
@@ -3060,14 +3060,19 @@ BEGIN
     END
 
 
+	DECLARE @simStartDate DATETIME = DATEADD(SECOND, -5, @startDate)
+	DECLARE @simEndDate DATETIME = DATEADD(SECOND, 5, @endDate)
+	print @simStartDate
+	print @simEndDate
     DECLARE @localEventDate DATE = CAST(@EventDate AS DATE)
     DECLARE @localMeterID INT = CAST(@MeterID AS INT)
+	DECLARE @timeWindow int = (SELECT Value FROM DashSettings WHERE Name = 'System.TimeWindow')
 
     ; WITH cte AS
     (
         SELECT
-            Event.LineID AS thelineid,
-            Event.ID AS theeventid,
+            Event.LineID AS thelineid, 
+            Event.ID AS theeventid, 
             EventType.Name AS theeventtype,
             CAST(Event.StartTime AS VARCHAR(26)) AS theinceptiontime,
             MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
@@ -3083,10 +3088,11 @@ BEGIN
                 WHEN 'Fault' THEN ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY IsSelectedAlgorithm DESC, IsSuppressed, IsValid DESC, Inception)
                 ELSE ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY Event.ID)
             END AS RowPriority,
-            (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
-            (SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.LineID = Event.LineID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
-            Event.UpdatedBy,
-            (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
+			(SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.StartTime BETWEEN DateAdd(SECOND, -5, Event.StartTime) and  DateAdd(SECOND, 5, Event.StartTime)) as SimultaneousCount,
+			(SELECT COUNT(*) FROM Event as EventCount WHERE EventTypeID IN (SELECT ID FROM EventType WHERE Name = 'Sag' OR Name = 'Fault') AND EventCount.StartTime BETWEEN DateAdd(SECOND, -@timeWindow, Event.StartTime) and  DateAdd(SECOND, @timeWindow, Event.StartTime)) as SimultaneousFAndSCount,
+			(SELECT COUNT(*) FROM Event as EventCount WHERE EventCount.LineID = Event.LineID AND EventCount.StartTime BETWEEN DateAdd(Day, -60, Event.StartTime) and  Event.StartTime) as SixtyDayCount,
+			Event.UpdatedBy,
+			(SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as Note
         FROM
             Event JOIN
             EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
@@ -3097,7 +3103,7 @@ BEGIN
             Line ON Event.LineID = Line.ID JOIN
             MeterLine ON MeterLine.MeterID = @MeterID AND MeterLine.LineID = Line.ID
         WHERE
-            Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
+            Event.StartTime >= @startDate AND Event.StartTime < @endDate AND 
             Event.MeterID = @localMeterID AND
             (Phase.ID IS NULL OR Phase.Name <> 'Worst')
     )
@@ -3111,10 +3117,11 @@ BEGIN
         thefaulttype,
         thecurrentdistance,
         pqiexists,
-        SimultaneousCount,
-        SixtyDayCount,
-        UpdatedBy,
-        Note
+		SimultaneousCount,
+		SimultaneousFAndSCount,
+		SixtyDayCount,
+		UpdatedBy,
+		Note
     INTO #temp
     FROM cte
     WHERE RowPriority = 1
@@ -3124,16 +3131,18 @@ BEGIN
     SELECT @sql = COALESCE(@sql + ',dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName, 'dbo.' + HasResultFunction + '(theeventid) AS ' + ServiceName)
     FROM EASExtension
 
-    DECLARE @serviceList NVARCHAR(MAX)
-    SELECT @serviceList = COALESCE(@serviceList + ',' + ServiceName, ServiceName)
-    FROM EASExtension
-    Set @serviceList = '''' + @serviceList + ''''
-
-    SET @sql = COALESCE('SELECT *,' + @sql + ', '+ @ServiceList +'as ServiceList FROM #temp', 'SELECT *, '''' as ServiceList FROM #temp')
-    EXEC sp_executesql @sql
+	DECLARE @serviceList NVARCHAR(MAX)
+	SELECT @serviceList = COALESCE(@serviceList + ',' + ServiceName, ServiceName)
+	FROM EASExtension
+	Set @serviceList = '''' + @serviceList + ''''
+	
+	
+    SET @sql = COALESCE('SELECT *,' + @sql + ', '+ @ServiceList +'as ServiceList FROM #temp', 'SELECT *, '''' AS ServiceList FROM #temp')
+    print @sql
+	EXEC sp_executesql @sql
 
     DROP TABLE #temp
-
+	
 END
 GO
 
@@ -3401,7 +3410,8 @@ BEGIN
         BreakerOperation.BreakerSpeed AS speed,
         BreakerOperation.StatusBitChatter AS chatter,
         BreakerOperation.DcOffsetDetected AS dcoffset,
-        BreakerOperationType.Name AS operationtype
+        BreakerOperationType.Name AS operationtype,
+		(SELECT COUNT(*) FROM EventNote WHERE EventNote.EventID = Event.ID) as notecount
     FROM
         BreakerOperation JOIN
         Event ON BreakerOperation.EventID = Event.ID JOIN

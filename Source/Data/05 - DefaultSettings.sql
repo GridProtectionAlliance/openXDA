@@ -516,7 +516,10 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('CorrectnessChartColors', '0%,#0000FF', 1)
 GO
 
-INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('XDAInstance', 'http://localhost:8989', 1)
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.XDAInstance', 'http://localhost:8989', 1)
+GO
+
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.TimeWindow', '1', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('YearBeginDate', 'January 1', 1)
