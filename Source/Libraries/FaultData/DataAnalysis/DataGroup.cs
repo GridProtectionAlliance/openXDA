@@ -401,107 +401,6 @@ namespace FaultData.DataAnalysis
 
         public byte[] ToData()
         {
-            int timeSeriesByteLength;
-            int dataSeriesByteLength;
-            int totalByteLength;
-
-            byte[] data;
-            int offset;
-
-            int seriesID;
-
-            if (m_dataSeries.Count == 0)
-                return new byte[0];
-
-            timeSeriesByteLength = m_samples * sizeof(long);
-            dataSeriesByteLength = sizeof(int) + (m_samples * sizeof(double));
-            totalByteLength = sizeof(int) + timeSeriesByteLength + (dataSeriesByteLength * m_dataSeries.Count);
-            data = new byte[totalByteLength];
-            offset = 0;
-
-            offset += LittleEndian.CopyBytes(m_samples, data, offset);
-
-            foreach (DataPoint dataPoint in m_dataSeries[0].DataPoints)
-                offset += LittleEndian.CopyBytes(dataPoint.Time.Ticks, data, offset);
-
-            foreach (DataSeries series in m_dataSeries)
-            {
-                if ((object)series.SeriesInfo != null)
-                    seriesID = series.SeriesInfo.ID;
-                else
-                    seriesID = 0;
-
-                offset += LittleEndian.CopyBytes(seriesID, data, offset);
-
-                foreach (DataPoint dataPoint in series.DataPoints)
-                    offset += LittleEndian.CopyBytes(dataPoint.Value, data, offset);
-            }
-
-            return GZipStream.CompressBuffer(data);
-        }
-
-        public void FromData(byte[] data)
-        {
-            FromData(null, data);
-        }
-
-        public void FromData(Meter meter, byte[] data)
-        {
-            byte[] uncompressedData;
-            int offset;
-            DateTime[] times;
-            DataSeries series;
-            int seriesID;
-
-            m_dataSeries.Clear();
-
-            if (data.Length == 0)
-                return;
-
-            uncompressedData = GZipStream.UncompressBuffer(data);
-            offset = 0;
-
-            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
-            offset += sizeof(int);
-
-            times = new DateTime[m_samples];
-
-            for (int i = 0; i < m_samples; i++)
-            {
-                times[i] = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
-                offset += sizeof(long);
-            }
-
-            while (offset < uncompressedData.Length)
-            {
-                series = new DataSeries();
-                seriesID = LittleEndian.ToInt32(uncompressedData, offset);
-                offset += sizeof(int);
-
-                if (seriesID > 0 && (object)meter != null)
-                {
-                    series.SeriesInfo = meter.Channels
-                        .SelectMany(channel => channel.Series)
-                        .FirstOrDefault(seriesInfo => seriesInfo.ID == seriesID);
-                }
-
-                for (int i = 0; i < m_samples; i++)
-                {
-                    series.DataPoints.Add(new DataPoint()
-                    {
-                        Time = times[i],
-                        Value = LittleEndian.ToDouble(uncompressedData, offset)
-                    });
-
-                    offset += sizeof(double);
-                }
-
-                Add(series);
-            }
-        }
-
-        public byte[] ToData_new()
-        {
             var timeSeries = m_dataSeries[0].DataPoints
                 .Select(dataPoint => new { Time = dataPoint.Time.Ticks, Compressed = false })
                 .ToList();
@@ -562,20 +461,77 @@ namespace FaultData.DataAnalysis
                 }
             }
 
-            return GZipStream.CompressBuffer(data);
+            byte[] returnArray = GZipStream.CompressBuffer(data);
+            returnArray[0] = 0x44;
+            returnArray[1] = 0x33;
+
+            return returnArray;
         }
 
-        public void FromData_new(byte[] data)
+        public void FromData(byte[] data)
         {
-            FromData_new(null, data);
+            FromData(null, data);
         }
 
-        public void FromData_new(Meter meter, byte[] data)
-        {
-            m_dataSeries.Clear();
+        public void FromData(Meter meter, byte[] data) {
+            if (data[0] == 0x1F && data[1] == 0x8B)
+                JustGzipped(meter, data);
+            else
+                NewCompression(meter, data);
+        }
 
-            if (data.Length == 0)
-                return;
+        private void JustGzipped(Meter meter, byte[] data) {
+            byte[] uncompressedData;
+            int offset;
+            DateTime[] times;
+            DataSeries series;
+            int seriesID;
+
+            uncompressedData = GZipStream.UncompressBuffer(data);
+            offset = 0;
+
+            m_samples = LittleEndian.ToInt32(uncompressedData, offset);
+            offset += sizeof(int);
+
+            times = new DateTime[m_samples];
+
+            for (int i = 0; i < m_samples; i++)
+            {
+                times[i] = new DateTime(LittleEndian.ToInt64(uncompressedData, offset));
+                offset += sizeof(long);
+            }
+
+            while (offset < uncompressedData.Length)
+            {
+                series = new DataSeries();
+                seriesID = LittleEndian.ToInt32(uncompressedData, offset);
+                offset += sizeof(int);
+
+                if (seriesID > 0 && (object)meter != null)
+                {
+                    series.SeriesInfo = meter.Channels
+                        .SelectMany(channel => channel.Series)
+                        .FirstOrDefault(seriesInfo => seriesInfo.ID == seriesID);
+                }
+
+                for (int i = 0; i < m_samples; i++)
+                {
+                    series.DataPoints.Add(new DataPoint()
+                    {
+                        Time = times[i],
+                        Value = LittleEndian.ToDouble(uncompressedData, offset)
+                    });
+
+                    offset += sizeof(double);
+                }
+
+                Add(series);
+            }
+        }
+
+        private void NewCompression(Meter meter, byte[] data) {
+            data[0] = 0x1F;
+            data[1] = 0x8B;
 
             byte[] uncompressedData = GZipStream.UncompressBuffer(data);
             int offset = 0;
