@@ -36,9 +36,6 @@
 @using System.Linq
 @using System.Web
 @using System.Web.Script.Serialization
-@using FaultData.Database
-@using FaultData.Database.FaultLocationDataTableAdapters
-@using FaultData.Database.MeterDataTableAdapters
 @using GSF.Configuration
 @using RazorEngine.Templating
 @using GSF.Web
@@ -51,7 +48,7 @@
     const string NextBackForStation = "GetPreviousAndNextEventIdsForMeterLocation";
     const string NextBackForMeter = "GetPreviousAndNextEventIdsForMeter";
     const string NextBackForLine = "GetPreviousAndNextEventIdsForLine";
-
+    DataContext dataContext = ViewBag.DataContext;
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
     string connectionString = ConfigurationFile.Current.Settings["systemSettings"]["ConnectionString"].Value;
@@ -128,130 +125,104 @@
 
     string postedErrorMessage = "";
 
-    using (DataContext dataContext = new DataContext("systemSettings"))
+    JavaScriptSerializer serializer = new JavaScriptSerializer();
+    postedSeriesList = JsonConvert.SerializeObject(SignalCode.GetFlotInfo(int.Parse(eventID)));
+
+    EventView theEvent = dataContext.Table<EventView>().QueryRecords(restriction: new RecordRestriction("ID = {0}", eventID)).First();
+
+    postedSystemFrequency = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? "60.0";
+    postedStationName = theEvent.StationName;
+    postedMeterId = theEvent.MeterID.ToString();
+    postedMeterName = theEvent.MeterName;
+    postedLineName = theEvent.LineName;
+    postedLineLength = theEvent.Length.ToString();
+
+    postedEventName = theEvent.EventTypeName;
+    postedEventDate = theEvent.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff");
+    postedDate = theEvent.StartTime.ToShortDateString();
+    postedEventMilliseconds = theEvent.StartTime.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds.ToString();
+
+    using (IDbCommand cmd = dataContext.Connection.Connection.CreateCommand())
     {
-        JavaScriptSerializer serializer = new JavaScriptSerializer();
-        postedSeriesList = JsonConvert.SerializeObject(SignalCode.GetFlotInfo(int.Parse(eventID)));
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.Add(new SqlParameter("@EventID", eventID));
+        cmd.CommandTimeout = 300;
 
-        EventView theEvent = dataContext.Table<EventView>().QueryRecords(restriction: new RecordRestriction("ID = {0}", eventID)).First();
-
-        postedSystemFrequency = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? "60.0";
-        postedStationName = theEvent.StationName;
-        postedMeterId = theEvent.MeterID.ToString();
-        postedMeterName = theEvent.MeterName;
-        postedLineName = theEvent.LineName;
-        postedLineLength = theEvent.Length.ToString();
-
-        postedEventName = theEvent.EventTypeName;
-        postedEventDate = theEvent.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff");
-        postedDate = theEvent.StartTime.ToShortDateString();
-        postedEventMilliseconds = theEvent.StartTime.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds.ToString();
-
-        using (IDbCommand cmd = dataContext.Connection.Connection.CreateCommand())
+        foreach (string procedure in nextBackLookup.Keys.ToList())
         {
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add(new SqlParameter("@EventID", eventID));
-            cmd.CommandTimeout = 300;
+            EventView back = null;
+            EventView next = null;
+            int backID = -1;
+            int nextID = -1;
 
-            foreach (string procedure in nextBackLookup.Keys.ToList())
+            cmd.CommandText = procedure;
+
+            using (IDataReader rdr = cmd.ExecuteReader())
             {
-                EventView back = null;
-                EventView next = null;
-                int backID = -1;
-                int nextID = -1;
+                rdr.Read();
 
-                cmd.CommandText = procedure;
-
-                using (IDataReader rdr = cmd.ExecuteReader())
+                if (!rdr.IsDBNull(0))
                 {
-                    rdr.Read();
-
-                    if (!rdr.IsDBNull(0))
-                    {
-                        backID = rdr.GetInt32(0);
-                    }
-
-                    if (!rdr.IsDBNull(1))
-                    {
-                        nextID = rdr.GetInt32(1);
-                    }
+                    backID = rdr.GetInt32(0);
                 }
 
-                back = dataContext.Table<EventView>().QueryRecords(restriction: new RecordRestriction("ID = {0}", backID)).FirstOrDefault();
-                next = dataContext.Table<EventView>().QueryRecords(restriction: new RecordRestriction("ID = {0}", nextID)).FirstOrDefault();
-                nextBackLookup[procedure] = Tuple.Create(back, next);
+                if (!rdr.IsDBNull(1))
+                {
+                    nextID = rdr.GetInt32(1);
+                }
+            }
+
+            back = dataContext.Table<EventView>().QueryRecords(restriction: new RecordRestriction("ID = {0}", backID)).FirstOrDefault();
+            next = dataContext.Table<EventView>().QueryRecords(restriction: new RecordRestriction("ID = {0}", nextID)).FirstOrDefault();
+            nextBackLookup[procedure] = Tuple.Create(back, next);
+        }
+    }
+
+    if (new[] { "Fault", "RecloseIntoFault" }.Contains(postedEventName))
+    {
+        FaultSummary thesummary = dataContext.Table<FaultSummary>().QueryRecordsWhere("EventID = {0} AND IsSelectedAlgorithm = 1", theEvent.ID).OrderBy(row => row.IsSuppressed).ThenBy(row => row.Inception).FirstOrDefault();
+
+        if ((object)thesummary != null)
+        {
+            postedStartTime = thesummary.Inception.TimeOfDay.ToString();
+            postedPhase = thesummary.FaultType;
+            postedDurationPeriod = thesummary.DurationCycles.ToString("##.##", CultureInfo.InvariantCulture) + " cycles";
+            postedMagnitude = thesummary.CurrentMagnitude.ToString("####.#", CultureInfo.InvariantCulture) + " Amps (RMS)";
+            postedCalculationCycle = thesummary.CalculationCycle.ToString();
+        }
+    }
+    else if (new[] { "Sag", "Swell" }.Contains(postedEventName))
+    {
+        Disturbance disturbance = dataContext.Table<Disturbance>().QueryRecordsWhere("EventID = {0}", theEvent.ID).Where(row => row.EventTypeID == theEvent.EventTypeID).OrderBy(row => row.StartTime).FirstOrDefault();
+
+        if ((object)disturbance != null)
+        {
+            postedStartTime = disturbance.StartTime.TimeOfDay.ToString();
+            postedPhase = dataContext.Table<Phase>().QueryRecordWhere("ID = {0}", disturbance.PhaseID).Name;
+            postedDurationPeriod = disturbance.DurationCycles.ToString("##.##", CultureInfo.InvariantCulture) + " cycles";
+
+            if (disturbance.PerUnitMagnitude != -1.0e308)
+            {
+                postedMagnitude = disturbance.PerUnitMagnitude.ToString("N3", CultureInfo.InvariantCulture) + " pu (RMS)";
             }
         }
+    }
 
-        using (DbAdapterContainer dbAdapterContainer = new DbAdapterContainer(connectionString))
+    if (breakerOperationID != "")
+    {
+        int id;
+
+        if (int.TryParse(breakerOperationID, out id))
         {
-            MeterInfoDataContext meterInfo = dbAdapterContainer.GetAdapter<MeterInfoDataContext>();
-            FaultSummaryTableAdapter summaryInfo = dbAdapterContainer.GetAdapter<FaultSummaryTableAdapter>();
-            DisturbanceTableAdapter disturbanceAdapter = dbAdapterContainer.GetAdapter<DisturbanceTableAdapter>();
-            BreakerOperationTableAdapter breakerAdapter = dbAdapterContainer.GetAdapter<BreakerOperationTableAdapter>();
+            BreakerOperation breakerRow = dataContext.Table<BreakerOperation>().QueryRecordWhere("ID = {0}", id);
 
-            if (new[] { "Fault", "RecloseIntoFault" }.Contains(postedEventName))
+            if ((object)breakerRow != null)
             {
-                FaultLocationData.FaultSummaryDataTable thesummarydatatable = summaryInfo.GetDataBy(Convert.ToInt32(eventID));
-
-                FaultLocationData.FaultSummaryRow thesummary = thesummarydatatable
-                    .Where(row => row.IsSelectedAlgorithm == 1)
-                    .OrderBy(row => row.IsSuppressed)
-                    .ThenBy(row => row.Inception)
-                    .FirstOrDefault();
-
-                if ((object)thesummary != null)
-                {
-                    postedStartTime = thesummary.Inception.TimeOfDay.ToString();
-                    postedPhase = thesummary.FaultType;
-                    postedDurationPeriod = thesummary.DurationCycles.ToString("##.##", CultureInfo.InvariantCulture) + " cycles";
-                    postedMagnitude = thesummary.CurrentMagnitude.ToString("####.#", CultureInfo.InvariantCulture) + " Amps (RMS)";
-                    postedCalculationCycle = thesummary.CalculationCycle.ToString();
-                }
-            }
-            else if (new[] { "Sag", "Swell" }.Contains(postedEventName))
-            {
-                MeterData.DisturbanceDataTable disturbanceTable = disturbanceAdapter.GetDataBy(theEvent.ID);
-
-                MeterData.DisturbanceRow disturbance = disturbanceTable
-                    .Where(row => row.EventTypeID == theEvent.EventTypeID)
-                    .OrderBy(row => row.StartTime)
-                    .FirstOrDefault();
-
-                if ((object)disturbance != null)
-                {
-                    postedStartTime = disturbance.StartTime.TimeOfDay.ToString();
-                    postedPhase = meterInfo.Phases.Where(phase => phase.ID == disturbance.PhaseID).Select(phase => phase.Name).FirstOrDefault() ?? "";
-                    postedDurationPeriod = disturbance.DurationCycles.ToString("##.##", CultureInfo.InvariantCulture) + " cycles";
-
-                    if (disturbance.PerUnitMagnitude != -1.0e308)
-                    {
-                        postedMagnitude = disturbance.PerUnitMagnitude.ToString("N3", CultureInfo.InvariantCulture) + " pu (RMS)";
-                    }
-                }
-            }
-
-            if (breakerOperationID != "")
-            {
-                int id;
-
-                if (int.TryParse(breakerOperationID, out id))
-                {
-                    MeterData.BreakerOperationDataTable breakerTable = breakerAdapter.GetDataBy(theEvent.ID);
-
-                    MeterData.BreakerOperationRow breakerRow = breakerTable
-                        .Where(row => row.ID == id)
-                        .FirstOrDefault();
-
-                    if ((object)breakerRow != null)
-                    {
-                        postedBreakerNumber = breakerRow.BreakerNumber;
-                        postedBreakerPhase = meterInfo.Phases.Where(phase => phase.ID == breakerRow.PhaseID).Select(phase => phase.Name).FirstOrDefault() ?? "";
-                        postedBreakerTiming = breakerRow.BreakerTiming.ToString();
-                        postedBreakerSpeed = breakerRow.BreakerSpeed.ToString();
-                        postedBreakerOperation = dbAdapterContainer.Connection.ExecuteScalar("SELECT Name FROM BreakerOperationType WHERE ID = @breakerOperationTypeID", DataExtensions.DefaultTimeoutDuration, breakerRow.BreakerOperationTypeID).ToString();
-                    }
-                }
+                postedBreakerNumber = breakerRow.BreakerNumber;
+                postedBreakerPhase = dataContext.Table<Phase>().QueryRecordWhere("ID = {0}", breakerRow.PhaseID).Name;
+                postedBreakerTiming = breakerRow.BreakerTiming.ToString();
+                postedBreakerSpeed = breakerRow.BreakerSpeed.ToString();
+                postedBreakerOperation = dataContext.Connection.ExecuteScalar("SELECT Name FROM BreakerOperationType WHERE ID = @breakerOperationTypeID", DataExtensions.DefaultTimeoutDuration, breakerRow.BreakerOperationTypeID).ToString();
             }
         }
     }

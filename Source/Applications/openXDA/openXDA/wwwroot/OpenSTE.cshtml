@@ -21,34 +21,17 @@
 //
 //*******************************************************************************************************@
 
-@using System.Data
 @using System.Net.Http
-@using System.Security.Policy
-@using GSF.Data.Model
-@using openXDA
 @using openXDA.Model
-@using System.Data;
-@using GSF.Data
 @using System.Collections.Generic;
-@using System.Data.SqlClient
-@using System.Globalization
-@using System.Linq
-@using System.Web
-@using System.Web.Script.Serialization
-@using FaultData.Database
-@using GSF.Configuration
-@using RazorEngine.Templating
 @using GSF.Web
-@using FaultData.Database;
-@using FaultData.Database.MeterDataTableAdapters;
 @using GSF.Web.Model
-@using Newtonsoft.Json
-@using Org.BouncyCastle.Asn1.Ocsp
 @inherits ExtendedTemplateBase<AppModel>
 
 @{
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
+    DataContext dataContext = ViewBag.DataContext;
 
     string postedmeterid = "";
     string postedchannelid = "";
@@ -82,8 +65,8 @@
         postedphasename = parameters["PhaseName"];
     }
 
-    string postedlinename = Model.DataContext.Connection.ExecuteScalar<string>("Select AssetKey FROM Line WHERE ID = (SELECT ID LineID FROM Channel WHERE ID = {0})", Convert.ToInt32(postedchannelid));
-    string postedmetername = Model.DataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", Convert.ToInt32(postedmeterid));
+    string postedlinename = dataContext.Connection.ExecuteScalar<string>("Select AssetKey FROM Line WHERE ID = (SELECT ID LineID FROM Channel WHERE ID = {0})", Convert.ToInt32(postedchannelid));
+    string postedmetername = dataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", Convert.ToInt32(postedmeterid));
 
 
 }
