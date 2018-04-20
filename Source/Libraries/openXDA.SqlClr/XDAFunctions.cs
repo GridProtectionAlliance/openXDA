@@ -61,7 +61,6 @@ namespace openXDA.SqlClr
             const string query =
                 "SELECT " +
                 "    TimeDomainData, " +
-                "    FrequencyDomainData " +
                 "FROM EventData " +
                 "WHERE ID = " +
                 "(" +
@@ -84,7 +83,6 @@ namespace openXDA.SqlClr
             DataRow row = eventDataSet.Tables[0].Rows[0];
 
             return ReadFrom(Inflate((byte[])row["TimeDomainData"]))
-                .Concat(ReadFrom(Inflate((byte[])row["FrequencyDomainData"]), freq: true))
                 .ToArray();
         }
         

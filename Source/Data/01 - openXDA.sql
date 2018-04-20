@@ -782,7 +782,6 @@ CREATE TABLE EventData
     FileGroupID INT NOT NULL,
     RuntimeID INT NOT NULL,
     TimeDomainData VARBINARY(MAX) NOT NULL,
-    FrequencyDomainData VARBINARY(MAX) NOT NULL,
     MarkedForDeletion INT NOT NULL
 )
 GO

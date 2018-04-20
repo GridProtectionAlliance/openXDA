@@ -539,9 +539,9 @@ namespace FaultData.DataOperations
             if ((object)evt == null)
                 return null;
 
-            byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
+            byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
 
-            if ((object)frequencyDomainData == null)
+            if ((object)timeDomainData == null)
                 return null;
 
             TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
@@ -553,8 +553,8 @@ namespace FaultData.DataOperations
             meter.ConnectionFactory = () => new AdoDataConnection(connection.Connection, connection.AdapterType, false);
 
             DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(meter, frequencyDomainData);
-            return new VICycleDataGroup(dataGroup);
+            dataGroup.FromData(meter, timeDomainData);
+            return Transform.ToVICycleDataGroup(new VIDataGroup(dataGroup), SystemFrequency);
         }
 
         private CycleData GetCycleAt(VICycleDataGroup viCycleDataGroup, int index)

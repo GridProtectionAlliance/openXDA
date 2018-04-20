@@ -37,8 +37,6 @@ namespace openXDA.Model
 
         public byte[] TimeDomainData { get; set; }
 
-        public byte[] FrequencyDomainData { get; set; }
-
         public int MarkedForDeletion { get; set; }
     }
 }

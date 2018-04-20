@@ -2997,19 +2997,17 @@ namespace openXDA.Hubs
                 }
 
                 DataGroup dataTimeGroup = new DataGroup();
-                DataGroup dataFreqGroup = new DataGroup();
                 DataGroup dataFaultAlgo = new DataGroup();
 
                 Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
                 byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
                 byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                 meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
 
                 try
                 {
-                    if (timeSeries != null && freqSeries != null)
+                    if (timeSeries != null)
                     {
                         dataTimeGroup.FromData(meter, timeSeries);
                         foreach (var dataSeries in dataTimeGroup.DataSeries)
@@ -3020,18 +3018,9 @@ namespace openXDA.Hubs
                             }
                         }
 
-                        dataFreqGroup.FromData(meter, freqSeries);
-                        foreach (var dataSeries in dataFreqGroup.DataSeries)
-                        {
-                            foreach (var dataPoint in dataSeries.DataPoints)
-                            {
-                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                            }
-                        }
 
                         byte[] newTimeData = dataTimeGroup.ToData();
-                        byte[] newFreqData = dataFreqGroup.ToData();
-                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {2}", newTimeData, record.EventDataID);
 
                     }
 
@@ -3225,19 +3214,17 @@ namespace openXDA.Hubs
                 }
 
                 DataGroup dataTimeGroup = new DataGroup();
-                DataGroup dataFreqGroup = new DataGroup();
                 DataGroup dataFaultAlgo = new DataGroup();
 
                 Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
                 byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
                 byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                 meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
 
                 try
                 {
-                    if (timeSeries != null && freqSeries != null)
+                    if (timeSeries != null)
                     {
                         dataTimeGroup.FromData(meter, timeSeries);
                         foreach (var dataSeries in dataTimeGroup.DataSeries)
@@ -3248,18 +3235,8 @@ namespace openXDA.Hubs
                             }
                         }
 
-                        dataFreqGroup.FromData(meter, freqSeries);
-                        foreach (var dataSeries in dataFreqGroup.DataSeries)
-                        {
-                            foreach (var dataPoint in dataSeries.DataPoints)
-                            {
-                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                            }
-                        }
-
                         byte[] newTimeData = dataTimeGroup.ToData();
-                        byte[] newFreqData = dataFreqGroup.ToData();
-                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {2}", newTimeData, record.EventDataID);
 
                     }
 
@@ -3494,19 +3471,17 @@ namespace openXDA.Hubs
                 }
 
                 DataGroup dataTimeGroup = new DataGroup();
-                DataGroup dataFreqGroup = new DataGroup();
                 DataGroup dataFaultAlgo = new DataGroup();
 
                 Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
                 byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
                 byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                 meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
 
                 try
                 {
-                    if (timeSeries != null && freqSeries != null)
+                    if (timeSeries != null)
                     {
                         dataTimeGroup.FromData(meter, timeSeries);
                         foreach (var dataSeries in dataTimeGroup.DataSeries)
@@ -3517,18 +3492,8 @@ namespace openXDA.Hubs
                             }
                         }
 
-                        dataFreqGroup.FromData(meter, freqSeries);
-                        foreach (var dataSeries in dataFreqGroup.DataSeries)
-                        {
-                            foreach (var dataPoint in dataSeries.DataPoints)
-                            {
-                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                            }
-                        }
-
                         byte[] newTimeData = dataTimeGroup.ToData();
-                        byte[] newFreqData = dataFreqGroup.ToData();
-                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {2}", newTimeData, record.EventDataID);
 
                     }
 
@@ -3756,19 +3721,17 @@ namespace openXDA.Hubs
 
 
                 DataGroup dataTimeGroup = new DataGroup();
-                DataGroup dataFreqGroup = new DataGroup();
                 DataGroup dataFaultAlgo = new DataGroup();
 
                 Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
                 byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
                 byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                 meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
 
                 try
                 {
-                    if (timeSeries != null && freqSeries != null)
+                    if (timeSeries != null)
                     {
                         dataTimeGroup.FromData(meter, timeSeries);
                         foreach (var dataSeries in dataTimeGroup.DataSeries)
@@ -3779,18 +3742,9 @@ namespace openXDA.Hubs
                             }
                         }
 
-                        dataFreqGroup.FromData(meter, freqSeries);
-                        foreach (var dataSeries in dataFreqGroup.DataSeries)
-                        {
-                            foreach (var dataPoint in dataSeries.DataPoints)
-                            {
-                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                            }
-                        }
 
                         byte[] newTimeData = dataTimeGroup.ToData();
-                        byte[] newFreqData = dataFreqGroup.ToData();
-                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {2}", newTimeData, record.EventDataID);
 
                     }
 
@@ -4001,19 +3955,17 @@ namespace openXDA.Hubs
                 }
 
                 DataGroup dataTimeGroup = new DataGroup();
-                DataGroup dataFreqGroup = new DataGroup();
                 DataGroup dataFaultAlgo = new DataGroup();
 
                 Meter meter = DataContext.Table<Meter>().QueryRecordWhere("ID = {0}", record.MeterID);
                 byte[] timeSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
-                byte[] freqSeries = DataContext.Connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", record.EventDataID);
                 byte[] faultCurve = DataContext.Connection.ExecuteScalar<byte[]>("SELECT Data FROM FaultCurve WHERE EventID = {0}", record.ID);
 
                 meter.ConnectionFactory = () => new AdoDataConnection(DataContext.Connection.Connection, DataContext.Connection.AdapterType, false);
 
                 try
                 {
-                    if (timeSeries != null && freqSeries != null)
+                    if (timeSeries != null)
                     {
                         dataTimeGroup.FromData(meter, timeSeries);
                         foreach (var dataSeries in dataTimeGroup.DataSeries)
@@ -4024,18 +3976,8 @@ namespace openXDA.Hubs
                             }
                         }
 
-                        dataFreqGroup.FromData(meter, freqSeries);
-                        foreach (var dataSeries in dataFreqGroup.DataSeries)
-                        {
-                            foreach (var dataPoint in dataSeries.DataPoints)
-                            {
-                                dataPoint.Time = dataPoint.Time.AddTicks(ticks);
-                            }
-                        }
-
                         byte[] newTimeData = dataTimeGroup.ToData();
-                        byte[] newFreqData = dataFreqGroup.ToData();
-                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0}, FrequencyDomainData = {1} WHERE ID = {2}", newTimeData, newFreqData, record.EventDataID);
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {2}", newTimeData, record.EventDataID);
 
                     }
 

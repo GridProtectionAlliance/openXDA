@@ -36,6 +36,11 @@ namespace openXDA.Hubs
 {
     public class SignalCode
     {
+        #region [ Members ]
+        private const double MaxFaultDistanceMultiplier = 1.25D;
+        private const double MinFaultDistanceMultiplier = -0.1D;
+        private double m_systemFrequency;
+
         public class eventSet
         {
             public string Yaxis0name;
@@ -55,6 +60,7 @@ namespace openXDA.Hubs
             public int yAxis;
             public double[] data;
         }
+
 
         public class faultSegmentDetail
         {
@@ -89,16 +95,37 @@ namespace openXDA.Hubs
                 return clone;
             }
         }
-        private const double MaxFaultDistanceMultiplier = 1.25D;
-        private const double MinFaultDistanceMultiplier = -0.1D;
+        #endregion
 
-        private static string ConnectionString = ConfigurationFile.Current.Settings["systemSettings"]["ConnectionString"].Value;
+        #region [ Constructors ]
 
         public SignalCode()
         {
+            int i = 1;
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                m_systemFrequency = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
+            }
             //Uncomment the following line if using designed components 
             //InitializeComponent(); 
         }
+
+        #endregion
+
+        #region [ Properties ]
+        public double SystemFrequency
+        {
+            get
+            {
+                return m_systemFrequency;
+            }
+        }
+        #endregion
+
+
+
+
+        private static string ConnectionString = ConfigurationFile.Current.Settings["systemSettings"]["ConnectionString"].Value;
 
         private static readonly List<FlotSeries> CycleDataInfo = new List<FlotSeries>();
 
@@ -259,18 +286,13 @@ namespace openXDA.Hubs
                 List<FlotSeries> flotInfo = GetFlotInfo(eventID);
                 DateTime epoch = new DateTime(1970, 1, 1);
 
-                Lazy<Dictionary<int, DataSeries>> waveformData = new Lazy<Dictionary<int, DataSeries>>(() =>
-                {
-                    byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
-                    DataGroup dataGroup = ToDataGroup(meter, timeDomainData);
-                    return dataGroup.DataSeries.ToDictionary(dataSeries => dataSeries.SeriesInfo.ID);
-                });
+                byte[] timeDomainData = connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
 
-                Lazy<DataGroup> cycleData = new Lazy<DataGroup>(() =>
-                {
-                    byte[] frequencyDomainData = connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
-                    return ToDataGroup(meter, frequencyDomainData);
-                });
+                Lazy<DataGroup> dataGroup = new Lazy<DataGroup>(() => ToDataGroup(meter, timeDomainData));
+                Dictionary<int, DataSeries> waveformData = dataGroup.Value.DataSeries.ToDictionary(dataSeries => dataSeries.SeriesInfo.ID);
+      
+
+                Lazy<DataGroup> cycleData = new Lazy<DataGroup>(() => (Transform.ToVICycleDataGroup(new VIDataGroup(dataGroup.Value), SystemFrequency).ToDataGroup()));
 
                 Lazy<Dictionary<string, DataSeries>> faultCurveData = new Lazy<Dictionary<string, DataSeries>>(() =>
                 {
@@ -297,7 +319,7 @@ namespace openXDA.Hubs
 
                     if (flotSeries.FlotType == FlotSeriesType.Waveform)
                     {
-                        if (!waveformData.Value.TryGetValue(flotSeries.SeriesID, out dataSeries))
+                        if (!waveformData.TryGetValue(flotSeries.SeriesID, out dataSeries))
                             continue;
                     }
                     else if (flotSeries.FlotType == FlotSeriesType.Cycle)
