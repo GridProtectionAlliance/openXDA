@@ -35,6 +35,8 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CurveFit.cs" />
+    <Compile Include="WaveFit.cs" />
     <Compile Include="XDAFunctions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
