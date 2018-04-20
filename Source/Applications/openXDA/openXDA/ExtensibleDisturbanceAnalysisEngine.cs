@@ -998,7 +998,6 @@ namespace openXDA
 
             try
             {
-
                 // Get the list of data files in the file group
                 using (AdoDataConnection connection = CreateDbConnection(systemSettings))
                 {
@@ -1014,13 +1013,14 @@ namespace openXDA
 
                     // Determine which meter the file is associated with
                     meterKey = meterTable.QueryRecordWhere("ID = {0}", meterId).AssetKey;
-
                 }
 
                 // Get the first file that matches the file processor's filter
+                string[] filters = m_fileProcessor.Filter.Split(Path.PathSeparator);
+
                 filePath = fileGroup.DataFiles
                     .Select(dataFile => dataFile.FilePath)
-                    .FirstOrDefault(dataFile => m_fileProcessor.Filter.Contains(new FileInfo(dataFile).Extension));
+                    .FirstOrDefault(dataFile => FilePath.IsFilePatternMatch(filters, dataFile, true));
 
                 if ((object)filePath == null)
                     throw new InvalidOperationException("There are no files in the file group that match the file processor's filter.");
@@ -1032,68 +1032,68 @@ namespace openXDA
                 return;
             }
 
-
             GetThread(meterKey).Push(RequeuePriority, () =>
+            {
+                if (m_stopped || m_disposed)
+                    return;
+
+                DateTime maxFileCreationTime = fileGroup.DataFiles.Max(dataFile => dataFile.CreationTime);
+                FileWrapper fileWrapper = new FileWrapper(filePath, maxFileCreationTime);
+                string tempFolderPath = Path.Combine(Path.GetTempPath(), "openXDA", "Reprocessor", meterKey);
+
+                fileGroup.ProcessingEndTime = DateTime.MinValue;
+
+                using (AdoDataConnection connection = CreateDbConnection(systemSettings))
                 {
-                    if (m_stopped || m_disposed)
-                        return;
-
-                    DateTime maxFileCreationTime = fileGroup.DataFiles.Max(dataFile => dataFile.CreationTime);
-                    FileWrapper fileWrapper = new FileWrapper(filePath, maxFileCreationTime);
-                    string tempFolderPath = Path.Combine(Path.GetTempPath(), "openXDA", "Reprocessor", meterKey);
-
-                    fileGroup.ProcessingEndTime = DateTime.MinValue;
-
-                    using (AdoDataConnection connection = CreateDbConnection(systemSettings))
-                    {
                     // If the data files don't exist at their original location,
                     // write them out to a temp directory so they can be processed
                     if (fileGroup.DataFiles.Any(dataFile => !File.Exists(dataFile.FilePath)))
+                    {
+                        string fileName = Path.GetFileName(filePath);
+                        string tempFilePath = Path.Combine(tempFolderPath, fileName);
+                        Directory.CreateDirectory(tempFolderPath);
+
+                        foreach (DataFile dataFile in fileGroup.DataFiles)
                         {
-                            string fileName = Path.GetFileName(filePath);
-                            string tempFilePath = Path.Combine(tempFolderPath, fileName);
-                            Directory.CreateDirectory(tempFolderPath);
-
-                            foreach (DataFile dataFile in fileGroup.DataFiles)
-                            {
-                                byte[] dataFileBlob = connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
-                                string dataFileName = Path.GetFileName(dataFile.FilePath);
-                                string tempDataFilePath = Path.Combine(tempFolderPath, dataFileName);
-                                File.WriteAllBytes(tempDataFilePath, dataFileBlob);
-                            }
-
-                            filePath = tempFilePath;
+                            byte[] dataFileBlob = connection.ExecuteScalar<byte[]>("SELECT Blob FROM FileBlob WHERE DataFileID = {0}", dataFile.ID);
+                            string dataFileName = Path.GetFileName(dataFile.FilePath);
+                            string tempDataFilePath = Path.Combine(tempFolderPath, dataFileName);
+                            File.WriteAllBytes(tempDataFilePath, dataFileBlob);
                         }
+
+                        filePath = tempFilePath;
                     }
+                }
+
                 Action<DataProcessorState> processFileCallback = state =>
                 {
                     try
                     {
-                        // Set up thread state for logging and reporting
-                        ThreadContext.Properties["Meter"] = state.MeterKey;
+                    // Set up thread state for logging and reporting
+                    ThreadContext.Properties["Meter"] = state.MeterKey;
                         m_activeFiles[state.MeterKey] = state.FilePath;
 
-                        // Sets the processing start time of the file group
-                        BeginProcessing(state);
+                    // Sets the processing start time of the file group
+                    BeginProcessing(state);
 
-                        // Create the appropriate data reader
-                        // and use it to parse the file
-                        ReadFile(state);
+                    // Create the appropriate data reader
+                    // and use it to parse the file
+                    ReadFile(state);
 
                         if (state.Retry)
                             return;
 
-                        // Process the data that was parsed from the file
-                        ProcessFile(state);
+                    // Process the data that was parsed from the file
+                    ProcessFile(state);
 
-                        // Set the processing end time of the file
-                        // group and save it to the database
-                        CompleteProcessing(state);
+                    // Set the processing end time of the file
+                    // group and save it to the database
+                    CompleteProcessing(state);
                     }
                     finally
                     {
-                        // Restore thread state for logging and reporting
-                        string removedFilePath;
+                    // Restore thread state for logging and reporting
+                    string removedFilePath;
                         m_activeFiles.TryRemove(state.MeterKey, out removedFilePath);
                         ThreadContext.Properties.Remove("Meter");
                     }
@@ -1101,10 +1101,10 @@ namespace openXDA
 
                 Action<DataProcessorState> processFailureCallback = state =>
                 {
-                    // Set the error flag on the file group,
-                    // then set the processing end time
-                    // and save the file group to the database
-                    state.FileGroup.Error = 1;
+                // Set the error flag on the file group,
+                // then set the processing end time
+                // and save the file group to the database
+                state.FileGroup.Error = 1;
                     CompleteProcessing(state);
                 };
 
