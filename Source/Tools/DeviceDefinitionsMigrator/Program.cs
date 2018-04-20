@@ -23,11 +23,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
-using FaultData.Database;
 using GSF.Collections;
+using GSF.Data;
+using GSF.Data.Model;
+using openXDA.Model;
 
 namespace DeviceDefinitionsMigrator
 {
@@ -162,9 +165,6 @@ namespace DeviceDefinitionsMigrator
 
         private class LookupTables
         {
-            private MeterInfoDataContext m_meterInfo;
-            private FaultLocationInfoDataContext m_faultLocationInfo;
-
             public Dictionary<string, Meter> MeterLookup;
             public Dictionary<string, Line> LineLookup;
             public Dictionary<string, MeterLocation> MeterLocationLookup;
@@ -178,142 +178,46 @@ namespace DeviceDefinitionsMigrator
             public Dictionary<Line, LineImpedance> LineImpedanceLookup;
             public Dictionary<MeterLocationLine, SourceImpedance> SourceImpedanceLookup;
 
-            public LookupTables(MeterInfoDataContext meterInfo, FaultLocationInfoDataContext faultLocationInfo)
-            {
-                m_meterInfo = meterInfo;
-                m_faultLocationInfo = faultLocationInfo;
-            }
-
-            public void CreateLookups(XDocument document)
+            public void CreateLookups(XDocument document, AdoDataConnection connection)
             {
                 List<XElement> deviceElements = document.Elements().Elements("device").ToList();
                 List<XElement> lineElements = deviceElements.Elements("lines").Elements("line").ToList();
 
-                MeterLookup = GetMeterLookup(deviceElements, m_meterInfo);
-                LineLookup = GetLineLookup(lineElements, m_meterInfo);
-                MeterLocationLookup = GetMeterLocationLookup(deviceElements, lineElements, m_meterInfo);
-                MeterLineLookup = GetMeterLineLookup(MeterLookup.Values, LineLookup.Values, m_meterInfo);
-                MeterLocationLineLookup = GetMeterLocationLineLookup(MeterLocationLookup.Values, LineLookup.Values, m_meterInfo);
-                MeasurementTypeLookup = GetMeasurementTypeLookup(m_meterInfo);
-                MeasurementCharacteristicLookup = GetMeasurementCharacteristicLookup(m_meterInfo);
-                PhaseLookup = GetPhaseLookup(m_meterInfo);
-                SeriesTypeLookup = GetSeriesTypeLookup(m_meterInfo);
+                MeterLookup = (new TableOperations<Meter>(connection)).QueryRecords().ToDictionary(meter => meter.AssetKey, StringComparer.OrdinalIgnoreCase);
+                LineLookup = (new TableOperations<Line>(connection)).QueryRecords().ToDictionary(line => line.AssetKey, StringComparer.OrdinalIgnoreCase);
+                MeterLocationLookup = (new TableOperations<MeterLocation>(connection)).QueryRecords().ToDictionary(meterLocation => meterLocation.AssetKey, StringComparer.OrdinalIgnoreCase);
+                MeterLineLookup = (new TableOperations<MeterLine>(connection)).QueryRecords().ToDictionary(meterLocation => Tuple.Create(MeterLookup.Values.Where(meter => meter.ID == meterLocation.MeterID).First().AssetKey, LineLookup.Values.Where(line => line.ID == meterLocation.LineID).First().AssetKey));
+                MeterLocationLineLookup = (new TableOperations<MeterLocationLine>(connection)).QueryRecords().ToDictionary(meterLocationLine => Tuple.Create(MeterLocationLookup.Values.Where(meterLocation => meterLocation.ID == meterLocationLine.MeterLocationID).First().AssetKey, LineLookup.Values.Where(line => line.ID == meterLocationLine.LineID).First().AssetKey));
+                MeasurementTypeLookup = (new TableOperations<MeasurementType>(connection)).QueryRecords().ToDictionary(measurementType => measurementType.Name, StringComparer.OrdinalIgnoreCase);
+                MeasurementCharacteristicLookup = (new TableOperations<MeasurementCharacteristic>(connection)).QueryRecords().ToDictionary(measurementCharacteristic => measurementCharacteristic.Name, StringComparer.OrdinalIgnoreCase);
+                PhaseLookup = (new TableOperations<Phase>(connection)).QueryRecords().ToDictionary(phase => phase.Name, StringComparer.OrdinalIgnoreCase);
+                SeriesTypeLookup = (new TableOperations<SeriesType>(connection)).QueryRecords().ToDictionary(seriesType => seriesType.Name, StringComparer.OrdinalIgnoreCase);
 
-                LineImpedanceLookup = GetLineImpedanceLookup(LineLookup.Values, m_faultLocationInfo);
-                SourceImpedanceLookup = GetSourceImpedanceLookup(MeterLocationLineLookup.Values, m_faultLocationInfo);
+                LineImpedanceLookup = GetLineImpedanceLookup(LineLookup.Values, connection);
+                SourceImpedanceLookup = GetSourceImpedanceLookup(MeterLocationLineLookup.Values, connection);
             }
 
-            public Dictionary<string, Tuple<Series, OutputChannel>> GetChannelLookup(Meter meter, Line line)
+            public Dictionary<string, Tuple<Series, OutputChannel>> GetChannelLookup(Meter meter, Line line, AdoDataConnection connection)
             {
+                meter.ConnectionFactory = () => new AdoDataConnection(connection.Connection, typeof(SqlDataAdapter), false);
+
                 return meter.Channels
                     .Where(channel => channel.LineID == line.ID)
                     .SelectMany(channel => channel.Series)
-                    .Join(m_faultLocationInfo.OutputChannels, series => series.ID, outputChannel => outputChannel.SeriesID, Tuple.Create)
+                    .Join((new TableOperations<OutputChannel>(connection)).QueryRecords(), series => series.ID, outputChannel => outputChannel.SeriesID, Tuple.Create)
                     .ToDictionary(tuple => tuple.Item2.ChannelKey, StringComparer.OrdinalIgnoreCase);
             }
 
-            private Dictionary<string, Meter> GetMeterLookup(List<XElement> deviceElements, MeterInfoDataContext meterInfo)
+            private Dictionary<Line, LineImpedance> GetLineImpedanceLookup(IEnumerable<Line> lines, AdoDataConnection connection)
             {
-                List<string> deviceIDs = deviceElements
-                    .Select(deviceElement => (string)deviceElement.Attribute("id"))
-                    .Where(id => (object)id != null)
-                    .Distinct()
-                    .ToList();
-
-                return meterInfo.Meters
-                    .Where(meter => deviceIDs.Contains(meter.AssetKey))
-                    .ToDictionary(meter => meter.AssetKey, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<string, Line> GetLineLookup(List<XElement> lineElements, MeterInfoDataContext meterInfo)
-            {
-                List<string> lineIDs = lineElements
-                    .Select(lineElement => (string)lineElement.Attribute("id"))
-                    .Where(id => (object)id != null)
-                    .Distinct()
-                    .ToList();
-
-                return meterInfo.Lines
-                    .Where(line => lineIDs.Contains(line.AssetKey))
-                    .ToDictionary(line => line.AssetKey, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<string, MeterLocation> GetMeterLocationLookup(List<XElement> deviceElements, List<XElement> lineElements, MeterInfoDataContext meterInfo)
-            {
-                List<string> meterLocationIDs = deviceElements
-                    .Select(deviceElement => deviceElement.Element("attributes") ?? new XElement("attributes"))
-                    .Select(deviceAttributes => (string)deviceAttributes.Element("stationID"))
-                    .Concat(lineElements.Select(lineElement => (string)lineElement.Element("endStationID")))
-                    .Distinct()
-                    .ToList();
-
-                return meterInfo.MeterLocations
-                    .Where(meterLocation => meterLocationIDs.Contains(meterLocation.AssetKey))
-                    .ToDictionary(meterLocation => meterLocation.AssetKey, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<Tuple<string, string>, MeterLine> GetMeterLineLookup(IEnumerable<Meter> meters, IEnumerable<Line> lines, MeterInfoDataContext meterInfo)
-            {
-                List<int> meterIDs = meters
-                    .Select(meter => meter.ID)
-                    .ToList();
-
-                List<int> lineIDs = lines
-                    .Select(line => line.ID)
-                    .ToList();
-
-                return meterInfo.MeterLines
-                    .Where(meterLine => meterIDs.Contains(meterLine.MeterID))
-                    .Where(meterLine => lineIDs.Contains(meterLine.LineID))
-                    .ToDictionary(meterLine => Tuple.Create(meterLine.Meter.AssetKey, meterLine.Line.AssetKey), TupleIgnoreCase.Default);
-            }
-
-            private Dictionary<Tuple<string, string>, MeterLocationLine> GetMeterLocationLineLookup(IEnumerable<MeterLocation> meterLocations, IEnumerable<Line> lines, MeterInfoDataContext meterInfo)
-            {
-                List<int> meterLocationIDs = meterLocations
-                    .Select(meterLocation => meterLocation.ID)
-                    .ToList();
-
-                List<int> lineIDs = lines
-                    .Select(line => line.ID)
-                    .ToList();
-
-                return meterInfo.MeterLocationLines
-                    .Where(meterLocationLine => meterLocationIDs.Contains(meterLocationLine.MeterLocationID))
-                    .Where(meterLocationLine => lineIDs.Contains(meterLocationLine.LineID))
-                    .ToDictionary(meterLocationLine => Tuple.Create(meterLocationLine.MeterLocation.AssetKey, meterLocationLine.Line.AssetKey), TupleIgnoreCase.Default);
-            }
-
-            private Dictionary<string, MeasurementType> GetMeasurementTypeLookup(MeterInfoDataContext meterInfo)
-            {
-                return meterInfo.MeasurementTypes.ToDictionary(measurementType => measurementType.Name, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<string, MeasurementCharacteristic> GetMeasurementCharacteristicLookup(MeterInfoDataContext meterInfo)
-            {
-                return meterInfo.MeasurementCharacteristics.ToDictionary(measurementCharacteristic => measurementCharacteristic.Name, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<string, Phase> GetPhaseLookup(MeterInfoDataContext meterInfo)
-            {
-                return meterInfo.Phases.ToDictionary(phase => phase.Name, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<string, SeriesType> GetSeriesTypeLookup(MeterInfoDataContext meterInfo)
-            {
-                return meterInfo.SeriesTypes.ToDictionary(seriesType => seriesType.Name, StringComparer.OrdinalIgnoreCase);
-            }
-
-            private Dictionary<Line, LineImpedance> GetLineImpedanceLookup(IEnumerable<Line> lines, FaultLocationInfoDataContext faultLocationInfo)
-            {
-                return faultLocationInfo.LineImpedances
+                return (new TableOperations<LineImpedance>(connection)).QueryRecords()
                     .Join(lines, impedance => impedance.LineID, line => line.ID, Tuple.Create)
                     .ToDictionary(tuple => tuple.Item2, tuple => tuple.Item1);
             }
 
-            private Dictionary<MeterLocationLine, SourceImpedance> GetSourceImpedanceLookup(IEnumerable<MeterLocationLine> meterLocationLines, FaultLocationInfoDataContext faultLocationInfo)
+            private Dictionary<MeterLocationLine, SourceImpedance> GetSourceImpedanceLookup(IEnumerable<MeterLocationLine> meterLocationLines, AdoDataConnection connection)
             {
-                return faultLocationInfo.SourceImpedances
+                return (new TableOperations<SourceImpedance>(connection)).QueryRecords()
                     .Join(meterLocationLines, impedance => impedance.MeterLocationLineID, meterLocationLine => meterLocationLine.ID, Tuple.Create)
                     .ToDictionary(tuple => tuple.Item2, tuple => tuple.Item1);
             }
@@ -354,22 +258,19 @@ namespace DeviceDefinitionsMigrator
 
             ProgressTracker progressTracker = new ProgressTracker(deviceElements.Count);
 
-            using (MeterInfoDataContext meterInfo = new MeterInfoDataContext(connectionString))
-            using (FaultLocationInfoDataContext faultLocationInfo = new FaultLocationInfoDataContext(connectionString))
+            using (AdoDataConnection connection = new AdoDataConnection(connectionString, "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter"))
             {
                 // Load existing fault location configuration from the database
                 progressTracker.StartPendingMessage("Loading existing fault location configuration from database...");
-                lookupTables = new LookupTables(meterInfo, faultLocationInfo);
-                lookupTables.CreateLookups(document);
+                lookupTables = new LookupTables();
+                lookupTables.CreateLookups(document, connection);
                 progressTracker.EndPendingMessage();
 
                 // Load updates to fault location algorithms into the database
                 progressTracker.StartPendingMessage("Loading updates to fault location algorithms into the database...");
 
                 foreach (XElement analyticsElement in document.Elements().Elements("analytics"))
-                    LoadFaultLocationAlgorithms(analyticsElement, faultLocationInfo);
-
-                faultLocationInfo.SubmitChanges();
+                    LoadFaultLocationAlgorithms(analyticsElement, connection);
 
                 progressTracker.EndPendingMessage();
 
@@ -387,14 +288,14 @@ namespace DeviceDefinitionsMigrator
 
                     // Attempt to find existing configuration for this device and update the meter with any changes to the device's attributes
                     meter = lookupTables.MeterLookup.GetOrAdd((string)deviceElement.Attribute("id"), assetKey => new Meter() { AssetKey = assetKey });
-                    LoadMeterAttributes(meter, deviceAttributes);
+                    LoadMeterAttributes(meter, deviceAttributes, lookupTables, connection);
 
                     // Now that we know what meter we are processing, display a message to indicate that we are parsing this meter's configuration
                     progressTracker.StartPendingMessage(string.Format("Loading configuration for meter {0} ({1})...", meter.Name, meter.AssetKey));
 
                     // Attempt to find existing configuration for the location of the meter and update with configuration changes
                     meterLocation = lookupTables.MeterLocationLookup.GetOrAdd((string)deviceAttributes.Element("stationID"), assetKey => new MeterLocation() { AssetKey = assetKey });
-                    LoadMeterLocationAttributes(meterLocation, deviceAttributes);
+                    LoadMeterLocationAttributes(meterLocation, deviceAttributes, lookupTables, connection);
 
                     // Link the meter location to the meter
                     meter.MeterLocation = meterLocation;
@@ -404,7 +305,7 @@ namespace DeviceDefinitionsMigrator
                     {
                         // Attempt to find existing configuration for the line and update with configuration changes
                         line = lookupTables.LineLookup.GetOrAdd((string)lineElement.Attribute("id"), assetKey => new Line() { AssetKey = assetKey });
-                        LoadLineAttributes(line, lineElement);
+                        LoadLineAttributes(line, lineElement, lookupTables, connection);
 
                         // Provide a link between this line and the location housing the meter
                         Link(meter, line, lineElement, lookupTables.MeterLineLookup);
@@ -414,7 +315,7 @@ namespace DeviceDefinitionsMigrator
                         {
                             // Attempt to find existing configuration for the location of the other end of the line and update with configuration changes
                             remoteMeterLocation = lookupTables.MeterLocationLookup.GetOrAdd((string)lineElement.Element("endStationID"), assetKey => new MeterLocation() { AssetKey = assetKey });
-                            LoadRemoteMeterLocationAttributes(remoteMeterLocation, lineElement);
+                            LoadRemoteMeterLocationAttributes(remoteMeterLocation, lineElement, lookupTables, connection);
 
                             // Provide a link between this line and the remote location
                             remoteLink = Link(remoteMeterLocation, line, lookupTables.MeterLocationLineLookup);
@@ -428,7 +329,7 @@ namespace DeviceDefinitionsMigrator
                         }
 
                         // Get a lookup table for the channels monitoring this line
-                        channelLookup = lookupTables.GetChannelLookup(meter, line);
+                        channelLookup = lookupTables.GetChannelLookup(meter, line, connection);
                         outputChannelIndex = 0;
 
                         foreach (XElement channelElement in lineElement.Elements("channels").Elements())
@@ -452,8 +353,8 @@ namespace DeviceDefinitionsMigrator
                             }
 
                             // Load updates to channel configuration into the database
-                            LoadChannelAttributes(meter, line, remoteMeterLocation, channel, channelKey, lookupTables);
-                            LoadSeriesAttributes(channel, series, channelElement, lookupTables);
+                            LoadChannelAttributes(meter, line, remoteMeterLocation, channel, channelKey, lookupTables, connection);
+                            LoadSeriesAttributes(channel, series, channelElement, lookupTables, connection);
 
                             outputChannel.ChannelKey = channelKey;
                             outputChannel.LoadOrder = outputChannelIndex;
@@ -483,11 +384,6 @@ namespace DeviceDefinitionsMigrator
                         }
                     }
 
-                    if (meter.ID == 0)
-                        meterInfo.Meters.InsertOnSubmit(meter);
-
-                    meterInfo.SubmitChanges();
-
                     // Load updates to line impedance configuration into the database
                     foreach (Tuple<Line, LineImpedance> mapping in lineImpedances)
                     {
@@ -496,7 +392,7 @@ namespace DeviceDefinitionsMigrator
                         lineImpedance.LineID = line.ID;
 
                         if (lineImpedance.ID == 0 && (lineImpedance.R0 != 0.0D || lineImpedance.X0 != 0.0D || lineImpedance.R1 != 0.0D || lineImpedance.X1 != 0.0D))
-                            faultLocationInfo.LineImpedances.InsertOnSubmit(lineImpedance);
+                            (new TableOperations<LineImpedance>(connection)).AddNewOrUpdateRecord(lineImpedance);
                     }
 
                     // Load updates to source impedance configuration into the database
@@ -507,7 +403,7 @@ namespace DeviceDefinitionsMigrator
                         localSourceImpedance.MeterLocationLineID = localLink.ID;
 
                         if (localSourceImpedance.ID == 0 && (localSourceImpedance.RSrc != 0.0D || localSourceImpedance.XSrc != 0.0D))
-                            faultLocationInfo.SourceImpedances.InsertOnSubmit(localSourceImpedance);
+                            (new TableOperations<SourceImpedance>(connection)).AddNewOrUpdateRecord(localSourceImpedance);
                     }
 
                     // Load updates to source impedance configuration into the database
@@ -518,10 +414,8 @@ namespace DeviceDefinitionsMigrator
                         outputChannel.SeriesID = series.ID;
 
                         if (outputChannel.ID == 0)
-                            faultLocationInfo.OutputChannels.InsertOnSubmit(outputChannel);
+                            (new TableOperations<OutputChannel>(connection)).AddNewOrUpdateRecord(outputChannel);
                     }
-
-                    faultLocationInfo.SubmitChanges();
 
                     progressTracker.EndPendingMessage();
 
@@ -531,20 +425,29 @@ namespace DeviceDefinitionsMigrator
             }
         }
 
-        private static void LoadFaultLocationAlgorithms(XElement analyticsElement, FaultLocationInfoDataContext faultLocationInfo)
+        private static void LoadFaultLocationAlgorithms(XElement analyticsElement, AdoDataConnection connection)
         {
-            List<FaultLocationAlgorithm> oldFaultLocationAlgorithms = faultLocationInfo.FaultLocationAlgorithms.ToList();
+            List<FaultLocationAlgorithm> oldFaultLocationAlgorithms = (new TableOperations<FaultLocationAlgorithm>(connection)).QueryRecords().ToList();
 
             List<FaultLocationAlgorithm> newFaultLocationAlgorithms = analyticsElement
                 .Elements("faultLocation")
                 .Select(ToFaultLocationAlgorithm)
                 .ToList();
 
-            faultLocationInfo.FaultLocationAlgorithms.InsertAllOnSubmit(newFaultLocationAlgorithms
-                .Where(algorithm1 => !oldFaultLocationAlgorithms.Any(algorithm2 => IsMatch(algorithm1, algorithm2))));
+            foreach (FaultLocationAlgorithm newAlg in newFaultLocationAlgorithms)
+            {
+                if (oldFaultLocationAlgorithms.Any(oldAlg => IsMatch(oldAlg, newAlg)))
+                {
+                    FaultLocationAlgorithm oldAlgRecord = oldFaultLocationAlgorithms.Find(oldAlg => IsMatch(oldAlg, newAlg));
+                    oldAlgRecord.ExecutionOrder = newAlg.ExecutionOrder;
+                    (new TableOperations<FaultLocationAlgorithm>(connection)).UpdateRecord(oldAlgRecord);
+                }
+                else
+                {
+                    (new TableOperations<FaultLocationAlgorithm>(connection)).AddNewRecord(newAlg);
+                }
 
-            faultLocationInfo.FaultLocationAlgorithms.DeleteAllOnSubmit(oldFaultLocationAlgorithms
-                .Where(algorithm1 => !newFaultLocationAlgorithms.Any(algorithm2 => IsMatch(algorithm1, algorithm2))));
+            }
         }
 
         private static FaultLocationAlgorithm ToFaultLocationAlgorithm(XElement faultLocationElement)
@@ -571,7 +474,7 @@ namespace DeviceDefinitionsMigrator
                 && algorithm1.MethodName == algorithm2.MethodName;
         }
 
-        private static void LoadMeterAttributes(Meter meter, XElement deviceAttributes)
+        private static void LoadMeterAttributes(Meter meter, XElement deviceAttributes, LookupTables lookupTables, AdoDataConnection connection)
         {
             string meterName = (string)deviceAttributes.Element("name")
                 ?? (string)deviceAttributes.Parent?.Attribute("id")
@@ -585,9 +488,22 @@ namespace DeviceDefinitionsMigrator
 
             meter.Make = (string)deviceAttributes.Element("make") ?? string.Empty;
             meter.Model = (string)deviceAttributes.Element("model") ?? string.Empty;
+
+            if (lookupTables.MeterLookup.ContainsKey(meter.AssetKey))
+            {
+                meter.ID = lookupTables.MeterLookup[meter.AssetKey].ID;
+                (new TableOperations<Meter>(connection)).UpdateRecord(meter);
+            }
+            else
+            {
+                (new TableOperations<Meter>(connection)).AddNewRecord(meter);
+                meter.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.MeterLookup.Add(meter.AssetKey, meter);
+            }
+
         }
 
-        private static void LoadMeterLocationAttributes(MeterLocation meterLocation, XElement deviceAttributes)
+        private static void LoadMeterLocationAttributes(MeterLocation meterLocation, XElement deviceAttributes, LookupTables lookupTables, AdoDataConnection connection)
         {
             string meterLocationName = (string)deviceAttributes.Element("stationName");
             string latitude = (string)deviceAttributes.Element("stationLatitude");
@@ -604,9 +520,22 @@ namespace DeviceDefinitionsMigrator
 
             if ((object)longitude != null)
                 meterLocation.Longitude = Convert.ToDouble(longitude);
+
+            if (lookupTables.MeterLocationLookup.ContainsKey(meterLocation.AssetKey))
+            {
+                meterLocation.ID = lookupTables.MeterLocationLookup[meterLocation.AssetKey].ID;
+                (new TableOperations<MeterLocation>(connection)).UpdateRecord(meterLocation);
+            }
+            else
+            {
+                (new TableOperations<MeterLocation>(connection)).AddNewRecord(meterLocation);
+                meterLocation.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.MeterLocationLookup.Add(meterLocation.AssetKey, meterLocation);
+            }
+
         }
 
-        private static void LoadRemoteMeterLocationAttributes(MeterLocation meterLocation, XElement lineElement)
+        private static void LoadRemoteMeterLocationAttributes(MeterLocation meterLocation, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
         {
             string meterLocationName = (string)lineElement.Element("endStationName");
             string latitude = (string)lineElement.Element("endStationLatitude");
@@ -623,13 +552,38 @@ namespace DeviceDefinitionsMigrator
 
             if ((object)longitude != null)
                 meterLocation.Longitude = Convert.ToDouble(longitude);
+
+            if (lookupTables.MeterLocationLookup.ContainsKey(meterLocation.AssetKey))
+            {
+                meterLocation.ID = lookupTables.MeterLocationLookup[meterLocation.AssetKey].ID;
+                (new TableOperations<MeterLocation>(connection)).UpdateRecord(meterLocation);
+            }
+            else
+            {
+                (new TableOperations<MeterLocation>(connection)).AddNewRecord(meterLocation);
+                meterLocation.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.MeterLocationLookup.Add(meterLocation.AssetKey, meterLocation);
+            }
         }
 
-        private static void LoadLineAttributes(Line line, XElement lineElement)
+        private static void LoadLineAttributes(Line line, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
         {
             line.VoltageKV = Convert.ToDouble((string)lineElement.Element("voltage"));
             line.ThermalRating = Convert.ToDouble((string)lineElement.Element("rating50F") ?? "0.0");
             line.Length = Convert.ToDouble((string)lineElement.Element("length") ?? "0");
+
+            if (lookupTables.LineLookup.ContainsKey(line.AssetKey))
+            {
+                line.ID = lookupTables.LineLookup[line.AssetKey].ID;
+                (new TableOperations<Line>(connection)).UpdateRecord(line);
+            }
+            else
+            {
+                (new TableOperations<Line>(connection)).AddNewRecord(line);
+                line.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.LineLookup.Add(line.AssetKey, line);
+            }
+
         }
 
         private static MeterLine Link(Meter meter, Line line, XElement lineElement, Dictionary<Tuple<string, string>, MeterLine> meterLineLookup)
@@ -671,7 +625,7 @@ namespace DeviceDefinitionsMigrator
             return meterLocationLine;
         }
 
-        private static void LoadChannelAttributes(Meter meter, Line line, MeterLocation remoteMeterLocation, Channel channel, string channelKey, LookupTables lookupTables)
+        private static void LoadChannelAttributes(Meter meter, Line line, MeterLocation remoteMeterLocation, Channel channel, string channelKey, LookupTables lookupTables, AdoDataConnection connection)
         {
             if ((object)remoteMeterLocation != null)
                 channel.Name = string.Format("{0}({1}) {2}", remoteMeterLocation.Name, line.AssetKey, channelKey);
@@ -679,19 +633,24 @@ namespace DeviceDefinitionsMigrator
                 channel.Name = string.Format("({0}) {1}", line.AssetKey, channelKey);
 
             channel.HarmonicGroup = 0;
-            channel.MeasurementType = lookupTables.MeasurementTypeLookup.GetOrAdd(GetMeasurementTypeName(channelKey), name => new MeasurementType() { Name = name, Description = name });
-            channel.MeasurementCharacteristic = lookupTables.MeasurementCharacteristicLookup.GetOrAdd("Instantaneous", name => new MeasurementCharacteristic() { Name = name, Description = name });
-            channel.Phase = lookupTables.PhaseLookup.GetOrAdd(GetPhaseName(channelKey), name => new Phase() { Name = name, Description = name });
+            channel.MeasurementTypeID = GetOrAddMeasurementType(GetMeasurementTypeName(channelKey), lookupTables, connection);
+            channel.MeasurementCharacteristicID = GetOrAddMeasurementCharacteristic("Instantaneous", lookupTables, connection);
+            channel.PhaseID = GetOrAddPhase(GetPhaseName(channelKey), lookupTables, connection);
 
-            channel.Meter = meter;
-            channel.Line = line;
+            channel.MeterID = meter.ID;
+            channel.LineID = line.ID;
+            (new TableOperations<Channel>(connection)).AddNewOrUpdateRecord(channel);
+            channel.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+
         }
 
-        private static void LoadSeriesAttributes(Channel channel, Series series, XElement channelElement, LookupTables lookupTables)
+        private static void LoadSeriesAttributes(Channel channel, Series series, XElement channelElement, LookupTables lookupTables, AdoDataConnection connection)
         {
             series.SeriesType = lookupTables.SeriesTypeLookup.GetOrAdd("Values", name => new SeriesType() { Name = name, Description = name });
             series.Channel = channel;
             series.SourceIndexes = (string)channelElement ?? string.Empty;
+            (new TableOperations<Series>(connection)).AddNewOrUpdateRecord(series);
+
         }
 
         private static void LoadLineImpedanceAttributes(LineImpedance lineImpedance, XElement impedancesElement)
@@ -779,5 +738,57 @@ namespace DeviceDefinitionsMigrator
             { "IN", "NG" },
             { "IG", "NG" }
         };
+
+        private static int GetOrAddSeriesType(LookupTables lookupTables, AdoDataConnection connection)
+        {
+            if (lookupTables.SeriesTypeLookup.ContainsKey("Values"))
+                return lookupTables.SeriesTypeLookup["Values"].ID;
+            else
+            {
+                (new TableOperations<SeriesType>(connection)).AddNewRecord(new SeriesType() { Name = "Values", Description = "Values" });
+                int id = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.SeriesTypeLookup.Add("Values", new SeriesType() { ID = id, Name = "Values", Description = "Values" });
+                return id;
+            }
+        }
+
+        private static int GetOrAddMeasurementType(string measurementType, LookupTables lookupTables, AdoDataConnection connection)
+        {
+            if (lookupTables.MeasurementTypeLookup.ContainsKey(measurementType))
+                return lookupTables.MeasurementTypeLookup[measurementType].ID;
+            else
+            {
+                (new TableOperations<MeasurementType>(connection)).AddNewRecord(new MeasurementType() { Name = measurementType, Description = measurementType });
+                int id = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.MeasurementTypeLookup.Add(measurementType, new MeasurementType() { ID = id, Name = measurementType, Description = measurementType });
+                return id;
+            }
+        }
+
+        private static int GetOrAddMeasurementCharacteristic(string measurementCharacteristic, LookupTables lookupTables, AdoDataConnection connection)
+        {
+            if (lookupTables.MeasurementCharacteristicLookup.ContainsKey(measurementCharacteristic))
+                return lookupTables.MeasurementCharacteristicLookup[measurementCharacteristic].ID;
+            else
+            {
+                (new TableOperations<MeasurementCharacteristic>(connection)).AddNewRecord(new MeasurementCharacteristic() { Name = measurementCharacteristic, Description = measurementCharacteristic });
+                int id = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.MeasurementCharacteristicLookup.Add(measurementCharacteristic, new MeasurementCharacteristic() { ID = id, Name = measurementCharacteristic, Description = measurementCharacteristic });
+                return id;
+            }
+        }
+
+        private static int GetOrAddPhase(string phase, LookupTables lookupTables, AdoDataConnection connection)
+        {
+            if (lookupTables.PhaseLookup.ContainsKey(phase))
+                return lookupTables.PhaseLookup[phase].ID;
+            else
+            {
+                (new TableOperations<Phase>(connection)).AddNewRecord(new Phase() { Name = phase, Description = phase });
+                int id = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                lookupTables.PhaseLookup.Add(phase, new Phase() { ID = id, Name = phase, Description = phase });
+                return id;
+            }
+        }
     }
 }

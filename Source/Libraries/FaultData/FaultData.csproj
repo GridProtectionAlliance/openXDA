@@ -94,69 +94,6 @@
     <Compile Include="DataAnalysis\Transform.cs" />
     <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
-    <Compile Include="Database\AlarmData.cs">
-      <DependentUpon>AlarmData.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\AlarmData.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AlarmData.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\BulkLoader.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Database\DataContextLookup.cs" />
-    <Compile Include="Database\DataQuality.cs">
-      <DependentUpon>DataQuality.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\DataQuality.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataQuality.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\DbAdapterContainer.cs" />
-    <Compile Include="Database\FaultLocationData.cs">
-      <DependentUpon>FaultLocationData.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\FaultLocationData.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FaultLocationData.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\FaultLocationInfo.designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FaultLocationInfo.dbml</DependentUpon>
-    </Compile>
-    <Compile Include="Database\FileInfo.designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FileInfo.dbml</DependentUpon>
-    </Compile>
-    <Compile Include="Database\MeterData.cs">
-      <DependentUpon>MeterData.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\MeterData.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MeterData.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Database\MeterInfo.cs">
-      <DependentUpon>MeterInfo.dbml</DependentUpon>
-    </Compile>
-    <Compile Include="Database\MeterInfo.designer.cs">
-      <DependentUpon>MeterInfo.dbml</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Database\SystemInfo.cs">
-      <DependentUpon>SystemInfo.dbml</DependentUpon>
-    </Compile>
-    <Compile Include="Database\SystemInfo.designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SystemInfo.dbml</DependentUpon>
-    </Compile>
     <Compile Include="DataOperations\AlarmOperation.cs" />
     <Compile Include="DataOperations\BreakerTimingOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
@@ -213,88 +150,10 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Database\AlarmData.xsc">
-      <DependentUpon>AlarmData.xsd</DependentUpon>
-    </None>
-    <None Include="Database\AlarmData.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>AlarmData.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Database\AlarmData.xss">
-      <DependentUpon>AlarmData.xsd</DependentUpon>
-    </None>
-    <None Include="Database\DataQuality.xsc">
-      <DependentUpon>DataQuality.xsd</DependentUpon>
-    </None>
-    <None Include="Database\DataQuality.xsd">
-      <SubType>Designer</SubType>
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataQuality.Designer.cs</LastGenOutput>
-    </None>
-    <None Include="Database\DataQuality.xss">
-      <DependentUpon>DataQuality.xsd</DependentUpon>
-    </None>
-    <None Include="Database\FaultLocationData.xsc">
-      <DependentUpon>FaultLocationData.xsd</DependentUpon>
-    </None>
-    <None Include="Database\FaultLocationData.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>FaultLocationData.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Database\FaultLocationData.xss">
-      <DependentUpon>FaultLocationData.xsd</DependentUpon>
-    </None>
-    <None Include="Database\FaultLocationInfo.dbml">
-      <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>FaultLocationInfo.designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Database\FileInfo.dbml">
-      <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>FileInfo.designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Database\MeterData.xsc">
-      <DependentUpon>MeterData.xsd</DependentUpon>
-    </None>
-    <None Include="Database\MeterData.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>MeterData.Designer.cs</LastGenOutput>
-    </None>
-    <None Include="Database\MeterData.xss">
-      <DependentUpon>MeterData.xsd</DependentUpon>
-    </None>
-    <None Include="Database\MeterInfo.dbml">
-      <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>MeterInfo.designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Database\SystemInfo.dbml">
-      <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>SystemInfo.designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Database\FaultLocationInfo.dbml.layout">
-      <DependentUpon>FaultLocationInfo.dbml</DependentUpon>
-    </None>
-    <None Include="Database\FileInfo.dbml.layout">
-      <DependentUpon>FileInfo.dbml</DependentUpon>
-    </None>
-    <None Include="Database\MeterInfo.dbml.layout">
-      <DependentUpon>MeterInfo.dbml</DependentUpon>
-    </None>
-    <None Include="Database\SystemInfo.dbml.layout">
-      <DependentUpon>SystemInfo.dbml</DependentUpon>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -232,18 +232,8 @@ namespace FaultData.DataWriters
 
         private VICycleDataGroup GetVICycleDataGroup()
         {
-            TableOperations<Meter> meterTable = new TableOperations<Meter>(m_connection);
-            TableOperations<Event> eventTable = new TableOperations<Event>(m_connection);
-
-            Event evt = eventTable.QueryRecordWhere("ID = {0}", m_eventID);
-            Meter meter = meterTable.QueryRecordWhere("ID = {0}", evt.MeterID);
-            byte[] frequencyDomainData = m_connection.ExecuteScalar<byte[]>("SELECT FrequencyDomainData FROM EventData WHERE ID = {0}", evt.EventDataID);
-
-            meter.ConnectionFactory = () => new AdoDataConnection(m_connection.Connection, m_connection.AdapterType, false);
-
-            DataGroup dataGroup = new DataGroup();
-            dataGroup.FromData(meter, frequencyDomainData);
-            return new VICycleDataGroup(dataGroup);
+            double frequency = m_connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
+            return Transform.ToVICycleDataGroup(GetVIDataGroup(), frequency);
         }
 
         private Dictionary<string, DataSeries> GetFaultCurveLookup()

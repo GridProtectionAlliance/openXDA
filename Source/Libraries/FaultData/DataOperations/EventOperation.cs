@@ -173,7 +173,6 @@ namespace FaultData.DataOperations
                         FileGroupID = meterDataSet.FileGroup.ID,
                         RunTimeID = i,
                         TimeDomainData = dataGroup.ToData(),
-                        FrequencyDomainData = viCycleDataGroups[i].ToDataGroup().ToData(),
                         MarkedForDeletion = 0
                     };
 
