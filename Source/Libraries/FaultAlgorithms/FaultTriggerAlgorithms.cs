@@ -265,11 +265,6 @@ namespace FaultAlgorithms
             double bnFaultLimit;
             double cnFaultLimit;
 
-            List<int> faultedCycles;
-            bool anFaultCycle;
-            bool bnFaultCycle;
-            bool cnFaultCycle;
-
             // If no cycles exist in the data set, there is no fault
             if (faultDataSet.Cycles.Count <= 0)
                 return false;

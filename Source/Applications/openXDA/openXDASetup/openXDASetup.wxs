@@ -119,6 +119,7 @@
     
     <SetProperty Id="SERVICEACCOUNT" Value="NT SERVICE\[SERVICENAME]" After="LaunchConditions" Sequence="first" />
     <SetProperty Id="DATABASENAME" Value="[SERVICENAME]" After="LaunchConditions" Sequence="first" />
+    <SetProperty Id="UPDATECONFIGFILEMAPPINGS" Value="[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING]" Before="UpdateConfigFileAction.SetProperty" Sequence="execute" />
     
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\openXDASetupBanner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\openXDASetupDialog.bmp" />
@@ -136,7 +137,7 @@
     <CustomAction Id="PasswordGenerationAction" BinaryKey="InstallerActions" DllEntry="PasswordGenerationAction" Execute="immediate" />
     <CustomAction Id="TestDatabaseConnectionAction" BinaryKey="InstallerActions" DllEntry="TestDatabaseConnectionAction" Execute="immediate" />
 
-    <CustomAction Id="UpdateConfigFileAction.SetProperty" Property="UpdateConfigFileAction" Value="FilePath=[#openXDA.exe.config];Mode=WRITE;PropertyMappings=[CONNECTIONSTRINGMAPPING];;[COMPANYNAMEMAPPING];;[COMPANYACRONYMMAPPING];XDACONNECTIONSTRING=[XDACONNECTIONSTRING];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM];SERVICENAME=[SERVICENAME]" />
+    <CustomAction Id="UpdateConfigFileAction.SetProperty" Property="UpdateConfigFileAction" Value="FilePath=[#openXDA.exe.config];Mode=WRITE;PropertyMappings=[UPDATECONFIGFILEMAPPINGS];XDACONNECTIONSTRING=[XDACONNECTIONSTRING];COMPANYNAME=[COMPANYNAME];COMPANYACRONYM=[COMPANYACRONYM];SERVICENAME=[SERVICENAME]" />
     <CustomAction Id="UpdateConfigFileAction" BinaryKey="InstallerActions" DllEntry="XmlFileAction" Execute="deferred" Impersonate="no" />
 
     <CustomAction Id="ConfigureServiceAction.SetProperty" Property="ConfigureServiceAction" Value="SERVICENAME=[SERVICENAME]" />

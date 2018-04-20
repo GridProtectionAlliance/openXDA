@@ -386,7 +386,7 @@ namespace openXDA.Adapters
                         return table.Select().Select(row => dataContext.Table<EventData>().LoadRecord(row)).ToList();
                     }
                 }
-                catch(Exception ex)
+                catch
                 {
                     return null;
                 }
@@ -409,7 +409,7 @@ namespace openXDA.Adapters
                         return table.Select().Select(row => dataContext.Table<EventData>().LoadRecord(row)).ToList();
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     return null;
                 }

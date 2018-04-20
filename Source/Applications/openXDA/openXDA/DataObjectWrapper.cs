@@ -105,21 +105,25 @@ namespace openXDA
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         public void Dispose()
         {
-            IDisposable dataReader;
+            IDisposable dataObject;
 
             if (m_disposed)
                 return;
 
             try
             {
-                dataReader = m_dataObject as IDisposable;
-                dataReader?.Dispose();
+                dataObject = m_dataObject as IDisposable;
+                dataObject?.Dispose();
             }
             catch (Exception ex)
             {
                 Type t = m_dataObject.GetType();
                 string message = $"Exception occurred while disposing {t.FullName}: {ex.Message}";
                 Log.Error(new Exception(message, ex));
+            }
+            finally
+            {
+                m_disposed = true;
             }
         }
 

@@ -205,9 +205,6 @@ namespace FaultData.DataAnalysis
             private string m_algorithm;
             private DataSeries m_series;
 
-            private double? m_average;
-            private double? m_standardDeviation;
-
             #endregion
 
             #region [ Constructors ]

@@ -42,10 +42,6 @@ namespace openXDAFileWatcher.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_dbConnectionString;
-        private string m_dbDataProviderString;
-        private int m_dbTimeout;
-
         private string m_xdaAddress;
         private string m_xdaUsername;
         private SecureString m_xdaPassword;

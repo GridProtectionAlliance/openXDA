@@ -96,7 +96,6 @@ namespace openXDA.Hubs
 
         public SignalCode()
         {
-            int i = 1;
             //Uncomment the following line if using designed components 
             //InitializeComponent(); 
         }

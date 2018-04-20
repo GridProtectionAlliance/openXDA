@@ -144,7 +144,7 @@ namespace FaultAlgorithms
         }
 
         /// <summary>
-        /// Writes all measurement data to a CSV file. 
+        /// Writes all voltage measurement data to a CSV file. 
         /// </summary>
         /// <param name="fileName">Export file name.</param>
         public void ExportVoltageDataToCSV(string fileName)
@@ -174,6 +174,10 @@ namespace FaultAlgorithms
             }
         }
 
+        /// <summary>
+        /// Writes all current measurement data to a CSV file. 
+        /// </summary>
+        /// <param name="fileName">Export file name.</param>
         public void ExportCurrentDataToCSV(string fileName)
         {
             const string Header = "Time,AN,BN,CN";
@@ -228,6 +232,12 @@ namespace FaultAlgorithms
 
         // Static Methods
 
+        /// <summary>
+        /// Writes all measurement data to a CSV file. 
+        /// </summary>
+        /// <param name="fileName">Export file name.</param>
+        /// <param name="voltageData">The voltage measurement data to be written to the file.</param>
+        /// <param name="currentData">The current measurement data to be written to the file.</param>
         public static void ExportToCSV(string fileName, MeasurementDataSet voltageData, MeasurementDataSet currentData)
         {
             const string Header = "Time,AN V,BN V,CN V,AB V,BC V,CA V,AN I,BN I,CN I";

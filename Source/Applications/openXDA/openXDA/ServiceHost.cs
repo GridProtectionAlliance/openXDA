@@ -325,8 +325,6 @@ namespace openXDA
 
             //Set up PQMarkController callbacks
             PQMarkController.ReprocessFilesEvent += (obj, Args) => ReprocessFile(Args.Argument1, Args.Argument2);
-            PQMarkController.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-            PQMarkController.LogStatusMessage += (obj, Args) => DisplayStatusMessage(Args.Argument2, Args.Argument3);
 
             //Set up DataAggregationEngine callbacks
             DataAggregationEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
