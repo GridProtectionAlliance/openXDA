@@ -794,6 +794,8 @@ namespace openXDAFileWatcher
                     }
                 }
 
+                Log.Info($"Pushing file {filePath} into openXDA...");
+
                 FileGroup fileGroup = new FileGroup();
                 fileGroup.FileHash = crc;
                 fileGroup.DataFiles = CreateDataFiles(filePath, systemSettings.XDATimeZoneInfo);
@@ -806,6 +808,8 @@ namespace openXDAFileWatcher
                 idObject.Add("FileGroupID", fileGroup.ID);
                 idObject.Add("MeterID", meter.ID);
                 WebAPIHub.ProcessFileGroup(systemSettings.XDAAddress, JObject.FromObject(idObject), userAccount);
+
+                Log.Info($"Finished pushing file {filePath} into openXDA.");
             }
             catch (FileSkippedException)
             {
