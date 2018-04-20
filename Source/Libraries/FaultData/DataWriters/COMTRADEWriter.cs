@@ -31,7 +31,6 @@ using System.Text;
 using FaultAlgorithms;
 using FaultData.Configuration;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF;

@@ -35,7 +35,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using FaultData.DataAnalysis;
-using FaultData.Database;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.IO;
