@@ -21,6 +21,12 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using GSF;
 using GSF.Configuration;
 using GSF.Net.Security;
@@ -29,12 +35,6 @@ using GSF.Web;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace openXDA.DataPusher
 {
@@ -76,22 +76,21 @@ namespace openXDA.DataPusher
         private static string GenerateAntiForgeryToken(string instance, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.GetAsync("api/PQMark/GenerateRequestVerficationToken").Result;
-                    if (response.IsSuccessStatusCode)
-                        return response.Content.ReadAsStringAsync().Result;
-                    else
-                        return "";
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                }
+                HttpResponseMessage response = client.GetAsync("api/PQMark/GenerateRequestVerficationToken").Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                return response.Content.ReadAsStringAsync().Result;
             }
         }
 
@@ -102,25 +101,23 @@ namespace openXDA.DataPusher
 
         public static dynamic GetRecord(string instance, string tableName, int id, UserAccount userAccount)
         {
-            dynamic record = new object();
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecord/" + tableName + "/" + id).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        record = response.Content.ReadAsAsync<dynamic>();
-                    }
-                    return record.Result.ToObject(typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName));
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                }
+                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecord/" + tableName + "/" + id).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+                return record.Result.ToObject(typeof(Meter).Assembly.GetType("openXDA.Model." + tableName));
             }
         }
 
@@ -131,28 +128,26 @@ namespace openXDA.DataPusher
 
         public static IEnumerable<dynamic> GetRecords(string instance, string tableName, string ids, UserAccount userAccount)
         {
-            dynamic record = new object();
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
-                handler.ServerCertificateValidationCallback += HandleCertificateValidation;               
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecords/" + tableName + "/" + ids).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        record = response.Content.ReadAsAsync<dynamic>();
-                    }
-                    Type type = typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName);
-                    Type listType = typeof(IEnumerable<>).MakeGenericType(type);
-                    return record.Result.ToObject(listType);
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                }
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecords/" + tableName + "/" + ids).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+                Type modelType = typeof(Meter).Assembly.GetType("openXDA.Model." + tableName);
+                Type listType = typeof(IEnumerable<>).MakeGenericType(modelType);
+                return record.Result.ToObject(listType);
             }
-
         }
 
         public dynamic GetRecordsWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
@@ -162,29 +157,26 @@ namespace openXDA.DataPusher
 
         public static IEnumerable<dynamic> GetRecordsWhere(string instance, string tableName, string ids, UserAccount userAccount)
         {
-            dynamic record = new object();
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordsWhere/" + tableName + "/" + ids).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        record = response.Content.ReadAsAsync<dynamic>();
-                    }
 
-                    Type type = typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName);
-                    Type listType = typeof(IEnumerable<>).MakeGenericType(type);
-                    return record.Result.ToObject(listType);
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                }
+                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordsWhere/" + tableName + "/" + ids).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+                Type type = typeof(openXDA.Model.Meter).Assembly.GetType("openXDA.Model." + tableName);
+                Type listType = typeof(IEnumerable<>).MakeGenericType(type);
+                return record.Result.ToObject(listType);
             }
-
         }
 
 
@@ -196,27 +188,24 @@ namespace openXDA.DataPusher
 
         public static IEnumerable<ChannelDetail> GetChannels(string instance, string ids, UserAccount userAccount)
         {
-            dynamic record = new object();
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.GetAsync("api/PQMark/GetChannels/channel/" + ids).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        record = response.Content.ReadAsAsync<dynamic>();
-                    }
 
-                    return record.Result.ToObject(typeof(IEnumerable<ChannelDetail>));
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                }
+                HttpResponseMessage response = client.GetAsync("api/PQMark/GetChannels/channel/" + ids).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+                return record.Result.ToObject(typeof(IEnumerable<ChannelDetail>));
             }
-
         }
 
 
@@ -227,24 +216,22 @@ namespace openXDA.DataPusher
 
         public static HttpResponseMessage UpdateRecord(string instance, string tableName, JObject record, UserAccount userAccount)
         {
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/UpdateRecord/" + tableName, record).Result;
-                    return response;
-                }
+                HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/UpdateRecord/" + tableName, record).Result;
+                return response;
             }
-
         }
 
         public int CreateRecordHub(string instance, string tableName, JObject record, UserAccount userAccount)
@@ -254,29 +241,26 @@ namespace openXDA.DataPusher
 
         public static int CreateRecord(string instance, string tableName, JObject record, UserAccount userAccount)
         {
-            dynamic r = new object();
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateRecord/" + tableName, record).Result;
 
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateRecord/" + tableName, record).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        r = response.Content.ReadAsAsync<dynamic>();
-                    }
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                    return (int)r.Result;
-                }
+                dynamic r = response.Content.ReadAsAsync<dynamic>();
+                return (int)r.Result;
             }
         }
 
@@ -287,29 +271,26 @@ namespace openXDA.DataPusher
 
         public static int CreateChannel(string instance, JObject record, UserAccount userAccount)
         {
-            dynamic r = new object();
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateChannel", record).Result;
 
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateChannel", record).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        r = response.Content.ReadAsAsync<dynamic>();
-                    }
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                    return (int)r.Result;
-                }
+                dynamic r = response.Content.ReadAsAsync<dynamic>();
+                return (int)r.Result;
             }
         }
 
@@ -321,24 +302,21 @@ namespace openXDA.DataPusher
 
         public static HttpResponseMessage ProcessFileGroup(string instance, JObject record, UserAccount userAccount)
         {
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/ProcessFileGroup", record).Result;
-                    return response;
-                }
+                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/ProcessFileGroup", record).Result;
+                return response;
             }
         }
 
@@ -350,35 +328,32 @@ namespace openXDA.DataPusher
 
         public static HttpResponseMessage DeleteRecord(string instance, string tableName, int id, UserAccount userAccount)
         {
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
             using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
             {
                 handler.ServerCertificateValidationCallback += HandleCertificateValidation;
 
-                using (HttpClient client = new HttpClient(handler))
-                {
-                    string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                    client.BaseAddress = new Uri(instance);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
-                    client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-                    HttpResponseMessage response = client.DeleteAsync("api/PQMark/DeleteRecord/" + tableName + "/" + id).Result;
-                    return response;
-                }
+                HttpResponseMessage response = client.DeleteAsync("api/PQMark/DeleteRecord/" + tableName + "/" + id).Result;
+                return response;
             }
         }
 
         private static bool HandleCertificateValidation(Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {           
+        {
             SimpleCertificateChecker simpleCertificateChecker = new SimpleCertificateChecker();
 
             CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-
             systemSettings.Add("CertFile", "", "This is a certfile.");
             systemSettings.Add("ValidPolicyErrors", "None", "Password for PQMarkWeb API access.");
             systemSettings.Add("ValidChainFlags", "NoError", "Password for PQMarkWeb API access.");
-
 
             try
             {
@@ -391,8 +366,9 @@ namespace openXDA.DataPusher
                 OnLogExceptionMessage(ex.ToString());
             }
 
-            return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);            
+            return simpleCertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
         }
+
         #endregion
 
     }
