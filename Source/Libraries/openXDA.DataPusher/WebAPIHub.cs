@@ -21,6 +21,12 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using GSF;
 using GSF.Configuration;
 using GSF.Net.Security;
@@ -29,12 +35,6 @@ using GSF.Web;
 using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace openXDA.DataPusher
 {
