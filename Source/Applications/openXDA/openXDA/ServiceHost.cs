@@ -69,6 +69,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -80,9 +81,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Identity;
 using GSF.IO;
 using GSF.Reflection;
@@ -97,6 +100,7 @@ using log4net.Config;
 using log4net.Layout;
 using Microsoft.Owin.Hosting;
 using openXDA.Adapters;
+using openXDA.Configuration;
 using openXDA.DataPusher;
 using openXDA.Logging;
 using openXDA.Model;
@@ -302,14 +306,19 @@ namespace openXDA
             m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
             m_serviceMonitors.Initialize();
 
+            string systemSettingsConnectionString = LoadSystemSettings();
+
             // Set up the analysis engine
             m_extensibleDisturbanceAnalysisEngine = new ExtensibleDisturbanceAnalysisEngine();
 
             // Set up data pusher engine
-            m_dataPusherEngine = new DataPusherEngine(m_dataPusherSettings);
+            m_dataPusherEngine = new DataPusherEngine();
+            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataPusherEngine);
 
             // Set up data aggregation engine
-            m_dataAggregationEngine = new DataAggregationEngine(m_pqMarkAggregationSettings);
+            m_dataAggregationEngine = new DataAggregationEngine();
+            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataAggregationEngine);
+
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
@@ -1140,6 +1149,35 @@ namespace openXDA
 
         #endregion
 
+
+        // Loads system settings from the database.
+        private string LoadSystemSettings()
+        {
+            using(AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<Setting> settingTable = new TableOperations<Setting>(connection);
+                List<Setting> settingList = settingTable.QueryRecords().ToList();
+
+                foreach (IGrouping<string, Setting> grouping in settingList.GroupBy(setting => setting.Name))
+                {
+                    if (grouping.Count() > 1)
+                        DisplayStatusMessage($"Duplicate record for setting {grouping.Key} detected.", UpdateType.Warning);
+                }
+
+                // Convert the Setting table to a dictionary
+                Dictionary<string, string> settings = settingList
+                    .DistinctBy(setting => setting.Name)
+                    .ToDictionary(setting => setting.Name, setting => setting.Value, StringComparer.OrdinalIgnoreCase);
+
+                // Convert dictionary to a connection string and return it
+                return SystemSettings.ToConnectionString(settings);
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
         #endregion
     }
 }

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using GSF;
@@ -64,13 +65,8 @@ namespace openXDA.DataPusher
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
 
-        public DataPusherSettings DataPusherSettings
-        {
-            get
-            {
-                return m_dataPusherSettings;
-            }
-        }
+        [Category]
+        public DataPusherSettings DataPusherSettings => m_dataPusherSettings;
         #endregion
 
         // Client-side script functionality
