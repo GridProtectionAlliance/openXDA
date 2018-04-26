@@ -81,6 +81,9 @@ namespace FaultData.DataOperations
                     Event evt = eventTable.GetEvent(MeterDataSet.FileGroup, DataGroup);
                     SegmentType faultSegmentType = segmentTypeTable.GetOrAdd("Fault");
 
+                    if ((object)evt == null)
+                        return;
+
                     // Create a fault group row for the whole group of faults
                     if (FaultGroup.FaultDetectionLogicResult != false || FaultGroup.FaultValidationLogicResult != false)
                         faultGroupTable.AddNewRecord(CreateFaultGroup(evt.ID, FaultGroup));

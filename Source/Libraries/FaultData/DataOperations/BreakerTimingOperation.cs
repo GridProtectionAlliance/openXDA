@@ -509,6 +509,9 @@ namespace FaultData.DataOperations
 
             Event evt = eventTable.GetEvent(fileGroup, dataGroup);
 
+            if ((object)evt == null)
+                return;
+
             foreach (string breakerNumber in breakerNumbers)
             {
                 double breakerSpeed = connection.ExecuteScalar(double.NaN, "SELECT Speed FROM Breaker WHERE AssetKey = {0}", breakerNumber.TrimStart('0'));
