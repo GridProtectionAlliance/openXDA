@@ -75,6 +75,7 @@ namespace openXDAFileWatcher
             // m_notifyIcon
             // 
             this.m_notifyIcon.ContextMenuStrip = this.m_contextMenuStrip;
+            this.m_notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("m_notifyIcon.Icon")));
             this.m_notifyIcon.Text = "{0} (Debug Mode)";
             this.m_notifyIcon.Visible = true;
             // 
