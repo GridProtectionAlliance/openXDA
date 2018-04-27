@@ -75,7 +75,6 @@ namespace openXDAFileWatcher
             // m_notifyIcon
             // 
             this.m_notifyIcon.ContextMenuStrip = this.m_contextMenuStrip;
-            this.m_notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("m_notifyIcon.Icon")));
             this.m_notifyIcon.Text = "{0} (Debug Mode)";
             this.m_notifyIcon.Visible = true;
             // 
@@ -116,7 +115,6 @@ namespace openXDAFileWatcher
             this.Controls.Add(this.LabelNotice);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "DebugHost";
             this.Padding = new System.Windows.Forms.Padding(10);
