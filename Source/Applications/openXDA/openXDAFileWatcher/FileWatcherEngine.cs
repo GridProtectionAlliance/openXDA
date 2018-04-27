@@ -723,8 +723,9 @@ namespace openXDAFileWatcher
                 // processed or needs to be processed again
                 if (fileProcessorEventArgs.AlreadyProcessed)
                 {
-                    DataFile remoteDataFile = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "DataFile", $"FilePathHash = {filePath.GetHashCode()} AND FilePath = {filePath}", userAccount)
+                    DataFile remoteDataFile = WebAPIHub.GetRecordsWhere(systemSettings.XDAAddress, "DataFile", $"FilePathHash = {filePath.GetHashCode()}", userAccount)
                         .Cast<DataFile>()
+                        .Where(file => file.FilePath == filePath)
                         .MaxBy(file => file.ID);
 
                     if ((object)remoteDataFile != null)
