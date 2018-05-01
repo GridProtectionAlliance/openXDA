@@ -2084,7 +2084,8 @@ CREATE TABLE EASExtension
 (
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     ServiceName VARCHAR(50) NOT NULL,
-    HasResultFunction VARCHAR(50) NOT NULL
+    HasResultFunction VARCHAR(50) NOT NULL,
+	WebPage VARCHAR(MAX) NOT NULL
 )
 GO
 
