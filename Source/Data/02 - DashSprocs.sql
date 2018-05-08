@@ -484,8 +484,8 @@ FROM
         (
             SELECT Date,
                     CASE
-                        WHEN Completeness >= 100.0 THEN 'First'
-                        WHEN 98.0 <= Completeness AND Completeness < 100.0 THEN 'Second'
+                        WHEN Completeness > 100.0 THEN 'First'
+                        WHEN 98.0 <= Completeness AND Completeness <= 100.0 THEN 'Second'
                         WHEN 90.0 <= Completeness AND Completeness < 98.0 THEN 'Third'
                         WHEN 70.0 <= Completeness AND Completeness < 90.0 THEN 'Fourth'
                         WHEN 50.0 <= Completeness AND Completeness < 70.0 THEN 'Fifth'
@@ -623,8 +623,8 @@ FROM
         (
             SELECT Date,
                     CASE
-                        WHEN Correctness >= 100.0 THEN 'First'
-                        WHEN 98.0 <= Correctness AND Correctness < 100.0 THEN 'Second'
+                        WHEN Correctness > 100.0 THEN 'First'
+                        WHEN 98.0 <= Correctness AND Correctness <= 100.0 THEN 'Second'
                         WHEN 90.0 <= Correctness AND Correctness < 98.0 THEN 'Third'
                         WHEN 70.0 <= Correctness AND Correctness < 90.0 THEN 'Fourth'
                         WHEN 50.0 <= Correctness AND Correctness < 70.0 THEN 'Fifth'
@@ -2109,54 +2109,28 @@ CREATE PROCEDURE [dbo].[selectMeterLocationsCorrectness]
 AS
 BEGIN
     SET NOCOUNT ON;
-
+    
     DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
     DECLARE @endDate DATE = CAST(@EventDateTo AS DATE)
 
-    SELECT
-        Meter.ID,
-        Meter.Name,
-        MeterLocation.Longitude,
-        MeterLocation.Latitude,
-        (
-            SELECT CAST(COALESCE(CAST(SUM(goodPoints) AS FLOAT) / NULLIF(CAST(SUM(expectedPoints) AS FLOAT), 0) * 100 , 0) AS INT)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS Count,
-        (
-            SELECT COALESCE(SUM(MeterDataQualitySummary.ExpectedPoints), 0)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS ExpectedPoints,
-        (
-            SELECT COALESCE(SUM(MeterDataQualitySummary.GoodPoints), 0)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS GoodPoints,
-        (
-            SELECT COALESCE(SUM(MeterDataQualitySummary.LatchedPoints), 0)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS LatchedPoints,
-        (
-            SELECT COALESCE(SUM(MeterDataQualitySummary.UnreasonablePoints), 0)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS UnreasonablePoints,
-        (
-            SELECT COALESCE(SUM(MeterDataQualitySummary.NoncongruentPoints), 0)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS NoncongruentPoints,
-        (
-            SELECT COALESCE(SUM(MeterDataQualitySummary.DuplicatePoints), 0)
-            FROM MeterDataQualitySummary
-            WHERE MeterDataQualitySummary.MeterID = Meter.ID AND [Date] BETWEEN @startDate AND @endDate
-        ) AS DuplicatePoints
+    SELECT 
+        Meter.ID, 
+        Meter.Name, 
+        MeterLocation.Longitude, 
+        MeterLocation.Latitude, 
+		COALESCE(CAST(CAST(SUM(MeterDataQualitySummary.GoodPoints) AS FLOAT) / NULLIF(CAST(SUM(MeterDataQualitySummary.ExpectedPoints) AS FLOAT), 0) * 100 AS INT),0) AS Count,
+		COALESCE(SUM(MeterDataQualitySummary.ExpectedPoints) , 0) AS ExpectedPoints,
+		COALESCE(SUM(MeterDataQualitySummary.GoodPoints),0) AS GoodPoints,
+		COALESCE(SUM(MeterDataQualitySummary.LatchedPoints),0) AS LatchedPoints,
+		COALESCE(SUM(MeterDataQualitySummary.UnreasonablePoints),0) AS UnreasonablePoints,
+		COALESCE(SUM(MeterDataQualitySummary.NoncongruentPoints),0) AS NoncongruentPoints,
+		COALESCE(SUM(MeterDataQualitySummary.DuplicatePoints),0) AS DuplicatePoints
         FROM
             Meter JOIN
-            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
-        WHERE Meter.ID IN (SELECT * FROM String_To_Int_Table(@meterIds, ','))
+            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT JOIN
+			( SELECT * FROM MeterDataQualitySummary WHERE [Date] BETWEEN @startDate AND @endDate) as MeterDataQualitySummary ON MeterDataQualitySummary.MeterID = Meter.ID
+		WHERE Meter.ID IN (SELECT * FROM String_To_Int_Table(@meterIds, ',')) 
+		GROUP BY Meter.ID, Meter.Name, MeterLocation.Longitude, MeterLocation.Latitude
         ORDER BY Meter.Name
 END
 GO
