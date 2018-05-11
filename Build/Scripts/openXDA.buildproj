@@ -81,20 +81,15 @@
     <PropertyGroup>
       <!--Must-override setting(s).-->
       <ProjectName>openXDA</ProjectName>
-      <GitServer>git@github.com:GridProtectionAlliance/openXDA.git</GitServer>
+      <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       
       <VersionMajorChange>None</VersionMajorChange>
       <VersionMinorChange>None</VersionMinorChange>
       <VersionBuildChange>None</VersionBuildChange>
       <VersionRevisionChange>Increment</VersionRevisionChange>
-    </PropertyGroup>
-  </Target>
 
-  <Target Name="AfterPrepareSettings">
-    <PropertyGroup>
-      <!--Project specific settings.-->
-      <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
-      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\GPAWEB\NightlyBuilds\$(ProjectName)\Beta\</BuildDeployFolder>
+      <!-- Override default settings. -->
+      <GitServer Condition="'$(GitServer)' == ''">git@github.com:GridProtectionAlliance/openXDA.git</GitServer>
     </PropertyGroup>
   </Target>
 

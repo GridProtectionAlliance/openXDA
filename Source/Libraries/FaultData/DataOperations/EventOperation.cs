@@ -144,7 +144,6 @@ namespace FaultData.DataOperations
                 IDbDataParameter startTime2 = ToDateTime2(connection, dataGroup.StartTime);
                 IDbDataParameter endTime2 = ToDateTime2(connection, dataGroup.EndTime);
 
-
                 if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, dataGroup.Samples, meterDataSet.Meter.ID, line.ID) > 0)
                     continue;
 
@@ -225,7 +224,7 @@ namespace FaultData.DataOperations
                 connection.ExecuteNonQuery(@"
                     IF dbo.EventHasImpactedComponents({0}) = 1
 	                    INSERT INTO PQIResult VALUES ({0})                
-                ", evt.ID);
+                ".Trim(), evt.ID);
             }
         }
 

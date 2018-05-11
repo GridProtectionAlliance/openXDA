@@ -1069,31 +1069,31 @@ namespace openXDA
                 {
                     try
                     {
-                    // Set up thread state for logging and reporting
-                    ThreadContext.Properties["Meter"] = state.MeterKey;
-                        m_activeFiles[state.MeterKey] = state.FilePath;
+                        // Set up thread state for logging and reporting
+                        ThreadContext.Properties["Meter"] = state.MeterKey;
+                            m_activeFiles[state.MeterKey] = state.FilePath;
 
-                    // Sets the processing start time of the file group
-                    BeginProcessing(state);
+                        // Sets the processing start time of the file group
+                        BeginProcessing(state);
 
-                    // Create the appropriate data reader
-                    // and use it to parse the file
-                    ReadFile(state);
+                        // Create the appropriate data reader
+                        // and use it to parse the file
+                        ReadFile(state);
 
                         if (state.Retry)
                             return;
 
-                    // Process the data that was parsed from the file
-                    ProcessFile(state);
+                        // Process the data that was parsed from the file
+                        ProcessFile(state);
 
-                    // Set the processing end time of the file
-                    // group and save it to the database
-                    CompleteProcessing(state);
+                        // Set the processing end time of the file
+                        // group and save it to the database
+                        CompleteProcessing(state);
                     }
                     finally
                     {
-                    // Restore thread state for logging and reporting
-                    string removedFilePath;
+                        // Restore thread state for logging and reporting
+                        string removedFilePath;
                         m_activeFiles.TryRemove(state.MeterKey, out removedFilePath);
                         ThreadContext.Properties.Remove("Meter");
                     }
@@ -1101,11 +1101,11 @@ namespace openXDA
 
                 Action<DataProcessorState> processFailureCallback = state =>
                 {
-                // Set the error flag on the file group,
-                // then set the processing end time
-                // and save the file group to the database
-                state.FileGroup.Error = 1;
-                    CompleteProcessing(state);
+                    // Set the error flag on the file group,
+                    // then set the processing end time
+                    // and save the file group to the database
+                    state.FileGroup.Error = 1;
+                        CompleteProcessing(state);
                 };
 
                 // Set up the data processor state and enter the processing loop
