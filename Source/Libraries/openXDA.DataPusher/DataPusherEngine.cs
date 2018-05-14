@@ -113,7 +113,7 @@ namespace openXDA.DataPusher
                 try
                 {
                     Stop();
-                    m_dataContext.Dispose();
+                    m_dataContext?.Dispose();
                     m_disposed = true;
                 }
                 catch (Exception ex)

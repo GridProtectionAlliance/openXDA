@@ -304,6 +304,7 @@ namespace openXDA
             m_serviceMonitors.AdapterCreated += ServiceMonitors_AdapterCreated;
             m_serviceMonitors.AdapterLoaded += ServiceMonitors_AdapterLoaded;
             m_serviceMonitors.AdapterUnloaded += ServiceMonitors_AdapterUnloaded;
+            m_serviceMonitors.AdapterLoadException += (obj, args) => HandleException(args.Argument);
             m_serviceMonitors.Initialize();
 
             string systemSettingsConnectionString = LoadSystemSettings();
@@ -1042,12 +1043,37 @@ namespace openXDA
         private void ServiceMonitors_AdapterLoaded(object sender, EventArgs<IServiceMonitor> e)
         {
             m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been loaded", e.Argument.GetType().Name);
+            e.Argument.StatusUpdate += ServiceMonitor_StatusUpdate;
+            e.Argument.ExecutionException += ServiceMonitor_ExecutionException;
         }
 
         // Display a message when service monitors are unloaded
         private void ServiceMonitors_AdapterUnloaded(object sender, EventArgs<IServiceMonitor> e)
         {
             m_serviceHelper.UpdateStatusAppendLine(UpdateType.Information, "{0} has been unloaded", e.Argument.GetType().Name);
+        }
+
+        // Handle updates from service monitors.
+        private void ServiceMonitor_StatusUpdate(object sender, EventArgs<UpdateType, string> e)
+        {
+            IServiceMonitor serviceMonitor = sender as IServiceMonitor;
+
+            if (serviceMonitor?.Enabled ?? false)
+                DisplayStatusMessage(e.Argument2, e.Argument1);
+        }
+
+        // Handle exceptions thrown by service monitors.
+        private void ServiceMonitor_ExecutionException(object sender, EventArgs<string, Exception> e)
+        {
+            IServiceMonitor serviceMonitor = sender as IServiceMonitor;
+
+            if (serviceMonitor?.Enabled ?? false)
+            {
+                Exception ex = e.Argument2;
+                string newLines = string.Format("{0}{0}", Environment.NewLine);
+                m_serviceHelper.ErrorLogger.Log(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "{0}: {1}", e.Argument1, ex.Message + newLines);
+            }
         }
 
         #endregion
