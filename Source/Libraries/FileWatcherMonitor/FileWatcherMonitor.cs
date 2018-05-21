@@ -22,8 +22,10 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.ServiceProcess;
 using System.Threading;
 using GSF;
 using GSF.Communication;
@@ -107,10 +109,11 @@ namespace FileWatcherMonitor
             if (args.Length == 0)
                 return;
 
-            if (!string.Equals(args[0], "PrintEngineStatus", StringComparison.OrdinalIgnoreCase))
-                return;
+            if (string.Equals(args[0], "EngineStatus", StringComparison.OrdinalIgnoreCase))
+                OnStatusUpdate(UpdateType.Information, "{0}", m_engineStatus);
 
-            OnStatusUpdate(UpdateType.Information, "{0}", m_engineStatus);
+            if (string.Equals(args[0], "RestartFileWatcher", StringComparison.OrdinalIgnoreCase))
+                RestartFileWatcher();
         }
 
         private void Start()
@@ -205,11 +208,94 @@ namespace FileWatcherMonitor
 
                 if (m_enumeratingCount >= 3)
                 {
-                    helper.SendRequest("Restart");
+                    RestartFileWatcher();
                     m_enumeratingCount = 0;
                 }
 
                 m_engineStatus = engineStatus;
+            }
+        }
+
+        private void RestartFileWatcher()
+        {
+            const string FileWatcherServiceName = "openXDAFileWatcher";
+
+            // Attempt to access service controller for the specified Windows service
+            ServiceController serviceController = ServiceController.GetServices()
+                .SingleOrDefault(svc => string.Equals(svc.ServiceName, FileWatcherServiceName, StringComparison.OrdinalIgnoreCase));
+
+            if (serviceController != null)
+            {
+                try
+                {
+                    if (serviceController.Status == ServiceControllerStatus.Running)
+                    {
+                        OnStatusUpdate(UpdateType.Information, "Attempting to stop the {0} Windows service...", FileWatcherServiceName);
+
+                        serviceController.Stop();
+
+                        // Can't wait forever for service to stop, so we time-out after 20 seconds
+                        serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
+
+                        if (serviceController.Status == ServiceControllerStatus.Stopped)
+                            OnStatusUpdate(UpdateType.Information, "Successfully stopped the {0} Windows service.", FileWatcherServiceName);
+                        else
+                            OnStatusUpdate(UpdateType.Information, "Failed to stop the {0} Windows service after trying for 20 seconds...", FileWatcherServiceName);
+
+                        // Add an extra line for visual separation of service termination status
+                        OnStatusUpdate(UpdateType.Information, "");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnExecutionException($"Failed to stop the {FileWatcherServiceName} Windows service", ex);
+                }
+            }
+
+            // If the service failed to stop or it is installed as stand-alone debug application, we try to forcibly stop any remaining running instances
+            try
+            {
+                Process[] instances = Process.GetProcessesByName(FileWatcherServiceName);
+
+                if (instances.Length > 0)
+                {
+                    int total = 0;
+                    OnStatusUpdate(UpdateType.Information, "Attempting to stop running instances of the {0}...", FileWatcherServiceName);
+
+                    // Terminate all instances of service running on the local computer
+                    foreach (Process process in instances)
+                    {
+                        process.Kill();
+                        total++;
+                    }
+
+                    if (total > 0)
+                        OnStatusUpdate(UpdateType.Information, "Stopped {0} {1} instance{2}.", total, FileWatcherServiceName, total > 1 ? "s" : "");
+
+                    // Add an extra line for visual separation of process termination status
+                    OnStatusUpdate(UpdateType.Information, "");
+                }
+            }
+            catch (Exception ex)
+            {
+                OnExecutionException($"Failed to terminate running instances of the {FileWatcherServiceName}", ex);
+            }
+
+            // Attempt to restart Windows service...
+            if (serviceController != null)
+            {
+                try
+                {
+                    // Refresh state in case service process was forcibly stopped
+                    serviceController.Refresh();
+
+                    if (serviceController.Status != ServiceControllerStatus.Running)
+                        serviceController.Start();
+                }
+                catch (Exception ex)
+                {
+                    OnExecutionException($"Failed to restart the {FileWatcherServiceName} Windows service", ex);
+                }
             }
         }
 
