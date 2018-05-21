@@ -89,6 +89,7 @@
 
     <Property Id="SERVICEACCOUNT" Secure="yes" />
     <Property Id="SERVICENAME" Value="$(var.openXDA.TargetName)" />
+    <Property Id="FILEWATCHERSERVICENAME" Value="$(var.openXDAFileWatcher.TargetName)" />
     <Property Id="SERVICEPASSWORD" Hidden="yes" />
     <Property Id="HTTPSERVICEPORTS" Value="8989" />
     <Property Id="SERVERNAME" Value="localhost" />
@@ -144,6 +145,10 @@
     <CustomAction Id="ConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
     <CustomAction Id="ServiceAccountAction.SetProperty" Property="ServiceAccountAction" Value="SERVICENAME=[SERVICENAME];SERVICEACCOUNT=[SERVICEACCOUNT];HTTPSERVICEPORTS=[HTTPSERVICEPORTS]" />
     <CustomAction Id="ServiceAccountAction" BinaryKey="InstallerActions" DllEntry="ServiceAccountAction" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="FileWatcherConfigureServiceAction.SetProperty" Property="FileWatcherConfigureServiceAction" Value="SERVICENAME=[FILEWATCHERSERVICENAME]" />
+    <CustomAction Id="FileWatcherConfigureServiceAction" BinaryKey="InstallerActions" DllEntry="ConfigureServiceAction" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="FileWatcherServiceAccountAction.SetProperty" Property="FileWatcherServiceAccountAction" Value="SERVICENAME=[FILEWATCHERSERVICENAME];SERVICEACCOUNT=[SERVICEACCOUNT];HTTPSERVICEPORTS=" />
+    <CustomAction Id="FileWatcherServiceAccountAction" BinaryKey="InstallerActions" DllEntry="ServiceAccountAction" Execute="deferred" Impersonate="no" />
     
     <CustomAction Id="CreateDatabase.SetProperty" Property="CreateDatabase" Value="SERVICENAME=[SERVICENAME];CONNECTIONSTRING=[SERVERCONNECTIONSTRING];DATAPROVIDERSTRING=[DATAPROVIDERSTRING];DBQUERY=[CREATEDBQUERY]" />
     <CustomAction Id="CreateDatabase" BinaryKey="InstallerActions" DllEntry="DatabaseQueryAction" Execute="deferred" Impersonate="yes" />
@@ -227,6 +232,10 @@
       <Custom Action="ConfigureServiceAction" After="ConfigureServiceAction.SetProperty"><![CDATA[&ServiceFeature=3]]></Custom>
       <Custom Action="ServiceAccountAction.SetProperty" After="ConfigureServiceAction"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
       <Custom Action="ServiceAccountAction" After="ServiceAccountAction.SetProperty"><![CDATA[&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)]]></Custom>
+      <Custom Action="FileWatcherConfigureServiceAction.SetProperty" After="ServiceAccountAction"><![CDATA[&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1)]]></Custom>
+      <Custom Action="FileWatcherConfigureServiceAction" After="FileWatcherConfigureServiceAction.SetProperty"><![CDATA[&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1)]]></Custom>
+      <Custom Action="FileWatcherServiceAccountAction.SetProperty" After="FileWatcherConfigureServiceAction"><![CDATA[(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)) AND (&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1))]]></Custom>
+      <Custom Action="FileWatcherServiceAccountAction" After="FileWatcherServiceAccountAction.SetProperty"><![CDATA[(&ServiceFeature=3 OR (!ServiceFeature=3 AND &ServiceFeature=-1)) AND (&FileWatcherServiceFeature=3 OR (!FileWatcherServiceFeature=3 AND &FileWatcherServiceFeature=-1))]]></Custom>
       
       <Custom Action="CreateDatabase.SetProperty" After="InstallFiles"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
       <Custom Action="CreateDatabase" After="CreateDatabase.SetProperty"><![CDATA[&DatabaseFeature=3 OR (!DatabaseFeature=3 AND &DatabaseFeature=-1)]]></Custom>
