@@ -131,7 +131,7 @@
             <tbody>
             <tr ng-repeat="item in events">
                 <td>{{item.MeterName}}</td>
-                <td><a href="~/OpenSEE.cshtml?ID={{item.EventID.toString()}}&faultcurves=1" target="_blank">{{item.EventID}}</a></td>
+                <td><a href="~/OpenSEE.cshtml?eventid={{item.EventID.toString()}}&faultcurves=1" target="_blank">{{item.EventID}}</a></td>
                 <td>{{item.LineName}}</td>
                 <td>{{item.Voltage}}</td>
                 <td>{{item.FaultType}}</td>

@@ -449,7 +449,7 @@
     <Content Include="wwwroot\Images\sync.png" />
     <Content Include="wwwroot\Images\dD Workbench.png" />
     <Content Include="wwwroot\index.cshtml" />
-    <Content Include="wwwroot\OpenSEE.cshtml" />
+    <Content Include="wwwroot\OpenSEEold.cshtml" />
     <Content Include="wwwroot\Scripts\D3\LICENSE" />
     <Content Include="wwwroot\OpenSTE.cshtml" />
     <None Include="wwwroot\Config\Settings.cshtml" />
@@ -480,6 +480,7 @@
     <Content Include="wwwroot\Scripts\jquery.multiselect.filter.js" />
     <Content Include="wwwroot\Scripts\jquery.multiselect.js" />
     <Content Include="wwwroot\Scripts\OpenSEE.js" />
+    <Content Include="wwwroot\Scripts\OpenSEEold.js" />
     <Content Include="wwwroot\Scripts\OpenSTE.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ace.js" />
@@ -849,6 +850,7 @@
     <Content Include="wwwroot\Workbench\MeterEventsByLine.cshtml" />
     <Content Include="wwwroot\Workbench\Breaker.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsDetailsByDate.cshtml" />
+    <Content Include="wwwroot\OpenSEE.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />

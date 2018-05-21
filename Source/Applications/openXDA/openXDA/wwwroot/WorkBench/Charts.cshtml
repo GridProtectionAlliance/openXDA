@@ -163,7 +163,7 @@
 
                     $('#chart').off('plotly_click');
                     $('#chart').on('plotly_click', function (event, data) {
-                        window.open("../OpenSEE.cshtml?ID=" + data.points[0].fullData.text[data.points[0].pointNumber] + "&faultcurves=1");
+                        window.open("../openSEE.cshtml?eventid=" + data.points[0].fullData.text[data.points[0].pointNumber] + "&faultcurves=1");
                     });
                 });
 

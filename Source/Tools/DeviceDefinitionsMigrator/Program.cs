@@ -159,7 +159,7 @@ namespace DeviceDefinitionsMigrator
             catch (Exception ex)
             {
                 Console.Error.WriteLine("--- ERROR ---");
-                Console.Error.WriteLine(ex.Message);
+                Console.Error.WriteLine(ex.ToString());
             }
 
             Console.WriteLine("Press any key to finish...");
@@ -543,7 +543,7 @@ namespace DeviceDefinitionsMigrator
             meterTable.AddNewOrUpdateRecord(meter);
 
             if (meter.ID == 0)
-                meter.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                meter.ID = connection.ExecuteScalar<int>("SELECT ID FROM Meter WHERE AssetKey = {0}", meter.AssetKey);
         }
 
         private static void LoadMeterLocationAttributes(MeterLocation meterLocation, XElement deviceAttributes, LookupTables lookupTables, AdoDataConnection connection)

@@ -77,7 +77,7 @@
 @helper BodyRows()
 {
     <td width="5%"><input type="checkbox" data-bind="attr: {id: 'checkbox' + theeventid}"/></td>
-    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + theeventid + '&faultcurves=1' }, text: theeventid"></a></td>
+    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?eventid=' + theeventid + '&faultcurves=1' }, text: theeventid"></a></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: theinceptiontime.formatDate(DateTimeFormat)"></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: theeventtype"></td>
     <td width="20%" class="text-center valign-middle" data-bind="text: thelinename.truncate(25), attr: {title: thelinename}"></td>

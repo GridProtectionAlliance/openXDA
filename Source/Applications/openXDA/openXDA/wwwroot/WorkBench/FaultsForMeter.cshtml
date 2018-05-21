@@ -77,7 +77,7 @@
 }
 @helper BodyRows()
 {
-    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?ID=' + EventID + '&faultcurves=1' }, text: ID"></a></td>
+    <td width="5%" class="text-left valign-middle"><a target="_blank" data-bind="attr: {href: '/OpenSEE.cshtml?eventid=' + EventID + '&faultcurves=1' }, text: ID"></a></td>
     <td width="15%" class="text-left valign-middle" data-bind="text: MeterName"></td>
     <td width="5%" class="text-center valign-middle" data-bind="text: LineName.truncate(25), attr: {title: LineName}"></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: Voltage"></td>
