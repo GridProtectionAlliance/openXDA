@@ -3187,7 +3187,8 @@ BEGIN
         dbo.DateDiffTicks('1970-01-01', Disturbance.EndTime) / 10000.0 AS endmillis,
 		DisturbanceSeverity.SeverityCode,
 		MeterLine.LineName + ' ' + [Line].[AssetKey] AS thelinename,
-		Line.VoltageKV AS voltage
+		Line.VoltageKV AS voltage,
+	    (SELECT COUNT(*) FROM EventNote WHERE EventID = Event.ID) as notes
 	FROM
 		Event JOIN
 		Disturbance ON Disturbance.EventID = Event.ID JOIN
