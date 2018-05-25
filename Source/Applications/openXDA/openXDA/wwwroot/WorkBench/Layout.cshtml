@@ -39,6 +39,7 @@
     string pageTitle = ViewBag.CustomTitle ?? ViewBag.Title;
     string pageHeader = ViewBag.CustomHeader ?? pageTitle;
     string programName = "dD Workbench";
+    bool usePagedViewModel = ViewBag.usePagedViewModel ?? true;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -51,7 +52,7 @@
     <meta name="application-name" content="@programName" />
     <meta name="description" content="" />
     <meta name="keywords" content="@Model.Global.ApplicationKeywords" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <link href="@("/@GSF/Web/Shared/Content/bootstrap.css")" rel="stylesheet">
     <link href="/@Model.Global.BootstrapTheme" rel="stylesheet">
     <link href="/Content/bootstrap-datepicker3@(min).css" rel="stylesheet">
@@ -70,45 +71,53 @@
             .navbar-header {
                 float: none;
             }
-            .navbar-left,.navbar-right {
+
+            .navbar-left, .navbar-right {
                 float: none !important;
             }
+
             .navbar-toggle {
                 display: block;
             }
+
             .navbar-collapse {
                 border-top: 1px solid transparent;
                 box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
             }
+
             .navbar-fixed-top {
                 top: 0;
                 border-width: 0 0 1px;
             }
+
             .navbar-collapse.collapse {
-                display: none!important;
+                display: none !important;
             }
+
             .navbar-nav {
-                float: none!important;
+                float: none !important;
                 margin-top: 7.5px;
             }
-            .navbar-nav>li {
-                float: none;
+
+                .navbar-nav > li {
+                    float: none;
+                }
+
+                    .navbar-nav > li > a {
+                        padding-top: 10px;
+                        padding-bottom: 10px;
+                    }
+
+            .collapse.in {
+                display: block !important;
             }
-            .navbar-nav>li>a {
-                padding-top: 10px;
-                padding-bottom: 10px;
-            }
-            .collapse.in{
-                display:block !important;
-            }
-        }  
-        
+        }
+
         @@media (min-width: 1600px) {
             .container {
                 width: 1550px;
             }
-        }       
-     
+        }
     </style>
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -135,7 +144,7 @@
     <meta name="msapplication-square70x70logo" content="/Images/Icons/mstile-70x70.png" />
     <meta name="msapplication-square150x150logo" content="/Images/Icons/mstile-150x150.png" />
     <meta name="msapplication-wide310x150logo" content="/Images/Icons/mstile-310x150.png" />
-    <meta name="msapplication-square310x310logo" content="/Images/Icons/mstile-310x310.png"/>
+    <meta name="msapplication-square310x310logo" content="/Images/Icons/mstile-310x310.png" />
     <script src="/Scripts/modernizr-2.8.3.js"></script>
     <script src="@("/@GSF/Web/Shared/Scripts/jquery.js")"></script>
     <script src="@("/@GSF/Web/Shared/Scripts/moment.js")"></script>
@@ -146,13 +155,17 @@
     <script src="/Scripts/bootstrap-datepicker@(min).js"></script>
     <script src="/Scripts/daterangepicker.js"></script>
     <script src="/Scripts/bootstrap-toolkit@(min).js"></script>
-    <script src="@("/@GSF/Web/Shared/Scripts/jquery.signalR.js")"></script>
-    <script src="/@("@GSF/Web/Shared/Scripts/gsf.web.client.js")"></script>
-    <script src="/signalr/hubs"></script>
     <script src="/Scripts/jquery.jspanel-compiled@(min).js"></script>
     <script src="/Scripts/plugins-all.js"></script>
     <script src="@("/@GSF/Web/Shared/Scripts/primeui.js")"></script>
-    <script src="/Scripts/Site.js"></script>
+    @if (usePagedViewModel)
+    {
+        <script src="@("/@GSF/Web/Shared/Scripts/jquery.signalR.js")"></script>
+        <script src="/@("@GSF/Web/Shared/Scripts/gsf.web.client.js")"></script>
+        <script src="/signalr/hubs"></script>
+    
+        <script src="/Scripts/Site.js"></script>
+    }
     <script type="text/javascript" src="~/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
     <script>
         const DateFormat = "@Model.Global.DateFormat";

@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -40,6 +41,7 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
     <Use64BitIISExpress />
+    <TypeScriptToolsVersion>2.6</TypeScriptToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -195,6 +197,9 @@
     <Reference Include="System.Web.Http.Owin">
       <HintPath>..\..\..\Dependencies\GSF\System.Web.Http.Owin.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
     </Reference>
@@ -331,6 +336,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\images\glyphicons-halflings-white.png" />
     <Content Include="Content\images\glyphicons-halflings.png" />
+    <Content Include="webpack.config.js" />
     <Content Include="wwwroot\Content\daterangepicker.css" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
     <Content Include="wwwroot\Config\EmailGroups.cshtml" />
@@ -339,6 +345,7 @@
     <Content Include="wwwroot\Config\EmailGroupUserAccount.cshtml" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
     <Content Include="PostBuildSetup.bat" />
+    <Content Include="package.json" />
     <None Include="Properties\PublishProfiles\Desktop Folder.pubxml" />
     <Content Include="wwwroot\Config\EmailRMarkdownViewer.cshtml" />
     <Content Include="wwwroot\Assets\index.cshtml" />
@@ -353,6 +360,7 @@
     <Content Include="wwwroot\Config\EmailGroupLineGroup.cshtml" />
     <Content Include="wwwroot\Config\ChannelsWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\ChannelsWithNormalLimits.cshtml" />
+    <Content Include="tsconfig.json" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
@@ -482,6 +490,7 @@
     <Content Include="wwwroot\Scripts\OpenSEE.js" />
     <Content Include="wwwroot\Scripts\OpenSEEold.js" />
     <Content Include="wwwroot\Scripts\OpenSTE.js" />
+    <Content Include="wwwroot\Scripts\PeriodicDataDisplay1.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ace.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ext-beautify.js" />
@@ -829,6 +838,8 @@
     <Content Include="wwwroot\Scripts\src-noconflict\worker-php.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\worker-xml.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\worker-xquery.js" />
+    <Content Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.js" />
+    <Content Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.js" />
     <Content Include="wwwroot\Workbench\index.cshtml" />
     <Content Include="wwwroot\Workbench\Layout.cshtml" />
     <Content Include="wwwroot\Workbench\Help.cshtml" />
@@ -851,6 +862,10 @@
     <Content Include="wwwroot\Workbench\Breaker.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsDetailsByDate.cshtml" />
     <Content Include="wwwroot\OpenSEE.cshtml" />
+    <Content Include="wwwroot\Workbench\PeriodDataDisplay1.cshtml" />
+    <Content Include="wwwroot\Scripts\PeriodicDataDisplay1.js.map" />
+    <Content Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.js.map" />
+    <Content Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.js.map" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
@@ -931,7 +946,16 @@
   <ItemGroup>
     <Folder Include="App_Code\" />
   </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\MeterInput.tsx" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.tsx" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
     <CallTarget Targets="CopyBuild" />

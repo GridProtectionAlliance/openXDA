@@ -70,6 +70,16 @@ namespace openXDA.Adapters
                 }
             );
 
+            config.Routes.MapHttpRoute(
+                name: "PeriodicDataDisplay",
+                routeTemplate: "api/PeriodicDataDisplay/{action}",
+                defaults: new
+                {
+                    controller = "PeriodicDataDisplay"
+                }
+            );
+
+
             config.MapHttpAttributeRoutes();
 
         }
