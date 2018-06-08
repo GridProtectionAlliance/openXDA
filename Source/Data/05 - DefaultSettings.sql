@@ -19,6 +19,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADEMinWaitTime', '15.0', '15.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADEUseRelaxedValidation', 'False', 'False')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'False', 'False')
 GO
 

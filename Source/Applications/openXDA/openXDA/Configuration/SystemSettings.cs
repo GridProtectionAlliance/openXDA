@@ -66,6 +66,7 @@ namespace openXDA.Configuration
 
         private string m_lengthUnits;
         private double m_comtradeMinWaitTime;
+        private bool m_comtradeUseRelaxedValidation;
         private int m_processingThreadCount;
         private Guid m_fileProcessorID;
         private bool m_fileWatcherEnabled;
@@ -488,6 +489,24 @@ namespace openXDA.Configuration
             set
             {
                 m_comtradeMinWaitTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that indicates whether to use
+        /// relaxed validation when parsing the COMTRADE schema file.
+        /// </summary>
+        [Setting]
+        [DefaultValue(false)]
+        public bool COMTRADEUseRelaxedValidation
+        {
+            get
+            {
+                return m_comtradeUseRelaxedValidation;
+            }
+            set
+            {
+                m_comtradeUseRelaxedValidation = value;
             }
         }
 

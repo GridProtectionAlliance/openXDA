@@ -44,6 +44,7 @@ namespace FaultData.DataReaders
 
         // Fields
         private TimeSpan m_minWaitTime;
+        private bool m_useRelaxedValidation;
         private Parser m_parser;
         private MeterDataSet m_meterDataSet;
 
@@ -75,6 +76,19 @@ namespace FaultData.DataReaders
             set
             {
                 m_minWaitTime = TimeSpan.FromSeconds(value);
+            }
+        }
+
+        [Setting]
+        public bool COMTRADEUseRelaxedValidation
+        {
+            get
+            {
+                return m_useRelaxedValidation;
+            }
+            set
+            {
+                m_useRelaxedValidation = value;
             }
         }
 
@@ -112,7 +126,7 @@ namespace FaultData.DataReaders
             try
             {
                 m_parser = new Parser();
-                m_parser.Schema = new Schema(schemaFileName);
+                m_parser.Schema = new Schema(schemaFileName, m_useRelaxedValidation);
                 m_parser.FileName = filePath;
                 m_parser.InferTimeFromSampleRates = true;
                 m_parser.AdjustToUTC = false;
