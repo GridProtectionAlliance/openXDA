@@ -41,7 +41,7 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
     <Use64BitIISExpress />
-    <TypeScriptToolsVersion>2.6</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -947,9 +947,9 @@
     <Folder Include="App_Code\" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\Scripts\TSX\MeterInput.tsx" />
+    <None Include="wwwroot\Scripts\TSX\MeterInput.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.tsx" />
-    <TypeScriptCompile Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.ts" />
+    <None Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.ts" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
