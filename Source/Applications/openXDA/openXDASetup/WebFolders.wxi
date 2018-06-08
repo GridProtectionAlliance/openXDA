@@ -3,6 +3,7 @@
   <Directory Id="wwwroot_ASSETSFOLDER" Name="Assets" />
   <Directory Id="wwwroot_CONFIGFOLDER" Name="Config" />
   <Directory Id="wwwroot_CONTENTFOLDER" Name="Content">
+    <Directory Id="wwwroot_CONTENTFONTSFOLDER" Name="fonts" />
     <Directory Id="wwwroot_CONTENTFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="wwwroot_CONTENTIMAGESFOLDER" Name="images" />
     <Directory Id="wwwroot_CONTENTTHEMESFOLDER" Name="themes">
@@ -20,9 +21,139 @@
   <Directory Id="wwwroot_SCRIPTSFOLDER" Name="Scripts">
     <Directory Id="wwwroot_SCRIPTSD3FOLDER" Name="D3" />
     <Directory Id="wwwroot_SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
+    <Directory Id="wwwroot_SCRIPTSPRIMEUIFOLDER" Name="PrimeUI">
+      <Directory Id="wwwroot_SCRIPTSPRIMEUIFONTAWESOMEFOLDER" Name="Font-Awesome">
+        <Directory Id="wwwroot_SCRIPTSPRIMEUIFONTAWESOMECSSFOLDER" Name="css" />
+        <Directory Id="wwwroot_SCRIPTSPRIMEUIFONTAWESOMEFONTSFOLDER" Name="fonts" />
+        <Directory Id="wwwroot_SCRIPTSPRIMEUIFONTAWESOMELESSFOLDER" Name="less" />
+        <Directory Id="wwwroot_SCRIPTSPRIMEUIFONTAWESOMESCSSFOLDER" Name="scss" />
+      </Directory>
+      <Directory Id="wwwroot_SCRIPTSPRIMEUIIMAGESFOLDER" Name="images" />
+      <Directory Id="wwwroot_SCRIPTSPRIMEUIPLUGINSFOLDER" Name="plugins" />
+      <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESFOLDER" Name="themes">
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESAFTERDARKFOLDER" Name="afterdark">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESAFTERDARKIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESAFTERNOONFOLDER" Name="afternoon">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESAFTERNOONIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESAFTERWORKFOLDER" Name="afterwork">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESAFTERWORKIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESARISTOFOLDER" Name="aristo">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESARISTOIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBLACKTIEFOLDER" Name="black-tie">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBLACKTIEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBLITZERFOLDER" Name="blitzer">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBLITZERIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBLUESKYFOLDER" Name="bluesky">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBLUESKYIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBOOTSTRAPFOLDER" Name="bootstrap">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESBOOTSTRAPIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESCASABLANCAFOLDER" Name="casablanca">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESCASABLANCAIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESCRUZEFOLDER" Name="cruze">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESCRUZEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESCUPERTINOFOLDER" Name="cupertino">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESCUPERTINOIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESDARKHIVEFOLDER" Name="dark-hive">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESDARKHIVEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESDELTAFOLDER" Name="delta">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESDELTAIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESDOTLUVFOLDER" Name="dot-luv">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESDOTLUVIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESEGGPLANTFOLDER" Name="eggplant">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESEGGPLANTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESEXCITEBIKEFOLDER" Name="excite-bike">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESEXCITEBIKEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESFLICKFOLDER" Name="flick">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESFLICKIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESGLASSXFOLDER" Name="glass-x">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESGLASSXIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESHOMEFOLDER" Name="home">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESHOMEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESHOTSNEAKSFOLDER" Name="hot-sneaks">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESHOTSNEAKSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESHUMANITYFOLDER" Name="humanity">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESHUMANITYIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESLEFROGFOLDER" Name="le-frog">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESLEFROGIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESMIDNIGHTFOLDER" Name="midnight">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESMIDNIGHTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESMINTCHOCFOLDER" Name="mint-choc">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESMINTCHOCIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESOVERCASTFOLDER" Name="overcast">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESOVERCASTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESPEPPERGRINDERFOLDER" Name="pepper-grinder">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESPEPPERGRINDERIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESREDMONDFOLDER" Name="redmond">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESREDMONDIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESROCKETFOLDER" Name="rocket">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESROCKETIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSAMFOLDER" Name="sam">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSAMIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSMOOTHNESSFOLDER" Name="smoothness">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSMOOTHNESSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSOUTHSTREETFOLDER" Name="south-street">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSOUTHSTREETIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSTARTFOLDER" Name="start">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSTARTIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSUNNYFOLDER" Name="sunny">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSUNNYIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSWANKYPURSEFOLDER" Name="swanky-purse">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESSWANKYPURSEIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESTRONTASTICFOLDER" Name="trontastic">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESTRONTASTICIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESUIDARKNESSFOLDER" Name="ui-darkness">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESUIDARKNESSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESUILIGHTNESSFOLDER" Name="ui-lightness">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESUILIGHTNESSIMAGESFOLDER" Name="images" />
+        </Directory>
+        <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESVADERFOLDER" Name="vader">
+          <Directory Id="wwwroot_SCRIPTSPRIMEUITHEMESVADERIMAGESFOLDER" Name="images" />
+        </Directory>
+      </Directory>
+    </Directory>
     <Directory Id="wwwroot_SCRIPTSSRCNOCONFLICTFOLDER" Name="src-noconflict">
       <Directory Id="wwwroot_SCRIPTSSRCNOCONFLICTSNIPPETSFOLDER" Name="snippets" />
     </Directory>
+    <Directory Id="wwwroot_SCRIPTSTSFOLDER" Name="TS">
+      <Directory Id="wwwroot_SCRIPTSTSSERVICESFOLDER" Name="Services" />
+    </Directory>
+    <Directory Id="wwwroot_SCRIPTSTSXFOLDER" Name="TSX" />
   </Directory>
   <Directory Id="wwwroot_WORKBENCHFOLDER" Name="WorkBench" />
 </Directory>

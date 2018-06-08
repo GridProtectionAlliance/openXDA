@@ -948,7 +948,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\Scripts\TSX\MeterInput.tsx" />
-    <TypeScriptCompile Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.tsx" />
+    <None Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.tsx" />
     <None Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.ts" />
   </ItemGroup>
   <ItemGroup>
