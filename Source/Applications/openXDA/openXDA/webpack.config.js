@@ -3,7 +3,7 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: {
-        PeriodicDataDisplay1: "./wwwroot/Scripts/TSX/PeriodicDataDisplay1.tsx"
+        PeriodicDataDisplay: "./wwwroot/Scripts/TSX/PeriodicDataDisplay.tsx"
     },
     output: {
         filename: "./wwwroot/Scripts/[name].js"
@@ -37,9 +37,9 @@ module.exports = {
           $: 'jquery',
           jQuery: 'jquery',
         }),
-        new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify('production')
-        }),
-        new webpack.optimize.UglifyJsPlugin()
+        //new webpack.DefinePlugin({
+        //    'process.env.NODE_ENV': JSON.stringify('production')
+        //}),
+        //new webpack.optimize.UglifyJsPlugin()
     ]
 };

@@ -80,6 +80,10 @@
       <Project>{11ae594d-2b2b-473c-8550-6bf62914c3e2}</Project>
       <Name>FaultData</Name>
     </ProjectReference>
+    <ProjectReference Include="..\openHistorian.XDALink\openHistorian.XDALink.csproj">
+      <Project>{7F731255-FA83-4DBF-9E0F-C22AE4845E76}</Project>
+      <Name>openHistorian.XDALink</Name>
+    </ProjectReference>
     <ProjectReference Include="..\openXDA.Model\openXDA.Model.csproj">
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>

@@ -40,6 +40,7 @@
     string pageHeader = ViewBag.CustomHeader ?? pageTitle;
     string programName = "dD Workbench";
     bool usePagedViewModel = ViewBag.usePagedViewModel ?? true;
+    bool useContainer = ViewBag.useContainer ?? true;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -195,6 +196,7 @@
                     <li @Raw(pageTitle == "Site Summary" ? "class=\"active\"" : "")><a href="SiteSummary.cshtml">Site Summary</a></li>
                     <li @Raw(pageTitle == "Data Files" ? "class=\"active\"" : "")><a href="DataFiles.cshtml">Data Files</a></li>
                     <li @Raw(pageTitle == "Audit Log" ? "class=\"active\"" : "")><a href="AuditLog.cshtml">Audit Log</a></li>
+                    <li @Raw(pageTitle == "Period Data Display" ? "class=\"active\"" : "")><a href="PeriodicDataDisplay.cshtml">Meter Periodic</a></li>
 
                 </ul>
                 <p class="nav navbar-text navbar-right">
@@ -212,7 +214,7 @@
 else {
     <div id="menuBar"></div>
 }
-    <div class="container theme-showcase" role="main" id="bodyContainer">
+    <div class="@Raw(useContainer ? "container theme-showcase": "")" role="main" id="bodyContainer">
         <div class="page-header" id="pageHeader">
             <span class="glyphicon glyphicon-refresh pre-cache"></span>
             <span class="glyphicon glyphicon-info-sign pre-cache"></span>

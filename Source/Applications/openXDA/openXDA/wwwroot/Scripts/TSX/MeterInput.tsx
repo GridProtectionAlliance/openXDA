@@ -23,34 +23,37 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import PeriodicDataDisplay1Service from './../TS/Services/PeriodicDataDisplay1';
+import PeriodicDataDisplayService from './../TS/Services/PeriodicDataDisplay';
 import createHistory from "history/createBrowserHistory"
 import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 
 export default class MeterInput extends React.Component<any, any>{
-    periodicDataDisplay1Service: PeriodicDataDisplay1Service;
+    periodicDataDisplayService: PeriodicDataDisplayService;
     constructor(props) {
         super(props);
         this.state = {
-            options: []
+            select: null
         }
 
-        this.periodicDataDisplay1Service = new PeriodicDataDisplay1Service();
+        this.periodicDataDisplayService = new PeriodicDataDisplayService();
     }
 
     componentDidMount() {
-        this.periodicDataDisplay1Service.getMeters().done(data => {
-            var options = data.map(d => <option value={d.ID}>{d.AssetKey}</option>)
-            this.setState({ options: options });
+        this.periodicDataDisplayService.getMeters().done(data => {
+            if (data.length == 0) return;
+
+            var value = (this.props.value ? this.props.value : data[0].ID)
+            var options = data.map(d => <option key={d.ID} value={d.ID}>{d.AssetKey}</option>);
+            var select = <select className='form-control' onChange={(e) => { this.props.onChange(e.target.value); }} defaultValue={value}>{options}</select>
+            this.props.onChange(value);
+            this.setState({ select: select });
         });
     }
 
     render() {
-        return (
-            <select>{this.state.options}</select>
-        );
+        return this.state.select;
     }
 
 }

@@ -20,6 +20,7 @@
   </Directory>
   <Directory Id="wwwroot_SCRIPTSFOLDER" Name="Scripts">
     <Directory Id="wwwroot_SCRIPTSD3FOLDER" Name="D3" />
+    <Directory Id="wwwroot_SCRIPTSFLOTFOLDER" Name="flot" />
     <Directory Id="wwwroot_SCRIPTSFULLSCREENSELECTFOLDER" Name="fullscreenselect" />
     <Directory Id="wwwroot_SCRIPTSPRIMEUIFOLDER" Name="PrimeUI">
       <Directory Id="wwwroot_SCRIPTSPRIMEUIFONTAWESOMEFOLDER" Name="Font-Awesome">

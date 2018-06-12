@@ -41,7 +41,7 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
     <Use64BitIISExpress />
-    <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>2.6</TypeScriptToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -476,6 +476,44 @@
     <Content Include="wwwroot\Scripts\D3\marchingsquares-isocontours.min.js" />
     <Content Include="wwwroot\Scripts\D3\turf.custom.js" />
     <Content Include="wwwroot\Scripts\daterangepicker.js" />
+    <Content Include="wwwroot\Scripts\flot\excanvas.js" />
+    <Content Include="wwwroot\Scripts\flot\excanvas.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.colorhelpers.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.colorhelpers.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.axislabels.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.canvas.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.canvas.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.categories.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.categories.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.crosshair.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.crosshair.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.errorbars.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.errorbars.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.fillbetween.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.fillbetween.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.image.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.image.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.navigate.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.navigate.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.pie.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.pie.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.resize.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.resize.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.selection.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.selection.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.stack.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.stack.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.symbol.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.symbol.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.threshold.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.threshold.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.time.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.flot.time.min.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.js" />
+    <Content Include="wwwroot\Scripts\flot\jquery.min.js" />
+    <Content Include="wwwroot\Scripts\flot\LICENSE.txt" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
     <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />
@@ -490,7 +528,6 @@
     <Content Include="wwwroot\Scripts\OpenSEE.js" />
     <Content Include="wwwroot\Scripts\OpenSEEold.js" />
     <Content Include="wwwroot\Scripts\OpenSTE.js" />
-    <Content Include="wwwroot\Scripts\PeriodicDataDisplay1.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ace.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ext-beautify.js" />
@@ -838,8 +875,6 @@
     <Content Include="wwwroot\Scripts\src-noconflict\worker-php.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\worker-xml.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\worker-xquery.js" />
-    <Content Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.js" />
-    <Content Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.js" />
     <Content Include="wwwroot\Workbench\index.cshtml" />
     <Content Include="wwwroot\Workbench\Layout.cshtml" />
     <Content Include="wwwroot\Workbench\Help.cshtml" />
@@ -862,10 +897,14 @@
     <Content Include="wwwroot\Workbench\Breaker.cshtml" />
     <Content Include="wwwroot\Workbench\FaultsDetailsByDate.cshtml" />
     <Content Include="wwwroot\OpenSEE.cshtml" />
-    <Content Include="wwwroot\Workbench\PeriodDataDisplay1.cshtml" />
-    <Content Include="wwwroot\Scripts\PeriodicDataDisplay1.js.map" />
-    <Content Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.js.map" />
-    <Content Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.js.map" />
+    <Content Include="wwwroot\Workbench\PeriodicDataDisplay.cshtml" />
+    <Content Include="wwwroot\Scripts\flot\API.md" />
+    <Content Include="wwwroot\Scripts\flot\CONTRIBUTING.md" />
+    <Content Include="wwwroot\Scripts\flot\FAQ.md" />
+    <Content Include="wwwroot\Scripts\flot\Makefile" />
+    <Content Include="wwwroot\Scripts\flot\NEWS.md" />
+    <Content Include="wwwroot\Scripts\flot\PLUGINS.md" />
+    <Content Include="wwwroot\Scripts\flot\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
@@ -947,12 +986,19 @@
     <Folder Include="App_Code\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="wwwroot\Scripts\TSX\DistributionPlot.tsx" />
+    <None Include="wwwroot\Scripts\TSX\Legend.tsx" />
+    <None Include="wwwroot\Scripts\TSX\LineChart.tsx" />
+    <None Include="wwwroot\Scripts\TSX\Measurement.tsx" />
     <None Include="wwwroot\Scripts\TSX\MeterInput.tsx" />
-    <None Include="wwwroot\Scripts\TSX\PeriodicDataDisplay1.tsx" />
-    <None Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.ts" />
+    <None Include="wwwroot\Scripts\TSX\PeriodicDataDisplay.tsx" />
+    <None Include="wwwroot\Scripts\TS\Services\PeriodicDataDisplay.ts" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\SummaryStat.tsx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />

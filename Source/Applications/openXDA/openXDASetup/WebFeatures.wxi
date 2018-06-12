@@ -17,6 +17,7 @@
   <ComponentGroupRef Id="wwwroot_Images_Icons_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_D3_Components" />
+  <ComponentGroupRef Id="wwwroot_Scripts_flot_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_fullscreenselect_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_Components" />
   <ComponentGroupRef Id="wwwroot_Scripts_PrimeUI_Font_Awesome_Components" />

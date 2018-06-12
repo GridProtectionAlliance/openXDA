@@ -20,16 +20,18 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+import * as moment from 'moment';
 
-export default class PeriodicDataDisplay1Service {
-    getData(filters) {
+export default class PeriodicDataDisplayService {
+    getData(meterID, startDate, endDate, pixels, measurementCharacteristicID, type) {
         return $.ajax({
             type: "GET",
-            url: `${window.location.origin}/api/PeriodicDataDisplay/GetData?eventId=${filters.eventId}` +
-                `${filters.startDate != undefined ? `&startDate=${filters.startDate}` : ``}` +
-                `${filters.endDate != undefined ? `&endDate=${filters.endDate}` : ``}` +
-                `&pixels=${filters.pixels}` +
-                `&type=${filters.type}`,
+            url: `${window.location.origin}/api/PeriodicDataDisplay/GetData?MeterID=${meterID}` +
+                `&startDate=${moment(startDate).format('YYYY-MM-DDTHH:mm:ss')}` +
+                `&endDate=${moment(endDate).format('YYYY-MM-DDTHH:mm:ss')}` +
+                `&pixels=${pixels}` +
+                `&MeasurementCharacteristicID=${measurementCharacteristicID}` + 
+                `&type=${type}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -47,5 +49,17 @@ export default class PeriodicDataDisplay1Service {
             async: true
         });
     }
+
+    getMeasurementCharacteristics() {
+        return $.ajax({
+            type: "GET",
+            url: `${window.location.origin}/api/PeriodicDataDisplay/GetMeasurementCharacteristics`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+    }
+
 
 }

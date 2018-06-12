@@ -479,8 +479,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_dDAssets_png">
-    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
+  <Component Id="wwwroot_Images_ddAssets_png">
+    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
@@ -666,11 +666,11 @@
   <Component Id="wwwroot_Scripts_OpenSTE_js">
     <File Id="wwwroot_Scripts_OpenSTE.js" Name="OpenSTE.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\OpenSTE.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_PeriodicDataDisplay1_js">
-    <File Id="wwwroot_Scripts_PeriodicDataDisplay1.js" Name="PeriodicDataDisplay1.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PeriodicDataDisplay1.js" />
+  <Component Id="wwwroot_Scripts_PeriodicDataDisplay_js">
+    <File Id="wwwroot_Scripts_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PeriodicDataDisplay.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_PeriodicDataDisplay1_js_map">
-    <File Id="wwwroot_Scripts_PeriodicDataDisplay1.js.map" Name="PeriodicDataDisplay1.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PeriodicDataDisplay1.js.map" />
+  <Component Id="wwwroot_Scripts_PeriodicDataDisplay_js_map">
+    <File Id="wwwroot_Scripts_PeriodicDataDisplay.js.map" Name="PeriodicDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PeriodicDataDisplay.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_plotly_latest_min_js">
     <File Id="wwwroot_Scripts_plotly_latest.min.js" Name="plotly-latest.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\plotly-latest.min.js" />
@@ -742,6 +742,143 @@
   </Component>
   <Component Id="wwwroot_Scripts_D3_turf_custom_js">
     <File Id="wwwroot_Scripts_D3_turf.custom.js" Name="turf.custom.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\D3\turf.custom.js" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Scripts_flot_Components" Directory="wwwroot_SCRIPTSFLOTFOLDER">
+  <Component Id="wwwroot_Scripts_flot_API_md">
+    <File Id="wwwroot_Scripts_flot_API.md" Name="API.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\API.md" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_CONTRIBUTING_md">
+    <File Id="wwwroot_Scripts_flot_CONTRIBUTING.md" Name="CONTRIBUTING.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\CONTRIBUTING.md" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_excanvas_js">
+    <File Id="wwwroot_Scripts_flot_excanvas.js" Name="excanvas.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\excanvas.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_excanvas_min_js">
+    <File Id="wwwroot_Scripts_flot_excanvas.min.js" Name="excanvas.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\excanvas.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_FAQ_md">
+    <File Id="wwwroot_Scripts_flot_FAQ.md" Name="FAQ.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\FAQ.md" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_colorhelpers_js">
+    <File Id="wwwroot_Scripts_flot_jquery.colorhelpers.js" Name="jquery.colorhelpers.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.colorhelpers.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_colorhelpers_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.colorhelpers.min.js" Name="jquery.colorhelpers.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.colorhelpers.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_axislabels_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.axislabels.js" Name="jquery.flot.axislabels.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.axislabels.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_canvas_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.canvas.js" Name="jquery.flot.canvas.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.canvas.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_canvas_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.canvas.min.js" Name="jquery.flot.canvas.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.canvas.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_categories_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.categories.js" Name="jquery.flot.categories.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.categories.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_categories_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.categories.min.js" Name="jquery.flot.categories.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.categories.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_crosshair_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.crosshair.js" Name="jquery.flot.crosshair.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.crosshair.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_crosshair_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.crosshair.min.js" Name="jquery.flot.crosshair.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.crosshair.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_errorbars_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.errorbars.js" Name="jquery.flot.errorbars.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.errorbars.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_errorbars_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.errorbars.min.js" Name="jquery.flot.errorbars.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.errorbars.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_fillbetween_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.fillbetween.js" Name="jquery.flot.fillbetween.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.fillbetween.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_fillbetween_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.fillbetween.min.js" Name="jquery.flot.fillbetween.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.fillbetween.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_image_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.image.js" Name="jquery.flot.image.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.image.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_image_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.image.min.js" Name="jquery.flot.image.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.image.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.js" Name="jquery.flot.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.min.js" Name="jquery.flot.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_navigate_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.navigate.js" Name="jquery.flot.navigate.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.navigate.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_navigate_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.navigate.min.js" Name="jquery.flot.navigate.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.navigate.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_pie_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.pie.js" Name="jquery.flot.pie.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.pie.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_pie_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.pie.min.js" Name="jquery.flot.pie.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.pie.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_resize_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.resize.js" Name="jquery.flot.resize.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.resize.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_resize_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.resize.min.js" Name="jquery.flot.resize.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.resize.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_selection_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.selection.js" Name="jquery.flot.selection.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.selection.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_selection_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.selection.min.js" Name="jquery.flot.selection.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.selection.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_stack_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.stack.js" Name="jquery.flot.stack.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.stack.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_stack_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.stack.min.js" Name="jquery.flot.stack.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.stack.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_symbol_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.symbol.js" Name="jquery.flot.symbol.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.symbol.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_symbol_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.symbol.min.js" Name="jquery.flot.symbol.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.symbol.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_threshold_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.threshold.js" Name="jquery.flot.threshold.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.threshold.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_threshold_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.threshold.min.js" Name="jquery.flot.threshold.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.threshold.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_time_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.time.js" Name="jquery.flot.time.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.time.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_flot_time_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.flot.time.min.js" Name="jquery.flot.time.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.flot.time.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_js">
+    <File Id="wwwroot_Scripts_flot_jquery.js" Name="jquery.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_jquery_min_js">
+    <File Id="wwwroot_Scripts_flot_jquery.min.js" Name="jquery.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\jquery.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_LICENSE_txt">
+    <File Id="wwwroot_Scripts_flot_LICENSE.txt" Name="LICENSE.txt" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\LICENSE.txt" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_Makefile">
+    <File Id="wwwroot_Scripts_flot_Makefile" Name="Makefile" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\Makefile" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_NEWS_md">
+    <File Id="wwwroot_Scripts_flot_NEWS.md" Name="NEWS.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\NEWS.md" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_PLUGINS_md">
+    <File Id="wwwroot_Scripts_flot_PLUGINS.md" Name="PLUGINS.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\PLUGINS.md" />
+  </Component>
+  <Component Id="wwwroot_Scripts_flot_README_md">
+    <File Id="wwwroot_Scripts_flot_README.md" Name="README.md" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\flot\README.md" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_fullscreenselect_Components" Directory="wwwroot_SCRIPTSFULLSCREENSELECTFOLDER">
@@ -3767,17 +3904,35 @@
 <ComponentGroup Id="wwwroot_Scripts_TS_Components" Directory="wwwroot_SCRIPTSTSFOLDER">
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TS_Services_Components" Directory="wwwroot_SCRIPTSTSSERVICESFOLDER">
-  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay1_js">
-    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay1.js" Name="PeriodicDataDisplay1.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.js" />
+  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_js">
+    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay1_js_map">
-    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay1.js.map" Name="PeriodicDataDisplay1.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.js.map" />
+  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_js_map">
+    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.js.map" Name="PeriodicDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.js.map" />
   </Component>
-  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay1_ts">
-    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay1.ts" Name="PeriodicDataDisplay1.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay1.ts" />
+  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_ts">
+    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.ts" Name="PeriodicDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.ts" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
+  <Component Id="wwwroot_Scripts_TSX_Legend_js">
+    <File Id="wwwroot_Scripts_TSX_Legend.js" Name="Legend.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_Legend_js_map">
+    <File Id="wwwroot_Scripts_TSX_Legend.js.map" Name="Legend.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.js.map" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_Legend_tsx">
+    <File Id="wwwroot_Scripts_TSX_Legend.tsx" Name="Legend.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.tsx" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_Measurement_js">
+    <File Id="wwwroot_Scripts_TSX_Measurement.js" Name="Measurement.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_Measurement_js_map">
+    <File Id="wwwroot_Scripts_TSX_Measurement.js.map" Name="Measurement.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.js.map" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_Measurement_tsx">
+    <File Id="wwwroot_Scripts_TSX_Measurement.tsx" Name="Measurement.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_MeterInput_js">
     <File Id="wwwroot_Scripts_TSX_MeterInput.js" Name="MeterInput.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeterInput.js" />
   </Component>
@@ -3787,14 +3942,14 @@
   <Component Id="wwwroot_Scripts_TSX_MeterInput_tsx">
     <File Id="wwwroot_Scripts_TSX_MeterInput.tsx" Name="MeterInput.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeterInput.tsx" />
   </Component>
-  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay1_js">
-    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay1.js" Name="PeriodicDataDisplay1.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay1.js" />
+  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_js">
+    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.js" />
   </Component>
-  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay1_js_map">
-    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay1.js.map" Name="PeriodicDataDisplay1.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay1.js.map" />
+  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_js_map">
+    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.js.map" Name="PeriodicDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.js.map" />
   </Component>
-  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay1_tsx">
-    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay1.tsx" Name="PeriodicDataDisplay1.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay1.tsx" />
+  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_tsx">
+    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.tsx" Name="PeriodicDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.tsx" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="wwwroot_WORKBENCHFOLDER">
@@ -3858,8 +4013,8 @@
   <Component Id="wwwroot_WorkBench_MeterEventsByLine_cshtml">
     <File Id="wwwroot_WorkBench_MeterEventsByLine.cshtml" Name="MeterEventsByLine.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\MeterEventsByLine.cshtml" />
   </Component>
-  <Component Id="wwwroot_WorkBench_PeriodDataDisplay1_cshtml">
-    <File Id="wwwroot_WorkBench_PeriodDataDisplay1.cshtml" Name="PeriodDataDisplay1.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\PeriodDataDisplay1.cshtml" />
+  <Component Id="wwwroot_WorkBench_PeriodicDataDisplay_cshtml">
+    <File Id="wwwroot_WorkBench_PeriodicDataDisplay.cshtml" Name="PeriodicDataDisplay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\PeriodicDataDisplay.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_SiteSummary_cshtml">
     <File Id="wwwroot_WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />

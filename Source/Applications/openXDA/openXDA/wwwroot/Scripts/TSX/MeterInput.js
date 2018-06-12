@@ -11,26 +11,31 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = require("react");
-var PeriodicDataDisplay1_1 = require("./../TS/Services/PeriodicDataDisplay1");
+var PeriodicDataDisplay_1 = require("./../TS/Services/PeriodicDataDisplay");
 var MeterInput = (function (_super) {
     __extends(MeterInput, _super);
     function MeterInput(props) {
         var _this = _super.call(this, props) || this;
         _this.state = {
-            options: []
+            select: null
         };
-        _this.periodicDataDisplay1Service = new PeriodicDataDisplay1_1.default();
+        _this.periodicDataDisplayService = new PeriodicDataDisplay_1.default();
         return _this;
     }
     MeterInput.prototype.componentDidMount = function () {
         var _this = this;
-        this.periodicDataDisplay1Service.getMeters().done(function (data) {
-            var options = data.map(function (d) { return React.createElement("option", { value: d.ID }, d.AssetKey); });
-            _this.setState({ options: options });
+        this.periodicDataDisplayService.getMeters().done(function (data) {
+            if (data.length == 0)
+                return;
+            var value = (_this.props.value ? _this.props.value : data[0].ID);
+            var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.AssetKey); });
+            var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange(e.target.value); }, defaultValue: value }, options);
+            _this.props.onChange(value);
+            _this.setState({ select: select });
         });
     };
     MeterInput.prototype.render = function () {
-        return (React.createElement("div", null, this.state.options));
+        return this.state.select;
     };
     return MeterInput;
 }(React.Component));
