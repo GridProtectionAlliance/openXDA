@@ -479,8 +479,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_ddAssets_png">
-    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
+  <Component Id="wwwroot_Images_dDAssets_png">
+    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
@@ -3915,6 +3915,15 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
+  <Component Id="wwwroot_Scripts_TSX_DistributionPlot_js">
+    <File Id="wwwroot_Scripts_TSX_DistributionPlot.js" Name="DistributionPlot.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_DistributionPlot_js_map">
+    <File Id="wwwroot_Scripts_TSX_DistributionPlot.js.map" Name="DistributionPlot.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.js.map" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_DistributionPlot_tsx">
+    <File Id="wwwroot_Scripts_TSX_DistributionPlot.tsx" Name="DistributionPlot.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_Legend_js">
     <File Id="wwwroot_Scripts_TSX_Legend.js" Name="Legend.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.js" />
   </Component>
@@ -3923,6 +3932,15 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_Legend_tsx">
     <File Id="wwwroot_Scripts_TSX_Legend.tsx" Name="Legend.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.tsx" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_LineChart_js">
+    <File Id="wwwroot_Scripts_TSX_LineChart.js" Name="LineChart.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\LineChart.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_LineChart_js_map">
+    <File Id="wwwroot_Scripts_TSX_LineChart.js.map" Name="LineChart.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\LineChart.js.map" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_LineChart_tsx">
+    <File Id="wwwroot_Scripts_TSX_LineChart.tsx" Name="LineChart.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\LineChart.tsx" />
   </Component>
   <Component Id="wwwroot_Scripts_TSX_Measurement_js">
     <File Id="wwwroot_Scripts_TSX_Measurement.js" Name="Measurement.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.js" />
@@ -3950,6 +3968,15 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_tsx">
     <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.tsx" Name="PeriodicDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.tsx" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_SummaryStat_js">
+    <File Id="wwwroot_Scripts_TSX_SummaryStat.js" Name="SummaryStat.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_SummaryStat_js_map">
+    <File Id="wwwroot_Scripts_TSX_SummaryStat.js.map" Name="SummaryStat.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.js.map" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_SummaryStat_tsx">
+    <File Id="wwwroot_Scripts_TSX_SummaryStat.tsx" Name="SummaryStat.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.tsx" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="wwwroot_WORKBENCHFOLDER">
