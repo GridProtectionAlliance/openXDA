@@ -47,8 +47,8 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
 
         this.state = {
             meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
-            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DDTHH:mm:ss')),
-            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DDTHH:mm:ss')),
+            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DD')),
+            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
             type: (query['type'] != undefined ? query['type'] : "Average"),
             detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : true),
             print: (query['print'] != undefined ? query['print'] == "true" : false),
@@ -74,7 +74,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
                 meterID={this.state.meterID}
                 startDate={this.state.startDate}
                 endDate={this.state.endDate}
-                key={d.ID}
+                key={d.MeasurementType + d.MeasurementCharacteristic}
                 data={d}
                 type={this.state.type}
                 height={300}
@@ -125,7 +125,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
                                 <DatetimeRangePicker
                                     startDate={new Date(this.state.startDate)}
                                     endDate={new Date(this.state.endDate)}
-                                    onChange={(obj) => { this.setState({ startDate: moment(obj.start).format('YYYY-MM-DDTHH:mm:ss'), endDate: moment(obj.end).format('YYYY-MM-DDTHH:mm:ss') }) }}
+                                    onChange={(obj) => { this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }) }}
                                     inputProps={{ style: { width: '100px', margin: '5px' }, className: 'form-control' }}
                                     className='form'
                                     timeFormat={false}
@@ -140,11 +140,13 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Detailed Report: <input type="checkbox" value={this.state.detailedReport} defaultChecked={this.state.detailedReport} onChange={(e) => { this.setState({ detailedReport: e.target.value }) }} /></label>
+                                <label>Detailed Report: <input type="checkbox" value={this.state.detailedReport} defaultChecked={this.state.detailedReport} onChange={(e) => {
+                                    this.setState({ detailedReport: !this.state.detailedReport })
+                                }} /></label>
                             </div>
 
                             <div className="form-group">
-                                <button className='btn btn-primary' style={{ float: 'right' }} onClick={() => { this.getData() }}>Apply</button>
+                                <button className='btn btn-primary' style={{ float: 'right' }} onClick={() => { this.updateUrl(); this.getData(); }}>Apply</button>
                             </div>
 
 

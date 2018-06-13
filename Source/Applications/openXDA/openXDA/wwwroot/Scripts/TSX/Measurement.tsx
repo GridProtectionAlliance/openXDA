@@ -102,7 +102,7 @@ export default class Measurement extends React.Component<any, any>{
 
 
     getData(props) {
-        this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.ID, this.props.type).done(data => {
+        this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.MeasurementCharacteristicID, props.data.MeasurementTypeID,this.props.type).done(data => {
             if (Object.keys(data).length == 0) {
                 this.setState({ display: 'none' });
                 return;
@@ -157,7 +157,7 @@ export default class Measurement extends React.Component<any, any>{
     render() {
         return (
             <div id={this.props.data.ID} className="list-group-item panel-default" style={{ padding: 0, display: this.state.display }}>
-                <div className="panel-heading">{this.props.data.Name}</div>
+                <div className="panel-heading">{this.props.data.MeasurementCharacteristic} - {this.props.data.MeasurementType}</div>
                 <div className="panel-body">
                     <div style={{ height: this.props.height, float: 'left', width: '100%', marginBottom: '10px'}}>
                         <div id={'graph'} style={{ height: 'inherit', width: this.props.width, position: 'absolute' }}>

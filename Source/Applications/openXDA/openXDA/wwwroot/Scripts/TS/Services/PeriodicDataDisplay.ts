@@ -23,14 +23,15 @@
 import * as moment from 'moment';
 
 export default class PeriodicDataDisplayService {
-    getData(meterID, startDate, endDate, pixels, measurementCharacteristicID, type) {
+    getData(meterID, startDate, endDate, pixels, measurementCharacteristicID, measurementTypeID, type) {
         return $.ajax({
             type: "GET",
             url: `${window.location.origin}/api/PeriodicDataDisplay/GetData?MeterID=${meterID}` +
-                `&startDate=${moment(startDate).format('YYYY-MM-DDTHH:mm:ss')}` +
-                `&endDate=${moment(endDate).format('YYYY-MM-DDTHH:mm:ss')}` +
+                `&startDate=${moment(startDate).format('YYYY-MM-DD')}` +
+                `&endDate=${moment(endDate).format('YYYY-MM-DD')}` +
                 `&pixels=${pixels}` +
                 `&MeasurementCharacteristicID=${measurementCharacteristicID}` + 
+                `&MeasurementTypeID=${measurementTypeID}` + 
                 `&type=${type}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',

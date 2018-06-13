@@ -15936,14 +15936,15 @@ var moment = __webpack_require__(0);
 var PeriodicDataDisplayService = (function () {
     function PeriodicDataDisplayService() {
     }
-    PeriodicDataDisplayService.prototype.getData = function (meterID, startDate, endDate, pixels, measurementCharacteristicID, type) {
+    PeriodicDataDisplayService.prototype.getData = function (meterID, startDate, endDate, pixels, measurementCharacteristicID, measurementTypeID, type) {
         return $.ajax({
             type: "GET",
             url: window.location.origin + "/api/PeriodicDataDisplay/GetData?MeterID=" + meterID +
-                ("&startDate=" + moment(startDate).format('YYYY-MM-DDTHH:mm:ss')) +
-                ("&endDate=" + moment(endDate).format('YYYY-MM-DDTHH:mm:ss')) +
+                ("&startDate=" + moment(startDate).format('YYYY-MM-DD')) +
+                ("&endDate=" + moment(endDate).format('YYYY-MM-DD')) +
                 ("&pixels=" + pixels) +
                 ("&MeasurementCharacteristicID=" + measurementCharacteristicID) +
+                ("&MeasurementTypeID=" + measurementTypeID) +
                 ("&type=" + type),
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
@@ -45470,8 +45471,8 @@ var PeriodicDataDisplay = (function (_super) {
         var query = queryString.parse(_this.history['location'].search);
         _this.state = {
             meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
-            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DDTHH:mm:ss')),
-            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DDTHH:mm:ss')),
+            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DD')),
+            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
             type: (query['type'] != undefined ? query['type'] : "Average"),
             detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : true),
             print: (query['print'] != undefined ? query['print'] == "true" : false),
@@ -45493,7 +45494,7 @@ var PeriodicDataDisplay = (function (_super) {
         if (data.length == 0)
             return;
         var list = data.map(function (d) {
-            return React.createElement(Measurement_1.default, { meterID: _this.state.meterID, startDate: _this.state.startDate, endDate: _this.state.endDate, key: d.ID, data: d, type: _this.state.type, height: 300, stateSetter: function (obj) { return _this.setState(obj, _this.updateUrl); }, detailedReport: _this.state.detailedReport, width: _this.state.width });
+            return React.createElement(Measurement_1.default, { meterID: _this.state.meterID, startDate: _this.state.startDate, endDate: _this.state.endDate, key: d.MeasurementType + d.MeasurementCharacteristic, data: d, type: _this.state.type, height: 300, stateSetter: function (obj) { return _this.setState(obj, _this.updateUrl); }, detailedReport: _this.state.detailedReport, width: _this.state.width });
         });
         this.setState({ measurements: list }, function () { return _this.updateUrl(); });
     };
@@ -45530,7 +45531,7 @@ var PeriodicDataDisplay = (function (_super) {
                             React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState({ meterID: obj }); } })),
                         React.createElement("div", { className: "form-group" },
                             React.createElement("label", null, "Time Range: "),
-                            React.createElement(react_datetime_range_picker_1.default, { startDate: new Date(this.state.startDate), endDate: new Date(this.state.endDate), onChange: function (obj) { _this.setState({ startDate: moment(obj.start).format('YYYY-MM-DDTHH:mm:ss'), endDate: moment(obj.end).format('YYYY-MM-DDTHH:mm:ss') }); }, inputProps: { style: { width: '100px', margin: '5px' }, className: 'form-control' }, className: 'form', timeFormat: false })),
+                            React.createElement(react_datetime_range_picker_1.default, { startDate: new Date(this.state.startDate), endDate: new Date(this.state.endDate), onChange: function (obj) { _this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }); }, inputProps: { style: { width: '100px', margin: '5px' }, className: 'form-control' }, className: 'form', timeFormat: false })),
                         React.createElement("div", { className: "form-group" },
                             React.createElement("label", null, "Data Type: "),
                             React.createElement("select", { onChange: function (obj) { return _this.setState({ type: obj.target.value }); }, className: "form-control", defaultValue: this.state.type },
@@ -45540,9 +45541,11 @@ var PeriodicDataDisplay = (function (_super) {
                         React.createElement("div", { className: "form-group" },
                             React.createElement("label", null,
                                 "Detailed Report: ",
-                                React.createElement("input", { type: "checkbox", value: this.state.detailedReport, defaultChecked: this.state.detailedReport, onChange: function (e) { _this.setState({ detailedReport: e.target.value }); } }))),
+                                React.createElement("input", { type: "checkbox", value: this.state.detailedReport, defaultChecked: this.state.detailedReport, onChange: function (e) {
+                                        _this.setState({ detailedReport: !_this.state.detailedReport });
+                                    } }))),
                         React.createElement("div", { className: "form-group" },
-                            React.createElement("button", { className: 'btn btn-primary', style: { float: 'right' }, onClick: function () { _this.getData(); } }, "Apply")))
+                            React.createElement("button", { className: 'btn btn-primary', style: { float: 'right' }, onClick: function () { _this.updateUrl(); _this.getData(); } }, "Apply")))
                     : null),
                 React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth } },
                     React.createElement("div", { className: "list-group", style: { maxHeight: height, overflowY: (this.state.print ? 'visible' : 'auto') } }, this.state.measurements)))));
@@ -69927,7 +69930,7 @@ var Measurement = (function (_super) {
     };
     Measurement.prototype.getData = function (props) {
         var _this = this;
-        this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.ID, this.props.type).done(function (data) {
+        this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.MeasurementCharacteristicID, props.data.MeasurementTypeID, this.props.type).done(function (data) {
             if (Object.keys(data).length == 0) {
                 _this.setState({ display: 'none' });
                 return;
@@ -69966,7 +69969,10 @@ var Measurement = (function (_super) {
     Measurement.prototype.render = function () {
         var _this = this;
         return (React.createElement("div", { id: this.props.data.ID, className: "list-group-item panel-default", style: { padding: 0, display: this.state.display } },
-            React.createElement("div", { className: "panel-heading" }, this.props.data.Name),
+            React.createElement("div", { className: "panel-heading" },
+                this.props.data.MeasurementCharacteristic,
+                " - ",
+                this.props.data.MeasurementType),
             React.createElement("div", { className: "panel-body" },
                 React.createElement("div", { style: { height: this.props.height, float: 'left', width: '100%', marginBottom: '10px' } },
                     React.createElement("div", { id: 'graph', style: { height: 'inherit', width: this.props.width, position: 'absolute' } },
