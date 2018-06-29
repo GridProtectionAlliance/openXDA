@@ -278,7 +278,7 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserDashSettings), RecordOperation.QueryRecords)]
-        public IEnumerable<UserDashSettings> QueryUserDashSettingss(string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<UserDashSettings> QueryUserDashSettings(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             return DataContext.Table<UserDashSettings>().QueryRecords(sortField, ascending, page, pageSize, filterString);
         }
@@ -327,7 +327,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupCount(int meterGroupID, string filterString)
         {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
             RecordRestriction restriction;
 
             if (meterGroupID > 0)
@@ -335,14 +335,14 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<MeterGroup>().QueryRecordCount(restriction);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
         public IEnumerable<MeterGroup> QueryGroups(int meterGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
             RecordRestriction restriction;
 
             if (meterGroupID > 0)
@@ -350,7 +350,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<MeterGroup>().QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -515,7 +515,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<MeterMeterGroupView>().QueryRecordCount(restriction);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -530,7 +530,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<MeterMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1671,7 +1671,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecordCount)]
         public int QueryEmailTypeCount(int emailTypeID, string filterString)
         {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            TableOperations<EmailTypeView> tableOperations = DataContext.Table<EmailTypeView>();
             RecordRestriction restriction;
 
             if (emailTypeID > 0)
@@ -1679,14 +1679,14 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<EmailTypeView>().QueryRecordCount(restriction);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EmailType), RecordOperation.QueryRecords)]
         public IEnumerable<EmailTypeView> QueryEmailType(int emailTypeID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
+            TableOperations<EmailTypeView> tableOperations = DataContext.Table<EmailTypeView>();
             RecordRestriction restriction;
 
             if (emailTypeID > 0)
@@ -1694,7 +1694,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<EmailTypeView>().QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1751,7 +1751,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<EmailGroup>().QueryRecordCount(restriction);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1766,7 +1766,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return DataContext.Table<EmailGroup>().QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -2638,7 +2638,7 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterID = {0} AND LineID = {1}", meterID, lineID);
 
-            return DataContext.Table<ChannelDetail>().QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         public IEnumerable<Channel> QueryChannelsForDropDown(string filterString, int meterID)
