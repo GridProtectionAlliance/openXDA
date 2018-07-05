@@ -2317,6 +2317,55 @@ GO
 SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] OFF
 GO
 
+CREATE TABLE ReportResultType
+(
+	ID int Primary KEY identity(1,1),
+	Name varchar(200) Not NULL,
+	Description varchar(500) Not NULL
+)
+GO
+
+INSERT INTO ReportResultType (Name, Description) Values ('Frequency', 'Frequency')
+GO
+
+INSERT INTO ReportResultType (Name, Description) Values ('voltage', 'Voltage')
+GO
+
+INSERT INTO ReportResultType (Name, Description) Values ('Flicker', 'Flicker')
+GO
+
+INSERT INTO ReportResultType (Name, Description) Values ('Imbalance', 'Imbalance')
+GO
+
+INSERT INTO ReportResultType (Name, Description) Values ('THD', 'THD')
+GO
+
+INSERT INTO ReportResultType (Name, Description) Values ('Harmonics', 'Harmonics')
+GO
+
+CREATE TABLE Report(
+	ID int Primary KEY identity(1,1),
+	MeterID int Foreign key references Meter(ID) not null,
+	Month int NOT NULL,
+	Year INT NOT NULL,
+	Results varchar(4) NOT NULL,
+	CONSTRAINT UC_Report UNIQUE(ID,MeterID, Month,Year)
+)
+GO
+
+CREATE TABLE ReportResult(
+	ID int Primary KEY identity(1,1),
+	ReportID int Foreign key references Report(ID) not null,
+	ReportResultTypeID int Foreign key references ReportResultType(ID) not null,
+	Minimum float NULL,
+	Average float NULL,
+	Maximum float NULL,
+	Compliance varchar(4) NOT NULL,
+	CONSTRAINT UC_ReportResult UNIQUE(ID,ReportID, ReportResultTypeID)
+)
+GO
+
+
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash

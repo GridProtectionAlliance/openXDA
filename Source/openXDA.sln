@@ -124,6 +124,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDAFileWatcherConsole",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileWatcherMonitor", "Libraries\FileWatcherMonitor\FileWatcherMonitor.csproj", "{B5A0F34E-015D-4D5F-B1C6-EBB8D14FC6A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Reports", "Libraries\openXDA.Reports\openXDA.Reports.csproj", "{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -392,6 +394,18 @@ Global
 		{B5A0F34E-015D-4D5F-B1C6-EBB8D14FC6A2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B5A0F34E-015D-4D5F-B1C6-EBB8D14FC6A2}.Release|x86.ActiveCfg = Release|Any CPU
 		{B5A0F34E-015D-4D5F-B1C6-EBB8D14FC6A2}.Release|x86.Build.0 = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Debug|x86.Build.0 = Debug|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Mono|x86.ActiveCfg = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Mono|x86.Build.0 = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Release|Any CPU.Build.0 = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Release|x86.ActiveCfg = Release|Any CPU
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -424,6 +438,7 @@ Global
 		{7C63F03F-5176-4878-A562-803F51F7ADBF} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
 		{55283222-247D-41F0-BD2E-A685468866E9} = {DE52CF89-A2CD-41E7-AB2C-4D0E8DE2772A}
 		{B5A0F34E-015D-4D5F-B1C6-EBB8D14FC6A2} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77720899-DA0C-45E0-AE45-677A89071A7B}

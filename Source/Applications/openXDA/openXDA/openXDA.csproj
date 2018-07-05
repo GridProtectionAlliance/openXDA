@@ -319,6 +319,10 @@
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Reports\openXDA.Reports.csproj">
+      <Project>{656f97d9-4fb6-4f65-a9a6-1a1dde3af634}</Project>
+      <Name>openXDA.Reports</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Name>PQMark.DataAggregator</Name>
@@ -454,7 +458,7 @@
     <Content Include="wwwroot\Images\openSEELogo.png" />
     <Content Include="wwwroot\Images\openSEET.png" />
     <Content Include="wwwroot\Images\openSTE.png" />
-    <Content Include="wwwroot\Images\reports.png" />
+    <Content Include="wwwroot\Images\dD Reports.png" />
     <Content Include="wwwroot\Images\sync.png" />
     <Content Include="wwwroot\Images\dD Workbench.png" />
     <Content Include="wwwroot\index.cshtml" />
@@ -987,6 +991,9 @@
     <Folder Include="App_Code\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="wwwroot\Reports\Layout.cshtml" />
+    <Content Include="wwwroot\Reports\index.cshtml" />
+    <Content Include="wwwroot\Reports\Report.cshtml" />
     <None Include="wwwroot\Scripts\TSX\DistributionPlot.tsx" />
     <None Include="wwwroot\Scripts\TSX\Legend.tsx" />
     <None Include="wwwroot\Scripts\TSX\LineChart.tsx" />
@@ -1000,6 +1007,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\Scripts\TSX\SummaryStat.tsx" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\Report.tsx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />

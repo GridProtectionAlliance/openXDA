@@ -104,6 +104,7 @@ using openXDA.Configuration;
 using openXDA.DataPusher;
 using openXDA.Logging;
 using openXDA.Model;
+using openXDA.Reports;
 using PQMark.DataAggregator;
 using Channel = openXDA.Model.Channel;
 using DataHub = openXDA.Hubs.DataHub;
@@ -135,9 +136,8 @@ namespace openXDA
         private ServiceMonitors m_serviceMonitors;
         private ExtensibleDisturbanceAnalysisEngine m_extensibleDisturbanceAnalysisEngine;
         private DataPusherEngine m_dataPusherEngine;
-        private DataPusherSettings m_dataPusherSettings;
         private DataAggregationEngine m_dataAggregationEngine;
-        private PQMarkAggregationSettings m_pqMarkAggregationSettings;
+        private ReportsEngine m_reportsEngine;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
@@ -152,8 +152,6 @@ namespace openXDA
             ConfigurationFile configFile = ConfigurationFile.Current;
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
             systemSettings.Add("DefaultCulture", "en-US", "Default culture to use for language, country/region and calendar formats.");
-            m_dataPusherSettings = new DataPusherSettings();
-            m_pqMarkAggregationSettings = new PQMarkAggregationSettings();
 
             // Attempt to set default culture
             string defaultCulture = systemSettings["DefaultCulture"].ValueAs("en-US");
@@ -200,27 +198,6 @@ namespace openXDA
         /// Gets current performance statistics.
         /// </summary>
         public string PerformanceStatistics => m_extensibleDisturbanceAnalysisEngine.Status;
-
-        [Category]
-        [SettingName("DataPusher")]
-        public DataPusherSettings DataPusherSettings
-        {
-            get
-            {
-                return m_dataPusherSettings;
-            }
-        }
-
-        [Category]
-        [SettingName("PQMarkAggregation")]
-        public PQMarkAggregationSettings PQMarkAggregationSettings
-        {
-            get
-            {
-                return m_pqMarkAggregationSettings;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -320,6 +297,10 @@ namespace openXDA
             m_dataAggregationEngine = new DataAggregationEngine();
             ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_dataAggregationEngine);
 
+            // Set up data reports engine
+            m_reportsEngine = new ReportsEngine();
+            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_reportsEngine);
+
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
@@ -340,6 +321,10 @@ namespace openXDA
             DataAggregationEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             DataAggregationEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
 
+            //Set up DataAggregationEngine callbacks
+            ReportsEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
+            ReportsEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
@@ -351,15 +336,16 @@ namespace openXDA
                 bool webUIStarted = false;
                 bool dataPusherEngineStarted = false;
                 bool dataAggregationEngineStarted = false;
-
+                bool reportsEngineStarted = false;
                 while (true)
                 {
                     engineStarted = engineStarted || TryStartEngine();
                     webUIStarted = webUIStarted || TryStartWebUI();
                     dataPusherEngineStarted = dataPusherEngineStarted || TryStartDataPusherEngine();
                     dataAggregationEngineStarted = dataAggregationEngineStarted || TryStartDataAggregationEngine();
+                    reportsEngineStarted = reportsEngineStarted || TryStartReportsEngine();
 
-                    if (engineStarted && webUIStarted && dataPusherEngineStarted)
+                    if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted)
                         break;
 
                     for (int i = 0; i < LoopCount; i++)
@@ -445,7 +431,7 @@ namespace openXDA
         {
             try
             {
-                if (DataPusherSettings.Enabled)
+                if (m_dataPusherEngine.DataPusherSettings.Enabled)
                     m_dataPusherEngine.Start();
                 return true;
             }
@@ -470,7 +456,7 @@ namespace openXDA
             try
             {
                 // Start the analysis engine
-                if (PQMarkAggregationSettings.Enabled)
+                if (m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
                     m_dataAggregationEngine.Start();
                 return true;
             }
@@ -488,6 +474,33 @@ namespace openXDA
                 return false;
             }
         }
+
+
+        // Attempts to start the engine and logs startup errors.
+        private bool TryStartReportsEngine()
+        {
+            try
+            {
+                // Start the analysis engine
+                if (m_reportsEngine.ReportsSettings.Enabled)
+                    m_reportsEngine.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the analysis engine
+                m_reportsEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start reports engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
+
 
 
         // Attempts to start the web UI and logs startup errors.
@@ -670,11 +683,11 @@ namespace openXDA
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
             
-            if (m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+            if (m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.ReloadSystemSettings();
-            else if (!DataPusherSettings.Enabled)
+            else if (!m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.Stop();
-            else if (!m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+            else if (!m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.Start();
             else
                 m_dataPusherEngine.Stop();
@@ -687,20 +700,20 @@ namespace openXDA
         {
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
 
-            if (m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+            if (m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.ReloadSystemSettings();
-            else if (!DataPusherSettings.Enabled)
+            else if (!m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.Stop();
-            else if (!m_dataPusherEngine.Running && DataPusherSettings.Enabled)
+            else if (!m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.Start();
             else
                 m_dataPusherEngine.Stop();
 
-            if (m_dataAggregationEngine.Running && PQMarkAggregationSettings.Enabled)
+            if (m_dataAggregationEngine.Running && m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
                 m_dataAggregationEngine.ReloadSystemSettings();
-            else if (!PQMarkAggregationSettings.Enabled)
+            else if (!m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
                 m_dataAggregationEngine.Stop();
-            else if (!m_dataPusherEngine.Running && PQMarkAggregationSettings.Enabled)
+            else if (!m_dataPusherEngine.Running && m_dataAggregationEngine.PQMarkAggregationSettings.Enabled)
                 m_dataAggregationEngine.Start();
             else
                 m_dataAggregationEngine.Stop();

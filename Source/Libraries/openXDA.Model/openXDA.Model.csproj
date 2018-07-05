@@ -67,8 +67,12 @@
     <Compile Include="Links\EmailGroupSecurityGroup.cs" />
     <Compile Include="Links\EmailGroupUserAccount.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
+    <Compile Include="Reports\Report.cs" />
+    <Compile Include="Reports\ReportResult.cs" />
+    <Compile Include="Reports\ReportResultType.cs" />
     <Compile Include="Settings\DataPusherSettings.cs" />
     <Compile Include="Settings\PQMarkAggregationSettings.cs" />
+    <Compile Include="Settings\ReportsSettings.cs" />
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />
