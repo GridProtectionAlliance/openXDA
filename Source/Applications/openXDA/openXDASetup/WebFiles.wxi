@@ -479,8 +479,8 @@
   <Component Id="wwwroot_Images_dDAssetolds_png">
     <File Id="wwwroot_Images_dDAssetolds.png" Name="dD Assetolds.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assetolds.png" />
   </Component>
-  <Component Id="wwwroot_Images_dDAssets_png">
-    <File Id="wwwroot_Images_dDAssets.png" Name="dD Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Assets.png" />
+  <Component Id="wwwroot_Images_ddAssets_png">
+    <File Id="wwwroot_Images_ddAssets.png" Name="dd Assets.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dd Assets.png" />
   </Component>
   <Component Id="wwwroot_Images_dDConfigold_png">
     <File Id="wwwroot_Images_dDConfigold.png" Name="dD Config old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Config old.png" />
@@ -493,6 +493,9 @@
   </Component>
   <Component Id="wwwroot_Images_dDImpact_png">
     <File Id="wwwroot_Images_dDImpact.png" Name="dD Impact.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Impact.png" />
+  </Component>
+  <Component Id="wwwroot_Images_dDReports_png">
+    <File Id="wwwroot_Images_dDReports.png" Name="dD Reports.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Reports.png" />
   </Component>
   <Component Id="wwwroot_Images_dDWorkbenchold_png">
     <File Id="wwwroot_Images_dDWorkbenchold.png" Name="dD Workbench old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Workbench old.png" />
@@ -532,9 +535,6 @@
   </Component>
   <Component Id="wwwroot_Images_openXDA_png">
     <File Id="wwwroot_Images_openXDA.png" Name="openXDA.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openXDA.png" />
-  </Component>
-  <Component Id="wwwroot_Images_reports_png">
-    <File Id="wwwroot_Images_reports.png" Name="reports.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\reports.png" />
   </Component>
   <Component Id="wwwroot_Images_sync_png">
     <File Id="wwwroot_Images_sync.png" Name="sync.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\sync.png" />
@@ -603,6 +603,17 @@
   </Component>
   <Component Id="wwwroot_Images_Icons_openXDA_png">
     <File Id="wwwroot_Images_Icons_openXDA.png" Name="openXDA.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Icons\openXDA.png" />
+  </Component>
+</ComponentGroup>
+<ComponentGroup Id="wwwroot_Reports_Components" Directory="wwwroot_REPORTSFOLDER">
+  <Component Id="wwwroot_Reports_index_cshtml">
+    <File Id="wwwroot_Reports_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Reports\index.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Reports_Layout_cshtml">
+    <File Id="wwwroot_Reports_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Reports\Layout.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Reports_Report_cshtml">
+    <File Id="wwwroot_Reports_Report.cshtml" Name="Report.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Reports\Report.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_Components" Directory="wwwroot_SCRIPTSFOLDER">
@@ -677,6 +688,12 @@
   </Component>
   <Component Id="wwwroot_Scripts_plugins_all_js">
     <File Id="wwwroot_Scripts_plugins_all.js" Name="plugins-all.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\plugins-all.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_Report_js">
+    <File Id="wwwroot_Scripts_Report.js" Name="Report.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Report.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_Report_js_map">
+    <File Id="wwwroot_Scripts_Report.js.map" Name="Report.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Report.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_respond_js">
     <File Id="wwwroot_Scripts_respond.js" Name="respond.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\respond.js" />
@@ -3968,6 +3985,9 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_tsx">
     <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.tsx" Name="PeriodicDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.tsx" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_Report_tsx">
+    <File Id="wwwroot_Scripts_TSX_Report.tsx" Name="Report.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Report.tsx" />
   </Component>
   <Component Id="wwwroot_Scripts_TSX_SummaryStat_js">
     <File Id="wwwroot_Scripts_TSX_SummaryStat.js" Name="SummaryStat.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.js" />
