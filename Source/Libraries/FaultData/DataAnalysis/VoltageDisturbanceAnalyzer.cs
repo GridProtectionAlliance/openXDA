@@ -404,7 +404,7 @@ namespace FaultData.DataAnalysis
         {
             DataPoint dataPoint = new DataPoint();
             dataPoint.Time = disturbance.StartTime;
-            dataPoint.Value = disturbance.Magnitude;
+            dataPoint.Value = disturbance.PerUnitMagnitude;
             return m_isDisturbed(dataPoint);
         }
 
