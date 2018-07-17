@@ -37,8 +37,17 @@
     <Reference Include="GSF.Web">
       <HintPath>..\..\Dependencies\GSF\GSF.Web.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Reports, Version=0.9.5821.33856, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\Report.NET.0.09.06\lib\net46\Reports.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,6 +56,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmailSettings.cs" />
+    <Compile Include="EmailWriter.cs" />
+    <Compile Include="PQReport.cs" />
     <Compile Include="ReportsEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -59,6 +71,9 @@
       <Project>{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}</Project>
       <Name>openXDA.Model</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

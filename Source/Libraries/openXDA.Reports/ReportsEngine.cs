@@ -27,12 +27,19 @@ using GSF.Scheduling;
 using GSF.Web.Model;
 using openHistorian.XDALink;
 using openXDA.Model;
+using Root.Reports;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.DataVisualization.Charting;
+using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
 
 namespace openXDA.Reports
 {
@@ -44,6 +51,7 @@ namespace openXDA.Reports
         private ScheduleManager m_scheduler;
         private bool m_running = false;
         private ReportsSettings m_reportsSettings;
+        private EmailSettings m_emailSettings;
 
         #endregion
 
@@ -51,6 +59,7 @@ namespace openXDA.Reports
         public ReportsEngine()
         {
             m_reportsSettings = new ReportsSettings();
+            m_emailSettings = new EmailSettings();
         }
 
         public ReportsEngine(ReportsSettings settings)
@@ -71,6 +80,16 @@ namespace openXDA.Reports
             get
             {
                 return m_reportsSettings;
+            }
+        }
+
+        [Category]
+        [SettingName("Email")]
+        public EmailSettings EmailSettings
+        {
+            get
+            {
+                return m_emailSettings;
             }
         }
 
@@ -98,6 +117,65 @@ namespace openXDA.Reports
 
         public void Start()
         {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                //DateTime today = DateTime.Parse("09/01/2016");
+                //DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
+                //DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+
+                //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'Cal.Cal2'");
+
+                //createPDF(meter, firstOfMonth, endOfMonth, dataContext);
+
+                DateTime today = DateTime.Parse("08/01/2016");
+                DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
+                DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+
+                //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'DR_Fortress'");
+                Meter meter = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = 'Enphase_SI'");
+                PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
+
+                byte[] pdf = pQReport.createPDF();
+
+                try
+                {
+                    Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
+
+                    if (report != null)
+                    {
+                        report.MeterID = meter.ID;
+                        report.Month = firstOfMonth.Month;
+                        report.Year = firstOfMonth.Year;
+                        report.Results = pQReport.Result;
+                        report.PDF = pdf;
+
+                        dataContext.Table<Model.Report>().UpdateRecord(report);
+
+                    }
+                    else
+                    {
+                        dataContext.Table<Model.Report>().AddNewRecord(new Model.Report()
+                        {
+                            MeterID = meter.ID,
+                            Month = firstOfMonth.Month,
+                            Year = firstOfMonth.Year,
+                            Results = pQReport.Result,
+                            PDF = pdf
+                        });
+                    }
+
+                    EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
+                    emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
+
+                }
+                catch (Exception ex)
+                {
+                    OnLogExceptionMessage(ex);
+                }
+
+                OnLogStatusMessage("Completed test pdf.");
+            }
+
             if (!Running)
             {
                 Scheduler.Initialize();
@@ -148,273 +226,53 @@ namespace openXDA.Reports
 
         public void ProcessMonthlyReports()
         {
+            DateTime today = DateTime.Now;
+            DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
+            DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
-                IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecords();
+                IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID IN (SELECT MeterGroupID FROM EmailGroupMeterGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
                 foreach (Meter meter in meters) {
-                    DateTime today = DateTime.Now;
-                    DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
-                    DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
-                    dataContext.Table<Report>().AddNewRecord(new Report()
+                    PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
+
+                    byte[] pdf = pQReport.createPDF();
+
+                    try
                     {
-                        MeterID = meter.ID,
-                        Month = firstOfMonth.Month,
-                        Year = firstOfMonth.Year,
-                        Results = ""
-                    });
+                        Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
 
-                    int reportID = dataContext.Table<Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year).ID;
+                        if (report != null)
+                        {
+                            report.MeterID = meter.ID;
+                            report.Month = firstOfMonth.Month;
+                            report.Year = firstOfMonth.Year;
+                            report.Results = pQReport.Result;
+                            report.PDF = pdf;
 
-                    bool frequency = ProcessFrequency(meter, firstOfMonth, endOfMonth, dataContext, reportID);
-                    bool voltage = ProcessVoltage(meter, firstOfMonth, endOfMonth, dataContext, reportID);
-                    bool flicker = ProcessFlicker(meter, firstOfMonth, endOfMonth, dataContext, reportID);
-                    bool imbalance = ProcessImbalance(meter, firstOfMonth, endOfMonth, dataContext, reportID);
-                    bool thd = ProcessTHD(meter, firstOfMonth, endOfMonth, dataContext, reportID);
-                    bool harmonics = ProcessHarmonics(meter, firstOfMonth, endOfMonth, dataContext, reportID);
+                            dataContext.Table<Model.Report>().UpdateRecord(report);
 
-                    
-                    string result = (frequency && voltage && flicker && imbalance && thd && harmonics ? "Pass" : "Fail");
-                    dataContext.Connection.ExecuteNonQuery("UPDATE Report SET Results = {0} WHERE ID = {1}", result, reportID);
-                }
-            }
-        }
+                        }
+                        else {
+                            dataContext.Table<Model.Report>().AddNewRecord(new Model.Report()
+                            {
+                                MeterID = meter.ID,
+                                Month = firstOfMonth.Month,
+                                Year = firstOfMonth.Year,
+                                Results = pQReport.Result,
+                                PDF = pdf
+                            });
+                        }
+                    }
+                    catch (Exception ex) {
+                        OnLogExceptionMessage(ex);
+                    }
 
-        private bool ProcessFrequency(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext, int reportID) {
-            string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = dataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'Frequency') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", meter.ID);
-
-            if (!channels.Any()) return true;
-
-            double nominal = 60.0D;
-            double testOneMultiplier = 0.005;
-            double testTwoMultiplier = 0.003;
-
-            double lowThreshOne = nominal - (nominal * testOneMultiplier);
-            double highThreshOne = nominal - (nominal * testOneMultiplier);
-            double lowThreshTwo = nominal - (nominal * testTwoMultiplier);
-            double highThreshTwo = nominal - (nominal * testTwoMultiplier);
-
-            using (Historian historian = new Historian(historianServer, historianInstance))
-            {
-                List<double> max = new List<double>();
-                List<double> min = new List<double>();
-                List<double> avg = new List<double>();
-
-                foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), firstOfMonth, endOfMonth))
-                {
-                    if (point.SeriesID == SeriesID.Minimum)
-                        min.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Maximum)
-                        max.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Average)
-                        avg.Add(point.Value);
                 }
 
-                double maxValue = max.Max();
-                double minValue = min.Min();
-                double avgValue = avg.Average();
-
-                bool testOne = avg.Where(x => x < lowThreshOne && x > highThreshOne).Count() / avg.Count() > 0.9995;
-                bool testTwo = avg.Where(x => x < lowThreshTwo && x > highThreshTwo).Count() / avg.Count() > 0.99;
-
-                dataContext.Table<ReportResult>().AddNewRecord(new ReportResult() {
-                    ReportID = reportID,
-                    ReportResultTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM ReportResultType WHERE Name = 'Frequency'"),
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Average = avgValue,
-                    Compliance = (testOne && testTwo ? "Pass": "Fail")
-                });
-                return testOne && testTwo;
-
+                EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
+                emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
             }
-
-        }
-
-        private bool ProcessVoltage(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext, int reportID) {
-            string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = dataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", meter.ID);
-
-            if (!channels.Any()) return true;
-
-            double nominal = dataContext.Table<Line>().QueryRecordWhere("LineID = {0}", channels.FirstOrDefault().LineID)?.VoltageKV ?? 0;
-            double testOneMultiplier = 0.005;
-            double testTwoMultiplier = 0.003;
-
-            double lowThreshOne = nominal - (nominal * testOneMultiplier);
-            double highThreshOne = nominal - (nominal * testOneMultiplier);
-            double lowThreshTwo = nominal - (nominal * testTwoMultiplier);
-            double highThreshTwo = nominal - (nominal * testTwoMultiplier);
-
-            using (Historian historian = new Historian(historianServer, historianInstance))
-            {
-                List<double> max = new List<double>();
-                List<double> min = new List<double>();
-                List<double> avg = new List<double>();
-
-                foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), firstOfMonth, endOfMonth))
-                {
-                    if (point.SeriesID == SeriesID.Minimum)
-                        min.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Maximum)
-                        max.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Average)
-                        avg.Add(point.Value);
-                }
-
-                double maxValue = max.Max();
-                double minValue = min.Min();
-                double avgValue = avg.Average();
-
-                bool testOne = avg.Where(x => x < lowThreshOne && x > highThreshOne).Count() / avg.Count() > 0.9995;
-                bool testTwo = avg.Where(x => x < lowThreshTwo && x > highThreshTwo).Count() / avg.Count() > 0.99;
-
-                dataContext.Table<ReportResult>().AddNewRecord(new ReportResult()
-                {
-                    ReportID = reportID,
-                    ReportResultTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM ReportResultType WHERE Name = 'Voltage'"),
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Average = avgValue,
-                    Compliance = (testOne && testTwo ? "Pass" : "Fail")
-                });
-                return testOne && testTwo;
-
-            }
-        }
-
-        private bool ProcessFlicker(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext, int reportID) {
-            string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = dataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'FlkrPST') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", meter.ID);
-
-            if (!channels.Any()) return true;
-
-            double nominal = 1;
-
-            using (Historian historian = new Historian(historianServer, historianInstance))
-            {
-                List<double> max = new List<double>();
-                List<double> min = new List<double>();
-                List<double> avg = new List<double>();
-
-                foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), firstOfMonth, endOfMonth))
-                {
-                    if (point.SeriesID == SeriesID.Minimum)
-                        min.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Maximum)
-                        max.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Average)
-                        avg.Add(point.Value);
-                }
-
-                double maxValue = max.Max();
-                double minValue = min.Min();
-                double avgValue = avg.Average();
-                bool test = avg.Where(x => x <= nominal).Count() / avg.Count() > 0.9850;
-
-                dataContext.Table<ReportResult>().AddNewRecord(new ReportResult()
-                {
-                    ReportID = reportID,
-                    ReportResultTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM ReportResultType WHERE Name = 'Flicker'"),
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Average = avgValue,
-                    Compliance = (test ? "Pass" : "Fail")
-                });
-                return test;
-
-            }
-        }
-
-        private bool ProcessImbalance(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext, int reportID) {
-            string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = dataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'AvgImbal') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", meter.ID);
-
-            if (!channels.Any()) return true;
-
-            using (Historian historian = new Historian(historianServer, historianInstance))
-            {
-                List<double> max = new List<double>();
-                List<double> min = new List<double>();
-                List<double> avg = new List<double>();
-
-                foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), firstOfMonth, endOfMonth))
-                {
-                    if (point.SeriesID == SeriesID.Minimum)
-                        min.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Maximum)
-                        max.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Average)
-                        avg.Add(point.Value);
-                }
-
-                double maxValue = max.Max();
-                double minValue = min.Min();
-                double avgValue = avg.Average();
-                bool test = avg.Where(x => x >= 0 && x <= 2).Count() / avg.Count() > 0.9950;
-
-                dataContext.Table<ReportResult>().AddNewRecord(new ReportResult()
-                {
-                    ReportID = reportID,
-                    ReportResultTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM ReportResultType WHERE Name = 'Imbalance'"),
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Average = avgValue,
-                    Compliance = (test ? "Pass" : "Fail")
-                });
-                return test;
-
-            }
-        }
-
-        private bool ProcessTHD(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext, int reportID) {
-            string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
-            string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
-            IEnumerable<Channel> channels = dataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage')", meter.ID);
-
-            if (!channels.Any()) return true;
-
-            using (Historian historian = new Historian(historianServer, historianInstance))
-            {
-                List<double> max = new List<double>();
-                List<double> min = new List<double>();
-                List<double> avg = new List<double>();
-
-                foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), firstOfMonth, endOfMonth))
-                {
-                    if (point.SeriesID == SeriesID.Minimum)
-                        min.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Maximum)
-                        max.Add(point.Value);
-                    else if (point.SeriesID == SeriesID.Average)
-                        avg.Add(point.Value);
-                }
-
-                double maxValue = max.Max();
-                double minValue = min.Min();
-                double avgValue = avg.Average();
-                bool test = avg.Where(x => x <= 8).Count() / avg.Count() > 0.9950;
-
-                dataContext.Table<ReportResult>().AddNewRecord(new ReportResult()
-                {
-                    ReportID = reportID,
-                    ReportResultTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM ReportResultType WHERE Name = 'THD'"),
-                    Minimum = minValue,
-                    Maximum = maxValue,
-                    Average = avgValue,
-                    Compliance = (test ? "Pass" : "Fail")
-                });
-                return test;
-
-            }
-        }
-
-        private bool ProcessHarmonics(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext, int reportID) {
-            return true;
         }
 
         public string GetHelpMessage(string command)

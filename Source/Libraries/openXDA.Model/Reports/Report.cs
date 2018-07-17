@@ -40,5 +40,8 @@ namespace openXDA.Model
         [Required]
         [StringLength(4)]
         public string Results { get; set; }
+        
+        public byte[] PDF { get; set; }
+
     }
 }
