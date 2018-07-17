@@ -67,7 +67,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
     }
 
     createMeasurements(data) {
-        if (data.length == 0) return;
+        if (data == null || data.length == 0) return;
 
         var list = data.map(d =>
             <Measurement
