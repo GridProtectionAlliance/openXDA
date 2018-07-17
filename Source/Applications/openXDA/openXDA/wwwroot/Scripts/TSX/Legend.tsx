@@ -90,13 +90,10 @@ export default class Legend extends React.Component<any, any>{
 
 const Row = (props) => {
     return (
-        <tr>
+        <tr onClick={props.callback} style={{cursor: 'pointer'}}>
             <td>
-                <input name={props.label} className='legendCheckbox' type="checkbox" style={{ display: 'none' }} defaultChecked={props.enabled}/>
-            </td>
-            <td>
-                <div style={{ border: '1px solid #ccc', padding: '1px' }}>
-                    <div style={{ width: ' 4px', height: 0, border: '5px solid ' + props.color + (props.enabled ? 'FF' : '60'), overflow: 'hidden' }} onClick={props.callback}>
+                <div style={{ border: '1px solid #ccc', padding: '1px' }} >
+                    <div style={{ width: ' 4px', height: '4px', border: '5px solid', borderColor: (props.enabled ? convertHex(props.color, 100) : convertHex(props.color, 50)), overflow: 'hidden' }} >
                     </div>
                 </div>
             </td>
@@ -105,4 +102,14 @@ const Row = (props) => {
             </td>
         </tr>
     );
+}
+
+function convertHex(hex, opacity) {
+    hex = hex.replace('#', '');
+    var r = parseInt(hex.substring(0, 2), 16);
+    var g = parseInt(hex.substring(2, 4), 16);
+    var b = parseInt(hex.substring(4, 6), 16);
+
+    var result = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')';
+    return result;
 }

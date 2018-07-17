@@ -24,7 +24,7 @@
     "pdfkit": "^0.8.3",
     "png-js": "^0.1.1",
     "prop-types": "^15.6.1",
-    "query-string": "^6.0.0",
+    "query-string": "@5.1.1",
     "react": "^16.3.2",
     "react-bar-chart": "^0.1.2",
     "react-datetime": "^2.14.0",
