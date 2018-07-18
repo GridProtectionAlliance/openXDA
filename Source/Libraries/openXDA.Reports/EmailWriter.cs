@@ -93,7 +93,7 @@ namespace openXDA.Reports
             SELECT
 	            {0} as [Month],
 	            {1} as [Year],
-	            'http://localhost:8989' as [XDALink],
+	            (select value from DashSettings where Name = 'System.XDAInstance') as [XDALink],
 	            (SELECT
 		            Meter.AssetKey as [Meter],
 		            Report.Results as [Result],
