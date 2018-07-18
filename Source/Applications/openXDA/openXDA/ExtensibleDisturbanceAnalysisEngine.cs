@@ -1265,6 +1265,22 @@ namespace openXDA
                     return;
                 }
 
+                // If the file is empty, we retry a number of times waiting
+                // for the contents of the file before ultimately failing
+                if (buffer.Length == 0)
+                {
+                    string message = $"Skipped file \"{filePath}\" because it is empty.";
+
+                    if (fileProcessorEventArgs.AlreadyProcessed)
+                        Log.Debug(message, new FileSkippedException(message));
+                    else if (fileProcessorEventArgs.RetryCount >= 30)
+                        fileProcessorEventArgs.Requeue = true;
+                    else
+                        throw new FileSkippedException(message);
+
+                    return;
+                }
+
                 Crc32 crc32 = new Crc32();
                 crc32.Update(buffer);
                 int crc = (int)crc32.Value;
