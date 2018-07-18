@@ -994,6 +994,7 @@
     <Content Include="wwwroot\Reports\Layout.cshtml" />
     <Content Include="wwwroot\Reports\index.cshtml" />
     <Content Include="wwwroot\Reports\Report.cshtml" />
+    <Content Include="wwwroot\Reports\Reports.cshtml" />
     <None Include="wwwroot\Scripts\TSX\DistributionPlot.tsx" />
     <None Include="wwwroot\Scripts\TSX\Legend.tsx" />
     <None Include="wwwroot\Scripts\TSX\LineChart.tsx" />

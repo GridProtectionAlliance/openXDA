@@ -1,0 +1,153 @@
+﻿@*******************************************************************************************************
+    //  Index.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  01/15/2016 - J. Ritchie Carroll
+    //       Generated original version of source code.
+    //
+    //*****************************************************************************************************@
+@using System
+@using System.Threading
+@using GSF
+@using GSF.Data
+@using GSF.Identity
+@using GSF.IO
+@using GSF.Reflection
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA.Model
+@using openXDA.Hubs
+@using System.Net.Http
+
+
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    Layout = "Reports/Layout.cshtml";
+    ViewBag.Title = "Monthly PQ Summary";
+    DataContext dataContext = ViewBag.DataContext;
+    HttpRequestMessage request = ViewBag.Request;
+
+    int meterCount = dataContext.Connection.ExecuteScalar<int>("SELECT Count(MeterID) FROM MeterMeterGroup WHERE MeterGroupID IN (SELECT MeterGroupID FROM EmailGroupMeterGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report'))");
+}
+
+@section StyleSheets {
+    <style>
+        #main{
+            height: 100%
+        }
+    </style>
+}
+
+<div id="main" class="well" >
+    <div>
+        <label>Month:</label>
+        <select id="month" style="margin-right: 10px" onchange="OnChange()">
+            @for(int x = 1; x <= 12; ++x)
+            {
+                if (x == DateTime.Now.Month)
+                {
+                    <option selected>@x</option>
+                }
+                else {
+                    <option>@x</option>
+                }
+            }
+        </select>
+
+        <label>Year:</label>
+        <select id="year" onchange="OnChange()">
+            @for(int x = 2015; x <= DateTime.Now.Year; ++x)
+            {
+                if (x == DateTime.Now.Year)
+                {
+                    <option selected>@x</option>
+                }
+                else {
+                    <option>@x</option>
+                }
+            }
+        </select>
+    </div>
+    <div>
+        <h4>Total Meters: @meterCount.ToString()</h4>
+        <h4>Failed Reports: <span id="failed">0</span></h4>
+    </div>
+
+    <div style="width: 50%; max-height: 75%; overflow-y: auto">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Meter</th>
+                    <th>Location</th>
+                    <th>Nominal Voltage</th>
+                    <th>Result</th>
+                </tr>
+
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function resizeContent() {
+            $("#main").attr("height", (calculateRemainingBodyHeight() + 56) + "px");
+        }
+
+        $(window).resize(function () {
+            resizeContent();
+            UpdateTable();
+        });
+
+        $(function () {
+            $(window).on("hubIsConnected", function () {
+                UpdateFailedCount();
+            });
+            resizeContent();
+        });
+
+        function OnChange() {
+            UpdateFailedCount();
+            UpdateTable();
+        }
+
+        function UpdateFailedCount() {
+            dataHub.failedReportCount($('#month').val(), $('#year').val()).done(function (data) {
+                $('#failed').html(data);
+            });
+        }
+
+        function UpdateTable() {
+            dataHub.getReports($('#month').val(), $('#year').val()).done(function (data) {
+                $('.table tbody').children().remove();
+                $.each(data, function (i, d) {
+                    $('.table tbody').append(`
+                        <tr>
+                            <td><a href='../Reports/Report.cshtml?ID=`+ d.ReportID + `' target='_blank'>`+ d.Meter + `</a></td>
+                            <td>`+ d.Location + `</td>
+                            <td>`+ d.Voltage + `</td>
+                            <td>`+ d.Result + `</td>
+                        </tr>
+                     `);
+
+                });
+            });
+
+        }
+    </script>
+}

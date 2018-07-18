@@ -5999,6 +5999,37 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ Reports Operations ]
+
+        public int FailedReportCount(int month, int year) {
+            return DataContext.Table<Report>().QueryRecordCountWhere("Month = {0} AND Year = {1} AND Results = 'Fail'", month,  year);
+        }
+
+        public DataTable GetReports(int month, int year)
+        {
+            return DataContext.Connection.RetrieveData(
+                @"
+                    SELECT
+                        Report.ID as ReportID,
+	                    Meter.AssetKey as Meter,
+	                    MeterLocation.Name as Location,
+	                    Line.VoltageKV * 1000 as Voltage,
+	                    Report.Results as Result
+                    FROM
+	                    Report JOIN
+	                    Meter ON Report.MeterID = Meter.ID JOIN
+	                    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
+	                    MeterLine ON Meter.ID = MeterLine.MeterID JOIN
+	                    Line ON MeterLine.LineID = Line.ID 
+                    WHERE
+                        Report.Month = {0} AND Report.Year = {1}
+                    ORDER BY Report.Results, Meter.AssetKey
+                    ", month, year);
+        }
+
+
+        #endregion
+
         #region [OpenSEE Operations]
         public List<SignalCode.FlotSeries> GetFlotData(int eventID, List<int> seriesIndexes)
         {

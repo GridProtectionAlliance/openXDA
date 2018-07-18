@@ -117,64 +117,64 @@ namespace openXDA.Reports
 
         public void Start()
         {
-            using (DataContext dataContext = new DataContext("systemSettings"))
-            {
-                //DateTime today = DateTime.Parse("09/01/2016");
-                //DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
-                //DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+            //using (DataContext dataContext = new DataContext("systemSettings"))
+            //{
+            //    //DateTime today = DateTime.Parse("09/01/2016");
+            //    //DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
+            //    //DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
 
-                //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'Cal.Cal2'");
+            //    //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'Cal.Cal2'");
 
-                //createPDF(meter, firstOfMonth, endOfMonth, dataContext);
+            //    //createPDF(meter, firstOfMonth, endOfMonth, dataContext);
 
-                DateTime today = DateTime.Parse("08/01/2016");
-                DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
-                DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+            //    DateTime today = DateTime.Parse("08/01/2016");
+            //    DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
+            //    DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
 
-                //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'DR_Fortress'");
-                Meter meter = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = 'Enphase_SI'");
-                PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
+            //    //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'DR_Fortress'");
+            //    Meter meter = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = 'Enphase_SI'");
+            //    PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
 
-                byte[] pdf = pQReport.createPDF();
+            //    byte[] pdf = pQReport.createPDF();
 
-                try
-                {
-                    Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
+            //    try
+            //    {
+            //        Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
 
-                    if (report != null)
-                    {
-                        report.MeterID = meter.ID;
-                        report.Month = firstOfMonth.Month;
-                        report.Year = firstOfMonth.Year;
-                        report.Results = pQReport.Result;
-                        report.PDF = pdf;
+            //        if (report != null)
+            //        {
+            //            report.MeterID = meter.ID;
+            //            report.Month = firstOfMonth.Month;
+            //            report.Year = firstOfMonth.Year;
+            //            report.Results = pQReport.Result;
+            //            report.PDF = pdf;
 
-                        dataContext.Table<Model.Report>().UpdateRecord(report);
+            //            dataContext.Table<Model.Report>().UpdateRecord(report);
 
-                    }
-                    else
-                    {
-                        dataContext.Table<Model.Report>().AddNewRecord(new Model.Report()
-                        {
-                            MeterID = meter.ID,
-                            Month = firstOfMonth.Month,
-                            Year = firstOfMonth.Year,
-                            Results = pQReport.Result,
-                            PDF = pdf
-                        });
-                    }
+            //        }
+            //        else
+            //        {
+            //            dataContext.Table<Model.Report>().AddNewRecord(new Model.Report()
+            //            {
+            //                MeterID = meter.ID,
+            //                Month = firstOfMonth.Month,
+            //                Year = firstOfMonth.Year,
+            //                Results = pQReport.Result,
+            //                PDF = pdf
+            //            });
+            //        }
 
-                    EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
-                    emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
+            //        EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
+            //        emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
 
-                }
-                catch (Exception ex)
-                {
-                    OnLogExceptionMessage(ex);
-                }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        OnLogExceptionMessage(ex);
+            //    }
 
-                OnLogStatusMessage("Completed test pdf.");
-            }
+            //    OnLogStatusMessage("Completed test pdf.");
+            //}
 
             if (!Running)
             {
