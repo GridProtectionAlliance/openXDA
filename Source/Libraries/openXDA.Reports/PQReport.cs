@@ -1744,20 +1744,21 @@ namespace openXDA.Reports
 
         private Chart GenerateBarChart(string units, IEnumerable<double> points, double max, double min)
         {
+            double step = (max - min) / NumBuckets;
             Chart chart;
             ChartArea area;
             ChartSeries series;
             area = new ChartArea();
             area.AxisX.MajorGrid.Enabled = false;
             area.AxisY.Enabled = AxisEnabled.False;
-            area.AxisX.LabelStyle.Format = units;
+            //area.AxisX.LabelStyle.Format = units;
+            area.AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
             area.AxisX.LabelAutoFitStyle = LabelAutoFitStyles.DecreaseFont;
             chart = new Chart();
             chart.Width = 1200;
             chart.Height = 500;
             chart.ChartAreas.Add(area);
 
-            double step = (max - min) / NumBuckets;
             IEnumerable<IGrouping<int, double>> groups = points.GroupBy(x => (int)(x / step)).Where(x => x.Key > 0).OrderBy(x => x.Key);
 
             double index = min;
@@ -1766,21 +1767,21 @@ namespace openXDA.Reports
             {
                 IGrouping<int, double> group = groups.Where(x => x.Key * step <= index && x.Key * step + step > index).FirstOrDefault();
 
-                buckets.Add(index.ToString(), group?.Count() ?? 0);
+                buckets.Add(index.ToString(units), group?.Count() ?? 0);
                 index += step;
             }
 
+            series = new ChartSeries("bars");
+            series.ChartType = SeriesChartType.Column;
+            series.BorderWidth = 20;
+            series.Color = Color.DarkBlue;
+
             foreach (var key in buckets)
             {
-
-                series = new ChartSeries(key.Key);
-                series.ChartType = SeriesChartType.Column;
-                series.BorderWidth = 20;
-                series.Color = Color.DarkBlue;
-                series.Points.AddXY(double.Parse(key.Key), key.Value);
-
-                chart.Series.Add(series);
+                series.Points.AddXY(key.Key, key.Value);
             }
+
+            chart.Series.Add(series);
 
             return chart;
 
