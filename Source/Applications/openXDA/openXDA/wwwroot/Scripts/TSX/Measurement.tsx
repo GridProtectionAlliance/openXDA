@@ -36,7 +36,7 @@ export default class Measurement extends React.Component<any, any>{
     periodicDataDisplayService: PeriodicDataDisplayService;
     options: object;
     plot: any;
-
+    state: {legend: object, hover: number, display: string, distributions: Array<DistributionPlot>, legendRows: object}
     constructor(props) {
         super(props);
 
@@ -44,7 +44,8 @@ export default class Measurement extends React.Component<any, any>{
             legend: {},
             hover: null,
             display: 'block',
-            distributions: []
+            distributions: [],
+            legendRows: []
         }
 
         this.periodicDataDisplayService = new PeriodicDataDisplayService();
@@ -102,7 +103,10 @@ export default class Measurement extends React.Component<any, any>{
 
 
     getData(props) {
+        props.stateSetter()
         this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.MeasurementCharacteristicID, props.data.MeasurementTypeID,this.props.type).done(data => {
+            this.props.returnedMeasurement();
+
             if (Object.keys(data).length == 0) {
                 this.setState({ display: 'none' });
                 return;

@@ -30,13 +30,24 @@ import * as stats from 'stats-lite';
 
 export default class DistributionPlot extends React.Component<any, any>{
     options: object;
+    props: { data: {data: any, key: string}, bins: number}
     constructor(props) {
         super(props);
 
     }
 
     componentDidMount() {
-        var stat = stats.histogram(this.props.data.data.data.map(d => d[1]), this.props.bins)
+        if (this.props.data != null)
+            this.makeChart(this.props);
+    }
+
+    componentWillReceiveProps(nextProps, nextContext) {
+        if (this.props.data != nextProps.data)
+            this.makeChart(nextProps);    
+    }
+
+    makeChart(props) {
+        var stat = stats.histogram(props.data.data.data.map(d => d[1]), props.bins)
         var totalCount = stat.values.reduce((t, x) => { return t + x });
 
         var options = {
@@ -80,15 +91,16 @@ export default class DistributionPlot extends React.Component<any, any>{
 
         var data = stat.values.map((d, i) => {
             var bin = stat.binLimits[0] + i * stat.binWidth;
-            return [bin, (d/totalCount) * 100]
+            return [bin, (d / totalCount) * 100]
         });
-        ($ as any).plot($(this.refs.chartHolder), [{ label: this.props.data.key ,data:data }], options);
-
+        ($ as any).plot($(this.refs.chartHolder), [{ label: props.data.key, data: data }], options);
     }
 
     render() {
+        if (this.props.data == null) return null;
+
         return (
-            <div style={{ height: 'inherit', margin: '10px'}}>
+            <div style={{ height: '100%', margin: '10px'}}>
                 <label style={{textAlign: 'center'}}>{this.props.data.key}</label>
                 <div ref="chartHolder" style={{ height: 'calc(100% - 20px)', width: 'inherit' }}></div>
             </div>

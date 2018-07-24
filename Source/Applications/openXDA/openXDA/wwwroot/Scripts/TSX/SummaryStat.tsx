@@ -28,11 +28,15 @@ import * as _ from "lodash";
 import * as stats from 'stats-lite';
 
 export default class SummaryStat extends React.Component<any, any>{
+    props: { data: { data: { data: any }, key: string } }
+
     constructor(props) {
         super(props);
     }
 
     render() {
+        if (this.props.data == null) return null;
+
         var avg = stats.mean(this.props.data.data.data.map(d => d[1]));
         var median = stats.median(this.props.data.data.data.map(d => d[1]));
         var variance = stats.variance(this.props.data.data.data.map(d => d[1]));

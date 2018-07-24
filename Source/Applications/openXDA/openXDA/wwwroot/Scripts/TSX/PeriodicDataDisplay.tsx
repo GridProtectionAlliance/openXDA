@@ -36,7 +36,8 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
     history: object;
     periodicDataDisplayService: PeriodicDataDisplayService;
     resizeId: any;
-
+    props: {};
+    state: {meterID: number, startDate: string, endDate: string, type: string, detailedReport: boolean, measurements: Array<Measurement>, width: number, data: any, numMeasurements: number, measurementsReturned: number};
     constructor(props) {
         super(props);
 
@@ -51,23 +52,36 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
             endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
             type: (query['type'] != undefined ? query['type'] : "Average"),
             detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : true),
-            print: (query['print'] != undefined ? query['print'] == "true" : false),
             measurements: [],
             width: window.innerWidth - 475,
-            data: null
+            data: null,
+            numMeasurements: 0,
+            measurementsReturned: 0
         }
 
     }
 
     getData() {
+        $(this.refs.loader).show();
+
         this.periodicDataDisplayService.getMeasurementCharacteristics().done(data => {
-            this.setState({ data: data });
+            this.setState({ data: data, numMeasurements: data.length });
             this.createMeasurements(data);
         });
     }
 
+    returnedMeasurement() {
+        if (this.state.numMeasurements == this.state.measurementsReturned + 1) $(this.refs.loader).hide();
+        this.setState({ measurementsReturned: ++this.state.measurementsReturned })
+
+    }
     createMeasurements(data) {
-        if (data == null || data.length == 0) return;
+        if (data == null || data.length == 0) {
+            $(this.refs.loader).hide();
+            return;
+        };
+
+        $(this.refs.loader).show();
 
         var list = data.map(d =>
             <Measurement
@@ -81,6 +95,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
                 stateSetter={(obj) => this.setState(obj, this.updateUrl)}
                 detailedReport={this.state.detailedReport}
                 width={this.state.width}
+                returnedMeasurement={this.returnedMeasurement.bind(this)}
             />);
         this.setState({ measurements: list }, () => this.updateUrl());
     }
@@ -102,58 +117,65 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
     }
 
     updateUrl() {
+
         var state = _.clone(this.state);
         delete state.measurements;
         delete state.data;
+        delete state.numMeasurements;
+        delete state.measurementsReturned;
+
         this.history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify(state, { encode: false }))
     }
 
     render() {
-        var height = window.innerHeight - (this.state.print ? 0 : 60);
+        var height = window.innerHeight -  60;
 
         return (
         <div>
-                <div className="screen" style={{ height: height, width: window.innerWidth }}>
-                    {(!this.state.print ?
-                        <div className="vertical-menu">
-                            <div className="form-group">
-                                <label>Meter: </label>
-                                <MeterInput value={this.state.meterID} onChange={(obj) => this.setState({ meterID: obj })} />
-                            </div>
-                            <div className="form-group">
-                                <label>Time Range: </label>
-                                <DatetimeRangePicker
-                                    startDate={new Date(this.state.startDate)}
-                                    endDate={new Date(this.state.endDate)}
-                                    onChange={(obj) => { this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }) }}
-                                    inputProps={{ style: { width: '100px', margin: '5px' }, className: 'form-control' }}
-                                    className='form'
-                                    timeFormat={false}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Data Type: </label>
-                                <select onChange={(obj) => this.setState({ type: obj.target.value })} className="form-control" defaultValue={this.state.type}>
-                                    <option value="Average">Average</option>
-                                    <option value="Maximum">Maximum</option>
-                                    <option value="Minimum">Minimum</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label>Detailed Report: <input type="checkbox" value={this.state.detailedReport} defaultChecked={this.state.detailedReport} onChange={(e) => {
-                                    this.setState({ detailedReport: !this.state.detailedReport })
-                                }} /></label>
-                            </div>
+            <div className="screen" style={{ height: height, width: window.innerWidth }}>
+                <div className="vertical-menu">
+                    <div className="form-group">
+                        <label>Meter: </label>
+                        <MeterInput value={this.state.meterID} onChange={(obj) => this.setState({ meterID: obj })} />
+                    </div>
+                    <div className="form-group">
+                        <label>Time Range: </label>
+                        <DatetimeRangePicker
+                            startDate={new Date(this.state.startDate)}
+                            endDate={new Date(this.state.endDate)}
+                            onChange={(obj) => { this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }) }}
+                            inputProps={{ style: { width: '100px', margin: '5px' }, className: 'form-control' }}
+                            className='form'
+                            timeFormat={false}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Data Type: </label>
+                        <select onChange={(obj) => this.setState({ type: obj.target.value })} className="form-control" defaultValue={this.state.type}>
+                            <option value="Average">Average</option>
+                            <option value="Maximum">Maximum</option>
+                            <option value="Minimum">Minimum</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Detailed Report: <input type="checkbox" value={this.state.detailedReport.toString()} defaultChecked={this.state.detailedReport} onChange={(e) => {
+                            this.setState({ detailedReport: !this.state.detailedReport })
+                        }} /></label>
+                    </div>
 
-                            <div className="form-group">
-                                <button className='btn btn-primary' style={{ float: 'right' }} onClick={() => { this.updateUrl(); this.getData(); }}>Apply</button>
-                            </div>
-
-
+                    <div className="form-group">
+                        <div style={{ float: 'left' }} ref={'loader'} hidden>
+                            <div style={{ border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' }}></div>
+                            <span>Loading...</span>
                         </div>
-                : null)}
+
+                        <button className='btn btn-primary' style={{ float: 'right' }} onClick={() => { this.updateUrl(); this.getData(); }}>Apply</button>
+                    </div>
+
+
+                </div>
                 <div className="waveform-viewer" style={{ width: window.innerWidth }}>
-                    <div className="list-group" style={{ maxHeight:height, overflowY: (this.state.print? 'visible' :'auto') }}>
+                    <div className="list-group" style={{ maxHeight:height, overflowY: 'auto' }}>
                             {this.state.measurements}
                     </div>
                 </div>

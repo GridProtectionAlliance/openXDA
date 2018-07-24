@@ -33,19 +33,13 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
-    ViewBag.Title = "Periodic Data Display";
+    ViewBag.Title = "Trending Data Display";
     DateTime toDateTime = DateTime.Now;
     ViewBag.usePagedViewModel = false;
     ViewBag.useContainer = false;
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
-
-    if (parameters.ContainsKey("print"))
-    {
-        ViewBag.ShowMenu = !bool.Parse(parameters["print"]);
-    }
-
 
 }
 @section StyleSheets {
@@ -91,13 +85,13 @@
     </style>
 }
 <script>
- //   window.onwheel = function (event, info) {
- //       if (event.path[0].tagName == "CANVAS") {
- //           event.path[1].dispatchEvent(new WheelEvent('plotzoom', event));
- //           return false;
- //       }
- //       else
- //           return true;
- //   }
+    window.onwheel = function (event, info) {
+        if (event.path[0].tagName == "CANVAS") {
+            event.path[1].dispatchEvent(new WheelEvent('plotzoom', event));
+            return false;
+        }
+        else
+            return true;
+    }
 </script>
-<script type="text/javascript" src="~/Scripts/PeriodicDataDisplay.js"></script>
+<script type="text/javascript" src="~/Scripts/TrendingDataDisplay.js"></script>

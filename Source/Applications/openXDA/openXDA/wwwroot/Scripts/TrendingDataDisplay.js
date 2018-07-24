@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 187);
+/******/ 	return __webpack_require__(__webpack_require__.s = 197);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -69768,735 +69768,52 @@ function histogram (vals, bins) {
 
 
 /***/ }),
-/* 186 */,
-/* 187 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function($) {
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(1);
-var ReactDOM = __webpack_require__(14);
-var PeriodicDataDisplay_1 = __webpack_require__(19);
-var createBrowserHistory_1 = __webpack_require__(160);
-var queryString = __webpack_require__(167);
 var moment = __webpack_require__(0);
-var _ = __webpack_require__(13);
-var MeterInput_1 = __webpack_require__(171);
-var react_datetime_range_picker_1 = __webpack_require__(188);
-var Measurement_1 = __webpack_require__(191);
-var PeriodicDataDisplay = (function (_super) {
-    __extends(PeriodicDataDisplay, _super);
-    function PeriodicDataDisplay(props) {
-        var _this = _super.call(this, props) || this;
-        _this.history = createBrowserHistory_1.default();
-        _this.periodicDataDisplayService = new PeriodicDataDisplay_1.default();
-        var query = queryString.parse(_this.history['location'].search);
-        _this.state = {
-            meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
-            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DD')),
-            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
-            type: (query['type'] != undefined ? query['type'] : "Average"),
-            detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : true),
-            measurements: [],
-            width: window.innerWidth - 475,
-            data: null,
-            numMeasurements: 0,
-            measurementsReturned: 0
-        };
-        return _this;
+var TrendingDataDisplayService = (function () {
+    function TrendingDataDisplayService() {
     }
-    PeriodicDataDisplay.prototype.getData = function () {
-        var _this = this;
-        $(this.refs.loader).show();
-        this.periodicDataDisplayService.getMeasurementCharacteristics().done(function (data) {
-            _this.setState({ data: data, numMeasurements: data.length });
-            _this.createMeasurements(data);
+    TrendingDataDisplayService.prototype.getData = function (channelID, startDate, endDate, pixels) {
+        return $.ajax({
+            type: "GET",
+            url: window.location.origin + "/api/TrendingDataDisplay/GetData?ChannelID=" + channelID +
+                ("&startDate=" + moment(startDate).format('YYYY-MM-DDTHH:mm')) +
+                ("&endDate=" + moment(endDate).format('YYYY-MM-DDTHH:mm')) +
+                ("&pixels=" + pixels),
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
         });
     };
-    PeriodicDataDisplay.prototype.returnedMeasurement = function () {
-        if (this.state.numMeasurements == this.state.measurementsReturned + 1)
-            $(this.refs.loader).hide();
-        this.setState({ measurementsReturned: ++this.state.measurementsReturned });
-    };
-    PeriodicDataDisplay.prototype.createMeasurements = function (data) {
-        var _this = this;
-        if (data == null || data.length == 0) {
-            $(this.refs.loader).hide();
-            return;
-        }
-        ;
-        $(this.refs.loader).show();
-        var list = data.map(function (d) {
-            return React.createElement(Measurement_1.default, { meterID: _this.state.meterID, startDate: _this.state.startDate, endDate: _this.state.endDate, key: d.MeasurementType + d.MeasurementCharacteristic, data: d, type: _this.state.type, height: 300, stateSetter: function (obj) { return _this.setState(obj, _this.updateUrl); }, detailedReport: _this.state.detailedReport, width: _this.state.width, returnedMeasurement: _this.returnedMeasurement.bind(_this) });
+    TrendingDataDisplayService.prototype.getMeasurements = function (meterID) {
+        return $.ajax({
+            type: "GET",
+            url: window.location.origin + "/api/TrendingDataDisplay/GetMeasurements?MeterID=" + meterID,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
         });
-        this.setState({ measurements: list }, function () { return _this.updateUrl(); });
     };
-    PeriodicDataDisplay.prototype.componentDidMount = function () {
-        window.addEventListener("resize", this.handleScreenSizeChange.bind(this));
-        if (this.state.meterID != 0)
-            this.getData();
-    };
-    PeriodicDataDisplay.prototype.componentWillUnmount = function () {
-        $(window).off('resize');
-    };
-    PeriodicDataDisplay.prototype.handleScreenSizeChange = function () {
-        var _this = this;
-        clearTimeout(this.resizeId);
-        this.resizeId = setTimeout(function () {
-            _this.setState({ width: window.innerWidth - 475 }, function () { _this.createMeasurements(_this.state.data); });
-        }, 100);
-    };
-    PeriodicDataDisplay.prototype.updateUrl = function () {
-        var state = _.clone(this.state);
-        delete state.measurements;
-        delete state.data;
-        delete state.numMeasurements;
-        delete state.measurementsReturned;
-        this.history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify(state, { encode: false }));
-    };
-    PeriodicDataDisplay.prototype.render = function () {
-        var _this = this;
-        var height = window.innerHeight - 60;
-        return (React.createElement("div", null,
-            React.createElement("div", { className: "screen", style: { height: height, width: window.innerWidth } },
-                React.createElement("div", { className: "vertical-menu" },
-                    React.createElement("div", { className: "form-group" },
-                        React.createElement("label", null, "Meter: "),
-                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState({ meterID: obj }); } })),
-                    React.createElement("div", { className: "form-group" },
-                        React.createElement("label", null, "Time Range: "),
-                        React.createElement(react_datetime_range_picker_1.default, { startDate: new Date(this.state.startDate), endDate: new Date(this.state.endDate), onChange: function (obj) { _this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }); }, inputProps: { style: { width: '100px', margin: '5px' }, className: 'form-control' }, className: 'form', timeFormat: false })),
-                    React.createElement("div", { className: "form-group" },
-                        React.createElement("label", null, "Data Type: "),
-                        React.createElement("select", { onChange: function (obj) { return _this.setState({ type: obj.target.value }); }, className: "form-control", defaultValue: this.state.type },
-                            React.createElement("option", { value: "Average" }, "Average"),
-                            React.createElement("option", { value: "Maximum" }, "Maximum"),
-                            React.createElement("option", { value: "Minimum" }, "Minimum"))),
-                    React.createElement("div", { className: "form-group" },
-                        React.createElement("label", null,
-                            "Detailed Report: ",
-                            React.createElement("input", { type: "checkbox", value: this.state.detailedReport.toString(), defaultChecked: this.state.detailedReport, onChange: function (e) {
-                                    _this.setState({ detailedReport: !_this.state.detailedReport });
-                                } }))),
-                    React.createElement("div", { className: "form-group" },
-                        React.createElement("div", { style: { float: 'left' }, ref: 'loader', hidden: true },
-                            React.createElement("div", { style: { border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' } }),
-                            React.createElement("span", null, "Loading...")),
-                        React.createElement("button", { className: 'btn btn-primary', style: { float: 'right' }, onClick: function () { _this.updateUrl(); _this.getData(); } }, "Apply"))),
-                React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth } },
-                    React.createElement("div", { className: "list-group", style: { maxHeight: height, overflowY: 'auto' } }, this.state.measurements)))));
-    };
-    return PeriodicDataDisplay;
-}(React.Component));
-exports.PeriodicDataDisplay = PeriodicDataDisplay;
-ReactDOM.render(React.createElement(PeriodicDataDisplay, null), document.getElementById('bodyContainer'));
+    return TrendingDataDisplayService;
+}());
+exports.default = TrendingDataDisplayService;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 188 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(1);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(147);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _moment = __webpack_require__(0);
-
-var _moment2 = _interopRequireDefault(_moment);
-
-var _reactDatetime = __webpack_require__(174);
-
-var _reactDatetime2 = _interopRequireDefault(_reactDatetime);
-
-__webpack_require__(189);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /* eslint 'react/sort-comp': off, 'react/jsx-no-bind': off */
-
-// import style
-
-
-var DatetimeRangePicker = function (_Component) {
-  _inherits(DatetimeRangePicker, _Component);
-
-  function DatetimeRangePicker(props) {
-    _classCallCheck(this, DatetimeRangePicker);
-
-    var _this = _possibleConstructorReturn(this, (DatetimeRangePicker.__proto__ || Object.getPrototypeOf(DatetimeRangePicker)).call(this, props));
-
-    _this.state = {
-      start: (0, _moment2.default)(props.startDate) || (0, _moment2.default)(),
-      end: (0, _moment2.default)(props.endDate) || (0, _moment2.default)()
-    };
-    return _this;
-  }
-
-  _createClass(DatetimeRangePicker, [{
-    key: 'getInputProps',
-    value: function getInputProps() {
-      var inputReadOnlyStyle = {
-        cursor: 'pointer',
-        backgroundColor: 'white',
-        border: '1px solid #e2e2e2'
-      };
-
-      return this.props.input ? this.props.inputProps : {
-        input: true,
-        inputProps: _extends({}, this.props.inputProps, { // merge inputProps with default
-          readOnly: true,
-          style: inputReadOnlyStyle
-        })
-      };
-    }
-  }, {
-    key: 'propsToPass',
-    value: function propsToPass() {
-      return {
-        end: this.state.end.toDate(),
-        start: this.state.start.toDate()
-      };
-    }
-  }, {
-    key: 'calcBaseProps',
-    value: function calcBaseProps() {
-      return {
-        utc: this.props.utc,
-        locale: this.props.locale,
-        input: !this.props.inline,
-        viewMode: this.props.viewMode,
-        dateFormat: this.props.dateFormat,
-        timeFormat: this.props.timeFormat,
-        closeOnTab: this.props.closeOnTab,
-        className: this.props.pickerClassName,
-        closeOnSelect: this.props.closeOnSelect
-      };
-    }
-  }, {
-    key: 'calcStartTimeProps',
-    value: function calcStartTimeProps() {
-      var baseProps = this.calcBaseProps();
-      var inputProps = this.getInputProps();
-
-      return _extends({}, baseProps, inputProps, {
-        defaultValue: this.props.startDate,
-        onBlur: this.props.onStartDateBlur,
-        onFocus: this.props.onStartDateFocus,
-        timeConstraints: this.props.startTimeConstraints
-      });
-    }
-  }, {
-    key: 'calcEndTimeProps',
-    value: function calcEndTimeProps() {
-      var baseProps = this.calcBaseProps();
-      var inputProps = this.getInputProps();
-
-      return _extends({}, baseProps, inputProps, {
-        onBlur: this.props.onEndDateBlur,
-        defaultValue: this.props.endDate,
-        onFocus: this.props.onEndDateFocus,
-        timeConstraints: this.props.endTimeConstraints
-      });
-    }
-  }, {
-    key: 'validateMinDate',
-    value: function validateMinDate(date) {
-      return this.state.start.isSameOrBefore(date, 'day');
-    }
-  }, {
-    key: 'isValidEndDate',
-    value: function isValidEndDate(currentDate, selectedDate) {
-      return this.validateMinDate(currentDate) && this.props.isValidEndDate(currentDate, selectedDate);
-    }
-  }, {
-    key: 'onStartDateChange',
-    value: function onStartDateChange(date) {
-      var _this2 = this;
-
-      var options = {
-        start: date
-      };
-
-      if (this.state.end.isBefore(date)) {
-        options.end = date.add(1, 'd');
-      }
-
-      this.setState(options, function () {
-        _this2.props.onChange(_this2.propsToPass());
-        _this2.props.onStartDateChange(_this2.propsToPass().start);
-      });
-    }
-  }, {
-    key: 'onEndDateChange',
-    value: function onEndDateChange(date) {
-      var _this3 = this;
-
-      this.setState({ end: date }, function () {
-        _this3.props.onChange(_this3.propsToPass());
-        _this3.props.onEndDateChange(_this3.propsToPass().end);
-      });
-    }
-  }, {
-    key: 'onFocus',
-    value: function onFocus() {
-      this.props.onFocus();
-    }
-  }, {
-    key: 'onBlur',
-    value: function onBlur() {
-      this.props.onBlur(this.propsToPass());
-    }
-  }, {
-    key: 'renderDay',
-    value: function renderDay(props, currentDate) {
-      var _state = this.state,
-          start = _state.start,
-          end = _state.end;
-
-      var className = props.className,
-          rest = _objectWithoutProperties(props, ['className']);
-
-      var date = (0, _moment2.default)(props.key, 'M_D');
-
-      // style all dates in range
-      var classes = date.isBetween(start, end, 'day') ? props.className + ' in-selecting-range' : props.className;
-
-      // add rdtActive to selected startdate and endDate in pickers
-      classes = date.isSame(start, 'day') || date.isSame(end, 'day') ? classes + ' rdtActive' : classes;
-
-      return _react2.default.createElement(
-        'td',
-        _extends({}, rest, {
-          className: classes }),
-        currentDate.date()
-      );
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var startProps = this.calcStartTimeProps();
-      var endProps = this.calcEndTimeProps();
-
-      return _react2.default.createElement(
-        'div',
-        {
-          className: this.props.className,
-          onFocus: this.onFocus.bind(this),
-          onBlur: this.onBlur.bind(this) },
-        _react2.default.createElement(_reactDatetime2.default, _extends({}, startProps, {
-          isValidDate: this.props.isValidStartDate,
-          onChange: this.onStartDateChange.bind(this),
-          renderDay: this.renderDay.bind(this) })),
-        _react2.default.createElement(_reactDatetime2.default, _extends({}, endProps, {
-          isValidDate: this.isValidEndDate.bind(this),
-          onChange: this.onEndDateChange.bind(this),
-          renderDay: this.renderDay.bind(this) }))
-      );
-    }
-  }]);
-
-  return DatetimeRangePicker;
-}(_react.Component);
-
-DatetimeRangePicker.defaultProps = {
-  utc: false,
-  locale: null,
-  input: false, // This defines whether or not to to edit date manually via input
-  inline: false, // This defines whether or not to show input field
-  className: '',
-  viewMode: 'days',
-  dateFormat: true,
-  timeFormat: true,
-  closeOnTab: true,
-  onBlur: function onBlur() {},
-  onFocus: function onFocus() {},
-  onChange: function onChange() {},
-  pickerClassName: '',
-  endDate: new Date(),
-  closeOnSelect: false,
-  inputProps: undefined,
-  startDate: new Date(),
-  onEndDateBlur: function onEndDateBlur() {},
-  endTimeConstraints: {},
-  onEndDateFocus: function onEndDateFocus() {},
-  isValidStartDate: function isValidStartDate() {
-    return true;
-  },
-  isValidEndDate: function isValidEndDate() {
-    return true;
-  },
-  onStartDateBlur: function onStartDateBlur() {},
-  onEndDateChange: function onEndDateChange() {}, // This is called after onChange
-  onStartDateFocus: function onStartDateFocus() {},
-  startTimeConstraints: {},
-  onStartDateChange: function onStartDateChange() {} // This is called after onChange
-};
-
-DatetimeRangePicker.propTypes = {
-  utc: _propTypes2.default.bool,
-  input: _propTypes2.default.bool,
-  inline: _propTypes2.default.bool,
-  onBlur: _propTypes2.default.func,
-  onFocus: _propTypes2.default.func,
-  locale: _propTypes2.default.string,
-  onChange: _propTypes2.default.func,
-  viewMode: _propTypes2.default.oneOf(['years', 'months', 'days', 'time']),
-  closeOnTab: _propTypes2.default.bool,
-  className: _propTypes2.default.string,
-  inputProps: _propTypes2.default.object, // eslint-disable-line
-  closeOnSelect: _propTypes2.default.bool,
-  isValidEndDate: _propTypes2.default.func,
-  onEndDateBlur: _propTypes2.default.func,
-  onEndDateFocus: _propTypes2.default.func,
-  onEndDateChange: _propTypes2.default.func,
-  onStartDateBlur: _propTypes2.default.func,
-  isValidStartDate: _propTypes2.default.func,
-  onStartDateFocus: _propTypes2.default.func,
-  onStartDateChange: _propTypes2.default.func,
-  pickerClassName: _propTypes2.default.string,
-  endDate: _propTypes2.default.instanceOf(Date),
-  endTimeConstraints: _propTypes2.default.object, // eslint-disable-line
-  startDate: _propTypes2.default.instanceOf(Date),
-  startTimeConstraints: _propTypes2.default.object, // eslint-disable-line
-  dateFormat: _propTypes2.default.oneOfType([_propTypes2.default.bool, _propTypes2.default.string]),
-  timeFormat: _propTypes2.default.oneOfType([_propTypes2.default.bool, _propTypes2.default.string])
-};
-
-exports.default = DatetimeRangePicker;
-
-/***/ }),
-/* 189 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-var content = __webpack_require__(190);
-
-if(typeof content === 'string') content = [[module.i, content, '']];
-
-var transform;
-var insertInto;
-
-
-
-var options = {"hmr":true}
-
-options.transform = transform
-options.insertInto = undefined;
-
-var update = __webpack_require__(182)(content, options);
-
-if(content.locals) module.exports = content.locals;
-
-if(false) {
-	module.hot.accept("!!../../css-loader/index.js!./style.css", function() {
-		var newContent = require("!!../../css-loader/index.js!./style.css");
-
-		if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-
-		var locals = (function(a, b) {
-			var key, idx = 0;
-
-			for(key in a) {
-				if(!b || a[key] !== b[key]) return false;
-				idx++;
-			}
-
-			for(key in b) idx--;
-
-			return idx === 0;
-		}(content.locals, newContent.locals));
-
-		if(!locals) throw new Error('Aborting CSS HMR due to changed css-modules locals.');
-
-		update(newContent);
-	});
-
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 190 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(181)(false);
-// imports
-
-
-// module
-exports.push([module.i, "/*!\n * https://github.com/YouCanBookMe/react-datetime\n */\n\n.rdt {\n  position: relative;\n}\n.rdtPicker {\n  display: none;\n  position: absolute;\n  width: 250px;\n  padding: 4px;\n  margin-top: 1px;\n  z-index: 99999 !important;\n  background: #fff;\n  box-shadow: 0 1px 3px rgba(0,0,0,.1);\n  border: 1px solid #f9f9f9;\n}\n.rdtOpen .rdtPicker {\n  display: block;\n}\n.rdtStatic .rdtPicker {\n  box-shadow: none;\n  position: static;\n}\n\n.rdtPicker .rdtTimeToggle {\n  text-align: center;\n}\n\n.rdtPicker table {\n  width: 100%;\n  margin: 0;\n}\n.rdtPicker td,\n.rdtPicker th {\n  text-align: center;\n  height: 28px;\n}\n.rdtPicker td {\n  cursor: pointer;\n}\n.rdtPicker td.rdtDay:hover,\n.rdtPicker td.rdtHour:hover,\n.rdtPicker td.rdtMinute:hover,\n.rdtPicker td.rdtSecond:hover,\n.rdtPicker .rdtTimeToggle:hover {\n  background: #eeeeee;\n  cursor: pointer;\n}\n.rdtPicker td.rdtOld,\n.rdtPicker td.rdtNew {\n  color: #999999;\n}\n.rdtPicker td.rdtToday {\n  position: relative;\n}\n.rdtPicker td.rdtToday:before {\n  content: '';\n  display: inline-block;\n  border-left: 7px solid transparent;\n  border-bottom: 7px solid #428bca;\n  border-top-color: rgba(0, 0, 0, 0.2);\n  position: absolute;\n  bottom: 4px;\n  right: 4px;\n}\n.rdtPicker td.rdtActive,\n.rdtPicker td.rdtActive:hover {\n  background-color: #428bca;\n  color: #fff;\n  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);\n}\n.rdtPicker td.rdtActive.rdtToday:before {\n  border-bottom-color: #fff;\n}\n.rdtPicker td.rdtDisabled,\n.rdtPicker td.rdtDisabled:hover {\n  background: none;\n  color: #999999;\n  cursor: not-allowed;\n}\n\n.rdtPicker td span.rdtOld {\n  color: #999999;\n}\n.rdtPicker td span.rdtDisabled,\n.rdtPicker td span.rdtDisabled:hover {\n  background: none;\n  color: #999999;\n  cursor: not-allowed;\n}\n.rdtPicker th {\n  border-bottom: 1px solid #f9f9f9;\n}\n.rdtPicker .dow {\n  width: 14.2857%;\n  border-bottom: none;\n}\n.rdtPicker th.rdtSwitch {\n  width: 100px;\n}\n.rdtPicker th.rdtNext,\n.rdtPicker th.rdtPrev {\n  font-size: 21px;\n  vertical-align: top;\n}\n\n.rdtPrev span,\n.rdtNext span {\n  display: block;\n  -webkit-touch-callout: none; /* iOS Safari */\n  -webkit-user-select: none;   /* Chrome/Safari/Opera */\n  -khtml-user-select: none;    /* Konqueror */\n  -moz-user-select: none;      /* Firefox */\n  -ms-user-select: none;       /* Internet Explorer/Edge */\n  user-select: none;\n}\n\n.rdtPicker th.rdtDisabled,\n.rdtPicker th.rdtDisabled:hover {\n  background: none;\n  color: #999999;\n  cursor: not-allowed;\n}\n.rdtPicker thead tr:first-child th {\n  cursor: pointer;\n}\n.rdtPicker thead tr:first-child th:hover {\n  background: #eeeeee;\n}\n\n.rdtPicker tfoot {\n  border-top: 1px solid #f9f9f9;\n}\n\n.rdtPicker button {\n  border: none;\n  background: none;\n  cursor: pointer;\n}\n.rdtPicker button:hover {\n  background-color: #eee;\n}\n\n.rdtPicker thead button {\n  width: 100%;\n  height: 100%;\n}\n\ntd.rdtMonth,\ntd.rdtYear {\n  height: 50px;\n  width: 25%;\n  cursor: pointer;\n}\ntd.rdtMonth:hover,\ntd.rdtYear:hover {\n  background: #eee;\n}\n\n.rdtCounters {\n  display: inline-block;\n}\n\n.rdtCounters > div {\n  float: left;\n}\n\n.rdtCounter {\n  height: 100px;\n}\n\n.rdtCounter {\n  width: 40px;\n}\n\n.rdtCounterSeparator {\n  line-height: 100px;\n}\n\n.rdtCounter .rdtBtn {\n  height: 40%;\n  line-height: 40px;\n  cursor: pointer;\n  display: block;\n\n  -webkit-touch-callout: none; /* iOS Safari */\n  -webkit-user-select: none;   /* Chrome/Safari/Opera */\n  -khtml-user-select: none;    /* Konqueror */\n  -moz-user-select: none;      /* Firefox */\n  -ms-user-select: none;       /* Internet Explorer/Edge */\n  user-select: none;\n}\n.rdtCounter .rdtBtn:hover {\n  background: #eee;\n}\n.rdtCounter .rdtCount {\n  height: 20%;\n  font-size: 1.2em;\n}\n\n.rdtMilli {\n  vertical-align: middle;\n  padding-left: 8px;\n  width: 48px;\n}\n\n.rdtMilli input {\n  width: 100%;\n  font-size: 1.2em;\n  margin-top: 37px;\n}\n\n.rdtDay.in-selecting-range {\n  background-color: rgba(66, 139, 202, 0.4);\n}\n\n", ""]);
-
-// exports
-
-
-/***/ }),
-/* 191 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(1);
-var _ = __webpack_require__(13);
-var PeriodicDataDisplay_1 = __webpack_require__(19);
-var Legend_1 = __webpack_require__(192);
-var DistributionPlot_1 = __webpack_require__(193);
-var SummaryStat_1 = __webpack_require__(195);
-var LineChart_1 = __webpack_require__(196);
-var Measurement = (function (_super) {
-    __extends(Measurement, _super);
-    function Measurement(props) {
-        var _this = _super.call(this, props) || this;
-        _this.state = {
-            legend: {},
-            hover: null,
-            display: 'block',
-            distributions: [],
-            legendRows: []
-        };
-        _this.periodicDataDisplayService = new PeriodicDataDisplay_1.default();
-        return _this;
-    }
-    Measurement.prototype.getColor = function (index) {
-        switch (index % 20) {
-            case 0: return "#dcc582";
-            case 1: return "#cb4b4b";
-            case 2: return "#afd8f8";
-            case 3: return "#56a14d";
-            case 4: return "#734da1";
-            case 5: return "#795548";
-            case 6: return "#9e9e9e";
-            case 7: return "#a31c73";
-            case 8: return "#3a96ca";
-            case 9: return "#a00bda";
-            case 10: return "#aa9b66";
-            case 11: return "#54ec23";
-            case 12: return "#6d3827";
-            case 13: return "#7b84ae";
-            case 14: return "#dceccd";
-            case 15: return "#0c87fc";
-            case 16: return "#575ddd";
-            case 17: return "#5b4f5b";
-            case 18: return "#5986e3";
-            case 19: return "#cb42b3";
-        }
-    };
-    Measurement.prototype.componentWillReceiveProps = function (nextProps) {
-        var props = _.clone(this.props);
-        var nextPropsClone = _.clone(nextProps);
-        delete props.data;
-        delete props.stateSetter;
-        delete props.height;
-        delete nextPropsClone.data;
-        delete nextPropsClone.stateSetter;
-        delete nextPropsClone.height;
-        if (!(_.isEqual(props, nextPropsClone))) {
-            this.getData(nextProps);
-        }
-    };
-    Measurement.prototype.componentDidMount = function () {
-        this.getData(this.props);
-    };
-    Measurement.prototype.getData = function (props) {
-        var _this = this;
-        props.stateSetter();
-        this.periodicDataDisplayService.getData(props.meterID, props.startDate, props.endDate, window.innerWidth, props.data.MeasurementCharacteristicID, props.data.MeasurementTypeID, this.props.type).done(function (data) {
-            _this.props.returnedMeasurement();
-            if (Object.keys(data).length == 0) {
-                _this.setState({ display: 'none' });
-                return;
-            }
-            _this.setState({ display: 'block' });
-            var legend = _this.createLegendRows(data);
-            _this.createDistributionPlots(legend);
-        });
-    };
-    Measurement.prototype.createDistributionPlots = function (legend) {
-        var distributions = Object.keys(legend).map(function (key) {
-            var data = { key: key, data: legend[key] };
-            return (React.createElement("li", { key: key, style: { height: '270px', width: '600px', display: 'inline-block' } },
-                React.createElement("table", { className: "table", style: { height: '270px', width: '600px' } },
-                    React.createElement("tbody", null,
-                        React.createElement("tr", { style: { height: '270px', width: '600px' } },
-                            React.createElement("td", { style: { height: 'inherit', width: '50%' } },
-                                React.createElement(DistributionPlot_1.default, { data: data, bins: 40 })),
-                            React.createElement("td", { style: { height: 'inherit', width: '50%' } },
-                                React.createElement(SummaryStat_1.default, { data: data })))))));
-        });
-        this.setState({ distributions: distributions });
-    };
-    Measurement.prototype.createLegendRows = function (data) {
-        var ctrl = this;
-        var legend = (this.state.legend != undefined ? this.state.legend : {});
-        $.each(Object.keys(data), function (i, key) {
-            if (legend[key] == undefined)
-                legend[key] = { color: ctrl.getColor(i), enabled: true, data: data[key] };
-            else
-                legend[key].data = data[key];
-        });
-        this.setState({ legendRows: legend });
-        return legend;
-    };
-    Measurement.prototype.render = function () {
-        var _this = this;
-        return (React.createElement("div", { id: this.props.data.ID, className: "list-group-item panel-default", style: { padding: 0, display: this.state.display } },
-            React.createElement("div", { className: "panel-heading" },
-                this.props.data.MeasurementCharacteristic,
-                " - ",
-                this.props.data.MeasurementType),
-            React.createElement("div", { className: "panel-body" },
-                React.createElement("div", { style: { height: this.props.height, float: 'left', width: '100%', marginBottom: '10px' } },
-                    React.createElement("div", { id: 'graph', style: { height: 'inherit', width: this.props.width, position: 'absolute' } },
-                        React.createElement(LineChart_1.default, { legend: this.state.legendRows, startDate: this.props.startDate, endDate: this.props.endDate, width: this.props.width })),
-                    React.createElement("div", { id: 'legend', className: 'legend', style: { position: 'absolute', right: '0', width: '200px', height: this.props.height - 38, marginTop: '6px', borderStyle: 'solid', borderWidth: '2px', overflowY: 'auto' } },
-                        React.createElement(Legend_1.default, { data: this.state.legendRows, callback: function () {
-                                _this.setState({ legend: _this.state.legend });
-                            } }))),
-                (this.props.detailedReport ?
-                    React.createElement("div", { style: { width: '100%', margin: '10px' } },
-                        React.createElement("label", { style: { width: '100%' } }, "Distributions"),
-                        React.createElement("ul", { style: { display: 'inline', position: 'relative', width: '100%', marginTop: '25px', paddingLeft: '0' } }, this.state.distributions)) : null)),
-            React.createElement("br", null)));
-    };
-    return Measurement;
-}(React.Component));
-exports.default = Measurement;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ }),
-/* 192 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(1);
-var _ = __webpack_require__(13);
-var Legend = (function (_super) {
-    __extends(Legend, _super);
-    function Legend(props) {
-        return _super.call(this, props) || this;
-    }
-    Legend.prototype.render = function () {
-        var _this = this;
-        if (this.props.data == null || Object.keys(this.props.data).length == 0)
-            return null;
-        var rows = Object.keys(this.props.data).sort().map(function (row) {
-            return React.createElement(Row, { key: row, label: row, color: _this.props.data[row].color, enabled: _this.props.data[row].enabled, callback: function () {
-                    _this.props.data[row].enabled = !_this.props.data[row].enabled;
-                    _this.props.callback();
-                } });
-        });
-        return (React.createElement("div", null,
-            React.createElement("table", null,
-                React.createElement("tbody", null, rows))));
-    };
-    Legend.prototype.toggleWave = function (event) {
-        var data = this.props.data;
-        var flag = false;
-        _.each(Object.keys(data).filter(function (d) { return d.indexOf('RMS') < 0 && d.indexOf('Amplitude') < 0 && d.indexOf('Phase') < 0; }), function (key, i) {
-            if (i == 0)
-                flag = !data[key].enabled;
-            data[key].enabled = flag;
-            $('[name="' + key + '"]').prop('checked', flag);
-        });
-        if (flag)
-            event.target.className = "active";
-        else
-            event.target.className = "";
-        this.props.callback();
-    };
-    Legend.prototype.toggleAll = function (type, event) {
-        var data = this.props.data;
-        var flag = false;
-        _.each(Object.keys(data).filter(function (d) { return d.indexOf(type) >= 0; }), function (key, i) {
-            if (i == 0)
-                flag = !data[key].enabled;
-            data[key].enabled = flag;
-            $('[name="' + key + '"]').prop('checked', flag);
-        });
-        if (flag)
-            event.target.className = "active";
-        else
-            event.target.className = "";
-        this.props.callback();
-    };
-    return Legend;
-}(React.Component));
-exports.default = Legend;
-var Row = function (props) {
-    return (React.createElement("tr", { onClick: props.callback, style: { cursor: 'pointer' } },
-        React.createElement("td", null,
-            React.createElement("div", { style: { border: '1px solid #ccc', padding: '1px' } },
-                React.createElement("div", { style: { width: ' 4px', height: '4px', border: '5px solid', borderColor: (props.enabled ? convertHex(props.color, 100) : convertHex(props.color, 50)), overflow: 'hidden' } }))),
-        React.createElement("td", null,
-            React.createElement("span", { style: { color: props.color, fontSize: 'smaller', fontWeight: 'bold', whiteSpace: 'nowrap' } }, props.label))));
-};
-function convertHex(hex, opacity) {
-    hex = hex.replace('#', '');
-    var r = parseInt(hex.substring(0, 2), 16);
-    var g = parseInt(hex.substring(2, 4), 16);
-    var b = parseInt(hex.substring(4, 6), 16);
-    var result = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity / 100 + ')';
-    return result;
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ }),
+/* 187 */,
+/* 188 */,
+/* 189 */,
+/* 190 */,
+/* 191 */,
+/* 192 */,
 /* 193 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -70680,7 +69997,208 @@ exports.default = SummaryStat;
 
 
 /***/ }),
-/* 196 */
+/* 196 */,
+/* 197 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(1);
+var ReactDOM = __webpack_require__(14);
+var TrendingDataDisplay_1 = __webpack_require__(186);
+var createBrowserHistory_1 = __webpack_require__(160);
+var queryString = __webpack_require__(167);
+var moment = __webpack_require__(0);
+var _ = __webpack_require__(13);
+var MeterInput_1 = __webpack_require__(171);
+var MeasurementInput_1 = __webpack_require__(198);
+var TrendingChart_1 = __webpack_require__(199);
+var DateTimeRangePicker_1 = __webpack_require__(203);
+var DistributionPlot_1 = __webpack_require__(193);
+var SummaryStat_1 = __webpack_require__(195);
+var TrendingDataDisplay = (function (_super) {
+    __extends(TrendingDataDisplay, _super);
+    function TrendingDataDisplay(props) {
+        var _this = _super.call(this, props) || this;
+        _this.history = createBrowserHistory_1.default();
+        _this.trendingDataDisplayService = new TrendingDataDisplay_1.default();
+        var query = queryString.parse(_this.history['location'].search);
+        _this.state = {
+            meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
+            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DDTHH:mm')),
+            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DDTHH:mm')),
+            measurementID: (query['measurementID'] != undefined ? query['measurementID'] : 0),
+            width: window.innerWidth - 475,
+            type: ["Minimum", "Maximum", "Average"],
+            data: null,
+            distributionData: null
+        };
+        _this.history['listen'](function (location, action) {
+            var query = queryString.parse(_this.history['location'].search);
+            _this.setState({
+                meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
+                startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DDTHH:mm')),
+                endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DDTHH:mm')),
+                measurementID: (query['measurementID'] != undefined ? query['measurementID'] : 0),
+                width: window.innerWidth - 475
+            }, function () { return _this.getData(); });
+        });
+        return _this;
+    }
+    TrendingDataDisplay.prototype.stateSetter = function (object) {
+        var _this = this;
+        this.setState(object, function () {
+            _this.updateUrl();
+        });
+    };
+    TrendingDataDisplay.prototype.getData = function () {
+        var _this = this;
+        $(this.refs.loader).show();
+        this.trendingDataDisplayService.getData(this.state.measurementID, this.state.startDate, this.state.endDate, this.state.width).done(function (data) {
+            _this.setState({ data: data, distributionData: { key: '', data: { data: data['Average'] } } }, function () { return $(_this.refs.loader).hide(); });
+        });
+    };
+    TrendingDataDisplay.prototype.componentDidMount = function () {
+        window.addEventListener("resize", this.handleScreenSizeChange.bind(this));
+        if (this.state.measurementID != 0)
+            this.getData();
+    };
+    TrendingDataDisplay.prototype.componentWillUnmount = function () {
+        $(window).off('resize');
+    };
+    TrendingDataDisplay.prototype.handleScreenSizeChange = function () {
+        var _this = this;
+        clearTimeout(this.resizeId);
+        this.resizeId = setTimeout(function () {
+            _this.updateUrl();
+        }, 500);
+    };
+    TrendingDataDisplay.prototype.updateUrl = function () {
+        var _this = this;
+        clearTimeout(this.updateUrlId);
+        this.updateUrlId = setTimeout(function () {
+            var state = _.clone(_this.state);
+            delete state.data;
+            delete state.type;
+            delete state.width;
+            _this.history['push']('TrendingDataDisplay.cshtml?' + queryString.stringify(state, { encode: false }));
+        }, 500);
+    };
+    TrendingDataDisplay.prototype.render = function () {
+        var _this = this;
+        var height = window.innerHeight - $('#navbar').height();
+        var menuWidth = 250;
+        var sideWidth = 400;
+        var top = $('#navbar').height() - 30;
+        return (React.createElement("div", null,
+            React.createElement("div", { className: "screen", style: { height: height, width: window.innerWidth, position: 'relative', top: top } },
+                React.createElement("div", { className: "vertical-menu" },
+                    React.createElement("div", { className: "form-group" },
+                        React.createElement("label", null, "Time Range: "),
+                        React.createElement(DateTimeRangePicker_1.default, { startDate: this.state.startDate, endDate: this.state.endDate, stateSetter: function (obj) {
+                                _this.setState(obj, function () { return _this.updateUrl(); });
+                            } })),
+                    React.createElement("div", { className: "form-group" },
+                        React.createElement("label", null, "Data Type: "),
+                        React.createElement("select", { onChange: function (obj) { return _this.setState({ type: $(obj.currentTarget).val() }); }, className: "form-control", style: { overflowY: "hidden" }, defaultValue: this.state.type, multiple: true },
+                            React.createElement("option", { value: "Average" }, "Average"),
+                            React.createElement("option", { value: "Maximum" }, "Maximum"),
+                            React.createElement("option", { value: "Minimum" }, "Minimum"))),
+                    React.createElement("div", { className: "form-group" },
+                        React.createElement("label", null, "Meter: "),
+                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState({ meterID: obj }); } })),
+                    React.createElement("div", { className: "form-group" },
+                        React.createElement("label", null, "Measurement: "),
+                        React.createElement(MeasurementInput_1.default, { meterID: this.state.meterID, value: this.state.measurementID, onChange: function (obj) { return _this.setState({ measurementID: obj }, _this.updateUrl); } })),
+                    React.createElement("div", { className: "form-group" },
+                        React.createElement("div", { style: { float: 'left' }, ref: 'loader', hidden: true },
+                            React.createElement("div", { style: { border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' } }),
+                            React.createElement("span", null, "Loading...")))),
+                React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth - menuWidth - sideWidth, height: height, float: 'left', left: sideWidth } },
+                    React.createElement(TrendingChart_1.default, { startDate: this.state.startDate, endDate: this.state.endDate, data: this.state.data, type: this.state.type, stateSetter: function (object) { return _this.stateSetter(object); } })),
+                React.createElement("div", { style: { width: sideWidth, height: 'inherit', position: 'relative', float: 'right' } },
+                    React.createElement("h4", null, "Statistics"),
+                    React.createElement("div", { style: { width: 'inherit', height: 'calc(50% - 100px)', padding: '5px', marginTop: 50, marginBottom: 50 } },
+                        React.createElement(DistributionPlot_1.default, { data: this.state.distributionData, bins: 40 })),
+                    React.createElement("div", { style: { width: 'inherit', height: '50%', padding: '5px' } },
+                        React.createElement(SummaryStat_1.default, { data: this.state.distributionData }))))));
+    };
+    return TrendingDataDisplay;
+}(React.Component));
+ReactDOM.render(React.createElement(TrendingDataDisplay, null), document.getElementById('bodyContainer'));
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ }),
+/* 198 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(1);
+var TrendingDataDisplay_1 = __webpack_require__(186);
+var MeterInput = (function (_super) {
+    __extends(MeterInput, _super);
+    function MeterInput(props) {
+        var _this = _super.call(this, props) || this;
+        _this.state = {
+            select: null
+        };
+        _this.trendingDataDisplayService = new TrendingDataDisplay_1.default();
+        return _this;
+    }
+    MeterInput.prototype.componentWillReceiveProps = function (nextProps) {
+        if (this.props.meterID != nextProps.meterID)
+            this.getData(nextProps.meterID);
+    };
+    MeterInput.prototype.componentDidMount = function () {
+        this.getData(this.props.meterID);
+    };
+    MeterInput.prototype.getData = function (meterID) {
+        var _this = this;
+        this.trendingDataDisplayService.getMeasurements(meterID).done(function (data) {
+            if (data.length == 0)
+                return;
+            var value = (_this.props.value ? _this.props.value : data[0].ID);
+            var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.Name); });
+            var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange(e.target.value); }, defaultValue: value }, options);
+            _this.props.onChange(value);
+            _this.setState({ select: select });
+            _this.props.onChange(data[0].ID);
+        });
+    };
+    MeterInput.prototype.render = function () {
+        return this.state.select;
+    };
+    return MeterInput;
+}(React.Component));
+exports.default = MeterInput;
+
+
+/***/ }),
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70699,15 +70217,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
 var moment = __webpack_require__(0);
 __webpack_require__(148);
+__webpack_require__(200);
+__webpack_require__(201);
+__webpack_require__(202);
 __webpack_require__(184);
-var LineChart = (function (_super) {
-    __extends(LineChart, _super);
-    function LineChart(props) {
+var TrendingChart = (function (_super) {
+    __extends(TrendingChart, _super);
+    function TrendingChart(props) {
         var _this = _super.call(this, props) || this;
+        _this.hover = 0;
+        _this.startDate = props.startDate;
+        _this.endDate = props.endDate;
         var ctrl = _this;
         _this.options = {
             canvas: true,
-            legend: { show: false },
+            legend: { show: true },
             crosshair: { mode: "x" },
             selection: { mode: "x" },
             grid: {
@@ -70731,8 +70255,13 @@ var LineChart = (function (_super) {
                     return ticks;
                 },
                 tickFormatter: function (value, axis) {
-                    return moment(value).utc().format("MM/DD");
-                }
+                    if (axis.delta > 3 * 24 * 60 * 60 * 1000)
+                        return moment(value).utc().format("MM/DD");
+                    else
+                        return moment(value).utc().format("MM/DD HH:mm");
+                },
+                max: null,
+                min: null
             },
             yaxis: {
                 labelWidth: 50,
@@ -70750,76 +70279,74 @@ var LineChart = (function (_super) {
         };
         return _this;
     }
-    LineChart.prototype.componentDidMount = function () {
-        this.createDataRows();
+    TrendingChart.prototype.getColor = function (key) {
+        if (key == "Average")
+            return '#261083';
+        if (key == "Minimum")
+            return '#30AF47';
+        if (key == "Maximum")
+            return '#DB0404';
+        return '#000000';
     };
-    LineChart.prototype.componentWillReceiveProps = function (nextProps) {
-        this.createDataRows();
-    };
-    LineChart.prototype.componentWillUnmount = function () {
-        $(this.refs.graph).off("plotselected");
-        $(this.refs.graph).off("plotzoom");
-        $(this.refs.graph).off("plothover");
-    };
-    LineChart.prototype.createDataRows = function () {
+    TrendingChart.prototype.createDataRows = function (props) {
         var _this = this;
         if (this.plot != undefined)
             $(this.refs.graph).children().remove();
         var ctrl = this;
-        var startString = this.props.startDate;
-        var endString = this.props.endDate;
+        var startString = this.startDate;
+        var endString = this.endDate;
         var newVessel = [];
-        if (this.props.legend != undefined && Object.keys(this.props.legend).length > 0) {
-            $.each(Object.keys(this.props.legend), function (i, key) {
-                if (_this.props.legend[key].enabled)
-                    newVessel.push({ label: key, data: _this.props.legend[key].data, color: _this.props.legend[key].color });
+        if (props.data != null) {
+            $.each(Object.keys(props.data), function (i, key) {
+                if (props.type.indexOf(key) >= 0)
+                    newVessel.push({ label: key, data: props.data[key], color: _this.getColor(key) });
             });
         }
         newVessel.push([[this.getMillisecondTime(startString), null], [this.getMillisecondTime(endString), null]]);
+        this.options.xaxis.max = this.getMillisecondTime(endString);
+        this.options.xaxis.min = this.getMillisecondTime(startString);
         this.plot = $.plot($(this.refs.graph), newVessel, this.options);
+        this.plotSelected();
+        this.plotZoom();
+        this.plotHover();
     };
-    LineChart.prototype.render = function () {
-        return React.createElement("div", { ref: 'graph', style: { height: 'inherit', width: this.props.width } });
+    TrendingChart.prototype.componentDidMount = function () {
+        this.createDataRows(this.props);
     };
-    LineChart.prototype.defaultTickFormatter = function (value, axis) {
-        var factor = axis.tickDecimals ? Math.pow(10, axis.tickDecimals) : 1;
-        var formatted = "" + Math.round(value * factor) / factor;
-        if (axis.tickDecimals != null) {
-            var decimal = formatted.indexOf(".");
-            var precision = decimal == -1 ? 0 : formatted.length - decimal - 1;
-            if (precision < axis.tickDecimals) {
-                return (precision ? formatted : formatted + ".") + ("" + factor).substr(1, axis.tickDecimals - precision);
-            }
-        }
-        return formatted;
+    TrendingChart.prototype.componentWillReceiveProps = function (nextProps) {
+        this.startDate = nextProps.startDate;
+        this.endDate = nextProps.endDate;
+        this.createDataRows(nextProps);
     };
-    ;
-    LineChart.prototype.floorInBase = function (n, base) {
+    TrendingChart.prototype.render = function () {
+        return React.createElement("div", { ref: 'graph', style: { height: 'inherit', width: 'inherit' } });
+    };
+    TrendingChart.prototype.floorInBase = function (n, base) {
         return base * Math.floor(n / base);
     };
-    LineChart.prototype.getMillisecondTime = function (date) {
+    TrendingChart.prototype.getMillisecondTime = function (date) {
         var milliseconds = moment.utc(date).valueOf();
         return milliseconds;
     };
-    LineChart.prototype.getDateString = function (float) {
-        var date = moment.utc(float).format('YYYY-MM-DDTHH:mm:ss');
+    TrendingChart.prototype.getDateString = function (float) {
+        var date = moment.utc(float).format('YYYY-MM-DDTHH:mm');
         return date;
     };
-    LineChart.prototype.plotSelected = function () {
+    TrendingChart.prototype.plotSelected = function () {
         var ctrl = this;
         $(this.refs.graph).off("plotselected");
         $(this.refs.graph).bind("plotselected", function (event, ranges) {
             ctrl.props.stateSetter({ startDate: ctrl.getDateString(ranges.xaxis.from), endDate: ctrl.getDateString(ranges.xaxis.to) });
         });
     };
-    LineChart.prototype.plotZoom = function () {
+    TrendingChart.prototype.plotZoom = function () {
         var ctrl = this;
         $(this.refs.graph).off("plotzoom");
         $(this.refs.graph).bind("plotzoom", function (event) {
             var minDelta = null;
             var maxDelta = 5;
             var xaxis = ctrl.plot.getAxes().xaxis;
-            var xcenter = ctrl.state.hover;
+            var xcenter = ctrl.hover;
             var xmin = xaxis.options.min;
             var xmax = xaxis.options.max;
             var datamin = xaxis.datamin;
@@ -70855,22 +70382,188 @@ var LineChart = (function (_super) {
             }
             if (xmin == xaxis.options.xmin && xmax == xaxis.options.xmax)
                 return;
-            ctrl.props.stateSetter({ startDate: ctrl.getDateString(xmin), endDate: ctrl.getDateString(xmax) });
+            ctrl.startDate = ctrl.getDateString(xmin);
+            ctrl.endDate = ctrl.getDateString(xmax);
+            ctrl.createDataRows(ctrl.props);
+            clearTimeout(ctrl.zoomId);
+            ctrl.zoomId = setTimeout(function () {
+                ctrl.props.stateSetter({ startDate: ctrl.getDateString(xmin), endDate: ctrl.getDateString(xmax) });
+            }, 250);
         });
     };
-    LineChart.prototype.plotHover = function () {
+    TrendingChart.prototype.plotHover = function () {
         var ctrl = this;
         $(this.refs.graph).off("plothover");
         $(this.refs.graph).bind("plothover", function (event, pos, item) {
-            ctrl.setState({ hover: pos.x });
+            ctrl.hover = pos.x;
         });
     };
-    return LineChart;
+    return TrendingChart;
 }(React.Component));
-exports.default = LineChart;
+exports.default = TrendingChart;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
+/***/ }),
+/* 200 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(jQuery) {/* Javascript plotting library for jQuery, version 0.8.3.
+
+Copyright (c) 2007-2014 IOLA and Ole Laursen.
+Licensed under the MIT license.
+
+*/
+(function($){var options={crosshair:{mode:null,color:"rgba(170, 0, 0, 0.80)",lineWidth:1}};function init(plot){var crosshair={x:-1,y:-1,locked:false};plot.setCrosshair=function setCrosshair(pos){if(!pos)crosshair.x=-1;else{var o=plot.p2c(pos);crosshair.x=Math.max(0,Math.min(o.left,plot.width()));crosshair.y=Math.max(0,Math.min(o.top,plot.height()))}plot.triggerRedrawOverlay()};plot.clearCrosshair=plot.setCrosshair;plot.lockCrosshair=function lockCrosshair(pos){if(pos)plot.setCrosshair(pos);crosshair.locked=true};plot.unlockCrosshair=function unlockCrosshair(){crosshair.locked=false};function onMouseOut(e){if(crosshair.locked)return;if(crosshair.x!=-1){crosshair.x=-1;plot.triggerRedrawOverlay()}}function onMouseMove(e){if(crosshair.locked)return;if(plot.getSelection&&plot.getSelection()){crosshair.x=-1;return}var offset=plot.offset();crosshair.x=Math.max(0,Math.min(e.pageX-offset.left,plot.width()));crosshair.y=Math.max(0,Math.min(e.pageY-offset.top,plot.height()));plot.triggerRedrawOverlay()}plot.hooks.bindEvents.push(function(plot,eventHolder){if(!plot.getOptions().crosshair.mode)return;eventHolder.mouseout(onMouseOut);eventHolder.mousemove(onMouseMove)});plot.hooks.drawOverlay.push(function(plot,ctx){var c=plot.getOptions().crosshair;if(!c.mode)return;var plotOffset=plot.getPlotOffset();ctx.save();ctx.translate(plotOffset.left,plotOffset.top);if(crosshair.x!=-1){var adj=plot.getOptions().crosshair.lineWidth%2?.5:0;ctx.strokeStyle=c.color;ctx.lineWidth=c.lineWidth;ctx.lineJoin="round";ctx.beginPath();if(c.mode.indexOf("x")!=-1){var drawX=Math.floor(crosshair.x)+adj;ctx.moveTo(drawX,0);ctx.lineTo(drawX,plot.height())}if(c.mode.indexOf("y")!=-1){var drawY=Math.floor(crosshair.y)+adj;ctx.moveTo(0,drawY);ctx.lineTo(plot.width(),drawY)}ctx.stroke()}ctx.restore()});plot.hooks.shutdown.push(function(plot,eventHolder){eventHolder.unbind("mouseout",onMouseOut);eventHolder.unbind("mousemove",onMouseMove)})}$.plot.plugins.push({init:init,options:options,name:"crosshair",version:"1.0"})})(jQuery);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ }),
+/* 201 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(jQuery) {/* Javascript plotting library for jQuery, version 0.8.3.
+
+Copyright (c) 2007-2014 IOLA and Ole Laursen.
+Licensed under the MIT license.
+
+*/
+(function(a){function e(h){var k,j=this,l=h.data||{};if(l.elem)j=h.dragTarget=l.elem,h.dragProxy=d.proxy||j,h.cursorOffsetX=l.pageX-l.left,h.cursorOffsetY=l.pageY-l.top,h.offsetX=h.pageX-h.cursorOffsetX,h.offsetY=h.pageY-h.cursorOffsetY;else if(d.dragging||l.which>0&&h.which!=l.which||a(h.target).is(l.not))return;switch(h.type){case"mousedown":return a.extend(l,a(j).offset(),{elem:j,target:h.target,pageX:h.pageX,pageY:h.pageY}),b.add(document,"mousemove mouseup",e,l),i(j,!1),d.dragging=null,!1;case!d.dragging&&"mousemove":if(g(h.pageX-l.pageX)+g(h.pageY-l.pageY)<l.distance)break;h.target=l.target,k=f(h,"dragstart",j),k!==!1&&(d.dragging=j,d.proxy=h.dragProxy=a(k||j)[0]);case"mousemove":if(d.dragging){if(k=f(h,"drag",j),c.drop&&(c.drop.allowed=k!==!1,c.drop.handler(h)),k!==!1)break;h.type="mouseup"}case"mouseup":b.remove(document,"mousemove mouseup",e),d.dragging&&(c.drop&&c.drop.handler(h),f(h,"dragend",j)),i(j,!0),d.dragging=d.proxy=l.elem=!1}return!0}function f(b,c,d){b.type=c;var e=a.event.dispatch.call(d,b);return e===!1?!1:e||b.result}function g(a){return Math.pow(a,2)}function h(){return d.dragging===!1}function i(a,b){a&&(a.unselectable=b?"off":"on",a.onselectstart=function(){return b},a.style&&(a.style.MozUserSelect=b?"":"none"))}a.fn.drag=function(a,b,c){return b&&this.bind("dragstart",a),c&&this.bind("dragend",c),a?this.bind("drag",b?b:a):this.trigger("drag")};var b=a.event,c=b.special,d=c.drag={not:":input",distance:0,which:1,dragging:!1,setup:function(c){c=a.extend({distance:d.distance,which:d.which,not:d.not},c||{}),c.distance=g(c.distance),b.add(this,"mousedown",e,c),this.attachEvent&&this.attachEvent("ondragstart",h)},teardown:function(){b.remove(this,"mousedown",e),this===d.dragging&&(d.dragging=d.proxy=!1),i(this,!0),this.detachEvent&&this.detachEvent("ondragstart",h)}};c.dragstart=c.dragend={setup:function(){},teardown:function(){}}})(jQuery);(function(d){function e(a){var b=a||window.event,c=[].slice.call(arguments,1),f=0,e=0,g=0,a=d.event.fix(b);a.type="mousewheel";b.wheelDelta&&(f=b.wheelDelta/120);b.detail&&(f=-b.detail/3);g=f;void 0!==b.axis&&b.axis===b.HORIZONTAL_AXIS&&(g=0,e=-1*f);void 0!==b.wheelDeltaY&&(g=b.wheelDeltaY/120);void 0!==b.wheelDeltaX&&(e=-1*b.wheelDeltaX/120);c.unshift(a,f,e,g);return(d.event.dispatch||d.event.handle).apply(this,c)}var c=["DOMMouseScroll","mousewheel"];if(d.event.fixHooks)for(var h=c.length;h;)d.event.fixHooks[c[--h]]=d.event.mouseHooks;d.event.special.mousewheel={setup:function(){if(this.addEventListener)for(var a=c.length;a;)this.addEventListener(c[--a],e,!1);else this.onmousewheel=e},teardown:function(){if(this.removeEventListener)for(var a=c.length;a;)this.removeEventListener(c[--a],e,!1);else this.onmousewheel=null}};d.fn.extend({mousewheel:function(a){return a?this.bind("mousewheel",a):this.trigger("mousewheel")},unmousewheel:function(a){return this.unbind("mousewheel",a)}})})(jQuery);(function($){var options={xaxis:{zoomRange:null,panRange:null},zoom:{interactive:false,trigger:"dblclick",amount:1.5},pan:{interactive:false,cursor:"move",frameRate:20}};function init(plot){function onZoomClick(e,zoomOut){var c=plot.offset();c.left=e.pageX-c.left;c.top=e.pageY-c.top;if(zoomOut)plot.zoomOut({center:c});else plot.zoom({center:c})}function onMouseWheel(e,delta){e.preventDefault();onZoomClick(e,delta<0);return false}var prevCursor="default",prevPageX=0,prevPageY=0,panTimeout=null;function onDragStart(e){if(e.which!=1)return false;var c=plot.getPlaceholder().css("cursor");if(c)prevCursor=c;plot.getPlaceholder().css("cursor",plot.getOptions().pan.cursor);prevPageX=e.pageX;prevPageY=e.pageY}function onDrag(e){var frameRate=plot.getOptions().pan.frameRate;if(panTimeout||!frameRate)return;panTimeout=setTimeout(function(){plot.pan({left:prevPageX-e.pageX,top:prevPageY-e.pageY});prevPageX=e.pageX;prevPageY=e.pageY;panTimeout=null},1/frameRate*1e3)}function onDragEnd(e){if(panTimeout){clearTimeout(panTimeout);panTimeout=null}plot.getPlaceholder().css("cursor",prevCursor);plot.pan({left:prevPageX-e.pageX,top:prevPageY-e.pageY})}function bindEvents(plot,eventHolder){var o=plot.getOptions();if(o.zoom.interactive){eventHolder[o.zoom.trigger](onZoomClick);eventHolder.mousewheel(onMouseWheel)}if(o.pan.interactive){eventHolder.bind("dragstart",{distance:10},onDragStart);eventHolder.bind("drag",onDrag);eventHolder.bind("dragend",onDragEnd)}}plot.zoomOut=function(args){if(!args)args={};if(!args.amount)args.amount=plot.getOptions().zoom.amount;args.amount=1/args.amount;plot.zoom(args)};plot.zoom=function(args){if(!args)args={};var c=args.center,amount=args.amount||plot.getOptions().zoom.amount,w=plot.width(),h=plot.height();if(!c)c={left:w/2,top:h/2};var xf=c.left/w,yf=c.top/h,minmax={x:{min:c.left-xf*w/amount,max:c.left+(1-xf)*w/amount},y:{min:c.top-yf*h/amount,max:c.top+(1-yf)*h/amount}};$.each(plot.getAxes(),function(_,axis){var opts=axis.options,min=minmax[axis.direction].min,max=minmax[axis.direction].max,zr=opts.zoomRange,pr=opts.panRange;if(zr===false)return;min=axis.c2p(min);max=axis.c2p(max);if(min>max){var tmp=min;min=max;max=tmp}if(pr){if(pr[0]!=null&&min<pr[0]){min=pr[0]}if(pr[1]!=null&&max>pr[1]){max=pr[1]}}var range=max-min;if(zr&&(zr[0]!=null&&range<zr[0]&&amount>1||zr[1]!=null&&range>zr[1]&&amount<1))return;opts.min=min;opts.max=max});plot.setupGrid();plot.draw();if(!args.preventEvent)plot.getPlaceholder().trigger("plotzoom",[plot,args])};plot.pan=function(args){var delta={x:+args.left,y:+args.top};if(isNaN(delta.x))delta.x=0;if(isNaN(delta.y))delta.y=0;$.each(plot.getAxes(),function(_,axis){var opts=axis.options,min,max,d=delta[axis.direction];min=axis.c2p(axis.p2c(axis.min)+d),max=axis.c2p(axis.p2c(axis.max)+d);var pr=opts.panRange;if(pr===false)return;if(pr){if(pr[0]!=null&&pr[0]>min){d=pr[0]-min;min+=d;max+=d}if(pr[1]!=null&&pr[1]<max){d=pr[1]-max;min+=d;max+=d}}opts.min=min;opts.max=max});plot.setupGrid();plot.draw();if(!args.preventEvent)plot.getPlaceholder().trigger("plotpan",[plot,args])};function shutdown(plot,eventHolder){eventHolder.unbind(plot.getOptions().zoom.trigger,onZoomClick);eventHolder.unbind("mousewheel",onMouseWheel);eventHolder.unbind("dragstart",onDragStart);eventHolder.unbind("drag",onDrag);eventHolder.unbind("dragend",onDragEnd);if(panTimeout)clearTimeout(panTimeout)}plot.hooks.bindEvents.push(bindEvents);plot.hooks.shutdown.push(shutdown)}$.plot.plugins.push({init:init,options:options,name:"navigate",version:"1.3"})})(jQuery);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ }),
+/* 202 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(jQuery) {/* Javascript plotting library for jQuery, version 0.8.3.
+
+Copyright (c) 2007-2014 IOLA and Ole Laursen.
+Licensed under the MIT license.
+
+*/
+(function($){function init(plot){var selection={first:{x:-1,y:-1},second:{x:-1,y:-1},show:false,active:false};var savedhandlers={};var mouseUpHandler=null;function onMouseMove(e){if(selection.active){updateSelection(e);plot.getPlaceholder().trigger("plotselecting",[getSelection()])}}function onMouseDown(e){if(e.which!=1)return;document.body.focus();if(document.onselectstart!==undefined&&savedhandlers.onselectstart==null){savedhandlers.onselectstart=document.onselectstart;document.onselectstart=function(){return false}}if(document.ondrag!==undefined&&savedhandlers.ondrag==null){savedhandlers.ondrag=document.ondrag;document.ondrag=function(){return false}}setSelectionPos(selection.first,e);selection.active=true;mouseUpHandler=function(e){onMouseUp(e)};$(document).one("mouseup",mouseUpHandler)}function onMouseUp(e){mouseUpHandler=null;if(document.onselectstart!==undefined)document.onselectstart=savedhandlers.onselectstart;if(document.ondrag!==undefined)document.ondrag=savedhandlers.ondrag;selection.active=false;updateSelection(e);if(selectionIsSane())triggerSelectedEvent();else{plot.getPlaceholder().trigger("plotunselected",[]);plot.getPlaceholder().trigger("plotselecting",[null])}return false}function getSelection(){if(!selectionIsSane())return null;if(!selection.show)return null;var r={},c1=selection.first,c2=selection.second;$.each(plot.getAxes(),function(name,axis){if(axis.used){var p1=axis.c2p(c1[axis.direction]),p2=axis.c2p(c2[axis.direction]);r[name]={from:Math.min(p1,p2),to:Math.max(p1,p2)}}});return r}function triggerSelectedEvent(){var r=getSelection();plot.getPlaceholder().trigger("plotselected",[r]);if(r.xaxis&&r.yaxis)plot.getPlaceholder().trigger("selected",[{x1:r.xaxis.from,y1:r.yaxis.from,x2:r.xaxis.to,y2:r.yaxis.to}])}function clamp(min,value,max){return value<min?min:value>max?max:value}function setSelectionPos(pos,e){var o=plot.getOptions();var offset=plot.getPlaceholder().offset();var plotOffset=plot.getPlotOffset();pos.x=clamp(0,e.pageX-offset.left-plotOffset.left,plot.width());pos.y=clamp(0,e.pageY-offset.top-plotOffset.top,plot.height());if(o.selection.mode=="y")pos.x=pos==selection.first?0:plot.width();if(o.selection.mode=="x")pos.y=pos==selection.first?0:plot.height()}function updateSelection(pos){if(pos.pageX==null)return;setSelectionPos(selection.second,pos);if(selectionIsSane()){selection.show=true;plot.triggerRedrawOverlay()}else clearSelection(true)}function clearSelection(preventEvent){if(selection.show){selection.show=false;plot.triggerRedrawOverlay();if(!preventEvent)plot.getPlaceholder().trigger("plotunselected",[])}}function extractRange(ranges,coord){var axis,from,to,key,axes=plot.getAxes();for(var k in axes){axis=axes[k];if(axis.direction==coord){key=coord+axis.n+"axis";if(!ranges[key]&&axis.n==1)key=coord+"axis";if(ranges[key]){from=ranges[key].from;to=ranges[key].to;break}}}if(!ranges[key]){axis=coord=="x"?plot.getXAxes()[0]:plot.getYAxes()[0];from=ranges[coord+"1"];to=ranges[coord+"2"]}if(from!=null&&to!=null&&from>to){var tmp=from;from=to;to=tmp}return{from:from,to:to,axis:axis}}function setSelection(ranges,preventEvent){var axis,range,o=plot.getOptions();if(o.selection.mode=="y"){selection.first.x=0;selection.second.x=plot.width()}else{range=extractRange(ranges,"x");selection.first.x=range.axis.p2c(range.from);selection.second.x=range.axis.p2c(range.to)}if(o.selection.mode=="x"){selection.first.y=0;selection.second.y=plot.height()}else{range=extractRange(ranges,"y");selection.first.y=range.axis.p2c(range.from);selection.second.y=range.axis.p2c(range.to)}selection.show=true;plot.triggerRedrawOverlay();if(!preventEvent&&selectionIsSane())triggerSelectedEvent()}function selectionIsSane(){var minSize=plot.getOptions().selection.minSize;return Math.abs(selection.second.x-selection.first.x)>=minSize&&Math.abs(selection.second.y-selection.first.y)>=minSize}plot.clearSelection=clearSelection;plot.setSelection=setSelection;plot.getSelection=getSelection;plot.hooks.bindEvents.push(function(plot,eventHolder){var o=plot.getOptions();if(o.selection.mode!=null){eventHolder.mousemove(onMouseMove);eventHolder.mousedown(onMouseDown)}});plot.hooks.drawOverlay.push(function(plot,ctx){if(selection.show&&selectionIsSane()){var plotOffset=plot.getPlotOffset();var o=plot.getOptions();ctx.save();ctx.translate(plotOffset.left,plotOffset.top);var c=$.color.parse(o.selection.color);ctx.strokeStyle=c.scale("a",.8).toString();ctx.lineWidth=1;ctx.lineJoin=o.selection.shape;ctx.fillStyle=c.scale("a",.4).toString();var x=Math.min(selection.first.x,selection.second.x)+.5,y=Math.min(selection.first.y,selection.second.y)+.5,w=Math.abs(selection.second.x-selection.first.x)-1,h=Math.abs(selection.second.y-selection.first.y)-1;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);ctx.restore()}});plot.hooks.shutdown.push(function(plot,eventHolder){eventHolder.unbind("mousemove",onMouseMove);eventHolder.unbind("mousedown",onMouseDown);if(mouseUpHandler)$(document).unbind("mouseup",mouseUpHandler)})}$.plot.plugins.push({init:init,options:{selection:{mode:null,color:"#e8cfac",shape:"round",minSize:5}},name:"selection",version:"1.1"})})(jQuery);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ }),
+/* 203 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(1);
+var DateTime = __webpack_require__(174);
+var moment = __webpack_require__(0);
+__webpack_require__(204);
+var DateTimeRangePicker = (function (_super) {
+    __extends(DateTimeRangePicker, _super);
+    function DateTimeRangePicker(props) {
+        var _this = _super.call(this, props) || this;
+        _this.state = {
+            startDate: moment(_this.props.startDate),
+            endDate: moment(_this.props.endDate)
+        };
+        return _this;
+    }
+    DateTimeRangePicker.prototype.render = function () {
+        var _this = this;
+        return (React.createElement("div", { className: "container", style: { width: 'inherit' } },
+            React.createElement("div", { className: "row" },
+                React.createElement("div", { className: "form-group" },
+                    React.createElement(DateTime, { isValidDate: function (date) { return date.isBefore(_this.state.endDate); }, value: this.state.startDate, timeFormat: "HH:mm", onChange: function (value) { return _this.setState({ startDate: value }, function () { return _this.stateSetter(); }); } }))),
+            React.createElement("div", { className: "row" },
+                React.createElement("div", { className: "form-group" },
+                    React.createElement(DateTime, { isValidDate: function (date) { return date.isAfter(_this.state.startDate); }, value: this.state.endDate, timeFormat: "HH:mm", onChange: function (value) { return _this.setState({ endDate: value }, function () { return _this.stateSetter(); }); } })))));
+    };
+    DateTimeRangePicker.prototype.componentWillReceiveProps = function (nextProps, nextContent) {
+        if (nextProps.startDate != this.state.startDate.format('YYYY-MM-DDTHH:mm') || nextProps.endDate != this.state.endDate.format('YYYY-MM-DDTHH:mm'))
+            this.setState({ startDate: moment(this.props.startDate), endDate: moment(this.props.endDate) });
+    };
+    DateTimeRangePicker.prototype.stateSetter = function () {
+        var _this = this;
+        clearTimeout(this.stateSetterId);
+        this.stateSetterId = setTimeout(function () {
+            _this.props.stateSetter({ startDate: _this.state.startDate.format('YYYY-MM-DDTHH:mm'), endDate: _this.state.endDate.format('YYYY-MM-DDTHH:mm') });
+        }, 500);
+    };
+    return DateTimeRangePicker;
+}(React.Component));
+exports.default = DateTimeRangePicker;
+
+
+/***/ }),
+/* 204 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(205);
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(182)(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {
+	module.hot.accept("!!../../css-loader/index.js!./react-datetime.css", function() {
+		var newContent = require("!!../../css-loader/index.js!./react-datetime.css");
+
+		if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+
+		var locals = (function(a, b) {
+			var key, idx = 0;
+
+			for(key in a) {
+				if(!b || a[key] !== b[key]) return false;
+				idx++;
+			}
+
+			for(key in b) idx--;
+
+			return idx === 0;
+		}(content.locals, newContent.locals));
+
+		if(!locals) throw new Error('Aborting CSS HMR due to changed css-modules locals.');
+
+		update(newContent);
+	});
+
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 205 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(181)(false);
+// imports
+
+
+// module
+exports.push([module.i, "/*!\n * https://github.com/YouCanBookMe/react-datetime\n */\n\n.rdt {\n  position: relative;\n}\n.rdtPicker {\n  display: none;\n  position: absolute;\n  width: 250px;\n  padding: 4px;\n  margin-top: 1px;\n  z-index: 99999 !important;\n  background: #fff;\n  box-shadow: 0 1px 3px rgba(0,0,0,.1);\n  border: 1px solid #f9f9f9;\n}\n.rdtOpen .rdtPicker {\n  display: block;\n}\n.rdtStatic .rdtPicker {\n  box-shadow: none;\n  position: static;\n}\n\n.rdtPicker .rdtTimeToggle {\n  text-align: center;\n}\n\n.rdtPicker table {\n  width: 100%;\n  margin: 0;\n}\n.rdtPicker td,\n.rdtPicker th {\n  text-align: center;\n  height: 28px;\n}\n.rdtPicker td {\n  cursor: pointer;\n}\n.rdtPicker td.rdtDay:hover,\n.rdtPicker td.rdtHour:hover,\n.rdtPicker td.rdtMinute:hover,\n.rdtPicker td.rdtSecond:hover,\n.rdtPicker .rdtTimeToggle:hover {\n  background: #eeeeee;\n  cursor: pointer;\n}\n.rdtPicker td.rdtOld,\n.rdtPicker td.rdtNew {\n  color: #999999;\n}\n.rdtPicker td.rdtToday {\n  position: relative;\n}\n.rdtPicker td.rdtToday:before {\n  content: '';\n  display: inline-block;\n  border-left: 7px solid transparent;\n  border-bottom: 7px solid #428bca;\n  border-top-color: rgba(0, 0, 0, 0.2);\n  position: absolute;\n  bottom: 4px;\n  right: 4px;\n}\n.rdtPicker td.rdtActive,\n.rdtPicker td.rdtActive:hover {\n  background-color: #428bca;\n  color: #fff;\n  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);\n}\n.rdtPicker td.rdtActive.rdtToday:before {\n  border-bottom-color: #fff;\n}\n.rdtPicker td.rdtDisabled,\n.rdtPicker td.rdtDisabled:hover {\n  background: none;\n  color: #999999;\n  cursor: not-allowed;\n}\n\n.rdtPicker td span.rdtOld {\n  color: #999999;\n}\n.rdtPicker td span.rdtDisabled,\n.rdtPicker td span.rdtDisabled:hover {\n  background: none;\n  color: #999999;\n  cursor: not-allowed;\n}\n.rdtPicker th {\n  border-bottom: 1px solid #f9f9f9;\n}\n.rdtPicker .dow {\n  width: 14.2857%;\n  border-bottom: none;\n  cursor: default;\n}\n.rdtPicker th.rdtSwitch {\n  width: 100px;\n}\n.rdtPicker th.rdtNext,\n.rdtPicker th.rdtPrev {\n  font-size: 21px;\n  vertical-align: top;\n}\n\n.rdtPrev span,\n.rdtNext span {\n  display: block;\n  -webkit-touch-callout: none; /* iOS Safari */\n  -webkit-user-select: none;   /* Chrome/Safari/Opera */\n  -khtml-user-select: none;    /* Konqueror */\n  -moz-user-select: none;      /* Firefox */\n  -ms-user-select: none;       /* Internet Explorer/Edge */\n  user-select: none;\n}\n\n.rdtPicker th.rdtDisabled,\n.rdtPicker th.rdtDisabled:hover {\n  background: none;\n  color: #999999;\n  cursor: not-allowed;\n}\n.rdtPicker thead tr:first-child th {\n  cursor: pointer;\n}\n.rdtPicker thead tr:first-child th:hover {\n  background: #eeeeee;\n}\n\n.rdtPicker tfoot {\n  border-top: 1px solid #f9f9f9;\n}\n\n.rdtPicker button {\n  border: none;\n  background: none;\n  cursor: pointer;\n}\n.rdtPicker button:hover {\n  background-color: #eee;\n}\n\n.rdtPicker thead button {\n  width: 100%;\n  height: 100%;\n}\n\ntd.rdtMonth,\ntd.rdtYear {\n  height: 50px;\n  width: 25%;\n  cursor: pointer;\n}\ntd.rdtMonth:hover,\ntd.rdtYear:hover {\n  background: #eee;\n}\n\n.rdtCounters {\n  display: inline-block;\n}\n\n.rdtCounters > div {\n  float: left;\n}\n\n.rdtCounter {\n  height: 100px;\n}\n\n.rdtCounter {\n  width: 40px;\n}\n\n.rdtCounterSeparator {\n  line-height: 100px;\n}\n\n.rdtCounter .rdtBtn {\n  height: 40%;\n  line-height: 40px;\n  cursor: pointer;\n  display: block;\n\n  -webkit-touch-callout: none; /* iOS Safari */\n  -webkit-user-select: none;   /* Chrome/Safari/Opera */\n  -khtml-user-select: none;    /* Konqueror */\n  -moz-user-select: none;      /* Firefox */\n  -ms-user-select: none;       /* Internet Explorer/Edge */\n  user-select: none;\n}\n.rdtCounter .rdtBtn:hover {\n  background: #eee;\n}\n.rdtCounter .rdtCount {\n  height: 20%;\n  font-size: 1.2em;\n}\n\n.rdtMilli {\n  vertical-align: middle;\n  padding-left: 8px;\n  width: 48px;\n}\n\n.rdtMilli input {\n  width: 100%;\n  font-size: 1.2em;\n  margin-top: 37px;\n}\n\n.rdtTime td {\n  cursor: default;\n}\n", ""]);
+
+// exports
+
+
 /***/ })
 /******/ ]);
-//# sourceMappingURL=PeriodicDataDisplay.js.map
+//# sourceMappingURL=TrendingDataDisplay.js.map

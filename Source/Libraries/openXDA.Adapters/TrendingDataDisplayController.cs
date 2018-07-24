@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Text;
@@ -41,23 +42,14 @@ using System.Web.Http;
 
 namespace openXDA.Adapters
 {
-    public class PeriodicDataDisplayController : ApiController
+    public class TrendingDataDisplayController : ApiController
     {
-        #region [ Members ]
-        // Fields
-        #endregion
-        #region [ Properties ]
-        #endregion
-
-        #region [ Constructors ]
-        #endregion
-
         #region [ Static ]
         private static MemoryCache s_memoryCache;
 
-        static PeriodicDataDisplayController()
+        static TrendingDataDisplayController()
         {
-            s_memoryCache = new MemoryCache("PeriodicDataDisplay");
+            s_memoryCache = new MemoryCache("TrendingDataDisplay");
         }
         #endregion
 
@@ -67,54 +59,40 @@ namespace openXDA.Adapters
         public Task<Dictionary<string, List<double[]>>> GetData(CancellationToken cancellationToken)
         {
             Dictionary<string, string> query = Request.QueryParameters();
-            int meterId = int.Parse(query["MeterID"]);
-            int measurementCharacteristicId = int.Parse(query["MeasurementCharacteristicID"]);
-            int measurementTypeId = int.Parse(query["MeasurementTypeID"]);
-
+            int channelID = int.Parse(query["ChannelID"]);
             int pixels = int.Parse(query["pixels"]);
-            string type = query["type"] ?? "Average";
 
-            DateTime startDate = DateTime.Parse(query["StartDate"]);
-            DateTime endDate = DateTime.Parse(query["EndDate"]);
+            DateTime startDate = DateTime.ParseExact(query["StartDate"], "yyyy-MM-ddTHH:mm", CultureInfo.CurrentCulture);
+            DateTime endDate = DateTime.ParseExact(query["EndDate"], "yyyy-MM-ddTHH:mm", CultureInfo.CurrentCulture);
             DateTime epoch = new DateTime(1970, 1, 1);
 
             return Task.Factory.StartNew(() =>
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-
-
-                    string target = "PeriodicDataDisplay" + meterId.ToString() + measurementCharacteristicId.ToString() + startDate.Subtract(epoch).TotalMilliseconds.ToString() + endDate.Subtract(epoch).TotalMilliseconds.ToString() + type;
+                    string target = "TrendingDataDisplayGetData" + channelID.ToString() + startDate.ToString("yyyyMMddHHmm") + endDate.ToString("yyyyMMddHHmm") ;
                     Dictionary<string, List<double[]>> data = (Dictionary<string, List<double[]>>)s_memoryCache.Get(target);
                     if(data == null)
                     {
                         data = new Dictionary<string, List<double[]>>();
-                        IEnumerable<Channel> channels = (new TableOperations<Channel>(connection)).QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = {1} AND MeasurementTypeID = {2}", meterId, measurementCharacteristicId, measurementTypeId);
+                        data.Add("Minimum", new List<double[]>());
+                        data.Add("Maximum", new List<double[]>());
+                        data.Add("Average", new List<double[]>());
 
                         string historianServer = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
                         string historianInstance = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 
                         using (Historian historian = new Historian(historianServer, historianInstance))
                         {
-                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(channels.Select(x => x.ID), startDate, endDate))
+                            foreach (openHistorian.XDALink.TrendingDataPoint point in historian.Read(new[] { channelID }, startDate, endDate))
                             {
-                                if (point.SeriesID.ToString() == type)
-                                {
-                                    Channel channel = channels.First(x => x.ID == point.ChannelID);
-                                    if (!data.ContainsKey(channel.Name))
-                                        data.Add(channel.Name, new List<double[]>() { new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Value } });
-                                    else
-                                        data[channel.Name].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Value });
-                                }
+                                data[point.SeriesID.ToString()].Add(new[] { point.Timestamp.Subtract(epoch).TotalMilliseconds, point.Value });
                             }
                         }
 
                         s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(0.5D) });
 
                     }
-                    Console.WriteLine(stopWatch.Elapsed);
                     return Downsample(data, pixels, new Range<DateTime>(startDate, endDate));
                 }
 
@@ -123,17 +101,20 @@ namespace openXDA.Adapters
         }
 
         [HttpGet]
-        public Task<IOrderedEnumerable<Meter>> GetMeters(CancellationToken cancellationToken)
+        public Task<IOrderedEnumerable<Channel>> GetMeasurements(CancellationToken cancellationToken)
         {
+            Dictionary<string, string> query = Request.QueryParameters();
+            int meterId = int.Parse(query["MeterID"]);
+
             return Task.Factory.StartNew(() =>
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    string target = "PeriodicDataDisplayMeters";
-                    IOrderedEnumerable<Meter> data = (IOrderedEnumerable<Meter>)s_memoryCache.Get(target);
+                    string target = "TrendingDataDisplayMeasurements" + meterId.ToString();
+                    IOrderedEnumerable<Channel> data = (IOrderedEnumerable<Channel>)s_memoryCache.Get(target);
                     if (data == null)
                     {
-                        data = (new TableOperations<Meter>(connection)).QueryRecordsWhere("ID IN (select DISTINCT MeterID from MeterDataQualitySummary)").OrderBy(x => x.AssetKey);
+                        data = (new TableOperations<Channel>(connection)).QueryRecordsWhere("ID IN (SELECT DISTINCT ChannelID FROM DailyTrendingSummary) AND MeterID = {0}", meterId).OrderBy(x => x.Name);
                         s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
                     }
 

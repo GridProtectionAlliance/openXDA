@@ -79,6 +79,14 @@ namespace openXDA.Adapters
                 }
             );
 
+            config.Routes.MapHttpRoute(
+                name: "TrendingDataDisplay",
+                routeTemplate: "api/TrendingDataDisplay/{action}",
+                defaults: new
+                {
+                    controller = "TrendingDataDisplay"
+                }
+            );
 
             config.MapHttpAttributeRoutes();
 
