@@ -50,12 +50,23 @@
     Meter meter = dataContext.Table<Meter>().QueryRecordWhere("ID = {0}", report.MeterID);
     string name = meter.AssetKey + "_" + report.Month + "_" + report.Year + ".pdf";
 }
-<embed id="pdfContent"  src="../api/Report/@(name)?ID=@report.ID" width="100%" height="700">
+<embed id="pdfContent"  src="../api/Report/@report.ID/@(name)">
 
 @section StyleSheets {
     <style>
         body {
             overflow-y: hidden;
+            padding-top: 16px;
+        }
+        embed {
+            width: inherit;
+            height: inherit;
+            position: absolute;
+        }
+        #bodyContainer {
+            width: 100%;
+            position: absolute;
+            height: calc(100% - 30px);
         }
     </style>
 }
@@ -63,18 +74,6 @@
 @section Scripts {
     <script>
         $('#bodyContainer').removeClass('container');
-
-        function resizePDFContent() {
-            $("#pdfContent").attr("height", (calculateRemainingBodyHeight() + 56) + "px");
-        }
-
-        $(window).resize(function () {
-            resizePDFContent();
-        });
-
-        $(function () {
-            resizePDFContent();
-        });
-
+        $('#bodyContainer').removeClass('theme-showcase');
     </script>
 }

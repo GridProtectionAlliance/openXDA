@@ -42,12 +42,12 @@ namespace openXDA.Adapters
     public class ReportController: ApiController
     {
         [HttpGet]
-        public IHttpActionResult Get(string name, [FromUri] int ID) {
+        public IHttpActionResult Get(int id, string name) {
             using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
             using(MemoryStream stream = new MemoryStream())
             {
                
-                Report report = (new TableOperations<Report>(connection)).QueryRecordWhere("ID = {0}", ID);
+                Report report = (new TableOperations<Report>(connection)).QueryRecordWhere("ID = {0}", id);
                 Meter meter = (new TableOperations<Meter>(connection)).QueryRecordWhere("ID = {0}", report.MeterID);
 
                 if (report == null) return BadRequest();
