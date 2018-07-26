@@ -111,7 +111,7 @@ using DataHub = openXDA.Hubs.DataHub;
 using Meter = openXDA.Model.Meter;
 using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
-using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
+using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 
 namespace openXDA
@@ -557,10 +557,9 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/XSLTemplate.cshtml", new Tuple<Type, Type>(typeof(XSLTemplate), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MeterGroups.cshtml", new Tuple<Type, Type>(typeof(MeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/LineGroups.cshtml", new Tuple<Type, Type>(typeof(LineGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/MeterMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/LineLineGroupView.cshtml", new Tuple<Type, Type>(typeof(LineLineGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/AssetGroups.cshtml", new Tuple<Type, Type>(typeof(AssetGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/MeterAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterAssetGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/LineAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(LineAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Assets/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
@@ -573,13 +572,8 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/HourOfWeekLimits.cshtml", new Tuple<Type, Type>(typeof(HourOfWeekLimit), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/AlarmSettings.cshtml", new Tuple<Type, Type>(typeof(AlarmRangeLimitView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/UserAccountMeterGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountMeterGroup), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/UserAccountAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroups.cshtml", new Tuple<Type, Type>(typeof(EmailGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupType.cshtml", new Tuple<Type, Type>(typeof(EmailGroupType), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupMeterGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupMeterGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupLineGroup.cshtml", new Tuple<Type, Type>(typeof(EmailGroupLineGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Config/EmailGroupUserAccount.cshtml", new Tuple<Type, Type>(typeof(EmailGroupUserAccount), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Filters.cshtml", new Tuple<Type, Type>(typeof(WorkbenchFilter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Events.cshtml", new Tuple<Type, Type>(typeof(Event), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Event.cshtml", new Tuple<Type, Type>(typeof(SingleEvent), typeof(DataHub)));

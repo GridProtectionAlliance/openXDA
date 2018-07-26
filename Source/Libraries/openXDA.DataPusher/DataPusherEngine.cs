@@ -224,13 +224,13 @@ namespace openXDA.DataPusher
                 int progressTotal = localMeterLines.Count() + 2;
                 int progressCount = 0;
                 int remoteMeterLocationId = SyncMeterLocations(instance.Address, meterToDataPush, localMeterRecord, userAccount);
-                int meterGroupId = AddMeterGroup(instance.Address, userAccount);
+                int assetGroupId = AddAssetGroup(instance.Address, userAccount);
                 OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (progressCount) / progressTotal));
 
                 // if meter doesnt exist remotely add it
                 AddMeter(instance.Address, meterToDataPush, localMeterRecord, remoteMeterLocationId, userAccount);
                 OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
-                AddMeterMeterGroup(instance.Address, meterGroupId, meterToDataPush.RemoteXDAMeterID, userAccount);
+                AddMeterAssetGroup(instance.Address, assetGroupId, meterToDataPush.RemoteXDAMeterID, userAccount);
                 OnUpdateProgressForMeter(clientId, localMeterRecord.AssetKey, (int)(100 * (++progressCount) / progressTotal));
 
                 // if there is a line for the meter ensure that its data has been uploaded remotely
@@ -594,18 +594,18 @@ namespace openXDA.DataPusher
             }
         }
 
-        private int AddMeterGroup(string address, UserAccount userAccount)
+        private int AddAssetGroup(string address, UserAccount userAccount)
         {
-            List<MeterGroup> remote = WebAPIHub.GetRecords(address, "MeterGroup", "all", userAccount).Select(x => (MeterGroup)x).ToList();
+            List<AssetGroup> remote = WebAPIHub.GetRecords(address, "AssetGroup", "all", userAccount).Select(x => (AssetGroup)x).ToList();
             // if the company meter location does not exist, create it
             if (!remote.Where(x => x.Name == WebAPIHub.CompanyName).Any())
             {
-                MeterGroup record = new MeterGroup()
+                AssetGroup record = new AssetGroup()
                 {
                     Name = WebAPIHub.CompanyName
                 };
 
-                return WebAPIHub.CreateRecord(address, "MeterGroup", JObject.FromObject(record), userAccount);
+                return WebAPIHub.CreateRecord(address, "AssetGroup", JObject.FromObject(record), userAccount);
             }
             else
             {
@@ -613,20 +613,20 @@ namespace openXDA.DataPusher
             }
         }
 
-        private void AddMeterMeterGroup(string address, int meterGroupId, int meterId, UserAccount userAccount)
+        private void AddMeterAssetGroup(string address, int assetGroupId, int meterId, UserAccount userAccount)
         {
-            List<MeterMeterGroup> remote = WebAPIHub.GetRecordsWhere(address, "MeterMeterGroup", $"MeterID = {meterId} AND MeterGroupID = {meterGroupId}", userAccount).Select(x => (MeterMeterGroup)x).ToList();
+            List<MeterAssetGroup> remote = WebAPIHub.GetRecordsWhere(address, "MeterAssetGroup", $"MeterID = {meterId} AND AssetGroupID = {assetGroupId}", userAccount).Select(x => (MeterAssetGroup)x).ToList();
 
             // if MeterLine association has not been previously made, make it
             if (!remote.Any())
             {
-                MeterMeterGroup record = new MeterMeterGroup()
+                MeterAssetGroup record = new MeterAssetGroup()
                 {
                     MeterID = meterId,
-                    MeterGroupID = meterGroupId
+                    AssetGroupID = assetGroupId
                 };
 
-                WebAPIHub.CreateRecord(address, "MeterMeterGroup", JObject.FromObject(record), userAccount);
+                WebAPIHub.CreateRecord(address, "MeterAssetGroup", JObject.FromObject(record), userAccount);
             }
         }
 

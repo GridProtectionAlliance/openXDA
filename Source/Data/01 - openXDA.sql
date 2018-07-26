@@ -270,12 +270,16 @@ GO
 
 INSERT INTO SeriesType(Name, Description) VALUES('Values', 'Instantaneous data values')
 GO
+
 INSERT INTO SeriesType(Name, Description) VALUES('Minimum', 'Minimum data values')
 GO
+
 INSERT INTO SeriesType(Name, Description) VALUES('Maximum', 'Maximum data values')
 GO
+
 INSERT INTO SeriesType(Name, Description) VALUES('Average', 'Average data values')
 GO
+
 INSERT INTO SeriesType(Name, Description) VALUES('Duration', 'Duration data values')
 GO
 
@@ -297,108 +301,58 @@ CREATE TABLE BreakerChannel
 )
 GO
 
-CREATE TABLE MeterGroup
+CREATE TABLE AssetGroup
 (
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     Name VARCHAR(200) NOT NULL
 )
 GO
 
-CREATE TABLE MeterMeterGroup
+CREATE TABLE MeterAssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
-    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID)
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
 )
 GO
 
-CREATE TABLE LineGroup
+CREATE NONCLUSTERED INDEX IX_MeterAssetGroup_MeterID
+ON MeterAssetGroup(MeterID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_MeterAssetGroup_AssetGroupID
+ON MeterAssetGroup(AssetGroupID ASC)
+GO
+
+CREATE TABLE LineAssetGroup
 (
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [Name] [varchar](200) NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    LineID INT NOT NULL REFERENCES Line(ID),
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
 )
-
 GO
 
-CREATE TABLE LineLineGroup
+CREATE NONCLUSTERED INDEX IX_LineAssetGroup_LineID
+ON LineAssetGroup(LineID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_LineAssetGroup_AssetGroupID
+ON LineAssetGroup(AssetGroupID ASC)
+GO
+
+CREATE TABLE AuditLog
 (
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [LineID] [int] NOT NULL,
-    [LineGroupID] [int] NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    TableName VARCHAR(200) NOT NULL,
+    PrimaryKeyColumn VARCHAR(200) NOT NULL,
+    PrimaryKeyValue VARCHAR(MAX) NOT NULL,
+    ColumnName VARCHAR(200) NOT NULL,
+    OriginalValue VARCHAR(MAX) NULL,
+    NewValue VARCHAR(MAX) NULL,
+    Deleted BIT NOT NULL DEFAULT 0,
+    UpdatedBy VARCHAR(200) NULL DEFAULT suser_name(),
+    UpdatedOn DATETIME NULL DEFAULT getutcdate(),
 )
-
-GO
-
-ALTER TABLE [dbo].[LineLineGroup]  WITH CHECK ADD FOREIGN KEY([LineID])
-REFERENCES [dbo].[Line] ([ID])
-GO
-
-ALTER TABLE [dbo].[LineLineGroup]  WITH CHECK ADD FOREIGN KEY([LineGroupID])
-REFERENCES [dbo].[LineGroup] ([ID])
-GO
-
-CREATE TABLE EmailGroupLineGroup
-(
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [EmailGroupID] [int] NOT NULL,
-    [LineGroupID] [int] NOT NULL,
-	CONSTRAINT CU_EmailGroupLineGroup_EmailGroupID_LineGroupID UNIQUE (EmailGroupID,LineGroupID),
-PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-)
-
-GO
-
-ALTER TABLE [dbo].[EmailGroupLineGroup]  WITH CHECK ADD FOREIGN KEY([LineGroupID])
-REFERENCES [dbo].[LineGroup] ([ID])
-GO
-
-
-
-CREATE TABLE [dbo].[AuditLog](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [TableName] [varchar](200) NOT NULL,
-    [PrimaryKeyColumn] [varchar](200) NOT NULL,
-    [PrimaryKeyValue] [varchar](max) NOT NULL,
-    [ColumnName] [varchar](200) NOT NULL,
-    [OriginalValue] [varchar](max) NULL,
-    [NewValue] [varchar](max) NULL,
-    [Deleted] [bit] NOT NULL,
-    [UpdatedBy] [varchar](200) NULL,
-    [UpdatedOn] [datetime] NULL,
- CONSTRAINT [PK_AuditLog] PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
-GO
-
-SET ANSI_PADDING OFF
-GO
-
-ALTER TABLE [dbo].[AuditLog] ADD  CONSTRAINT [DF_AuditLog_Deleted]  DEFAULT ((0)) FOR [Deleted]
-GO
-
-ALTER TABLE [dbo].[AuditLog] ADD  CONSTRAINT [DF_AuditLog_UpdatedBy]  DEFAULT (suser_name()) FOR [UpdatedBy]
-GO
-
-ALTER TABLE [dbo].[AuditLog] ADD  CONSTRAINT [DF_AuditLog_UpdatedOn]  DEFAULT (getutcdate()) FOR [UpdatedOn]
-GO
-
-
-CREATE NONCLUSTERED INDEX IX_MeterMeterGroup_MeterID
-ON MeterMeterGroup(MeterID ASC)
 GO
 
 INSERT INTO DataReader(FilePattern, AssemblyName, TypeName, LoadOrder) VALUES('**\*.dat', 'FaultData.dll', 'FaultData.DataReaders.COMTRADEReader', 1)
@@ -455,19 +409,32 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.EventEmailWriter', 10)
 GO
 
-INSERT INTO MeterGroup(Name) VALUES('AllMeters')
+INSERT INTO AssetGroup(Name) VALUES('AllAssets')
 GO
 
-CREATE TRIGGER Meter_AugmentAllMetersGroup
+CREATE TRIGGER Meter_AugmentAllAssetsGroup
 ON Meter
 AFTER INSERT
 AS BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO MeterMeterGroup(MeterID, MeterGroupID)
-    SELECT Meter.ID, MeterGroup.ID
-    FROM inserted Meter CROSS JOIN MeterGroup
-    WHERE MeterGroup.Name = 'AllMeters'
+    INSERT INTO MeterAssetGroup(MeterID, AssetGroupID)
+    SELECT Meter.ID, AssetGroup.ID
+    FROM inserted Meter CROSS JOIN AssetGroup
+    WHERE AssetGroup.Name = 'AllAssets'
+END
+GO
+
+CREATE TRIGGER Line_AugmentAllAssetsGroup
+ON Line
+AFTER INSERT
+AS BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO LineAssetGroup(LineID, AssetGroupID)
+    SELECT Line.ID, AssetGroup.ID
+    FROM inserted Line CROSS JOIN AssetGroup
+    WHERE AssetGroup.Name = 'AllAssets'
 END
 GO
 
@@ -543,24 +510,26 @@ CREATE TABLE SecurityGroupUserAccount
 )
 GO
 
-CREATE TABLE UserAccountMeterGroup
+CREATE TABLE UserAccountAssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
-    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID)
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
+    Dashboard BIT NOT NULL DEFAULT 1,
+    Email BIT NOT NULL DEFAULT 0
 )
 GO
 
-CREATE TRIGGER UserAccount_AugmentAllMetersGroup
+CREATE TRIGGER UserAccount_AugmentAllAssetsGroup
 ON UserAccount
 AFTER INSERT
 AS BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO UserAccountMeterGroup(UserAccountID, MeterGroupID)
-    SELECT UserAccount.ID, MeterGroup.ID
-    FROM inserted UserAccount CROSS JOIN MeterGroup
-    WHERE MeterGroup.Name = 'AllMeters'
+    INSERT INTO UserAccountAssetGroup(UserAccountID, AssetGroupID)
+    SELECT UserAccount.ID, AssetGroup.ID
+    FROM inserted UserAccount CROSS JOIN AssetGroup
+    WHERE AssetGroup.Name = 'AllAssets'
 END
 GO
 
@@ -595,45 +564,6 @@ CREATE TABLE XSLTemplate
 )
 GO
 
-CREATE TABLE EmailGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL
-)
-GO
-
-ALTER TABLE [dbo].[EmailGroupLineGroup]  WITH CHECK ADD FOREIGN KEY([EmailGroupID])
-REFERENCES [dbo].[EmailGroup] ([ID])
-GO
-
-
-CREATE TABLE EmailGroupUserAccount
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
-    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
-	CONSTRAINT CU_EmailGroupUserAccount_EmailGroupID_UserAccountID UNIQUE (EmailGroupID,UserAccountID)
-)
-GO
-
-CREATE TABLE EmailGroupSecurityGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
-    SecurityGroupID UNIQUEIDENTIFIER NOT NULL REFERENCES SecurityGroup(ID)
-	CONSTRAINT CU_EmailGroupSecurityGroup_EmailGroupID_SecurityGroupID UNIQUE (EmailGroupID,SecurityGroupID)
-)
-GO
-
-CREATE TABLE EmailGroupMeterGroup
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
-    MeterGroupID INT NOT NULL REFERENCES MeterGroup(ID),
-	CONSTRAINT CU_EmailGroupMeterGroup_EmailGroupID_MeterGroupID UNIQUE (EmailGroupID,MeterGroupID)
-)
-GO
-
 CREATE TABLE EmailCategory
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -649,19 +579,29 @@ CREATE TABLE EmailType
 )
 GO
 
-CREATE TABLE EmailGroupType
+CREATE TABLE EventEmailParameters
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
-    EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
-	CONSTRAINT CU_EmailGroupType_EmailGroupID_EmailTypeID UNIQUE (EmailGroupID,EmailTypeID)
+    EmailTypeID INT NOT NULL UNIQUE REFERENCES EmailType(ID),
+    TriggersEmailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT 0',
+    EventDetailSQL VARCHAR(MAX) NOT NULL DEFAULT 'SELECT '''' FOR XML PATH(''EventDetail''), TYPE',
+    MinDelay FLOAT NOT NULL DEFAULT 10,
+    MaxDelay FLOAT NOT NULL DEFAULT 60
+)
+GO
+
+CREATE TABLE UserAccountEmailType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID),
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID)
 )
 GO
 
 CREATE TABLE DisturbanceEmailCriterion
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     SeverityCode INT NOT NULL
 )
 GO
@@ -669,7 +609,7 @@ GO
 CREATE TABLE FaultEmailCriterion
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     EmailOnReclose INT NOT NULL DEFAULT 0
 )
 GO
@@ -677,7 +617,7 @@ GO
 CREATE TABLE AlarmEmailCriterion
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    EmailGroupID INT NOT NULL REFERENCES EmailGroup(ID),
+    EmailTypeID INT NOT NULL REFERENCES EmailType(ID),
     MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
     MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID)
 )
@@ -693,8 +633,9 @@ CREATE TABLE SentEmail
 )
 GO
 
-CREATE TABLE [dbo].[FileBlob](
-    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+CREATE TABLE FileBlob
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     DataFileID INT NOT NULL REFERENCES DataFile(ID),
     Blob VARBINARY(MAX) NOT NULL
 )
@@ -704,31 +645,30 @@ CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
 ON FileBlob(DataFileID ASC)
 GO
 
-CREATE TABLE [dbo].[DeviceFilter](
-    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [UserAccount] [varchar](500) NOT NULL,
-    [Name] [nvarchar](500) NOT NULL,
-    [FilterExpression] [nvarchar](max) NOT NULL,
-    [MeterGroupID] [int] NOT NULL
+CREATE TABLE DeviceFilter
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    UserAccount VARCHAR(500) NOT NULL,
+    Name NVARCHAR(500) NOT NULL,
+    FilterExpression NVARCHAR(MAX) NOT NULL,
+    AssetGroupID INT NOT NULL
 )
-
 GO
 
-CREATE TABLE [dbo].SavedViews(
-    [ID] [int] IDENTITY(1,1) PRIMARY KEY NOT NULL,
-    [UserAccount] [varchar](500) NOT NULL,
-    [Name] [nvarchar](500) NOT NULL,
-	DateRange int NOT NULL,
-    FromDate DateTime NOT NULL,
-    ToDate DateTime NOT NULL,
-    Tab nvarchar(20) NOT NULL,
+CREATE TABLE SavedViews
+(
+    ID INT IDENTITY(1, 1) PRIMARY KEY NOT NULL,
+    UserAccount VARCHAR(500) NOT NULL,
+    Name NVARCHAR(500) NOT NULL,
+	DateRange INT NOT NULL,
+    FromDate DATETIME NOT NULL,
+    ToDate DATETIME NOT NULL,
+    Tab NVARCHAR(20) NOT NULL,
     DeviceFilterID INT NOT NULL,
-    MapGrid nvarchar(5) NOT NULL,
-	IsDefault bit NOT NULL
+    MapGrid NVARCHAR(5) NOT NULL,
+	IsDefault BIT NOT NULL
 )
-
 GO
-
 
 INSERT INTO SavedViews(UserAccount, Name, DateRange, FromDate, ToDate, Tab, DeviceFilterID, MapGrid, IsDefault) VALUES('Default', 'Home', 2, GETDATE(), GETDATE(), 'Events', 0, 'Grid', 'true')
 GO
@@ -856,7 +796,7 @@ CREATE NONCLUSTERED INDEX IX_Event_EndTime
 ON Event(EndTime ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime_ID_EventID_PhaseID 
+CREATE NONCLUSTERED INDEX IX_Event_MeterID_StartTime_ID_EventID_PhaseID
 ON Event ( MeterID ASC, StartTime ASC ) INCLUDE ( EventTypeID)
 GO
 
@@ -895,7 +835,7 @@ CREATE NONCLUSTERED INDEX IX_Disturbance_EndTime
 ON Disturbance(EndTime ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID 
+CREATE NONCLUSTERED INDEX IX_Disturbance_StartTime_ID_EventID_PhaseID
 ON Disturbance ( StartTime ASC ) INCLUDE ( ID, EventID, PhaseID)
 GO
 
@@ -951,17 +891,17 @@ CREATE TABLE VoltageEnvelopeCurve
 )
 GO
 
-CREATE TABLE [dbo].[WorkbenchFilter](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [Name] [varchar](50) NOT NULL,
-    [UserID] [uniqueidentifier] NOT NULL,
-    [TimeRange] [varchar](512) NOT NULL,
-    [Meters] [varchar](max) NULL,
-    [Lines] [varchar](max) NULL,
-    [EventTypes] [varchar](50) NOT NULL,
-    [IsDefault] [bit] NOT NULL
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
+CREATE TABLE WorkbenchFilter
+(
+    ID INT IDENTITY(1,1) NOT NULL,
+    Name VARCHAR(50) NOT NULL,
+    UserID UNIQUEIDENTIFIER NOT NULL,
+    TimeRange VARCHAR(512) NOT NULL,
+    Meters VARCHAR(MAX) NULL,
+    Lines VARCHAR(MAX) NULL,
+    EventTypes VARCHAR(50) NOT NULL,
+    IsDefault BIT NOT NULL
+)
 GO
 
 CREATE TABLE DisturbanceSeverity
@@ -1098,269 +1038,377 @@ GO
 INSERT INTO VoltageCurvePoint(VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES (2, 0.9, 10.0, 5)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Upper',1)
+
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('ITIC Upper', 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 2, 0.001, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 2, 0.001, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.4, 0.003, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 1.4, 0.003, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.2, 0.003, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 1.2, 0.003, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.2, 0.5, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 1.2, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.1, 0.5, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 1.1, 0.5, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 5, 0.0001667, 0)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 5, 0.0001667, 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (1, 1.1, 1000000, 6)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(1, 1.1, 1000000, 6)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('ITIC Lower',1)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('ITIC Lower', 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0, 0.02, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0, 0.02, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.7, 0.02, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0.7, 0.02, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.7, 0.5, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0.7, 0.5, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.8, 0.5, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0.8, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.8, 10, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0.8, 10, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.9, 10, 6)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0.9, 10, 6)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (2, 0.9, 1000000, 7)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(2, 0.9, 1000000, 7)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('SEMI',0)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('SEMI', 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0, 0.02, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0, 0.02, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.5, 0.02, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.5, 0.02, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.5, 0.2, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.5, 0.2, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.7, 0.2, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.7, 0.2, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.7, 0.5, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.7, 0.5, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.8, 0.5, 6)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.8, 0.5, 6)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.8, 10, 7)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.8, 10, 7)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.9, 10, 8)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.9, 10, 8)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (3, 0.9, 1000000, 9)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(3, 0.9, 1000000, 9)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type I & II',0)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.5, 0.01, 1)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.5, 0.2, 2)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.7, 0.2, 3)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.7, 0.5, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.8, 0.5, 5)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.8, 2, 6)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 1, 2, 7)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 1, 0.01, 8)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (4, 0.5, 0.01, 9)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1668 Recommended Type I & II', 0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1668 Recommended Type III',0)
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.5, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.5, 0.01, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.5, 0.2, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.5, 0.05, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.7, 0.2, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.7, 0.05, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.7, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.7, 0.1, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.8, 0.5, 5)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.8, 0.1, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.8, 2, 6)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.8, 2, 6)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 1, 2, 7)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 1, 2, 7)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 1, 0.01, 8)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 1, 0.01, 8)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (5, 0.5, 0.01, 9)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(4, 0.5, 0.01, 9)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 1.0 Transients',0)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1668 Recommended Type III', 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 0, 1E-06, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.5, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 0, 0.01, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.5, 0.05, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 5, 0.01, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.7, 0.05, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 5, 1E-06, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.7, 0.1, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (6, 0, 1E-06, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.8, 0.1, 5)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.8, 2, 6)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 1, 2, 7)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 1, 0.01, 8)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(5, 0.5, 0.01, 9)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.1 Instantaneous Sag',0)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 1.0 Transients', 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.1, 0.01, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(6, 0, 1E-06, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.1, 0.5, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(6, 0, 0.01, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.9, 0.5, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(6, 5, 0.01, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.9, 0.01, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(6, 5, 1E-06, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (7, 0.1, 0.01, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(6, 0, 1E-06, 5)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.1.2 Instantaneous Swell',0)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.1, 0.01, 1)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.1, 0.5, 2)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.8, 0.5, 3)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.8, 0.01, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (8, 1.1, 0.01, 5)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.1.1 Instantaneous Sag', 0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.1 Mom. Interruption',0)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0, 0.01, 1)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0, 3, 2)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.1, 3, 3)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0.1, 0.01, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (9, 0, 0.01, 5)
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(7, 0.1, 0.01, 1)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.2 Momentary Sag',0)
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(7, 0.1, 0.5, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.1, 0.5, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(7, 0.9, 0.5, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.1, 3, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(7, 0.9, 0.01, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.9, 3, 3)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.9, 0.5, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (10, 0.1, 0.5, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(7, 0.1, 0.01, 5)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.2.3 Momentary Swell',0)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.1.2 Instantaneous Swell', 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.1, 0.5, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(8, 1.1, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.1, 3, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(8, 1.1, 0.5, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.4, 3, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(8, 1.8, 0.5, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.4, 0.5, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(8, 1.8, 0.01, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (11, 1.1, 0.5, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(8, 1.1, 0.01, 5)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.1 Temp. Interruption',0)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0, 3, 1)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0, 60, 2)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0.1, 60, 3)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0.1, 3, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (12, 0, 3, 5)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.2.1 Mom. Interruption', 0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.2 Temporary Sag',0)
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(9, 0, 0.01, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 3, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(9, 0, 3, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 60, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(9, 0.1, 3, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.9, 60, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(9, 0.1, 0.01, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.9, 3, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (13, 0.1, 3, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(9, 0, 0.01, 5)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 2.3.3 Temporary Swell',0)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.2.2 Momentary Sag', 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.1, 3, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(10, 0.1, 0.5, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.1, 60, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(10, 0.1, 3, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.2, 60, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(10, 0.9, 3, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.2, 3, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(10, 0.9, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (14, 1.1, 3, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(10, 0.1, 0.5, 5)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.1 Sustained Int.',0)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0, 60, 1)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0, 1000000, 2)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0.1, 1000000, 3)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0.1, 60, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (15, 0, 60, 5)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.2.3 Momentary Swell',0)
 GO
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.2 Undervoltage',0)
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(11, 1.1, 0.5, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.8, 60, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(11, 1.1, 3, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.8, 1000000, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(11, 1.4, 3, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.9, 1000000, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(11, 1.4, 0.5, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.9, 60, 4)
-GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (16, 0.8, 60, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(11, 1.1, 0.5, 5)
 GO
 
 
-INSERT [dbo].[WorkbenchVoltageCurve] ([Name],[Visible]) VALUES ('IEEE 1159 3.3 Overvoltage',0)
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.3.1 Temp. Interruption', 0)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.1, 60, 1)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(12, 0, 3, 1)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.1, 1000000, 2)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(12, 0, 60, 2)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.2, 1000000, 3)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(12, 0.1, 60, 3)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.2, 60, 4)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(12, 0.1, 3, 4)
 GO
-INSERT [dbo].[WorkbenchVoltageCurvePoint] ([VoltageCurveID], [PerUnitMagnitude], [DurationSeconds], [LoadOrder]) VALUES (17, 1.1, 60, 5)
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(12, 0, 3, 5)
 GO
+
+
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.3.2 Temporary Sag', 0)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(13, 0.1, 3, 1)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(13, 0.1, 60, 2)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(13, 0.9, 60, 3)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(13, 0.9, 3, 4)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(13, 0.1, 3, 5)
+GO
+
+
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 2.3.3 Temporary Swell', 0)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(14, 1.1, 3, 1)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(14, 1.1, 60, 2)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(14, 1.2, 60, 3)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(14, 1.2, 3, 4)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(14, 1.1, 3, 5)
+GO
+
+
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 3.1 Sustained Int.', 0)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(15, 0, 60, 1)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(15, 0, 1000000, 2)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(15, 0.1, 1000000, 3)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(15, 0.1, 60, 4)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(15, 0, 60, 5)
+GO
+
+
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 3.2 Undervoltage', 0)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(16, 0.8, 60, 1)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(16, 0.8, 1000000, 2)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(16, 0.9, 1000000, 3)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(16, 0.9, 60, 4)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(16, 0.8, 60, 5)
+GO
+
+
+INSERT WorkbenchVoltageCurve(Name, Visible) VALUES('IEEE 1159 3.3 Overvoltage', 0)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(17, 1.1, 60, 1)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(17, 1.1, 1000000, 2)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(17, 1.2, 1000000, 3)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(17, 1.2, 60, 4)
+GO
+
+INSERT WorkbenchVoltageCurvePoint (VoltageCurveID, PerUnitMagnitude, DurationSeconds, LoadOrder) VALUES(17, 1.1, 60, 5)
+GO
+
 
 INSERT INTO VoltageEnvelopeCurve(VoltageEnvelopeID, VoltageCurveID) VALUES(1, 1)
 GO
@@ -1952,26 +2000,22 @@ GO
 INSERT INTO AlarmType(Name, Description) VALUES ('Alarm', 'Value exceeded regulatory limits')
 GO
 
-CREATE TABLE [dbo].[FaultNote](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [FaultSummaryID] [int] NOT NULL,
-    [Note] [varchar](max) NOT NULL,
-    [UserAccountID] [uniqueidentifier] NOT NULL,
-    [Timestamp] [datetime] NOT NULL
-PRIMARY KEY CLUSTERED
+CREATE TABLE FaultNote
 (
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FaultSummaryID INT NOT NULL,
+    Note VARCHAR(MAX) NOT NULL,
+    UserAccountID UNIQUEIDENTIFIER NOT NULL,
+    Timestamp DATETIME NOT NULL
+)
 GO
 
-ALTER TABLE [dbo].[FaultNote]  WITH CHECK ADD FOREIGN KEY([FaultSummaryID])
-REFERENCES [dbo].[FaultSummary] ([ID])
+ALTER TABLE FaultNote WITH CHECK ADD FOREIGN KEY(FaultSummaryID)
+REFERENCES FaultSummary(ID)
 GO
 
-ALTER TABLE [dbo].[FaultNote]  WITH CHECK ADD FOREIGN KEY([UserAccountID])
-REFERENCES [dbo].[UserAccount] ([ID])
+ALTER TABLE FaultNote WITH CHECK ADD FOREIGN KEY(UserAccountID)
+REFERENCES UserAccount(ID)
 GO
 
 CREATE NONCLUSTERED INDEX IX_FaultNote_FaultSummaryID
@@ -1982,22 +2026,18 @@ CREATE NONCLUSTERED INDEX IX_FaultNote_UserAccountID
 ON FaultNote(UserAccountID ASC)
 GO
 
-CREATE TABLE [dbo].[EventNote](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [EventID] [int] NOT NULL,
-    [Note] [varchar](max) NOT NULL,
-    [UserAccount] [varchar](max) NOT NULL,
-    [Timestamp] [datetime] NOT NULL,
-PRIMARY KEY CLUSTERED
+CREATE TABLE EventNote
 (
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL,
+    Note VARCHAR(MAX) NOT NULL,
+    UserAccount VARCHAR(MAX) NOT NULL,
+    Timestamp DATETIME NOT NULL,
+)
 GO
 
-
-ALTER TABLE [dbo].[EventNote]  WITH CHECK ADD FOREIGN KEY([EventID])
-REFERENCES [dbo].[Event] ([ID])
+ALTER TABLE EventNote WITH CHECK ADD FOREIGN KEY(EventID)
+REFERENCES Event(ID)
 GO
 
 CREATE NONCLUSTERED INDEX IX_EventNote_EventID
@@ -2016,44 +2056,52 @@ CREATE TABLE MetersToDataPush
     Synced bit NOT NULL
 )
 GO
-CREATE TABLE [dbo].[LinesToDataPush](
-    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    [LocalXDALineID] [int] NOT NULL,
-    [RemoteXDALineID] [int] NULL,
-    [LocalXDAAssetKey] [varchar](200) NOT NULL,
-    [RemoteXDAAssetKey] varchar(200) NOT NULL,
+
+CREATE TABLE LinesToDataPush
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    LocalXDALineID INT NOT NULL,
+    RemoteXDALineID INT NULL,
+    LocalXDAAssetKey VARCHAR(200) NOT NULL,
+    RemoteXDAAssetKey VARCHAR(200) NOT NULL,
 )
 GO
-CREATE TABLE [dbo].RemoteXDAInstance(
-    [ID] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    Name varchar(200) NOT NULL,
-    Address varchar(200) NULL,
-    Frequency [varchar](20) NOT NULL,
-	UserAccountID uniqueidentifier FOREIGN KEY  REFERENCES UserAccount(ID) NOT NULL
+
+CREATE TABLE RemoteXDAInstance
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Address VARCHAR(200) NULL,
+    Frequency VARCHAR(20) NOT NULL,
+	UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
 GO
+
 CREATE TABLE RemoteXDAInstanceMeter(
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     RemoteXDAInstanceID INT NOT NULL,
     MetersToDataPushID INT NOT NULL
 )
 GO
-ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(RemoteXDAInstanceID)
-REFERENCES [dbo].RemoteXDAInstance ([ID])
+
+ALTER TABLE RemoteXDAInstanceMeter WITH CHECK ADD FOREIGN KEY(RemoteXDAInstanceID)
+REFERENCES RemoteXDAInstance(ID)
 GO
 
-ALTER TABLE [dbo].RemoteXDAInstanceMeter  WITH CHECK ADD FOREIGN KEY(MetersToDataPushID)
-REFERENCES [dbo].MetersToDataPush ([ID])
+ALTER TABLE RemoteXDAInstanceMeter WITH CHECK ADD FOREIGN KEY(MetersToDataPushID)
+REFERENCES MetersToDataPush(ID)
 GO
 
-CREATE TABLE FileGroupLocalToRemote(
-    ID INT IDENTITY(1,1) Primary key not null,
-    LocalFileGroupID INT not null,
-    RemoteFileGroupID INT not null
+CREATE TABLE FileGroupLocalToRemote
+(
+    ID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+    LocalFileGroupID INT NOT NULL,
+    RemoteFileGroupID INT NOT NULL
 )
 GO
-ALTER TABLE [dbo].FileGroupLocalToRemote  WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
-REFERENCES [dbo].FileGroup ([ID])
+
+ALTER TABLE FileGroupLocalToRemote WITH CHECK ADD FOREIGN KEY(LocalFileGroupID)
+REFERENCES FileGroup(ID)
 GO
 
 
@@ -2152,183 +2200,166 @@ CREATE NONCLUSTERED INDEX IX_ContourAnimationFrame_ContourAnimationID
 ON ContourAnimationFrame(ContourAnimationID ASC)
 GO
 
-CREATE TABLE [dbo].[PQMarkCompany](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [Name] [varchar](200) NOT NULL
-PRIMARY KEY CLUSTERED
+CREATE TABLE PQMarkCompany
 (
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-
-CREATE TABLE [dbo].[PQMarkCompanyMeter](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [PQMarkCompanyID] [int] NOT NULL,
-    [MeterID] [int] NOT NULL,
-    DisplayName varchar(200) NOT NULL,
-    Enabled bit NOT NULL
-PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-
-ALTER TABLE [dbo].[PQMarkCompanyMeter]  WITH CHECK ADD FOREIGN KEY([MeterID])
-REFERENCES [dbo].[Meter] ([ID])
-GO
-
-ALTER TABLE [dbo].[PQMarkCompanyMeter]  WITH CHECK ADD FOREIGN KEY([PQMarkCompanyID])
-REFERENCES [dbo].[PQMarkCompany] ([ID])
-GO
-
-CREATE TABLE [dbo].[PQMarkAggregate](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [MeterID] [int] NOT NULL,
-    [Year] [int] NOT NULL,
-    [Month] [int] NOT NULL,
-    [ITIC] [int] NOT NULL,
-    [SEMI] [int] NOT NULL,
-    [SARFI90] [int] NOT NULL,
-    [SARFI70] [int] NOT NULL,
-    [SARFI50] [int] NOT NULL,
-    [SARFI10] [int] NOT NULL,
-    [THDJson] varchar(max) NULL
-PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-
-SET ANSI_PADDING OFF
-GO
-
-ALTER TABLE [dbo].[PQMarkAggregate]  WITH CHECK ADD FOREIGN KEY([MeterID])
-REFERENCES [dbo].[Meter] ([ID])
-GO
-
-CREATE INDEX IX_PQMarkAggregate_MeterID ON [dbo].[PQMarkAggregate](MeterID)
-GO
-CREATE INDEX IX_PQMarkAggregate_Year ON [dbo].[PQMarkAggregate]([Year])
-GO
-CREATE INDEX IX_PQMarkAggregate_Month ON [dbo].[PQMarkAggregate]([Month])
-GO
-
-/****** Object:  Table [dbo].PQMarkDuration    Script Date: 8/15/2017 2:07:17 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].PQMarkDuration(
-    [ID] [int] NOT NULL,
-    [Label] [nvarchar](50) NOT NULL,
-    [Min] [float] NOT NULL,
-    [Max] [float] NOT NULL,
-    [LoadOrder] [int] NOT NULL
-) ON [PRIMARY]
-
-GO
-/****** Object:  Table [dbo].[PQMarkVoltageBin]    Script Date: 8/15/2017 2:07:17 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[PQMarkVoltageBin](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [Label] [nvarchar](50) NOT NULL,
-    [Min] [float] NOT NULL,
-    [Max] [float] NOT NULL,
-    [LoadOrder] [int] NOT NULL
-) ON [PRIMARY]
-
-GO
-
-CREATE TABLE [dbo].[PQMarkRestrictedTableUserAccount](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
-    [PrimaryID] [int] NOT NULL,
-    [TableName] [varchar](max) NOT NULL,
-    [UserAccount] [varchar](max) NOT NULL,
-PRIMARY KEY CLUSTERED
-(
-    [ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
-GO
-
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1, N'<1c', 0, 0.01666666666, 0)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (2, N'1 to 2 c', 0.01666666667, 0.03333333333, 1)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (3, N'2 to 3 c', 0.03333333334, 0.05, 2)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (4, N'3 to 4 c', 0.050000000001, 0.06666666667, 3)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (5, N'4 to 5 c', 0.06666666668, 0.08333333334, 4)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (6, N'5 to 10 c', 0.08333333335, 0.16666666666, 5)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (7, N'10 c to 0.25s', 0.166666666667, 0.24999999999, 6)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (8, N'0.25 to 0.5s', 0.25, 0.49999999999, 7)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (9, N'0.5 to 1s', 0.5, 0.99999999999, 8)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (10, N'1 to 2s', 1, 1.99999999999, 9)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (11, N'2 to 5s', 2, 4.99999999999, 10)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (12, N'5 to 10s', 5, 9.99999999999, 11)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (13, N'10 to 20s', 10, 19.9999999999, 12)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (14, N'20 to 30s', 20, 29.9999999999, 13)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (15, N'30 to 60s', 30, 59.99999999999, 14)
-GO
-INSERT [dbo].PQMarkDuration ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (16, N'1 to 2 min', 60, 119.9999999999, 15)
-GO
-SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] ON
-
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (1, N'00-10', 0, 9.999999999, 0)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (2, N'10-20', 10, 19.99999999, 1)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (3, N'20-30', 20, 29.999999999, 2)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (4, N'30-40', 30, 39.999999999, 3)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (5, N'40-50', 40, 49.999999999, 4)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (6, N'50-60', 50, 59.999999999, 5)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (7, N'60-70', 60, 69.999999999, 6)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (8, N'70-80', 70, 79.999999999, 7)
-GO
-INSERT [dbo].[PQMarkVoltageBin] ([ID], [Label], [Min], [Max], [LoadOrder]) VALUES (9, N'80-90', 80, 89.999999999, 8)
-GO
-SET IDENTITY_INSERT [dbo].[PQMarkVoltageBin] OFF
-GO
-
-
-CREATE TABLE Report(
-	ID int Primary KEY identity(1,1),
-	MeterID int Foreign key references Meter(ID) not null,
-	Month int NOT NULL,
-	Year INT NOT NULL,
-	Results varchar(4) NOT NULL,
-	PDF varbinary(max) NOT NULL,
-	CONSTRAINT UC_Report UNIQUE(ID,MeterID, Month,Year)
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL
 )
 GO
 
+CREATE TABLE PQMarkCompanyMeter
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    PQMarkCompanyID INT NOT NULL REFERENCES PQMarkCompany(ID),
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    DisplayName VARCHAR(200) NOT NULL,
+    Enabled BIT NOT NULL
+)
+GO
+
+CREATE TABLE PQMarkAggregate
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    Year INT NOT NULL,
+    Month INT NOT NULL,
+    ITIC INT NOT NULL,
+    SEMI INT NOT NULL,
+    SARFI90 INT NOT NULL,
+    SARFI70 INT NOT NULL,
+    SARFI50 INT NOT NULL,
+    SARFI10 INT NOT NULL,
+    THDJson VARCHAR(MAX) NULL
+)
+GO
+
+CREATE INDEX IX_PQMarkAggregate_MeterID
+ON PQMarkAggregate(MeterID)
+GO
+
+CREATE INDEX IX_PQMarkAggregate_Year
+ON PQMarkAggregate(Year)
+GO
+
+CREATE INDEX IX_PQMarkAggregate_Month
+ON PQMarkAggregate(Month)
+GO
+
+CREATE TABLE PQMarkDuration
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Label NVARCHAR(50) NOT NULL,
+    Min FLOAT NOT NULL,
+    Max FLOAT NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
+CREATE TABLE PQMarkVoltageBin
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Label NVARCHAR(50) NOT NULL,
+    Min FLOAT NOT NULL,
+    Max FLOAT NOT NULL,
+    LoadOrder INT NOT NULL
+)
+GO
+
+CREATE TABLE PQMarkRestrictedTableUserAccount
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    PrimaryID INT NOT NULL,
+    TableName VARCHAR(MAX) NOT NULL,
+    UserAccount VARCHAR(MAX) NOT NULL,
+)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'<1c', 0, 0.01666666666, 0)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'1 to 2 c', 0.01666666667, 0.03333333333, 1)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'2 to 3 c', 0.03333333334, 0.05, 2)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'3 to 4 c', 0.050000000001, 0.06666666667, 3)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'4 to 5 c', 0.06666666668, 0.08333333334, 4)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'5 to 10 c', 0.08333333335, 0.16666666666, 5)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'10 c to 0.25s', 0.166666666667, 0.24999999999, 6)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'0.25 to 0.5s', 0.25, 0.49999999999, 7)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'0.5 to 1s', 0.5, 0.99999999999, 8)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'1 to 2s', 1, 1.99999999999, 9)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'2 to 5s', 2, 4.99999999999, 10)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'5 to 10s', 5, 9.99999999999, 11)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'10 to 20s', 10, 19.9999999999, 12)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'20 to 30s', 20, 29.9999999999, 13)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'30 to 60s', 30, 59.99999999999, 14)
+GO
+
+INSERT PQMarkDuration(Label, Min, Max, LoadOrder) VALUES(N'1 to 2 min', 60, 119.9999999999, 15)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'00-10', 0, 9.999999999, 0)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'10-20', 10, 19.99999999, 1)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'20-30', 20, 29.999999999, 2)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'30-40', 30, 39.999999999, 3)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'40-50', 40, 49.999999999, 4)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'50-60', 50, 59.999999999, 5)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'60-70', 60, 69.999999999, 6)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'70-80', 70, 79.999999999, 7)
+GO
+
+INSERT PQMarkVoltageBin (Label, Min, Max, LoadOrder) VALUES(N'80-90', 80, 89.999999999, 8)
+GO
+
+CREATE TABLE Report
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	MeterID INT NOT NULL REFERENCES Meter(ID),
+	Month INT NOT NULL,
+	Year INT NOT NULL,
+	Results VARCHAR(4) NOT NULL,
+	PDF VARBINARY(MAX) NOT NULL,
+	CONSTRAINT UC_Report UNIQUE(ID, MeterID, Month, Year)
+)
+GO
 
 
 ----- FUNCTIONS -----
@@ -2634,21 +2665,21 @@ GO
 
 CREATE VIEW MeterDetail
 AS
-SELECT	Meter.ID, 
-		Meter.AssetKey, 
-		Meter.MeterLocationID, 
-		MeterLocation.AssetKey AS LocationKey, 
-		MeterLocation.Name AS Location, 
-		MeterLocation.Latitude, 
-		MeterLocation.Longitude, 
-        Meter.Name, 
-		Meter.Alias, 
-		Meter.ShortName, 
-		Meter.Make, 
-		Meter.Model, 
-		CASE COALESCE (Meter.TimeZone, '') 
-			WHEN '' THEN COALESCE (Setting.Value, 'UTC') 
-            ELSE Meter.TimeZone END AS TimeZone, 
+SELECT	Meter.ID,
+		Meter.AssetKey,
+		Meter.MeterLocationID,
+		MeterLocation.AssetKey AS LocationKey,
+		MeterLocation.Name AS Location,
+		MeterLocation.Latitude,
+		MeterLocation.Longitude,
+        Meter.Name,
+		Meter.Alias,
+		Meter.ShortName,
+		Meter.Make,
+		Meter.Model,
+		CASE COALESCE (Meter.TimeZone, '')
+			WHEN '' THEN COALESCE (Setting.Value, 'UTC')
+            ELSE Meter.TimeZone END AS TimeZone,
 		Meter.Description
 FROM    Meter INNER JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
@@ -2792,45 +2823,47 @@ FROM
     Meter ON Channel.MeterID = Meter.ID
 GO
 
-CREATE VIEW MeterMeterGroupView
+CREATE VIEW MeterAssetGroupView
 AS
 SELECT
-    MeterMeterGroup.ID,
+    MeterAssetGroup.ID,
     Meter.Name AS MeterName,
     Meter.ID AS MeterID,
-    MeterGroupID,
+    AssetGroupID,
     MeterLocation.Name AS Location
 FROM
-    MeterMeterGroup JOIN
-    Meter ON MeterMeterGroup.MeterID = Meter.ID JOIN
+    MeterAssetGroup JOIN
+    Meter ON MeterAssetGroup.MeterID = Meter.ID JOIN
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID
 GO
 
-CREATE VIEW [dbo].[LineLineGroupView]
+CREATE VIEW LineAssetGroupView
 AS
 SELECT
-    LineLineGroup.ID,
+    LineAssetGroup.ID,
     Line.AssetKey AS LineName,
 	(SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
     Line.ID AS LineID,
-    LineGroupID
+    AssetGroupID
 FROM
-    LineLineGroup JOIN
-    Line ON LineLineGroup.LineID = Line.ID
+    LineAssetGroup JOIN
+    Line ON LineAssetGroup.LineID = Line.ID
 GO
 
-CREATE VIEW UserAccountMeterGroupView
+CREATE VIEW UserAccountAssetGroupView
 AS
 SELECT
-    UserAccountMeterGroup.ID,
-    UserAccountMeterGroup.UserAccountID,
-    UserAccountMeterGroup.MeterGroupID,
+    UserAccountAssetGroup.ID,
+    UserAccountAssetGroup.UserAccountID,
+    UserAccountAssetGroup.AssetGroupID,
+    UserAccountAssetGroup.Dashboard,
+    UserAccountAssetGroup.Email,
     UserAccount.Name AS Username,
-    MeterGroup.Name AS GroupName
+    AssetGroup.Name AS GroupName
 FROM
-    UserAccountMeterGroup JOIN
-    UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID JOIN
-    MeterGroup ON UserAccountMeterGroup.MeterGroupID = MeterGroup.ID
+    UserAccountAssetGroup JOIN
+    UserAccount ON UserAccountAssetGroup.UserAccountID = UserAccount.ID JOIN
+    AssetGroup ON UserAccountAssetGroup.AssetGroupID = AssetGroup.ID
 GO
 
 CREATE VIEW UserMeter
@@ -2840,9 +2873,9 @@ SELECT DISTINCT
     Meter.ID AS MeterID
 FROM
     Meter JOIN
-    MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID JOIN
-    UserAccountMeterGroup ON MeterMeterGroup.MeterGroupID = UserAccountMeterGroup.MeterGroupID JOIN
-    UserAccount ON UserAccountMeterGroup.UserAccountID = UserAccount.ID
+    MeterAssetGroup ON MeterAssetGroup.MeterID = Meter.ID JOIN
+    UserAccountAssetGroup ON MeterAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID JOIN
+    UserAccount ON UserAccountAssetGroup.UserAccountID = UserAccount.ID
 GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -3201,65 +3234,95 @@ FROM
     EventType ON Event.EventTypeID = EventType.ID
 GO
 
-CREATE VIEW [dbo].[DisturbanceView]
-AS
-SELECT dbo.Disturbance.ID, dbo.Disturbance.EventID, dbo.Disturbance.EventTypeID, dbo.Disturbance.PhaseID, dbo.Disturbance.Magnitude, dbo.Disturbance.PerUnitMagnitude, dbo.Disturbance.StartTime,
-       dbo.Disturbance.EndTime, dbo.Disturbance.DurationSeconds, dbo.Disturbance.DurationCycles, dbo.Disturbance.StartIndex, dbo.Disturbance.EndIndex, dbo.Event.MeterID,
-           (SELECT        MAX(SeverityCode) AS Expr1
-             FROM            dbo.DisturbanceSeverity
-             WHERE        (DisturbanceID = dbo.Disturbance.ID)) AS SeverityCode, dbo.Meter.Name AS MeterName, dbo.Phase.Name AS PhaseName, dbo.Event.LineID
-FROM   dbo.Disturbance INNER JOIN
-       dbo.Event ON dbo.Disturbance.EventID = dbo.Event.ID INNER JOIN
-       dbo.Meter ON dbo.Event.MeterID = dbo.Meter.ID INNER JOIN
-       dbo.Phase ON dbo.Disturbance.PhaseID = dbo.Phase.ID
-
-GO
-
-CREATE VIEW [dbo].[BreakerView]
-AS
-SELECT dbo.BreakerOperation.ID, dbo.Meter.ID AS MeterID, dbo.Event.ID AS EventID, dbo.EventType.Name AS EventType, dbo.BreakerOperation.TripCoilEnergized AS Energized, dbo.BreakerOperation.BreakerNumber,
-       dbo.MeterLine.LineName, dbo.Phase.Name AS PhaseName, CAST(dbo.BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing, dbo.BreakerOperation.BreakerSpeed AS Speed,
-       dbo.BreakerOperationType.Name AS OperationType, BreakerOperation.UpdatedBy
-FROM   dbo.BreakerOperation INNER JOIN
-       dbo.Event ON dbo.BreakerOperation.EventID = dbo.Event.ID INNER JOIN
-       dbo.EventType ON dbo.EventType.ID = dbo.Event.EventTypeID INNER JOIN
-       dbo.Meter ON dbo.Meter.ID = dbo.Event.MeterID INNER JOIN
-       dbo.Line ON dbo.Line.ID = dbo.Event.LineID INNER JOIN
-       dbo.MeterLine ON dbo.MeterLine.LineID = dbo.Event.LineID AND dbo.MeterLine.MeterID = dbo.Meter.ID INNER JOIN
-       dbo.BreakerOperationType ON dbo.BreakerOperation.BreakerOperationTypeID = dbo.BreakerOperationType.ID INNER JOIN
-       dbo.Phase ON dbo.BreakerOperation.PhaseID = dbo.Phase.ID
-
-GO
-
-CREATE VIEW [dbo].[FaultView]
+CREATE VIEW DisturbanceView
 AS
 SELECT
-            FaultSummary.ID AS ID,
-            FaultSummary.EventID,
-            FaultSummary.Algorithm,
-            FaultSummary.FaultNumber,
-            FaultSummary.CalculationCycle,
-            FaultSummary.Distance,
-            FaultSummary.CurrentMagnitude,
-            FaultSummary.CurrentLag,
-            FaultSummary.PrefaultCurrent,
-            FaultSummary.PostfaultCurrent,
-            FaultSummary.Inception,
-            FaultSummary.DurationSeconds,
-            FaultSummary.DurationCycles,
-            FaultSummary.FaultType,
-            FaultSummary.IsSelectedAlgorithm,
-            FaultSummary.IsValid,
-            FaultSummary.IsSuppressed,
-            Meter.Name AS MeterName,
-            Meter.ShortName AS ShortName,
-            MeterLocation.ShortName AS LocationName,
-            Meter.ID AS MeterID,
-            Line.ID AS LineID,
-            MeterLine.LineName AS LineName,
-            Line.VoltageKV AS Voltage,
-            Event.StartTime AS InceptionTime,
-    CASE WHEN FaultSummary.Distance = '-1E308' THEN 'NaN' ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19)) END AS CurrentDistance,
+    Disturbance.ID,
+    Disturbance.EventID,
+    Disturbance.EventTypeID,
+    Disturbance.PhaseID,
+    Disturbance.Magnitude,
+    Disturbance.PerUnitMagnitude,
+    Disturbance.StartTime,
+    Disturbance.EndTime,
+    Disturbance.DurationSeconds,
+    Disturbance.DurationCycles,
+    Disturbance.StartIndex,
+    Disturbance.EndIndex,
+    Event.MeterID,
+    (
+        SELECT MAX(SeverityCode) AS Expr1
+        FROM DisturbanceSeverity
+        WHERE (DisturbanceID = Disturbance.ID)
+    ) AS SeverityCode,
+    Meter.Name AS MeterName,
+    Phase.Name AS PhaseName,
+    Event.LineID
+FROM
+    Disturbance JOIN
+    Event ON Disturbance.EventID = Event.ID JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN
+    Phase ON Disturbance.PhaseID = Phase.ID
+GO
+
+CREATE VIEW BreakerView
+AS
+SELECT
+    BreakerOperation.ID,
+    Meter.ID AS MeterID,
+    Event.ID AS EventID,
+    EventType.Name AS EventType,
+    BreakerOperation.TripCoilEnergized AS Energized,
+    BreakerOperation.BreakerNumber,
+    MeterLine.LineName,
+    Phase.Name AS PhaseName,
+    CAST(BreakerOperation.BreakerTiming AS DECIMAL(16, 5)) AS Timing,
+    BreakerOperation.BreakerSpeed AS Speed,
+    BreakerOperationType.Name AS OperationType,
+    BreakerOperation.UpdatedBy
+FROM
+    BreakerOperation JOIN
+    Event ON BreakerOperation.EventID = Event.ID JOIN
+    EventType ON EventType.ID = Event.EventTypeID JOIN
+    Meter ON Meter.ID = Event.MeterID JOIN
+    Line ON Line.ID = Event.LineID JOIN
+    MeterLine ON MeterLine.LineID = Event.LineID AND MeterLine.MeterID = Meter.ID JOIN
+    BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
+    Phase ON BreakerOperation.PhaseID = Phase.ID
+GO
+
+CREATE VIEW FaultView
+AS
+SELECT
+    FaultSummary.ID AS ID,
+    FaultSummary.EventID,
+    FaultSummary.Algorithm,
+    FaultSummary.FaultNumber,
+    FaultSummary.CalculationCycle,
+    FaultSummary.Distance,
+    FaultSummary.CurrentMagnitude,
+    FaultSummary.CurrentLag,
+    FaultSummary.PrefaultCurrent,
+    FaultSummary.PostfaultCurrent,
+    FaultSummary.Inception,
+    FaultSummary.DurationSeconds,
+    FaultSummary.DurationCycles,
+    FaultSummary.FaultType,
+    FaultSummary.IsSelectedAlgorithm,
+    FaultSummary.IsValid,
+    FaultSummary.IsSuppressed,
+    Meter.Name AS MeterName,
+    Meter.ShortName AS ShortName,
+    MeterLocation.ShortName AS LocationName,
+    Meter.ID AS MeterID,
+    Line.ID AS LineID,
+    MeterLine.LineName AS LineName,
+    Line.VoltageKV AS Voltage,
+    Event.StartTime AS InceptionTime,
+    CASE WHEN FaultSummary.Distance = '-1E308'
+        THEN 'NaN'
+        ELSE CAST(CAST(FaultSummary.Distance AS DECIMAL(16,2)) AS NVARCHAR(19))
+    END AS CurrentDistance,
     ROW_NUMBER() OVER(PARTITION BY Event.ID ORDER BY FaultSummary.IsSuppressed, FaultSummary.IsSelectedAlgorithm DESC, FaultSummary.Inception) AS RK
 FROM
     FaultSummary JOIN
@@ -3271,157 +3334,166 @@ FROM
     MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID
 WHERE
     EventType.Name = 'Fault'
-
-
 GO
 
-CREATE VIEW [dbo].[WorkbenchVoltageCurveView]
+CREATE VIEW WorkbenchVoltageCurveView
 AS
-SELECT  dbo.WorkbenchVoltageCurve.ID, dbo.WorkbenchVoltageCurve.Name, dbo.WorkbenchVoltageCurvePoint.ID AS CurvePointID, dbo.WorkbenchVoltageCurvePoint.PerUnitMagnitude,
-        dbo.WorkbenchVoltageCurvePoint.DurationSeconds, dbo.WorkbenchVoltageCurvePoint.LoadOrder, dbo.WorkbenchVoltageCurve.Visible
-FROM    dbo.WorkbenchVoltageCurve INNER JOIN
-        dbo.WorkbenchVoltageCurvePoint ON dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID AND
-        dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID AND dbo.WorkbenchVoltageCurve.ID = dbo.WorkbenchVoltageCurvePoint.VoltageCurveID
-
-GO
-
-CREATE VIEW [dbo].[EmailTypeView]
-AS
-SELECT        dbo.EmailType.EmailCategoryID, dbo.EmailType.XSLTemplateID, dbo.EmailType.ID, dbo.EmailCategory.Name AS EmailCategory, dbo.XSLTemplate.Name AS XSLTemplate,
-                         dbo.EmailCategory.Name + ' - ' + dbo.XSLTemplate.Name AS Name
-FROM            dbo.EmailType INNER JOIN
-                         dbo.EmailCategory ON dbo.EmailType.EmailCategoryID = dbo.EmailCategory.ID INNER JOIN
-                         dbo.XSLTemplate ON dbo.EmailType.XSLTemplateID = dbo.XSLTemplate.ID
-
-GO
-
-CREATE VIEW [dbo].[EmailGroupTypeView]
-AS
-SELECT        dbo.EmailGroupType.ID, dbo.EmailGroupType.EmailGroupID, dbo.EmailGroupType.EmailTypeID, dbo.EmailGroup.Name AS GroupName,
-                         dbo.EmailCategory.Name + ' - ' + dbo.XSLTemplate.Name AS TypeName
-FROM            dbo.EmailGroupType INNER JOIN
-                         dbo.EmailGroup ON dbo.EmailGroupType.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
-                         dbo.EmailType ON dbo.EmailGroupType.EmailTypeID = dbo.EmailType.ID INNER JOIN
-                         dbo.XSLTemplate ON dbo.XSLTemplate.ID = dbo.EmailType.XSLTemplateID INNER JOIN
-                         dbo.EmailCategory ON dbo.EmailCategory.ID = dbo.EmailType.EmailCategoryID
-
-GO
-
-CREATE VIEW [dbo].[EmailGroupMeterGroupView]
-AS
-SELECT        dbo.EmailGroupMeterGroup.ID, dbo.EmailGroupMeterGroup.EmailGroupID, dbo.EmailGroupMeterGroup.MeterGroupID, dbo.EmailGroup.Name AS EmailGroup, dbo.MeterGroup.Name AS MeterGroup
-FROM            dbo.EmailGroupMeterGroup INNER JOIN
-                         dbo.EmailGroup ON dbo.EmailGroupMeterGroup.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
-                         dbo.MeterGroup ON dbo.EmailGroupMeterGroup.MeterGroupID = dbo.MeterGroup.ID
-
-GO
-
-CREATE VIEW [dbo].[EmailGroupLineGroupView]
-AS
-SELECT        dbo.EmailGroupLineGroup.ID, dbo.EmailGroupLineGroup.EmailGroupID, dbo.EmailGroupLineGroup.LineGroupID, dbo.EmailGroup.Name AS EmailGroup, dbo.LineGroup.Name AS LineGroup
-FROM            dbo.EmailGroupLineGroup INNER JOIN
-                         dbo.EmailGroup ON dbo.EmailGroupLineGroup.EmailGroupID = dbo.EmailGroup.ID INNER JOIN
-                         dbo.LineGroup ON dbo.EmailGroupLineGroup.LineGroupID = dbo.LineGroup.ID
-
-GO
-
-CREATE VIEW EmailGroupUserAccountView AS
 SELECT
-    EmailGroupUserAccount.ID,
-    EmailGroupUserAccount.EmailGroupID,
-    EmailGroupUserAccount.UserAccountID,
-    EmailGroup.Name AS EmailGroup,
-    COALESCE(UserAccount.FirstName + ' ' + UserAccount.LastName, UserAccount.FirstName, UserAccount.Name) AS UserName
+    WorkbenchVoltageCurve.ID,
+    WorkbenchVoltageCurve.Name,
+    WorkbenchVoltageCurvePoint.ID AS CurvePointID,
+    WorkbenchVoltageCurvePoint.PerUnitMagnitude,
+    WorkbenchVoltageCurvePoint.DurationSeconds,
+    WorkbenchVoltageCurvePoint.LoadOrder,
+    WorkbenchVoltageCurve.Visible
 FROM
-    EmailGroupUserAccount JOIN
-    EmailGroup ON EmailGroupUserAccount.EmailGroupID = EmailGroup.ID JOIN
-    UserAccount ON EmailGroupUserAccount.UserAccountID = UserAccount.ID
+    WorkbenchVoltageCurve JOIN
+    WorkbenchVoltageCurvePoint ON
+        WorkbenchVoltageCurve.ID = WorkbenchVoltageCurvePoint.VoltageCurveID AND
+        WorkbenchVoltageCurve.ID = WorkbenchVoltageCurvePoint.VoltageCurveID AND
+        WorkbenchVoltageCurve.ID = WorkbenchVoltageCurvePoint.VoltageCurveID
 GO
 
-CREATE VIEW [dbo].[AuditLogView]
+CREATE VIEW EmailTypeView
 AS
-SELECT        TOP (2000) ID, TableName, PrimaryKeyColumn, PrimaryKeyValue, ColumnName, OriginalValue, NewValue, Deleted, UpdatedBy, UpdatedOn
-FROM            dbo.AuditLog
-WHERE         UpdatedBy IS NOT NULL
-
+SELECT
+    EmailType.EmailCategoryID,
+    EmailType.XSLTemplateID,
+    EmailType.ID,
+    EmailCategory.Name AS EmailCategory,
+    XSLTemplate.Name AS XSLTemplate,
+    EmailCategory.Name + ' - ' + XSLTemplate.Name AS Name
+FROM
+    EmailType JOIN
+    EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID JOIN
+    XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID
 GO
 
-CREATE VIEW [dbo].[MetersWithHourlyLimits]
+CREATE VIEW AuditLogView
 AS
-SELECT        dbo.Meter.Name, COUNT(DISTINCT dbo.Channel.ID) AS Limits, dbo.Meter.ID
-FROM            dbo.HourOfWeekLimit INNER JOIN
-                         dbo.Channel ON dbo.HourOfWeekLimit.ChannelID = dbo.Channel.ID INNER JOIN
-                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID
-GROUP BY dbo.Meter.Name, dbo.Meter.ID
-
+SELECT TOP(2000)
+    ID,
+    TableName,
+    PrimaryKeyColumn,
+    PrimaryKeyValue,
+    ColumnName,
+    OriginalValue,
+    NewValue,
+    Deleted,
+    UpdatedBy,
+    UpdatedOn
+FROM AuditLog
+WHERE UpdatedBy IS NOT NULL
 GO
 
-CREATE VIEW [dbo].[HourOfWeekLimitView]
+CREATE VIEW MetersWithHourlyLimits
 AS
-SELECT        dbo.HourOfWeekLimit.ID, dbo.HourOfWeekLimit.ChannelID, dbo.HourOfWeekLimit.AlarmTypeID, dbo.HourOfWeekLimit.HourOfWeek, dbo.HourOfWeekLimit.Severity, dbo.HourOfWeekLimit.High, dbo.HourOfWeekLimit.Low,
-                         dbo.HourOfWeekLimit.Enabled, dbo.AlarmType.Name AS AlarmTypeName
-FROM            dbo.HourOfWeekLimit INNER JOIN
-                         dbo.AlarmType ON dbo.HourOfWeekLimit.AlarmTypeID = dbo.AlarmType.ID
-
+SELECT
+    Meter.Name,
+    COUNT(DISTINCT Channel.ID) AS Limits,
+    Meter.ID
+FROM
+    HourOfWeekLimit JOIN
+    Channel ON HourOfWeekLimit.ChannelID = Channel.ID JOIN
+    Meter ON Channel.MeterID = Meter.ID
+GROUP BY
+    Meter.Name,
+    Meter.ID
 GO
 
-CREATE VIEW [dbo].[ChannelsWithHourlyLimits]
+CREATE VIEW HourOfWeekLimitView
 AS
-SELECT        dbo.Channel.Name, COUNT(DISTINCT dbo.HourOfWeekLimit.HourOfWeek) AS Limits, dbo.Channel.ID, dbo.Channel.MeterID, dbo.AlarmType.Name AS AlarmTypeName,
-                         dbo.MeasurementCharacteristic.Name AS MeasurementCharacteristic, dbo.MeasurementType.Name AS MeasurementType, dbo.Channel.HarmonicGroup, dbo.Phase.Name AS Phase
-FROM            dbo.HourOfWeekLimit INNER JOIN
-                         dbo.Channel ON dbo.HourOfWeekLimit.ChannelID = dbo.Channel.ID INNER JOIN
-                         dbo.AlarmType ON dbo.HourOfWeekLimit.AlarmTypeID = dbo.AlarmType.ID INNER JOIN
-                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID INNER JOIN
-                         dbo.MeasurementCharacteristic ON dbo.Channel.MeasurementCharacteristicID = dbo.MeasurementCharacteristic.ID INNER JOIN
-                         dbo.MeasurementType ON dbo.Channel.MeasurementTypeID = dbo.MeasurementType.ID INNER JOIN
-                         dbo.Phase ON dbo.Channel.PhaseID = dbo.Phase.ID
-GROUP BY dbo.Channel.Name, dbo.Channel.MeterID, dbo.Channel.ID, dbo.AlarmType.Name, dbo.MeasurementCharacteristic.Name, dbo.MeasurementType.Name, dbo.Channel.HarmonicGroup, dbo.Phase.Name
-
+SELECT
+    HourOfWeekLimit.ID,
+    HourOfWeekLimit.ChannelID,
+    HourOfWeekLimit.AlarmTypeID,
+    HourOfWeekLimit.HourOfWeek,
+    HourOfWeekLimit.Severity,
+    HourOfWeekLimit.High,
+    HourOfWeekLimit.Low,
+    HourOfWeekLimit.Enabled, AlarmType.Name AS AlarmTypeName
+FROM
+    HourOfWeekLimit JOIN
+    AlarmType ON HourOfWeekLimit.AlarmTypeID = AlarmType.ID
 GO
 
-CREATE VIEW [dbo].[MetersWithNormalLimits]
+CREATE VIEW ChannelsWithHourlyLimits
 AS
-SELECT        dbo.Meter.Name, COUNT(DISTINCT dbo.Channel.ID) AS Limits, dbo.Meter.ID
-FROM            dbo.AlarmRangeLimit INNER JOIN
-                         dbo.Channel ON dbo.AlarmRangeLimit.ChannelID = dbo.Channel.ID INNER JOIN
-                         dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID
-GROUP BY dbo.Meter.Name, dbo.Meter.ID
-
+SELECT
+    Channel.Name,
+    COUNT(DISTINCT HourOfWeekLimit.HourOfWeek) AS Limits,
+    Channel.ID,
+    Channel.MeterID,
+    AlarmType.Name AS AlarmTypeName,
+    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+    MeasurementType.Name AS MeasurementType,
+    Channel.HarmonicGroup,
+    Phase.Name AS Phase
+FROM
+    HourOfWeekLimit JOIN
+    Channel ON HourOfWeekLimit.ChannelID = Channel.ID JOIN
+    AlarmType ON HourOfWeekLimit.AlarmTypeID = AlarmType.ID JOIN
+    Meter ON Channel.MeterID = Meter.ID JOIN
+    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+    Phase ON Channel.PhaseID = Phase.ID
+GROUP BY
+    Channel.Name,
+    Channel.MeterID,
+    Channel.ID,
+    AlarmType.Name,
+    MeasurementCharacteristic.Name,
+    MeasurementType.Name,
+    Channel.HarmonicGroup,
+    Phase.Name
 GO
 
-CREATE VIEW [dbo].[ChannelsWithNormalLimits]
+CREATE VIEW MetersWithNormalLimits
 AS
-SELECT        
-	dbo.Channel.Name, 
-	dbo.Channel.ID, 
-	dbo.Channel.MeterID, 
-	dbo.AlarmType.Name AS AlarmTypeName, 
-    dbo.MeasurementCharacteristic.Name AS MeasurementCharacteristic, 
-	dbo.MeasurementType.Name AS MeasurementType, 
-	dbo.Channel.HarmonicGroup, 
-	dbo.Phase.Name AS Phase, 
-	High, 
+SELECT
+    Meter.Name,
+    COUNT(DISTINCT Channel.ID) AS Limits,
+    Meter.ID
+FROM
+    AlarmRangeLimit JOIN
+    Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
+    Meter ON Channel.MeterID = Meter.ID
+GROUP BY
+    Meter.Name,
+    Meter.ID
+GO
+
+CREATE VIEW ChannelsWithNormalLimits
+AS
+SELECT
+	Channel.Name,
+	Channel.ID,
+	Channel.MeterID,
+	AlarmType.Name AS AlarmTypeName,
+    MeasurementCharacteristic.Name AS MeasurementCharacteristic,
+	MeasurementType.Name AS MeasurementType,
+	Channel.HarmonicGroup,
+	Phase.Name AS Phase,
+	High,
 	Low,
 	RangeInclusive,
 	PerUnit,
 	AlarmRangeLimit.Enabled,
 	IsDefault
-FROM            
-	dbo.AlarmRangeLimit INNER JOIN
-    dbo.Channel ON dbo.AlarmRangeLimit.ChannelID = dbo.Channel.ID INNER JOIN
-    dbo.AlarmType ON dbo.AlarmRangeLimit.AlarmTypeID = dbo.AlarmType.ID INNER JOIN
-    dbo.Meter ON dbo.Channel.MeterID = dbo.Meter.ID INNER JOIN
-    dbo.MeasurementCharacteristic ON dbo.Channel.MeasurementCharacteristicID = dbo.MeasurementCharacteristic.ID INNER JOIN
-    dbo.MeasurementType ON dbo.Channel.MeasurementTypeID = dbo.MeasurementType.ID INNER JOIN
-    dbo.Phase ON dbo.Channel.PhaseID = dbo.Phase.ID
-
+FROM
+	AlarmRangeLimit JOIN
+    Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
+    AlarmType ON AlarmRangeLimit.AlarmTypeID = AlarmType.ID JOIN
+    Meter ON Channel.MeterID = Meter.ID JOIN
+    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+    Phase ON Channel.PhaseID = Phase.ID
 GO
 
 
 ----- PROCEDURES -----
 
-CREATE PROCEDURE [dbo].[GetEventEmailRecipients]
+CREATE PROCEDURE GetEventEmailRecipients
 (
     @eventID INT
 )
@@ -3441,39 +3513,20 @@ AS BEGIN
         Setting ON Setting.Name = 'TimeTolerance'
     WHERE Event.ID = @eventID
 
-    ; WITH cte AS
-    (
-        SELECT
-            EmailGroupID,
-            UserAccountID
-        FROM EmailGroupUserAccount
-        UNION
-        SELECT
-            EmailGroupSecurityGroup.EmailGroupID,
-            UserAccount.ID
-        FROM
-            EmailGroupSecurityGroup JOIN
-            SecurityGroupUserAccount ON EmailGroupSecurityGroup.SecurityGroupID = SecurityGroupUserAccount.SecurityGroupID JOIN
-            UserAccount on SecurityGroupUserAccount.UserAccountID = UserAccount.ID
-    )
     SELECT DISTINCT
-        EmailGroupUserAccount.UserAccountID,
+        UserAccountAssetGroup.UserAccountID,
         EmailType.XSLTemplateID AS TemplateID
     FROM
         GetLineEventIDs(@lineID, @startTime, @endTime, @timeTolerance) LineEventID JOIN
         Event ON LineEventID.EventID = Event.ID JOIN
-        EventType ON Event.EventTypeID = EventType.ID JOIN
-        Meter ON Event.MeterID = Meter.ID LEFT OUTER JOIN
-        MeterMeterGroup ON MeterMeterGroup.MeterID = Meter.ID LEFT OUTER JOIN
-        LineLineGroup ON LineLineGroup.LineID = Event.LineID LEFT OUTER JOIN
-        EmailGroupMeterGroup ON MeterMeterGroup.MeterGroupID = EmailGroupMeterGroup.MeterGroupID LEFT OUTER JOIN
-        EmailGroupLineGroup ON LineLineGroup.LineGroupID = EmailGroupLineGroup.LineGroupID JOIN
-        EmailGroup ON
-            EmailGroupMeterGroup.EmailGroupID = EmailGroup.ID OR
-            EmailGroupLineGroup.EmailGroupID = EmailGroup.ID JOIN
-        cte EmailGroupUserAccount ON EmailGroupUserAccount.EmailGroupID = EmailGroup.ID JOIN
-        EmailGroupType ON EmailGroupType.EmailGroupID = EmailGroup.ID JOIN
-        EmailType ON EmailGroupType.EmailTypeID = EmailType.ID JOIN
+        EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
+        MeterAssetGroup ON MeterAssetGroup.MeterID = Event.MeterID LEFT OUTER JOIN
+        LineAssetGroup ON LineAssetGroup.LineID = Event.LineID JOIN
+        UserAccountAssetGroup ON
+            UserAccountAssetGroup.AssetGroupID = MeterAssetGroup.AssetGroupID OR
+            UserAccountAssetGroup.AssetGroupID = LineAssetGroup.AssetGroupID JOIN
+        UserAccountEmailType ON UserAccountAssetGroup.UserAccountID = UserAccountEmailType.UserAccountID JOIN
+        EmailType ON UserAccountEmailType.EmailTypeID = EmailType.ID JOIN
         EmailCategory ON
             EmailType.EmailCategoryID = EmailCategory.ID AND
             EmailCategory.Name = 'Event'
@@ -3484,7 +3537,7 @@ AS BEGIN
             (
                 SELECT *
                 FROM FaultEmailCriterion
-                WHERE FaultEmailCriterion.EmailGroupID = EmailGroup.ID
+                WHERE FaultEmailCriterion.EmailTypeID = EmailType.ID
             )
         )
         OR
@@ -3495,7 +3548,7 @@ AS BEGIN
                 SELECT *
                 FROM FaultEmailCriterion
                 WHERE
-                    FaultEmailCriterion.EmailGroupID = EmailGroup.ID AND
+                    FaultEmailCriterion.EmailTypeID = EmailType.ID AND
                     FaultEmailCriterion.EmailOnReclose <> 0
             )
         )
@@ -3508,7 +3561,7 @@ AS BEGIN
                 DisturbanceEmailCriterion ON DisturbanceSeverity.SeverityCode = DisturbanceEmailCriterion.SeverityCode
             WHERE
                 Disturbance.EventID = Event.ID AND
-                DisturbanceEmailCriterion.EmailGroupID = EmailGroup.ID
+                DisturbanceEmailCriterion.EmailTypeID = EmailType.ID
         )
 END
 GO
@@ -3685,14 +3738,11 @@ GO
 -- Create date: <Create Date,12/1/2016>
 -- Description: <Description, Calls usp_delete_cascade to perform cascading deletes for a table>
 -- =============================================
-CREATE PROCEDURE [dbo].[UniversalCascadeDelete]
-    -- Add the parameters for the stored procedure here
+CREATE PROCEDURE UniversalCascadeDelete
     @tableName VARCHAR(200),
     @baseCriteria NVARCHAR(1000)
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
     SET NOCOUNT ON;
     DECLARE @deleteSQL NVARCHAR(900)
 
@@ -3728,9 +3778,8 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [dbo].[InsertIntoAuditLog] (@tableName VARCHAR(128), @primaryKeyColumn VARCHAR(128), @deleted BIT = '0', @inserted BIT = '0') AS
+CREATE PROCEDURE InsertIntoAuditLog(@tableName VARCHAR(128), @primaryKeyColumn VARCHAR(128), @deleted BIT = '0', @inserted BIT = '0') AS
 BEGIN
-
     DECLARE @columnName varchar(100)
     DECLARE @cursorColumnNames CURSOR
 
@@ -3765,7 +3814,6 @@ BEGIN
 
     CLOSE @cursorColumnNames
     DEALLOCATE @cursorColumnNames
-
 END
 GO
 
@@ -3779,7 +3827,6 @@ CREATE TRIGGER Event_AuditUpdate
    AFTER UPDATE
 AS
 BEGIN
-
     SET NOCOUNT ON;
 
     SELECT * INTO #deleted  FROM deleted
@@ -3791,17 +3838,11 @@ BEGIN
 END
 GO
 
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 CREATE TRIGGER Disturbance_AuditUpdate
-   ON  Disturbance
+   ON Disturbance
    AFTER UPDATE
 AS
 BEGIN
-
     SET NOCOUNT ON;
 
     SELECT * INTO #deleted  FROM deleted
@@ -3809,13 +3850,7 @@ BEGIN
     EXEC InsertIntoAuditLog 'Disturbance', 'ID'
     DROP TABLE #inserted
     DROP TABLE #deleted
-
 END
-GO
-
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TRIGGER BreakerOperation_AuditUpdate
@@ -3823,7 +3858,6 @@ CREATE TRIGGER BreakerOperation_AuditUpdate
    AFTER UPDATE
 AS
 BEGIN
-
     SET NOCOUNT ON;
 
     SELECT * INTO #deleted  FROM deleted
@@ -3831,10 +3865,8 @@ BEGIN
     EXEC InsertIntoAuditLog 'BreakerOperation', 'ID'
     DROP TABLE #inserted
     DROP TABLE #deleted
-
 END
 GO
-
 
 
 ----- Email Templates -----

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  LineLineGroup.cs - Gbtc
+//  AssetGroup.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,28 +21,20 @@
 //
 //******************************************************************************************************
 
-using GSF.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class LineLineGroup
+    public class AssetGroup
     {
+        [Required]
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int LineID { get; set; }
-
-        public int LineGroupID { get; set; }
-    }
-
-    [PrimaryLabel("MeterName")]
-    public class LineLineGroupView: LineLineGroup
-    {
+        [Required]
+        [StringLength(100)]
         [Searchable]
-        public string LineName { get; set; }
-
-        [Searchable]
-        public string LongLineName { get; set; }
+        public string Name { get; set; }
     }
 }

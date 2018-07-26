@@ -1,5 +1,5 @@
 ﻿@*******************************************************************************************************
-//  Settings.cshtml - Gbtc
+//  LineAssetGroupView.cshtml - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -67,24 +67,24 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<LineLineGroupView>("LongLineName"))
+    @Raw(dataContext.AddInputField<LineAssetGroupView>("LongLineName"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts 
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<LineLineGroup, DataHub>(ViewBag, "ID", null, groupID))
+        @Raw(dataContext.RenderViewModelConfiguration<LineAssetGroup, DataHub>(ViewBag, "ID", null, groupID))
         
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            observableRecord.LineGroupID(@groupID);
+            observableRecord.AssetGroupID(@groupID);
         });
         
         $(function(){
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if (viewModel.dataHubIsConnected()) {
                     function searchLines(searchText, limit) {
-                        return dataHub.searchLinesForLineLineGroupByGroup(@groupID, searchText, limit);
+                        return dataHub.searchLinesForLineAssetGroupByGroup(@groupID, searchText, limit);
                     }
 
                     initializeAutoCompleteLookupField("LongLineName", searchLines, false);

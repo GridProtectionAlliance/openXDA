@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EmailGroup.cs - Gbtc
+//  UserAccountAssetGroup.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,18 +21,36 @@
 //
 //******************************************************************************************************
 
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.ComponentModel;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class EmailGroup
+    public class UserAccountAssetGroup
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        [Required]
+        public Guid UserAccountID { get; set; }
+
+        public int AssetGroupID { get; set; }
+
+        [DefaultValue(true)]
+        public bool Dashboard { get; set; }
+
+        [DefaultValue(false)]
+        public bool Email { get; set; }
+    }
+
+    [PrimaryLabel("Username")]
+    public class UserAccountAssetGroupView : UserAccountAssetGroup
+    {
         [Searchable]
-        public string Name { get; set; }
+        public string Username { get; set; }
+
+        [Searchable]
+        public string GroupName { get; set; }
     }
 }

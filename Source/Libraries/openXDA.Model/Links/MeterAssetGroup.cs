@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  EmailGroupType.cs - Gbtc
+//  MeterAssetGroup.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,26 +21,28 @@
 //
 //******************************************************************************************************
 
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace openXDA.Model
 {
-    public class EmailGroupType
+    public class MeterAssetGroup
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int EmailGroupID { get; set; }
+        public int MeterID { get; set; }
 
-        public int EmailTypeID { get; set; }
+        public int AssetGroupID { get; set; }
     }
 
-    public class EmailGroupTypeView : EmailGroupType
+    [PrimaryLabel("MeterName")]
+    public class MeterAssetGroupView : MeterAssetGroup
     {
         [Searchable]
-        public string GroupName { get; set; }
+        public string MeterName { get; set; }
 
         [Searchable]
-        public string TypeName { get; set; }
+        public string Location { get; set; }
     }
 }

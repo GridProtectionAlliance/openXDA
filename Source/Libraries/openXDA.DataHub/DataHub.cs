@@ -54,7 +54,7 @@ using Meter = openXDA.Model.Meter;
 using MeterDetail = openXDA.Model.MeterDetail;
 using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
-using MeterMeterGroup = openXDA.Model.MeterMeterGroup;
+using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 
 namespace openXDA.Hubs
@@ -321,17 +321,17 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ MeterGroup Table Operations ]
+        #region [ AssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecordCount)]
-        public int QueryGroupCount(int meterGroupID, string filterString)
+        [RecordOperation(typeof(AssetGroup), RecordOperation.QueryRecordCount)]
+        public int QueryGroupCount(int assetGroupID, string filterString)
         {
-            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
+            TableOperations<AssetGroup> tableOperations = DataContext.Table<AssetGroup>();
             RecordRestriction restriction;
 
-            if (meterGroupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", meterGroupID);
+            if (assetGroupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", assetGroupID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -339,14 +339,14 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterGroup> QueryGroups(int meterGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(AssetGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetGroup> QueryGroups(int assetGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<MeterGroup> tableOperations = DataContext.Table<MeterGroup>();
+            TableOperations<AssetGroup> tableOperations = DataContext.Table<AssetGroup>();
             RecordRestriction restriction;
 
-            if (meterGroupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", meterGroupID);
+            if (assetGroupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", assetGroupID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -354,71 +354,71 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterGroup), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(AssetGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroup(int id)
         {
-            CascadeDelete("MeterGroup", $"ID={id}");
+            CascadeDelete("AssetGroup", $"ID={id}");
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterGroup), RecordOperation.CreateNewRecord)]
-        public MeterGroup NewGroup()
+        [RecordOperation(typeof(AssetGroup), RecordOperation.CreateNewRecord)]
+        public AssetGroup NewGroup()
         {
-            return new MeterGroup();
+            return new AssetGroup();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterGroup), RecordOperation.AddNewRecord)]
-        public void AddNewGroup(MeterGroup record)
+        [RecordOperation(typeof(AssetGroup), RecordOperation.AddNewRecord)]
+        public void AddNewGroup(AssetGroup record)
         {
-            DataContext.Table<MeterGroup>().AddNewRecord(record);
+            DataContext.Table<AssetGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(MeterGroup), RecordOperation.UpdateRecord)]
-        public void UpdateGroup(MeterGroup record)
+        [RecordOperation(typeof(AssetGroup), RecordOperation.UpdateRecord)]
+        public void UpdateGroup(AssetGroup record)
         {
-            DataContext.Table<MeterGroup>().UpdateRecord(record);
+            DataContext.Table<AssetGroup>().UpdateRecord(record);
         }
 
-        public int GetLastMeterGroupID()
+        public int GetLastAssetGroupID()
         {
-            return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('MeterGroup')") ?? 0;
+            return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('AssetGroup')") ?? 0;
         }
 
 
         public void UpdateMeters(List<string> meters, int groupID )
         {
-            IEnumerable<MeterMeterGroup> records = DataContext.Table<MeterMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", groupID));
-            foreach (MeterMeterGroup record in records)
+            IEnumerable<MeterAssetGroup> records = DataContext.Table<MeterAssetGroup>().QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID));
+            foreach (MeterAssetGroup record in records)
             {
                 if (!meters.Contains(record.MeterID.ToString()))
-                    DataContext.Table<MeterMeterGroup>().DeleteRecord(record.ID);
+                    DataContext.Table<MeterAssetGroup>().DeleteRecord(record.ID);
             }
 
             foreach (string meter in meters)
             {
                 if (!records.Any(record => record.MeterID == int.Parse(meter)))
                 {
-                    DataContext.Table<MeterMeterGroup>().AddNewRecord(new MeterMeterGroup() { MeterGroupID = groupID, MeterID = int.Parse(meter) });
+                    DataContext.Table<MeterAssetGroup>().AddNewRecord(new MeterAssetGroup() { AssetGroupID = groupID, MeterID = int.Parse(meter) });
                 }
             }
         }
 
         public void UpdateUsers(List<string> users, int groupID)
         {
-            IEnumerable<UserAccountMeterGroup> records = DataContext.Table<UserAccountMeterGroup>().QueryRecords(restriction: new RecordRestriction("MeterGroupID = {0}", groupID));
-            foreach (UserAccountMeterGroup record in records)
+            IEnumerable<UserAccountAssetGroup> records = DataContext.Table<UserAccountAssetGroup>().QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID));
+            foreach (UserAccountAssetGroup record in records)
             {
                 if (!users.Contains(record.UserAccountID.ToString()))
-                    DataContext.Table<UserAccountMeterGroup>().DeleteRecord(record.ID);
+                    DataContext.Table<UserAccountAssetGroup>().DeleteRecord(record.ID);
             }
 
             foreach (string user in users)
             {
                 if (!records.Any(record => record.UserAccountID == Guid.Parse(user)))
                 {
-                    DataContext.Table<UserAccountMeterGroup>().AddNewRecord(new UserAccountMeterGroup() { MeterGroupID = groupID, UserAccountID = Guid.Parse(user) });
+                    DataContext.Table<UserAccountAssetGroup>().AddNewRecord(new UserAccountAssetGroup() { AssetGroupID = groupID, UserAccountID = Guid.Parse(user) });
                 }
             }
         }
@@ -426,92 +426,17 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ LineGroup Table Operations ]
+        #region [ MeterAssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineGroup), RecordOperation.QueryRecordCount)]
-        public int QueryLineGroupCount(string filterString)
-        {
-            return DataContext.Table<LineGroup>().QueryRecordCount(filterString);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<LineGroup> QueryLineGroups(string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            return DataContext.Table<LineGroup>().QueryRecords(sortField, ascending, page, pageSize, filterString);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineGroup), RecordOperation.DeleteRecord)]
-        public void DeleteLineGroup(int id)
-        {
-            CascadeDelete("LineGroup", $"ID={id}");
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineGroup), RecordOperation.CreateNewRecord)]
-        public LineGroup NewLineGroup()
-        {
-            return new LineGroup();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineGroup), RecordOperation.AddNewRecord)]
-        public void AddNewLineGroup(LineGroup record)
-        {
-            DataContext.Table<LineGroup>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(LineGroup), RecordOperation.UpdateRecord)]
-        public void UpdateLineGroup(LineGroup record)
-        {
-            DataContext.Table<LineGroup>().UpdateRecord(record);
-        }
-
-        public int GetLastLineGroupID()
-        {
-            return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('LineGroup')") ?? 0;
-        }
-
-        public void UpdateLines(List<string> lines, int groupID)
-        {
-            if(lines == null)
-            {
-                lines = new List<string>();
-            }
-
-            IEnumerable<LineLineGroup> records = DataContext.Table<LineLineGroup>().QueryRecords(restriction: new RecordRestriction("LineGroupID = {0}", groupID));
-            foreach (LineLineGroup record in records)
-            {
-                if (!lines.Contains(record.LineID.ToString()))
-                    DataContext.Table<LineLineGroup>().DeleteRecord(record.ID);
-            }
-
-            foreach (string line in lines)
-            {
-                if (!records.Any(record => record.LineID == int.Parse(line)))
-                {
-                    DataContext.Table<LineLineGroup>().AddNewRecord(new LineLineGroup() { LineGroupID = groupID, LineID = int.Parse(line) });
-                }
-            }
-        }
-
-
-        #endregion
-
-        #region [ MeterMeterGroup Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(MeterAssetGroup), RecordOperation.QueryRecordCount)]
         public int QueryGroupMeterViewCount(int groupID, string filterString)
         {
-            TableOperations<MeterMeterGroupView> tableOperations = DataContext.Table<MeterMeterGroupView>();
+            TableOperations<MeterAssetGroupView> tableOperations = DataContext.Table<MeterAssetGroupView>();
             RecordRestriction restriction;
 
             if (groupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterGroupID = {0}", groupID);
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("AssetGroupID = {0}", groupID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -519,14 +444,14 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterMeterGroupView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(MeterAssetGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<MeterAssetGroupView> QueryGroupMeterViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<MeterMeterGroupView> tableOperations = DataContext.Table<MeterMeterGroupView>();
+            TableOperations<MeterAssetGroupView> tableOperations = DataContext.Table<MeterAssetGroupView>();
             RecordRestriction restriction;
 
             if (groupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("MeterGroupID = {0}", groupID);
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("AssetGroupID = {0}", groupID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -534,37 +459,37 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.DeleteRecord)]
+        [RecordOperation(typeof(MeterAssetGroup), RecordOperation.DeleteRecord)]
         public void DeleteGroupMeterView(int id)
         {
-            DataContext.Table<MeterMeterGroup>().DeleteRecord(id);
+            DataContext.Table<MeterAssetGroup>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.CreateNewRecord)]
-        public MeterMeterGroupView NewGroupMeterView()
+        [RecordOperation(typeof(MeterAssetGroup), RecordOperation.CreateNewRecord)]
+        public MeterAssetGroupView NewGroupMeterView()
         {
-            return new MeterMeterGroupView();
+            return new MeterAssetGroupView();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.AddNewRecord)]
-        public void AddNewGroupMeterView(MeterMeterGroup record)
+        [RecordOperation(typeof(MeterAssetGroup), RecordOperation.AddNewRecord)]
+        public void AddNewGroupMeterView(MeterAssetGroup record)
         {
-            DataContext.Table<MeterMeterGroup>().AddNewRecord(record);
+            DataContext.Table<MeterAssetGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(MeterMeterGroup), RecordOperation.UpdateRecord)]
-        public void UpdateGroupMeterView(MeterMeterGroup record)
+        [RecordOperation(typeof(MeterAssetGroup), RecordOperation.UpdateRecord)]
+        public void UpdateGroupMeterView(MeterAssetGroup record)
         {
-            DataContext.Table<MeterMeterGroup>().UpdateRecord(record);
+            DataContext.Table<MeterAssetGroup>().UpdateRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
-        public IEnumerable<IDLabel> SearchMeterMeterGroupByGroup(int groupID, string searchText, int limit = -1)
+        public IEnumerable<IDLabel> SearchMeterAssetGroupByGroup(int groupID, string searchText, int limit = -1)
         {
-            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID = {1})", $"%{searchText}%", groupID);
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT MeterID FROM MeterAssetGroup WHERE AssetGroupID = {1})", $"%{searchText}%", groupID);
 
             return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
                 .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
@@ -573,17 +498,17 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ LineLineGroup Table Operations ]
+        #region [ LineAssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineLineGroup), RecordOperation.QueryRecordCount)]
-        public int QueryLineLineGroupViewCount(int groupID, string filterString)
+        [RecordOperation(typeof(LineAssetGroup), RecordOperation.QueryRecordCount)]
+        public int QueryLineAssetGroupViewCount(int groupID, string filterString)
         {
-            TableOperations<LineLineGroupView> tableOperations = DataContext.Table<LineLineGroupView>();
+            TableOperations<LineAssetGroupView> tableOperations = DataContext.Table<LineAssetGroupView>();
             RecordRestriction restriction;
 
             if (groupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineGroupID = {0}", groupID);
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("AssetGroupID = {0}", groupID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -591,14 +516,14 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineLineGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<LineLineGroupView> QueryLineLineGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(LineAssetGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<LineAssetGroupView> QueryLineAssetGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            TableOperations<LineLineGroupView> tableOperations = DataContext.Table<LineLineGroupView>();
+            TableOperations<LineAssetGroupView> tableOperations = DataContext.Table<LineAssetGroupView>();
             RecordRestriction restriction;
 
             if (groupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("LineGroupID = {0}", groupID);
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("AssetGroupID = {0}", groupID);
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
@@ -606,36 +531,36 @@ namespace openXDA.Hubs
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineLineGroup), RecordOperation.DeleteRecord)]
-        public void DeleteLineLineGroupView(int id)
+        [RecordOperation(typeof(LineAssetGroup), RecordOperation.DeleteRecord)]
+        public void DeleteLineAssetGroupView(int id)
         {
-            DataContext.Table<LineLineGroup>().DeleteRecord(id);
+            DataContext.Table<LineAssetGroup>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineLineGroup), RecordOperation.CreateNewRecord)]
-        public LineLineGroupView NewLineLineGroupView()
+        [RecordOperation(typeof(LineAssetGroup), RecordOperation.CreateNewRecord)]
+        public LineAssetGroupView NewLineAssetGroupView()
         {
-            return new LineLineGroupView();
+            return new LineAssetGroupView();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineLineGroup), RecordOperation.AddNewRecord)]
-        public void AddNewLineLineGroupView(LineLineGroup record)
+        [RecordOperation(typeof(LineAssetGroup), RecordOperation.AddNewRecord)]
+        public void AddNewLineAssetGroupView(LineAssetGroup record)
         {
-            DataContext.Table<LineLineGroup>().AddNewRecord(record);
+            DataContext.Table<LineAssetGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(LineLineGroup), RecordOperation.UpdateRecord)]
-        public void UpdateLineLineGroupView(LineLineGroup record)
+        [RecordOperation(typeof(LineAssetGroup), RecordOperation.UpdateRecord)]
+        public void UpdateLineAssetGroupView(LineAssetGroup record)
         {
-            DataContext.Table<LineLineGroup>().UpdateRecord(record);
+            DataContext.Table<LineAssetGroup>().UpdateRecord(record);
         }
 
-        public IEnumerable<IDLabel> SearchLinesForLineLineGroupByGroup(int groupID, string searchText, int limit = -1)
+        public IEnumerable<IDLabel> SearchLinesForLineAssetGroupByGroup(int groupID, string searchText, int limit = -1)
         {
-            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineLineGroup WHERE LineGroupID = {1})", $"%{searchText}%", groupID);
+            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineAssetGroup WHERE AssetGroupID = {1})", $"%{searchText}%", groupID);
 
             return DataContext.Table<Line>().QueryRecords("AssetKey", restriction, limit)
                 .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
@@ -643,24 +568,24 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ UserAccountMeterGroup Table Operations ]
+        #region [ UserAccountAssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecordCount)]
-        public int QueryUserAccountMeterGroupCount(int groupID, string filterString)
+        [RecordOperation(typeof(UserAccountAssetGroup), RecordOperation.QueryRecordCount)]
+        public int QueryUserAccountAssetGroupCount(int groupID, string filterString)
         {
             if (filterString != null && filterString != string.Empty)
-                return DataContext.Table<UserAccountMeterGroupView>().QueryRecordsWhere("MeterGroupID = {0}", groupID).Where(x => UserInfo.SIDToAccountName(x.Username).ToLower().Contains(filterString.ToLower())).Count();
+                return DataContext.Table<UserAccountAssetGroupView>().QueryRecordsWhere("AssetGroupID = {0}", groupID).Where(x => UserInfo.SIDToAccountName(x.Username).ToLower().Contains(filterString.ToLower())).Count();
             else
-                return DataContext.Table<UserAccountMeterGroupView>().QueryRecordsWhere("MeterGroupID = {0}", groupID).Count();
+                return DataContext.Table<UserAccountAssetGroupView>().QueryRecordsWhere("AssetGroupID = {0}", groupID).Count();
 
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<UserAccountMeterGroupView> QueryUserAccountMeterGroups(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(UserAccountAssetGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<UserAccountAssetGroupView> QueryUserAccountAssetGroups(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            Func<UserAccountMeterGroupView, bool> whereFunc;
+            Func<UserAccountAssetGroupView, bool> whereFunc;
 
             if (filterString != null && filterString != string.Empty)
                 whereFunc = x => UserInfo.SIDToAccountName(x.Username).ToLower().Contains(filterString.ToLower());
@@ -668,46 +593,46 @@ namespace openXDA.Hubs
                 whereFunc = x => true;
 
             if (ascending)
-                return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID))
+                return DataContext.Table<UserAccountAssetGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetGroupID = {0}", groupID))
                     .Where(whereFunc).OrderBy(x => UserInfo.SIDToAccountName(x.Username), StringComparer.OrdinalIgnoreCase);
             else
-                return DataContext.Table<UserAccountMeterGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("MeterGroupID = {0}", groupID))
+                return DataContext.Table<UserAccountAssetGroupView>().QueryRecords(sortField, ascending, page, pageSize, new RecordRestriction("AssetGroupID = {0}", groupID))
                     .Where(whereFunc).OrderByDescending(x => UserInfo.SIDToAccountName(x.Username), StringComparer.OrdinalIgnoreCase);
 
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.DeleteRecord)]
-        public void DeleteUserAccountMeterGroup(int id)
+        [RecordOperation(typeof(UserAccountAssetGroup), RecordOperation.DeleteRecord)]
+        public void DeleteUserAccountAssetGroup(int id)
         {
-            DataContext.Table<UserAccountMeterGroup>().DeleteRecord(id);
+            DataContext.Table<UserAccountAssetGroup>().DeleteRecord(id);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.CreateNewRecord)]
-        public UserAccountMeterGroupView NewUserAccountMeterGroup()
+        [RecordOperation(typeof(UserAccountAssetGroup), RecordOperation.CreateNewRecord)]
+        public UserAccountAssetGroupView NewUserAccountAssetGroup()
         {
-            return new UserAccountMeterGroupView();
+            return new UserAccountAssetGroupView();
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.AddNewRecord)]
-        public void AddNewUserAccountMeterGroup(UserAccountMeterGroup record)
+        [RecordOperation(typeof(UserAccountAssetGroup), RecordOperation.AddNewRecord)]
+        public void AddNewUserAccountAssetGroup(UserAccountAssetGroup record)
         {
-            DataContext.Table<UserAccountMeterGroup>().AddNewRecord(record);
+            DataContext.Table<UserAccountAssetGroup>().AddNewRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(UserAccountMeterGroup), RecordOperation.UpdateRecord)]
-        public void UpdateUserAccountMeterGroup(UserAccountMeterGroup record)
+        [RecordOperation(typeof(UserAccountAssetGroup), RecordOperation.UpdateRecord)]
+        public void UpdateUserAccountAssetGroup(UserAccountAssetGroup record)
         {
-            DataContext.Table<UserAccountMeterGroup>().UpdateRecord(record);
+            DataContext.Table<UserAccountAssetGroup>().UpdateRecord(record);
         }
 
         [AuthorizeHubRole("Administrator")]
         public IEnumerable<IDLabel> SearchUsersByGroup(int groupID, string searchText, int limit = -1)
         {
-            RecordRestriction restriction = new RecordRestriction("ID NOT IN (SELECT UserAccountID FROM UserAccountMeterGroup WHERE MeterGroupID = {0})",  groupID);
+            RecordRestriction restriction = new RecordRestriction("ID NOT IN (SELECT UserAccountID FROM UserAccountAssetGroup WHERE AssetGroupID = {0})",  groupID);
 
 
             if (limit < 1)
@@ -1737,324 +1662,6 @@ namespace openXDA.Hubs
 
         #endregion
 
-        #region [ EmailGroup Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecordCount)]
-        public int QueryEmailGroupCount(int emailGroupID, string filterString)
-        {
-            TableOperations<EmailGroup> tableOperations = DataContext.Table<EmailGroup>();
-            RecordRestriction restriction;
-
-            if (emailGroupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", emailGroupID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailGroup> QueryEmailGroup(int emailGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<EmailGroup> tableOperations = DataContext.Table<EmailGroup>();
-            RecordRestriction restriction;
-
-            if (emailGroupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ID = {0}", emailGroupID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroup), RecordOperation.DeleteRecord)]
-        public void DeleteEmailGroup(int id)
-        {
-            //DataContext.Table<EmailGroup>().DeleteRecord(id);
-            CascadeDelete("EmailGroup", $"ID={id}");
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroup), RecordOperation.CreateNewRecord)]
-        public EmailGroup NewEmailGroup()
-        {
-            return new EmailGroup();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroup), RecordOperation.AddNewRecord)]
-        public void AddNewEmailGroup(EmailGroup record)
-        {
-            DataContext.Table<EmailGroup>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(EmailGroup), RecordOperation.UpdateRecord)]
-        public void UpdateEmailGroup(EmailGroup record)
-        {
-            DataContext.Table<EmailGroup>().UpdateRecord(record);
-        }
-
-
-        #endregion
-
-        #region [ EmailGroupMeterGroup Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.QueryRecordCount)]
-        public int QueryEmailGroupMeterGroupCount(int emailGroupId, string filterString)
-        {
-            TableOperations<EmailGroupMeterGroupView> tableOperations = DataContext.Table<EmailGroupMeterGroupView>();
-            RecordRestriction restriction;
-            if (emailGroupId > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailGroupMeterGroupView> QueryEmailGroupMeterGroup(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<EmailGroupMeterGroupView> tableOperations = DataContext.Table<EmailGroupMeterGroupView>();
-            RecordRestriction restriction;
-            if (emailGroupId > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.DeleteRecord)]
-        public void DeleteEmailGroupMeterGroup(int id)
-        {
-            DataContext.Table<EmailGroupMeterGroup>().DeleteRecord(id);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.CreateNewRecord)]
-        public EmailGroupMeterGroup NewEmailGroupMeterGroup()
-        {
-            return new EmailGroupMeterGroup();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.AddNewRecord)]
-        public void AddNewEmailGroupMeterGroup(EmailGroupMeterGroup record)
-        {
-            DataContext.Table<EmailGroupMeterGroup>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(EmailGroupMeterGroup), RecordOperation.UpdateRecord)]
-        public void UpdateEmailGroupMeterGroup(EmailGroupMeterGroup record)
-        {
-            DataContext.Table<EmailGroupMeterGroup>().UpdateRecord(record);
-        }
-
-
-        #endregion
-
-        #region [ EmailGroupLineGroup Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.QueryRecordCount)]
-        public int QueryEmailGroupLineGroupCount(int emailGroupId, string filterString)
-        {
-            TableOperations<EmailGroupLineGroupView> tableOperations = DataContext.Table<EmailGroupLineGroupView>();
-            RecordRestriction restriction;
-            if (emailGroupId > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailGroupLineGroupView> QueryEmailGroupLineGroup(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<EmailGroupLineGroupView> tableOperations = DataContext.Table<EmailGroupLineGroupView>();
-            RecordRestriction restriction;
-            if (emailGroupId > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.DeleteRecord)]
-        public void DeleteEmailGroupLineGroup(int id)
-        {
-            DataContext.Table<EmailGroupLineGroup>().DeleteRecord(id);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.CreateNewRecord)]
-        public EmailGroupLineGroup NewEmailGroupLineGroup()
-        {
-            return new EmailGroupLineGroup();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.AddNewRecord)]
-        public void AddNewEmailGroupLineGroup(EmailGroupLineGroup record)
-        {
-            DataContext.Table<EmailGroupLineGroup>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(EmailGroupLineGroup), RecordOperation.UpdateRecord)]
-        public void UpdateEmailGroupLineGroup(EmailGroupLineGroup record)
-        {
-            DataContext.Table<EmailGroupLineGroup>().UpdateRecord(record);
-        }
-
-
-        #endregion
-
-        #region [ EmailGroupUserAccount Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.QueryRecordCount)]
-        public int QueryEmailGroupUserAccountCount(int emailGroupId, string filterString)
-        {
-            TableOperations<EmailGroupUserAccountView> tableOperations = DataContext.Table<EmailGroupUserAccountView>();
-            RecordRestriction restriction;
-            if (emailGroupId > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailGroupUserAccountView> QueryEmailGroupUserAccount(int emailGroupId, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<EmailGroupUserAccountView> tableOperations = DataContext.Table<EmailGroupUserAccountView>();
-            RecordRestriction restriction;
-            if (emailGroupId > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupId);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.DeleteRecord)]
-        public void DeleteEmailGroupUserAccount(int id)
-        {
-            DataContext.Table<EmailGroupUserAccount>().DeleteRecord(id);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.CreateNewRecord)]
-        public EmailGroupUserAccount NewEmailGroupUserAccount()
-        {
-            return new EmailGroupUserAccount();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.AddNewRecord)]
-        public void AddNewEmailGroupUserAccount(EmailGroupUserAccount record)
-        {
-            DataContext.Table<EmailGroupUserAccount>().AddNewRecord(record);
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(EmailGroupUserAccount), RecordOperation.UpdateRecord)]
-        public void UpdateEmailGroupUserAccount(EmailGroupUserAccount record)
-        {
-            DataContext.Table<EmailGroupUserAccount>().UpdateRecord(record);
-        }
-
-
-        #endregion
-
-        #region [ EmailGroupType Table Operations ]
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupType), RecordOperation.QueryRecordCount)]
-        public int QueryEmailGroupTypeCount(int emailGroupID, string filterString)
-        {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
-            RecordRestriction restriction;
-            if (emailGroupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecordCount(restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupType), RecordOperation.QueryRecords)]
-        public IEnumerable<EmailGroupType> QueryEmailGroupType(int emailGroupID, string sortField, bool ascending, int page, int pageSize, string filterString)
-        {
-            TableOperations<EmailGroupTypeView> tableOperations = DataContext.Table<EmailGroupTypeView>();
-            RecordRestriction restriction;
-            if (emailGroupID > 0)
-                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("EmailGroupID = {0}", emailGroupID);
-            else
-                restriction = tableOperations.GetSearchRestriction(filterString);
-
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupType), RecordOperation.DeleteRecord)]
-        public void DeleteEmailGroupType(int id)
-        {
-            DataContext.Table<EmailGroupType>().DeleteRecord(id);
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupType), RecordOperation.CreateNewRecord)]
-        public EmailGroupType NewEmailGroupType()
-        {
-            return new EmailGroupType();
-        }
-
-        [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(EmailGroupType), RecordOperation.AddNewRecord)]
-        public void AddNewEmailGroupType(EmailGroupTypeView record)
-        {
-            DataContext.Table<EmailGroupType>().AddNewRecord(CreateEmailGroupTypeFromView(record));
-        }
-
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(EmailGroupType), RecordOperation.UpdateRecord)]
-        public void UpdateEmailGroupType(EmailGroupTypeView record)
-        {
-            DataContext.Table<EmailGroupType>().UpdateRecord(CreateEmailGroupTypeFromView(record));
-        }
-
-        private EmailGroupType CreateEmailGroupTypeFromView(EmailGroupTypeView record)
-        {
-            return new EmailGroupType()
-            {
-                EmailGroupID = record.EmailGroupID,
-                ID = record.ID,
-                EmailTypeID = record.EmailTypeID
-            };
-        }
-
-
-        #endregion
-
         #region [ XSLTemplate Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
@@ -2457,7 +2064,7 @@ namespace openXDA.Hubs
         [AuthorizeHubRole("Administrator")]
         public IEnumerable<IDLabel> SearchLinesByGroup(int groupID, string searchText, int limit = -1)
         {
-            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineLineGroup WHERE LineGroupID = {1})", $"%{searchText}%", groupID);
+            RecordRestriction restriction = new RecordRestriction("AssetKey LIKE {0} AND ID NOT IN (SELECT LineID FROM LineAssetGroup WHERE AssetGroupID = {1})", $"%{searchText}%", groupID);
 
             return DataContext.Table<Meter>().QueryRecords("AssetKey", restriction, limit)
                 .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));

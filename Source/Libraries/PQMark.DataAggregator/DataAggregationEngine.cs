@@ -235,12 +235,12 @@ namespace PQMark.DataAggregator
             );
             IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
 
-            var meterGroups = dd.GroupBy(x => x.MeterID);
+            var assetGroups = dd.GroupBy(x => x.MeterID);
 
-            foreach(var meterGroup in meterGroups)
+            foreach(var assetGroup in assetGroups)
             {
-                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", meterGroup.Key));
-                var yearGroups = meterGroup.GroupBy(x => x.StartTime.Year);
+                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
+                var yearGroups = assetGroup.GroupBy(x => x.StartTime.Year);
                 foreach(var yearGroup in yearGroups)
                 {
                     var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
@@ -305,7 +305,7 @@ namespace PQMark.DataAggregator
                             return value >= 1.0D;
                         }).Count();
 
-                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", meterGroup.Key).Select(x => x.ID).ToList();
+                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
                         List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
                         using (Historian historian = new Historian(historianServer, historianInstance))
                         {
@@ -321,7 +321,7 @@ namespace PQMark.DataAggregator
 
                         string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
 
-                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, yearGroup.Key, dateGroup.Key);
+                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, yearGroup.Key, dateGroup.Key);
                         if(record != null)
                         {
                             record.ITIC = iticLower + iticUpper;
@@ -338,7 +338,7 @@ namespace PQMark.DataAggregator
                         {
                             record = new PQMarkAggregate()
                             {
-                                MeterID = meterGroup.Key,
+                                MeterID = assetGroup.Key,
                                 Year = yearGroup.Key,
                                 Month = dateGroup.Key,
                                 ITIC = iticLower + iticUpper,
@@ -380,18 +380,18 @@ namespace PQMark.DataAggregator
             );
             IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
 
-            var meterGroups = dd.GroupBy(x => x.MeterID);
+            var assetGroups = dd.GroupBy(x => x.MeterID);
 
-            foreach (var meterGroup in meterGroups)
+            foreach (var assetGroup in assetGroups)
             {
-                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", meterGroup.Key));
-                var yearGroups = meterGroup.GroupBy(x => x.StartTime.Year);
+                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
+                var yearGroups = assetGroup.GroupBy(x => x.StartTime.Year);
                 foreach (var yearGroup in yearGroups)
                 {
                     var dateGroups = yearGroup.GroupBy(x => x.StartTime.Month);
                     foreach (var dateGroup in dateGroups)
                     {
-                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, yearGroup.Key, dateGroup.Key);
+                        PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, yearGroup.Key, dateGroup.Key);
                         if (record != null) continue;
 
                         DateTime startDate = new DateTime(yearGroup.Key, dateGroup.Key, 1);
@@ -453,7 +453,7 @@ namespace PQMark.DataAggregator
                             return value >= 1.0D;
                         }).Count();
 
-                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", meterGroup.Key).Select(x => x.ID).ToList();
+                        List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
                         List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
                         using (Historian historian = new Historian(historianServer, historianInstance))
                         {
@@ -470,7 +470,7 @@ namespace PQMark.DataAggregator
 
                         record = new PQMarkAggregate()
                         {
-                            MeterID = meterGroup.Key,
+                            MeterID = assetGroup.Key,
                             Year = yearGroup.Key,
                             Month = dateGroup.Key,
                             ITIC = iticLower + iticUpper,
@@ -516,19 +516,19 @@ namespace PQMark.DataAggregator
             );
             IEnumerable<DisturbanceData> dd = table.Select().Select(row => DataContext.Table<DisturbanceData>().LoadRecord(row));
 
-            var meterGroups = dd.GroupBy(x => x.MeterID);
+            var assetGroups = dd.GroupBy(x => x.MeterID);
 
-            foreach (var meterGroup in meterGroups)
+            foreach (var assetGroup in assetGroups)
             {
-                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", meterGroup.Key));
+                OnLogStatusMessage(string.Format("PQMark aggregation: Processing {0}", assetGroup.Key));
                 // Get Easy Counts for SARFI 90, 70, 50, 10
-                int sarfi90 = meterGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
-                int sarfi70 = meterGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
-                int sarfi50 = meterGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
-                int sarfi10 = meterGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
+                int sarfi90 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.9).Count();
+                int sarfi70 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.7).Count();
+                int sarfi50 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.5).Count();
+                int sarfi10 = assetGroup.Where(x => x.PerUnitMagnitude <= 0.1).Count();
 
                 // Get Counts for semi
-                int semi = meterGroup.Where(x => {
+                int semi = assetGroup.Where(x => {
                     double vc = 0.0D;
 
                     int point1 = Curves.SemiCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
@@ -545,7 +545,7 @@ namespace PQMark.DataAggregator
                 }).Count();
 
                 // Get counts for ITIC
-                int iticLower = meterGroup.Where(x => {
+                int iticLower = assetGroup.Where(x => {
                     double vc = 0.0D;
 
                     int point1 = Curves.IticLowerCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
@@ -561,7 +561,7 @@ namespace PQMark.DataAggregator
                     return value >= 1.0D;
                 }).Count();
 
-                int iticUpper = meterGroup.Where(x => {
+                int iticUpper = assetGroup.Where(x => {
                     double vc = 0.0D;
 
                     int point1 = Curves.IticUpperCurve.TakeWhile(y => y.Item2 < x.DurationSeconds).Count() - 1;
@@ -577,7 +577,7 @@ namespace PQMark.DataAggregator
                     return value >= 1.0D;
                 }).Count();
 
-                List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", meterGroup.Key).Select(x => x.ID).ToList();
+                List<int> channelIds = DataContext.Table<Channel>().QueryRecordsWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'TotalTHD')", assetGroup.Key).Select(x => x.ID).ToList();
                 List<openHistorian.XDALink.TrendingDataPoint> historianPoints = new List<openHistorian.XDALink.TrendingDataPoint>();
                 using (Historian historian = new Historian(historianServer, historianInstance))
                 {
@@ -592,7 +592,7 @@ namespace PQMark.DataAggregator
 
                 string thdjson = "{" + string.Join(",", historianPoints.GroupBy(x => (int)(x.Value / 0.1)).Where(x => x.Key > 0).OrderBy(x => x.Key).Select(x => $"\"{x.Key}\":\"{x.Count()}\"")) + "}";
 
-                PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", meterGroup.Key, startDate.Year, startDate.Month);
+                PQMarkAggregate record = DataContext.Table<PQMarkAggregate>().QueryRecordWhere("MeterID = {0} AND Year = {1} AND Month = {2}", assetGroup.Key, startDate.Year, startDate.Month);
                 if (record != null)
                 {
                     record.ITIC = iticLower + iticUpper;
@@ -609,7 +609,7 @@ namespace PQMark.DataAggregator
                 {
                     record = new PQMarkAggregate()
                     {
-                        MeterID = meterGroup.Key,
+                        MeterID = assetGroup.Key,
                         Year = startDate.Year,
                         Month = startDate.Month,
                         ITIC = iticLower + iticUpper,

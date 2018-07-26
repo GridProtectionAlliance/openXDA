@@ -1,5 +1,5 @@
 ﻿@*******************************************************************************************************
-//  Settings.cshtml - Gbtc
+//  MeterAssetGroupView.cshtml - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -29,7 +29,6 @@
 @using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
-
 @inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
@@ -46,9 +45,9 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-        new[] { "MeterName", "Meter Name", "text-Left" },
-        new[] { "Location", "Site", "text-left"}
-    };
+new[] { "MeterName", "Meter Name", "text-Left" },
+new[] { "Location", "Site", "text-left"}
+};
     ViewBag.ShowSearchFilter = true;
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -64,24 +63,24 @@
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<MeterMeterGroupView>("MeterName"))
+    @Raw(dataContext.AddInputField<MeterAssetGroupView>("MeterName"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts 
+@section Scripts
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterMeterGroup, DataHub>(ViewBag, "ID", null, groupID))
-        
+        @Raw(dataContext.RenderViewModelConfiguration<MeterAssetGroup, DataHub>(ViewBag, "ID", null, groupID))
+
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            observableRecord.MeterGroupID = @groupID;
+            observableRecord.AssetGroupID = @groupID;
         });
-        
+
         $(function(){
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if (viewModel.dataHubIsConnected()) {
                     function searchMeters(searchText, limit) {
-                        return dataHub.searchMeterMeterGroupByGroup(@groupID, searchText, limit);
+                        return dataHub.searchMeterAssetGroupByGroup(@groupID, searchText, limit);
                     }
 
                     initializeAutoCompleteLookupField("MeterName", searchMeters, false);

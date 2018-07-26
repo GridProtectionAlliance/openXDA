@@ -1,5 +1,5 @@
 ﻿@******************************************************************************************************
-//  UserAccountMeterGroupView.cshtml - Gbtc
+//  UserAccountAssetGroupView.cshtml - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -27,7 +27,6 @@
 @using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
-
 @inherits ExtendedTemplateBase<AppModel>
 @{
     DataContext dataContext = ViewBag.DataContext;
@@ -43,8 +42,8 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "Username", "Username", "text-Left" },
-    };
+new[] { "Username", "Username", "text-Left" },
+};
     ViewBag.ShowSearchFilter = true;
 
     ViewBag.BodyRows = BodyRows().ToString();
@@ -52,26 +51,26 @@
 }
 @helper BodyRows()
 {
-    <td width="20%" class="text-left valign-middle" nowrap><button id="accountNameButton"type="button" class="btn btn-link" data-bind="text: lookupAccountName(Username, $($element)), click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-left valign-middle" nowrap><button id="accountNameButton" type="button" class="btn btn-link" data-bind="text: lookupAccountName(Username, $($element)), click: $parent.viewPageRecord"></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<UserAccountMeterGroupView>("Username"))
+    @Raw(dataContext.AddInputField<UserAccountAssetGroupView>("Username"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts 
+@section Scripts
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<UserAccountMeterGroup, DataHub>(ViewBag, "Username", null, groupID))
+        @Raw(dataContext.RenderViewModelConfiguration<UserAccountAssetGroup, DataHub>(ViewBag, "Username", null, groupID))
 
         $(viewModel).on("beforeSave", function (event, observableRecord) {
-            observableRecord.MeterGroupID = @groupID;
+            observableRecord.AssetGroupID = @groupID;
         });
-        
+
         function lookupAccountName(UserName, element) {
             if (viewModel.dataHubIsConnected()) {
                 securityHub.sidToAccountName(UserName).done(function (accountName) {

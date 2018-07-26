@@ -345,10 +345,6 @@
     <Content Include="webpack.config.js" />
     <Content Include="wwwroot\Content\daterangepicker.css" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
-    <Content Include="wwwroot\Config\EmailGroups.cshtml" />
-    <Content Include="wwwroot\Config\EmailGroupType.cshtml" />
-    <Content Include="wwwroot\Config\EmailGroupMeterGroup.cshtml" />
-    <Content Include="wwwroot\Config\EmailGroupUserAccount.cshtml" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
     <Content Include="PostBuildSetup.bat" />
     <Content Include="package.json" />
@@ -363,7 +359,6 @@
     <Content Include="wwwroot\Assets\Meters.cshtml" />
     <Content Include="wwwroot\Assets\Sites.cshtml" />
     <Content Include="wwwroot\Config\UserDashSettings.cshtml" />
-    <Content Include="wwwroot\Config\EmailGroupLineGroup.cshtml" />
     <Content Include="wwwroot\Config\ChannelsWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\ChannelsWithNormalLimits.cshtml" />
     <Content Include="tsconfig.json" />
@@ -377,8 +372,7 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
-    <Content Include="wwwroot\Config\LineGroups.cshtml" />
-    <Content Include="wwwroot\Config\LineLineGroupView.cshtml" />
+    <Content Include="wwwroot\Config\LineAssetGroupView.cshtml" />
     <Content Include="wwwroot\Config\HourOfWeekLimits.cshtml" />
     <Content Include="wwwroot\Config\MetersWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\HowlCSVDownloadHandler.ashx" />
@@ -410,13 +404,13 @@
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.ttf" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff2" />
-    <None Include="wwwroot\Config\MeterMeterGroupView.cshtml" />
+    <None Include="wwwroot\Config\MeterAssetGroupView.cshtml" />
     <None Include="wwwroot\Config\Groups.cshtml" />
     <None Include="wwwroot\Config\Help.cshtml" />
     <None Include="wwwroot\Images\Icons\Thumbs.db" />
     <None Include="wwwroot\Config\index.cshtml" />
     <None Include="wwwroot\Config\Layout.cshtml" />
-    <None Include="wwwroot\Config\MeterGroups.cshtml" />
+    <None Include="wwwroot\Config\AssetGroups.cshtml" />
     <Content Include="wwwroot\Content\jquery.jspanel.css" />
     <Content Include="wwwroot\Content\jquery.jspanel.min.css" />
     <Content Include="wwwroot\Content\jquery.multiselect.css" />

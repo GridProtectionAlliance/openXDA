@@ -232,7 +232,8 @@ namespace openXDA.Reports
 
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
-                IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterMeterGroup WHERE MeterGroupID IN (SELECT MeterGroupID FROM EmailGroupMeterGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
+                // TODO: There is no EmailGroupAssetGroup
+                IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterAssetGroup WHERE AssetGroupID IN (SELECT AssetGroupID FROM EmailGroupAssetGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
                 foreach (Meter meter in meters) {
                     PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
 

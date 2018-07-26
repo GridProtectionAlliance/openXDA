@@ -53,8 +53,8 @@
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
     <Compile Include="Alarms\AlarmType.cs" />
-    <Compile Include="Emails\EmailGroupType.cs" />
     <Compile Include="Emails\EmailType.cs" />
+    <Compile Include="Emails\EventEmailParameters.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
     <Compile Include="Events\Faults\FaultCurve.cs" />
@@ -62,10 +62,7 @@
     <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
     <Compile Include="ExceptionHandler.cs" />
     <Compile Include="LazyContext.cs" />
-    <Compile Include="Links\EmailGroupLineGroup.cs" />
-    <Compile Include="Links\EmailGroupMeterGroup.cs" />
-    <Compile Include="Links\EmailGroupSecurityGroup.cs" />
-    <Compile Include="Links\EmailGroupUserAccount.cs" />
+    <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="Reports\Report.cs" />
     <Compile Include="Settings\DataPusherSettings.cs" />
@@ -91,7 +88,6 @@
     <Compile Include="Events\Disturbances\DisturbanceSeverity.cs" />
     <Compile Include="Events\Faults\DoubleEndedFaultDistance.cs" />
     <Compile Include="Emails\EmailCategory.cs" />
-    <Compile Include="Emails\EmailGroup.cs" />
     <Compile Include="Events\Event.cs" />
     <Compile Include="Links\EventFaultEmail.cs" />
     <Compile Include="Events\EventInfo.cs" />
@@ -114,9 +110,8 @@
     <Compile Include="EAS\ICFEvent.cs" />
     <Compile Include="EAS\ICFResult.cs" />
     <Compile Include="TransmissionElements\Line.cs" />
-    <Compile Include="TransmissionElements\LineGroup.cs" />
     <Compile Include="TransmissionElements\LineImpedance.cs" />
-    <Compile Include="Links\LineLineGroup.cs" />
+    <Compile Include="Links\LineAssetGroup.cs" />
     <Compile Include="LinesToDataPush.cs" />
     <Compile Include="TransmissionElements\LineView.cs" />
     <Compile Include="Channels\MeasurementCharacteristic.cs" />
@@ -127,11 +122,11 @@
     <Compile Include="Alarms\ChannelDataQualitySummary.cs" />
     <Compile Include="Alarms\MeterDataQualitySummary.cs" />
     <Compile Include="Links\MeterFacility.cs" />
-    <Compile Include="Meters\MeterGroup.cs" />
+    <Compile Include="Meters\AssetGroup.cs" />
     <Compile Include="Links\MeterLine.cs" />
     <Compile Include="Meters\MeterLocation.cs" />
     <Compile Include="Links\MeterLocationLine.cs" />
-    <Compile Include="Links\MeterMeterGroup.cs" />
+    <Compile Include="Links\MeterAssetGroup.cs" />
     <Compile Include="MetersToDataPush.cs" />
     <Compile Include="Channels\OutputChannel.cs" />
     <Compile Include="Channels\Phase.cs" />
@@ -150,7 +145,7 @@
     <Compile Include="TransmissionElements\SourceImpedance.cs" />
     <Compile Include="Trending\TrendingData.cs" />
     <Compile Include="System\User.cs" />
-    <Compile Include="Links\UserAccountMeterGroup.cs" />
+    <Compile Include="Links\UserAccountAssetGroup.cs" />
     <Compile Include="Events\Disturbances\VoltageCurvePoint.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelope.cs" />
     <Compile Include="WorkbenchFilter.cs" />

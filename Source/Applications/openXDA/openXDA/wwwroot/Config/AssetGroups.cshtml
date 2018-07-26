@@ -1,5 +1,5 @@
 ﻿@*******************************************************************************************************
-//  Settings.cshtml - Gbtc
+//  AssetGroups.cshtml - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -30,11 +30,11 @@
 @using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
-
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
-    <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css"/>
+    <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
     <style>
+
         html, body {
             height: 100%;
         }
@@ -43,29 +43,29 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Config/Layout.cshtml";
-    ViewBag.Title = "Meter Groups";
+    ViewBag.Title = "Asset Groups";
     HttpRequestMessage request = ViewBag.Request;
 
     Dictionary<string, string> parameters = request.QueryParameters();
 
-    if (parameters.ContainsKey("MeterGroupID"))
+    if (parameters.ContainsKey("AssetGroupID"))
     {
-        ViewBag.MeterGroupID = parameters["MeterGroupID"];
+        ViewBag.AssetGroupID = parameters["AssetGroupID"];
     }
     else
     {
-        ViewBag.MeterGroupID = "-1";
+        ViewBag.AssetGroupID = "-1";
     }
 
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
 {   //    { "Field", "Label", "Classes" }
-        new[] { "Name", "Name", "text-Left" },
-        new[] { null, "Meters", "text-center valign-middle"},
-        new[] {null, "Users", "text-center valign-middle"}
+new[] { "Name", "Name", "text-Left" },
+new[] { null, "Meters", "text-center valign-middle"},
+new[] {null, "Users", "text-center valign-middle"}
 
-    };
+};
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
@@ -85,7 +85,7 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     <div>
-        @Raw(dataContext.AddInputField<MeterGroup>("Name"))
+        @Raw(dataContext.AddInputField<AssetGroup>("Name"))
     </div>
     <div data-bind="visible: $parent.recordMode()!==RecordMode.View">
         <div id="metersSelectFrame" class="form-group">
@@ -96,7 +96,6 @@
             <label>Users:</label>
             <select id="userSelect" class="form-control mobileSelect" multiple></select>
         </div>
-
     </div>
 }
 <div id="metersDialog" class="modal modal-wide fade" role="dialog">
@@ -110,7 +109,6 @@
         </div>
     </div>
 </div>
-
 <div id="usersDialog" class="modal modal-wide fade" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -122,14 +120,13 @@
         </div>
     </div>
 </div>
-
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
     <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<MeterGroup, DataHub>(ViewBag, null, null, ViewBag.MeterGroupID))
-                
+        @Raw(dataContext.RenderViewModelConfiguration<AssetGroup, DataHub>(ViewBag, null, null, ViewBag.AssetGroupID))
+
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryGroupMeterViewCount(sourceID, null).done(function (count) {
@@ -139,10 +136,10 @@
 
             return element.text();
         }
-        
+
         function getUserCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
-                dataHub.queryUserAccountMeterGroupCount(sourceID, null).done(function (count) {
+                dataHub.queryUserAccountAssetGroupCount(sourceID, null).done(function (count) {
                     $(element).text(count.toString());
                 });
             }
@@ -152,18 +149,18 @@
         function openMeters(record) {
             //console.log(record);
             $("#metersFrame").attr({
-                "src": "/Config/MeterMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
+                "src": "/Config/MeterAssetGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });
-            
+
             $("#metersDialog").modal("show");
         }
-        
+
         function openUsers(record) {
             //console.log(record);
             $("#usersFrame").attr({
-                "src": "/Config/UserAccountMeterGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
+                "src": "/Config/UserAccountAssetGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
                 "height": ($(document).height() - 150) + "px",
                 "width": "100%"
             });
@@ -178,7 +175,7 @@
             // Clear frame page
             $("#metersFrame").attr("src", "about:blank");
         });
-        
+
         $("#usersDialog").on("hidden.bs.modal", function () {
             // Refresh page counts after editing tasks
             viewModel.queryPageRecords();
@@ -192,7 +189,7 @@
                 $("#metersFrame").attr("height", ($(document).height() - 150) + "px");
             }, 500);
         });
-        
+
         var meters;
         var users;
         $(viewModel).on('beforeSave', function (event, record) {
@@ -203,7 +200,7 @@
         $(viewModel).on('recordSaved', function (event, record) {
             if (viewModel.dataHubIsConnected()) {
                 if (record.ID == 0) {
-                    dataHub.getLastMeterGroupID().done(function (id) {
+                    dataHub.getLastAssetGroupID().done(function (id) {
                         dataHub.updateMeters(meters, id);
                         dataHub.updateUsers(users, id).done(function () {
                             viewModel.queryPageRecords();
@@ -232,7 +229,7 @@
         $('#addNewEditDialog').on('shown.bs.modal', function () {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeters(-1, "Name", true, 1, 10000000, null).done(function (meters) {
-                   
+
                     $('#meterSelect').children().remove();
 
                     $.each(meters, function (i, d) {
@@ -272,7 +269,7 @@
                 });
 
                 securityHub.queryUserAccounts("Name", true, 1, 1000000, null).done(function (users) {
-                    $('#userSelect').children().remove();                    
+                    $('#userSelect').children().remove();
                     $.each(users, function (i, d) {
                         securityHub.sidToAccountName(d.Name).done(function (accountName) {
                             $('#userSelect').append(new Option(accountName, d.ID));
@@ -280,7 +277,7 @@
                     });
 
                     if (viewModel.recordMode() === RecordMode.Edit) {
-                        dataHub.queryUserAccountMeterGroups(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (usersInGroup) {
+                        dataHub.queryUserAccountAssetGroups(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (usersInGroup) {
                             $.each(usersInGroup, function (i, user) {
                                 $('#userSelect').find('option[value="' + user.UserAccountID + '"]').attr('selected', true);
                             });
@@ -311,7 +308,7 @@
                 });
             }
         });
-        
+
         $('#addNewEditDialog').on('hidden.bs.modal', function () {
             if($('#userSelect').mobileSelect('exists'))
                 $('#userSelect').mobileSelect('destroy');

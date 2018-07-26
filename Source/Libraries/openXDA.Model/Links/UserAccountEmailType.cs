@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  MeterMeterGroup.cs - Gbtc
+//  UserAccountEmailType.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,38 +16,22 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/29/2017 - Billy Ernest
+//  07/20/2018 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
-namespace openXDA.Model
+namespace openXDA.Model.Links
 {
-    public class MeterMeterGroup
+    public class UserAccountEmailType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
 
-        public int MeterID { get; set; }
+        public int UserAccountID { get; set; }
 
-        public int MeterGroupID { get; set; }
-    }
-
-    [PrimaryLabel("MeterName")]
-    public class MeterMeterGroupView
-    {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        public int MeterID { get; set; }
-
-        public int MeterGroupID { get; set; }
-        [Searchable]
-        public string MeterName { get; set; }
-        [Searchable]
-        public string Location { get; set; }
+        public int EmailTypeID { get; set; }
     }
 }
