@@ -88,6 +88,16 @@ namespace openXDA.Adapters
                 }
             );
 
+            config.Routes.MapHttpRoute(
+                name: "ReportAPI",
+                routeTemplate: "api/report/{name}",
+                defaults: new
+                {
+                    controller = "Report",
+                    name = RouteParameter.Optional
+                }
+            );
+
             config.MapHttpAttributeRoutes();
 
         }

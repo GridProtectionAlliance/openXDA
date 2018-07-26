@@ -47,11 +47,10 @@
     }
 
     Report report = dataContext.Table<Report>().QueryRecordWhere("ID = {0}", ViewBag.ID);
-    string pdf = Convert.ToBase64String(report.PDF);
     Meter meter = dataContext.Table<Meter>().QueryRecordWhere("ID = {0}", report.MeterID);
-
+    string name = meter.AssetKey + "_" + report.Month + "_" + report.Year + ".pdf";
 }
-<embed id="pdfContent"  width="100%" height="700">
+<embed id="pdfContent"  src="../api/Report/@(name)?ID=@report.ID" width="100%" height="700">
 
 @section StyleSheets {
     <style>
@@ -63,9 +62,6 @@
 
 @section Scripts {
     <script>
-        var file = base64ToArrayBuffer('@Raw(pdf)');
-        showFile(file,  "@(meter.AssetKey + "_" + report.Month.ToString() + "_" + report.Year.ToString()).pdf");
-
         $('#bodyContainer').removeClass('container');
 
         function resizePDFContent() {
@@ -77,53 +73,8 @@
         });
 
         $(function () {
-            setTimeout(resizePDFContent, 50);
+            resizePDFContent();
         });
 
-        function base64ToArrayBuffer(base64) {
-            var binary_string = window.atob(base64);
-            var len = binary_string.length;
-            var bytes = new Uint8Array(len);
-            for (var i = 0; i < len; i++) {
-                bytes[i] = binary_string.charCodeAt(i);
-            }
-            return bytes.buffer;
-        }
-
-        function openlink(file) {
-            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-                window.navigator.msSaveOrOpenBlob(file);
-            } else {
-                var fileUrl = URL.createObjectURL(file);
-                document.getElementById('pdfContent').src = fileUrl;
-            }
-        }
-
-        function showFile(blob, fileName){
-            // It is necessary to create a new blob object with mime-type explicitly set
-            // otherwise only Chrome works like it should
-            var newBlob = new Blob([blob], { type: "application/pdf" })
-
-            // IE doesn't allow using a blob object directly as link href
-            // instead it is necessary to use msSaveOrOpenBlob
-            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-                window.navigator.msSaveOrOpenBlob(newBlob, fileName);
-                return;
-            }
-
-            // For other browsers: 
-            // Create a link pointing to the ObjectURL containing the blob.
-            newBlob.fileName = fileName;
-            const data = window.URL.createObjectURL(newBlob);
-            document.getElementById('pdfContent').src = data;
-            //var link = document.createElement('a');
-            //link.href = data;
-            //link.download = fileName;
-            //link.click();
-            setTimeout(function () {
-                // For Firefox it is necessary to delay revoking the ObjectURL
-                window.URL.revokeObjectURL(data);
-            }, 10000);
-        }
     </script>
 }
