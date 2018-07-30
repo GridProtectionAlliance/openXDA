@@ -1714,6 +1714,103 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ Event Email Configuration Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.QueryRecordCount)]
+        public int QueryEventEmailConfigurationCount(string filterString)
+        {
+            return GetPagedQueryCount( DataContext, @"
+                SELECT
+                    EventEmailParameters.ID,
+	                XSLTemplate.Name,
+	                MinDelay,
+	                MaxDelay
+                FROM
+	                EventEmailParameters JOIN
+	                EmailType ON EventEmailParameters.EmailTypeID = EmailType.ID JOIN
+	                XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID      
+            ");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.QueryRecords)]
+        public DataTable QueryEventEmailConfiguration(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return GetPagedQuery(DataContext, @"
+                SELECT
+                    EventEmailParameters.ID,
+	                XSLTemplate.Name,
+	                MinDelay,
+	                MaxDelay
+                FROM
+	                EventEmailParameters JOIN
+	                EmailType ON EventEmailParameters.EmailTypeID = EmailType.ID JOIN
+	                XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID      
+            ", sortField, ascending, page, pageSize);
+        }
+
+        public EventEmailParameters QueryEventEmailConfigurationByID(int id)
+        {
+            return DataContext.Table<EventEmailParameters>().QueryRecordWhere("ID = {0}", id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.DeleteRecord)]
+        public void DeleteEventEmailConfiguration(int id)
+        {
+            DataContext.Table<XSLTemplate>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.CreateNewRecord)]
+        public Dictionary<string, object> NewEventEmailConfiguration()
+        {
+            return new Dictionary<string, object>() {
+                {"ID", 0 },
+                { "Name", string.Empty },
+                { "MinDelay", 0 },
+                { "MaxDelay", 0 }
+            };
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.AddNewRecord)]
+        public void AddNewEventEmailConfiguration(Dictionary<string, object> record)
+        {
+            DataContext.Table<XSLTemplate>().AddNewRecord(new XSLTemplate() { Name = record["Name"].ToString(), Template = ""});
+            int emailCategoryID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM EmailCategory WHERE Name = 'Event'");
+            int xslTemplateID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM XSLTemplate WHERE Name = {0}", record["Name"].ToString());
+            DataContext.Table<EmailType>().AddNewRecord(new EmailType() { EmailCategoryID = emailCategoryID, XSLTemplateID = xslTemplateID });
+            int emailTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM EmailType WHERE EmailCategoryID = {0} AND XSLTemplateID = {1}", emailCategoryID, xslTemplateID);
+            DataContext.Table<EventEmailParameters>().AddNewRecord(new EventEmailParameters() { EmailTypeID = emailTypeID, TriggersEmailSQL = "", EventDetailSQL = "", MaxDelay = double.Parse(record["MaxDelay"].ToString()), MinDelay = double.Parse(record["MinDelay"].ToString()) });
+
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.UpdateRecord)]
+        public void UpdateEventEmailConfiguration(Dictionary<string, object> record)
+        {
+            DataContext.Connection.ExecuteNonQuery("UPDATE XSLTemplate SET Name = {0} WHERE ID = (SELECT XSLTemplateID FROM EmailType WHERE ID = (SELECT EmailTypeID FROM EventEmailParameters WHERE ID = {1}))", record["Name"].ToString(), int.Parse(record["ID"].ToString()));
+            DataContext.Connection.ExecuteNonQuery("UPDATE EventEmailParameters SET MinDelay = {0}, MaxDelay = {1} WHERE ID = {2}", double.Parse(record["MinDelay"].ToString()), double.Parse(record["MaxDelay"].ToString()), int.Parse(record["ID"].ToString()));
+        }
+
+        [AuthorizeHubRole("Administrator, Owner")]
+        [RecordOperation(typeof(EventEmailParameters), RecordOperation.UpdateRecord)]
+        public void UpdateEventEmailTemplates(Dictionary<string, object> record)
+        {
+            if (record.ContainsKey("template"))
+                DataContext.Connection.ExecuteNonQuery("UPDATE XSLTemplate SET Template = {0} WHERE ID = (SELECT XSLTemplateID FROM EmailType WHERE ID = (SELECT EmailTypeID FROM EventEmailParameters WHERE ID = {1}))", record["template"].ToString(), int.Parse(record["ID"].ToString()));
+            else if (record.ContainsKey("trigger"))
+                DataContext.Connection.ExecuteNonQuery("UPDATE EventEmailParameters SET TriggersEmailSQL = {0} WHERE ID = {1}", record["trigger"].ToString(), int.Parse(record["ID"].ToString()));
+            else if (record.ContainsKey("event"))
+                DataContext.Connection.ExecuteNonQuery("UPDATE EventEmailParameters SET EventDetailSQL = {0} WHERE ID = {1}", record["event"].ToString(), int.Parse(record["ID"].ToString()));
+        }
+
+
+
+        #endregion
+
         #region [Event Criterion]
 
         public class EventCriterion
@@ -5821,6 +5918,77 @@ namespace openXDA.Hubs
 
             return Tuple.Create(startDate, endDate);
         }
+
+        private DataTable GetPagedQuery(DataContext dataContext, string query, string sortField, bool ascending, int page, int pageSize, params object[] parameters) {
+            List<object> list = new List<object>() { page, sortField};
+            list.AddRange(parameters.AsEnumerable());
+            DataTable table = new DataTable();
+
+            using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
+            {
+                sc.CommandText = @"
+                -- Determine the first record and last record 
+                WITH TempResult as
+                (
+                " + query +
+                @"
+                ), 
+                TempResult2 AS
+                (
+	                SELECT ROW_NUMBER() OVER(ORDER BY @orderBy) as RowNum, * FROM TempResult
+                )
+                SELECT top (@LastRec-1) *
+                FROM TempResult2
+                WHERE RowNum > @FirstRec 
+                AND RowNum < @LastRec
+                ";
+                sc.CommandType = CommandType.Text;
+                sc.CommandTimeout = 600;
+                IDbDataParameter param1 = sc.CreateParameter();
+                param1.ParameterName = "@Page";
+                param1.Value = page;
+                IDbDataParameter param2 = sc.CreateParameter();
+                param2.ParameterName = "@RecsPerPage";
+                param2.Value = pageSize;
+                IDbDataParameter param3 = sc.CreateParameter();
+                param3.ParameterName = "@orderBy";
+                param3.Value = $"[{sortField}] {(ascending ? "ASC" : "DESC")}";
+                IDbDataParameter param4 = sc.CreateParameter();
+                param4.ParameterName = "@FirstRec";
+                param4.Value = (page - 1) * pageSize;
+                IDbDataParameter param5 = sc.CreateParameter();
+                param5.ParameterName = "@LastRec";
+                param5.Value = page * pageSize + 1;
+
+                sc.Parameters.Add(param1);
+                sc.Parameters.Add(param2);
+                sc.Parameters.Add(param3);
+                sc.Parameters.Add(param4);
+                sc.Parameters.Add(param5);
+
+                int num = 0;
+                foreach (object o in parameters) {
+                    IDbDataParameter param = sc.CreateParameter();
+                    param.ParameterName = "@p" + num.ToString();
+                    param.Value = o;
+                    sc.Parameters.Add(param);
+                    ++num;
+                }
+
+                IDataReader rdr = sc.ExecuteReader();
+                table.Load(rdr);
+
+
+            }
+
+            return table;
+        }
+
+        private int GetPagedQueryCount(DataContext dataContext, string query, params object[] parameters)
+        {
+            return dataContext.Connection.RetrieveData(query, parameters).Select().Count();
+        }
+
 
         #endregion
     }

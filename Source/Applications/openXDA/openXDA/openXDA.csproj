@@ -362,6 +362,7 @@
     <Content Include="wwwroot\Config\ChannelsWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\ChannelsWithNormalLimits.cshtml" />
     <Content Include="tsconfig.json" />
+    <Content Include="wwwroot\Config\EditEventEmailParameters.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
     <None Include="wwwroot\Config\AlarmSettings.cshtml" />
@@ -381,6 +382,7 @@
     <Content Include="wwwroot\Config\AlarmViewer.cshtml" />
     <Content Include="wwwroot\Config\TemplateEditor.cshtml" />
     <Content Include="wwwroot\Config\RemoteConsole.cshtml" />
+    <Content Include="wwwroot\Config\EventEmailConfiguration.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Config\DashSettings.cshtml" />

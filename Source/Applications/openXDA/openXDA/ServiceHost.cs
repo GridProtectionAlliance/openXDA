@@ -574,6 +574,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/DefaultAlarmSettings.cshtml", new Tuple<Type, Type>(typeof(DefaultAlarmRangeLimitView), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/UserAccountAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Config/EventEmailConfiguration.cshtml", new Tuple<Type, Type>(typeof(EventEmailParameters), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Filters.cshtml", new Tuple<Type, Type>(typeof(WorkbenchFilter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Events.cshtml", new Tuple<Type, Type>(typeof(Event), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Event.cshtml", new Tuple<Type, Type>(typeof(SingleEvent), typeof(DataHub)));

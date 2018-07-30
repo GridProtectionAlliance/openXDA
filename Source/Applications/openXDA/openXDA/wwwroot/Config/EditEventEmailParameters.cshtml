@@ -1,0 +1,186 @@
+﻿@*//******************************************************************************************************
+    //  EditEventEmailParameters.cshtml - Gbtc
+    //
+    //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  07/27/2018 - Billy Ernest
+    //       Generated original version of source code.
+    //
+    //*******************************************************************************************************@
+@using System.Net.Http
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using openXDA.Hubs
+
+@inherits ExtendedTemplateBase<AppModel>
+
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Config/Layout.cshtml";
+    HttpRequestMessage request = ViewBag.Request;
+    Dictionary<string, string> parameters = request.QueryParameters();
+
+    if (parameters.ContainsKey("ID"))
+    {
+        ViewBag.ID = int.Parse(parameters["ID"]);
+    }
+
+    if (parameters.ContainsKey("Name"))
+    {
+        ViewBag.Name = parameters["Name"];
+    }
+
+    ViewBag.Title = ViewBag.Name + " Email Configuration";
+
+    ViewBag.HideAddNewButton = false;
+    ViewBag.ShowSearchFilter = false;
+
+    EventEmailParameters eventEmailParameters = dataContext.Table<EventEmailParameters>().QueryRecordWhere("ID = {0}", ViewBag.ID);
+    XSLTemplate xslTemplate = dataContext.Table<XSLTemplate>().QueryRecordWhere("ID = (SELECT XSLTemplateID FROM EmailType WHERE ID = {0})", eventEmailParameters.EmailTypeID);
+}
+
+<ul class="nav nav-tabs">
+    <li class="active"><a data-toggle="tab" href="#config">Configuration</a></li>
+    <li><a data-toggle="tab" href="#template">Template</a></li>
+    <li><a data-toggle="tab" href="#trigger">Trigger SQL</a></li>
+    <li><a data-toggle="tab" href="#event">Event SQL</a></li>
+</ul>
+
+<div class="tab-content">
+    <div id="config" class="tab-pane fade in active">
+        <div style="width: 100%; margin-top: 20px">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" value="@xslTemplate.Name" />
+            </div>
+            <div class="form-group">
+                <label for="min">Minimum Delay:</label>
+                <input type="number" class="form-control" id="min" value="@eventEmailParameters.MinDelay" />
+            </div>
+            <div class="form-group">
+                <label for="max">Maximum Delay:</label>
+                <input type="number" class="form-control" id="max" value="@eventEmailParameters.MaxDelay" />
+            </div>
+            <button id="updateConfigBtn" type="submit" style="float: right" class="btn btn-primary" onclick="updateConfiguration()">Update</button>
+        </div>
+    </div>
+
+    <div id="template" class="tab-pane fade">
+        <div class="form-group">
+            <div id="templateEditor" class="form-control"></div>
+        </div>
+        <button id="updateTemplateBtn" type="submit" style="float: right" class="btn btn-primary" onclick="updateTemplate()">Update</button>
+
+    </div>
+    <div id="trigger" class="tab-pane fade">
+        <div class="form-group">
+            <div id="triggerEditor" class="form-control"></div>
+        </div>
+        <button id="updateTriggerBtn" type="submit" style="float: right" class="btn btn-primary" onclick="updateTrigger()">Update</button>
+
+    </div>
+    <div id="event" class="tab-pane fade">
+        <div class="form-group">
+            <div id="eventEditor" class="form-control"></div>
+        </div>
+        <button id="updateEventBtn" type="submit" style="float: right" class="btn btn-primary" onclick="updateEvent()">Update</button>
+    </div>
+</div>
+@section Scripts
+{
+    <script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+
+        $(function () {
+            $('#templateEditor').height(calculateRemainingBodyHeight() - 100);
+            var editor = ace.edit("templateEditor");
+            editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/xml");
+            editor.setFontSize("14px");
+            editor.setValue(`@Raw(xslTemplate.Template)`);
+
+            $('#triggerEditor').height(calculateRemainingBodyHeight() - 100);
+            editor = ace.edit("triggerEditor");
+            editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/sql");
+            editor.setFontSize("14px");
+            editor.setValue(`@Raw(eventEmailParameters.TriggersEmailSQL)`);
+
+            $('#eventEditor').height(calculateRemainingBodyHeight() - 100);
+            editor = ace.edit("eventEditor");
+            editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/sql");
+            editor.setFontSize("14px");
+            editor.setValue(`@Raw(eventEmailParameters.EventDetailSQL)`);
+
+        });
+
+        function updateConfiguration() {
+            var data = {
+                ID: '@eventEmailParameters.ID',
+                Name: $('#name').val(),
+                MinDelay: $('#min').val(),
+                MaxDelay: $('#max').val()
+            };
+
+            $('#updateConfigBtn').prop('disabled', true);
+            dataHub.updateEventEmailConfiguration(data).done(function () {
+                $('#updateConfigBtn').prop('disabled', false);
+                showInfoMessage($('#name').val() + " record updated.", 2000);
+            });
+        }
+
+        function updateTemplate() {
+            var data = {
+                ID: '@eventEmailParameters.ID',
+                template: ace.edit('templateEditor').getValue()
+            };
+
+            $('#updateTemplateBtn').prop('disabled', true);
+            dataHub.updateEventEmailTemplates(data).done(function () {
+                $('#updateTemplateBtn').prop('disabled', false);
+                showInfoMessage($('#name').val() + " record updated.", 2000);
+            });
+        }
+        function updateTrigger() {
+            var data = {
+                ID: '@eventEmailParameters.ID',
+                trigger: ace.edit('triggerEditor').getValue()
+            };
+
+            $('#updateTriggerBtn').prop('disabled', true);
+            dataHub.updateEventEmailTemplates(data).done(function () {
+                $('#updateTriggerBtn').prop('disabled', false);
+                showInfoMessage($('#name').val() + " record updated.", 2000);
+            });
+        }
+        function updateEvent() {
+            var data = {
+                ID: '@eventEmailParameters.ID',
+                event: ace.edit('eventEditor').getValue()
+            };
+
+            $('#updateEventBtn').prop('disabled', true);
+            dataHub.updateEventEmailTemplates(data).done(function () {
+                $('#updateEventBtn').prop('disabled', false);
+                showInfoMessage($('#name').val() + " record updated.", 2000);
+            });
+        }
+
+    </script>
+}
