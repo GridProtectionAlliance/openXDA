@@ -33,5 +33,7 @@ namespace openXDA.Model.Links
         public int UserAccountID { get; set; }
 
         public int EmailTypeID { get; set; }
+
+        public bool Confirmed { get; set; }
     }
 }

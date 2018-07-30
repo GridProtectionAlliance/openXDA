@@ -33,6 +33,8 @@ namespace openXDA.Model
         public int EmailCategoryID { get; set; }
 
         public int XSLTemplateID { get; set; }
+
+        public bool SMS { get; set; }
     }
 
     public class EmailTypeView : EmailType
