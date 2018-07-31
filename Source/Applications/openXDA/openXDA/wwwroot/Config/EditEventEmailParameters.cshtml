@@ -52,6 +52,7 @@
 
     EventEmailParameters eventEmailParameters = dataContext.Table<EventEmailParameters>().QueryRecordWhere("ID = {0}", ViewBag.ID);
     XSLTemplate xslTemplate = dataContext.Table<XSLTemplate>().QueryRecordWhere("ID = (SELECT XSLTemplateID FROM EmailType WHERE ID = {0})", eventEmailParameters.EmailTypeID);
+    EmailType emailType = dataContext.Table<EmailType>().QueryRecordWhere("ID = {0}", eventEmailParameters.EmailTypeID);
 }
 
 <ul class="nav nav-tabs">
@@ -60,6 +61,10 @@
     <li><a data-toggle="tab" href="#trigger">Trigger SQL</a></li>
     <li><a data-toggle="tab" href="#event">Event SQL</a></li>
 </ul>
+
+<div id="xslTemplate" hidden>@Raw(xslTemplate.Template)</div>
+<div id="triggerTemplate" hidden>@Raw(eventEmailParameters.TriggersEmailSQL)</div>
+<div id="eventTemplate" hidden>@Raw(eventEmailParameters.EventDetailSQL)</div>
 
 <div class="tab-content">
     <div id="config" class="tab-pane fade in active">
@@ -76,6 +81,10 @@
                 <label for="max">Maximum Delay:</label>
                 <input type="number" class="form-control" id="max" value="@eventEmailParameters.MaxDelay" />
             </div>
+            <div class="form-group">
+                <input type="checkbox" class="" id="sms" @(emailType.SMS ? "checked='checked'" : null) />Is SMS
+            </div>
+
             <button id="updateConfigBtn" type="submit" style="float: right" class="btn btn-primary" onclick="updateConfiguration()">Update</button>
         </div>
     </div>
@@ -112,21 +121,21 @@
             editor.setTheme("ace/theme/monokai");
             editor.getSession().setMode("ace/mode/xml");
             editor.setFontSize("14px");
-            editor.setValue(`@Raw(xslTemplate.Template)`);
+            editor.setValue($('#xslTemplate').html());
 
             $('#triggerEditor').height(calculateRemainingBodyHeight() - 100);
             editor = ace.edit("triggerEditor");
             editor.setTheme("ace/theme/monokai");
             editor.getSession().setMode("ace/mode/sql");
             editor.setFontSize("14px");
-            editor.setValue(`@Raw(eventEmailParameters.TriggersEmailSQL)`);
+            editor.setValue($('#triggerTemplate').html());
 
             $('#eventEditor').height(calculateRemainingBodyHeight() - 100);
             editor = ace.edit("eventEditor");
             editor.setTheme("ace/theme/monokai");
             editor.getSession().setMode("ace/mode/sql");
             editor.setFontSize("14px");
-            editor.setValue(`@Raw(eventEmailParameters.EventDetailSQL)`);
+            editor.setValue($('#eventTemplate').html());
 
         });
 
@@ -135,7 +144,8 @@
                 ID: '@eventEmailParameters.ID',
                 Name: $('#name').val(),
                 MinDelay: $('#min').val(),
-                MaxDelay: $('#max').val()
+                MaxDelay: $('#max').val(),
+                SMS: $('#sms').prop('checked')
             };
 
             $('#updateConfigBtn').prop('disabled', true);

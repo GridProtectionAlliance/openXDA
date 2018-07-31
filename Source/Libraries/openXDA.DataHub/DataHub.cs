@@ -1724,13 +1724,16 @@ namespace openXDA.Hubs
                 SELECT
                     EventEmailParameters.ID,
 	                XSLTemplate.Name,
+                    SMS,
 	                MinDelay,
 	                MaxDelay
                 FROM
 	                EventEmailParameters JOIN
 	                EmailType ON EventEmailParameters.EmailTypeID = EmailType.ID JOIN
-	                XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID      
-            ");
+	                XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID
+                WHERE 
+                    XSLTemplate.Name LIKE '%' + {0} + '%'
+            ", filterString);
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -1741,13 +1744,16 @@ namespace openXDA.Hubs
                 SELECT
                     EventEmailParameters.ID,
 	                XSLTemplate.Name,
+                    SMS,
 	                MinDelay,
 	                MaxDelay
                 FROM
 	                EventEmailParameters JOIN
 	                EmailType ON EventEmailParameters.EmailTypeID = EmailType.ID JOIN
-	                XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID      
-            ", sortField, ascending, page, pageSize);
+	                XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID 
+                WHERE 
+                    XSLTemplate.Name LIKE '%' + {0} + '%'
+            ", sortField, ascending, page, pageSize, filterString);
         }
 
         public EventEmailParameters QueryEventEmailConfigurationByID(int id)
@@ -1770,7 +1776,8 @@ namespace openXDA.Hubs
                 {"ID", 0 },
                 { "Name", string.Empty },
                 { "MinDelay", 0 },
-                { "MaxDelay", 0 }
+                { "MaxDelay", 0 },
+                { "SMS", false }
             };
         }
 
@@ -1781,22 +1788,21 @@ namespace openXDA.Hubs
             DataContext.Table<XSLTemplate>().AddNewRecord(new XSLTemplate() { Name = record["Name"].ToString(), Template = ""});
             int emailCategoryID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM EmailCategory WHERE Name = 'Event'");
             int xslTemplateID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM XSLTemplate WHERE Name = {0}", record["Name"].ToString());
-            DataContext.Table<EmailType>().AddNewRecord(new EmailType() { EmailCategoryID = emailCategoryID, XSLTemplateID = xslTemplateID });
+            DataContext.Table<EmailType>().AddNewRecord(new EmailType() { EmailCategoryID = emailCategoryID, XSLTemplateID = xslTemplateID, SMS = bool.Parse(record["SMS"].ToString()) });
             int emailTypeID = DataContext.Connection.ExecuteScalar<int>("SELECT ID FROM EmailType WHERE EmailCategoryID = {0} AND XSLTemplateID = {1}", emailCategoryID, xslTemplateID);
             DataContext.Table<EventEmailParameters>().AddNewRecord(new EventEmailParameters() { EmailTypeID = emailTypeID, TriggersEmailSQL = "", EventDetailSQL = "", MaxDelay = double.Parse(record["MaxDelay"].ToString()), MinDelay = double.Parse(record["MinDelay"].ToString()) });
 
         }
 
-        [AuthorizeHubRole("Administrator, Owner")]
+        [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(EventEmailParameters), RecordOperation.UpdateRecord)]
         public void UpdateEventEmailConfiguration(Dictionary<string, object> record)
         {
             DataContext.Connection.ExecuteNonQuery("UPDATE XSLTemplate SET Name = {0} WHERE ID = (SELECT XSLTemplateID FROM EmailType WHERE ID = (SELECT EmailTypeID FROM EventEmailParameters WHERE ID = {1}))", record["Name"].ToString(), int.Parse(record["ID"].ToString()));
             DataContext.Connection.ExecuteNonQuery("UPDATE EventEmailParameters SET MinDelay = {0}, MaxDelay = {1} WHERE ID = {2}", double.Parse(record["MinDelay"].ToString()), double.Parse(record["MaxDelay"].ToString()), int.Parse(record["ID"].ToString()));
+            DataContext.Connection.ExecuteNonQuery("UPDATE EmailType SET SMS = {0} WHERE ID = (SELECT EmailTypeID FROM EventEmailParameters WHERE ID = {1})", bool.Parse(record["SMS"].ToString()), int.Parse(record["ID"].ToString()));
         }
 
-        [AuthorizeHubRole("Administrator, Owner")]
-        [RecordOperation(typeof(EventEmailParameters), RecordOperation.UpdateRecord)]
         public void UpdateEventEmailTemplates(Dictionary<string, object> record)
         {
             if (record.ContainsKey("template"))
@@ -5926,6 +5932,19 @@ namespace openXDA.Hubs
 
             using (IDbCommand sc = DataContext.Connection.Connection.CreateCommand())
             {
+                int num = 0;
+                List<string> paramNames = new List<string>();
+                foreach (object o in parameters)
+                {
+                    IDbDataParameter param = sc.CreateParameter();
+                    param.ParameterName = "@p" + num.ToString();
+                    paramNames.Add("@p" + num.ToString());
+                    param.Value = o;
+                    sc.Parameters.Add(param);
+                    ++num;
+                }
+                query = string.Format(query, paramNames.ToArray());
+
                 sc.CommandText = @"
                 -- Determine the first record and last record 
                 WITH TempResult as
@@ -5935,7 +5954,7 @@ namespace openXDA.Hubs
                 ), 
                 TempResult2 AS
                 (
-	                SELECT ROW_NUMBER() OVER(ORDER BY @orderBy) as RowNum, * FROM TempResult
+	                SELECT ROW_NUMBER() OVER(ORDER BY " + $"[{sortField}] {(ascending ? "ASC" : "DESC")}" + @") as RowNum, * FROM TempResult
                 )
                 SELECT top (@LastRec-1) *
                 FROM TempResult2
@@ -5945,35 +5964,15 @@ namespace openXDA.Hubs
                 sc.CommandType = CommandType.Text;
                 sc.CommandTimeout = 600;
                 IDbDataParameter param1 = sc.CreateParameter();
-                param1.ParameterName = "@Page";
-                param1.Value = page;
+                param1.ParameterName = "@FirstRec";
+                param1.Value = (page - 1) * pageSize;
                 IDbDataParameter param2 = sc.CreateParameter();
-                param2.ParameterName = "@RecsPerPage";
-                param2.Value = pageSize;
-                IDbDataParameter param3 = sc.CreateParameter();
-                param3.ParameterName = "@orderBy";
-                param3.Value = $"[{sortField}] {(ascending ? "ASC" : "DESC")}";
-                IDbDataParameter param4 = sc.CreateParameter();
-                param4.ParameterName = "@FirstRec";
-                param4.Value = (page - 1) * pageSize;
-                IDbDataParameter param5 = sc.CreateParameter();
-                param5.ParameterName = "@LastRec";
-                param5.Value = page * pageSize + 1;
+                param2.ParameterName = "@LastRec";
+                param2.Value = page * pageSize + 1;
 
                 sc.Parameters.Add(param1);
                 sc.Parameters.Add(param2);
-                sc.Parameters.Add(param3);
-                sc.Parameters.Add(param4);
-                sc.Parameters.Add(param5);
 
-                int num = 0;
-                foreach (object o in parameters) {
-                    IDbDataParameter param = sc.CreateParameter();
-                    param.ParameterName = "@p" + num.ToString();
-                    param.Value = o;
-                    sc.Parameters.Add(param);
-                    ++num;
-                }
 
                 IDataReader rdr = sc.ExecuteReader();
                 table.Load(rdr);
