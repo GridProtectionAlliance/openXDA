@@ -21,10 +21,12 @@
 //
 //******************************************************************************************************
 
+using GSF.Data.Model;
 using GSF.Security.Model;
 
 namespace openXDA.Model
 {
+    [TableName("UserAccount")]
     public class ConfirmableUserAccount : UserAccount
     {
         public bool PhoneConfirmed { get; set; }
