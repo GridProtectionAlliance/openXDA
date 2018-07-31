@@ -39,6 +39,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,6 +50,9 @@
     <Compile Include="Alarms\ChannelsWithNormalLimits.cs" />
     <Compile Include="Alarms\DefaultDataQualityRangeLimit.cs" />
     <Compile Include="Alarms\MetersWithNormalLimits.cs" />
+    <Compile Include="Dashboard\ContourClasses.cs" />
+    <Compile Include="Dashboard\DeviceFilter.cs" />
+    <Compile Include="Dashboard\SavedView.cs" />
     <Compile Include="Emails\AlarmEmailCriterion.cs" />
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />

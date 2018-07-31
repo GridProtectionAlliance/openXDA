@@ -28,6 +28,7 @@ using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
+using System.Transactions;
 
 namespace openXDA.Model
 {
@@ -474,4 +475,84 @@ namespace openXDA.Model
 
         public string Phasing { get; set; }
     }
+
+    public static partial class TableOperationsExtensions
+    {
+        public static DashSettings GetOrAdd(this TableOperations<DashSettings> table, string name, string value, bool enabled = true)
+        {
+            TransactionScopeOption required = TransactionScopeOption.Required;
+
+            TransactionOptions transactionOptions = new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+
+            DashSettings dashSettings;
+
+            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
+            {
+                if (value.Contains(","))
+                    dashSettings = table.QueryRecordWhere("Name = {0} AND SUBSTRING(Value, 0, CHARINDEX(',', Value)) = {1}", name, value.Split(',').First());
+                else
+                    dashSettings = table.QueryRecordWhere("Name = {0} AND Value = {1}", name, value);
+
+                if ((object)dashSettings == null)
+                {
+                    dashSettings = new DashSettings();
+                    dashSettings.Name = name;
+                    dashSettings.Value = value;
+                    dashSettings.Enabled = enabled;
+
+                    table.AddNewRecord(dashSettings);
+
+                    dashSettings.ID = table.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                }
+
+                transactionScope.Complete();
+            }
+
+            return dashSettings;
+        }
+
+        public static UserDashSettings GetOrAdd(this TableOperations<UserDashSettings> table, string name, Guid user, string value, bool enabled = true)
+        {
+            TransactionScopeOption required = TransactionScopeOption.Required;
+
+            TransactionOptions transactionOptions = new TransactionOptions()
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.MaximumTimeout
+            };
+
+            UserDashSettings dashSettings;
+
+            using (TransactionScope transactionScope = new TransactionScope(required, transactionOptions))
+            {
+                if (value.Contains(","))
+                    dashSettings = table.QueryRecordWhere("Name = {0} AND SUBSTRING(Value, 0, CHARINDEX(',', Value)) = {1} AND UserAccountID = {2}", name, value.Split(',').First(), user);
+                else
+                    dashSettings = table.QueryRecordWhere("Name = {0} AND Value = {1} AND UserAccountID = {2}", name, value, user);
+
+                if ((object)dashSettings == null)
+                {
+                    dashSettings = new UserDashSettings();
+                    dashSettings.Name = name;
+                    dashSettings.Value = value;
+                    dashSettings.Enabled = enabled;
+                    dashSettings.UserAccountID = user;
+
+                    table.AddNewRecord(dashSettings);
+
+                    dashSettings.ID = table.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                }
+
+                transactionScope.Complete();
+            }
+
+            return dashSettings;
+        }
+
+    }
+
 }

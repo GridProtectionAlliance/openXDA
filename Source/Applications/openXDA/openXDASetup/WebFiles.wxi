@@ -52,6 +52,9 @@
   <Component Id="wwwroot_Config_AlarmViewer_cshtml">
     <File Id="wwwroot_Config_AlarmViewer.cshtml" Name="AlarmViewer.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AlarmViewer.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_AssetGroups_cshtml">
+    <File Id="wwwroot_Config_AssetGroups.cshtml" Name="AssetGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AssetGroups.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_ChannelsWithHourlyLimits_cshtml">
     <File Id="wwwroot_Config_ChannelsWithHourlyLimits.cshtml" Name="ChannelsWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\ChannelsWithHourlyLimits.cshtml" />
   </Component>
@@ -64,20 +67,8 @@
   <Component Id="wwwroot_Config_DefaultAlarmSettings_cshtml">
     <File Id="wwwroot_Config_DefaultAlarmSettings.cshtml" Name="DefaultAlarmSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\DefaultAlarmSettings.cshtml" />
   </Component>
-  <Component Id="wwwroot_Config_EmailGroupLineGroup_cshtml">
-    <File Id="wwwroot_Config_EmailGroupLineGroup.cshtml" Name="EmailGroupLineGroup.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupLineGroup.cshtml" />
-  </Component>
-  <Component Id="wwwroot_Config_EmailGroupMeterGroup_cshtml">
-    <File Id="wwwroot_Config_EmailGroupMeterGroup.cshtml" Name="EmailGroupMeterGroup.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupMeterGroup.cshtml" />
-  </Component>
-  <Component Id="wwwroot_Config_EmailGroups_cshtml">
-    <File Id="wwwroot_Config_EmailGroups.cshtml" Name="EmailGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroups.cshtml" />
-  </Component>
-  <Component Id="wwwroot_Config_EmailGroupType_cshtml">
-    <File Id="wwwroot_Config_EmailGroupType.cshtml" Name="EmailGroupType.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupType.cshtml" />
-  </Component>
-  <Component Id="wwwroot_Config_EmailGroupUserAccount_cshtml">
-    <File Id="wwwroot_Config_EmailGroupUserAccount.cshtml" Name="EmailGroupUserAccount.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailGroupUserAccount.cshtml" />
+  <Component Id="wwwroot_Config_EditEventEmailParameters_cshtml">
+    <File Id="wwwroot_Config_EditEventEmailParameters.cshtml" Name="EditEventEmailParameters.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EditEventEmailParameters.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_EmailRMarkdownViewer_cshtml">
     <File Id="wwwroot_Config_EmailRMarkdownViewer.cshtml" Name="EmailRMarkdownViewer.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailRMarkdownViewer.cshtml" />
@@ -90,6 +81,9 @@
   </Component>
   <Component Id="wwwroot_Config_EmailTypes_cshtml">
     <File Id="wwwroot_Config_EmailTypes.cshtml" Name="EmailTypes.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EmailTypes.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Config_EventEmailConfiguration_cshtml">
+    <File Id="wwwroot_Config_EventEmailConfiguration.cshtml" Name="EventEmailConfiguration.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\EventEmailConfiguration.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_Groups_cshtml">
     <File Id="wwwroot_Config_Groups.cshtml" Name="Groups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Groups.cshtml" />
@@ -118,17 +112,11 @@
   <Component Id="wwwroot_Config_Layout_cshtml">
     <File Id="wwwroot_Config_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Layout.cshtml" />
   </Component>
-  <Component Id="wwwroot_Config_LineGroups_cshtml">
-    <File Id="wwwroot_Config_LineGroups.cshtml" Name="LineGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineGroups.cshtml" />
+  <Component Id="wwwroot_Config_LineAssetGroupView_cshtml">
+    <File Id="wwwroot_Config_LineAssetGroupView.cshtml" Name="LineAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineAssetGroupView.cshtml" />
   </Component>
-  <Component Id="wwwroot_Config_LineLineGroupView_cshtml">
-    <File Id="wwwroot_Config_LineLineGroupView.cshtml" Name="LineLineGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineLineGroupView.cshtml" />
-  </Component>
-  <Component Id="wwwroot_Config_MeterGroups_cshtml">
-    <File Id="wwwroot_Config_MeterGroups.cshtml" Name="MeterGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterGroups.cshtml" />
-  </Component>
-  <Component Id="wwwroot_Config_MeterMeterGroupView_cshtml">
-    <File Id="wwwroot_Config_MeterMeterGroupView.cshtml" Name="MeterMeterGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterMeterGroupView.cshtml" />
+  <Component Id="wwwroot_Config_MeterAssetGroupView_cshtml">
+    <File Id="wwwroot_Config_MeterAssetGroupView.cshtml" Name="MeterAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterAssetGroupView.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_MetersWithHourlyLimits_cshtml">
     <File Id="wwwroot_Config_MetersWithHourlyLimits.cshtml" Name="MetersWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MetersWithHourlyLimits.cshtml" />
@@ -615,6 +603,9 @@
   <Component Id="wwwroot_Reports_Report_cshtml">
     <File Id="wwwroot_Reports_Report.cshtml" Name="Report.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Reports\Report.cshtml" />
   </Component>
+  <Component Id="wwwroot_Reports_Reports_cshtml">
+    <File Id="wwwroot_Reports_Reports.cshtml" Name="Reports.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Reports\Reports.cshtml" />
+  </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_Components" Directory="wwwroot_SCRIPTSFOLDER">
   <Component Id="wwwroot_Scripts_bootstrap_datepicker_js">
@@ -712,6 +703,12 @@
   </Component>
   <Component Id="wwwroot_Scripts_spin_js">
     <File Id="wwwroot_Scripts_spin.js" Name="spin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\spin.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TrendingDataDisplay_js">
+    <File Id="wwwroot_Scripts_TrendingDataDisplay.js" Name="TrendingDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TrendingDataDisplay.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TrendingDataDisplay_js_map">
+    <File Id="wwwroot_Scripts_TrendingDataDisplay.js.map" Name="TrendingDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TrendingDataDisplay.js.map" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_D3_Components" Directory="wwwroot_SCRIPTSD3FOLDER">
@@ -3930,8 +3927,14 @@
   <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_ts">
     <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.ts" Name="PeriodicDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.ts" />
   </Component>
+  <Component Id="wwwroot_Scripts_TS_Services_TrendingDataDisplay_ts">
+    <File Id="wwwroot_Scripts_TS_Services_TrendingDataDisplay.ts" Name="TrendingDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
+  </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
+  <Component Id="wwwroot_Scripts_TSX_DateTimeRangePicker_tsx">
+    <File Id="wwwroot_Scripts_TSX_DateTimeRangePicker.tsx" Name="DateTimeRangePicker.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DateTimeRangePicker.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_DistributionPlot_js">
     <File Id="wwwroot_Scripts_TSX_DistributionPlot.js" Name="DistributionPlot.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.js" />
   </Component>
@@ -3968,6 +3971,9 @@
   <Component Id="wwwroot_Scripts_TSX_Measurement_tsx">
     <File Id="wwwroot_Scripts_TSX_Measurement.tsx" Name="Measurement.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.tsx" />
   </Component>
+  <Component Id="wwwroot_Scripts_TSX_MeasurementInput_tsx">
+    <File Id="wwwroot_Scripts_TSX_MeasurementInput.tsx" Name="MeasurementInput.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeasurementInput.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_MeterInput_js">
     <File Id="wwwroot_Scripts_TSX_MeterInput.js" Name="MeterInput.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeterInput.js" />
   </Component>
@@ -3997,6 +4003,12 @@
   </Component>
   <Component Id="wwwroot_Scripts_TSX_SummaryStat_tsx">
     <File Id="wwwroot_Scripts_TSX_SummaryStat.tsx" Name="SummaryStat.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.tsx" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_TrendingChart_tsx">
+    <File Id="wwwroot_Scripts_TSX_TrendingChart.tsx" Name="TrendingChart.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\TrendingChart.tsx" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TSX_TrendingDataDisplay_tsx">
+    <File Id="wwwroot_Scripts_TSX_TrendingDataDisplay.tsx" Name="TrendingDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_WorkBench_Components" Directory="wwwroot_WORKBENCHFOLDER">
@@ -4065,6 +4077,9 @@
   </Component>
   <Component Id="wwwroot_WorkBench_SiteSummary_cshtml">
     <File Id="wwwroot_WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />
+  </Component>
+  <Component Id="wwwroot_WorkBench_TrendingDataDisplay_cshtml">
+    <File Id="wwwroot_WorkBench_TrendingDataDisplay.cshtml" Name="TrendingDataDisplay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\TrendingDataDisplay.cshtml" />
   </Component>
 </ComponentGroup>
 </Include>
