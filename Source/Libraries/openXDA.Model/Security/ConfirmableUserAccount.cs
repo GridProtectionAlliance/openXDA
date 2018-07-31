@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  UserAccountEmailType.cs - Gbtc
+//  ConfirmableUserAccount.cs - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,23 +16,18 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/20/2018 - Stephen C. Wills
+//  07/31/2018 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using GSF.Data.Model;
+using GSF.Security.Model;
 
 namespace openXDA.Model
 {
-    public class UserAccountEmailType
+    public class ConfirmableUserAccount : UserAccount
     {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        public Guid UserAccountID { get; set; }
-
-        public int EmailTypeID { get; set; }
+        public bool PhoneConfirmed { get; set; }
+        public bool EmailConfirmed { get; set; }
     }
 }

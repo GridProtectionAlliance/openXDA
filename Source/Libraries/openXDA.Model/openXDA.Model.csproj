@@ -33,6 +33,10 @@
     <Reference Include="GSF.Core">
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
     </Reference>
+    <Reference Include="GSF.Security, Version=2.2.256.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\GSF.Security.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Dependencies\GSF\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -69,6 +73,7 @@
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="Reports\Report.cs" />
+    <Compile Include="Security\ConfirmableUserAccount.cs" />
     <Compile Include="Settings\DataPusherSettings.cs" />
     <Compile Include="Settings\PQMarkAggregationSettings.cs" />
     <Compile Include="Settings\ReportsSettings.cs" />
