@@ -31,5 +31,6 @@ namespace openXDA.Model
     {
         public bool PhoneConfirmed { get; set; }
         public bool EmailConfirmed { get; set; }
+        public bool Approved { get; set; }
     }
 }
