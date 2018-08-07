@@ -490,7 +490,11 @@ namespace FaultData.DataOperations
             {
                 TableOperations<Channel> channelTable = new TableOperations<Channel>(connection);
 
-                foreach (DataSeries dataSeries in meterDataSet.DataSeries)
+                List<DataSeries> allDataSeries = meterDataSet.DataSeries
+                    .Concat(meterDataSet.Digitals)
+                    .ToList();
+
+                foreach (DataSeries dataSeries in allDataSeries)
                 {
                     if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
                     {
@@ -510,7 +514,7 @@ namespace FaultData.DataOperations
                 }
 
                 IEnumerable<ChannelKey> parsedChannelKeys = parsedMeter.Channels
-                    .Concat(meterDataSet.DataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
+                    .Concat(allDataSeries.Select(dataSeries => dataSeries.SeriesInfo.Channel))
                     .Where(channel => (object)channel.Line != null)
                     .Select(channel => new ChannelKey(channel));
 
