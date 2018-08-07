@@ -465,9 +465,12 @@ namespace FaultData.DataWriters
 
         private static void PurgeOldLineEvents()
         {
-            DateTime twoDaysAgo = DateTime.UtcNow.AddDays(-2.0D);
-            RecentLineEvents.RemoveWhere(lineEvent => lineEvent.TimeRange.End < twoDaysAgo);
-            PurgeOldLineEventsAction.DelayAndExecute(PurgeInterval);
+            EmailProcessingThread.Push(() =>
+            {
+                DateTime twoDaysAgo = DateTime.UtcNow.AddDays(-2.0D);
+                RecentLineEvents.RemoveWhere(lineEvent => lineEvent.TimeRange.End < twoDaysAgo);
+                PurgeOldLineEventsAction.DelayAndExecute(PurgeInterval);
+            });
         }
 
         private static void DequeueLineEvent(LineEvent lineEvent)
