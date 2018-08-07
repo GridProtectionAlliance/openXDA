@@ -157,8 +157,18 @@ namespace FaultData.DataOperations
 
             // Create data series for series which
             // are combinations of the parsed series
+            List<DataSeries> calculatedDataSeriesList = new List<DataSeries>();
+
             foreach (Series series in seriesList.Where(series => !string.IsNullOrEmpty(series.SourceIndexes)))
-                AddCalculatedDataSeries(meterDataSet, series);
+                AddCalculatedDataSeries(calculatedDataSeriesList, meterDataSet, series);
+
+            foreach (DataSeries calculatedDataSeries in calculatedDataSeriesList)
+            {
+                if (calculatedDataSeries.SeriesInfo.Channel.MeasurementType.Name != "Digital")
+                    meterDataSet.DataSeries.Add(calculatedDataSeries);
+                else
+                    meterDataSet.Digitals.Add(calculatedDataSeries);
+            }
 
             // There may be some placeholder DataSeries objects with no data so that indexes
             // would be correct for calculating data series--now that we are finished
@@ -191,7 +201,7 @@ namespace FaultData.DataOperations
             UpdateConfigurationData(meterDataSet);
         }
 
-        private void AddCalculatedDataSeries(MeterDataSet meterDataSet, Series series)
+        private void AddCalculatedDataSeries(List<DataSeries> calculatedDataSeriesList, MeterDataSet meterDataSet, Series series)
         {
             List<SourceIndex> sourceIndexes;
             DataSeries dataSeries;
@@ -204,16 +214,7 @@ namespace FaultData.DataOperations
             if (sourceIndexes.Count == 0)
                 return;
 
-            if (series.Channel.MeasurementType.Name == "Digital")
-            {
-                if (sourceIndexes.Any(sourceIndex => Math.Abs(sourceIndex.ChannelIndex) >= meterDataSet.Digitals.Count))
-                    return;
-
-                dataSeries = sourceIndexes
-                    .Select(sourceIndex => meterDataSet.Digitals[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
-                    .Aggregate((series1, series2) => series1.Add(series2));
-            }
-            else
+            if (series.Channel.MeasurementType.Name != "Digital")
             {
                 if (sourceIndexes.Any(sourceIndex => sourceIndex.ChannelIndex >= meterDataSet.DataSeries.Count))
                     return;
@@ -222,11 +223,18 @@ namespace FaultData.DataOperations
                     .Select(sourceIndex => meterDataSet.DataSeries[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
                     .Aggregate((series1, series2) => series1.Add(series2));
             }
+            else
+            {
+                if (sourceIndexes.Any(sourceIndex => Math.Abs(sourceIndex.ChannelIndex) >= meterDataSet.Digitals.Count))
+                    return;
+
+                dataSeries = sourceIndexes
+                    .Select(sourceIndex => meterDataSet.Digitals[sourceIndex.ChannelIndex].Multiply(sourceIndex.Multiplier))
+                    .Aggregate((series1, series2) => series1.Add(series2));
+            }
 
             dataSeries.SeriesInfo = series;
-
-            if (!meterDataSet.DataSeries.Contains(dataSeries))
-                meterDataSet.DataSeries.Add(dataSeries);
+            calculatedDataSeriesList.Add(dataSeries);
         }
 
         private void AddUndefinedChannels(MeterDataSet meterDataSet)
