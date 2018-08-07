@@ -910,6 +910,7 @@
     <Content Include="wwwroot\Scripts\flot\PLUGINS.md" />
     <Content Include="wwwroot\Scripts\flot\README.md" />
     <Content Include="wwwroot\Workbench\TrendingDataDisplay.cshtml" />
+    <Content Include="wwwroot\Workbench\DataQualitySummary.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
@@ -1012,10 +1013,13 @@
   <ItemGroup>
     <Content Include="wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
     <Content Include="wwwroot\Scripts\TSX\MeasurementInput.tsx" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\DataQualitySummary.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\DateTimeRangePicker.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\Report.tsx" />
     <Content Include="wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\Table.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\TrendingChart.tsx" />
+    <Content Include="wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />

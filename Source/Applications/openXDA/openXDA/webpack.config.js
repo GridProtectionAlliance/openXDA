@@ -4,8 +4,9 @@ const webpack = require("webpack");
 module.exports = {
     entry: {
         PeriodicDataDisplay: "./wwwroot/Scripts/TSX/PeriodicDataDisplay.tsx",
-        //Report: "./wwwroot/Scripts/TSX/Report.tsx",
-        TrendingDataDisplay: "./wwwroot/Scripts/TSX/TrendingDataDisplay.tsx"
+        TrendingDataDisplay: "./wwwroot/Scripts/TSX/TrendingDataDisplay.tsx",
+        DataQualitySummary: "./wwwroot/Scripts/TSX/DataQualitySummary.tsx",
+
     },
     output: {
         filename: "./wwwroot/Scripts/[name].js"

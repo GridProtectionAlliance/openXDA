@@ -47,6 +47,7 @@ export default class DistributionPlot extends React.Component<any, any>{
     }
 
     makeChart(props) {
+        if (props.data.data.data.length == 0) return null;
         var stat = stats.histogram(props.data.data.data.map(d => d[1]), props.bins)
         var totalCount = stat.values.reduce((t, x) => { return t + x });
 

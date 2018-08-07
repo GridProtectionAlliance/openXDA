@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeterInput.tsx - Gbtc
+//  PeriodicDataDisplay1.ts - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -20,40 +20,23 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import PeriodicDataDisplayService from './../TS/Services/PeriodicDataDisplay';
-import createHistory from "history/createBrowserHistory"
-import * as queryString from "query-string";
 import * as moment from 'moment';
-import * as _ from "lodash";
 
-export default class MeterInput extends React.Component<any, any>{
-    periodicDataDisplayService: PeriodicDataDisplayService;
-    constructor(props) {
-        super(props);
-        this.state = {
-            select: null
-        }
-
-        this.periodicDataDisplayService = new PeriodicDataDisplayService();
-    }
-
-    componentDidMount() {
-        this.periodicDataDisplayService.getMeters().done(data => {
-            if (data.length == 0) return <select className='form-control'></select>;
-
-            var value = (this.props.value ? this.props.value : data[0].ID)
-            var options = data.map(d => <option key={d.ID} value={d.ID}>{d.AssetKey}</option>);
-            var select = <select className='form-control' onChange={(e) => { this.props.onChange(e.target.value); }} defaultValue={value}>{options}</select>;
-            this.props.onChange(value);
-            this.setState({ select: select });
+export default class DataQualitySummaryService {
+    getData(meterID, date, level, sortField, ascending) {
+        return $.ajax({
+            type: "GET",
+            url: `${window.location.origin}/api/DataQualitySummary/GetData?meterID=${meterID}` +
+                `&date=${moment(date).format('YYYY-MM-DD')}` +
+                `&level=${level}` +
+                `&sortField=${sortField}` +
+                `&ascending=${ascending}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
         });
     }
 
-    render() {
-        return this.state.select;
-    }
 
 }

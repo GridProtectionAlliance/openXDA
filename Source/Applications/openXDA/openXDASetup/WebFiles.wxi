@@ -620,6 +620,12 @@
   <Component Id="wwwroot_Scripts_bootstrap_toolkit_min_js">
     <File Id="wwwroot_Scripts_bootstrap_toolkit.min.js" Name="bootstrap-toolkit.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\bootstrap-toolkit.min.js" />
   </Component>
+  <Component Id="wwwroot_Scripts_DataQualitySummary_js">
+    <File Id="wwwroot_Scripts_DataQualitySummary.js" Name="DataQualitySummary.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\DataQualitySummary.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_DataQualitySummary_js_map">
+    <File Id="wwwroot_Scripts_DataQualitySummary.js.map" Name="DataQualitySummary.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\DataQualitySummary.js.map" />
+  </Component>
   <Component Id="wwwroot_Scripts_daterangepicker_js">
     <File Id="wwwroot_Scripts_daterangepicker.js" Name="daterangepicker.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\daterangepicker.js" />
   </Component>
@@ -3918,6 +3924,9 @@
 <ComponentGroup Id="wwwroot_Scripts_TS_Components" Directory="wwwroot_SCRIPTSTSFOLDER">
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TS_Services_Components" Directory="wwwroot_SCRIPTSTSSERVICESFOLDER">
+  <Component Id="wwwroot_Scripts_TS_Services_DataQualitySummary_ts">
+    <File Id="wwwroot_Scripts_TS_Services_DataQualitySummary.ts" Name="DataQualitySummary.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />
+  </Component>
   <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_js">
     <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.js" />
   </Component>
@@ -3932,6 +3941,9 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
+  <Component Id="wwwroot_Scripts_TSX_DataQualitySummary_tsx">
+    <File Id="wwwroot_Scripts_TSX_DataQualitySummary.tsx" Name="DataQualitySummary.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DataQualitySummary.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_DateTimeRangePicker_tsx">
     <File Id="wwwroot_Scripts_TSX_DateTimeRangePicker.tsx" Name="DateTimeRangePicker.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DateTimeRangePicker.tsx" />
   </Component>
@@ -4004,6 +4016,9 @@
   <Component Id="wwwroot_Scripts_TSX_SummaryStat_tsx">
     <File Id="wwwroot_Scripts_TSX_SummaryStat.tsx" Name="SummaryStat.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.tsx" />
   </Component>
+  <Component Id="wwwroot_Scripts_TSX_Table_tsx">
+    <File Id="wwwroot_Scripts_TSX_Table.tsx" Name="Table.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Table.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_TrendingChart_tsx">
     <File Id="wwwroot_Scripts_TSX_TrendingChart.tsx" Name="TrendingChart.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\TrendingChart.tsx" />
   </Component>
@@ -4026,6 +4041,9 @@
   </Component>
   <Component Id="wwwroot_WorkBench_DataFiles_cshtml">
     <File Id="wwwroot_WorkBench_DataFiles.cshtml" Name="DataFiles.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DataFiles.cshtml" />
+  </Component>
+  <Component Id="wwwroot_WorkBench_DataQualitySummary_cshtml">
+    <File Id="wwwroot_WorkBench_DataQualitySummary.cshtml" Name="DataQualitySummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DataQualitySummary.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_DisturbancesForDay_cshtml">
     <File Id="wwwroot_WorkBench_DisturbancesForDay.cshtml" Name="DisturbancesForDay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\DisturbancesForDay.cshtml" />

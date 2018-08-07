@@ -89,6 +89,15 @@ namespace openXDA.Adapters
             );
 
             config.Routes.MapHttpRoute(
+                name: "DataQualitySummary",
+                routeTemplate: "api/DataQualitySummary/{action}",
+                defaults: new
+                {
+                    controller = "DataQualitySummary"
+                }
+            );
+
+            config.Routes.MapHttpRoute(
                 name: "ReportAPI",
                 routeTemplate: "api/report/{id}/{name}",
                 defaults: new

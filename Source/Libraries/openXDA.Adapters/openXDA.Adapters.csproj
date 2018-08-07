@@ -72,6 +72,7 @@
     <Compile Include="JSONApiController.cs" />
     <Compile Include="OpenSEEController.cs" />
     <Compile Include="ReportController.cs" />
+    <Compile Include="DataQualitySummaryController.cs" />
     <Compile Include="TrendingDataDisplayController.cs" />
     <Compile Include="PeriodicDataDisplayController.cs" />
     <Compile Include="PQMarkController.cs" />

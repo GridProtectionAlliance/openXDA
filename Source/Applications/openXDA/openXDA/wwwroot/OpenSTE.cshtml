@@ -33,40 +33,22 @@
     Dictionary<string, string> parameters = request.QueryParameters();
     DataContext dataContext = ViewBag.DataContext;
 
-    string postedmeterid = "";
-    string postedchannelid = "";
-    string posteddate = "";
-    string postedmeasurementtype = "";
-    string postedcharacteristic = "";
-    string postedphasename = "";
     if (parameters.ContainsKey("ChannelID"))
     {
-        postedchannelid = parameters["ChannelID"];
+        ViewBag.channelID = parameters["ChannelID"];
     }
-
+    Channel channel = dataContext.Table<Channel>().QueryRecordWhere("ID = {0}", int.Parse(ViewBag.channelID));
     if (parameters.ContainsKey("date"))
     {
-        posteddate = parameters["date"];
-    }
-    if (parameters.ContainsKey("MeterID"))
-    {
-        postedmeterid = parameters["MeterID"];
-    }
-    if (parameters.ContainsKey("MeasurementType"))
-    {
-        postedmeasurementtype = parameters["MeasurementType"];
-    }
-    if (parameters.ContainsKey("Characteristic"))
-    {
-        postedcharacteristic = parameters["Characteristic"];
-    }
-    if (parameters.ContainsKey("PhaseName"))
-    {
-        postedphasename = parameters["PhaseName"];
+        ViewBag.date = parameters["date"];
     }
 
-    string postedlinename = dataContext.Connection.ExecuteScalar<string>("Select AssetKey FROM Line WHERE ID = (SELECT ID LineID FROM Channel WHERE ID = {0})", Convert.ToInt32(postedchannelid));
-    string postedmetername = dataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", Convert.ToInt32(postedmeterid));
+    string postedmeterid = channel.MeterID.ToString();
+    string postedmeasurementtype = dataContext.Connection.ExecuteScalar<string>("Select Name FROM MeasurementType WHERE ID = {0}", channel.MeasurementTypeID);
+    string postedcharacteristic = dataContext.Connection.ExecuteScalar<string>("Select Name FROM MeasurementCharacteristic WHERE ID = {0}", channel.MeasurementCharacteristicID);
+    string postedphasename = dataContext.Connection.ExecuteScalar<string>("Select Name FROM Phase WHERE ID = {0}", channel.PhaseID);
+    string postedlinename = dataContext.Connection.ExecuteScalar<string>("Select AssetKey FROM Line WHERE ID = {0}", channel.LineID);
+    string postedmetername = dataContext.Connection.ExecuteScalar<string>("Select Name FROM Meter WHERE ID = {0}", channel.MeterID);
 
 
 }
@@ -98,12 +80,12 @@
     <script type="text/javascript" src="./Scripts/jquery.blockUI.js"></script>
     <script type="text/javascript" src="./Scripts/jquery.multiselect.js"></script>
     <script type="text/javascript" src="./Scripts/jquery.multiselect.filter.js"></script>
-    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.js")"></script>
-    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.errorbars.js")"></script>
-    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.navigate.js")"></script>
-    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.resize.js")"></script>
-    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.time.js")"></script>
-    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.selection.js")"></script>
+    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.min.js")"></script>
+    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.errorbars.min.js")"></script>
+    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.navigate.min.js")"></script>
+    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.resize.min.js")"></script>
+    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.time.min.js")"></script>
+    <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/flot/jquery.flot.selection.min.js")"></script>
     <script type="text/javascript" src="./Scripts/OpenSTE.js"></script>
     <script type="text/javascript" src="@("@GSF/Web/Shared/Scripts/jquery.signalR.js")"></script>
     <script type="text/javascript" src="/signalr/hubs"></script>
@@ -114,8 +96,8 @@
 </head>
 <body>
 
-    <div style="visibility:hidden; width: 0px; height: 0px;" id="postedchannelid">@postedchannelid </div>
-    <div style="visibility:hidden; width: 0px; height: 0px;" id="posteddate">@posteddate </div>
+    <div style="visibility:hidden; width: 0px; height: 0px;" id="postedchannelid">@ViewBag.channelID </div>
+    <div style="visibility:hidden; width: 0px; height: 0px;" id="posteddate">@ViewBag.date </div>
     <div style="visibility:hidden; width: 0px; height: 0px;" id="postedmeterid">@postedmeterid </div>
     <div style="visibility:hidden; width: 0px; height: 0px;" id="postedmeasurementtype">@postedmeasurementtype </div>
     <div style="visibility:hidden; width: 0px; height: 0px;" id="postedcharacteristic">@postedcharacteristic </div>

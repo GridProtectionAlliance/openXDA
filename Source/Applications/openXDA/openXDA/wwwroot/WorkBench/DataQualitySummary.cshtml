@@ -1,5 +1,5 @@
 ﻿@*//******************************************************************************************************
-    //  PeriodDataDisplay1.cshtml - Gbtc
+    //  DataQualitySummary.cshtml - Gbtc
     //
     //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
     //
@@ -16,13 +16,12 @@
     //
     //  Code Modification History:
     //  ----------------------------------------------------------------------------------------------------
-    //  05/25/2018 - Billy Ernest
+    //  08/02/2018 - Billy Ernest
     //       Generated original version of source code.
     //
-    //******************************************************************************************************@
-@using System.Collections.Generic
+    //*******************************************************************************************************@
+
 @using System.Net.Http
-@using System.Text.RegularExpressions
 @using GSF.Web
 @using GSF.Web.Model
 @using openXDA
@@ -30,18 +29,17 @@
 @using openXDA.Hubs
 
 @inherits ExtendedTemplateBase<AppModel>
+
 @{
     DataContext dataContext = ViewBag.DataContext;
     Layout = "Workbench/Layout.cshtml";
-    ViewBag.Title = "Periodic Data Display";
+    ViewBag.Title = "Data Quality Summary";
     DateTime toDateTime = DateTime.Now;
     ViewBag.usePagedViewModel = false;
     ViewBag.useContainer = false;
 
-    HttpRequestMessage request = ViewBag.Request;
-    Dictionary<string, string> parameters = request.QueryParameters();
-
 }
+
 @section StyleSheets {
     <style>
         .vertical-menu {
@@ -74,24 +72,9 @@
             overflow-y: hidden;
         }
 
-        .screen {
-            position: absolute;
-            top: 60px;
-        }
-
         :focus {
             outline: none;
         }
     </style>
 }
-<script>
- //   window.onwheel = function (event, info) {
- //       if (event.path[0].tagName == "CANVAS") {
- //           event.path[1].dispatchEvent(new WheelEvent('plotzoom', event));
- //           return false;
- //       }
- //       else
- //           return true;
- //   }
-</script>
-<script type="text/javascript" src="~/Scripts/PeriodicDataDisplay.js"></script>
+<script type="text/javascript" src="~/Scripts/DataQualitySummary.js"></script>

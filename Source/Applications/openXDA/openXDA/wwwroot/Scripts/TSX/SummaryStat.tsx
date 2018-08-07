@@ -93,6 +93,8 @@ export default class SummaryStat extends React.Component<any, any>{
             return ((val / 1000) | 0) + "K";
         else if (val < 0.01)
             return val.toFixed(4);
+        else if (val == undefined)
+            return val;
         else
             return val.toFixed(2);
     }

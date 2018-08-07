@@ -55,6 +55,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.Username', '', '')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.ApprovalAddress', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.ApplyTimestampCorrection', 'True', 'True')
 GO
 
@@ -520,6 +523,9 @@ INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('CorrectnessChartColors'
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('CorrectnessChartColors', '0%,#0000FF', 1)
+GO
+
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.URL', 'http://localhost', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.XDAInstance', 'http://localhost:8989', 1)
