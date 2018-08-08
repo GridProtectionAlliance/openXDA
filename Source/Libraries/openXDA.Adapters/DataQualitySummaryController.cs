@@ -111,9 +111,9 @@ namespace openXDA.Adapters
 		                    Channel JOIN
 		                    ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID
 	                    ) as tbl on Meter.ID = tbl.MeterID
-                    WHERE Date BETWEEN {0} AND {1}
+                    WHERE Date = {0}
                     GROUP BY Meter.Name, Meter.ID
-                ", date, date.AddDays(1).AddMilliseconds(-1));
+                ", date);
 
                 s_memoryCache.Add("Meters" + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
 
@@ -148,8 +148,8 @@ namespace openXDA.Adapters
 	                FROM
 		                Channel JOIN
 		                ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID
-                    WHERE Date BETWEEN {0} AND {1} AND Channel.MeterID = {2}
-                ", date, date.AddDays(1).AddMilliseconds(-1), meterID);
+                    WHERE Date = {0} AND Channel.MeterID = {1}
+                ", date , meterID);
 
                 s_memoryCache.Add("Channels" + meterID.ToString() + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
             }
