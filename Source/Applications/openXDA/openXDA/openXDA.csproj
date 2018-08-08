@@ -529,7 +529,6 @@
     <Content Include="wwwroot\Scripts\jquery.multiselect.js" />
     <Content Include="wwwroot\Scripts\OpenSEE.js" />
     <Content Include="wwwroot\Scripts\OpenSEEold.js" />
-    <Content Include="wwwroot\Scripts\OpenSTE.js" />
     <Content Include="wwwroot\Scripts\PeriodicDataDisplay.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />
     <Content Include="wwwroot\Scripts\Report.js" />

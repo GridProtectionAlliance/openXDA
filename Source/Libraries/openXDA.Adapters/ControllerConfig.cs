@@ -71,6 +71,15 @@ namespace openXDA.Adapters
             );
 
             config.Routes.MapHttpRoute(
+                name: "OpenSTE",
+                routeTemplate: "api/OpenSTE/{action}",
+                defaults: new
+                {
+                    controller = "OpenSTE"
+                }
+            );
+
+            config.Routes.MapHttpRoute(
                 name: "PeriodicDataDisplay",
                 routeTemplate: "api/PeriodicDataDisplay/{action}",
                 defaults: new
