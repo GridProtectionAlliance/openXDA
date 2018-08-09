@@ -79,7 +79,6 @@
     <Compile Include="Configuration\BreakerSettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
     <Compile Include="Configuration\EMAXSettings.cs" />
-    <Compile Include="Configuration\EventEmailSettings.cs" />
     <Compile Include="Configuration\FaultLocationSettings.cs" />
     <Compile Include="Configuration\HistorianSettings.cs" />
     <Compile Include="DataAnalysis\CycleDataGroup.cs" />
@@ -130,7 +129,8 @@
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <None Include="DataWriters\COMTRADEWriter.cs" />
-    <Compile Include="DataWriters\EventEmailWriter.cs" />
+    <Compile Include="DataWriters\EmailService.cs" />
+    <Compile Include="DataWriters\EventEmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
     <Compile Include="DataWriters\LightningGenerator.cs" />
     <Compile Include="DataWriters\PQIGenerator.cs" />

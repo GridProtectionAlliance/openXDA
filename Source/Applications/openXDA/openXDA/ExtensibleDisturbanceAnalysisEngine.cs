@@ -95,6 +95,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using FileShare = openXDA.Configuration.FileShare;
 
@@ -263,7 +264,6 @@ namespace openXDA
         }
 
         // Constants
-
         private const int FileEnumerationPriority = 1;
         private const int FileWatcherPriority = 2;
         private const int RequeuePriority = 3;
@@ -278,6 +278,9 @@ namespace openXDA
         private LogicalThreadScheduler m_meterDataScheduler;
         private Dictionary<string, LogicalThread> m_meterDataThreadLookup;
         private LogicalThread m_noMeterThread;
+        private int m_meterTaskCount;
+
+        private EventEmailEngine m_eventEmailEngine;
 
         private bool m_stopped;
         private bool m_disposed;
@@ -432,6 +435,10 @@ namespace openXDA
             }
 
             m_meterDataScheduler.MaxThreadCount = m_systemSettings.ProcessingThreadCount;
+
+            // Setup new email engine to send emails when an event occurs
+            if ((object)m_eventEmailEngine == null)
+                m_eventEmailEngine = new EventEmailEngine();
 
             // Setup new file processor to monitor the watch directories
             if ((object)m_fileProcessor == null)
@@ -899,7 +906,7 @@ namespace openXDA
             string meterKey = GetMeterKey(filePath, systemSettings.FilePattern);
 
             // Get the thread used to process this data
-            GetThread(meterKey).Push(priority, () =>
+            QueueForMeter(meterKey, priority, () =>
             {
                 if (m_stopped || m_disposed)
                     return;
@@ -1032,7 +1039,7 @@ namespace openXDA
                 return;
             }
 
-            GetThread(meterKey).Push(RequeuePriority, () =>
+            QueueForMeter(meterKey, RequeuePriority, () =>
             {
                 if (m_stopped || m_disposed)
                     return;
@@ -1333,10 +1340,11 @@ namespace openXDA
             Action delayAndProcess = null;
 
             // This method should always be called from the meter thread
-            LogicalThread meterThread = LogicalThread.CurrentThread;
+            LogicalThread currentThread = LogicalThread.CurrentThread;
+            LogicalThread meterThread = GetThread(state.MeterKey);
 
-            if ((object)meterThread != GetThread(state.MeterKey))
-                throw new InvalidOperationException("EnterReadLoop must be called from the appropriate meter thread.");
+            if (!ReferenceEquals(currentThread, meterThread))
+                throw new InvalidOperationException("EnterProcessingLoop must be called from the appropriate meter thread.");
 
             // Attempts to process the file and
             // returns the success indicator
@@ -1383,7 +1391,7 @@ namespace openXDA
 
             // Always invoked after a delay -
             // pushes the process file timer onto the processing thread
-            delayAndProcess = () => meterThread.Push(RequeuePriority, processFileTimer);
+            delayAndProcess = () => QueueForMeter(state.MeterKey, RequeuePriority, processFileTimer);
 
             // Execute the timer action
             // to kick off the async loop
@@ -1473,6 +1481,9 @@ namespace openXDA
             OnStatusMessage($"Processing file '{filePath}'...");
             ProcessMeterDataSet(state.MeterDataSet);
             OnStatusMessage($"Finished processing file '{filePath}'.");
+
+            // Send data set to email engine for processing
+            m_eventEmailEngine.Process(state.MeterDataSet);
         }
 
         // Saves the file group to the database and cleans up state for logging and reporting.
@@ -1606,6 +1617,28 @@ namespace openXDA
             }
 
             m_fileProcessor.Filter = string.Join(Path.PathSeparator.ToString(), filterPatterns);
+        }
+
+        private void QueueForMeter(string meterKey, int priority, Action action)
+        {
+            m_eventEmailEngine.StopTimer();
+            LogicalThread meterThread = GetThread(meterKey);
+            Interlocked.Increment(ref m_meterTaskCount);
+
+            meterThread.Push(priority, () =>
+            {
+                try
+                {
+                    action();
+                }
+                finally
+                {
+                    int meterTaskCount = Interlocked.Decrement(ref m_meterTaskCount);
+
+                    if (meterTaskCount == 0)
+                        m_eventEmailEngine.StartTimer();
+                }
+            });
         }
 
         // Gets the thread used to process data for

@@ -237,6 +237,7 @@
     <Compile Include="DebugHost.Designer.cs">
       <DependentUpon>DebugHost.cs</DependentUpon>
     </Compile>
+    <Compile Include="EventEmailEngine.cs" />
     <Compile Include="ExtensibleDisturbanceAnalysisEngine.cs" />
     <Compile Include="Logging\FileSkippedExceptionFilter.cs" />
     <Compile Include="ServiceConnection.cs" />

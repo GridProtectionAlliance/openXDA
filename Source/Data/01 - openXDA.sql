@@ -406,9 +406,6 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 9)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataWriters.EventEmailWriter', 10)
-GO
-
 INSERT INTO AssetGroup(Name) VALUES('AllAssets')
 GO
 
@@ -708,6 +705,12 @@ INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(2, 3)
 GO
 
 INSERT INTO EmailType(EmailCategoryID, XSLTemplateID) VALUES(3, 4)
+GO
+
+INSERT INTO EventEmailParameters(EmailTypeID) VALUES(2)
+GO
+
+INSERT INTO EventEmailParameters(EmailTypeID) VALUES(3)
 GO
 
 
@@ -2376,8 +2379,20 @@ CREATE FUNCTION ComputeHash
 RETURNS BIGINT
 BEGIN
     DECLARE @md5Hash BINARY(16)
+    
+    DECLARE @eventDetailSQL VARCHAR(MAX) =
+    (
+        SELECT EventDetailSQL
+        FROM
+            EmailType JOIN
+            EventEmailParameters ON EventEmailParameters.EmailTypeID = EmailType.ID
+        WHERE EmailType.XSLTemplateID = @templateID
+    )
+    
+    DECLARE @eventDetail VARCHAR(MAX)
+    EXEC sp_executesql @eventDetailSQL, @eventID, @eventDetail OUT
 
-    SELECT @md5Hash = master.sys.fn_repl_hash_binary(CONVERT(VARBINARY(MAX), EventDetail))
+    SELECT @md5Hash = master.sys.fn_repl_hash_binary(CONVERT(VARBINARY(MAX), @eventDetail))
     FROM EventDetail
     WHERE EventID = @eventID
 
@@ -2876,10 +2891,17 @@ SELECT DISTINCT
     UserAccount.Name AS UserName,
     Meter.ID AS MeterID
 FROM
-    Meter JOIN
-    MeterAssetGroup ON MeterAssetGroup.MeterID = Meter.ID JOIN
-    UserAccountAssetGroup ON MeterAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID JOIN
-    UserAccount ON UserAccountAssetGroup.UserAccountID = UserAccount.ID
+    UserAccount JOIN
+    UserAccountAssetGroup ON UserAccountAssetGroup.UserAccountID = UserAccount.ID LEFT OUTER JOIN
+    MeterAssetGroup ON MeterAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID LEFT OUTER JOIN
+    LineAssetGroup ON LineAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID LEFT OUTER JOIN
+    MeterLine ON MeterLine.LineID = LineAssetGroup.LineID JOIN
+    Meter ON
+        MeterAssetGroup.MeterID = Meter.ID OR
+        MeterLine.MeterID = Meter.ID
+WHERE
+    UserAccount.Approved <> 0 AND
+    UserAccountAssetGroup.Dashboard <> 0
 GO
 
 CREATE VIEW DoubleEndedFaultSummary AS
@@ -2920,288 +2942,6 @@ FROM
         Channel.MeasurementCharacteristicID = ContourChannelType.MeasurementCharacteristicID AND
         Channel.PhaseID = ContourChannelType.PhaseID AND
         Channel.HarmonicGroup = ContourChannelType.HarmonicGroup
-GO
-
-CREATE VIEW EventDetail AS
-WITH TimeTolerance AS
-(
-    SELECT
-        COALESCE(CAST(Value AS FLOAT), 0.5) AS Tolerance
-    FROM
-        (SELECT 'TimeTolerance' AS Name) AS SettingName LEFT OUTER JOIN
-        Setting ON SettingName.Name = Setting.Name
-),
-SelectedDisturbance AS
-(
-    SELECT Disturbance.*
-    FROM
-        Disturbance JOIN
-        Phase ON Disturbance.PhaseID = Phase.ID JOIN
-        Disturbance WorstDisturbance ON
-            Disturbance.EventID = WorstDisturbance.EventID AND
-            Disturbance.Magnitude = WorstDisturbance.Magnitude AND
-            Disturbance.DurationCycles = WorstDisturbance.DurationCycles JOIN
-        Phase WorstPhase ON WorstDisturbance.PhaseID = WorstPhase.ID
-    WHERE
-        Phase.Name <> 'Worst' AND
-        WorstPhase.Name = 'Worst'
-),
-DisturbanceData AS
-(
-    SELECT
-        SelectedDisturbance.ID AS DisturbanceID,
-        Meter.AssetKey AS MeterKey,
-        MeterLocation.Name AS StationName,
-        MeterLine.LineName,
-        EventType.Name AS DisturbanceType,
-        Phase.Name AS Phase,
-        SelectedDisturbance.StartTime,
-        SelectedDisturbance.EndTime,
-        SelectedDisturbance.DurationCycles,
-        SelectedDisturbance.DurationSeconds * 1000.0 AS DurationMilliseconds,
-        SelectedDisturbance.Magnitude,
-        SelectedDisturbance.PerUnitMagnitude,
-        RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
-        SelectedDisturbance.EventID,
-        Event.StartTime AS EventStartTime,
-        Event.EndTime AS EventEndTime
-    FROM
-        SelectedDisturbance JOIN
-        Event ON SelectedDisturbance.EventID = Event.ID JOIN
-        EventType ON SelectedDisturbance.EventTypeID = EventType.ID JOIN
-        DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
-        Meter ON Event.MeterID = Meter.ID JOIN
-        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
-        Phase ON SelectedDisturbance.PhaseID = Phase.ID
-    WHERE
-        DataFile.FilePath LIKE '%.DAT' OR
-        DataFile.FilePath LIKE '%.D00' OR
-        DataFile.FilePath LIKE '%.PQD' OR
-        DataFile.FilePath LIKE '%.RCD' OR
-        DataFile.FilePath LIKE '%.RCL' OR
-        DataFile.FilePath LIKE '%.SEL' OR
-        DataFile.FilePath LIKE '%.EVE' OR
-        DataFile.FilePath LIKE '%.CEV'
-),
-SelectedSummary AS
-(
-    SELECT *
-    FROM FaultSummary
-    WHERE IsSelectedAlgorithm <> 0 AND IsSuppressed = 0
-),
-SummaryData AS
-(
-    SELECT
-        SelectedSummary.ID AS FaultSummaryID,
-        Meter.AssetKey AS MeterKey,
-        Meter.Name AS MeterName,
-        MeterLocation.AssetKey as StationKey,
-        MeterLocation.Name AS StationName,
-        Line.AssetKey AS LineKey,
-        MeterLine.LineName,
-        SelectedSummary.FaultType,
-        SelectedSummary.Inception,
-        SelectedSummary.DurationCycles,
-        SelectedSummary.DurationSeconds * 1000.0 AS DurationMilliseconds,
-        SelectedSummary.PrefaultCurrent,
-        SelectedSummary.PostfaultCurrent,
-        SelectedSummary.ReactanceRatio,
-        SelectedSummary.CurrentMagnitude AS FaultCurrent,
-        SelectedSummary.Algorithm,
-        SelectedSummary.Distance AS SingleEndedDistance,
-        DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
-        DoubleEndedFaultSummary.Angle AS DoubleEndedAngle,
-        RIGHT(DataFile.FilePath, CHARINDEX('\', REVERSE(DataFile.FilePath)) - 1) AS FileName,
-        SelectedSummary.EventID,
-        Event.StartTime AS EventStartTime,
-        Event.EndTime AS EventEndTime,
-        (Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Simple' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Simple,
-        (Select Distance FROM FaultSummary as fs WHERE fs.Algorithm = 'Reactance' AND fs.EventID = SelectedSummary.EventID AND fs.Inception = SelectedSummary.Inception) as Reactance
-    FROM
-        SelectedSummary JOIN
-        Event ON SelectedSummary.EventID = Event.ID JOIN
-        DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
-        Meter ON Event.MeterID = Meter.ID JOIN
-        MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-        MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
-        Line ON Line.ID=MeterLine.LineID LEFT OUTER JOIN
-        DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = SelectedSummary.ID LEFT OUTER JOIN
-        DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
-    WHERE
-        DataFile.FilePath LIKE '%.DAT' OR
-        DataFile.FilePath LIKE '%.D00' OR
-        DataFile.FilePath LIKE '%.PQD' OR
-        DataFile.FilePath LIKE '%.RCD' OR
-        DataFile.FilePath LIKE '%.RCL' OR
-        DataFile.FilePath LIKE '%.SEL' OR
-        DataFile.FilePath LIKE '%.EVE' OR
-        DataFile.FilePath LIKE '%.CEV'
-),
-SummaryIDs AS
-(
-    SELECT
-        SelectedSummary.ID AS FaultSummaryID,
-        EventID,
-        LineID,
-        MeterID AS PartitionID,
-        Inception AS OrderID
-    FROM
-        SelectedSummary JOIN
-        Event ON SelectedSummary.EventID = Event.ID
-)
-SELECT
-    Event.ID AS EventID,
-    (
-        SELECT
-            Event.ID AS [Event/ID],
-            Event.StartTime AS [Event/StartTime],
-            Event.EndTime AS [Event/EndTime],
-            EventType.Name AS [Event/Type],
-            (
-                SELECT
-                    SequenceNumber AS [@num],
-                    (
-                        SELECT
-                            MeterKey,
-                            StationName,
-                            LineName,
-                            DisturbanceType,
-                            Phase,
-                            StartTime,
-                            EndTime,
-                            DurationCycles,
-                            DurationMilliseconds,
-                            Magnitude,
-                            PerUnitMagnitude,
-                            EventStartTime,
-                            EventEndTime,
-                            FileName,
-                            EventID,
-                            DisturbanceID
-                        FROM DisturbanceData
-                        WHERE DisturbanceID IN
-                        (
-                            SELECT PhaseDisturbance.ID
-                            FROM
-                                dbo.GetDisturbancesInSystemEvent(Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)) InnerSequenceNumber JOIN
-                                Disturbance ON Disturbance.ID = InnerSequenceNumber.ID JOIN
-                                Disturbance PhaseDisturbance ON
-                                    Disturbance.EventID = PhaseDisturbance.EventID AND
-                                    Disturbance.StartTime = PhaseDisturbance.StartTime AND
-                                    Disturbance.PerUnitMagnitude = PhaseDisturbance.PerUnitMagnitude
-                            WHERE InnerSequenceNumber.SequenceNumber = OuterSequenceNumber.SequenceNumber
-                        )
-                        ORDER BY DisturbanceData.StartTime
-                        FOR XML PATH('Disturbance'), TYPE
-                    )
-                FROM
-                (
-                    SELECT DISTINCT SequenceNumber
-                    FROM dbo.GetDisturbancesInSystemEvent(Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance))
-                ) OuterSequenceNumber
-                FOR XML PATH('DisturbanceGroup'), TYPE
-            ) AS [DisturbanceGroups],
-            (
-                SELECT
-                    FaultNumber AS [@num],
-                    (
-                        SELECT
-                            MeterKey,
-                            MeterName,
-                            StationKey,
-                            StationName,
-                            LineKey,
-                            LineName,
-                            FaultType,
-                            Inception,
-                            DurationCycles,
-                            DurationMilliseconds,
-                            PrefaultCurrent,
-                            PostfaultCurrent,
-                            ReactanceRatio,
-                            FaultCurrent,
-                            Algorithm,
-                            SingleEndedDistance,
-                            DoubleEndedDistance,
-                            DoubleEndedAngle,
-                            EventStartTime,
-                            EventEndTime,
-                            FileName,
-                            EventID,
-                            FaultSummaryID AS FaultID,
-                            CASE WHEN ABS(Reactance/COALESCE(Simple,1)) > 0.6 THEN 'LOW'
-                                 WHEN ABS(Reactance/COALESCE(Simple,1)) < 0.4 THEN 'HIGH'
-                                 ELSE 'MEDIUM'
-                            END AS Ratio
-                        FROM SummaryData
-                        WHERE FaultSummaryID IN
-                        (
-                            SELECT FaultSummaryID
-                            FROM
-                            (
-                                SELECT FaultSummaryID, ROW_NUMBER() OVER(PARTITION BY PartitionID ORDER BY OrderID) AS FaultNumber
-                                FROM SummaryIDs
-                                WHERE SummaryIDs.LineID = Event.LineID AND SummaryIDs.EventID IN (SELECT * FROM dbo.GetLineEventIDs(Event.LineID, Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)))
-                            ) InnerFaultNumber
-                            WHERE InnerFaultNumber.FaultNumber = OuterFaultNumber.FaultNumber
-                        )
-                        FOR XML PATH('SummaryData'), TYPE
-                    )
-                FROM
-                (
-                    SELECT DISTINCT ROW_NUMBER() OVER(PARTITION BY PartitionID ORDER BY OrderID) AS FaultNumber
-                    FROM SummaryIDs
-                    WHERE SummaryIDs.LineID = Event.LineID AND SummaryIDs.EventID IN (SELECT * FROM dbo.GetLineEventIDs(Event.LineID, Event.StartTime, Event.EndTime, (SELECT * FROM TimeTolerance)))
-                ) OuterFaultNumber
-                FOR XML PATH('Fault'), TYPE
-            ) AS [Faults],
-            Meter.AssetKey AS [Meter/AssetKey],
-            Meter.Name AS [Meter/Name],
-            Meter.ShortName AS [Meter/ShortName],
-            Meter.Alias AS [Meter/Alias],
-            Meter.Make AS [Meter/Make],
-            Meter.Model AS [Meter/Model],
-            MeterLocation.AssetKey AS [MeterLocation/AssetKey],
-            MeterLocation.Name AS [MeterLocation/Name],
-            MeterLocation.ShortName AS [MeterLocation/ShortName],
-            MeterLocation.Alias AS [MeterLocation/Alias],
-            SourceImpedance.RSrc AS [MeterLocation/RSrc],
-            SourceImpedance.XSrc AS [MeterLocation/XSrc],
-            Line.AssetKey AS [Line/AssetKey],
-            MeterLine.LineName AS [Line/Name],
-			Line.Description AS [Line/Description],
-            FORMAT(Line.Length, '0.##########') AS [Line/Length],
-            FORMAT(SQRT(LineImpedance.R1 * LineImpedance.R1 + LineImpedance.X1 * LineImpedance.X1), '0.##########') AS [Line/Z1],
-            CASE LineImpedance.R1 WHEN 0 THEN '0' ELSE FORMAT(ATN2(LineImpedance.X1, LineImpedance.R1) * 180 / PI(), '0.##########') END AS [Line/A1],
-            FORMAT(LineImpedance.R1, '0.##########') AS [Line/R1],
-            FORMAT(LineImpedance.X1, '0.##########') AS [Line/X1],
-            FORMAT(SQRT(LineImpedance.R0 * LineImpedance.R0 + LineImpedance.X0 * LineImpedance.X0), '0.##########') AS [Line/Z0],
-            CASE LineImpedance.R0 WHEN 0 THEN '0' ELSE FORMAT(ATN2(LineImpedance.X0, LineImpedance.R0) * 180 / PI(), '0.##########') END AS [Line/A0],
-            FORMAT(LineImpedance.R0, '0.##########') AS [Line/R0],
-            FORMAT(LineImpedance.X0, '0.##########') AS [Line/X0],
-            FORMAT(SQRT(POWER((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, 2) + POWER((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, 2)), '0.##########') AS [Line/ZS],
-            CASE 2.0 * LineImpedance.R1 + LineImpedance.R0 WHEN 0 THEN '0' ELSE FORMAT(ATN2((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, (2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0) * 180 / PI(), '0.##########') END AS [Line/AS],
-            FORMAT((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, '0.##########') AS [Line/RS],
-            FORMAT((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, '0.##########') AS [Line/XS],
-            (
-                CAST((SELECT '<TimeTolerance>' + CAST((SELECT * FROM TimeTolerance) AS VARCHAR) + '</TimeTolerance>') AS XML)
-            ) AS [Settings]
-        FROM
-            Meter CROSS JOIN
-            Line LEFT OUTER JOIN
-            MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
-            MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Line.ID LEFT OUTER JOIN
-            MeterLocationLine ON MeterLocationLine.MeterLocationID = MeterLocation.ID AND MeterLocationLine.LineID = Line.ID LEFT OUTER JOIN
-            SourceImpedance ON SourceImpedance.MeterLocationLineID = MeterLocationLine.ID LEFT OUTER JOIN
-            LineImpedance ON LineImpedance.LineID = Line.ID LEFT OUTER JOIN
-            EventType ON Event.EventTypeID = EventType.ID
-        WHERE
-            Event.MeterID = Meter.ID AND
-            Event.LineID = Line.ID
-        FOR XML PATH('EventDetail'), TYPE
-    ) AS EventDetail
-FROM Event
 GO
 
 CREATE VIEW EventView
@@ -3874,6 +3614,175 @@ GO
 
 
 ----- Email Templates -----
+
+UPDATE EventEmailParameters
+SET TriggersEmailSQL = 'SELECT
+    CASE WHEN EventType.Name = ''Fault''
+        THEN 1
+        ELSE 0
+    END
+FROM
+    Event JOIN
+    EventType ON Event.EventTypeID = EventType.ID
+WHERE Event.ID = {0}'
+WHERE EventEmailParameters.ID = 2
+GO
+
+UPDATE EventEmailParameters
+SET EventDetailSQL = 'DECLARE @timeTolerance FLOAT = (SELECT CAST(Value AS FLOAT) FROM Setting WHERE Name = ''TimeTolerance'')
+DECLARE @lineID INT
+DECLARE @startTime DATETIME2
+DECLARE @endTime DATETIME2
+
+SELECT
+    @lineID = LineID,
+    @startTime = dbo.AdjustDateTime2(StartTime, -@timeTolerance),
+    @endTime = dbo.AdjustDateTime2(EndTime, @timeTolerance)
+FROM Event
+WHERE ID = {0}
+
+SELECT *
+INTO #lineEvent
+FROM Event
+WHERE
+    Event.LineID = @lineID AND
+    Event.EndTime >= @startTime AND
+    Event.StartTime <= @endTime
+    
+SELECT
+    ROW_NUMBER() OVER(PARTITION BY Event.MeterID ORDER BY FaultSummary.Inception) AS FaultNumber,
+    FaultSummary.ID AS FaultSummaryID,
+    Meter.AssetKey AS MeterKey,
+    Meter.Name AS MeterName,
+    MeterLocation.AssetKey as StationKey,
+    MeterLocation.Name AS StationName,
+    Line.AssetKey AS LineKey,
+    MeterLine.LineName,
+    FaultSummary.FaultType,
+    FaultSummary.Inception,
+    FaultSummary.DurationCycles,
+    FaultSummary.DurationSeconds * 1000.0 AS DurationMilliseconds,
+    FaultSummary.PrefaultCurrent,
+    FaultSummary.PostfaultCurrent,
+    FaultSummary.ReactanceRatio,
+    FaultSummary.CurrentMagnitude AS FaultCurrent,
+    FaultSummary.Algorithm,
+    FaultSummary.Distance AS SingleEndedDistance,
+    DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
+    DoubleEndedFaultSummary.Angle AS DoubleEndedAngle,
+    RIGHT(DataFile.FilePath, CHARINDEX(''\'', REVERSE(DataFile.FilePath)) - 1) AS FileName,
+    FaultSummary.EventID,
+    Event.StartTime AS EventStartTime,
+    SimpleSummary.Distance AS Simple,
+    ReactanceSummary.Distance AS Reactance,
+    Event.EndTime AS EventEndTime
+INTO #summaryData
+FROM
+    #lineEvent Event JOIN
+    FaultSummary ON
+        FaultSummary.EventID = Event.ID AND
+        FaultSummary.IsSelectedAlgorithm <> 0 AND
+        FaultSummary.IsSuppressed = 0 LEFT OUTER JOIN
+    FaultSummary SimpleSummary ON
+        FaultSummary.EventID = SimpleSummary.EventID AND
+        FaultSummary.Inception = SimpleSummary.Inception AND
+        SimpleSummary.Algorithm = ''Simple'' LEFT OUTER JOIN
+    FaultSummary ReactanceSummary ON
+        FaultSummary.EventID = ReactanceSummary.EventID AND
+        FaultSummary.Inception = ReactanceSummary.Inception AND
+        ReactanceSummary.Algorithm = ''Reactance'' JOIN
+    DataFile ON DataFile.FileGroupID = Event.FileGroupID JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
+    MeterLine ON MeterLine.MeterID = Meter.ID AND MeterLine.LineID = Event.LineID JOIN
+    Line ON Line.ID=MeterLine.LineID LEFT OUTER JOIN
+    DoubleEndedFaultDistance ON DoubleEndedFaultDistance.LocalFaultSummaryID = FaultSummary.ID LEFT OUTER JOIN
+    DoubleEndedFaultSummary ON DoubleEndedFaultSummary.ID = DoubleEndedFaultDistance.ID
+WHERE
+    DataFile.FilePath LIKE ''%.DAT'' OR
+    DataFile.FilePath LIKE ''%.D00'' OR
+    DataFile.FilePath LIKE ''%.PQD'' OR
+    DataFile.FilePath LIKE ''%.RCD'' OR
+    DataFile.FilePath LIKE ''%.RCL'' OR
+    DataFile.FilePath LIKE ''%.SEL'' OR
+    DataFile.FilePath LIKE ''%.EVE'' OR
+    DataFile.FilePath LIKE ''%.CEV''
+
+SELECT
+    (
+        SELECT ID AS [@id]
+        FROM #lineEvent
+        FOR XML PATH(''Event''), TYPE
+    ) AS [Events],
+    (
+        SELECT
+            FaultNumber AS [@num],
+            (
+                SELECT
+                    MeterKey,
+                    MeterName,
+                    StationKey,
+                    StationName,
+                    LineKey,
+                    LineName,
+                    FaultType,
+                    Inception,
+                    DurationCycles,
+                    DurationMilliseconds,
+                    PrefaultCurrent,
+                    PostfaultCurrent,
+                    ReactanceRatio,
+                    FaultCurrent,
+                    Algorithm,
+                    SingleEndedDistance,
+                    DoubleEndedDistance,
+                    DoubleEndedAngle,
+                    EventStartTime,
+                    EventEndTime,
+                    FileName,
+                    EventID,
+                    FaultSummaryID AS FaultID,
+                    CASE WHEN ABS(Reactance/COALESCE(Simple,1)) > 0.6 THEN ''LOW''
+                            WHEN ABS(Reactance/COALESCE(Simple,1)) < 0.4 THEN ''HIGH''
+                            ELSE ''MEDIUM''
+                    END AS Ratio
+                FROM #summaryData
+                WHERE FaultNumber = Fault.FaultNumber
+                FOR XML PATH(''SummaryData''), TYPE
+            )
+        FROM
+        (
+            SELECT DISTINCT FaultNumber
+            FROM #summaryData
+        ) Fault
+        FOR XML PATH(''Fault''), TYPE
+    ) AS [Faults],
+    MeterLine.LineName AS [Line/Name],
+    Line.AssetKey AS [Line/AssetKey],
+    FORMAT(Line.Length, ''0.##########'') AS [Line/Length],
+    FORMAT(SQRT(LineImpedance.R1 * LineImpedance.R1 + LineImpedance.X1 * LineImpedance.X1), ''0.##########'') AS [Line/Z1],
+    CASE LineImpedance.R1 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2(LineImpedance.X1, LineImpedance.R1) * 180 / PI(), ''0.##########'') END AS [Line/A1],
+    FORMAT(LineImpedance.R1, ''0.##########'') AS [Line/R1],
+    FORMAT(LineImpedance.X1, ''0.##########'') AS [Line/X1],
+    FORMAT(SQRT(LineImpedance.R0 * LineImpedance.R0 + LineImpedance.X0 * LineImpedance.X0), ''0.##########'') AS [Line/Z0],
+    CASE LineImpedance.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2(LineImpedance.X0, LineImpedance.R0) * 180 / PI(), ''0.##########'') END AS [Line/A0],
+    FORMAT(LineImpedance.R0, ''0.##########'') AS [Line/R0],
+    FORMAT(LineImpedance.X0, ''0.##########'') AS [Line/X0],
+    FORMAT(SQRT(POWER((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, 2) + POWER((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, 2)), ''0.##########'') AS [Line/ZS],
+    CASE 2.0 * LineImpedance.R1 + LineImpedance.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, (2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0) * 180 / PI(), ''0.##########'') END AS [Line/AS],
+    FORMAT((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, ''0.##########'') AS [Line/RS],
+    FORMAT((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, ''0.##########'') AS [Line/XS]
+FROM
+    Event JOIN
+    Line ON Event.LineID = Line.ID JOIN
+    MeterLine ON
+        MeterLine.MeterID = Event.MeterID AND
+        MeterLine.LineID = Event.LineID JOIN
+    LineImpedance ON LineImpedance.LineID = Line.ID
+WHERE Event.ID = {0}
+FOR XML PATH(''EventDetail''), TYPE'
+WHERE EventEmailParameters.ID = 2
+GO
 
 UPDATE XSLTemplate
 SET Template = '<?xml version="1.0"?>
