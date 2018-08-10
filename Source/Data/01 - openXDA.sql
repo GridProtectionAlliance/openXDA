@@ -4000,7 +4000,7 @@ SET Template = '<?xml version="1.0"?>
 
         <hr />
 
-        <p style="font-size: 8px">
+        <p style="font-size: .8em">
             If you would like receive a different set of emails or unsubscribe, you can <a><xsl:attribute name="href"><xsl:value-of select="/EventDetail/PQDashboard" />/Email/UpdateSettings</xsl:attribute>manage your subscriptions</a>.
         </p>
     </body>
