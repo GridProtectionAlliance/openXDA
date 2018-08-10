@@ -1991,7 +1991,11 @@ BEGIN
 
 
     SET @SQLStatement =
-    ' SELECT Meter.ID,
+    'SELECT *
+    INTO #authMeters
+    FROM authMeters(@username)
+
+    SELECT Meter.ID,
              Meter.Name,
              MeterLocation.Longitude,
              MeterLocation.Latitude,
@@ -2017,7 +2021,7 @@ BEGIN
                  FOR ed.OperationType IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
            ) as pvt On pvt.MeterID = meter.ID
     WHERE
-        Meter.ID in (select * from authMeters(@username)) AND
+        Meter.ID in (select * from #authMeters) AND
         Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
 
     ORDER BY Meter.Name'
@@ -2210,6 +2214,10 @@ DECLARE @ids varchar(max) = @MeterIds
 DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@user)
+
 SELECT Meter.ID, 
 		 Meter.Name,
 		 MeterLocation.Longitude,
@@ -2239,7 +2247,7 @@ FROM
 	   		 FOR ed.SeverityCode IN(' + @PivotColumns + ') 
 	   ) as pvt On pvt.MeterID = meter.ID
 	WHERE 
-		Meter.ID in (select * from authMeters(@user)) AND 
+		Meter.ID in (select * from #authMeters) AND 
 		Meter.ID IN (SELECT * FROM String_To_Int_Table( @ids,  '',''))  
 
 Order By Name '
@@ -2315,6 +2323,10 @@ DECLARE @ids varchar(max) = @MeterIds
 DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@user)
+
 SELECT Meter.ID, 
 		 Meter.Name,
 		 MeterLocation.Longitude,
@@ -2340,7 +2352,7 @@ FROM
 	   		 FOR ed.Name IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
 	   ) as pvt On pvt.MeterID = meter.ID
 WHERE 
-	Meter.ID in (select * from authMeters(@user)) AND 
+	Meter.ID in (select * from #authMeters) AND 
 	Meter.ID IN (SELECT * FROM String_To_Int_Table( @ids,  '',''))  
 
 ORDER BY Meter.Name'
@@ -2419,7 +2431,11 @@ FROM (Select Distinct Line.VoltageKV
 
 
 SET @SQLStatement =
-' SELECT Meter.ID,
+'SELECT *
+INTO #authMeters
+FROM authMeters(@username)
+
+SELECT Meter.ID,
          Meter.Name,
          MeterLocation.Longitude,
          MeterLocation.Latitude,
@@ -2445,7 +2461,7 @@ FROM
              FOR ed.VoltageKV IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
        ) as pvt On pvt.MeterID = meter.ID
     WHERE
-        Meter.ID in (select * from authMeters(@username)) AND
+        Meter.ID in (select * from #authMeters) AND
         Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
 
 ORDER BY Meter.Name'
@@ -2767,7 +2783,10 @@ SELECT @MiddleStatment = @MiddleStatment +  '
 FROM (Select * FROM EASExtension) AS t
 
 SET @SQLStatement =
-'
+'SELECT *
+INTO #authMeters
+FROM authMeters(@username)
+
 SELECT Meter.ID,
          Meter.Name,
          MeterLocation.Longitude,
@@ -2783,7 +2802,7 @@ FROM
              FOR ed.ServiceName IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
        ) as pvt On pvt.MeterID = meter.ID
 WHERE
-    Meter.ID in (select * from authMeters(@username)) AND
+    Meter.ID in (select * from #authMeters) AND
     Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
 
 ORDER BY Meter.Name
