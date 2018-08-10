@@ -105,6 +105,7 @@ using openXDA.DataPusher;
 using openXDA.Logging;
 using openXDA.Model;
 using openXDA.Reports;
+using openXDA.PQTrendingWebReport;
 using PQMark.DataAggregator;
 using Channel = openXDA.Model.Channel;
 using DataHub = openXDA.Hubs.DataHub;
@@ -138,6 +139,7 @@ namespace openXDA
         private DataPusherEngine m_dataPusherEngine;
         private DataAggregationEngine m_dataAggregationEngine;
         private ReportsEngine m_reportsEngine;
+        private PQTrendingWebReportEngine m_pqTrendingWebReportEngine;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
@@ -301,6 +303,10 @@ namespace openXDA
             m_reportsEngine = new ReportsEngine();
             ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_reportsEngine);
 
+            // Set up data reports engine
+            m_pqTrendingWebReportEngine = new PQTrendingWebReportEngine();
+            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_pqTrendingWebReportEngine);
+
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
@@ -325,6 +331,10 @@ namespace openXDA
             ReportsEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             ReportsEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
 
+            //Set up DataAggregationEngine callbacks
+            PQTrendingWebReportEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
+            PQTrendingWebReportEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
@@ -337,6 +347,8 @@ namespace openXDA
                 bool dataPusherEngineStarted = false;
                 bool dataAggregationEngineStarted = false;
                 bool reportsEngineStarted = false;
+                bool pqTrendingWebReportsEngineStarted = false;
+
                 while (true)
                 {
                     engineStarted = engineStarted || TryStartEngine();
@@ -344,8 +356,9 @@ namespace openXDA
                     dataPusherEngineStarted = dataPusherEngineStarted || TryStartDataPusherEngine();
                     dataAggregationEngineStarted = dataAggregationEngineStarted || TryStartDataAggregationEngine();
                     reportsEngineStarted = reportsEngineStarted || TryStartReportsEngine();
+                    pqTrendingWebReportsEngineStarted = pqTrendingWebReportsEngineStarted || TryStartPQTrendingWebReportsEngine();
 
-                    if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted)
+                    if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted && pqTrendingWebReportsEngineStarted)
                         break;
 
                     for (int i = 0; i < LoopCount; i++)
@@ -492,6 +505,31 @@ namespace openXDA
 
                 // Stop the analysis engine
                 m_reportsEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start reports engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
+
+        // Attempts to start the engine and logs startup errors.
+        private bool TryStartPQTrendingWebReportsEngine()
+        {
+            try
+            {
+                // Start the analysis engine
+                if (m_pqTrendingWebReportEngine.PQTrendingWebReportSettings.Enabled)
+                    m_pqTrendingWebReportEngine.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the analysis engine
+                m_pqTrendingWebReportEngine.Stop();
 
                 // Log the exception
                 message = "Failed to start reports engine due to exception: " + ex.Message;

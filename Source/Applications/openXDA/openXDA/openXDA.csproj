@@ -321,6 +321,11 @@
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
       <Name>openXDA.Model</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
+      <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>
+      <Name>openXDA.PQTrendingWebReport</Name>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.Reports\openXDA.Reports.csproj">
       <Project>{656f97d9-4fb6-4f65-a9a6-1a1dde3af634}</Project>
       <Name>openXDA.Reports</Name>
@@ -366,7 +371,6 @@
     <Content Include="wwwroot\Config\EditEventEmailParameters.cshtml" />
     <None Include="wwwroot\Config\EmailTemplateHandler.ashx" />
     <None Include="wwwroot\Config\AlarmRangeLimitCSVUploadHandler.ashx" />
-    <None Include="wwwroot\Config\AlarmSettings.cshtml" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -374,7 +378,6 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="wwwroot\Config\XSLTemplate.cshtml" />
-    <Content Include="wwwroot\Config\LineAssetGroupView.cshtml" />
     <Content Include="wwwroot\Config\HourOfWeekLimits.cshtml" />
     <Content Include="wwwroot\Config\MetersWithHourlyLimits.cshtml" />
     <Content Include="wwwroot\Config\HowlCSVDownloadHandler.ashx" />
@@ -407,7 +410,6 @@
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.ttf" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff" />
     <None Include="wwwroot\fonts\glyphicons-halflings-regular.woff2" />
-    <None Include="wwwroot\Config\MeterAssetGroupView.cshtml" />
     <None Include="wwwroot\Config\Groups.cshtml" />
     <None Include="wwwroot\Config\Help.cshtml" />
     <None Include="wwwroot\Images\Icons\Thumbs.db" />
@@ -519,7 +521,6 @@
     <Content Include="wwwroot\Scripts\flot\LICENSE.txt" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.js" />
     <Content Include="wwwroot\Scripts\fullscreenselect\bootstrap-fullscreen-select.min.js" />
-    <Content Include="wwwroot\Config\UserAccountMeterGroupView.cshtml" />
     <None Include="wwwroot\Config\Users.cshtml" />
     <Content Include="wwwroot\Scripts\jquery.blockUI.js" />
     <Content Include="wwwroot\Scripts\jquery.jspanel-compiled.js" />

@@ -151,10 +151,19 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('ProcessingThreadCount', '0', '0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Enable', 'False', 'False')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Enabled', 'False', 'False')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQMarkAggregation.Frequency', '0 0 * * *', '0 0 1 * *')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQTrendingWebReport.Enabled', 'False', 'False')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQTrendingWebReport.Frequency', '0 2 * * *', '0 2 * * *')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQTrendingWebReport.Verbose', 'False', 'False')
 GO
 
 

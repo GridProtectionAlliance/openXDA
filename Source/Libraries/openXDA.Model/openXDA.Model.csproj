@@ -72,10 +72,14 @@
     <Compile Include="LazyContext.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
+    <Compile Include="PQTrendingWebReports\Unit.cs" />
+    <Compile Include="PQTrendingWebReports\PQMeasurement.cs" />
+    <Compile Include="PQTrendingWebReports\PQTrendStat.cs" />
     <Compile Include="Reports\Report.cs" />
     <Compile Include="Security\ConfirmableUserAccount.cs" />
     <Compile Include="Settings\DataPusherSettings.cs" />
     <Compile Include="Settings\PQMarkAggregationSettings.cs" />
+    <Compile Include="Settings\PQTrendingWebReportSettings.cs" />
     <Compile Include="Settings\ReportsSettings.cs" />
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
