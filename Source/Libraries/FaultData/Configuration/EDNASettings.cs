@@ -76,6 +76,10 @@ namespace FaultData.Configuration
             }
         }
 
+        /// <summary>
+        /// Gets or sets the value of the point representing
+        /// breaker state when the breaker is open.
+        /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
         public double BreakerOpenValue
