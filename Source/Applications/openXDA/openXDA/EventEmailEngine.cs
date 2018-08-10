@@ -33,6 +33,7 @@ using FaultData.DataWriters;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Threading;
+using log4net;
 using openXDA.Model;
 
 namespace openXDA
@@ -71,7 +72,7 @@ namespace openXDA
             {
                 m_triggeredEvents = new ConcurrentQueue<Event>();
                 m_sendEmailCallback = sendEmailCallback;
-                m_synchronizedOperation = new LongSynchronizedOperation(UpdateTimersAndSendEmail);
+                m_synchronizedOperation = new LongSynchronizedOperation(UpdateTimersAndSendEmail, HandleException);
             }
 
             #endregion
@@ -197,6 +198,18 @@ namespace openXDA
                 if (triggeredEvents.Any())
                     m_sendEmailCallback(Parameters, triggeredEvents);
             }
+
+            private void HandleException(Exception ex)
+            {
+                Log.Error(ex.Message, ex);
+            }
+
+            #endregion
+
+            #region [ Static ]
+
+            // Static Fields
+            private static ILog Log = LogManager.GetLogger(typeof(EventEmailType));
 
             #endregion
         }
