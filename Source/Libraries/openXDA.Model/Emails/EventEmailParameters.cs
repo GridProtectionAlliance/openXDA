@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
 
@@ -49,5 +50,35 @@ namespace openXDA.Model
         [JsonIgnore]
         [NonRecordField]
         public TimeSpan MaxDelaySpan => TimeSpan.FromSeconds(MaxDelay);
+
+        [JsonIgnore]
+        [NonRecordField]
+        public Func<AdoDataConnection> ConnectionFactory { get; set; }
+
+        public bool TriggersEmail(int eventID)
+        {
+            Func<AdoDataConnection> connectionFactory = ConnectionFactory;
+
+            if ((object)connectionFactory == null)
+                throw new InvalidOperationException("ConnectionFactory is undefined");
+
+            using (AdoDataConnection connection = connectionFactory())
+            {
+                return connection.ExecuteScalar<bool>(TriggersEmailSQL, eventID);
+            }
+        }
+
+        public string GetEventDetail(int eventID)
+        {
+            Func<AdoDataConnection> connectionFactory = ConnectionFactory;
+
+            if ((object)connectionFactory == null)
+                throw new InvalidOperationException("ConnectionFactory is undefined");
+
+            using (AdoDataConnection connection = connectionFactory())
+            {
+                return connection.ExecuteScalar<string>(EventDetailSQL, eventID);
+            }
+        }
     }
 }

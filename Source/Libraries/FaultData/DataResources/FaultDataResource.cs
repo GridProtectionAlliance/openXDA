@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Parsing;
 using GSF.Units;
+using InStep.eDNA.EzDNAApiNet;
 using log4net;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
@@ -224,8 +226,10 @@ namespace FaultData.DataResources
         private double m_systemFrequency;
         private double m_maxVoltage;
         private double m_maxCurrent;
+        private string m_xdaTimeZoneID;
         private FaultLocationSettings m_faultLocationSettings;
         private BreakerSettings m_breakerSettings;
+        private EDNASettings m_ednaSettings;
 
         private Dictionary<DataGroup, FaultGroup> m_faultLookup;
 
@@ -237,6 +241,7 @@ namespace FaultData.DataResources
         {
             m_faultLocationSettings = new FaultLocationSettings();
             m_breakerSettings = new BreakerSettings();
+            m_ednaSettings = new EDNASettings();
             m_faultLookup = new Dictionary<DataGroup, FaultGroup>();
         }
 
@@ -291,6 +296,20 @@ namespace FaultData.DataResources
             }
         }
 
+        [Setting]
+        [SettingName("XDATimeZone")]
+        public string XDATimeZoneID
+        {
+            get
+            {
+                return m_xdaTimeZoneID;
+            }
+            set
+            {
+                m_xdaTimeZoneID = value;
+            }
+        }
+
         [Category]
         [SettingName("FaultLocation")]
         public FaultLocationSettings FaultLocationSettings
@@ -308,6 +327,24 @@ namespace FaultData.DataResources
             get
             {
                 return m_breakerSettings;
+            }
+        }
+
+        [Category]
+        [SettingName("EDNA")]
+        public EDNASettings EDNASettings
+        {
+            get
+            {
+                return m_ednaSettings;
+            }
+        }
+
+        private TimeZoneInfo XDATimeZone
+        {
+            get
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById(XDATimeZoneID);
             }
         }
 
@@ -989,7 +1026,7 @@ namespace FaultData.DataResources
             fault.Duration = endTime - startTime;
             fault.PrefaultCurrent = GetPrefaultCurrent(fault, dataGroup, viCycleDataGroup);
             fault.PostfaultCurrent = GetPostfaultCurrent(fault, dataGroup, viCycleDataGroup);
-            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold;
+            fault.IsSuppressed = double.IsNaN(postfaultPeak) || postfaultPeak > m_breakerSettings.OpenBreakerThreshold || !AskSCADAIfBreakerOpened(dataGroup.Line, fault);
 
             fault.IsReclose =
                 !double.IsNaN(prefaultPeak) &&
@@ -1056,6 +1093,50 @@ namespace FaultData.DataResources
             {
                 fault.IsSuppressed = true;
             }
+        }
+
+        private bool AskSCADAIfBreakerOpened(Line line, Fault fault)
+        {
+            string pointQuery = m_ednaSettings.PointQuery;
+            List<string> points;
+
+            using (AdoDataConnection connection = line.ConnectionFactory())
+            using (DataTable pointTable = connection.RetrieveData(pointQuery, line.ID))
+            {
+                points = pointTable
+                    .Select()
+                    .Select(row => row.ConvertField<string>("Point"))
+                    .ToList();
+            }
+
+            // If there are no SCADA points configured,
+            // trust the analysis results
+            if (!points.Any())
+                return true;
+
+            DateTime utcClearingTime = TimeZoneInfo.ConvertTimeToUtc(fault.ClearingTime, XDATimeZone);
+            DateTime localClearingTime = utcClearingTime.ToLocalTime();
+
+            TimeSpan queryTolerance = m_ednaSettings.QueryToleranceSpan;
+            DateTime startTime = fault.ClearingTime - queryTolerance;
+            DateTime endTime = fault.ClearingTime + queryTolerance;
+
+            double breakerOpenValue = m_ednaSettings.BreakerOpenValue;
+
+            foreach (string point in points)
+            {
+                int result = History.DnaGetHistRaw(point, startTime, endTime, out uint key);
+
+                while (result == 0)
+                {
+                    result = History.DnaGetNextHist(key, out double value, out DateTime time, out string status);
+
+                    if (result == 0 && value == breakerOpenValue)
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         private bool IsValid(double faultDistance, DataGroup dataGroup)

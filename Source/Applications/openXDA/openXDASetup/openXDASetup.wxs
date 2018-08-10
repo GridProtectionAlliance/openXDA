@@ -440,7 +440,6 @@
       <ComponentRef Id="openXDA.DataPusher" />
       <ComponentRef Id="PQMark.DataAggregator" />
 
-
       <!-- DotNetZip Dependencies -->
       <ComponentRef Id="Ionic.Zlib" />
 
@@ -469,6 +468,18 @@
       <ComponentRef Id="crypto" />
       <ComponentRef Id="GSF.SortedTreeStore" />
       <ComponentRef Id="openHistorian.Core" />
+
+      <!-- eDNA Dependencies -->
+      <ComponentRef Id="EzDnaApi" />
+      <ComponentRef Id="EzDnaApi64" />
+      <ComponentRef Id="EzDNAApiNet" />
+      <ComponentRef Id="EzDNAApiNet64" />
+      <ComponentRef Id="EzDNAApiNetSecure" />
+      <ComponentRef Id="EzDNAApiNetSecure64" />
+      <ComponentRef Id="EZDnaServApi" />
+      <ComponentRef Id="EZDnaServApi64" />
+      <ComponentRef Id="EzDNAServApiNet" />
+      <ComponentRef Id="EzDNAServApiNet64" />
 
       <!-- Local NuGet Dependencies -->
       <ComponentRef Id="MathNet.Numerics" />
@@ -554,7 +565,6 @@
         <File Id="PQMark.DataAggregator.dll" Name="$(var.PQMark.DataAggregator.TargetFileName)" Source="$(var.PQMark.DataAggregator.TargetPath)" />
       </Component>
 
-
       <Component Id="openHistorian.XDALink">
         <File Id="openHistorian.XDALink.dll" Name="$(var.openHistorian.XDALink.TargetFileName)" Source="$(var.openHistorian.XDALink.TargetPath)" />
       </Component>
@@ -569,7 +579,6 @@
         <File Id="log4net.dll" Name="log4net.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\log4net.2.0.3\lib\net40-full\log4net.dll" />
       </Component>
 
-      
       <!-- GSF Dependencies -->
       <Component Id="AjaxMin">
         <File Id="AjaxMin.dll" Name="AjaxMin.dll" Source="$(var.SolutionDir)\Dependencies\GSF\AjaxMin.dll" />
@@ -620,7 +629,6 @@
         <File Id="GrafanaAdapters.dll" Name="GrafanaAdapters.dll" Source="$(var.SolutionDir)\Dependencies\GSF\GrafanaAdapters.dll" />
       </Component>
 
-
       <!-- openHistorian Dependencies -->
       <Component Id="crypto">
         <File Id="crypto.dll" Name="crypto.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\crypto.dll" />
@@ -630,6 +638,38 @@
       </Component>
       <Component Id="openHistorian.Core">
         <File Id="openHistorian.Core.dll" Name="openHistorian.Core.dll" Source="$(var.SolutionDir)\Dependencies\openHistorian\openHistorian.Core.dll" />
+      </Component>
+
+      <!-- eDNA Dependencies -->
+      <Component Id="EzDnaApi">
+        <File Id="EzDnaApi.dll" Name="EzDnaApi.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDnaApi.dll" />
+      </Component>
+      <Component Id="EzDnaApi64">
+        <File Id="EzDnaApi64.dll" Name="EzDnaApi64.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDnaApi64.dll" />
+      </Component>
+      <Component Id="EzDNAApiNet">
+        <File Id="EzDNAApiNet.dll" Name="EzDNAApiNet.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAApiNet.dll" />
+      </Component>
+      <Component Id="EzDNAApiNet64">
+        <File Id="EzDNAApiNet64.dll" Name="EzDNAApiNet64.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAApiNet64.dll" />
+      </Component>
+      <Component Id="EzDNAApiNetSecure">
+        <File Id="EzDNAApiNetSecure.dll" Name="EzDNAApiNetSecure.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAApiNetSecure.dll" />
+      </Component>
+      <Component Id="EzDNAApiNetSecure64">
+        <File Id="EzDNAApiNetSecure64.dll" Name="EzDNAApiNetSecure64.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAApiNetSecure64.dll" />
+      </Component>
+      <Component Id="EZDnaServApi">
+        <File Id="EZDnaServApi.dll" Name="EZDnaServApi.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EZDnaServApi.dll" />
+      </Component>
+      <Component Id="EZDnaServApi64">
+        <File Id="EZDnaServApi64.dll" Name="EZDnaServApi64.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EZDnaServApi64.dll" />
+      </Component>
+      <Component Id="EzDNAServApiNet">
+        <File Id="EzDNAServApiNet.dll" Name="EzDNAServApiNet.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAServApiNet.dll" />
+      </Component>
+      <Component Id="EzDNAServApiNet64">
+        <File Id="EzDNAServApiNet64.dll" Name="EzDNAServApiNet64.dll" Source="$(var.SolutionDir)\Dependencies\eDNA\EzDNAServApiNet64.dll" />
       </Component>
 
       <!-- Local NuGet Depedencies -->

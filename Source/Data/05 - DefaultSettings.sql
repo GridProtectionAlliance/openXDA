@@ -40,6 +40,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DefaultMeterTimeZone', 'UTC', 'UTC')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.ApprovalAddress', 'xda-admin@gridprotectionalliance.org', 'xda-admin@gridprotectionalliance.org')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.EnableSSL', 'False', 'False')
 GO
 
@@ -55,9 +58,6 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.Username', '', '')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.ApprovalAddress', '', '')
-GO
-
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.ApplyTimestampCorrection', 'True', 'True')
 GO
 
@@ -67,11 +67,7 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EMAX.COMTRADEExportDirectory', '', '')
 GO
 
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.MinWaitPeriod', '10.0', '10.0')
-GO
-
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.MaxWaitPeriod', '60.0', '60.0')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('EventEmail.Enabled', 'False', 'False')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.MaxFaultDistanceMultiplier', '1.05', '1.05')
@@ -525,13 +521,13 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('CorrectnessChartColors', '0%,#0000FF', 1)
 GO
 
-INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.URL', 'http://localhost', 1)
-GO
-
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.XDAInstance', 'http://localhost:8989', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.TimeWindow', '1', 1)
+GO
+
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('System.URL', 'http://localhost/PQDashboard', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('YearBeginDate', 'January 1', 1)

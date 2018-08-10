@@ -23,9 +23,7 @@
 @using System.Net.Http
 @using GSF.Web
 @using GSF.Web.Model
-@using openXDA
 @using openXDA.Model
-@using openXDA.Hubs
 
 @inherits ExtendedTemplateBase<AppModel>
 
@@ -62,9 +60,9 @@
     <li><a data-toggle="tab" href="#event">Event SQL</a></li>
 </ul>
 
-<div id="xslTemplate" hidden>@Raw(xslTemplate.Template)</div>
-<div id="triggerTemplate" hidden>@Raw(eventEmailParameters.TriggersEmailSQL)</div>
-<div id="eventTemplate" hidden>@Raw(eventEmailParameters.EventDetailSQL)</div>
+<div id="xslTemplate" hidden>@xslTemplate.Template</div>
+<div id="triggerTemplate" hidden>@eventEmailParameters.TriggersEmailSQL</div>
+<div id="eventTemplate" hidden>@eventEmailParameters.EventDetailSQL</div>
 
 <div class="tab-content">
     <div id="config" class="tab-pane fade in active">
@@ -114,29 +112,27 @@
 {
     <script src="../Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
-
         $(function () {
             $('#templateEditor').height(calculateRemainingBodyHeight() - 100);
             var editor = ace.edit("templateEditor");
             editor.setTheme("ace/theme/monokai");
             editor.getSession().setMode("ace/mode/xml");
             editor.setFontSize("14px");
-            editor.setValue($('#xslTemplate').html());
+            editor.setValue($('#xslTemplate').text());
 
             $('#triggerEditor').height(calculateRemainingBodyHeight() - 100);
             editor = ace.edit("triggerEditor");
             editor.setTheme("ace/theme/monokai");
             editor.getSession().setMode("ace/mode/sql");
             editor.setFontSize("14px");
-            editor.setValue($('#triggerTemplate').html());
+            editor.setValue($('#triggerTemplate').text());
 
             $('#eventEditor').height(calculateRemainingBodyHeight() - 100);
             editor = ace.edit("eventEditor");
             editor.setTheme("ace/theme/monokai");
             editor.getSession().setMode("ace/mode/sql");
             editor.setFontSize("14px");
-            editor.setValue($('#eventTemplate').html());
-
+            editor.setValue($('#eventTemplate').text());
         });
 
         function updateConfiguration() {
@@ -167,6 +163,7 @@
                 showInfoMessage($('#name').val() + " record updated.", 2000);
             });
         }
+
         function updateTrigger() {
             var data = {
                 ID: '@eventEmailParameters.ID',
@@ -179,6 +176,7 @@
                 showInfoMessage($('#name').val() + " record updated.", 2000);
             });
         }
+
         function updateEvent() {
             var data = {
                 ID: '@eventEmailParameters.ID',
