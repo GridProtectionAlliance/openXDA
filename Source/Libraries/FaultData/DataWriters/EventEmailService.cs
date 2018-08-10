@@ -127,21 +127,25 @@ namespace FaultData.DataWriters
                 string addressField = emailType.SMS ? "Phone" : "Email";
 
                 string emailAddressQuery =
-                    $"SELECT UserAccount.{addressField} " +
+                    $"SELECT DISTINCT UserAccount.{addressField} " +
                     $"FROM " +
                     $"    UserAccount JOIN " +
                     $"    UserAccountEmailType ON UserAccountEmailType.UserAccountID = UserAccount.ID JOIN " +
                     $"    UserAccountAssetGroup ON UserAccountAssetGroup.UserAccountID = UserAccount.ID LEFT OUTER JOIN " +
-                    $"    MeterAssetGroup ON MeterAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID LEFT OUTER JOIN " +
-                    $"    LineAssetGroup ON LineAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID " +
+                    $"    MeterAssetGroup ON " +
+                    $"        MeterAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID AND " +
+                    $"        MeterAssetGroup.MeterID IN ({meterIDList}) LEFT OUTER JOIN " +
+                    $"    LineAssetGroup ON " +
+                    $"        LineAssetGroup.AssetGroupID = UserAccountAssetGroup.AssetGroupID AND " +
+                    $"        LineAssetGroup.LineID IN ({lineIDList}) " +
                     $"WHERE " +
                     $"    UserAccountEmailType.EmailTypeID = {{0}} AND " +
                     $"    UserAccount.{addressField}Confirmed <> 0 AND " +
                     $"    UserAccount.Approved <> 0 AND " +
                     $"    UserAccountAssetGroup.Email <> 0 AND " +
                     $"    ( " +
-                    $"        MeterAssetGroup.MeterID IN ({meterIDList}) OR " +
-                    $"        LineAssetGroup.LineID IN ({lineIDList}) " +
+                    $"        MeterAssetGroup.ID IS NOT NULL OR " +
+                    $"        LineAssetGroup.ID IS NOT NULL " +
                     $"    )";
 
                 using (DataTable emailAddressTable = connection.RetrieveData(emailAddressQuery, emailType.ID))

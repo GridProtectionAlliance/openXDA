@@ -2379,7 +2379,7 @@ CREATE FUNCTION ComputeHash
 RETURNS BIGINT
 BEGIN
     DECLARE @md5Hash BINARY(16)
-    
+
     DECLARE @eventDetailSQL VARCHAR(MAX) =
     (
         SELECT EventDetailSQL
@@ -2388,7 +2388,7 @@ BEGIN
             EventEmailParameters ON EventEmailParameters.EmailTypeID = EmailType.ID
         WHERE EmailType.XSLTemplateID = @templateID
     )
-    
+
     DECLARE @eventDetail VARCHAR(MAX)
     EXEC sp_executesql @eventDetailSQL, @eventID, @eventDetail OUT
 
@@ -3648,7 +3648,7 @@ WHERE
     Event.LineID = @lineID AND
     Event.EndTime >= @startTime AND
     Event.StartTime <= @endTime
-    
+
 SELECT
     ROW_NUMBER() OVER(PARTITION BY Event.MeterID ORDER BY FaultSummary.Inception) AS FaultNumber,
     FaultSummary.ID AS FaultSummaryID,
@@ -3707,6 +3707,8 @@ WHERE
     DataFile.FilePath LIKE ''%.SEL'' OR
     DataFile.FilePath LIKE ''%.EVE'' OR
     DataFile.FilePath LIKE ''%.CEV''
+
+DECLARE @url VARCHAR(MAX) = (SELECT Value FROM DashSettings WHERE Name = ''System.URL'')
 
 SELECT
     (
@@ -3771,7 +3773,8 @@ SELECT
     FORMAT(SQRT(POWER((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, 2) + POWER((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, 2)), ''0.##########'') AS [Line/ZS],
     CASE 2.0 * LineImpedance.R1 + LineImpedance.R0 WHEN 0 THEN ''0'' ELSE FORMAT(ATN2((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, (2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0) * 180 / PI(), ''0.##########'') END AS [Line/AS],
     FORMAT((2.0 * LineImpedance.R1 + LineImpedance.R0) / 3.0, ''0.##########'') AS [Line/RS],
-    FORMAT((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, ''0.##########'') AS [Line/XS]
+    FORMAT((2.0 * LineImpedance.X1 + LineImpedance.X0) / 3.0, ''0.##########'') AS [Line/XS],
+    @url AS [PQDashboard]
 FROM
     Event JOIN
     Line ON Event.LineID = Line.ID JOIN
@@ -3838,7 +3841,7 @@ SET Template = '<?xml version="1.0"?>
                     <xsl:for-each select="SummaryData">
                         <tr>
                             <td><xsl:if test="position() = 1">DFRs:</xsl:if></td>
-                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href">http://pqserver/pqdashboard/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&amp;faultcurves=1</xsl:attribute>click for waveform</a>)</td>
+                            <td><xsl:value-of select="MeterKey" /> at <xsl:value-of select="StationName" /> triggered at <format type="System.DateTime" spec="HH:mm:ss.fffffff"><xsl:value-of select="EventStartTime" /></format> (<a><xsl:attribute name="href"><xsl:value-of select="/EventDetail/PQDashboard" />/Main/OpenSEE?eventid=<xsl:value-of select="EventID" />&amp;faultcurves=1</xsl:attribute>click for waveform</a>)</td>
                         </tr>
                     </xsl:for-each>
 
@@ -3994,6 +3997,12 @@ SET Template = '<?xml version="1.0"?>
                 </td>
             </tr>
         </table>
+
+        <hr />
+
+        <p style="font-size: 8px">
+            If you would like receive a different set of emails or unsubscribe, you can <a><xsl:attribute name="href"><xsl:value-of select="/EventDetail/PQDashboard" />/Email/UpdateSettings</xsl:attribute>manage your subscriptions</a>.
+        </p>
     </body>
     </html>
 </xsl:template>
