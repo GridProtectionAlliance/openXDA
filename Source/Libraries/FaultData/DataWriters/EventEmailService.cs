@@ -127,7 +127,7 @@ namespace FaultData.DataWriters
                 string addressField = emailType.SMS ? "Phone" : "Email";
 
                 string emailAddressQuery =
-                    $"SELECT DISTINCT UserAccount.{addressField} " +
+                    $"SELECT DISTINCT UserAccount.{addressField} AS Email " +
                     $"FROM " +
                     $"    UserAccount JOIN " +
                     $"    UserAccountEmailType ON UserAccountEmailType.UserAccountID = UserAccount.ID JOIN " +
