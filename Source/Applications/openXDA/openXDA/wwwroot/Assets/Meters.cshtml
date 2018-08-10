@@ -96,12 +96,7 @@
 {
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Name"))
-        @if(ViewBag.MeterLocationID == -1){
-            @Raw(dataContext.AddInputField<Meter>("Location", fieldLabel: "Site"))
-        }
-        else{
-            @Raw(dataContext.AddSelectField<Meter,MeterLocation>("MeterLocationID", "ID", "AssetKey", fieldLabel: "Site"))
-        }
+        @Raw(dataContext.AddSelectField<Meter, MeterLocation>("MeterLocationID", "ID", "AssetKey", fieldLabel: "Site"))
         @Raw(dataContext.AddInputField<Meter>("AssetKey", fieldLabel: "Asset Key"))
         @Raw(dataContext.AddInputField<Meter>("ShortName", fieldLabel: "Short Name"))
     </div>
@@ -109,7 +104,10 @@
     <div class="col-md-6">
         @Raw(dataContext.AddInputField<Meter>("Make"))
         @Raw(dataContext.AddInputField<Meter>("Model"))
-        @Raw(dataContext.AddInputField<Meter>("TimeZoneLabel", fieldLabel: "Time Zone"))
+        <div class="form-group">
+            <label>Time Zone:</label>
+            <select class="form-control" id="inputTimeZoneLabel"></select>
+        </div>
         @Raw(dataContext.AddTextAreaField<Meter>("Description"))
     </div>
 
@@ -123,23 +121,21 @@
 
         $(function () {
             $('#addNewEditDialog').on('shown.bs.modal', function () {
-                if (viewModel.dataHubIsConnected() && @ViewBag.MeterLocationID == -1) {
-                    initializeAutoCompleteLookupField("Location", dataHub.searchMeterLocations, false);
+                if (viewModel.dataHubIsConnected()) {
+                    dataHub.searchTimeZones("", -1).done(function (records) {
+                        $('#inputTimeZoneLabel').children().remove();
+                        $.each(records, function (i, r) {
+                            if(viewModel.currentRecord().TimeZone() == r.id)
+                                $('#inputTimeZoneLabel').append(new Option(r.label, r.id, null, true));
+                            else
+                                $('#inputTimeZoneLabel').append(new Option(r.label, r.id));
 
-                    $('#inputLocation').puiautocomplete({
-                        select: function (event, item) {
-                            var id = Number(item.data("id"));
-                            viewModel.currentRecord().MeterLocationID(id);
-                        }
-                    });
+                        })
+                        $('#inputTimeZoneLabel').off('change');
+                        $('#inputTimeZoneLabel').on('change', function (e) {
+                            viewModel.currentRecord().TimeZone($('#inputTimeZoneLabel').val());
+                        });
 
-                    initializeAutoCompleteLookupField("TimeZoneLabel", dataHub.searchTimeZones, false, undefined, undefined, -1);
-
-                    $('#inputTimeZoneLabel').puiautocomplete({
-                        select: function (event, item) {
-                            var id = item.data("id");
-                            viewModel.currentRecord().TimeZone(id);
-                        }
                     });
                 }
             });

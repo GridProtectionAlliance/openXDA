@@ -87,7 +87,7 @@
 
 //}
     <div data-bind="visible: $parent.recordMode() == RecordMode.AddNew">
-        @Raw(dataContext.AddInputField<MetersToDataPush>("MeterSelection", fieldLabel: "Meter"))
+        @Raw(dataContext.AddSelectField<MetersToDataPush, Meter>("MeterSelection", "ID", "AssetKey", fieldLabel: "Meter"))
     </div>
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAAssetKey", fieldLabel: "Local Asset Key", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAName", fieldLabel: "Remote Name"))
@@ -119,27 +119,41 @@
         $(function () {
             $('#addNewEditDialog').on('shown.bs.modal', function () {
                 if (viewModel.dataHubIsConnected()) {
-                    initializeAutoCompleteLookupField("MeterSelection", dataHub.searchMetersToDataPushs, false);
+                    if (viewModel.recordMode() == RecordMode.AddNew) {
+                        dataHub.getMeterRecord($('#selectMeterSelection').val()).done(function (record) {
+                            var id = Number($('#selectMeterSelection').val());
+                            viewModel.currentRecord().LocalXDAMeterID(id);
+                            viewModel.currentRecord().LocalXDAAssetKey(record.AssetKey);
+                            if ($('#checkObsfucate').prop('checked')) {
+                                viewModel.currentRecord().RemoteXDAAssetKey("00000000-0000-0000-0000-000000000000");
+                                viewModel.currentRecord().RemoteXDAName("Site" + id);
+                            }
+                            else {
+                                viewModel.currentRecord().RemoteXDAAssetKey(record.AssetKey);
+                                viewModel.currentRecord().RemoteXDAName(record.Name);
+                            }
+                            viewModel.currentRecord().RemoteXDAMeterID(0);
 
-                    $('#inputMeterSelection').puiautocomplete({
-                        select: function (event, item) {
-                            dataHub.getMeterRecord(item.data("id")).done(function(record){
-                                var id = Number(item.data("id"));
-                                viewModel.currentRecord().LocalXDAMeterID(id);
-                                viewModel.currentRecord().LocalXDAAssetKey(item.data("label"));
-                                if($('#checkObsfucate').prop('checked')){
-                                    viewModel.currentRecord().RemoteXDAAssetKey("00000000-0000-0000-0000-000000000000");
-                                    viewModel.currentRecord().RemoteXDAName("Site" + id);
-                                }
-                                else{
-                                    viewModel.currentRecord().RemoteXDAAssetKey(item.data("label"));
-                                    viewModel.currentRecord().RemoteXDAName(record.Name);
-                                }
-                                viewModel.currentRecord().RemoteXDAMeterID(0);
+                        });
+                    }
 
-                            });
+                    $('#selectMeterSelection').off('change');
+                    $('#selectMeterSelection').on('change', function (event) {
+                        dataHub.getMeterRecord($('#selectMeterSelection').val()).done(function(record){
+                            var id = Number($('#selectMeterSelection').val());
+                            viewModel.currentRecord().LocalXDAMeterID(id);
+                            viewModel.currentRecord().LocalXDAAssetKey(record.AssetKey);
+                            if($('#checkObsfucate').prop('checked')){
+                                viewModel.currentRecord().RemoteXDAAssetKey("00000000-0000-0000-0000-000000000000");
+                                viewModel.currentRecord().RemoteXDAName("Site" + id);
+                            }
+                            else{
+                                viewModel.currentRecord().RemoteXDAAssetKey(record.AssetKey);
+                                viewModel.currentRecord().RemoteXDAName(record.Name);
+                            }
+                            viewModel.currentRecord().RemoteXDAMeterID(0);
 
-                        }
+                        });
                     });
                 }
             });

@@ -1,25 +1,25 @@
 ﻿@*******************************************************************************************************
-//  Settings.cshtml - Gbtc
-//
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
-//
-//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
-//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-//  file except in compliance with the License. You may obtain a copy of the License at:
-//
-//      http://opensource.org/licenses/MIT
-//
-//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
-//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
-//  License for the specific language governing permissions and limitations.
-//
-//  Code Modification History:
-//  ----------------------------------------------------------------------------------------------------
-//  01/15/2016 - J. Ritchie Carroll
-//       Generated original version of source code.
-//
-//*****************************************************************************************************@
+    //  Settings.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  01/15/2016 - J. Ritchie Carroll
+    //       Generated original version of source code.
+    //
+    //*****************************************************************************************************@
 @using System
 @using System.Collections.Generic
 @using System.Net.Http
@@ -51,13 +51,13 @@
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
         {   //    { "Field", "Label", "Classes" }
-            new[] { "MeterID", "Meter", "text-left"},
-            new[] { "LineID", "Line", "text-left" },
-            new[] { "LineName", "Line Name", "text-left"},
-            new[] { null, "Channel", "text-center valign-middle"},
-            new[] { null, "Alarms", "text-center valign-middle"},
+new[] { "MeterID", "Meter", "text-left"},
+new[] { "LineID", "Line", "text-left" },
+new[] { "LineName", "Line Name", "text-left"},
+new[] { null, "Channel", "text-center valign-middle"},
+new[] { null, "Alarms", "text-center valign-middle"},
 
-        };
+};
     }
     else
     {
@@ -68,12 +68,12 @@
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
         {   //    { "Field", "Label", "Classes" }
-            new[] { "LineID", "Line", "text-left" },
-            new[] { "MeterID", "Meter", "text-left"},
-            new[] { "LineName", "Line Name", "text-left"},
-            new[] { null, "Channels", "text-center valign-middle"},
-            new[] { null, "Alarms", "text-center valign-middle"},
-        };
+new[] { "LineID", "Line", "text-left" },
+new[] { "MeterID", "Meter", "text-left"},
+new[] { "LineName", "Line Name", "text-left"},
+new[] { null, "Channels", "text-center valign-middle"},
+new[] { null, "Alarms", "text-center valign-middle"},
+};
     }
 
     ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.lineID;
@@ -82,45 +82,29 @@
     ViewBag.ShowSearchFilter = true;
 }
 @helper BodyRows()
-{
-    if (ViewBag.meterID != -1)
     {
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
-    }
-    else
-    {
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
-        <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
-    }
-    <td width="40%" class="text-left valign-middle" data-bind="text: LineName"></td>
-    <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Assets/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(MeterID, LineID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/ChannelsWithNormalLimits.cshtml?MeterID=' + MeterID + '&Name=' + LineName}, enable: $parent.dataHubIsConnected" target="_blank" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(MeterID, LineID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
-    <td width="5%" class="text-center valign-middle" nowrap>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
-    </td>
+        if (ViewBag.meterID != -1)
+        {
+            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
+            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
+        }
+        else
+        {
+            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
+            <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
+        }
+        <td width="40%" class="text-left valign-middle" data-bind="text: LineName"></td>
+        <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Assets/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(MeterID, LineID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
+        <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/ChannelsWithNormalLimits.cshtml?MeterID=' + MeterID + '&Name=' + LineName}, enable: $parent.dataHubIsConnected" target="_blank" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(MeterID, LineID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
+        <td width="5%" class="text-center valign-middle" nowrap>
+            <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+            <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+        </td>
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    if (ViewBag.lineID != -1)
-    {
-            @Raw(dataContext.AddSelectField<MeterLine, Line>("LineID", "ID", "AssetKey", fieldLabel: "Line Key"))
-    }
-    else
-    {
-            @Raw(dataContext.AddInputField<MeterLine>("LineKey", fieldLabel: "Line Key"))
-    }
-
-    if (ViewBag.meterID != -1)
-    {
-            @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
-    }
-    else
-    {
-            @Raw(dataContext.AddInputField<MeterLine>("MeterName", fieldLabel: "Meter Name"))
-    }
-
+    @Raw(dataContext.AddSelectField<MeterLine, Line>("LineID", "ID", "AssetKey", fieldLabel: "Line Key"))
+    @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
     @Raw(dataContext.AddInputField<MeterLine>("LineName"))
 }
 <div id="channelsDialog" class="modal modal-wide fade" role="dialog">
@@ -135,7 +119,7 @@
     </div>
 </div>
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
-@section Scripts 
+@section Scripts
 {
     <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
@@ -147,14 +131,14 @@
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
-        
+
         $(viewModel).on("newRecord", function (event, observableRecord) {
             if (@ViewBag.lineID !== -1)
                 observableRecord.LineID = @ViewBag.lineID;
             if (@ViewBag.meterID !== -1)
                 observableRecord.MeterID = @ViewBag.meterID;
         });
-        
+
         function getChannelCount(meterID, lineID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryChannelCount(meterID, lineID, null).done(function (count) {
@@ -164,7 +148,7 @@
 
             return element.text();
         }
-        
+
         function getAlarmCount(meterID, lineID, element){
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryAlarmRangeLimitViewCount(meterID, lineID, '%').done(function (count) {
@@ -195,27 +179,6 @@
 
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if (viewModel.dataHubIsConnected()) {
-                    if (@ViewBag.lineID === -1) {
-                        initializeAutoCompleteLookupField("LineKey", dataHub.searchLines, false);
-
-                        $('#inputLineKey').puiautocomplete({
-                            select: function (event, item) {
-                                var id = Number(item.data("id"));
-                                viewModel.currentRecord().LineID(id);
-                            }
-                        });
-                    }
-
-                    if (@ViewBag.meterID === -1) {
-                        initializeAutoCompleteLookupField("MeterName", dataHub.searchMeters, false);
-
-                        $('#inputMeterName').puiautocomplete({
-                            select: function (event, item) {
-                                var id = Number(item.data("id"));
-                                viewModel.currentRecord().MeterID(id);
-                            }
-                        });
-                    }
                 }
             });
         });

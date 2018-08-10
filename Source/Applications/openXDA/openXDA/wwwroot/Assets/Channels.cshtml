@@ -128,12 +128,12 @@
         @Raw(dataContext.AddInputField<Channel>("Name"))
         @Raw(dataContext.AddSelectField<Channel, Meter>("MeterID", "ID", "Name"))
         @Raw(dataContext.AddSelectField<Channel, Line>("LineID", "ID", "AssetKey"))
-        @Raw(dataContext.AddInputField<Channel>("MeasurementType"))
-        @Raw(dataContext.AddInputField<Channel>("MeasurementCharacteristic"))
+        @Raw(dataContext.AddSelectField<Channel, MeasurementType>("MeasurementTypeID", "ID", "Name"))
+        @Raw(dataContext.AddSelectField<Channel, MeasurementCharacteristic>("MeasurementCharacteristicID", "ID", "Name"))
         @Raw(dataContext.AddSelectField<ChannelDetail, SeriesType>("SeriesTypeID", "ID", "Name"))
     </div>
     <div class="col-md-6">
-        @Raw(dataContext.AddInputField<Channel>("Phase"))
+        @Raw(dataContext.AddSelectField<Channel, Phase>("PhaseID", "ID", "Name"))
         @Raw(dataContext.AddInputField<Channel>("SamplesPerHour"))
         @Raw(dataContext.AddInputField<Channel>("PerUnitValue"))
         @Raw(dataContext.AddInputField<Channel>("HarmonicGroup"))
@@ -159,32 +159,6 @@
 
             $("#addNewEditDialog").on("shown.bs.modal", function () {
                 if (viewModel.dataHubIsConnected()) {
-                    initializeAutoCompleteLookupField("MeasurementType", dataHub.searchMeasurementTypes, false);
-
-                    $('#inputMeasurementType').puiautocomplete({
-                        select: function (event, item) {
-                            var id = Number(item.data("id"));
-                            viewModel.currentRecord().MeasurementTypeID(id);
-                        }
-                    });
-
-                    initializeAutoCompleteLookupField("MeasurementCharacteristic", dataHub.searchMeasurementCharacteristics, false);
-
-                    $('#inputMeasurementCharacteristic').puiautocomplete({
-                        select: function (event, item) {
-                            var id = Number(item.data("id"));
-                            viewModel.currentRecord().MeasurementCharacteristicID(id);
-                        }
-                    });
-                    
-                    initializeAutoCompleteLookupField("Phase", dataHub.searchPhases, false);
-
-                    $('#inputPhase').puiautocomplete({
-                        select: function (event, item) {
-                            var id = Number(item.data("id"));
-                            viewModel.currentRecord().PhaseID(id);
-                        }
-                    });
                 }
             });
 
