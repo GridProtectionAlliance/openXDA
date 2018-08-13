@@ -6,6 +6,7 @@ module.exports = {
         PeriodicDataDisplay: "./wwwroot/Scripts/TSX/PeriodicDataDisplay.tsx",
         TrendingDataDisplay: "./wwwroot/Scripts/TSX/TrendingDataDisplay.tsx",
         DataQualitySummary: "./wwwroot/Scripts/TSX/DataQualitySummary.tsx",
+        PQTrendingWebReport: "./wwwroot/Scripts/TSX/PQTrendingWebReport.tsx",
 
     },
     output: {

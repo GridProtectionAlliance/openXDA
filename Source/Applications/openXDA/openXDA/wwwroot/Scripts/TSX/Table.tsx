@@ -26,7 +26,7 @@ import * as _ from 'lodash';
 
 export default class Table extends React.Component<any, any> {
 
-    props: { cols: Array<any>, data: Array<any>, onClick: Function, sortField: string, ascending: boolean, onSort: Function };
+    props: { cols: Array<any>, data: Array<any>, onClick: Function, sortField: string, ascending: boolean, onSort: Function, tableClass?: string, theadStyle?: object, tbodyStyle?: object };
     constructor(props) {
         super(props);
     }
@@ -38,9 +38,9 @@ export default class Table extends React.Component<any, any> {
         var rowComponents = this.generateRows();
         var headerComponents = this.generateHeaders();
         return (
-            <table className="table table-condensed table-hover">
-                <thead>{headerComponents}</thead>
-                <tbody>{rowComponents}</tbody>
+            <table className={(this.props.tableClass != undefined ? this.props.tableClass : '')} >
+                <thead style={this.props.theadStyle}>{headerComponents}</thead>
+                <tbody style={this.props.tbodyStyle}>{rowComponents}</tbody>
             </table>
         );
     }
@@ -49,9 +49,11 @@ export default class Table extends React.Component<any, any> {
         if (this.props.cols.length == 0) return null;
 
         var cells = this.props.cols.map(colData => {
-            colData.headerStyle.cursor = 'pointer';
+            var style = colData.headerStyle;
+            if(style.cursor == undefined)
+                style.cursor = 'pointer';
 
-            return <th key={colData.key} style={colData.headerStyle} onClick={this.handleSort.bind(this, {col: colData.key, ascending: this.props.ascending})}>{colData.label}{(this.props.sortField == colData.key ? <span className={"glyphicon " + (this.props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom")}></span>: null)}</th>
+            return <th key={colData.key} style={style} onClick={this.handleSort.bind(this, {col: colData.key, ascending: this.props.ascending})}>{colData.label}{(this.props.sortField == colData.key ? <span className={"glyphicon " + (this.props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom")}></span>: null)}</th>
         });
 
         return <tr>{cells}</tr>;
@@ -61,9 +63,11 @@ export default class Table extends React.Component<any, any> {
         if (this.props.data.length == 0) return null;
 
         return this.props.data.map((item, index) => {
-            var cells = this.props.cols.map(colData => <td key={index.toString() + item[colData.key] + colData.key} onClick={this.handleClick.bind(this, { col: colData.key, row: item, data: item[colData.key] })}>{item[colData.key]}</td>);
+            var cells = this.props.cols.map(colData => <td key={index.toString() + item[colData.key] + colData.key} style={colData.rowStyle} onClick={this.handleClick.bind(this, { col: colData.key, row: item, data: item[colData.key] })}>{item[colData.key]}</td>);
 
-            return <tr style={{cursor: 'pointer'}} key={index.toString()}>{cells}</tr>;
+            var style = { cursor: 'pointer' };
+
+            return <tr style={style} key={index.toString()}>{cells}</tr>;
         });
     }
 

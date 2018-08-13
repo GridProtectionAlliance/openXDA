@@ -27,52 +27,60 @@ import createHistory from "history/createBrowserHistory"
 import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
-import DataQualitySummaryService from "./../TS/Services/DataQualitySummary";
+import PQTrendingWebReportService from "./../TS/Services/PQTrendingWebReport";
 import Table from "./Table";
 import MeterInput from './MeterInput';
+import Select from "./Select";
 import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
+import { Modal } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 
-export class DataQualitySummary extends React.Component<any, any>{
+declare var pqMeasurements: JSON;
+
+export class PQTrendingWebReport extends React.Component<any, any>{
     history: object;
-    dataQualitySummaryService: DataQualitySummaryService;
+    pqTrendingWebReportService: PQTrendingWebReportService;
     resizeId: any;
     props: {};
-    state: {date: string, meterID: number, level: string, data: Array<any>, sortField: string, ascending: boolean};
+    state: { date: string, stat: string, data: Array<any>, sortField: string, ascending: boolean, listModalData: any };
+    cols: any;
     constructor(props) {
         super(props);
 
         this.history = createHistory();
-        this.dataQualitySummaryService = new DataQualitySummaryService();
+        this.pqTrendingWebReportService = new PQTrendingWebReportService();
 
         var query = queryString.parse(this.history['location'].search);
 
         this.state = {
-            meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
             date: (query['date'] != undefined ? query['date'] : moment().format('YYYY-MM-DD')),
-            level: (query['level'] != undefined ? query['level'] : "Meter"),
+            stat: (query['stat'] != undefined ? query['stat'] : "Avg"),
             data: [],
             sortField: (query['sortField'] != undefined ? query['sortField'] : "Name"),
-            ascending: (query['ascending'] != undefined ? query['ascending'] == "true" : true)
+            ascending: (query['ascending'] != undefined ? query['ascending'] == "true" : true),
+            listModalData: false
         }
 
         this.history['listen']((location, action) => {
             var query = queryString.parse(this.history['location'].search);
             this.setState({
-                meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
                 date: (query['date'] != undefined ? query['date'] : moment().format('YYYY-MM-DD')),
-                level: (query['level'] != undefined ? query['level'] : "Meter"),
+                stat: (query['stat'] != undefined ? query['stat'] : "Avg"),
                 sortField: (query['sortField'] != undefined ? query['sortField'] : "Name"),
                 ascending: (query['ascending'] != undefined ? query['ascending'] == "true" : true)
             },this.getData);
         });
 
-
+        this.cols = [];
+        this.cols.push({ key: "Name", label: "Meter", headerStyle: { minWidth: '150px' }, rowStyle: { minWidth: '150px' } });
+        _.each(pqMeasurements, (measurement, index) => {
+            this.cols.push({ key: measurement.Name, label: measurement.Name, headerStyle: { minWidth: '200px' }, rowStyle: { minWidth: '200px'} });
+        });
     }
 
     componentDidMount() {
-        if (this.state.level == "Meter")
-            this.updateUrl();
+        this.updateUrl();
     }
 
     render() {
@@ -93,23 +101,10 @@ export class DataQualitySummary extends React.Component<any, any>{
                     </div>
 
                     <div className="form-group">
-                        <label>Data Level: </label>
-                        <select
-                            onChange={(obj) => {
-                                this.setState({ level: obj.target.value }, this.updateUrl);
-                            }}
-                            className="form-control"
-                            defaultValue={this.state.level}>
-                            <option value="Meter">Meter</option>
-                            <option value="Channel">Channel</option>
-                        </select>
-                    </div>
-                    {( this.state.level == "Channel" ?
-                        <div className="form-group">
-                            <label>Meter: </label>
-                            <MeterInput value={this.state.meterID} onChange={(obj) => this.setState({ meterID: obj }, this.updateUrl)} />
-                        </div> : null
-                    )}
+                        <label>Statistic: </label>
+                        <Select value={this.state.stat} options={["Max", "CP99", "CP95", "Avg", "CP05", "CP01", "Min"]} onChange={(obj) => this.setState({ stat: obj }, this.updateUrl)} />
+                    </div> 
+
                     <div className="form-group">
                         <div style={{ float: 'left' }} ref={'loader'} hidden>
                             <div style={{ border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' }}></div>
@@ -123,38 +118,48 @@ export class DataQualitySummary extends React.Component<any, any>{
 
                 </div>
 
-                <div className="waveform-viewer" style={{ width: window.innerWidth }}>
-                    <div className="list-group" style={{ maxHeight: height, overflowY: 'auto' }}>
-                        <Table
-                            cols={
-                                [{ key: "Name", label: (this.state.level == "Meter" ? "Meter Name" : "Channel Name"), headerStyle: {width: '20%'} },
-                                 { key: "Expected", label: "Expected", headerStyle: { width: '20%' } },
-                                 { key: "Missing", label: "Missing", headerStyle: { width: '20%' } },
-                                 { key: "Latched", label: "Latched", headerStyle: { width: '20%' } },
-                                    { key: "Unreasonable", label: "Unreasonable", headerStyle: { width: '20%' } }]}
-                            tableClass={"table table-hover table-bordered"}
-                            data={this.state.data}
-                            sortField={this.state.sortField}
-                            ascending={this.state.ascending}
-                            onClick={this.handleTableClick.bind(this)}
-                            onSort={this.handleTableSort.bind(this)}
-                        />
-                    </div>
+                <div className="waveform-viewer" style={{ width: window.innerWidth - 250, float: 'right',  maxHeight: height, overflowY: 'auto' }}>
+                    <Table
+                        //theadStyle={{ position: 'absolute'}}
+                        //tbodyStyle={{ top: '60px', position: 'absolute'}}
+                        tableClass={"table table-hover table-bordered"}
+                        cols={this.cols}
+                        data={this.state.data}
+                        sortField={this.state.sortField}
+                        ascending={this.state.ascending}
+                        onClick={this.handleTableClick.bind(this)}
+                        onSort={this.handleTableSort.bind(this)}
+                    />
+                </div>
+                <div ref={"listModal"} className="static-modal" style={{display: 'none'}}>
+                    <Modal.Dialog>
+                        <Modal.Header>
+                            <button type="button" className="close" onClick={() => { $(this.refs.listModal).hide() }}>&times;</button>
+                            <Modal.Title>{this.state.listModalData.Name}</Modal.Title>
+                        </Modal.Header>
+
+                        <div className="modal-body" style={{ overflowY: 'auto', maxHeight: height/2}}>
+                            {this.state.listModalData.Table}
+                        </div>
+
+                        <Modal.Footer>
+                            <Button onClick={() => { $(this.refs.listModal).hide() }}>Close</Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
                 </div>
             </div>
         );
     }
 
     handleTableClick(data) {
-        if (this.state.level == "Channel")
-            window.open(`../OpenSTE.cshtml?ChannelID=${data.row.ID}&date=${this.state.date}`);
-        else {
-            this.setState({
-                level: "Channel",
-                meterID: data.row.ID,
-                ascending: (data.col == "Name"),
-                sortField: data.col
-            }, this.updateUrl);
+        if (data.col == "Name") {
+            var rows = Object.keys(data.row).map(key => <tr key={key}><td>{key}</td><td>{data.row[key]}</td></tr>)
+            var listModalData = {
+                Name: data.data,
+                Table: <table className="table" style={{ maxHeight: '350px', overflowY: 'auto' }}><tbody>{rows}</tbody></table>
+            }
+            this.setState({ listModalData: listModalData }, () => $(this.refs.listModal).show())
+            
         }
     }
 
@@ -173,7 +178,7 @@ export class DataQualitySummary extends React.Component<any, any>{
     getData() {
         $(this.refs.loader).show();
 
-        this.dataQualitySummaryService.getData(this.state.meterID,this.state.date, this.state.level, this.state.sortField, this.state.ascending).done(data => {
+        this.pqTrendingWebReportService.getData(this.state.date, this.state.stat, this.state.sortField, this.state.ascending).done(data => {
             this.setState({ data: data }, () => {
                 $(this.refs.loader).hide();
              });
@@ -184,11 +189,11 @@ export class DataQualitySummary extends React.Component<any, any>{
         var state = _.clone(this.state);
         delete state.data;
 
-        this.history['push']('DataQualitySummary.cshtml?' + queryString.stringify(state, { encode: false }));
-        this.getData();
+        this.history['push']('PQTrendingWebReport.cshtml?' + queryString.stringify(state, { encode: false }));
     }
 
 
 }
 
-ReactDOM.render(<DataQualitySummary />, document.getElementById('bodyContainer'));
+
+ReactDOM.render(<PQTrendingWebReport />, document.getElementById('bodyContainer'));

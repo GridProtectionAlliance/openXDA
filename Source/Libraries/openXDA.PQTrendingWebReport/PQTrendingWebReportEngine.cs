@@ -100,7 +100,7 @@ namespace openXDA.PQTrendingWebReport
 
         public void Start()
         {
-            ProcessPQWebReport();
+            //ProcessPQWebReport();
 
             if (!Running)
             {
