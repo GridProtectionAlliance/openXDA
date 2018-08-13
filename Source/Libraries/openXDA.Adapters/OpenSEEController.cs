@@ -78,17 +78,19 @@ namespace openXDA.Adapters
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="MainController"/> object and optionally releases the managed resources.
         /// </summary>
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
                 try
                 {
-                    m_dataContext?.Dispose();
+                    if (disposing)
+                        m_dataContext?.Dispose();
                 }
                 finally
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
         }
