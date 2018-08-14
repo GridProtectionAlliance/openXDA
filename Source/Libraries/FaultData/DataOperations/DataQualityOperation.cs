@@ -24,10 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using openXDA.Model;
 
 namespace FaultData.DataOperations
@@ -94,6 +96,14 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+
+            if (trendingGroups.Count == 0)
+            {
+                Log.Debug($"No trending data found; skipping {nameof(DataQualityOperation)}.");
+                return;
+            }
+
             // Process the data quality range limits to identify unreasonable values
             ProcessDataQualityRangeLimits(meterDataSet);
 
@@ -324,6 +334,13 @@ namespace FaultData.DataOperations
 
             return dataQualityRangeLimits;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DataQualityOperation));
 
         #endregion
     }

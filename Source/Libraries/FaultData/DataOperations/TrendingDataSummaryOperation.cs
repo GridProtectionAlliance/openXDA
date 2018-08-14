@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using FaultData.Configuration;
+using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Configuration;
@@ -75,6 +76,14 @@ namespace FaultData.DataOperations
         public override void Execute(MeterDataSet meterDataSet)
         {
             Log.Info("Executing operation to load trending summary data into the openHistorian...");
+
+            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+
+            if (trendingGroups.Count == 0)
+            {
+                Log.Debug($"No trending data found; skipping {nameof(TrendingDataSummaryOperation)}.");
+                return;
+            }
 
             ImportedMeasurementsTable importedMeasurementsTable = null;
 

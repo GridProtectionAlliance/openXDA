@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
 using GSF.Data;
@@ -37,6 +38,14 @@ namespace FaultData.DataOperations
     {
         public override void Execute(MeterDataSet meterDataSet)
         {
+            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+
+            if (trendingGroups.Count == 0)
+            {
+                Log.Debug($"No trending data found; skipping {nameof(DailySummaryOperation)}.");
+                return;
+            }
+
             Dictionary<Channel, List<TrendingDataSummaryResource.TrendingDataSummary>> trendingDataSummaries = meterDataSet.GetResource<TrendingDataSummaryResource>().TrendingDataSummaries;
 
             int count = trendingDataSummaries.Values
