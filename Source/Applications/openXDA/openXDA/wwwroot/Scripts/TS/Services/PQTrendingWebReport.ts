@@ -23,10 +23,13 @@
 import * as moment from 'moment';
 
 export default class PQTrendingWebReportService {
-    getData( date: string, stat: string, sortField: string, ascending: boolean) {
-        return $.ajax({
+    response: any;
+    getData(date: string, stat: string, sortField: string, ascending: boolean) {
+        if (this.response != null) this.response.abort();
+
+        this.response = $.ajax({
             type: "GET",
-            url: `${window.location.origin}/api/PQTrendingWebReport`+
+            url: `${window.location.origin}/api/PQTrendingWebReport/GetData`+
                 `?date=${moment(date).format('YYYY-MM-DD')}` +
                 `&stat=${stat}` +
                 `&sortField=${sortField}` +
@@ -36,7 +39,29 @@ export default class PQTrendingWebReportService {
             cache: true,
             async: true
         });
+
+        return this.response;
+
     }
 
+    getChart(date: string, stat: string, meterId: number, measurementId: number) {
+        if (this.response != null) this.response.abort();
+
+        this.response = $.ajax({
+            type: "GET",
+            url: `${window.location.origin}/api/PQTrendingWebReport/GetChart` +
+                `?date=${moment(date).format('YYYY-MM-DD')}` +
+                `&stat=${stat}` +
+                `&measurementID=${measurementId}` +
+                `&meterID=${meterId}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+
+        return this.response;
+
+    }
 
 }

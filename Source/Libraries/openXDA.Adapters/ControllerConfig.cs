@@ -107,7 +107,7 @@ namespace openXDA.Adapters
             );
             config.Routes.MapHttpRoute(
                 name: "PQTrendingWebReport",
-                routeTemplate: "api/PQTrendingWebReport",
+                routeTemplate: "api/PQTrendingWebReport/{action}",
                 defaults: new
                 {
                     controller = "PQTrendingWebReport"

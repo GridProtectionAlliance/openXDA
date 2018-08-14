@@ -56,7 +56,7 @@ namespace openXDA.Adapters
 
         #region [ Methods ]
         [HttpGet]
-        public Task<DataTable> Get(CancellationToken cancellationToken)
+        public Task<DataTable> GetData(CancellationToken cancellationToken)
         {
             Dictionary<string, string> query = Request.QueryParameters();
             string stat = query["stat"];
@@ -73,6 +73,36 @@ namespace openXDA.Adapters
 
         }
 
+        [HttpGet]
+        public Task<DataTable> GetChart(CancellationToken cancellationToken) {
+            Dictionary<string, string> query = Request.QueryParameters();
+            string stat = query["stat"];
+            string measurementId = query["measurementID"];
+            string meterId = query["meterID"];
+
+            DateTime toDate = DateTime.ParseExact(query["date"], "yyyy-MM-dd", CultureInfo.CurrentCulture);
+            DateTime startDate = toDate.AddDays(-30);
+            string[] stats = { "Max", "CP99", "CP95", "Avg", "CP05", "CP01", "Min" };
+            string notSqlInjection = "Avg";
+            if (stats.Contains(stat)) notSqlInjection = stat;
+
+            return Task.Factory.StartNew(() =>
+            {
+                string target = "Chart" + meterId + measurementId + stat + startDate.ToString();
+                if (s_memoryCache.Contains(target))
+                {
+                    return (DataTable)s_memoryCache.Get(target);
+                }
+                else {
+                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                    {
+                        DataTable table = connection.RetrieveData("SELECT DISTINCT Date, " + notSqlInjection + " as Value FROM PQTrendStat WHERE MeterID = (SELECT TOP 1 ID FROM METER WHERE Name = {0}) AND PQMeasurementTypeID = (SELECT TOP 1 ID FROM PQMeasurement WHERE Name = {1}) AND Date BETWEEN {2} AND {3}", meterId, measurementId, startDate, toDate);
+                        s_memoryCache.Add(target, table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
+                        return table;
+                    }
+                }
+            }, cancellationToken);
+        }
 
         private DataTable GetData(AdoDataConnection connection, DateTime date, string sortField, bool ascending, string stat)
         {

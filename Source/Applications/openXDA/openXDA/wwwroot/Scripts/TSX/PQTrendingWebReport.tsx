@@ -35,6 +35,8 @@ import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
 import { Modal } from 'react-bootstrap';
 import { Button } from 'react-bootstrap';
+import './../flot/jquery.flot.min.js';
+import './../flot/jquery.flot.time.min.js';
 
 declare var pqMeasurements: JSON;
 
@@ -44,7 +46,8 @@ export class PQTrendingWebReport extends React.Component<any, any>{
     resizeId: any;
     props: {};
     state: { date: string, stat: string, data: Array<any>, sortField: string, ascending: boolean, listModalData: any };
-    cols: any;
+    cols: Array<object>;
+    options: object;
     constructor(props) {
         super(props);
 
@@ -77,6 +80,19 @@ export class PQTrendingWebReport extends React.Component<any, any>{
         _.each(pqMeasurements, (measurement, index) => {
             this.cols.push({ key: measurement.Name, label: measurement.Name, headerStyle: { minWidth: '200px' }, rowStyle: { minWidth: '200px'} });
         });
+
+        this.options = {
+            legend: { show: false },
+            xaxis: {
+                mode: "time",
+                reserveSpace: false
+            },
+            yaxis: {
+                position: 'left',
+                tickLength: 30
+            }
+        }
+
     }
 
     componentDidMount() {
@@ -147,6 +163,22 @@ export class PQTrendingWebReport extends React.Component<any, any>{
                         </Modal.Footer>
                     </Modal.Dialog>
                 </div>
+                <div ref={"graphModal"} className="static-modal" style={{ display: 'none' }}>
+                    <Modal.Dialog>
+                        <Modal.Header>
+                            <button type="button" className="close" onClick={() => { $(this.refs.graphModal).hide() }}>&times;</button>
+                            <Modal.Title>{this.state.listModalData.Name}</Modal.Title>
+                        </Modal.Header>
+
+                        <div className="modal-body">
+                            <div ref={'graph'} style={{ height: '250px', width: '500px' }}></div>
+                        </div>
+
+                        <Modal.Footer>
+                            <Button onClick={() => { $(this.refs.graphModal).hide() }}>Close</Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
+                </div>
             </div>
         );
     }
@@ -159,7 +191,17 @@ export class PQTrendingWebReport extends React.Component<any, any>{
                 Table: <table className="table" style={{ maxHeight: '350px', overflowY: 'auto' }}><tbody>{rows}</tbody></table>
             }
             this.setState({ listModalData: listModalData }, () => $(this.refs.listModal).show())
-            
+
+        }
+        else {
+            this.pqTrendingWebReportService.getChart(this.state.date, this.state.stat,data.row.Name,data.col).done(data => {
+                //console.log(data.map(d => [d.Date, d.Value]));
+                ($ as any).plot($(this.refs.graph), [data.map(d => [moment(d.Date), d.Value])], this.options);
+                $(this.refs.graphModal).show()
+                //this.setState({ data: data }, () => {
+                //    $(this.refs.loader).hide();
+                //});
+            });
         }
     }
 
