@@ -167,7 +167,7 @@ export class PQTrendingWebReport extends React.Component<any, any>{
                     <Modal.Dialog>
                         <Modal.Header>
                             <button type="button" className="close" onClick={() => { $(this.refs.graphModal).hide() }}>&times;</button>
-                            <Modal.Title>{this.state.listModalData.Name}</Modal.Title>
+                            <Modal.Title><span ref={"graphTitle"}></span></Modal.Title>
                         </Modal.Header>
 
                         <div className="modal-body">
@@ -194,13 +194,10 @@ export class PQTrendingWebReport extends React.Component<any, any>{
 
         }
         else {
-            this.pqTrendingWebReportService.getChart(this.state.date, this.state.stat,data.row.Name,data.col).done(data => {
-                //console.log(data.map(d => [d.Date, d.Value]));
-                ($ as any).plot($(this.refs.graph), [data.map(d => [moment(d.Date), d.Value])], this.options);
+            this.pqTrendingWebReportService.getChart(this.state.date, this.state.stat,data.row.Name,data.col).done(chartData => {
+                ($ as any).plot($(this.refs.graph), [chartData.map(d => [moment(d.Date), d.Value])], this.options);
+                $(this.refs.graphTitle).text(data.row.Name + ' - ' + data.col);
                 $(this.refs.graphModal).show()
-                //this.setState({ data: data }, () => {
-                //    $(this.refs.loader).hide();
-                //});
             });
         }
     }

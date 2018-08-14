@@ -77907,7 +77907,8 @@ var PQTrendingWebReport = (function (_super) {
                 React.createElement(react_bootstrap_1.Modal.Dialog, null,
                     React.createElement(react_bootstrap_1.Modal.Header, null,
                         React.createElement("button", { type: "button", className: "close", onClick: function () { $(_this.refs.graphModal).hide(); } }, "\u00D7"),
-                        React.createElement(react_bootstrap_1.Modal.Title, null, this.state.listModalData.Name)),
+                        React.createElement(react_bootstrap_1.Modal.Title, null,
+                            React.createElement("span", { ref: "graphTitle" }))),
                     React.createElement("div", { className: "modal-body" },
                         React.createElement("div", { ref: 'graph', style: { height: '250px', width: '500px' } })),
                     React.createElement(react_bootstrap_1.Modal.Footer, null,
@@ -77927,8 +77928,9 @@ var PQTrendingWebReport = (function (_super) {
             this.setState({ listModalData: listModalData }, function () { return $(_this.refs.listModal).show(); });
         }
         else {
-            this.pqTrendingWebReportService.getChart(this.state.date, this.state.stat, data.row.Name, data.col).done(function (data) {
-                $.plot($(_this.refs.graph), [data.map(function (d) { return [moment(d.Date), d.Value]; })], _this.options);
+            this.pqTrendingWebReportService.getChart(this.state.date, this.state.stat, data.row.Name, data.col).done(function (chartData) {
+                $.plot($(_this.refs.graph), [chartData.map(function (d) { return [moment(d.Date), d.Value]; })], _this.options);
+                $(_this.refs.graphTitle).text(data.row.Name + ' - ' + data.col);
                 $(_this.refs.graphModal).show();
             });
         }
