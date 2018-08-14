@@ -106,7 +106,7 @@
         @Raw(dataContext.AddInputField<Meter>("Model"))
         <div class="form-group">
             <label>Time Zone:</label>
-            <select class="form-control" id="inputTimeZoneLabel"></select>
+            <select class="form-control" id="inputTimeZoneLabel" data-bind="attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}"></select>
         </div>
         @Raw(dataContext.AddTextAreaField<Meter>("Description"))
     </div>
