@@ -32,6 +32,7 @@ using FaultData.DataSets;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using log4net;
 using openHistorian.XDALink;
 using openXDA.Model;
 using TrendingDataPoint = openHistorian.XDALink.TrendingDataPoint;
@@ -77,6 +78,14 @@ namespace FaultData.DataOperations
 
         public override void Execute(MeterDataSet meterDataSet)
         {
+            Dictionary<Channel, List<DataGroup>> trendingGroups = meterDataSet.GetResource<TrendingGroupsResource>().TrendingGroups;
+
+            if (trendingGroups.Count == 0)
+            {
+                Log.Debug($"No trending data found; skipping {nameof(AlarmOperation)}.");
+                return;
+            }
+
             LoadRangeLimits(meterDataSet);
             LoadHourOfWeekLimits(meterDataSet);
         }
@@ -312,6 +321,13 @@ namespace FaultData.DataOperations
                 AlarmPoints = alarmPoints
         };
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(AlarmOperation));
 
         #endregion
     }
