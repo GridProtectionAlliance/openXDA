@@ -330,6 +330,10 @@
       <Project>{656f97d9-4fb6-4f65-a9a6-1a1dde3af634}</Project>
       <Name>openXDA.Reports</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.StepChangeWebReport\openXDA.StepChangeWebReport.csproj">
+      <Project>{1F3B639C-6C49-480D-A184-AED1C86AD97B}</Project>
+      <Name>openXDA.StepChangeWebReport</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\PQMark.DataAggregator\PQMark.DataAggregator.csproj">
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Name>PQMark.DataAggregator</Name>
@@ -913,6 +917,8 @@
     <Content Include="wwwroot\Workbench\TrendingDataDisplay.cshtml" />
     <Content Include="wwwroot\Workbench\DataQualitySummary.cshtml" />
     <Content Include="wwwroot\Workbench\PQTrendingWebReport.cshtml" />
+    <Content Include="wwwroot\Workbench\StepChangeWebReport.cshtml" />
+    <Content Include="wwwroot\Workbench\StepChangeWebReportSettings.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
@@ -1015,6 +1021,7 @@
   <ItemGroup>
     <Content Include="wwwroot\Scripts\TSX\TrendingDataDisplay.tsx" />
     <Content Include="wwwroot\Scripts\TSX\MeasurementInput.tsx" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\StepChangeWebReport.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\PQTrendingWebReport.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\DataQualitySummary.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\DateTimeRangePicker.tsx" />
@@ -1025,6 +1032,7 @@
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\TrendingChart.tsx" />
     <Content Include="wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />
     <Content Include="wwwroot\Scripts\TS\Services\PQTrendingWebReport.ts" />
+    <Content Include="wwwroot\Scripts\TS\Services\StepChangeWebReport.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />

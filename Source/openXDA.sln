@@ -128,6 +128,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Reports", "Librarie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.PQTrendingWebReport", "Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj", "{2635EFE2-EF6F-4110-9229-8D91F02DF143}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.StepChangeWebReport", "Libraries\openXDA.StepChangeWebReport\openXDA.StepChangeWebReport.csproj", "{1F3B639C-6C49-480D-A184-AED1C86AD97B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -420,6 +422,18 @@ Global
 		{2635EFE2-EF6F-4110-9229-8D91F02DF143}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2635EFE2-EF6F-4110-9229-8D91F02DF143}.Release|x86.ActiveCfg = Release|Any CPU
 		{2635EFE2-EF6F-4110-9229-8D91F02DF143}.Release|x86.Build.0 = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Debug|x86.Build.0 = Debug|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Mono|x86.ActiveCfg = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Mono|x86.Build.0 = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Release|x86.ActiveCfg = Release|Any CPU
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -454,6 +468,7 @@ Global
 		{B5A0F34E-015D-4D5F-B1C6-EBB8D14FC6A2} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{656F97D9-4FB6-4F65-A9A6-1A1DDE3AF634} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 		{2635EFE2-EF6F-4110-9229-8D91F02DF143} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
+		{1F3B639C-6C49-480D-A184-AED1C86AD97B} = {0F4F3F4C-55D3-4D76-99AC-1ABD3F69CFBE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {77720899-DA0C-45E0-AE45-677A89071A7B}

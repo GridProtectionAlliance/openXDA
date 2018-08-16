@@ -166,7 +166,6 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('PQTrendingWebReport.Verbose', 'False', 'False')
 GO
 
-
 INSERT INTO Setting (Name, Value, DefaultValue)VALUES ('RemoteXDAInstance', 'http://127.0.0.1:8989', 'http://127.0.0.1:8989')
 GO
 
@@ -181,6 +180,16 @@ GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SwellThreshold', '1.1', '1.1')
 GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Enabled', 'False', 'False')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Frequency', '0 2 * * *', '0 2 * * *')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Verbose', 'False', 'False')
+GO
+
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemFrequency', '60.0', '60.0')
 GO

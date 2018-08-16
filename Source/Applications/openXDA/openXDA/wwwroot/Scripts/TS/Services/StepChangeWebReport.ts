@@ -22,46 +22,43 @@
 //******************************************************************************************************
 import * as moment from 'moment';
 
-export default class PeriodicDataDisplayService {
-    getData(meterID, startDate, endDate, pixels, measurementCharacteristicID, measurementTypeID, type) {
-        return $.ajax({
+export default class StepChangeWebReportService {
+    response: any;
+    getData(startDate: string, endDate: string, sortField: string, ascending: boolean) {
+        if (this.response != null) this.response.abort();
+
+        this.response = $.ajax({
             type: "GET",
-            url: `${window.location.origin}/api/PeriodicDataDisplay/GetData?MeterID=${meterID}` +
-                `&startDate=${moment(startDate).format('YYYY-MM-DD')}` +
-                `&endDate=${moment(endDate).format('YYYY-MM-DD')}` +
-                `&pixels=${pixels}` +
-                `&MeasurementCharacteristicID=${measurementCharacteristicID}` + 
-                `&MeasurementTypeID=${measurementTypeID}` + 
-                `&type=${type}`,
+            url: `${window.location.origin}/api/StepChangeWebReport/GetData`+
+                `?startDate=${startDate}` +
+                `&endDate=${endDate}` +
+                `&sortField=${sortField}` +
+                `&ascending=${ascending}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
             async: true
         });
-    }
 
-    getMeters() {
-        return $.ajax({
+        return this.response;
+
+    }
+    getChannel(meterID: number, measurementID: string) {
+        if (this.response != null) this.response.abort();
+
+        this.response = $.ajax({
             type: "GET",
-            url: `${window.location.origin}/api/PeriodicDataDisplay/GetMeters`,
+            url: `${window.location.origin}/api/StepChangeWebReport/GetChannel` +
+                `?meterID=${meterID}` +
+                `&MeasurementID=${measurementID}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
             async: true
         });
-    }
 
-    getMeasurementCharacteristics(fromStepChangeWebReport, meterID) {
-        return $.ajax({
-            type: "GET",
-            url: `${window.location.origin}/api/PeriodicDataDisplay/GetMeasurementCharacteristics` +
-                 `${(fromStepChangeWebReport ? `?MeterID=${meterID}` : ``)}`,
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    }
+        return this.response;
 
+    }
 
 }

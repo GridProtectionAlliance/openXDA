@@ -37,7 +37,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
     periodicDataDisplayService: PeriodicDataDisplayService;
     resizeId: any;
     props: {};
-    state: {meterID: number, startDate: string, endDate: string, type: string, detailedReport: boolean, measurements: Array<Measurement>, width: number, data: any, numMeasurements: number, measurementsReturned: number};
+    state: { meterID: number, startDate: string, endDate: string, type: string, detailedReport: boolean, measurements: Array<Measurement>, width: number, data: any, numMeasurements: number, measurementsReturned: number, fromStepChangeWebReport: boolean};
     constructor(props) {
         super(props);
 
@@ -51,7 +51,8 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
             startDate: (query['startDate'] != undefined ? query['startDate'] : moment().subtract(7, 'day').format('YYYY-MM-DD')),
             endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
             type: (query['type'] != undefined ? query['type'] : "Average"),
-            detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : true),
+            detailedReport: (query['detailedReport'] != undefined ? query['detailedReport'] == "true" : false),
+            fromStepChangeWebReport: (query['fromStepChangeWebReport'] != undefined ? query['fromStepChangeWebReport'] == "true" : false),
             measurements: [],
             width: window.innerWidth - 475,
             data: null,
@@ -64,7 +65,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
     getData() {
         $(this.refs.loader).show();
 
-        this.periodicDataDisplayService.getMeasurementCharacteristics().done(data => {
+        this.periodicDataDisplayService.getMeasurementCharacteristics(this.state.fromStepChangeWebReport, this.state.meterID).done(data => {
             this.setState({ data: data, numMeasurements: data.length });
             this.createMeasurements(data);
         });
@@ -123,7 +124,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
         delete state.data;
         delete state.numMeasurements;
         delete state.measurementsReturned;
-
+        delete state.width;
         this.history['push']('PeriodicDataDisplay.cshtml?' + queryString.stringify(state, { encode: false }))
     }
 

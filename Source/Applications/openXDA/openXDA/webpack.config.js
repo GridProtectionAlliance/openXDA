@@ -7,6 +7,7 @@ module.exports = {
         TrendingDataDisplay: "./wwwroot/Scripts/TSX/TrendingDataDisplay.tsx",
         DataQualitySummary: "./wwwroot/Scripts/TSX/DataQualitySummary.tsx",
         PQTrendingWebReport: "./wwwroot/Scripts/TSX/PQTrendingWebReport.tsx",
+        StepChangeWebReport: "./wwwroot/Scripts/TSX/StepChangeWebReport.tsx",
 
     },
     output: {

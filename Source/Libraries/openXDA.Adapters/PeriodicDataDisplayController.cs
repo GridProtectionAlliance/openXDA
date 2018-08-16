@@ -143,7 +143,7 @@ namespace openXDA.Adapters
 
         }
 
-        public class PeridoicMeasurements {
+        public class PeriodicMeasurements {
             public string MeasurementType { get; set; }
             public int MeasurementTypeID { get; set; }
             public string MeasurementCharacteristic { get; set; }
@@ -152,17 +152,35 @@ namespace openXDA.Adapters
         }
 
         [HttpGet]
-        public Task<IOrderedEnumerable<PeridoicMeasurements>> GetMeasurementCharacteristics(CancellationToken cancellationToken)
+        public Task<IOrderedEnumerable<PeriodicMeasurements>> GetMeasurementCharacteristics(CancellationToken cancellationToken)
         {
-            return Task.Factory.StartNew(() =>
+            Dictionary<string, string> query = Request.QueryParameters();
+            if (query.ContainsKey("MeterID"))
             {
-                using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+                int meterId = int.Parse(query["MeterID"]);
+                return Task.Factory.StartNew(() =>
                 {
-                    string target = "PeriodicDataDisplayMeasurementCharacteristics";
-                    IOrderedEnumerable<PeridoicMeasurements> data = (IOrderedEnumerable<PeridoicMeasurements>)s_memoryCache.Get(target);
-                    if (data == null)
-                    {
-                        string query = @"
+                    return GetMeasurementCharacteristicsForWebReport();
+                }, cancellationToken);
+            }
+            else
+            {
+                return Task.Factory.StartNew(() =>
+                {
+                    return GetAllMeasurementCharacteristics();
+                }, cancellationToken);
+            }
+
+        }
+
+        private IOrderedEnumerable<PeriodicMeasurements> GetAllMeasurementCharacteristics() {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                string target = "PeriodicDataDisplayMeasurementCharacteristicsAll";
+                IOrderedEnumerable<PeriodicMeasurements> data = (IOrderedEnumerable<PeriodicMeasurements>)s_memoryCache.Get(target);
+                if (data == null)
+                {
+                    string query = @"
                             SELECT DISTINCT 
 	                            MeasurementType.Name as MeasurementType,
                                 MeasurementType.ID as MeasurementTypeID,
@@ -174,15 +192,51 @@ namespace openXDA.Adapters
 	                            MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
                         ";
 
-                        data = connection.RetrieveData(query).Select().Select(row => new PeridoicMeasurements() { MeasurementType = row["MeasurementType"].ToString(), MeasurementTypeID = int.Parse(row["MeasurementTypeID"].ToString()), MeasurementCharacteristic = row["MeasurementCharacteristic"].ToString(), MeasurementCharacteristicID = int.Parse(row["MeasurementCharacteristicID"].ToString()) }).OrderBy(x => x.MeasurementCharacteristic).ThenBy(x => x.MeasurementType);
-                        s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
-                    }
-
-                    return data;
+                    data = connection.RetrieveData(query).Select().Select(row => new PeriodicMeasurements() { MeasurementType = row["MeasurementType"].ToString(), MeasurementTypeID = int.Parse(row["MeasurementTypeID"].ToString()), MeasurementCharacteristic = row["MeasurementCharacteristic"].ToString(), MeasurementCharacteristicID = int.Parse(row["MeasurementCharacteristicID"].ToString()) }).OrderBy(x => x.MeasurementCharacteristic).ThenBy(x => x.MeasurementType);
+                    s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
                 }
 
-            }, cancellationToken);
+                return data;
+            }
+        }
 
+        private IOrderedEnumerable<PeriodicMeasurements> GetMeasurementCharacteristicsForWebReport()
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                string target = "PeriodicDataDisplayMeasurementCharacteristicsForWebReport";
+                IOrderedEnumerable<PeriodicMeasurements> data = (IOrderedEnumerable<PeriodicMeasurements>)s_memoryCache.Get(target);
+                if (data == null)
+                {
+                    string query = @"
+                            SELECT DISTINCT 
+	                            MeasurementType.Name as MeasurementType,
+                                MeasurementType.ID as MeasurementTypeID,
+	                            MeasurementCharacteristic.Name as MeasurementCharacteristic,
+	                            MeasurementCharacteristic.ID as MeasurementCharacteristicID
+                            FROM 
+	                            Channel JOIN
+	                            MeasurementCharacteristic ON MeasurementCharacteristic.ID = Channel.MeasurementCharacteristicID JOIN
+	                            MeasurementType ON MeasurementType.ID = Channel.MeasurementTypeID
+                        WHERE 
+	                        Channel.ID IN (
+	                        SELECT 
+		                        Channel.ID
+	                        FROM 
+		                        StepChangeMeasurement JOIN
+		                        PQMeasurement ON StepChangeMeasurement.PQMeasurementID = PQMeasurement.ID LEFT JOIN
+		                        Channel ON 
+			                        PQMeasurement.MeasurementTypeID = Channel.MeasurementTypeID AND
+			                        PQMeasurement.MeasurementCharacteristicID = Channel.MeasurementCharacteristicID
+                         )
+                        ";
+
+                    data = connection.RetrieveData(query).Select().Select(row => new PeriodicMeasurements() { MeasurementType = row["MeasurementType"].ToString(), MeasurementTypeID = int.Parse(row["MeasurementTypeID"].ToString()), MeasurementCharacteristic = row["MeasurementCharacteristic"].ToString(), MeasurementCharacteristicID = int.Parse(row["MeasurementCharacteristicID"].ToString()) }).OrderBy(x => x.MeasurementCharacteristic).ThenBy(x => x.MeasurementType);
+                    s_memoryCache.Add(target, data, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
+                }
+
+                return data;
+            }
         }
 
 

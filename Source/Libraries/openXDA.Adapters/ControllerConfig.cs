@@ -114,6 +114,15 @@ namespace openXDA.Adapters
                 }
             );
 
+            config.Routes.MapHttpRoute(
+                name: "StepChangeWebReport",
+                routeTemplate: "api/StepChangeWebReport/{action}",
+                defaults: new
+                {
+                    controller = "StepChangeWebReport"
+                }
+            );
+
 
             config.Routes.MapHttpRoute(
                 name: "ReportAPI",

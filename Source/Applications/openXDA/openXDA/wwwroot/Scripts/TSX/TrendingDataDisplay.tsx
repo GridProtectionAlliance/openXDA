@@ -36,12 +36,14 @@ import { relative } from 'path';
 import DistributionPlot from './DistributionPlot';
 import SummaryStat from './SummaryStat';
 
+declare interface state { meterID: number, startDate: string, endDate: string, width: number, data: JSON, measurementID: number, type: Array<string>, distributionData: any };
+
 class TrendingDataDisplay extends React.Component<any, any>{
     history: object;
     trendingDataDisplayService: TrendingDataDisplayService;
     resizeId: any;
     updateUrlId: any;
-    state: {meterID: number, startDate: string, endDate: string, width: number, data: JSON, measurementID: number, type: Array<string>, distributionData: any}
+    state: state
     constructor(props) {
         super(props);
 
@@ -107,10 +109,12 @@ class TrendingDataDisplay extends React.Component<any, any>{
     updateUrl() {
         clearTimeout(this.updateUrlId);
         this.updateUrlId = setTimeout(() => {
-            var state = _.clone(this.state);
+            var state = _.clone(this.state) as state;
             delete state.data;
             delete state.type;
             delete state.width;
+            delete state.distributionData;
+
             this.history['push']('TrendingDataDisplay.cshtml?' + queryString.stringify(state, { encode: false }))
         }, 500);
 

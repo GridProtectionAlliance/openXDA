@@ -199,14 +199,25 @@
                     <li @Raw(pageTitle == "Audit Log" ? "class=\"active\"" : "")><a href="AuditLog.cshtml">Audit Log</a></li>
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            Data Displays
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li @Raw(pageTitle == "Period Data Display" ? "class=\"active\"" : "")><a href="PeriodicDataDisplay.cshtml">Meter Periodic</a></li>
+                            <li @Raw(pageTitle == "Trending Data Display" ? "class=\"active\"" : "")><a href="TrendingDataDisplay.cshtml">Trending Data</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                             Data Quality
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
                             <li @Raw(pageTitle == "Data Quality Summary" ? "class=\"active\"" : "")><a href="DataQualitySummary.cshtml">Data Quality Summary</a></li>
                             <li @Raw(pageTitle == "PQ Trending Web Report" ? "class=\"active\"" : "")><a href="PQTrendingWebReport.cshtml">PQ Trending Web Report</a></li>
-                            <li @Raw(pageTitle == "Period Data Display" ? "class=\"active\"" : "")><a href="PeriodicDataDisplay.cshtml">Meter Periodic</a></li>
-                            <li @Raw(pageTitle == "Trending Data Display" ? "class=\"active\"" : "")><a href="TrendingDataDisplay.cshtml">Trending Data</a></li>
+                            <li @Raw(pageTitle == "Step Change Web Report" ? "class=\"active\"" : "")><a href="StepChangeWebReport.cshtml">Step Change Web Report</a></li>
+                            <li @Raw(pageTitle == "Step Change Web Report Settings" ? "class=\"active\"" : "")><a href="StepChangeWebReportSettings.cshtml">Step Change Web Report Settings</a></li>
                         </ul>
                     </li>
 

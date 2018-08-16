@@ -5522,6 +5522,80 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ StepChangeWebReportSettings Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StepChangeMeasurement), RecordOperation.QueryRecordCount)]
+        public int QueryStepChangeMeasurementCount(string filterString)
+        {
+            return GetPagedQueryCount(DataContext, @"
+            SELECT
+                StepChangeMeasurement.ID,
+                Name,
+                Setting
+            FROM
+                StepChangeMeasurement JOIN
+                PQMeasurement ON StepChangeMeasurement.PQMeasurementID = PQMeasurement.ID                
+            WHERE 
+                PQMeasurement.Name LIKE '%' + {0} + '%'
+            ", filterString);
+            
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StepChangeMeasurement), RecordOperation.QueryRecords)]
+        public DataTable QueryStepChangeMeasurements(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return GetPagedQuery(DataContext, @"
+            SELECT
+                StepChangeMeasurement.ID,
+                Name,
+                Setting
+            FROM
+                StepChangeMeasurement JOIN
+                PQMeasurement ON StepChangeMeasurement.PQMeasurementID = PQMeasurement.ID                
+            WHERE 
+                PQMeasurement.Name LIKE '%' + {0} + '%'
+            ", sortField, ascending, page, pageSize, filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StepChangeMeasurement), RecordOperation.DeleteRecord)]
+        public void DeleteStepChangeMeasurement(int id)
+        {
+            DataContext.Table<StepChangeMeasurement>().DeleteRecord(id);
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StepChangeMeasurement), RecordOperation.CreateNewRecord)]
+        public Dictionary<string, object> NewStepChangeMeasurement()
+        {
+            return new Dictionary<string, object>() {
+                {"ID", 0 },
+                { "Name", string.Empty },
+                { "Setting", 0 }
+            };
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StepChangeMeasurement), RecordOperation.AddNewRecord)]
+        public void AddNewStepChangeMeasurement(Dictionary<string, object> record)
+        {
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(StepChangeMeasurement), RecordOperation.UpdateRecord)]
+        public void UpdateStepChangeMeasurement(Dictionary<string, object> record)
+        {
+            StepChangeMeasurement stepChangeMeasurement = DataContext.Table<StepChangeMeasurement>().QueryRecordWhere("ID = {0}", record["ID"]);
+            stepChangeMeasurement.Setting = double.Parse(record["Setting"].ToString());
+            DataContext.Table<StepChangeMeasurement>().UpdateRecord(stepChangeMeasurement);
+        }
+
+        #endregion
+
         #endregion
 
         #region [ DataPusher Operations ]

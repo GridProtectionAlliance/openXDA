@@ -114,6 +114,7 @@ using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
+using openXDA.StepChangeWebReport;
 
 namespace openXDA
 {
@@ -140,6 +141,7 @@ namespace openXDA
         private DataAggregationEngine m_dataAggregationEngine;
         private ReportsEngine m_reportsEngine;
         private PQTrendingWebReportEngine m_pqTrendingWebReportEngine;
+        private StepChangeWebReportEngine m_stepChangeWebReportEngine;
         private Thread m_startEngineThread;
         private bool m_serviceStopping;
         private IDisposable m_webAppHost;
@@ -307,6 +309,10 @@ namespace openXDA
             m_pqTrendingWebReportEngine = new PQTrendingWebReportEngine();
             ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_pqTrendingWebReportEngine);
 
+            // Set up data reports engine
+            m_stepChangeWebReportEngine = new StepChangeWebReportEngine();
+            ConnectionStringParser.ParseConnectionString(systemSettingsConnectionString, m_stepChangeWebReportEngine);
+
 
             //Set up datahub callbacks
             DataHub.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument1, Args.Argument2);
@@ -335,6 +341,10 @@ namespace openXDA
             PQTrendingWebReportEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             PQTrendingWebReportEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
 
+            //Set up DataAggregationEngine callbacks
+            StepChangeWebReportEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
+            StepChangeWebReportEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
+
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
@@ -348,6 +358,7 @@ namespace openXDA
                 bool dataAggregationEngineStarted = false;
                 bool reportsEngineStarted = false;
                 bool pqTrendingWebReportsEngineStarted = false;
+                bool statChangeWebReportsEngineStarted = false;
 
                 while (true)
                 {
@@ -357,8 +368,10 @@ namespace openXDA
                     dataAggregationEngineStarted = dataAggregationEngineStarted || TryStartDataAggregationEngine();
                     reportsEngineStarted = reportsEngineStarted || TryStartReportsEngine();
                     pqTrendingWebReportsEngineStarted = pqTrendingWebReportsEngineStarted || TryStartPQTrendingWebReportsEngine();
+                    statChangeWebReportsEngineStarted = statChangeWebReportsEngineStarted || TryStartStepChangeWebReportsEngine();
 
-                    if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted && pqTrendingWebReportsEngineStarted)
+
+                    if (engineStarted && webUIStarted && dataPusherEngineStarted && reportsEngineStarted && pqTrendingWebReportsEngineStarted && statChangeWebReportsEngineStarted)
                         break;
 
                     for (int i = 0; i < LoopCount; i++)
@@ -539,6 +552,30 @@ namespace openXDA
             }
         }
 
+        // Attempts to start the engine and logs startup errors.
+        private bool TryStartStepChangeWebReportsEngine()
+        {
+            try
+            {
+                // Start the analysis engine
+                if (m_stepChangeWebReportEngine.StepChangeWebReportSettings.Enabled)
+                    m_stepChangeWebReportEngine.Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                string message;
+
+                // Stop the analysis engine
+                m_stepChangeWebReportEngine.Stop();
+
+                // Log the exception
+                message = "Failed to start reports engine due to exception: " + ex.Message;
+                HandleException(new InvalidOperationException(message, ex));
+
+                return false;
+            }
+        }
 
 
         // Attempts to start the web UI and logs startup errors.
@@ -593,14 +630,9 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/Groups.cshtml", new Tuple<Type, Type>(typeof(SecurityGroup), typeof(SecurityHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/Settings.cshtml", new Tuple<Type, Type>(typeof(Setting), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/XSLTemplate.cshtml", new Tuple<Type, Type>(typeof(XSLTemplate), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/AssetGroups.cshtml", new Tuple<Type, Type>(typeof(AssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/MeterAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(MeterAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/LineAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(LineAssetGroup), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
-                webServer.PagedViewModelTypes.TryAdd("Assets/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/DashSettings.cshtml", new Tuple<Type, Type>(typeof(DashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/UserDashSettings.cshtml", new Tuple<Type, Type>(typeof(UserDashSettings), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/MetersWithHourlyLimits.cshtml", new Tuple<Type, Type>(typeof(MetersWithHourlyLimits), typeof(DataHub)));
@@ -613,6 +645,13 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Config/UserAccountAssetGroupView.cshtml", new Tuple<Type, Type>(typeof(UserAccountAssetGroup), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/EmailTypes.cshtml", new Tuple<Type, Type>(typeof(EmailType), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Config/EventEmailConfiguration.cshtml", new Tuple<Type, Type>(typeof(EventEmailParameters), typeof(DataHub)));
+
+                webServer.PagedViewModelTypes.TryAdd("Assets/Lines.cshtml", new Tuple<Type, Type>(typeof(LineView), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/MeterLines.cshtml", new Tuple<Type, Type>(typeof(MeterLine), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/Channels.cshtml", new Tuple<Type, Type>(typeof(Channel), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/Meters.cshtml", new Tuple<Type, Type>(typeof(Meter), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Assets/Sites.cshtml", new Tuple<Type, Type>(typeof(MeterLocation), typeof(DataHub)));
+
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Filters.cshtml", new Tuple<Type, Type>(typeof(WorkbenchFilter), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Events.cshtml", new Tuple<Type, Type>(typeof(Event), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/Event.cshtml", new Tuple<Type, Type>(typeof(SingleEvent), typeof(DataHub)));
@@ -629,6 +668,8 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Workbench/SiteSummaryPVM.cshtml", new Tuple<Type, Type>(typeof(SiteSummary), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/AuditLog.cshtml", new Tuple<Type, Type>(typeof(AuditLog), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/DataFiles.cshtml", new Tuple<Type, Type>(typeof(openXDA.Model.DataFile), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Workbench/StepChangeWebReportSettings.cshtml", new Tuple<Type, Type>(typeof(StepChangeMeasurement), typeof(DataHub)));
+
                 webServer.PagedViewModelTypes.TryAdd("DataPusher/RemoteXDAInstances.cshtml", new Tuple<Type, Type>(typeof(RemoteXDAInstance), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DataPusher/MetersToDataPush.cshtml", new Tuple<Type, Type>(typeof(MetersToDataPush), typeof(DataHub)));
 

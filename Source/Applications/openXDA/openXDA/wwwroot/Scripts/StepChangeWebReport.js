@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 327);
+/******/ 	return __webpack_require__(__webpack_require__.s = 482);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -69464,60 +69464,7 @@ module.exports = function (css) {
 /* 195 */,
 /* 196 */,
 /* 197 */,
-/* 198 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-Object.defineProperty(exports, "__esModule", { value: true });
-var moment = __webpack_require__(0);
-var PeriodicDataDisplayService = (function () {
-    function PeriodicDataDisplayService() {
-    }
-    PeriodicDataDisplayService.prototype.getData = function (meterID, startDate, endDate, pixels, measurementCharacteristicID, measurementTypeID, type) {
-        return $.ajax({
-            type: "GET",
-            url: window.location.origin + "/api/PeriodicDataDisplay/GetData?MeterID=" + meterID +
-                ("&startDate=" + moment(startDate).format('YYYY-MM-DD')) +
-                ("&endDate=" + moment(endDate).format('YYYY-MM-DD')) +
-                ("&pixels=" + pixels) +
-                ("&MeasurementCharacteristicID=" + measurementCharacteristicID) +
-                ("&MeasurementTypeID=" + measurementTypeID) +
-                ("&type=" + type),
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    };
-    PeriodicDataDisplayService.prototype.getMeters = function () {
-        return $.ajax({
-            type: "GET",
-            url: window.location.origin + "/api/PeriodicDataDisplay/GetMeters",
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    };
-    PeriodicDataDisplayService.prototype.getMeasurementCharacteristics = function (fromStepChangeWebReport, meterID) {
-        return $.ajax({
-            type: "GET",
-            url: window.location.origin + "/api/PeriodicDataDisplay/GetMeasurementCharacteristics" +
-                ("" + (fromStepChangeWebReport ? "?MeterID=" + meterID : "")),
-            contentType: "application/json; charset=utf-8",
-            dataType: 'json',
-            cache: true,
-            async: true
-        });
-    };
-    return PeriodicDataDisplayService;
-}());
-exports.default = PeriodicDataDisplayService;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
-
-/***/ }),
+/* 198 */,
 /* 199 */,
 /* 200 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -69595,55 +69542,7 @@ exports.push([module.i, "/*!\n * https://github.com/YouCanBookMe/react-datetime\
 /* 211 */,
 /* 212 */,
 /* 213 */,
-/* 214 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(1);
-var PeriodicDataDisplay_1 = __webpack_require__(198);
-var MeterInput = (function (_super) {
-    __extends(MeterInput, _super);
-    function MeterInput(props) {
-        var _this = _super.call(this, props) || this;
-        _this.state = {
-            select: null
-        };
-        _this.periodicDataDisplayService = new PeriodicDataDisplay_1.default();
-        return _this;
-    }
-    MeterInput.prototype.componentDidMount = function () {
-        var _this = this;
-        this.periodicDataDisplayService.getMeters().done(function (data) {
-            if (data.length == 0)
-                return React.createElement("select", { className: 'form-control' });
-            var value = (_this.props.value ? _this.props.value : data[0].ID);
-            var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.AssetKey); });
-            var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange(e.target.value); }, defaultValue: value }, options);
-            _this.props.onChange(value);
-            _this.setState({ select: select });
-        });
-    };
-    MeterInput.prototype.render = function () {
-        return this.state.select;
-    };
-    return MeterInput;
-}(React.Component));
-exports.default = MeterInput;
-
-
-/***/ }),
+/* 214 */,
 /* 215 */,
 /* 216 */,
 /* 217 */
@@ -69827,7 +69726,162 @@ exports.default = Table;
 /* 324 */,
 /* 325 */,
 /* 326 */,
-/* 327 */
+/* 327 */,
+/* 328 */,
+/* 329 */,
+/* 330 */,
+/* 331 */,
+/* 332 */,
+/* 333 */,
+/* 334 */,
+/* 335 */,
+/* 336 */,
+/* 337 */,
+/* 338 */,
+/* 339 */,
+/* 340 */,
+/* 341 */,
+/* 342 */,
+/* 343 */,
+/* 344 */,
+/* 345 */,
+/* 346 */,
+/* 347 */,
+/* 348 */,
+/* 349 */,
+/* 350 */,
+/* 351 */,
+/* 352 */,
+/* 353 */,
+/* 354 */,
+/* 355 */,
+/* 356 */,
+/* 357 */,
+/* 358 */,
+/* 359 */,
+/* 360 */,
+/* 361 */,
+/* 362 */,
+/* 363 */,
+/* 364 */,
+/* 365 */,
+/* 366 */,
+/* 367 */,
+/* 368 */,
+/* 369 */,
+/* 370 */,
+/* 371 */,
+/* 372 */,
+/* 373 */,
+/* 374 */,
+/* 375 */,
+/* 376 */,
+/* 377 */,
+/* 378 */,
+/* 379 */,
+/* 380 */,
+/* 381 */,
+/* 382 */,
+/* 383 */,
+/* 384 */,
+/* 385 */,
+/* 386 */,
+/* 387 */,
+/* 388 */,
+/* 389 */,
+/* 390 */,
+/* 391 */,
+/* 392 */,
+/* 393 */,
+/* 394 */,
+/* 395 */,
+/* 396 */,
+/* 397 */,
+/* 398 */,
+/* 399 */,
+/* 400 */,
+/* 401 */,
+/* 402 */,
+/* 403 */,
+/* 404 */,
+/* 405 */,
+/* 406 */,
+/* 407 */,
+/* 408 */,
+/* 409 */,
+/* 410 */,
+/* 411 */,
+/* 412 */,
+/* 413 */,
+/* 414 */,
+/* 415 */,
+/* 416 */,
+/* 417 */,
+/* 418 */,
+/* 419 */,
+/* 420 */,
+/* 421 */,
+/* 422 */,
+/* 423 */,
+/* 424 */,
+/* 425 */,
+/* 426 */,
+/* 427 */,
+/* 428 */,
+/* 429 */,
+/* 430 */,
+/* 431 */,
+/* 432 */,
+/* 433 */,
+/* 434 */,
+/* 435 */,
+/* 436 */,
+/* 437 */,
+/* 438 */,
+/* 439 */,
+/* 440 */,
+/* 441 */,
+/* 442 */,
+/* 443 */,
+/* 444 */,
+/* 445 */,
+/* 446 */,
+/* 447 */,
+/* 448 */,
+/* 449 */,
+/* 450 */,
+/* 451 */,
+/* 452 */,
+/* 453 */,
+/* 454 */,
+/* 455 */,
+/* 456 */,
+/* 457 */,
+/* 458 */,
+/* 459 */,
+/* 460 */,
+/* 461 */,
+/* 462 */,
+/* 463 */,
+/* 464 */,
+/* 465 */,
+/* 466 */,
+/* 467 */,
+/* 468 */,
+/* 469 */,
+/* 470 */,
+/* 471 */,
+/* 472 */,
+/* 473 */,
+/* 474 */,
+/* 475 */,
+/* 476 */,
+/* 477 */,
+/* 478 */,
+/* 479 */,
+/* 480 */,
+/* 481 */,
+/* 482 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -69849,22 +69903,20 @@ var createBrowserHistory_1 = __webpack_require__(173);
 var queryString = __webpack_require__(179);
 var moment = __webpack_require__(0);
 var _ = __webpack_require__(155);
-var DataQualitySummary_1 = __webpack_require__(328);
+var StepChangeWebReport_1 = __webpack_require__(483);
 var Table_1 = __webpack_require__(217);
-var MeterInput_1 = __webpack_require__(214);
 __webpack_require__(200);
 var DateTime = __webpack_require__(185);
-var DataQualitySummary = (function (_super) {
-    __extends(DataQualitySummary, _super);
-    function DataQualitySummary(props) {
+var StepChangeWebReport = (function (_super) {
+    __extends(StepChangeWebReport, _super);
+    function StepChangeWebReport(props) {
         var _this = _super.call(this, props) || this;
         _this.history = createBrowserHistory_1.default();
-        _this.dataQualitySummaryService = new DataQualitySummary_1.default();
+        _this.stepChangeWebReportService = new StepChangeWebReport_1.default();
         var query = queryString.parse(_this.history['location'].search);
         _this.state = {
-            meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
-            date: (query['date'] != undefined ? query['date'] : moment().format('YYYY-MM-DD')),
-            level: (query['level'] != undefined ? query['level'] : "Meter"),
+            startDate: (query['startDate'] != undefined ? query['startDate'] : moment().format('YYYY-MM-DD')),
+            endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
             data: [],
             sortField: (query['sortField'] != undefined ? query['sortField'] : "Name"),
             ascending: (query['ascending'] != undefined ? query['ascending'] == "true" : true)
@@ -69872,63 +69924,67 @@ var DataQualitySummary = (function (_super) {
         _this.history['listen'](function (location, action) {
             var query = queryString.parse(_this.history['location'].search);
             _this.setState({
-                meterID: (query['meterID'] != undefined ? query['meterID'] : 0),
-                date: (query['date'] != undefined ? query['date'] : moment().format('YYYY-MM-DD')),
-                level: (query['level'] != undefined ? query['level'] : "Meter"),
+                startDate: (query['startDate'] != undefined ? query['startDate'] : moment().format('YYYY-MM-DD')),
+                endDate: (query['endDate'] != undefined ? query['endDate'] : moment().format('YYYY-MM-DD')),
                 sortField: (query['sortField'] != undefined ? query['sortField'] : "Name"),
                 ascending: (query['ascending'] != undefined ? query['ascending'] == "true" : true)
             }, _this.getData);
         });
+        _this.cols = [];
+        _this.cols.push({ key: "Name", label: "Meter", headerStyle: { minWidth: '150px' }, rowStyle: { minWidth: '150px' } });
+        _.each(stepChangeMeasurements, function (measurement, index) {
+            _this.cols.push({
+                key: measurement.Name,
+                label: measurement.Name,
+                headerStyle: { minWidth: '200px' },
+                rowStyle: { minWidth: '200px', textAlign: 'center' },
+                content: function (dictionary, key, style) {
+                    if (dictionary[key] == 0)
+                        return dictionary[key];
+                    else if (dictionary[key] < 10)
+                        style.backgroundColor = 'yellow';
+                    else
+                        style.backgroundColor = 'red';
+                    return dictionary[key];
+                }
+            });
+        });
         return _this;
     }
-    DataQualitySummary.prototype.componentDidMount = function () {
-        if (this.state.level == "Meter")
-            this.updateUrl();
+    StepChangeWebReport.prototype.componentDidMount = function () {
+        this.updateUrl();
     };
-    DataQualitySummary.prototype.render = function () {
+    StepChangeWebReport.prototype.render = function () {
         var _this = this;
         var height = window.innerHeight - 60;
         return (React.createElement("div", { className: "screen", style: { height: height, width: window.innerWidth, position: 'absolute', top: '60px' } },
             React.createElement("div", { className: "vertical-menu" },
                 React.createElement("div", { className: "form-group" },
-                    React.createElement("label", null, "Date: "),
-                    React.createElement(DateTime, { closeOnSelect: true, isValidDate: function (date) { return date.isBefore(moment()); }, value: moment(this.state.date), timeFormat: false, dateFormat: "MM/DD/YYYY", onChange: function (value) { return _this.setState({ date: value.format("YYYY-MM-DD") }, _this.updateUrl); } })),
+                    React.createElement("label", null, "Start Date: "),
+                    React.createElement(DateTime, { closeOnSelect: true, isValidDate: function (date) { return date.isBefore(moment()); }, value: moment(this.state.startDate), timeFormat: false, dateFormat: "MM/DD/YYYY", onChange: function (value) { return _this.setState({ startDate: value.format("YYYY-MM-DD") }, _this.updateUrl); } })),
                 React.createElement("div", { className: "form-group" },
-                    React.createElement("label", null, "Data Level: "),
-                    React.createElement("select", { onChange: function (obj) {
-                            _this.setState({ level: obj.target.value }, _this.updateUrl);
-                        }, className: "form-control", defaultValue: this.state.level },
-                        React.createElement("option", { value: "Meter" }, "Meter"),
-                        React.createElement("option", { value: "Channel" }, "Channel"))),
-                (this.state.level == "Channel" ?
-                    React.createElement("div", { className: "form-group" },
-                        React.createElement("label", null, "Meter: "),
-                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState({ meterID: obj }, _this.updateUrl); } })) : null),
+                    React.createElement("label", null, "End Date: "),
+                    React.createElement(DateTime, { closeOnSelect: true, isValidDate: function (date) { return date.isBefore(moment()); }, value: moment(this.state.endDate), timeFormat: false, dateFormat: "MM/DD/YYYY", onChange: function (value) { return _this.setState({ endDate: value.format("YYYY-MM-DD") }, _this.updateUrl); } })),
                 React.createElement("div", { className: "form-group" },
                     React.createElement("div", { style: { float: 'left' }, ref: 'loader', hidden: true },
                         React.createElement("div", { style: { border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' } }),
                         React.createElement("span", null, "Loading...")))),
-            React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth } },
-                React.createElement("div", { className: "list-group", style: { maxHeight: height, overflowY: 'auto' } },
-                    React.createElement(Table_1.default, { cols: [{ key: "Name", label: (this.state.level == "Meter" ? "Meter Name" : "Channel Name"), headerStyle: { width: '20%' } },
-                            { key: "Expected", label: "Expected", headerStyle: { width: '20%' } },
-                            { key: "Missing", label: "Missing", headerStyle: { width: '20%' } },
-                            { key: "Latched", label: "Latched", headerStyle: { width: '20%' } },
-                            { key: "Unreasonable", label: "Unreasonable", headerStyle: { width: '20%' } }], tableClass: "table table-hover table-bordered", data: this.state.data, sortField: this.state.sortField, ascending: this.state.ascending, onClick: this.handleTableClick.bind(this), onSort: this.handleTableSort.bind(this) })))));
+            React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth - 250, float: 'right', maxHeight: height, overflowY: 'auto' } },
+                React.createElement(Table_1.default, { tableClass: "table table-hover table-bordered", cols: this.cols, data: this.state.data, sortField: this.state.sortField, ascending: this.state.ascending, onClick: this.handleTableClick.bind(this), onSort: this.handleTableSort.bind(this) }))));
     };
-    DataQualitySummary.prototype.handleTableClick = function (data) {
-        if (this.state.level == "Channel")
-            window.open("../OpenSTE.cshtml?ChannelID=" + data.row.ID + "&date=" + this.state.date);
+    StepChangeWebReport.prototype.handleTableClick = function (data) {
+        var _this = this;
+        if (data.col == "Name") {
+            window.open("PeriodicDataDisplay.cshtml?meterID=" + data.row.MeterID + "&startDate=" + moment(this.state.startDate).startOf("day").format('YYYY-MM-DDTHH:mm') + "&endDate=" + moment(this.state.endDate).endOf("day").format('YYYY-MM-DDTHH:mm') + "&fromStepChangeWebReport=true");
+        }
         else {
-            this.setState({
-                level: "Channel",
-                meterID: data.row.ID,
-                ascending: (data.col == "Name"),
-                sortField: data.col
-            }, this.updateUrl);
+            this.stepChangeWebReportService.getChannel(data.row.MeterID, data.col).done(function (channel) {
+                if (channel != null)
+                    window.open("TrendingDataDisplay.cshtml?meterID=" + data.row.MeterID + "&measurementID=" + channel.ID + "&startDate=" + moment(_this.state.startDate).startOf("day").format('YYYY-MM-DDTHH:mm') + "&endDate=" + moment(_this.state.endDate).endOf("day").format('YYYY-MM-DDTHH:mm'));
+            });
         }
     };
-    DataQualitySummary.prototype.handleTableSort = function (data) {
+    StepChangeWebReport.prototype.handleTableSort = function (data) {
         var ascending = data.ascending;
         if (data.col == this.state.sortField)
             ascending = !data.ascending;
@@ -69937,45 +69993,45 @@ var DataQualitySummary = (function (_super) {
             sortField: data.col
         }, this.updateUrl);
     };
-    DataQualitySummary.prototype.getData = function () {
+    StepChangeWebReport.prototype.getData = function () {
         var _this = this;
         $(this.refs.loader).show();
-        this.dataQualitySummaryService.getData(this.state.meterID, this.state.date, this.state.level, this.state.sortField, this.state.ascending).done(function (data) {
+        this.stepChangeWebReportService.getData(this.state.startDate, this.state.endDate, this.state.sortField, this.state.ascending).done(function (data) {
             _this.setState({ data: data }, function () {
                 $(_this.refs.loader).hide();
             });
         });
     };
-    DataQualitySummary.prototype.updateUrl = function () {
+    StepChangeWebReport.prototype.updateUrl = function () {
         var state = _.clone(this.state);
         delete state.data;
-        this.history['push']('DataQualitySummary.cshtml?' + queryString.stringify(state, { encode: false }));
-        this.getData();
+        this.history['push']('StepChangeWebReport.cshtml?' + queryString.stringify(state, { encode: false }));
     };
-    return DataQualitySummary;
+    return StepChangeWebReport;
 }(React.Component));
-exports.DataQualitySummary = DataQualitySummary;
-ReactDOM.render(React.createElement(DataQualitySummary, null), document.getElementById('bodyContainer'));
+exports.StepChangeWebReport = StepChangeWebReport;
+ReactDOM.render(React.createElement(StepChangeWebReport, null), document.getElementById('bodyContainer'));
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 328 */
+/* 483 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function($) {
 Object.defineProperty(exports, "__esModule", { value: true });
-var moment = __webpack_require__(0);
-var DataQualitySummaryService = (function () {
-    function DataQualitySummaryService() {
+var StepChangeWebReportService = (function () {
+    function StepChangeWebReportService() {
     }
-    DataQualitySummaryService.prototype.getData = function (meterID, date, level, sortField, ascending) {
-        return $.ajax({
+    StepChangeWebReportService.prototype.getData = function (startDate, endDate, sortField, ascending) {
+        if (this.response != null)
+            this.response.abort();
+        this.response = $.ajax({
             type: "GET",
-            url: window.location.origin + "/api/DataQualitySummary/GetData?meterID=" + meterID +
-                ("&date=" + moment(date).format('YYYY-MM-DD')) +
-                ("&level=" + level) +
+            url: window.location.origin + "/api/StepChangeWebReport/GetData" +
+                ("?startDate=" + startDate) +
+                ("&endDate=" + endDate) +
                 ("&sortField=" + sortField) +
                 ("&ascending=" + ascending),
             contentType: "application/json; charset=utf-8",
@@ -69983,13 +70039,29 @@ var DataQualitySummaryService = (function () {
             cache: true,
             async: true
         });
+        return this.response;
     };
-    return DataQualitySummaryService;
+    StepChangeWebReportService.prototype.getChannel = function (meterID, measurementID) {
+        if (this.response != null)
+            this.response.abort();
+        this.response = $.ajax({
+            type: "GET",
+            url: window.location.origin + "/api/StepChangeWebReport/GetChannel" +
+                ("?meterID=" + meterID) +
+                ("&MeasurementID=" + measurementID),
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        });
+        return this.response;
+    };
+    return StepChangeWebReportService;
 }());
-exports.default = DataQualitySummaryService;
+exports.default = StepChangeWebReportService;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ })
 /******/ ]);
-//# sourceMappingURL=DataQualitySummary.js.map
+//# sourceMappingURL=StepChangeWebReport.js.map

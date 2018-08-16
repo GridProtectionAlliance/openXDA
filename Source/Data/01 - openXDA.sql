@@ -1878,6 +1878,37 @@ GO
 INSERT INTO Unit (Name) VALUES ('Percent')
 GO
 
+CREATE TABLE StepChangeMeasurement(
+	ID INT PRIMARY KEY IDENTITY(1,1),
+	PQMeasurementID INT FOREIGN KEY REFERENCES PQMeasurement(ID) NOT NULL,
+	Setting float NULL
+)
+
+CREATE NONCLUSTERED INDEX IX_StepChangeMeasurement_PQMeasurement
+ON StepChangeMeasurement(PQMeasurementID ASC)
+GO
+
+CREATE TABLE StepChangeStat(
+	ID INT PRIMARY KEY IDENTITY(1,1),
+	MeterID INT FOREIGN KEY REFERENCES Meter(ID) NOT NULL,
+	Date Date NOT NULL,
+	StepChangeMeasurementID INT FOREIGN KEY REFERENCES StepChangeMeasurement(ID) NOT NULL,
+	Value float NULL
+)
+
+CREATE NONCLUSTERED INDEX IX_StepChangeStat_Date
+ON StepChangeStat(Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_StepChangeStat_MeterID_Date
+ON StepChangeStat(MeterID ASC, Date ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_StepChangeStat_MeterID_StepChangeMeasurementID_Date
+ON StepChangeStat(MeterID ASC,StepChangeMeasurementID ASC, Date ASC)
+GO
+
+
 -- ------ --
 -- Alarms --
 -- ------ --

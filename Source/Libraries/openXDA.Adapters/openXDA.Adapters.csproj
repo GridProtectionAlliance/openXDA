@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ControllerConfig.cs" />
+    <Compile Include="StepChangeWebReportController.cs" />
     <Compile Include="PQTrendingWebReportController.cs" />
     <Compile Include="GrafanaController.cs" />
     <Compile Include="JSONApiController.cs" />

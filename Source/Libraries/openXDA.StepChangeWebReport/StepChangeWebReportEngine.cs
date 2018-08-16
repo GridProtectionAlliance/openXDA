@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ReportsEngine.cs - Gbtc
+//  StepChangeWebReportEngine.cs - Gbtc
 //
 //  Copyright © 2018, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,13 +16,14 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  06/14/2018 - Billy Ernest
+//  08/15/2018 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using GSF;
 using GSF.Configuration;
+using GSF.NumericalAnalysis;
 using GSF.Scheduling;
 using GSF.Web.Model;
 using openHistorian.XDALink;
@@ -30,36 +31,32 @@ using openXDA.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace openXDA.PQTrendingWebReport
+namespace openXDA.StepChangeWebReport
 {
-    public class PQTrendingWebReportEngine
+    public class StepChangeWebReportEngine
     {
         #region [ Members ]
 
         // Fields
         private ScheduleManager m_scheduler;
         private bool m_running = false;
-        private PQTrendingWebReportSettings m_pqTrendingWebReportSettings;
+        private StepChangeWebReportSettings m_stepChangeWebReportSettings;
 
         #endregion
 
         #region [ Constructors ]
-        public PQTrendingWebReportEngine()
+        public StepChangeWebReportEngine()
         {
-            m_pqTrendingWebReportSettings = new PQTrendingWebReportSettings();
+            m_stepChangeWebReportSettings = new StepChangeWebReportSettings();
         }
 
-        public PQTrendingWebReportEngine(PQTrendingWebReportSettings settings)
+        public StepChangeWebReportEngine(StepChangeWebReportSettings settings)
         {
-            m_pqTrendingWebReportSettings = settings;
+            m_stepChangeWebReportSettings = settings;
         }
 
         #endregion
@@ -69,11 +66,12 @@ namespace openXDA.PQTrendingWebReport
         public bool Running => m_running;
 
         [Category]
-        [SettingName("PQTrendingWebReport")]
-        public PQTrendingWebReportSettings PQTrendingWebReportSettings {
+        [SettingName("StepChangeWebReport")]
+        public StepChangeWebReportSettings StepChangeWebReportSettings
+        {
             get
             {
-                return m_pqTrendingWebReportSettings;
+                return m_stepChangeWebReportSettings;
             }
         }
         #endregion
@@ -109,7 +107,7 @@ namespace openXDA.PQTrendingWebReport
                 Scheduler.Started += Scheduler_Started;
                 Scheduler.ScheduleDue += Scheduler_ScheduleDue;
                 Scheduler.Disposed += Scheduler_Disposed;
-                Scheduler.AddSchedule("PQTrendingWebReport", PQTrendingWebReportSettings.Frequency);
+                Scheduler.AddSchedule("StepChangeWebReport", StepChangeWebReportSettings.Frequency);
                 Scheduler.Start();
                 m_running = true;
             }
@@ -130,8 +128,8 @@ namespace openXDA.PQTrendingWebReport
 
         private void Scheduler_Started(object sender, EventArgs e)
         {
-            if(PQTrendingWebReportSettings.Verbose)
-                OnLogStatusMessage("PQTrendingWebReport Engine has started successfully...");
+            if (StepChangeWebReportSettings.Verbose)
+                OnLogStatusMessage("StepChangeWebReport Engine has started successfully...");
         }
 
         private void Scheduler_Starting(object sender, EventArgs e)
@@ -140,21 +138,21 @@ namespace openXDA.PQTrendingWebReport
 
         private void Scheduler_Disposed(object sender, EventArgs e)
         {
-            if (PQTrendingWebReportSettings.Verbose)
-                OnLogStatusMessage("PQTrendingWebReport Engine is disposed...");
+            if (StepChangeWebReportSettings.Verbose)
+                OnLogStatusMessage("StepChangeWebReport Engine is disposed...");
         }
 
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            if (PQTrendingWebReportSettings.Verbose)
-                OnLogStatusMessage(string.Format("Processing pq web reports..."));
+            if (StepChangeWebReportSettings.Verbose)
+                OnLogStatusMessage(string.Format("Processing Step Change web reports..."));
 
-            ProcessPQWebReport();
+            ProcessStepChangeWebReport();
 
         }
 
-        private void ProcessPQWebReport()
+        private void ProcessStepChangeWebReport()
         {
             DateTime today = DateTime.Now;
             DateTime startDay = today.Date.AddDays(-1);
@@ -166,10 +164,12 @@ namespace openXDA.PQTrendingWebReport
                 string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 
                 IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterDataQualitySummary)");
-                IEnumerable<PQMeasurement> pQMeasurements = dataContext.Table<PQMeasurement>().QueryRecords();
+                IEnumerable<StepChangeMeasurement> stepChangeMeasurements = dataContext.Table<StepChangeMeasurement>().QueryRecords();
 
-                foreach (Meter meter in meters) {
-                    foreach (PQMeasurement measurement in pQMeasurements) {
+                foreach (Meter meter in meters)
+                {
+                    foreach (StepChangeMeasurement measurement in stepChangeMeasurements)
+                    {
                         try
                         {
                             Task.Run(() =>
@@ -186,94 +186,69 @@ namespace openXDA.PQTrendingWebReport
             }
         }
 
-        private void ProcessMeasurement(Meter meter, PQMeasurement measurement, string historianServer, string historianInstance, DateTime startTime, DateTime endTime) {
-            using( DataContext dataContext = new DataContext("systemSettings"))
-            using( Historian historian = new Historian(historianServer, historianInstance))
+        private void ProcessMeasurement(Meter meter, StepChangeMeasurement measurement, string historianServer, string historianInstance, DateTime startTime, DateTime endTime)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                Channel channel = dataContext.Table<Channel>().QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1} AND PhaseID = {2} AND HarmonicGroup = {3}", measurement.MeasurementTypeID, measurement.MeasurementCharacteristicID, measurement.PhaseID, measurement.HarmonicGroup);
-                PQTrendStat record = dataContext.Table<PQTrendStat>().QueryRecordWhere("MeterID = {0} AND Date = {1} AND PQMeasurementTypeID = {2}", meter.ID, startTime, measurement.ID);
+                PQMeasurement pqMeasurement = dataContext.Table<PQMeasurement>().QueryRecordWhere("ID = {0}", measurement.PQMeasurementID);
+                Channel channel = dataContext.Table<Channel>().QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1} AND PhaseID = {2} AND HarmonicGroup = {3}", pqMeasurement.MeasurementTypeID, pqMeasurement.MeasurementCharacteristicID, pqMeasurement.PhaseID, pqMeasurement.HarmonicGroup);
+                StepChangeStat record = dataContext.Table<StepChangeStat>().QueryRecordWhere("MeterID = {0} AND Date = {1} AND StepChangeMeasurementID = {2}", meter.ID, startTime, measurement.ID);
+                Unit unit = dataContext.Table<Unit>().QueryRecordWhere("ID = {0}", pqMeasurement.UnitID);
+
                 if (record == null)
                 {
-                    record = new PQTrendStat();
+                    record = new StepChangeStat();
                     record.MeterID = meter.ID;
-                    record.PQMeasurementTypeID = measurement.ID;
+                    record.StepchangeMeasurementID = measurement.ID;
                     record.Date = startTime;
                 }
 
-                record.Max = null;
-                record.Min = null;
-                record.Avg = null;
-                record.CP99 = null;
-                record.CP95 = null;
-                record.CP05 = null;
-                record.CP01 = null;
+                record.Value = 0;
 
-                if (channel != null) {
-                    IEnumerable<openHistorian.XDALink.TrendingDataPoint> data = historian.Read(new[] { channel.ID }, startTime, endTime).ToList();
-                    IEnumerable<openHistorian.XDALink.TrendingDataPoint> avgList = data.Where(x => x.SeriesID == SeriesID.Average).OrderBy(x => x.Value);
+                if (channel != null)
+                {
+                    IEnumerable<openHistorian.XDALink.TrendingDataPoint> data = historian.Read(new[] { channel.ID }, startTime.AddHours(-1), endTime).ToList();
 
                     try
                     {
-                        record.Max = data.Where(x => x.SeriesID == SeriesID.Maximum).Select(x => x.Value).Max();
-                    }
-                    catch (Exception) {
-                        record.Max = null;
-                    }
+                        foreach (openHistorian.XDALink.TrendingDataPoint point in data) {
+                            if (point.Timestamp >= startTime) {
+                                double lastHourAvg = data.Where(x => x.Timestamp >= point.Timestamp.AddHours(-1) && x.Timestamp < point.Timestamp).Select(x => x.Value).Average();
 
-                    try
-                    {
-                        record.Min = data.Where(x => x.SeriesID == SeriesID.Minimum).Select(x => x.Value).Min();
+                                // if value is outside 5 sigma, do not check for step change
+                                double std = data.StandardDeviation(x => x.Value);
+                                if (point.Value > std * 5) continue;
+
+                                if (unit.Name == "Percent") {
+                                    if (Math.Abs(point.Value - lastHourAvg) > measurement.Setting)
+                                        record.Value++;
+                                }
+                                else {
+                                    if (Math.Abs(point.Value - lastHourAvg)/lastHourAvg > measurement.Setting)
+                                        record.Value++;
+                                }
+
+                            }
+                        }
+                        record.Value = data.Where(x => x.SeriesID == SeriesID.Average).Select(x => x.Value).Max();
                     }
                     catch (Exception)
                     {
-                        record.Min = null;
+                        // no associated data for this measurement;  just return without creating the record.
+                        return;
                     }
-
-                    try
-                    {
-                        record.Avg = avgList.Select(x => x.Value).Average();
-                    }
-                    catch (Exception)
-                    {
-                        record.Avg = null;
-                    }
-
-                    try
-                    {
-                        int index99 = (int)(avgList.Count() - avgList.Count() * 0.99);
-                        int index01 = (int)(avgList.Count() - avgList.Count() * 0.01);
-                        record.CP99 = avgList.Where(x => x.ChannelID >= index01 && x.ChannelID <= index99).Select(x => x.Value).Max();
-                        record.CP01 = avgList.Where(x => x.ChannelID >= index01 && x.ChannelID <= index99).Select(x => x.Value).Min();
-                    }
-                    catch (Exception)
-                    {
-                        record.CP99 = null;
-                        record.CP01 = null;
-                    }
-
-                    try
-                    {
-                        int index95 = (int)(avgList.Count() - avgList.Count() * 0.95);
-                        int index05 = (int)(avgList.Count() - avgList.Count() * 0.05);
-                        record.CP95 = avgList.Where(x => x.ChannelID >= index05 && x.ChannelID <= index95).Select(x => x.Value).Max();
-                        record.CP05 = avgList.Where(x => x.ChannelID >= index05 && x.ChannelID <= index95).Select(x => x.Value).Min();
-                    }
-                    catch (Exception)
-                    {
-                        record.CP95 = null;
-                        record.CP05 = null;
-                    }
-
                 }
 
-                dataContext.Table<PQTrendStat>().AddNewRecord(record);
+                if(record.Value > 0)
+                    dataContext.Table<StepChangeStat>().AddNewRecord(record);
             }
         }
         public string GetHelpMessage(string command)
         {
             StringBuilder helpMessage = new StringBuilder();
 
-            helpMessage.Append("Processes the month PQ Trending Web Reports");
+            helpMessage.Append("Processes the Step Change Web Reports");
             helpMessage.AppendLine();
             helpMessage.AppendLine();
             helpMessage.Append("   Usage:");

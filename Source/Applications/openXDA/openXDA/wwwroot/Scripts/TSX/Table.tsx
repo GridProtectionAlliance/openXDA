@@ -63,7 +63,16 @@ export default class Table extends React.Component<any, any> {
         if (this.props.data.length == 0) return null;
 
         return this.props.data.map((item, index) => {
-            var cells = this.props.cols.map(colData => <td key={index.toString() + item[colData.key] + colData.key} style={colData.rowStyle} onClick={this.handleClick.bind(this, { col: colData.key, row: item, data: item[colData.key] })}>{item[colData.key]}</td>);
+            var cells = this.props.cols.map(colData => {
+                var style = _.clone(colData.rowStyle);
+                return <td
+                    key={index.toString() + item[colData.key] + colData.key}
+                    style={style}
+                    onClick={this.handleClick.bind(this, { col: colData.key, row: item, data: item[colData.key] })}
+                >
+                    {colData.content != undefined ? colData.content(item, colData.key, style) : item[colData.key]}
+                </td>
+            });
 
             var style = { cursor: 'pointer' };
 
