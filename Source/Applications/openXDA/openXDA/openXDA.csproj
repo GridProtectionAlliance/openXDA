@@ -391,6 +391,7 @@
     <Content Include="wwwroot\Config\TemplateEditor.cshtml" />
     <Content Include="wwwroot\Config\RemoteConsole.cshtml" />
     <Content Include="wwwroot\Config\EventEmailConfiguration.cshtml" />
+    <Content Include="wwwroot\Config\ProblematicUserAccounts.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Config\DashSettings.cshtml" />

@@ -1,0 +1,89 @@
+﻿@*//******************************************************************************************************
+//  XSLTemplate.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  12/12/2016 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using System.Net.Http
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using openXDA.Hubs
+@using GSF.Security.Model
+@inherits ExtendedTemplateBase<AppModel>
+@{
+    DataContext dataContext = ViewBag.DataContext;
+    Layout = "Config/Layout.cshtml";
+    ViewBag.Title = "Problematic User Accounts";
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "FirstName", "First Name", "text-center valign-middle" },
+        new[] {"LastName", "Last Name", "text-center valign-middle"},
+        new[] { null, "User Name", "text-center valign-middle"},
+    };
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.ShowSearchFilter = true;
+    ViewBag.HideAddNewButton = true;
+
+
+}
+
+@helper BodyRows()
+{
+    <td width="20%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: FirstName"></button></td>
+    <td width="20%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LastName"></button></td>
+    <td width="25%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AccountName(), attr: {title: Name}, click: $parent.viewPageRecord"></button></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
+    </td>
+}
+
+@helper AddNewEditDialog(DataContext dataContext)
+{
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+
+@section Scripts
+{
+    <script>
+        @Raw(dataContext.RenderViewModelConfiguration<UserAccount, DataHub>(ViewBag))
+
+        $(viewModel).on("pageRecordsQueried", function (event, records) {
+            // Add a virtual observable field called "AccountName" that will resolve SID values to account names
+            for (var i = 0; i < records.length; i++) {
+                records[i].AccountName = ko.observable("...");
+                lookupAccountName(records[i]);
+            }
+        });
+
+        function lookupAccountName(record) {
+            if (viewModel.dataHubIsConnected()) {
+                securityHub.sidToAccountName(record.Name).done(function (accountName) {
+                    record.AccountName(accountName);
+                });
+            }
+        }
+
+    </script>    
+}

@@ -314,6 +314,46 @@ namespace openXDA.Hubs
         #endregion
 
         #region [ UserAccount Operations]
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecordCount)]
+        public int QueryProblematicUserAccountCount(string filterString)
+        {
+            return DataContext.Table<UserAccount>().QueryRecords(filterString).Where(x => x.UseADAuthentication && x.AccountName == x.Name).Count();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
+        public IEnumerable<UserAccount> QueryProblematicUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize, filterString).Where(x => x.UseADAuthentication && x.AccountName == x.Name);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.DeleteRecord)]
+        public void DeleteProblematicUserAccount(Guid id)
+        {
+            CascadeDelete("UserAccount", $"ID = '{id}'");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.CreateNewRecord)]
+        public UserAccount NewProblematicUserAccount()
+        {
+            return DataContext.Table<UserAccount>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.AddNewRecord)]
+        public void AddNewProblematicUserAccount(UserAccount record)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.UpdateRecord)]
+        public void UpdateEventEmailConfiguration(UserAccount record)
+        {
+        }
+
         public void DeleteUserAccount(Guid id)
         {
             CascadeDelete("UserAccount", $"ID = '{id}'");
