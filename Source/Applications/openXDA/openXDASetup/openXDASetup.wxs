@@ -438,6 +438,10 @@
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
       <ComponentRef Id="openXDA.DataPusher" />
+      <ComponentRef Id="openXDA.Reports" />
+      <ComponentRef Id="openXDA.PQTrendingWebReport" />
+      <ComponentRef Id="openXDA.StepChangeWebReport" />
+
       <ComponentRef Id="PQMark.DataAggregator" />
 
       <!-- DotNetZip Dependencies -->
@@ -560,6 +564,19 @@
       <Component Id="openXDA.DataPusher">
         <File Id="openXDA.DataPusher.dll" Name="$(var.openXDA.DataPusher.TargetFileName)" Source="$(var.openXDA.DataPusher.TargetPath)" />
       </Component>
+      <Component Id="openXDA.Reports">
+        <File Id="openXDA.Reports.dll" Name="$(var.openXDA.Reports.TargetFileName)" Source="$(var.openXDA.Reports.TargetPath)" />
+      </Component>
+
+      <Component Id="openXDA.PQTrendingWebReport">
+        <File Id="openXDA.PQTrendingWebReport.dll" Name="$(var.openXDA.PQTrendingWebReport.TargetFileName)" Source="$(var.openXDA.PQTrendingWebReport.TargetPath)" />
+      </Component>
+
+      <Component Id="openXDA.StepChangeWebReport">
+        <File Id="openXDA.StepChangeWebReport.dll" Name="$(var.openXDA.StepChangeWebReport.TargetFileName)" Source="$(var.openXDA.StepChangeWebReport.TargetPath)" />
+      </Component>
+
+
 
       <Component Id="PQMark.DataAggregator">
         <File Id="PQMark.DataAggregator.dll" Name="$(var.PQMark.DataAggregator.TargetFileName)" Source="$(var.PQMark.DataAggregator.TargetPath)" />

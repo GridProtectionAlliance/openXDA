@@ -74,6 +74,22 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
+      <Name>openXDA.PQTrendingWebReport</Name>
+      <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Reports\openXDA.Reports.csproj">
+      <Name>openXDA.Reports</Name>
+      <Project>{656f97d9-4fb6-4f65-a9a6-1a1dde3af634}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.SqlClr\openXDA.SqlClr.csproj">
       <Name>openXDA.SqlClr</Name>
       <Project>{48d080cc-6539-4ab0-b756-cdc5a28b3ab2}</Project>
@@ -101,6 +117,14 @@
     <ProjectReference Include="..\..\..\Libraries\openXDA.Model\openXDA.Model.csproj">
       <Name>openXDA.Model</Name>
       <Project>{a1a0bc13-50ed-4dc9-8c1e-3293b0b69281}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.StepChangeWebReport\openXDA.StepChangeWebReport.csproj">
+      <Name>openXDA.StepChangeWebReport</Name>
+      <Project>{1f3b639c-6c49-480d-a184-aed1c86ad97b}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
