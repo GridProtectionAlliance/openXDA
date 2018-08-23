@@ -325,7 +325,10 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
         public IEnumerable<UserAccount> QueryProblematicUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            return DataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize, filterString).Where(x => x.UseADAuthentication && x.AccountName == x.Name);
+            if(ascending)
+                return DataContext.Table<UserAccount>().QueryRecords(filterString).Where(x => x.UseADAuthentication && x.AccountName == x.Name).OrderBy(x => sortField).Skip((page - 1)* pageSize).Take(pageSize);
+            else
+                return DataContext.Table<UserAccount>().QueryRecords(filterString).Where(x => x.UseADAuthentication && x.AccountName == x.Name).OrderByDescending(x => sortField).Skip((page - 1) * pageSize).Take(pageSize);
         }
 
         [AuthorizeHubRole("Administrator")]

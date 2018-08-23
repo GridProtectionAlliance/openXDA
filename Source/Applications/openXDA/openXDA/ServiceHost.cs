@@ -274,9 +274,12 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PurgeData", "Deletes data from database beyond a sepecified date", PurgeDataHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessAllData", "Creates aggregates for all data", OnProcessAllData));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessEmptyData", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcessMonthToDate", "Creates aggregates for month to date data", OnProcessMonthToDateData));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcAD", "Creates aggregates for all data", OnProcessAllData));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcED", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcMTD", "Creates aggregates for month to date data", OnProcessMonthToDateData));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQTrendingProcess", "Processes data for PQTrending Web Report", OnProcessPQTrending));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("StepChangeProcess", "Processes data for Step Change Web Report", OnProcessStepChange));
+
             m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
             m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
@@ -336,14 +339,6 @@ namespace openXDA
             //Set up DataAggregationEngine callbacks
             ReportsEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             ReportsEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-
-            //Set up DataAggregationEngine callbacks
-            PQTrendingWebReportEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-            PQTrendingWebReportEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-
-            //Set up DataAggregationEngine callbacks
-            StepChangeWebReportEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-            StepChangeWebReportEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
 
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
@@ -890,6 +885,112 @@ namespace openXDA
             else
                 SendResponseWithAttachment(requestInfo, false, null, "PQMark data aggregation engine is not current running.");
         }
+
+        public void OnProcessPQTrending(ClientRequestInfo requestInfo)
+        {
+            DateTime? date = null;
+            int? meter = null;
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_pqTrendingWebReportEngine.GetHelpMessage("PQTrendingProcess");
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            if (requestInfo.Request.Arguments["date"] != null) {
+                try
+                {
+                    date = DateTime.Parse(requestInfo.Request.Arguments["date"]);
+                }
+                catch (Exception ex) {
+                    SendResponseWithAttachment(requestInfo, false, null, "Parameter is not a valid date string, use the following format - MM/DD/YYYY.");
+                    return;
+                }
+            }
+
+            if (requestInfo.Request.Arguments["meter"] != null)
+            {
+                try
+                {
+                    meter = int.Parse(requestInfo.Request.Arguments["meter"]);
+                }
+                catch (Exception ex)
+                {
+                    SendResponseWithAttachment(requestInfo, false, null, "Meter parameter is not a valid interger.");
+                }
+            }
+
+
+            if (m_pqTrendingWebReportEngine.Running)
+            {
+                try
+                {
+                    m_pqTrendingWebReportEngine.ProcessPQWebReport(date, meter);
+                    SendResponseWithAttachment(requestInfo, true, null, $"PQ Trending Web Report engine has begun aggregating data. {(date == null ? "" : $"-date={date.ToString()}")}{(meter == null ? "" : $"-meter={meter.ToString()}")}");
+
+                }
+                catch (Exception ex) {
+                    SendResponseWithAttachment(requestInfo, false, null, "There was an error runnign the PQ Trending Web Report.");
+                }
+            }
+            else
+                SendResponseWithAttachment(requestInfo, false, null, "PQ Trending Web Report is not running.");
+        }
+
+        public void OnProcessStepChange(ClientRequestInfo requestInfo)
+        {
+            DateTime? date = null;
+            int? meter = null;
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                string helpMessage = m_stepChangeWebReportEngine.GetHelpMessage("StepChangeProcess");
+                DisplayResponseMessage(requestInfo, helpMessage);
+                return;
+            }
+
+            if (requestInfo.Request.Arguments["date"] != null)
+            {
+                try
+                {
+                    date = DateTime.Parse(requestInfo.Request.Arguments["date"]);
+                }
+                catch (Exception ex)
+                {
+                    SendResponseWithAttachment(requestInfo, false, null, "Parameter is not a valid date string, use the following format - MM/DD/YYYY.");
+                    return;
+                }
+            }
+
+            if (requestInfo.Request.Arguments["meter"] != null)
+            {
+                try
+                {
+                    meter = int.Parse(requestInfo.Request.Arguments["meter"]);
+                }
+                catch (Exception ex)
+                {
+                    SendResponseWithAttachment(requestInfo, false, null, "Meter parameter is not a valid interger.");
+                }
+            }
+
+
+            if (m_pqTrendingWebReportEngine.Running)
+            {
+                try
+                {
+                    m_stepChangeWebReportEngine.ProcessStepChangeWebReport(date, meter);
+                    SendResponseWithAttachment(requestInfo, true, null, $"Step Change Web Report engine has begun aggregating data. {(date == null ? "" : $"-date={date.ToString()}")}{(meter == null ? "" : $"-meter={meter.ToString()}")}");
+
+                }
+                catch (Exception ex)
+                {
+                    SendResponseWithAttachment(requestInfo, false, null, "There was an error runnign the Step Change Web Report.");
+                }
+            }
+            else
+                SendResponseWithAttachment(requestInfo, false, null, "Step Change Web Report is not running.");
+        }
+
 
         // Send a message to the service monitors on request.
         private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)

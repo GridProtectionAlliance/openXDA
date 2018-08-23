@@ -26,30 +26,9 @@ import * as _ from "lodash";
 
 export default class Select extends React.Component<any, any>{
     props: { options: any; value: any; onChange: Function;};
-    state: { dynamicColumns: Array<HTMLObjectElement> }
     constructor(props) {
         super(props);
-        this.state = {
-            dynamicColumns: this.props.options.map((o, i) => {
-                return <option key={o}>{o}</option>
-            })
-        };
     }
-
-    componentDidMount() {        
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (!(_.isEqual(this.props, nextProps)))
-            this.setState({
-                options: nextProps.options,
-                dynamicColumns: this.props.options.map((o, i) => {
-                    return <option key={o}>{o}</option>
-                }),
-                value: nextProps.value
-            });
-    }
-
 
     onChange(event) {
         if(this.props.onChange != undefined)
@@ -57,8 +36,9 @@ export default class Select extends React.Component<any, any>{
     }
 
     render() {
+        var options = this.props.options.map((o, i) => <option key={o} selected={this.props.value == o}>{o}</option>);
         return  <select className="form-control" value={this.props.value} onChange={this.onChange.bind(this)}>
-                    {this.state.dynamicColumns}
+                    {options}
                 </select>;
 
     }

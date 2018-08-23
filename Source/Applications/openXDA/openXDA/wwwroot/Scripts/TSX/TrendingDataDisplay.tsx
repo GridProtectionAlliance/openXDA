@@ -146,12 +146,12 @@ class TrendingDataDisplay extends React.Component<any, any>{
 
                     <div className="form-group">
                         <label>Meter: </label>
-                        <MeterInput value={this.state.meterID} onChange={(obj) => this.setState({ meterID: obj })} />
+                            <MeterInput value={this.state.meterID} onChange={(obj) => this.setState(obj)} />
                     </div>
 
                     <div className="form-group">
                         <label>Measurement: </label>
-                    <MeasurementInput meterID={this.state.meterID} value={this.state.measurementID} onChange={(obj) => this.setState({ measurementID: obj }, this.updateUrl)} />
+                        <MeasurementInput meterID={this.state.meterID} value={this.state.measurementID} onChange={(obj) => this.setState({ measurementID: obj }, this.updateUrl)} />
                     </div>
 
 

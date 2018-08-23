@@ -260,6 +260,10 @@ CREATE NONCLUSTERED INDEX IX_Channel_PhaseID
 ON Channel(PhaseID ASC)
 GO
 
+CREATE NONCLUSTERED INDEX IX_Channel_MeterID_MeasurementTypeID_MeasurementCharacteristicID_PhaseID_HarmonicGroup
+ON Channel(MeterID ASC, MeasurementTypeID, MeasurementCharacteristicID, PhaseID, HarmonicGroup)
+GO
+
 CREATE TABLE SeriesType
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -1853,9 +1857,14 @@ CREATE NONCLUSTERED INDEX IX_PQTrendStat_Date
 ON PQTrendStat(Date ASC)
 GO
 
-CREATE NONCLUSTERED INDEX IX_PQTrendStaty_MeterID_Date
+CREATE NONCLUSTERED INDEX IX_PQTrendStat_MeterID_Date
 ON PQTrendStat(MeterID ASC, Date ASC)
 GO
+
+CREATE NONCLUSTERED INDEX IX_PQTrendStat_MeterID_PQMeasurementTypeID_Date
+ON PQTrendStat(Date DESC, MeterID ASC, PQMeasurementTypeID ASC)
+GO
+
 
 INSERT INTO Unit (Name) VALUES ('Volts')
 GO

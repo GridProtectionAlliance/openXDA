@@ -29,7 +29,7 @@ import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 
-export default class MeterInput extends React.Component<any, any>{
+export default class MeasurementInput extends React.Component<any, any>{
     trendingDataDisplayService: TrendingDataDisplayService;
     constructor(props) {
         super(props);
@@ -58,7 +58,6 @@ export default class MeterInput extends React.Component<any, any>{
             var select = <select className='form-control' onChange={(e) => { this.props.onChange(e.target.value); }} defaultValue={value}>{options}</select>
             this.props.onChange(value);
             this.setState({ select: select });
-            this.props.onChange(data[0].ID);
         });
 
     }

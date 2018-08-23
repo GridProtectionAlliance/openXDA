@@ -24,7 +24,9 @@
 using GSF;
 using GSF.Configuration;
 using GSF.Scheduling;
+using GSF.Threading;
 using GSF.Web.Model;
+using log4net;
 using openHistorian.XDALink;
 using openXDA.Model;
 using System;
@@ -36,6 +38,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace openXDA.PQTrendingWebReport
@@ -48,7 +51,7 @@ namespace openXDA.PQTrendingWebReport
         private ScheduleManager m_scheduler;
         private bool m_running = false;
         private PQTrendingWebReportSettings m_pqTrendingWebReportSettings;
-
+        private int m_runningCount;
         #endregion
 
         #region [ Constructors ]
@@ -67,33 +70,17 @@ namespace openXDA.PQTrendingWebReport
         #region [ Properties ]
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
+        private int RunningCount => m_runningCount;
+        private bool IsProcessing => RunningCount > 0;
 
         [Category]
         [SettingName("PQTrendingWebReport")]
-        public PQTrendingWebReportSettings PQTrendingWebReportSettings {
-            get
-            {
-                return m_pqTrendingWebReportSettings;
-            }
-        }
+        public PQTrendingWebReportSettings PQTrendingWebReportSettings => m_pqTrendingWebReportSettings;
         #endregion
 
         #region [ Static ]
-
-        public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
-
-        private static void OnLogStatusMessage(string message)
-        {
-            LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
-        }
-
-        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
-
-        private static void OnLogExceptionMessage(Exception exception)
-        {
-            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
-        }
-
+        // Static Fields
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQTrendingWebReportEngine));
         #endregion
 
         #region [ Methods ]
@@ -124,151 +111,185 @@ namespace openXDA.PQTrendingWebReport
             }
         }
 
-        public void ReloadSystemSettings()
-        {
-        }
-
         private void Scheduler_Started(object sender, EventArgs e)
         {
-            if(PQTrendingWebReportSettings.Verbose)
-                OnLogStatusMessage("PQTrendingWebReport Engine has started successfully...");
+            if (PQTrendingWebReportSettings.Verbose)
+                Log.Info("PQTrendingWebReport Engine has started successfully...");
         }
 
-        private void Scheduler_Starting(object sender, EventArgs e)
-        {
-        }
+        private void Scheduler_Starting(object sender, EventArgs e){}
 
         private void Scheduler_Disposed(object sender, EventArgs e)
         {
             if (PQTrendingWebReportSettings.Verbose)
-                OnLogStatusMessage("PQTrendingWebReport Engine is disposed...");
+                Log.Info("PQTrendingWebReport Engine is disposed...");
         }
 
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
             if (PQTrendingWebReportSettings.Verbose)
-                OnLogStatusMessage(string.Format("Processing pq web reports..."));
+                Log.Info(string.Format("Processing pq web reports..."));
 
-            ProcessPQWebReport();
-
+            if (!IsProcessing)
+                ProcessPQWebReport();
+            else
+            {
+                if (PQTrendingWebReportSettings.Verbose)
+                    Log.Info("PQ Trending Web Reports is currently processing.");
+            }
         }
 
-        private void ProcessPQWebReport()
+        public void ProcessPQWebReport(DateTime? date = null, int? meterID = null)
         {
-            DateTime today = DateTime.Now;
-            DateTime startDay = today.Date.AddDays(-1);
+            DateTime processDate = date ?? DateTime.Now.AddDays(-1);
+            DateTime startDay = processDate.Date;
             DateTime endDay = startDay.AddDays(1).AddTicks(-1);
+            LogicalThreadScheduler logicalThreadScheduler = new LogicalThreadScheduler();
+            logicalThreadScheduler.MaxThreadCount = 20;
+            logicalThreadScheduler.UnhandledException += (sender, args) => Log.Error(args.Argument.Message, args.Argument);
 
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
                 string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
                 string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 
-                IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterDataQualitySummary)");
+                IEnumerable<Meter> meters;
+                
+                if(meterID == null)
+                    meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterDataQualitySummary)");
+                else
+                    meters = dataContext.Table<Meter>().QueryRecordsWhere("ID = {0}", meterID);
+
                 IEnumerable<PQMeasurement> pQMeasurements = dataContext.Table<PQMeasurement>().QueryRecords();
+
+                int returnVal = Interlocked.CompareExchange(ref m_runningCount, meters.Count() * pQMeasurements.Count(), 0);
+
+                if (returnVal != 0)
+                {
+                    Log.Error("PQ Treding Web Report aggregtaion process may already be running. Aborting....");
+                    return;
+                }
 
                 foreach (Meter meter in meters) {
                     foreach (PQMeasurement measurement in pQMeasurements) {
                         try
                         {
-                            Task.Run(() =>
-                            {
-                                ProcessMeasurement(meter, measurement, historianServer, historianInstance, startDay, endDay);
+                            logicalThreadScheduler.CreateThread().Push(() => {
+                                try
+                                {
+                                    ProcessMeasurement(meter, measurement, historianServer, historianInstance, startDay, endDay);
+                                }
+                                finally {
+                                    Interlocked.Decrement(ref m_runningCount);
+                                    if (RunningCount == 0)
+                                        Log.Info("PQ Trend Web Report has completed aggregating data.");
+                                }
+
                             });
                         }
                         catch (Exception ex)
                         {
-                            OnLogExceptionMessage(ex);
+                            Log.Error(ex.Message, ex);
                         }
                     }
                 }
             }
         }
 
-        private void ProcessMeasurement(Meter meter, PQMeasurement measurement, string historianServer, string historianInstance, DateTime startTime, DateTime endTime) {
-            using( DataContext dataContext = new DataContext("systemSettings"))
-            using( Historian historian = new Historian(historianServer, historianInstance))
+        private void ProcessMeasurement(Meter meter, PQMeasurement measurement, string historianServer, string historianInstance, DateTime startTime, DateTime endTime)
+        {
+            Channel channel;
+            PQTrendStat record;
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
             {
-                Channel channel = dataContext.Table<Channel>().QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1} AND PhaseID = {2} AND HarmonicGroup = {3}", measurement.MeasurementTypeID, measurement.MeasurementCharacteristicID, measurement.PhaseID, measurement.HarmonicGroup);
-                PQTrendStat record = dataContext.Table<PQTrendStat>().QueryRecordWhere("MeterID = {0} AND Date = {1} AND PQMeasurementTypeID = {2}", meter.ID, startTime, measurement.ID);
-                if (record == null)
+                channel = dataContext.Table<Channel>().QueryRecordWhere("MeasurementTypeID = {0} AND MeasurementCharacteristicID = {1} AND PhaseID = {2} AND HarmonicGroup = {3} AND MeterID = {4}", measurement.MeasurementTypeID, measurement.MeasurementCharacteristicID, measurement.PhaseID, measurement.HarmonicGroup, meter.ID);
+                record = dataContext.Table<PQTrendStat>().QueryRecordWhere("MeterID = {0} AND Date = {1} AND PQMeasurementTypeID = {2}", meter.ID, startTime, measurement.ID);
+            }
+
+
+            if (record == null)
+            {
+                record = new PQTrendStat();
+                record.MeterID = meter.ID;
+                record.PQMeasurementTypeID = measurement.ID;
+                record.Date = startTime;
+            }
+
+            record.Max = null;
+            record.Min = null;
+            record.Avg = null;
+            record.CP99 = null;
+            record.CP95 = null;
+            record.CP05 = null;
+            record.CP01 = null;
+
+            if (channel != null)
+            {
+                using (Historian historian = new Historian(historianServer, historianInstance))
                 {
-                    record = new PQTrendStat();
-                    record.MeterID = meter.ID;
-                    record.PQMeasurementTypeID = measurement.ID;
-                    record.Date = startTime;
-                }
-
-                record.Max = null;
-                record.Min = null;
-                record.Avg = null;
-                record.CP99 = null;
-                record.CP95 = null;
-                record.CP05 = null;
-                record.CP01 = null;
-
-                if (channel != null) {
                     IEnumerable<openHistorian.XDALink.TrendingDataPoint> data = historian.Read(new[] { channel.ID }, startTime, endTime).ToList();
+                    if (!data.Any()) return;
+
                     IEnumerable<openHistorian.XDALink.TrendingDataPoint> avgList = data.Where(x => x.SeriesID == SeriesID.Average).OrderBy(x => x.Value);
 
                     try
                     {
                         record.Max = data.Where(x => x.SeriesID == SeriesID.Maximum).Select(x => x.Value).Max();
-                    }
-                    catch (Exception) {
-                        record.Max = null;
-                    }
-
-                    try
-                    {
                         record.Min = data.Where(x => x.SeriesID == SeriesID.Minimum).Select(x => x.Value).Min();
-                    }
-                    catch (Exception)
-                    {
-                        record.Min = null;
-                    }
-
-                    try
-                    {
                         record.Avg = avgList.Select(x => x.Value).Average();
+
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        record.Avg = null;
+                        if (PQTrendingWebReportSettings.Verbose)
+                            Log.Error(ex.Message, ex);
                     }
 
                     try
                     {
-                        int index99 = (int)(avgList.Count() - avgList.Count() * 0.99);
-                        int index01 = (int)(avgList.Count() - avgList.Count() * 0.01);
-                        record.CP99 = avgList.Where(x => x.ChannelID >= index01 && x.ChannelID <= index99).Select(x => x.Value).Max();
-                        record.CP01 = avgList.Where(x => x.ChannelID >= index01 && x.ChannelID <= index99).Select(x => x.Value).Min();
+                        int index99 = (int)(avgList.Count() * (0.995));
+                        int index01 = (int)(avgList.Count() * (0.005));
+                        record.CP99 = avgList.Where((x, i) => i >= index01 && i <= index99).Select(x => x.Value).Max();
+                        record.CP01 = avgList.Where((x, i) => i >= index01 && i <= index99).Select(x => x.Value).Min();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         record.CP99 = null;
                         record.CP01 = null;
+
+                        if (PQTrendingWebReportSettings.Verbose)
+                            Log.Error(ex.Message, ex);
                     }
 
                     try
                     {
-                        int index95 = (int)(avgList.Count() - avgList.Count() * 0.95);
-                        int index05 = (int)(avgList.Count() - avgList.Count() * 0.05);
-                        record.CP95 = avgList.Where(x => x.ChannelID >= index05 && x.ChannelID <= index95).Select(x => x.Value).Max();
-                        record.CP05 = avgList.Where(x => x.ChannelID >= index05 && x.ChannelID <= index95).Select(x => x.Value).Min();
+                        int index95 = (int)(avgList.Count() * (0.975));
+                        int index05 = (int)(avgList.Count() * (0.025));
+                        record.CP95 = avgList.Where((x, i) => i >= index05 && i <= index95).Select(x => x.Value).Max();
+                        record.CP05 = avgList.Where((x, i) => i >= index05 && i <= index95).Select(x => x.Value).Min();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         record.CP95 = null;
                         record.CP05 = null;
+
+                        if (PQTrendingWebReportSettings.Verbose)
+                            Log.Error(ex.Message, ex);
+
                     }
 
                 }
 
-                dataContext.Table<PQTrendStat>().AddNewRecord(record);
+                using (DataContext dataContext = new DataContext("systemSettings"))
+                {
+                    if(record.Avg != null && record.Max != null && record.Min != null)
+                        dataContext.Table<PQTrendStat>().AddNewOrUpdateRecord(record);
+                }
             }
         }
+
         public string GetHelpMessage(string command)
         {
             StringBuilder helpMessage = new StringBuilder();
@@ -279,6 +300,8 @@ namespace openXDA.PQTrendingWebReport
             helpMessage.Append("   Usage:");
             helpMessage.AppendLine();
             helpMessage.Append("       " + command);
+            helpMessage.AppendLine();
+            helpMessage.Append("       " + command + " -date=MM/DD/YYYY -meter=meterID");
             helpMessage.AppendLine();
             helpMessage.Append("       " + command + " -?");
             helpMessage.AppendLine();

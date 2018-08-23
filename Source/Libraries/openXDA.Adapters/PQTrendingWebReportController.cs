@@ -131,12 +131,19 @@ namespace openXDA.Adapters
                     FROM (
 	                    SELECT
 		                    Meter.Name,
-		                    PQMeasurement.Name as Measurement,
-		                    PQTrendStat." + notSqlInjection + @"
+		                    t.Name as Measurement,
+		                    t." + notSqlInjection + @"
 	                    FROM
-		                    Meter JOIN
-		                    PQTrendStat ON Meter.ID = PQTrendStat.MeterID JOIN
-		                    PQMeasurement ON PQTrendStat.PQMeasurementTypeID = PQMeasurement.ID
+		                    Meter LEFT JOIN
+                            (
+                                SELECT 
+                                    PQMeasurement.Name,
+                                    PQTrendStat.MeterID,
+                                    PQTrendStat.Date,
+                                    PQTrendStat." + notSqlInjection + @"
+		                        PQTrendStat  JOIN
+		                        PQMeasurement ON PQTrendStat.PQMeasurementTypeID = PQMeasurement.ID
+                            ) as t ON Meter.ID = t.MeterID
 	                    WHERE 
 		                    Date = @date
                            ) as ed 

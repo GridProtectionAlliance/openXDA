@@ -99,9 +99,9 @@ export class DataQualitySummary extends React.Component<any, any>{
                                 this.setState({ level: obj.target.value }, this.updateUrl);
                             }}
                             className="form-control"
-                            defaultValue={this.state.level}>
-                            <option value="Meter">Meter</option>
-                            <option value="Channel">Channel</option>
+                            >
+                            <option value="Meter" selected={this.state.level == "Meter"}>Meter</option>
+                            <option value="Channel" selected={this.state.level == "Channel"}>Channel</option>
                         </select>
                     </div>
                     {( this.state.level == "Channel" ?

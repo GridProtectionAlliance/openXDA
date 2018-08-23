@@ -115,6 +115,9 @@
   <Component Id="wwwroot_Config_MetersWithNormalLimits_cshtml">
     <File Id="wwwroot_Config_MetersWithNormalLimits.cshtml" Name="MetersWithNormalLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MetersWithNormalLimits.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_ProblematicUserAccounts_cshtml">
+    <File Id="wwwroot_Config_ProblematicUserAccounts.cshtml" Name="ProblematicUserAccounts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\ProblematicUserAccounts.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_RemoteConsole_cshtml">
     <File Id="wwwroot_Config_RemoteConsole.cshtml" Name="RemoteConsole.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\RemoteConsole.cshtml" />
   </Component>

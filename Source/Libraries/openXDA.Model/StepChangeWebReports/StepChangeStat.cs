@@ -32,6 +32,6 @@ namespace openXDA.Model
 	    public int MeterID { get; set; }
         public DateTime Date { get; set; }
         public int StepchangeMeasurementID { get; set; }
-        public double? Value { get; set; }
+        public int Value { get; set; }
     }
 }
