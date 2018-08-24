@@ -5639,6 +5639,53 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ PQTrendingWebReportSettings Operations]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(PQMeasurement), RecordOperation.QueryRecordCount)]
+        public int QueryPQMeasurementCount(string filterString)
+        {
+            return DataContext.Table<PQMeasurement>().QueryRecordCount(filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(PQMeasurement), RecordOperation.QueryRecords)]
+        public IEnumerable<PQMeasurement> QueryPQMeasurements(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            return DataContext.Table<PQMeasurement>().QueryRecords(sortField, ascending, page, pageSize, filterString);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(PQMeasurement), RecordOperation.DeleteRecord)]
+        public void DeletePQMeasurement(int id)
+        {
+            DataContext.Table<PQMeasurement>().DeleteRecord(id);
+
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(PQMeasurement), RecordOperation.CreateNewRecord)]
+        public PQMeasurement NewPQMeasurement()
+        {
+            return DataContext.Table<PQMeasurement>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(PQMeasurement), RecordOperation.AddNewRecord)]
+        public void AddNewPQMeasurement(PQMeasurement record)
+        {
+            DataContext.Table<PQMeasurement>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(PQMeasurement), RecordOperation.UpdateRecord)]
+        public void UpdatePQMeasurement(PQMeasurement record)
+        {
+            DataContext.Table<PQMeasurement>().UpdateRecord(record);
+        }
+
+        #endregion
+
         #endregion
 
         #region [ DataPusher Operations ]

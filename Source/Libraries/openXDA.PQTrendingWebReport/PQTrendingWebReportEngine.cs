@@ -146,11 +146,11 @@ namespace openXDA.PQTrendingWebReport
             DateTime startDay = processDate.Date;
             DateTime endDay = startDay.AddDays(1).AddTicks(-1);
             LogicalThreadScheduler logicalThreadScheduler = new LogicalThreadScheduler();
-            logicalThreadScheduler.MaxThreadCount = 20;
             logicalThreadScheduler.UnhandledException += (sender, args) => Log.Error(args.Argument.Message, args.Argument);
 
             using (DataContext dataContext = new DataContext("systemSettings"))
             {
+                logicalThreadScheduler.MaxThreadCount = dataContext.Connection.ExecuteScalar<int?>("SELECT Value FROM Setting WHERE Name = 'MaxThreadCount'") ?? 1;
                 string historianServer = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Server'") ?? "127.0.0.1";
                 string historianInstance = dataContext.Connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'Historian.Instance'") ?? "XDA";
 

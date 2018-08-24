@@ -665,6 +665,7 @@ namespace openXDA
                 webServer.PagedViewModelTypes.TryAdd("Workbench/AuditLog.cshtml", new Tuple<Type, Type>(typeof(AuditLog), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/DataFiles.cshtml", new Tuple<Type, Type>(typeof(openXDA.Model.DataFile), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("Workbench/StepChangeWebReportSettings.cshtml", new Tuple<Type, Type>(typeof(StepChangeMeasurement), typeof(DataHub)));
+                webServer.PagedViewModelTypes.TryAdd("Workbench/PQTrendingWebReportSettings.cshtml", new Tuple<Type, Type>(typeof(PQMeasurement), typeof(DataHub)));
 
                 webServer.PagedViewModelTypes.TryAdd("DataPusher/RemoteXDAInstances.cshtml", new Tuple<Type, Type>(typeof(RemoteXDAInstance), typeof(DataHub)));
                 webServer.PagedViewModelTypes.TryAdd("DataPusher/MetersToDataPush.cshtml", new Tuple<Type, Type>(typeof(MetersToDataPush), typeof(DataHub)));

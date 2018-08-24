@@ -36,8 +36,8 @@ export default class Select extends React.Component<any, any>{
     }
 
     render() {
-        var options = this.props.options.map((o, i) => <option key={o} selected={this.props.value == o}>{o}</option>);
-        return  <select className="form-control" value={this.props.value} onChange={this.onChange.bind(this)}>
+        var options = this.props.options.map((o, i) => <option key={o}>{o}</option>);
+        return  <select className="form-control" defaultValue={this.props.value} onChange={this.onChange.bind(this)}>
                     {options}
                 </select>;
 

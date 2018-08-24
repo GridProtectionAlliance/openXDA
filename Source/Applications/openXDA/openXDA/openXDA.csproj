@@ -353,6 +353,7 @@
     <Content Include="Content\images\glyphicons-halflings-white.png" />
     <Content Include="Content\images\glyphicons-halflings.png" />
     <Content Include="webpack.config.js" />
+    <Content Include="wwwroot\Content\BigTable.css" />
     <Content Include="wwwroot\Content\daterangepicker.css" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css" />
     <Content Include="wwwroot\Content\fullscreenselect\bootstrap-fullscreen-select.css.map" />
@@ -538,6 +539,7 @@
     <Content Include="wwwroot\Scripts\OpenSEEold.js" />
     <Content Include="wwwroot\Scripts\PeriodicDataDisplay.js" />
     <Content Include="wwwroot\Scripts\plotly-latest.min.js" />
+    <Content Include="wwwroot\Scripts\PQTrendingWebReport.js" />
     <Content Include="wwwroot\Scripts\Report.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ace.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\ext-beautify.js" />
@@ -885,6 +887,8 @@
     <Content Include="wwwroot\Scripts\src-noconflict\worker-php.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\worker-xml.js" />
     <Content Include="wwwroot\Scripts\src-noconflict\worker-xquery.js" />
+    <Content Include="wwwroot\Scripts\StepChangeWebReport.js" />
+    <Content Include="wwwroot\Scripts\TrendingDataDisplay.js" />
     <Content Include="wwwroot\Workbench\index.cshtml" />
     <Content Include="wwwroot\Workbench\Layout.cshtml" />
     <Content Include="wwwroot\Workbench\Help.cshtml" />
@@ -920,6 +924,7 @@
     <Content Include="wwwroot\Workbench\PQTrendingWebReport.cshtml" />
     <Content Include="wwwroot\Workbench\StepChangeWebReport.cshtml" />
     <Content Include="wwwroot\Workbench\StepChangeWebReportSettings.cshtml" />
+    <Content Include="wwwroot\Workbench\PQTrendingWebReportSettings.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\Content\bootstrap-datepicker3.css" />
@@ -1005,6 +1010,10 @@
     <Content Include="wwwroot\Reports\index.cshtml" />
     <Content Include="wwwroot\Reports\Report.cshtml" />
     <Content Include="wwwroot\Reports\Reports.cshtml" />
+    <Content Include="wwwroot\Scripts\PQTrendingWebReport.js.map" />
+    <Content Include="wwwroot\Scripts\Report.js.map" />
+    <Content Include="wwwroot\Scripts\StepChangeWebReport.js.map" />
+    <Content Include="wwwroot\Scripts\TrendingDataDisplay.js.map" />
     <None Include="wwwroot\Scripts\TSX\DistributionPlot.tsx" />
     <None Include="wwwroot\Scripts\TSX\Legend.tsx" />
     <None Include="wwwroot\Scripts\TSX\LineChart.tsx" />
@@ -1029,6 +1038,7 @@
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\Report.tsx" />
     <Content Include="wwwroot\Scripts\TS\Services\TrendingDataDisplay.ts" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\Select.tsx" />
+    <TypeScriptCompile Include="wwwroot\Scripts\TSX\BigTable.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\Table.tsx" />
     <TypeScriptCompile Include="wwwroot\Scripts\TSX\TrendingChart.tsx" />
     <Content Include="wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />

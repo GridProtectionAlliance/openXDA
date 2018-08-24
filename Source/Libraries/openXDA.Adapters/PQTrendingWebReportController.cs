@@ -141,11 +141,15 @@ namespace openXDA.Adapters
                                     PQTrendStat.MeterID,
                                     PQTrendStat.Date,
                                     PQTrendStat." + notSqlInjection + @"
-		                        PQTrendStat  JOIN
-		                        PQMeasurement ON PQTrendStat.PQMeasurementTypeID = PQMeasurement.ID
+                                FROM
+		                            PQTrendStat  JOIN
+		                            PQMeasurement ON PQTrendStat.PQMeasurementTypeID = PQMeasurement.ID
+	                            WHERE 
+		                            PQTrendStat.Date = @date
+
                             ) as t ON Meter.ID = t.MeterID
-	                    WHERE 
-		                    Date = @date
+                           WHERE 
+                                Meter.ID IN (SELECT DISTINCT ID FROM MeterDataQualitySummary)
                            ) as ed 
                      PIVOT( 
 		                    Avg(ed." + notSqlInjection + @")

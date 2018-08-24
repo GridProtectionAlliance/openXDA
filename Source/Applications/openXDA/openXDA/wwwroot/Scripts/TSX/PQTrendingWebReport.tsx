@@ -28,7 +28,7 @@ import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 import PQTrendingWebReportService from "./../TS/Services/PQTrendingWebReport";
-import Table from "./Table";
+import BigTable from "./BigTable";
 import MeterInput from './MeterInput';
 import Select from "./Select";
 import 'react-datetime/css/react-datetime.css';
@@ -135,9 +135,9 @@ export class PQTrendingWebReport extends React.Component<any, any>{
                 </div>
 
                 <div className="waveform-viewer" style={{ width: window.innerWidth - 250, float: 'right',  maxHeight: height, overflowY: 'auto' }}>
-                    <Table
-                        //theadStyle={{ position: 'absolute'}}
-                        //tbodyStyle={{ top: '60px', position: 'absolute'}}
+                    <BigTable
+                        theadStyle={{ position: 'absolute', overflowY: 'scroll', maxHeight: '50px'}}
+                        tbodyStyle={{ top: '50px', position: 'absolute', overflowY: 'scroll', maxHeight: height-60}}
                         tableClass={"table table-hover table-bordered"}
                         cols={this.cols}
                         data={this.state.data}

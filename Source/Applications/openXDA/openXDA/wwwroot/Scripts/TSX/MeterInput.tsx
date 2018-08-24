@@ -45,7 +45,7 @@ export default class MeterInput extends React.Component<any, any>{
             if (data.length == 0) return <select className='form-control'></select>;
 
             var value = (this.props.value ? this.props.value : data[0].ID)
-            var options = data.map(d => <option key={d.ID} value={d.ID}>{d.AssetKey}</option>);
+            var options = data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>);
             var select = <select className='form-control' onChange={(e) => { this.props.onChange({ meterID: e.target.value, measurementID: null }); }} defaultValue={value}>{options}</select>;
             this.props.onChange({ meterID: value });
             this.setState({ select: select });
