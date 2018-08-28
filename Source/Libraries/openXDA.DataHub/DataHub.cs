@@ -56,6 +56,7 @@ using MeterLine = openXDA.Model.MeterLine;
 using MeterLocation = openXDA.Model.MeterLocation;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
+using GSF.Security;
 
 namespace openXDA.Hubs
 {
@@ -357,11 +358,6 @@ namespace openXDA.Hubs
         {
         }
 
-        public void DeleteUserAccount(Guid id)
-        {
-            CascadeDelete("UserAccount", $"ID = '{id}'");
-        }
-
         #endregion
 
         #region [ AssetGroup Table Operations ]
@@ -607,6 +603,84 @@ namespace openXDA.Hubs
 
             return DataContext.Table<Line>().QueryRecords("AssetKey", restriction, limit)
                 .Select(line => new IDLabel(line.ID.ToString(), line.AssetKey));
+        }
+
+        #endregion
+
+        #region [ UserAccount Table Operations ]
+
+        /// <summary>
+        /// Queries count of user accounts.
+        /// </summary>
+        /// <param name="filterText">Text to use for filtering.</param>
+        /// <returns>Count of user accounts.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.QueryRecordCount)]
+        public int QueryUserAccountCount(string filterText)
+        {
+            return DataContext.Table<ConfirmableUserAccount>().QueryRecordCount(filterText);
+        }
+
+        /// <summary>
+        /// Queries page of user accounts.
+        /// </summary>
+        /// <param name="sortField">Current sort field.</param>
+        /// <param name="ascending">Current sort direction.</param>
+        /// <param name="page">Current page number.</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <param name="filterText">Text to use for filtering.</param>
+        /// <returns>Page of user accounts.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.QueryRecords)]
+        public IEnumerable<ConfirmableUserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterText)
+        {
+            return DataContext.Table<ConfirmableUserAccount>().QueryRecords(sortField, ascending, page, pageSize, filterText);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.DeleteRecord)]
+        public void DeleteUserAccount(Guid id)
+        {
+            CascadeDelete("UserAccount", $"ID = '{id}'");
+        }
+
+        /// <summary>
+        /// Creates a new user account model instance.
+        /// </summary>
+        /// <returns>A new user account model instance.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.CreateNewRecord)]
+        public ConfirmableUserAccount NewUserAccount()
+        {
+            return DataContext.Table<ConfirmableUserAccount>().NewRecord();
+        }
+
+        /// <summary>
+        /// Adds a new user account.
+        /// </summary>
+        /// <param name="record">User account model instance to add.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.AddNewRecord)]
+        public void AddNewUserAccount(ConfirmableUserAccount record)
+        {
+            if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
+                record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
+
+            DataContext.Table<ConfirmableUserAccount>().AddNewRecord(record);
+        }
+
+        /// <summary>
+        /// Updates user account.
+        /// </summary>
+        /// <param name="record">User account model instance to update.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.UpdateRecord)]
+        public void UpdateUserAccount(ConfirmableUserAccount record)
+        {
+            if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
+                record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
+
+            DataContext.Table<ConfirmableUserAccount>().UpdateRecord(record);
         }
 
         #endregion

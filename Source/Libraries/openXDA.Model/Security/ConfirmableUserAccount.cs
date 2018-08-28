@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.Data.Model;
+using GSF.Security;
 using GSF.Security.Model;
 
 namespace openXDA.Model
@@ -29,6 +30,11 @@ namespace openXDA.Model
     [TableName("UserAccount")]
     public class ConfirmableUserAccount : UserAccount
     {
+        static ConfirmableUserAccount()
+        {
+            TableOperations<ConfirmableUserAccount>.TypeRegistry.RegisterType<AdoSecurityProvider>();
+        }
+
         public bool PhoneConfirmed { get; set; }
         public bool EmailConfirmed { get; set; }
         public bool Approved { get; set; }
