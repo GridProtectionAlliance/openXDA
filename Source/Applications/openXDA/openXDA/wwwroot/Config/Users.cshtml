@@ -83,13 +83,14 @@
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
-new[] { "FirstName", "First Name", "text-center valign-middle" },
-new[] {"LastName", "Last Name", "text-center valign-middle"},
-new[] { null, "User Name", "text-center valign-middle"},
-new[] { "UseADAuthentication", "Is&nbsp;AD&nbsp;User", "text-center" },
-new[] { "CreatedOn", "Date&nbsp;Added", "text-center" },
-new[] { null, "User Roles", "text-center valign-middle" }
-};
+        new[] { "FullName", "Full&nbsp;Name", "text-center valign-middle" },
+        new[] { "AccountName", "User&nbsp;Name", "text-center valign-middle" },
+        new[] { "Email", "Email", "text-center valign-middle" },
+        new[] { "Phone", "Phone", "text-center valign-middle" },
+        new[] { "UseADAuthentication", "Is&nbsp;AD&nbsp;User", "text-center" },
+        new[] { "Approved", "Approved", "text-center" },
+        new[] { null, "User&nbsp;Roles", "text-center valign-middle" }
+    };
 
     if (ViewBag.HelpTarget == null)
     {
@@ -115,11 +116,12 @@ new[] { null, "User Roles", "text-center valign-middle" }
 }
 @helper BodyRows()
 {
-    <td width="20%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: FirstName"></button></td>
-    <td width="20%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LastName"></button></td>
-    <td width="25%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AccountName(), attr: {title: Name}, click: $parent.viewPageRecord"></button></td>
+    <td width="17%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: fullName($data)"></button></td>
+    <td width="16%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AccountName(), attr: {title: Name}, click: $parent.viewPageRecord"></button></td>
+    <td width="16%" class="text-center valign-middle" nowrap><span data-bind="text: Email"></span> <span class="glyphicon glyphicon-exclamation-sign text-danger" title="Email not confirmed" data-bind="visible: notNull(Email).length > 0 && !EmailConfirmed"></span></td>
+    <td width="16%" class="text-center valign-middle" nowrap><span data-bind="text: Phone"></span> <span class="glyphicon glyphicon-exclamation-sign text-danger" title="Phone not confirmed" data-bind="visible: notNull(Phone).length > 0 && !PhoneConfirmed"></span></td>
     <td width="10%" class="text-center valign-middle"><input type="checkbox" id="checkEnabled" data-bind="checked: UseADAuthentication" disabled></td>
-    <td width="10%" class="text-center valign-middle" data-bind="text: CreatedOn.formatDate(DateFormat)"></td>
+    <td width="10%" class="text-center valign-middle"><input type="checkbox" id="checkEnabled" data-bind="checked: Approved" disabled></td>
     <td width="10%" class="text-center valign-middle"><button type="button" class="btn btn-default btn-sm" data-bind="click: openRolesEditor.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Roles...</button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -171,9 +173,7 @@ new[] { null, "User Roles", "text-center valign-middle" }
                         @Raw(dataContext.AddInputField<ConfirmableUserAccount>("LastName"))
                     </div>
                     <div class="col-md-6">
-                        <div data-bind="visible: UseDBAuthentication">
-                            @Raw(dataContext.AddInputField<ConfirmableUserAccount>("Phone", dependencyFieldName: "UseDBAuthentication"))
-                        </div>
+                        @Raw(dataContext.AddInputField<ConfirmableUserAccount>("Phone"))
                         @Raw(dataContext.AddInputField<ConfirmableUserAccount>("Email"))
                         <div data-bind="visible: UseDBAuthentication">
                             @Raw(dataContext.AddDateField<ConfirmableUserAccount>("ChangePasswordOn", dependencyFieldName: "UseDBAuthentication"))
@@ -190,6 +190,9 @@ new[] { null, "User Roles", "text-center valign-middle" }
         </div>
         <div class="pull-right">
             @Raw(dataContext.AddCheckBoxField<ConfirmableUserAccount>("LockedOut"))
+            @Raw(dataContext.AddCheckBoxField<ConfirmableUserAccount>("PhoneConfirmed"))
+            @Raw(dataContext.AddCheckBoxField<ConfirmableUserAccount>("EmailConfirmed"))
+            @Raw(dataContext.AddCheckBoxField<ConfirmableUserAccount>("Approved"))
         </div>
     </div>
 }
@@ -245,6 +248,18 @@ new[] { null, "User Roles", "text-center valign-middle" }
             Valid: 1,
             Unknown: 2,
             Resolving: 3
+        };
+
+        function fullName(record) {
+            var firstName = notNull(record.FirstName);
+            var lastName = notNull(record.LastName);
+
+            if (lastName.length === 0)
+                return firstName;
+            else if (firstName.length === 0)
+                return lastName;
+            else
+                return lastName + ", " + firstName;
         }
 
         function lookupAccountName(record) {
@@ -439,12 +454,6 @@ new[] { null, "User Roles", "text-center valign-middle" }
                     }
                 }
             });
-        });
-
-        $(function () {
-            viewModel.deleteRecord = function (keyValues) {
-                return dataHub.deleteConfirmableUserAccount(keyValues[0]);
-            }
         });
     </script>
 }

@@ -618,7 +618,26 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.QueryRecordCount)]
         public int QueryUserAccountCount(string filterText)
         {
-            return DataContext.Table<ConfirmableUserAccount>().QueryRecordCount(filterText);
+            bool matchesFilter(ConfirmableUserAccount userAccount)
+            {
+                string firstName = userAccount.FirstName.ToNonNullString().ToLower();
+                string lastName = userAccount.LastName.ToNonNullString().ToLower();
+                string userName = userAccount.AccountName.ToNonNullString().ToLower();
+                string email = userAccount.Email.ToNonNullString().ToLower();
+                string phone = userAccount.Phone.ToNonNullString().ToLower();
+                string lowFilterText = filterText.ToNonNullString().ToLower();
+
+                return
+                    firstName.Contains(lowFilterText) ||
+                    lastName.Contains(lowFilterText) ||
+                    userName.Contains(lowFilterText) ||
+                    email.Contains(lowFilterText) ||
+                    phone.Contains(lowFilterText);
+            }
+
+            return DataContext.Table<ConfirmableUserAccount>().QueryRecords()
+                .Where(matchesFilter)
+                .Count();
         }
 
         /// <summary>
@@ -634,9 +653,68 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.QueryRecords)]
         public IEnumerable<ConfirmableUserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            return DataContext.Table<ConfirmableUserAccount>().QueryRecords(sortField, ascending, page, pageSize, filterText);
+            bool matchesFilter(ConfirmableUserAccount userAccount)
+            {
+                string firstName = userAccount.FirstName.ToNonNullString().ToLower();
+                string lastName = userAccount.LastName.ToNonNullString().ToLower();
+                string userName = userAccount.AccountName.ToNonNullString().ToLower();
+                string email = userAccount.Email.ToNonNullString().ToLower();
+                string phone = userAccount.Phone.ToNonNullString().ToLower();
+                string lowFilterText = filterText.ToNonNullString().ToLower();
+
+                return
+                    firstName.Contains(lowFilterText) ||
+                    lastName.Contains(lowFilterText) ||
+                    userName.Contains(lowFilterText) ||
+                    email.Contains(lowFilterText) ||
+                    phone.Contains(lowFilterText);
+            }
+
+            Func<ConfirmableUserAccount, IComparable> orderByFunc;
+
+            switch (sortField)
+            {
+                case "AccountName":
+                    orderByFunc = (userAccount => userAccount.AccountName);
+                    break;
+
+                case "Email":
+                    orderByFunc = (userAccount => userAccount.Email);
+                    break;
+
+                case "Phone":
+                    orderByFunc = (userAccount => userAccount.Phone);
+                    break;
+
+                case "UseADAuthentication":
+                    orderByFunc = (userAccount => userAccount.UseADAuthentication);
+                    break;
+
+                case "Approved":
+                    orderByFunc = (userAccount => userAccount.Approved);
+                    break;
+
+                default:
+                case "FullName":
+                    orderByFunc = (userAccount => string.Concat(userAccount.LastName, " ", userAccount.FirstName));
+                    break;
+            }
+
+            IEnumerable<ConfirmableUserAccount> accounts = DataContext.Table<ConfirmableUserAccount>().QueryRecords();
+            accounts = accounts.Where(matchesFilter);
+            accounts = ascending ? accounts.OrderBy(orderByFunc) : accounts.OrderByDescending(orderByFunc);
+
+            int skipCount = (page - 1) * pageSize;
+            accounts = accounts.Skip(skipCount);
+            accounts = accounts.Take(pageSize);
+
+            return accounts;
         }
 
+        /// <summary>
+        /// Deletes user account.
+        /// </summary>
+        /// <param name="id">Unique ID of user account.</param>
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(ConfirmableUserAccount), RecordOperation.DeleteRecord)]
         public void DeleteUserAccount(Guid id)
