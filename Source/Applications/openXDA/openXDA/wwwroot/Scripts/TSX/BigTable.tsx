@@ -36,14 +36,11 @@ export default class BigTable extends React.Component<any, any> {
         }
     }
 
-    static getDerivedStateFromProps(props, state) {
-
-    }
 
     shouldComponentUpdate(nextProps, nextState) {
-        var newRows = this.generateRows(nextProps.data);
-        if (newRows != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
-            console.log(newRows);
+        if (nextProps.data != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
+            var newRows = this.generateRows(nextProps.data);
+
             nextState.rows = newRows;
             return true;
         }

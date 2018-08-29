@@ -77982,12 +77982,9 @@ var BigTable = (function (_super) {
         };
         return _this;
     }
-    BigTable.getDerivedStateFromProps = function (props, state) {
-    };
     BigTable.prototype.shouldComponentUpdate = function (nextProps, nextState) {
-        var newRows = this.generateRows(nextProps.data);
-        if (newRows != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
-            console.log(newRows);
+        if (nextProps.data != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
+            var newRows = this.generateRows(nextProps.data);
             nextState.rows = newRows;
             return true;
         }
