@@ -138,7 +138,6 @@ export class PQTrendingWebReport extends React.Component<any, any>{
                     <BigTable
                         theadStyle={{ position: 'absolute', overflowY: 'scroll', maxHeight: '50px'}}
                         tbodyStyle={{ top: '50px', position: 'absolute', overflowY: 'scroll', maxHeight: height-60}}
-                        tableClass={"table table-hover table-bordered"}
                         cols={this.cols}
                         data={this.state.data}
                         sortField={this.state.sortField}
@@ -216,7 +215,7 @@ export class PQTrendingWebReport extends React.Component<any, any>{
 
     getData() {
         $(this.refs.loader).show();
-
+        this.setState({ data: null });
         this.pqTrendingWebReportService.getData(this.state.date, this.state.stat, this.state.sortField, this.state.ascending).done(data => {
             this.setState({ data: data }, () => {
                 $(this.refs.loader).hide();
@@ -227,6 +226,7 @@ export class PQTrendingWebReport extends React.Component<any, any>{
     updateUrl() {
         var state = _.clone(this.state);
         delete state.data;
+        delete state.listModalData;
 
         this.history['push']('PQTrendingWebReport.cshtml?' + queryString.stringify(state, { encode: false }));
     }

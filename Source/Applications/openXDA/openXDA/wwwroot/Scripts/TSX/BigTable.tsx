@@ -30,24 +30,40 @@ export default class BigTable extends React.Component<any, any> {
     props: { cols: Array<any>, data: Array<any>, onClick: Function, sortField: string, ascending: boolean, onSort: Function, tableClass?: string, theadStyle?: object, tbodyStyle?: object };
     constructor(props) {
         super(props);
+        this.state = {
+            headers: this.generateHeaders(),
+            rows: this.generateRows(props.data)
+        }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    static getDerivedStateFromProps(props, state) {
+
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        var newRows = this.generateRows(nextProps.data);
+        if (newRows != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
+            console.log(newRows);
+            nextState.rows = newRows;
+            return true;
+        }
+        else
+            return false;
     }
 
     render() {
-        var rowComponents = this.generateRows();
+        var rowComponents = this.generateRows(this.props.data);
         var headerComponents = this.generateHeaders();
         return (
             <div className={'divTable ' + (this.props.tableClass != undefined ? this.props.tableClass : '')} >
-                <div className={'divTableHeading'} style={this.props.theadStyle}>{headerComponents}</div>
-                <div className={'divTableBody'} style={this.props.tbodyStyle}>{rowComponents}</div>
+                <div className={'divTableHeading'} style={this.props.theadStyle}>{this.state.headers}</div>
+                <div className={'divTableBody'} style={this.props.tbodyStyle}>{this.state.rows}</div>
             </div>
         );
     }
 
     generateHeaders() {
-        if (this.props.cols.length == 0) return null;
+        if (this.props.cols == null || this.props.cols.length == 0) return null;
 
         var cells = this.props.cols.map(colData => {
             var style = colData.headerStyle;
@@ -60,10 +76,10 @@ export default class BigTable extends React.Component<any, any> {
         return <div className='divTableRow'>{cells}</div>;
     }
 
-    generateRows() {
-        if (this.props.data.length == 0) return null;
+    generateRows(data) {
+        if (data == null || data.length == 0) return null;
 
-        return this.props.data.map((item, index) => {
+        return data.map((item, index) => {
             var cells = this.props.cols.map(colData => {
                 var style = _.clone(colData.rowStyle);
                 return <div
@@ -90,3 +106,50 @@ export default class BigTable extends React.Component<any, any> {
         this.props.onSort(data);
     }
 };
+
+const HeaderRow = (props) => {
+    if (props.cols == null || props.cols.length == 0) return null;
+    var cells = props.cols.map(colData => {
+        var style = colData.headerStyle;
+        if (style.cursor == undefined)
+            style.cursor = 'pointer';
+        if (style.height == undefined)
+            style.height = 50;
+
+        return <HeaderCell key={colData.key} cellKey={colData.key} style={style} label={colData.label} onClick={props.handleSort.bind(this, { col: colData.key, ascending: props.ascending })} sortField={props.sortField} ascending={props.ascending}></HeaderCell>
+    });
+
+    return <div className='divTableRow'>{cells}</div>;
+}
+
+const HeaderCell = (props) => {
+    return <div className='divTableHead' style={props.style} onClick={props.onClick}>{props.label}{(props.sortField == props.cellKey ? <span className={"glyphicon " + (props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom")}></span> : null)}</div>
+}
+
+const DataRow = (props) => {
+    if (props.data == null || props.data.length == 0) return null;
+
+    var cells = this.props.cols.map(colData => {
+        var style = _.clone(colData.rowStyle);
+        return <DataCell
+                    key={props.index.toString() + props.item[colData.key] + colData.key}
+                    colData={colData}
+                    item={props.item}
+                    style={style}
+                    onClick={this.handleClick.bind(this, { col: colData.key, row: props.item, data: props.item[colData.key] })}
+                />
+    });
+
+    return <div className='divTableRow' style={props.style} key={props.index.toString()}>{cells}</div>;
+}
+
+const DataCell = (props) => {
+    return <div
+                className='divTableCell'
+                style={props.style}
+                onClick={props.onClick}
+                >
+                {props.colData.content != undefined ? props.colData.content(props.item, props.colData.key, props.style) : props.item[props.colData.key]}
+            </div>;
+}
+

@@ -77827,7 +77827,7 @@ var PQTrendingWebReport = (function (_super) {
                         React.createElement("div", { style: { border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' } }),
                         React.createElement("span", null, "Loading...")))),
             React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth - 250, float: 'right', maxHeight: height, overflowY: 'auto' } },
-                React.createElement(BigTable_1.default, { theadStyle: { position: 'absolute', overflowY: 'scroll', maxHeight: '50px' }, tbodyStyle: { top: '50px', position: 'absolute', overflowY: 'scroll', maxHeight: height - 60 }, tableClass: "table table-hover table-bordered", cols: this.cols, data: this.state.data, sortField: this.state.sortField, ascending: this.state.ascending, onClick: this.handleTableClick.bind(this), onSort: this.handleTableSort.bind(this) })),
+                React.createElement(BigTable_1.default, { theadStyle: { position: 'absolute', overflowY: 'scroll', maxHeight: '50px' }, tbodyStyle: { top: '50px', position: 'absolute', overflowY: 'scroll', maxHeight: height - 60 }, cols: this.cols, data: this.state.data, sortField: this.state.sortField, ascending: this.state.ascending, onClick: this.handleTableClick.bind(this), onSort: this.handleTableSort.bind(this) })),
             React.createElement("div", { ref: "listModal", className: "static-modal", style: { display: 'none' } },
                 React.createElement(react_bootstrap_1.Modal.Dialog, null,
                     React.createElement(react_bootstrap_1.Modal.Header, null,
@@ -77880,6 +77880,7 @@ var PQTrendingWebReport = (function (_super) {
     PQTrendingWebReport.prototype.getData = function () {
         var _this = this;
         $(this.refs.loader).show();
+        this.setState({ data: null });
         this.pqTrendingWebReportService.getData(this.state.date, this.state.stat, this.state.sortField, this.state.ascending).done(function (data) {
             _this.setState({ data: data }, function () {
                 $(_this.refs.loader).hide();
@@ -77889,6 +77890,7 @@ var PQTrendingWebReport = (function (_super) {
     PQTrendingWebReport.prototype.updateUrl = function () {
         var state = _.clone(this.state);
         delete state.data;
+        delete state.listModalData;
         this.history['push']('PQTrendingWebReport.cshtml?' + queryString.stringify(state, { encode: false }));
     };
     return PQTrendingWebReport;
@@ -77965,6 +77967,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
 var _ = __webpack_require__(25);
@@ -77972,20 +77975,35 @@ __webpack_require__(332);
 var BigTable = (function (_super) {
     __extends(BigTable, _super);
     function BigTable(props) {
-        return _super.call(this, props) || this;
+        var _this = _super.call(this, props) || this;
+        _this.state = {
+            headers: _this.generateHeaders(),
+            rows: _this.generateRows(props.data)
+        };
+        return _this;
     }
-    BigTable.prototype.componentDidUpdate = function (prevProps, prevState) {
+    BigTable.getDerivedStateFromProps = function (props, state) {
+    };
+    BigTable.prototype.shouldComponentUpdate = function (nextProps, nextState) {
+        var newRows = this.generateRows(nextProps.data);
+        if (newRows != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
+            console.log(newRows);
+            nextState.rows = newRows;
+            return true;
+        }
+        else
+            return false;
     };
     BigTable.prototype.render = function () {
-        var rowComponents = this.generateRows();
+        var rowComponents = this.generateRows(this.props.data);
         var headerComponents = this.generateHeaders();
         return (React.createElement("div", { className: 'divTable ' + (this.props.tableClass != undefined ? this.props.tableClass : '') },
-            React.createElement("div", { className: 'divTableHeading', style: this.props.theadStyle }, headerComponents),
-            React.createElement("div", { className: 'divTableBody', style: this.props.tbodyStyle }, rowComponents)));
+            React.createElement("div", { className: 'divTableHeading', style: this.props.theadStyle }, this.state.headers),
+            React.createElement("div", { className: 'divTableBody', style: this.props.tbodyStyle }, this.state.rows)));
     };
     BigTable.prototype.generateHeaders = function () {
         var _this = this;
-        if (this.props.cols.length == 0)
+        if (this.props.cols == null || this.props.cols.length == 0)
             return null;
         var cells = this.props.cols.map(function (colData) {
             var style = colData.headerStyle;
@@ -77997,11 +78015,11 @@ var BigTable = (function (_super) {
         });
         return React.createElement("div", { className: 'divTableRow' }, cells);
     };
-    BigTable.prototype.generateRows = function () {
+    BigTable.prototype.generateRows = function (data) {
         var _this = this;
-        if (this.props.data.length == 0)
+        if (data == null || data.length == 0)
             return null;
-        return this.props.data.map(function (item, index) {
+        return data.map(function (item, index) {
             var cells = _this.props.cols.map(function (colData) {
                 var style = _.clone(colData.rowStyle);
                 return React.createElement("div", { className: 'divTableCell', key: index.toString() + item[colData.key] + colData.key, style: style, onClick: _this.handleClick.bind(_this, { col: colData.key, row: item, data: item[colData.key] }) }, colData.content != undefined ? colData.content(item, colData.key, style) : item[colData.key]);
@@ -78020,6 +78038,36 @@ var BigTable = (function (_super) {
 }(React.Component));
 exports.default = BigTable;
 ;
+var HeaderRow = function (props) {
+    if (props.cols == null || props.cols.length == 0)
+        return null;
+    var cells = props.cols.map(function (colData) {
+        var style = colData.headerStyle;
+        if (style.cursor == undefined)
+            style.cursor = 'pointer';
+        if (style.height == undefined)
+            style.height = 50;
+        return React.createElement(HeaderCell, { key: colData.key, cellKey: colData.key, style: style, label: colData.label, onClick: props.handleSort.bind(_this, { col: colData.key, ascending: props.ascending }), sortField: props.sortField, ascending: props.ascending });
+    });
+    return React.createElement("div", { className: 'divTableRow' }, cells);
+};
+var HeaderCell = function (props) {
+    return React.createElement("div", { className: 'divTableHead', style: props.style, onClick: props.onClick },
+        props.label,
+        (props.sortField == props.cellKey ? React.createElement("span", { className: "glyphicon " + (props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom") }) : null));
+};
+var DataRow = function (props) {
+    if (props.data == null || props.data.length == 0)
+        return null;
+    var cells = _this.props.cols.map(function (colData) {
+        var style = _.clone(colData.rowStyle);
+        return React.createElement(DataCell, { key: props.index.toString() + props.item[colData.key] + colData.key, colData: colData, item: props.item, style: style, onClick: _this.handleClick.bind(_this, { col: colData.key, row: props.item, data: props.item[colData.key] }) });
+    });
+    return React.createElement("div", { className: 'divTableRow', style: props.style, key: props.index.toString() }, cells);
+};
+var DataCell = function (props) {
+    return React.createElement("div", { className: 'divTableCell', style: props.style, onClick: props.onClick }, props.colData.content != undefined ? props.colData.content(props.item, props.colData.key, props.style) : props.item[props.colData.key]);
+};
 
 
 /***/ }),
