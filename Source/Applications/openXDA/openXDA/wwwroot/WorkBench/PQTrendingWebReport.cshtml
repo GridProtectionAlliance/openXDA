@@ -39,7 +39,7 @@
     DateTime toDateTime = DateTime.Now;
     ViewBag.usePagedViewModel = false;
     ViewBag.useContainer = false;
-    ViewBag.PQMeasurements = JsonConvert.SerializeObject(dataContext.Table<PQMeasurement>().QueryRecords());
+    ViewBag.PQMeasurements = JsonConvert.SerializeObject(dataContext.Table<PQMeasurement>().QueryRecordsWhere("Enabled <> 0"));
 
 }
 <script>

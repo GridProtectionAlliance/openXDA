@@ -5811,8 +5811,7 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(PQMeasurement), RecordOperation.DeleteRecord)]
         public void DeletePQMeasurement(int id)
         {
-            DataContext.Table<PQMeasurement>().DeleteRecord(id);
-
+            CascadeDelete("PQMeasurement", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]

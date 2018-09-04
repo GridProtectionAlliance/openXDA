@@ -28,12 +28,15 @@ namespace openXDA.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [Searchable]
         public string Name { get; set; }
+        [Searchable]
         public string Description { get; set; }
         public int UnitID { get; set; }
         public int MeasurementTypeID { get; set; }
         public int MeasurementCharacteristicID { get; set; }
         public int PhaseID { get; set; }
         public int HarmonicGroup { get; set; }
+        public bool Enabled { get; set; }
     }
 }

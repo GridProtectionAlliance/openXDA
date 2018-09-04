@@ -77967,7 +77967,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
 var _ = __webpack_require__(25);
@@ -77975,28 +77974,14 @@ __webpack_require__(332);
 var BigTable = (function (_super) {
     __extends(BigTable, _super);
     function BigTable(props) {
-        var _this = _super.call(this, props) || this;
-        _this.state = {
-            headers: _this.generateHeaders(),
-            rows: _this.generateRows(props.data)
-        };
-        return _this;
+        return _super.call(this, props) || this;
     }
-    BigTable.prototype.shouldComponentUpdate = function (nextProps, nextState) {
-        if (nextProps.data != null && JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
-            var newRows = this.generateRows(nextProps.data);
-            nextState.rows = newRows;
-            return true;
-        }
-        else
-            return false;
-    };
     BigTable.prototype.render = function () {
         var rowComponents = this.generateRows(this.props.data);
         var headerComponents = this.generateHeaders();
         return (React.createElement("div", { className: 'divTable ' + (this.props.tableClass != undefined ? this.props.tableClass : '') },
-            React.createElement("div", { className: 'divTableHeading', style: this.props.theadStyle }, this.state.headers),
-            React.createElement("div", { className: 'divTableBody', style: this.props.tbodyStyle }, this.state.rows)));
+            React.createElement("div", { className: 'divTableHeading', style: this.props.theadStyle }, headerComponents),
+            React.createElement("div", { className: 'divTableBody', style: this.props.tbodyStyle }, rowComponents)));
     };
     BigTable.prototype.generateHeaders = function () {
         var _this = this;
@@ -78035,36 +78020,6 @@ var BigTable = (function (_super) {
 }(React.Component));
 exports.default = BigTable;
 ;
-var HeaderRow = function (props) {
-    if (props.cols == null || props.cols.length == 0)
-        return null;
-    var cells = props.cols.map(function (colData) {
-        var style = colData.headerStyle;
-        if (style.cursor == undefined)
-            style.cursor = 'pointer';
-        if (style.height == undefined)
-            style.height = 50;
-        return React.createElement(HeaderCell, { key: colData.key, cellKey: colData.key, style: style, label: colData.label, onClick: props.handleSort.bind(_this, { col: colData.key, ascending: props.ascending }), sortField: props.sortField, ascending: props.ascending });
-    });
-    return React.createElement("div", { className: 'divTableRow' }, cells);
-};
-var HeaderCell = function (props) {
-    return React.createElement("div", { className: 'divTableHead', style: props.style, onClick: props.onClick },
-        props.label,
-        (props.sortField == props.cellKey ? React.createElement("span", { className: "glyphicon " + (props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom") }) : null));
-};
-var DataRow = function (props) {
-    if (props.data == null || props.data.length == 0)
-        return null;
-    var cells = _this.props.cols.map(function (colData) {
-        var style = _.clone(colData.rowStyle);
-        return React.createElement(DataCell, { key: props.index.toString() + props.item[colData.key] + colData.key, colData: colData, item: props.item, style: style, onClick: _this.handleClick.bind(_this, { col: colData.key, row: props.item, data: props.item[colData.key] }) });
-    });
-    return React.createElement("div", { className: 'divTableRow', style: props.style, key: props.index.toString() }, cells);
-};
-var DataCell = function (props) {
-    return React.createElement("div", { className: 'divTableCell', style: props.style, onClick: props.onClick }, props.colData.content != undefined ? props.colData.content(props.item, props.colData.key, props.style) : props.item[props.colData.key]);
-};
 
 
 /***/ }),

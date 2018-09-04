@@ -109,6 +109,9 @@
   <Component Id="wwwroot_Config_Layout_cshtml">
     <File Id="wwwroot_Config_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Layout.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_MeterAssetGroupView_cshtml">
+    <File Id="wwwroot_Config_MeterAssetGroupView.cshtml" Name="MeterAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterAssetGroupView.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_MetersWithHourlyLimits_cshtml">
     <File Id="wwwroot_Config_MetersWithHourlyLimits.cshtml" Name="MetersWithHourlyLimits.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MetersWithHourlyLimits.cshtml" />
   </Component>
@@ -127,6 +130,9 @@
   <Component Id="wwwroot_Config_TemplateEditor_cshtml">
     <File Id="wwwroot_Config_TemplateEditor.cshtml" Name="TemplateEditor.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\TemplateEditor.cshtml" />
   </Component>
+  <Component Id="wwwroot_Config_UserAccountAssetGroupView_cshtml">
+    <File Id="wwwroot_Config_UserAccountAssetGroupView.cshtml" Name="UserAccountAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UserAccountAssetGroupView.cshtml" />
+  </Component>
   <Component Id="wwwroot_Config_UserDashSettings_cshtml">
     <File Id="wwwroot_Config_UserDashSettings.cshtml" Name="UserDashSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\UserDashSettings.cshtml" />
   </Component>
@@ -138,6 +144,9 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Content_Components" Directory="wwwroot_CONTENTFOLDER">
+  <Component Id="wwwroot_Content_BigTable_css">
+    <File Id="wwwroot_Content_BigTable.css" Name="BigTable.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\BigTable.css" />
+  </Component>
   <Component Id="wwwroot_Content_bootstrap_datepicker3_css">
     <File Id="wwwroot_Content_bootstrap_datepicker3.css" Name="bootstrap-datepicker3.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\bootstrap-datepicker3.css" />
   </Component>
@@ -659,6 +668,9 @@
   <Component Id="wwwroot_Scripts_OpenSEE_js">
     <File Id="wwwroot_Scripts_OpenSEE.js" Name="OpenSEE.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\OpenSEE.js" />
   </Component>
+  <Component Id="wwwroot_Scripts_OpenSEE_js_map">
+    <File Id="wwwroot_Scripts_OpenSEE.js.map" Name="OpenSEE.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\OpenSEE.js.map" />
+  </Component>
   <Component Id="wwwroot_Scripts_OpenSEEold_js">
     <File Id="wwwroot_Scripts_OpenSEEold.js" Name="OpenSEEold.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\OpenSEEold.js" />
   </Component>
@@ -679,6 +691,9 @@
   </Component>
   <Component Id="wwwroot_Scripts_PQTrendingWebReport_js_map">
     <File Id="wwwroot_Scripts_PQTrendingWebReport.js.map" Name="PQTrendingWebReport.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PQTrendingWebReport.js.map" />
+  </Component>
+  <Component Id="wwwroot_Scripts_PQTrendingWebReport_zip">
+    <File Id="wwwroot_Scripts_PQTrendingWebReport.zip" Name="PQTrendingWebReport.zip" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PQTrendingWebReport.zip" />
   </Component>
   <Component Id="wwwroot_Scripts_Report_js">
     <File Id="wwwroot_Scripts_Report.js" Name="Report.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Report.js" />
@@ -3947,6 +3962,9 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Scripts_TSX_Components" Directory="wwwroot_SCRIPTSTSXFOLDER">
+  <Component Id="wwwroot_Scripts_TSX_BigTable_tsx">
+    <File Id="wwwroot_Scripts_TSX_BigTable.tsx" Name="BigTable.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\BigTable.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_DataQualitySummary_tsx">
     <File Id="wwwroot_Scripts_TSX_DataQualitySummary.tsx" Name="DataQualitySummary.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DataQualitySummary.tsx" />
   </Component>
@@ -4110,6 +4128,9 @@
   </Component>
   <Component Id="wwwroot_WorkBench_PQTrendingWebReport_cshtml">
     <File Id="wwwroot_WorkBench_PQTrendingWebReport.cshtml" Name="PQTrendingWebReport.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\PQTrendingWebReport.cshtml" />
+  </Component>
+  <Component Id="wwwroot_WorkBench_PQTrendingWebReportSettings_cshtml">
+    <File Id="wwwroot_WorkBench_PQTrendingWebReportSettings.cshtml" Name="PQTrendingWebReportSettings.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\PQTrendingWebReportSettings.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_SiteSummary_cshtml">
     <File Id="wwwroot_WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />

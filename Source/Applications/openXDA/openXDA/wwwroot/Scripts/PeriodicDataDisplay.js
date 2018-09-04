@@ -69582,7 +69582,7 @@ var MeterInput = (function (_super) {
             var value = (_this.props.value ? _this.props.value : data[0].ID);
             var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.Name); });
             var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange({ meterID: e.target.value, measurementID: null }); }, defaultValue: value }, options);
-            _this.props.onChange({ meterID: value });
+            _this.props.onChange(value);
             _this.setState({ select: select });
         });
     };

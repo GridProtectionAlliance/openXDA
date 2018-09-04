@@ -498,11 +498,7 @@ namespace FaultData.DataOperations
                 {
                     if ((object)dataSeries.SeriesInfo != null && dataSeries.DataPoints.Count > 1)
                     {
-                        double samplesPerHour = (dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D);
-                        double roundedSamplesPerHour = Math.Round(samplesPerHour);
-
-                        if (Math.Abs(samplesPerHour - roundedSamplesPerHour) < 0.1D)
-                            samplesPerHour = roundedSamplesPerHour;
+                        double samplesPerHour = CalculateSamplesPerHour(dataSeries);
 
                         if (samplesPerHour <= 60.0D)
                         {
@@ -601,6 +597,18 @@ namespace FaultData.DataOperations
                    channel.Phase.Name == "BC" ||
                    channel.Phase.Name == "CA" ||
                    channel.Phase.Name == "LineToLineAverage";
+        }
+
+        public static double CalculateSamplesPerHour(DataSeries dataSeries)
+        {
+            double[] commonSampleRates =
+            {
+                0.5, 1, 2, 3, 4, 6, 10, 12, 15, 20, 30, 60
+            };
+
+            double samplesPerHour = (dataSeries.DataPoints.Count - 1) / (dataSeries.Duration / 3600.0D);
+            double nearestCommonRate = commonSampleRates.MinBy(rate => Math.Abs(samplesPerHour - rate));
+            return nearestCommonRate;
         }
 
         #endregion

@@ -110,10 +110,15 @@ namespace openXDA.Adapters
             string notSqlInjection = "Avg";
             if (stats.Contains(stat)) notSqlInjection = stat;
 
+            string notSqlInjectionSort = connection.ExecuteScalar<string>(string.Empty, "SELECT Name FROM PQMeasurement WHERE Name = {0}", sortField);
+            if (notSqlInjectionSort != sortField) notSqlInjectionSort = "Name";
+            notSqlInjectionSort = (ascending ? "[" + notSqlInjectionSort + "]" + " ASC" : "[" + notSqlInjectionSort + "]" + " DESC");
+
             DataTable table;
-            if (s_memoryCache.Contains("Data" +stat + date.ToString()))
+            string target = "Data" + stat + date.ToString() + notSqlInjectionSort + ascending.ToString();
+            if (s_memoryCache.Contains(target))
             {
-                table = (DataTable)s_memoryCache.Get("Data" + stat + date.ToString());
+                table = (DataTable)s_memoryCache.Get(target);
             }
             else {
                 table = connection.RetrieveData(@"
@@ -122,7 +127,7 @@ namespace openXDA.Adapters
                     DECLARE @DateParam Date = {0}
 
                     SELECT @PivotColumns = @PivotColumns + '[' + t.Name + '],' 
-                    FROM (Select Name FROM PQMeasurement) AS t
+                    FROM (Select Name FROM PQMeasurement WHERE Enabled <> 0) AS t
 
                     SET @SQLStatement =
                     ' 
@@ -145,7 +150,7 @@ namespace openXDA.Adapters
 		                            PQTrendStat  JOIN
 		                            PQMeasurement ON PQTrendStat.PQMeasurementTypeID = PQMeasurement.ID
 	                            WHERE 
-		                            PQTrendStat.Date = @date
+		                            PQMeasurement.Enabled <>0 AND PQTrendStat.Date = @date
 
                             ) as t ON Meter.ID = t.MeterID
                            WHERE 
@@ -155,22 +160,17 @@ namespace openXDA.Adapters
 		                    Avg(ed." + notSqlInjection + @")
 		                    FOR ed.Measurement IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ') 
                      ) as pvt 
-                     ORDER BY Name '
+                     ORDER BY " + notSqlInjectionSort +@" '
 
                     print @sqlstatement
 
                     exec sp_executesql @SQLStatement, N'@DateParam Date', @DateParam
                 ", date);
 
-                s_memoryCache.Add("Data" + stat + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
+                s_memoryCache.Add(target, table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
 
             }
-            if (!table.Select().Any())
-                return table;
-            else if (ascending)
-                return table.Select().OrderBy(row => row[sortField]).CopyToDataTable();
-            else
-                return table.Select().OrderByDescending(row => row[sortField]).CopyToDataTable();
+            return table;
         }
 
 

@@ -28,7 +28,7 @@ import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 import StepChangeWebReportService from "./../TS/Services/StepChangeWebReport";
-import Table from "./Table";
+import BigTable from "./BigTable";
 import Select from "./Select";
 import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
@@ -133,10 +133,9 @@ export class StepChangeWebReport extends React.Component<any, any>{
                 </div>
 
                 <div className="waveform-viewer" style={{ width: window.innerWidth - 250, float: 'right',  maxHeight: height, overflowY: 'auto' }}>
-                    <Table
-                        //theadStyle={{ position: 'absolute'}}
-                        //tbodyStyle={{ top: '60px', position: 'absolute'}}
-                        tableClass={"table table-hover table-bordered"}
+                    <BigTable
+                        theadStyle={{ position: 'absolute', overflowY: 'scroll', maxHeight: '50px' }}
+                        tbodyStyle={{ top: '50px', position: 'absolute', overflowY: 'scroll', maxHeight: height - 60 }}
                         cols={this.cols}
                         data={this.state.data}
                         sortField={this.state.sortField}

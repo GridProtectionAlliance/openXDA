@@ -28,7 +28,7 @@ import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 import DataQualitySummaryService from "./../TS/Services/DataQualitySummary";
-import Table from "./Table";
+import BigTable from "./BigTable";
 import MeterInput from './MeterInput';
 import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
@@ -125,14 +125,13 @@ export class DataQualitySummary extends React.Component<any, any>{
 
                 <div className="waveform-viewer" style={{ width: window.innerWidth }}>
                     <div className="list-group" style={{ maxHeight: height, overflowY: 'auto' }}>
-                        <Table
+                        <BigTable
                             cols={
                                 [{ key: "Name", label: (this.state.level == "Meter" ? "Meter Name" : "Channel Name"), headerStyle: {width: '20%'} },
                                  { key: "Expected", label: "Expected", headerStyle: { width: '20%' } },
                                  { key: "Missing", label: "Missing", headerStyle: { width: '20%' } },
                                  { key: "Latched", label: "Latched", headerStyle: { width: '20%' } },
                                     { key: "Unreasonable", label: "Unreasonable", headerStyle: { width: '20%' } }]}
-                            tableClass={"table table-hover table-bordered"}
                             data={this.state.data}
                             sortField={this.state.sortField}
                             ascending={this.state.ascending}

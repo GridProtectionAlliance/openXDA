@@ -110,6 +110,9 @@ namespace openXDA.Adapters
 	                    FROM
 		                    Channel JOIN
 		                    ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID
+	                    WHERE
+		                    Channel.MeasurementTypeID IN (SELECT ID FROM MeasurementType WHERE Name = 'Voltage' OR Name = 'Current') AND
+		                    Channel.MeasurementCharacteristicID IN (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS')
 	                    ) as tbl on Meter.ID = tbl.MeterID
                     WHERE Date = {0}
                     GROUP BY Meter.Name, Meter.ID
@@ -148,7 +151,10 @@ namespace openXDA.Adapters
 	                FROM
 		                Channel JOIN
 		                ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID
-                    WHERE Date = {0} AND Channel.MeterID = {1}
+	                WHERE
+		                Channel.MeasurementTypeID IN (SELECT ID FROM MeasurementType WHERE Name = 'Voltage' OR Name = 'Current') AND
+		                Channel.MeasurementCharacteristicID IN (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND
+                        Date = {0} AND Channel.MeterID = {1}
                 ", date , meterID);
 
                 s_memoryCache.Add("Channels" + meterID.ToString() + date.ToString(), table, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });

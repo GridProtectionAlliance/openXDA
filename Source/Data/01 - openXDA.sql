@@ -1834,6 +1834,7 @@ CREATE TABLE PQMeasurement
 	MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
 	PhaseID INT NOT NULL REFERENCES Phase(ID),
 	HarmonicGroup INT NOT NULL DEFAULT 0,
+	Enabled bit NOT NULL DEFAULT 1
 )
 GO
 

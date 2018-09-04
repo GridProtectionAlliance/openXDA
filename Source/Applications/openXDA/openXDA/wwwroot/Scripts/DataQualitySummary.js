@@ -69631,7 +69631,7 @@ var MeterInput = (function (_super) {
             var value = (_this.props.value ? _this.props.value : data[0].ID);
             var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.Name); });
             var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange({ meterID: e.target.value, measurementID: null }); }, defaultValue: value }, options);
-            _this.props.onChange({ meterID: value });
+            _this.props.onChange(value);
             _this.setState({ select: select });
         });
     };
@@ -69668,78 +69668,7 @@ exports.default = MeterInput;
 /* 236 */,
 /* 237 */,
 /* 238 */,
-/* 239 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(1);
-var _ = __webpack_require__(25);
-var Table = (function (_super) {
-    __extends(Table, _super);
-    function Table(props) {
-        return _super.call(this, props) || this;
-    }
-    Table.prototype.componentDidUpdate = function (prevProps, prevState) {
-    };
-    Table.prototype.render = function () {
-        var rowComponents = this.generateRows();
-        var headerComponents = this.generateHeaders();
-        return (React.createElement("table", { className: (this.props.tableClass != undefined ? this.props.tableClass : '') },
-            React.createElement("thead", { style: this.props.theadStyle }, headerComponents),
-            React.createElement("tbody", { style: this.props.tbodyStyle }, rowComponents)));
-    };
-    Table.prototype.generateHeaders = function () {
-        var _this = this;
-        if (this.props.cols.length == 0)
-            return null;
-        var cells = this.props.cols.map(function (colData) {
-            var style = colData.headerStyle;
-            if (style.cursor == undefined)
-                style.cursor = 'pointer';
-            return React.createElement("th", { key: colData.key, style: style, onClick: _this.handleSort.bind(_this, { col: colData.key, ascending: _this.props.ascending }) },
-                colData.label,
-                (_this.props.sortField == colData.key ? React.createElement("span", { className: "glyphicon " + (_this.props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom") }) : null));
-        });
-        return React.createElement("tr", null, cells);
-    };
-    Table.prototype.generateRows = function () {
-        var _this = this;
-        if (this.props.data.length == 0)
-            return null;
-        return this.props.data.map(function (item, index) {
-            var cells = _this.props.cols.map(function (colData) {
-                var style = _.clone(colData.rowStyle);
-                return React.createElement("td", { key: index.toString() + item[colData.key] + colData.key, style: style, onClick: _this.handleClick.bind(_this, { col: colData.key, row: item, data: item[colData.key] }) }, colData.content != undefined ? colData.content(item, colData.key, style) : item[colData.key]);
-            });
-            var style = { cursor: 'pointer' };
-            return React.createElement("tr", { style: style, key: index.toString() }, cells);
-        });
-    };
-    Table.prototype.handleClick = function (data, event) {
-        this.props.onClick(data);
-    };
-    Table.prototype.handleSort = function (data, event) {
-        this.props.onSort(data);
-    };
-    return Table;
-}(React.Component));
-exports.default = Table;
-;
-
-
-/***/ }),
+/* 239 */,
 /* 240 */,
 /* 241 */,
 /* 242 */,
@@ -69850,7 +69779,7 @@ var queryString = __webpack_require__(181);
 var moment = __webpack_require__(0);
 var _ = __webpack_require__(25);
 var DataQualitySummary_1 = __webpack_require__(328);
-var Table_1 = __webpack_require__(239);
+var BigTable_1 = __webpack_require__(331);
 var MeterInput_1 = __webpack_require__(214);
 __webpack_require__(200);
 var DateTime = __webpack_require__(187);
@@ -69910,11 +69839,11 @@ var DataQualitySummary = (function (_super) {
                         React.createElement("span", null, "Loading...")))),
             React.createElement("div", { className: "waveform-viewer", style: { width: window.innerWidth } },
                 React.createElement("div", { className: "list-group", style: { maxHeight: height, overflowY: 'auto' } },
-                    React.createElement(Table_1.default, { cols: [{ key: "Name", label: (this.state.level == "Meter" ? "Meter Name" : "Channel Name"), headerStyle: { width: '20%' } },
+                    React.createElement(BigTable_1.default, { cols: [{ key: "Name", label: (this.state.level == "Meter" ? "Meter Name" : "Channel Name"), headerStyle: { width: '20%' } },
                             { key: "Expected", label: "Expected", headerStyle: { width: '20%' } },
                             { key: "Missing", label: "Missing", headerStyle: { width: '20%' } },
                             { key: "Latched", label: "Latched", headerStyle: { width: '20%' } },
-                            { key: "Unreasonable", label: "Unreasonable", headerStyle: { width: '20%' } }], tableClass: "table table-hover table-bordered", data: this.state.data, sortField: this.state.sortField, ascending: this.state.ascending, onClick: this.handleTableClick.bind(this), onSort: this.handleTableSort.bind(this) })))));
+                            { key: "Unreasonable", label: "Unreasonable", headerStyle: { width: '20%' } }], data: this.state.data, sortField: this.state.sortField, ascending: this.state.ascending, onClick: this.handleTableClick.bind(this), onSort: this.handleTableSort.bind(this) })))));
     };
     DataQualitySummary.prototype.handleTableClick = function (data) {
         if (this.state.level == "Channel")
@@ -69989,6 +69918,143 @@ var DataQualitySummaryService = (function () {
 exports.default = DataQualitySummaryService;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+
+/***/ }),
+/* 329 */,
+/* 330 */,
+/* 331 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(1);
+var _ = __webpack_require__(25);
+__webpack_require__(332);
+var BigTable = (function (_super) {
+    __extends(BigTable, _super);
+    function BigTable(props) {
+        return _super.call(this, props) || this;
+    }
+    BigTable.prototype.render = function () {
+        var rowComponents = this.generateRows(this.props.data);
+        var headerComponents = this.generateHeaders();
+        return (React.createElement("div", { className: 'divTable ' + (this.props.tableClass != undefined ? this.props.tableClass : '') },
+            React.createElement("div", { className: 'divTableHeading', style: this.props.theadStyle }, headerComponents),
+            React.createElement("div", { className: 'divTableBody', style: this.props.tbodyStyle }, rowComponents)));
+    };
+    BigTable.prototype.generateHeaders = function () {
+        var _this = this;
+        if (this.props.cols == null || this.props.cols.length == 0)
+            return null;
+        var cells = this.props.cols.map(function (colData) {
+            var style = colData.headerStyle;
+            if (style.cursor == undefined)
+                style.cursor = 'pointer';
+            return React.createElement("div", { className: 'divTableHead', key: colData.key, style: style, onClick: _this.handleSort.bind(_this, { col: colData.key, ascending: _this.props.ascending }) },
+                colData.label,
+                (_this.props.sortField == colData.key ? React.createElement("span", { className: "glyphicon " + (_this.props.ascending ? "glyphicon-triangle-top" : "glyphicon-triangle-bottom") }) : null));
+        });
+        return React.createElement("div", { className: 'divTableRow' }, cells);
+    };
+    BigTable.prototype.generateRows = function (data) {
+        var _this = this;
+        if (data == null || data.length == 0)
+            return null;
+        return data.map(function (item, index) {
+            var cells = _this.props.cols.map(function (colData) {
+                var style = _.clone(colData.rowStyle);
+                return React.createElement("div", { className: 'divTableCell', key: index.toString() + item[colData.key] + colData.key, style: style, onClick: _this.handleClick.bind(_this, { col: colData.key, row: item, data: item[colData.key] }) }, colData.content != undefined ? colData.content(item, colData.key, style) : item[colData.key]);
+            });
+            var style = { cursor: 'pointer' };
+            return React.createElement("div", { className: 'divTableRow', style: style, key: index.toString() }, cells);
+        });
+    };
+    BigTable.prototype.handleClick = function (data, event) {
+        this.props.onClick(data);
+    };
+    BigTable.prototype.handleSort = function (data, event) {
+        this.props.onSort(data);
+    };
+    return BigTable;
+}(React.Component));
+exports.default = BigTable;
+;
+
+
+/***/ }),
+/* 332 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(333);
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(162)(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {
+	module.hot.accept("!!../../node_modules/css-loader/index.js!./BigTable.css", function() {
+		var newContent = require("!!../../node_modules/css-loader/index.js!./BigTable.css");
+
+		if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+
+		var locals = (function(a, b) {
+			var key, idx = 0;
+
+			for(key in a) {
+				if(!b || a[key] !== b[key]) return false;
+				idx++;
+			}
+
+			for(key in b) idx--;
+
+			return idx === 0;
+		}(content.locals, newContent.locals));
+
+		if(!locals) throw new Error('Aborting CSS HMR due to changed css-modules locals.');
+
+		update(newContent);
+	});
+
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 333 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(161)(false);
+// imports
+
+
+// module
+exports.push([module.i, ".divTable {\r\n    display: table;\r\n    width: 100%;\r\n}\r\n\r\n.divTableRow {\r\n    display: table-row;\r\n}\r\n\r\n.divTableRow:nth-child(even) {\r\n    background-color: lightgrey\r\n}\r\n\r\n.divTableHeading {\r\n    display: table-header-group;\r\n}\r\n\r\n.divTableCell, .divTableHead {\r\n    border: 1px solid #999999;\r\n    display: table-cell;\r\n    padding: 3px 10px;\r\n}\r\n\r\n.divTableHeading {\r\n    display: table-header-group;\r\n    font-weight: bold;\r\n}\r\n\r\n.divTableFoot {\r\n    display: table-footer-group;\r\n    font-weight: bold;\r\n}\r\n\r\n.divTableBody {\r\n    display: table-row-group;\r\n}\r\n", ""]);
+
+// exports
+
 
 /***/ })
 /******/ ]);

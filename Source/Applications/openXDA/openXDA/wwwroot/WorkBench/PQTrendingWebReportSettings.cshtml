@@ -42,12 +42,13 @@
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Display Name", "text-left"},
-        new[] { "Description", "Description", "text-left"}
+        new[] { "Description", "Description", "text-left"},
+        new[] { "Enabled", "Enabled", "text-center"},
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
-    ViewBag.HideAddNewButton = true;
+    ViewBag.HideAddNewButton = false;
     ViewBag.ShowSearchFilter = true;
 
 }
@@ -58,7 +59,8 @@
 @helper BodyRows()
 {
     <td width="30%" class="text-left valign-middle" data-bind="text: Name"></td>
-    <td width="67%" class="text-left valign-middle" data-bind="text: Description"></td>
+    <td width="57%" class="text-left valign-middle" data-bind="text: Description"></td>
+    <td width="10%" class="text-center valign-middle" data-bind="text: Enabled"></td>
     <td width="3%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
@@ -74,6 +76,7 @@
     @Raw(dataContext.AddSelectField<PQMeasurement, MeasurementCharacteristic>("MeasurementCharacteristicID", "ID", "Name"))
     @Raw(dataContext.AddSelectField<PQMeasurement, Phase>("PhaseID", "ID", "Name"))
     @Raw(dataContext.AddInputField<PQMeasurement>("HarmonicGroup"))
+    @Raw(dataContext.AddCheckBoxField<PQMeasurement>("Enabled"))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
