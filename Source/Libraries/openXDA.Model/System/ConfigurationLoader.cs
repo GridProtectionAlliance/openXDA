@@ -37,8 +37,7 @@ namespace openXDA.Model
         public int LoadOrder { get; set; }
 
         [NonRecordField]
-        public string UnqualifiedTypeName => TypeName.Contains(".")
-            ? TypeName.Remove(TypeName.LastIndexOf('.'))
-            : TypeName;
+        public string UnqualifiedTypeName =>
+            TypeName.Substring(TypeName.LastIndexOf('.') + 1);
     }
 }
