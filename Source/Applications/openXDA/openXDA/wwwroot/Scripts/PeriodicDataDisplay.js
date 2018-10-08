@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 313);
+/******/ 	return __webpack_require__(__webpack_require__.s = 315);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -45469,9 +45469,7 @@ module.exports = invariant;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
 
 /***/ }),
-/* 159 */,
-/* 160 */,
-/* 161 */
+/* 159 */
 /***/ (function(module, exports) {
 
 /*
@@ -45553,7 +45551,7 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 162 */
+/* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -45939,6 +45937,8 @@ function updateLink (link, options, obj) {
 
 
 /***/ }),
+/* 161 */,
+/* 162 */,
 /* 163 */,
 /* 164 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -69611,7 +69611,7 @@ module.exports.stdev = stdev
 module.exports.percentile = percentile
 module.exports.histogram = histogram
 
-var isNumber = __webpack_require__(237)
+var isNumber = __webpack_require__(240)
 
 function numbers(vals) {
   var nums = []
@@ -69819,7 +69819,10 @@ Licensed under the MIT license.
 /* 233 */,
 /* 234 */,
 /* 235 */,
-/* 236 */
+/* 236 */,
+/* 237 */,
+/* 238 */,
+/* 239 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -69913,7 +69916,7 @@ exports.default = DistributionPlot;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 237 */
+/* 240 */
 /***/ (function(module, exports) {
 
 module.exports = isNumber
@@ -69928,7 +69931,7 @@ function isNumber(n) {
 }
 
 /***/ }),
-/* 238 */
+/* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70006,9 +70009,6 @@ exports.default = SummaryStat;
 
 
 /***/ }),
-/* 239 */,
-/* 240 */,
-/* 241 */,
 /* 242 */,
 /* 243 */,
 /* 244 */,
@@ -70080,7 +70080,9 @@ exports.default = SummaryStat;
 /* 310 */,
 /* 311 */,
 /* 312 */,
-/* 313 */
+/* 313 */,
+/* 314 */,
+/* 315 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70104,8 +70106,8 @@ var queryString = __webpack_require__(181);
 var moment = __webpack_require__(0);
 var _ = __webpack_require__(25);
 var MeterInput_1 = __webpack_require__(214);
-var react_datetime_range_picker_1 = __webpack_require__(314);
-var Measurement_1 = __webpack_require__(317);
+var react_datetime_range_picker_1 = __webpack_require__(316);
+var Measurement_1 = __webpack_require__(319);
 var PeriodicDataDisplay = (function (_super) {
     __extends(PeriodicDataDisplay, _super);
     function PeriodicDataDisplay(props) {
@@ -70218,7 +70220,7 @@ ReactDOM.render(React.createElement(PeriodicDataDisplay, null), document.getElem
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 314 */
+/* 316 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70248,7 +70250,7 @@ var _reactDatetime = __webpack_require__(187);
 
 var _reactDatetime2 = _interopRequireDefault(_reactDatetime);
 
-__webpack_require__(315);
+__webpack_require__(317);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -70511,11 +70513,11 @@ DatetimeRangePicker.propTypes = {
 exports.default = DatetimeRangePicker;
 
 /***/ }),
-/* 315 */
+/* 317 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(316);
+var content = __webpack_require__(318);
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -70529,7 +70531,7 @@ var options = {"hmr":true}
 options.transform = transform
 options.insertInto = undefined;
 
-var update = __webpack_require__(162)(content, options);
+var update = __webpack_require__(160)(content, options);
 
 if(content.locals) module.exports = content.locals;
 
@@ -70561,10 +70563,10 @@ if(false) {
 }
 
 /***/ }),
-/* 316 */
+/* 318 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(161)(false);
+exports = module.exports = __webpack_require__(159)(false);
 // imports
 
 
@@ -70575,7 +70577,7 @@ exports.push([module.i, "/*!\n * https://github.com/YouCanBookMe/react-datetime\
 
 
 /***/ }),
-/* 317 */
+/* 319 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70594,10 +70596,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
 var _ = __webpack_require__(25);
 var PeriodicDataDisplay_1 = __webpack_require__(198);
-var Legend_1 = __webpack_require__(318);
-var DistributionPlot_1 = __webpack_require__(236);
-var SummaryStat_1 = __webpack_require__(238);
-var LineChart_1 = __webpack_require__(319);
+var Legend_1 = __webpack_require__(320);
+var DistributionPlot_1 = __webpack_require__(239);
+var SummaryStat_1 = __webpack_require__(241);
+var LineChart_1 = __webpack_require__(321);
 var Measurement = (function (_super) {
     __extends(Measurement, _super);
     function Measurement(props) {
@@ -70720,7 +70722,7 @@ exports.default = Measurement;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 318 */
+/* 320 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70810,7 +70812,7 @@ function convertHex(hex, opacity) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 319 */
+/* 321 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

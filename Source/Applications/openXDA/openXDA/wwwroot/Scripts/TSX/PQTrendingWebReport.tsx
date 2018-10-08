@@ -126,9 +126,6 @@ export class PQTrendingWebReport extends React.Component<any, any>{
                             <div style={{ border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' }}></div>
                             <span>Loading...</span>
                         </div>
-
-                        {//<button className='btn btn-primary' style={{ float: 'right' }} onClick={this.updateUrl}>Apply</button>
-                        }
                     </div>
 
 

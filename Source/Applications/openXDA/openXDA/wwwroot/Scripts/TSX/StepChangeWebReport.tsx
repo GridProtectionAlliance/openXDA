@@ -77,15 +77,15 @@ export class StepChangeWebReport extends React.Component<any, any>{
                 label: measurement.Name,
                 headerStyle: { minWidth: '200px' },
                 rowStyle: { minWidth: '200px', textAlign: 'center' },
-                content: (dictionary, key, style) => {
-                    if (dictionary[key] == 0)
-                        return dictionary[key];
-                    else if (dictionary[key] < 10)
+                content: (value, style) => {
+                    if (value == 0)
+                        return value;
+                    else if (value < 10)
                         style.backgroundColor = 'yellow';
                     else                    
                         style.backgroundColor = 'red';
 
-                    return dictionary[key];
+                    return value;
                 }
             });
         });

@@ -103,10 +103,10 @@ namespace openXDA.Adapters
 		                    Channel.MeterId,
 		                    Channel.Name,
 		                    ChannelDataQualitySummary.Date,
-		                    Channel.SamplesPerHour * 24 as Expected,
-		                    (Channel.SamplesPerHour * 24) - COALESCE(ChannelDataQualitySummary.GoodPoints,0) - COALESCE(ChannelDataQualitySummary.LatchedPoints,0) - COALESCE(ChannelDataQualitySummary.UnreasonablePoints,0) - COALESCE(ChannelDataQualitySummary.NoncongruentPoints,0) as Missing,
-		                    COALESCE(ChannelDataQualitySummary.LatchedPoints, 0) as Latched,
-		                    COALESCE(ChannelDataQualitySummary.UnreasonablePoints, 0) as Unreasonable
+		                    CAST(Channel.SamplesPerHour * 24 as int) as Expected,
+		                    CAST((Channel.SamplesPerHour * 24) - COALESCE(ChannelDataQualitySummary.GoodPoints,0) - COALESCE(ChannelDataQualitySummary.LatchedPoints,0) - COALESCE(ChannelDataQualitySummary.UnreasonablePoints,0) - COALESCE(ChannelDataQualitySummary.NoncongruentPoints,0) as int) as Missing,
+		                    CAST(COALESCE(ChannelDataQualitySummary.LatchedPoints, 0) as int) as Latched,
+		                    CAST(COALESCE(ChannelDataQualitySummary.UnreasonablePoints, 0) as int) as Unreasonable
 	                    FROM
 		                    Channel JOIN
 		                    ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID
@@ -142,15 +142,18 @@ namespace openXDA.Adapters
 	                SELECT 
 		                Channel.ID,
 		                Channel.MeterId,
-		                Channel.Name,
+	                    MeasurementType.Name + ' ' + MeasurementCharacteristic.Name  + ' ' + Phase.Name as Name,
 		                ChannelDataQualitySummary.Date,
-		                Channel.SamplesPerHour * 24 as Expected,
-		                (Channel.SamplesPerHour * 24) - COALESCE(ChannelDataQualitySummary.GoodPoints,0) - COALESCE(ChannelDataQualitySummary.LatchedPoints,0) - COALESCE(ChannelDataQualitySummary.UnreasonablePoints,0) - COALESCE(ChannelDataQualitySummary.NoncongruentPoints,0) as Missing,
-		                COALESCE(ChannelDataQualitySummary.LatchedPoints, 0) as Latched,
-		                COALESCE(ChannelDataQualitySummary.UnreasonablePoints, 0) as Unreasonable
+		                CAST(Channel.SamplesPerHour * 24 as int) as Expected,
+		                CAST((Channel.SamplesPerHour * 24) - COALESCE(ChannelDataQualitySummary.GoodPoints,0) - COALESCE(ChannelDataQualitySummary.LatchedPoints,0) - COALESCE(ChannelDataQualitySummary.UnreasonablePoints,0) - COALESCE(ChannelDataQualitySummary.NoncongruentPoints,0) as int) as Missing,
+		                CAST(COALESCE(ChannelDataQualitySummary.LatchedPoints, 0) as int) as Latched,
+		                CAST(COALESCE(ChannelDataQualitySummary.UnreasonablePoints, 0) as int) as Unreasonable
 	                FROM
 		                Channel JOIN
-		                ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID
+		                ChannelDataQualitySummary ON Channel.ID = ChannelDataQualitySummary.ChannelID  JOIN
+	                    MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+	                    MeasurementCharacteristic ON Channel.MeasurementCharacteristicID = MeasurementCharacteristic.ID JOIN
+	                    Phase ON Channel.PhaseID = Phase.ID
 	                WHERE
 		                Channel.MeasurementTypeID IN (SELECT ID FROM MeasurementType WHERE Name = 'Voltage' OR Name = 'Current') AND
 		                Channel.MeasurementCharacteristicID IN (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND

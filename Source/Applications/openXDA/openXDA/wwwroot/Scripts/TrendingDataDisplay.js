@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 320);
+/******/ 	return __webpack_require__(__webpack_require__.s = 322);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -45469,9 +45469,7 @@ module.exports = invariant;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
 
 /***/ }),
-/* 159 */,
-/* 160 */,
-/* 161 */
+/* 159 */
 /***/ (function(module, exports) {
 
 /*
@@ -45553,7 +45551,7 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 162 */
+/* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -45939,6 +45937,8 @@ function updateLink (link, options, obj) {
 
 
 /***/ }),
+/* 161 */,
+/* 162 */,
 /* 163 */,
 /* 164 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -69550,7 +69550,7 @@ var options = {"hmr":true}
 options.transform = transform
 options.insertInto = undefined;
 
-var update = __webpack_require__(162)(content, options);
+var update = __webpack_require__(160)(content, options);
 
 if(content.locals) module.exports = content.locals;
 
@@ -69585,7 +69585,7 @@ if(false) {
 /* 201 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(161)(false);
+exports = module.exports = __webpack_require__(159)(false);
 // imports
 
 
@@ -69673,7 +69673,7 @@ module.exports.stdev = stdev
 module.exports.percentile = percentile
 module.exports.histogram = histogram
 
-var isNumber = __webpack_require__(237)
+var isNumber = __webpack_require__(240)
 
 function numbers(vals) {
   var nums = []
@@ -69881,7 +69881,10 @@ Licensed under the MIT license.
 /* 233 */,
 /* 234 */,
 /* 235 */,
-/* 236 */
+/* 236 */,
+/* 237 */,
+/* 238 */,
+/* 239 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -69975,7 +69978,7 @@ exports.default = DistributionPlot;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 237 */
+/* 240 */
 /***/ (function(module, exports) {
 
 module.exports = isNumber
@@ -69990,7 +69993,7 @@ function isNumber(n) {
 }
 
 /***/ }),
-/* 238 */
+/* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70068,9 +70071,6 @@ exports.default = SummaryStat;
 
 
 /***/ }),
-/* 239 */,
-/* 240 */,
-/* 241 */,
 /* 242 */,
 /* 243 */,
 /* 244 */,
@@ -70095,7 +70095,9 @@ exports.default = SummaryStat;
 /* 263 */,
 /* 264 */,
 /* 265 */,
-/* 266 */
+/* 266 */,
+/* 267 */,
+/* 268 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70135,8 +70137,6 @@ exports.default = TrendingDataDisplayService;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 267 */,
-/* 268 */,
 /* 269 */,
 /* 270 */,
 /* 271 */,
@@ -70188,7 +70188,9 @@ exports.default = TrendingDataDisplayService;
 /* 317 */,
 /* 318 */,
 /* 319 */,
-/* 320 */
+/* 320 */,
+/* 321 */,
+/* 322 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70206,17 +70208,17 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
 var ReactDOM = __webpack_require__(17);
-var TrendingDataDisplay_1 = __webpack_require__(266);
+var TrendingDataDisplay_1 = __webpack_require__(268);
 var createBrowserHistory_1 = __webpack_require__(175);
 var queryString = __webpack_require__(181);
 var moment = __webpack_require__(0);
 var _ = __webpack_require__(25);
 var MeterInput_1 = __webpack_require__(214);
-var MeasurementInput_1 = __webpack_require__(321);
-var TrendingChart_1 = __webpack_require__(322);
-var DateTimeRangePicker_1 = __webpack_require__(326);
-var DistributionPlot_1 = __webpack_require__(236);
-var SummaryStat_1 = __webpack_require__(238);
+var MeasurementInput_1 = __webpack_require__(323);
+var TrendingChart_1 = __webpack_require__(324);
+var DateTimeRangePicker_1 = __webpack_require__(328);
+var DistributionPlot_1 = __webpack_require__(239);
+var SummaryStat_1 = __webpack_require__(241);
 ;
 var TrendingDataDisplay = (function (_super) {
     __extends(TrendingDataDisplay, _super);
@@ -70333,7 +70335,7 @@ ReactDOM.render(React.createElement(TrendingDataDisplay, null), document.getElem
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 321 */
+/* 323 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70350,7 +70352,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
-var TrendingDataDisplay_1 = __webpack_require__(266);
+var TrendingDataDisplay_1 = __webpack_require__(268);
 var MeasurementInput = (function (_super) {
     __extends(MeasurementInput, _super);
     function MeasurementInput(props) {
@@ -70389,7 +70391,7 @@ exports.default = MeasurementInput;
 
 
 /***/ }),
-/* 322 */
+/* 324 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -70408,9 +70410,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(1);
 var moment = __webpack_require__(0);
 __webpack_require__(199);
-__webpack_require__(323);
-__webpack_require__(324);
 __webpack_require__(325);
+__webpack_require__(326);
+__webpack_require__(327);
 __webpack_require__(216);
 var TrendingChart = (function (_super) {
     __extends(TrendingChart, _super);
@@ -70596,7 +70598,7 @@ exports.default = TrendingChart;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 323 */
+/* 325 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* Javascript plotting library for jQuery, version 0.8.3.
@@ -70609,7 +70611,7 @@ Licensed under the MIT license.
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 324 */
+/* 326 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* Javascript plotting library for jQuery, version 0.8.3.
@@ -70622,7 +70624,7 @@ Licensed under the MIT license.
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 325 */
+/* 327 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(jQuery) {/* Javascript plotting library for jQuery, version 0.8.3.
@@ -70635,7 +70637,7 @@ Licensed under the MIT license.
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
-/* 326 */
+/* 328 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

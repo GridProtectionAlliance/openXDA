@@ -70,7 +70,7 @@ export default class BigTable extends React.Component<any, any> {
                     style={style}
                     onClick={this.handleClick.bind(this, { col: colData.key, row: item, data: item[colData.key] })}
                 >
-                    {colData.content != undefined ? colData.content(item, colData.key, style) : item[colData.key]}
+                    {colData.content != undefined ? colData.content(this.round(item[colData.key]), style) : this.round(item[colData.key])}
                 </div>
             });
 
@@ -78,6 +78,17 @@ export default class BigTable extends React.Component<any, any> {
 
             return <div className='divTableRow' style={style} key={index.toString()}>{cells}</div>;
         });
+    }
+
+    round(value) {
+        if (Number.isInteger(value) || isNaN(Number.parseFloat(value)))
+            return value;
+        else if (value > 100)
+            return Math.round(value);
+        else if (value > 1)
+            return value.toFixed(1);
+        else
+            return value.toPrecision(2);
     }
 
     handleClick(data, event) {
