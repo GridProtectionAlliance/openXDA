@@ -1118,13 +1118,19 @@ namespace FaultData.DataResources
             DateTime localClearingTime = utcClearingTime.ToLocalTime();
 
             TimeSpan queryTolerance = m_ednaSettings.QueryToleranceSpan;
-            DateTime startTime = fault.ClearingTime - queryTolerance;
-            DateTime endTime = fault.ClearingTime + queryTolerance;
+            DateTime startTime = localClearingTime - queryTolerance;
+            DateTime endTime = localClearingTime + queryTolerance;
 
             double breakerOpenValue = m_ednaSettings.BreakerOpenValue;
 
             foreach (string point in points)
             {
+                int[] expectedResults =
+                {
+                    (int)eDNAHistoryReturnStatus.END_OF_HISTORY,
+                    (int)eDNAHistoryReturnStatus.NO_HISTORY_FOR_TIME
+                };
+
                 int result = History.DnaGetHistRaw(point, startTime, endTime, out uint key);
 
                 while (result == 0)
@@ -1133,6 +1139,14 @@ namespace FaultData.DataResources
 
                     if (result == 0 && value == breakerOpenValue)
                         return true;
+                }
+
+                // Assume that unexpected return status indicates an error
+                // and therefore the analysis results should be trusted
+                if (expectedResults.Contains(result))
+                {
+                    Log.Debug($"Unexpected eDNA return code: {result}");
+                    return true;
                 }
             }
 
