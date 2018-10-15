@@ -22,16 +22,16 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using GSF.COMTRADE;
-using GSF.IO;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
+using GSF.COMTRADE;
+using GSF.IO;
 using log4net;
 using openXDA.Model;
-using System.Collections.Generic;
 
 namespace FaultData.DataReaders
 {
