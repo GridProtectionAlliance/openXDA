@@ -413,9 +413,6 @@ namespace openXDA
             foreach (string path in m_systemSettings.WatchDirectoryList)
                 TryCreateDirectory(path);
 
-            // Make sure results directory exists
-            TryCreateDirectory(m_systemSettings.ResultsPath);
-
             // Create the lookup table used to track which files are being processed
             if ((object)m_activeFiles == null)
                 m_activeFiles = new ConcurrentDictionary<string, string>();
