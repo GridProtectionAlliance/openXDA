@@ -37,10 +37,15 @@ using GSF;
 using GSF.Configuration;
 using GSF.COMTRADE;
 using GSF.IO;
+using openXDA.Model;
+using FaultGroup = FaultData.DataAnalysis.FaultGroup;
+using Fault = FaultData.DataAnalysis.Fault;
+using GSF.Data;
+using GSF.Data.Model;
 
 namespace FaultData.DataWriters
 {
-    public class COMTRADEWriter : IDataWriter
+    public class COMTRADEWriter
     {
         #region [ Members ]
 
@@ -184,7 +189,7 @@ namespace FaultData.DataWriters
 
         #region [ Methods ]
 
-        public void WriteResults(DbAdapterContainer dbAdapterContainer, MeterDataSet meterDataSet)
+        public void WriteResults(MeterDataSet meterDataSet)
         {
             CycleDataResource cycleDataResource;
             FaultDataResource faultDataResource;
@@ -197,8 +202,8 @@ namespace FaultData.DataWriters
             string rootFileName;
             string fileName;
 
-            cycleDataResource = meterDataSet.GetResource(() => CycleDataResource.GetResource(meterDataSet, dbAdapterContainer));
-            faultDataResource = meterDataSet.GetResource(() => new FaultDataResource(dbAdapterContainer));
+            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
+            faultDataResource = meterDataSet.GetResource<FaultDataResource>();
 
             if (!Directory.Exists(m_resultsPath))
                 Directory.CreateDirectory(m_resultsPath);
@@ -215,18 +220,19 @@ namespace FaultData.DataWriters
                     seriesIDs = dataGroup.DataSeries
                         .Select(series => series.SeriesInfo.ID)
                         .ToList();
-
-                    eventDataSet = new EventDataSet()
+                    using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                     {
-                        ResultsPath = Path.Combine(m_resultsPath, fileName),
-                        MeterDataSet = meterDataSet,
-                        TimeZoneOffset = GetTimeZoneOffset(meterDataSet.Meter.TimeZone, dataGroup.StartTime),
-                        DataGroup = dataGroup,
-                        VICycleDataGroup = cycleDataResource.VICycleDataGroups[i],
-                        Faults = faultGroup.Faults,
-                        OutputChannels = dbAdapterContainer.GetAdapter<FaultLocationInfoDataContext>().OutputChannels.Where(channel => seriesIDs.Contains(channel.SeriesID)).ToList()
-                    };
-
+                        eventDataSet = new EventDataSet()
+                        {
+                            ResultsPath = Path.Combine(m_resultsPath, fileName),
+                            MeterDataSet = meterDataSet,
+                            TimeZoneOffset = GetTimeZoneOffset(meterDataSet.Meter.TimeZone, dataGroup.StartTime),
+                            DataGroup = dataGroup,
+                            VICycleDataGroup = cycleDataResource.VICycleDataGroups[i],
+                            Faults = faultGroup.Faults,
+                            OutputChannels = (new TableOperations<OutputChannel>(connection)).QueryRecordsWhere($"SeriesID IN ({string.Join(",",seriesIDs)})").ToList()
+                        };
+                    }
                     WriteResults(eventDataSet);
                 }
             }
@@ -383,7 +389,7 @@ namespace FaultData.DataWriters
 
         private Schema WriteSchemaFile(COMTRADEData comtradeData, string schemaFilePath)
         {
-            Schema schema = Writer.CreateSchema(new List<ChannelMetadata>(), comtradeData.StationName, comtradeData.DeviceID, comtradeData.DataStartTime, comtradeData.SampleCount, samplingRate: comtradeData.SamplingRate, includeFracSecDefinition: false, nominalFrequency: m_systemFrequency);
+            Schema schema = Writer.CreateSchema(new List<ChannelMetadata>(), comtradeData.StationName, comtradeData.DeviceID, comtradeData.DataStartTime, comtradeData.SampleCount, 1999, FileType.Binary, 1, comtradeData.SamplingRate, m_systemFrequency,false);
             List<AnalogChannel> analogChannels = new List<AnalogChannel>();
             List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
             int i = 1;

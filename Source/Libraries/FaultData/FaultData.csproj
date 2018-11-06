@@ -138,7 +138,7 @@
     <Compile Include="DataReaders\IDataReader.cs" />
     <Compile Include="DataReaders\PQDIFReader.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
-    <None Include="DataWriters\COMTRADEWriter.cs" />
+    <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EmailService.cs" />
     <Compile Include="DataWriters\EventEmailService.cs" />
     <Compile Include="DataWriters\FaultTypeGenerator.cs" />
