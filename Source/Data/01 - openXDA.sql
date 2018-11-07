@@ -436,6 +436,10 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 9)
 GO
 
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.StatisticOperation', 10)
+GO
+
+
 INSERT INTO AssetGroup(Name) VALUES('AllAssets')
 GO
 
@@ -2474,6 +2478,18 @@ CREATE TABLE Report
 )
 GO
 
+CREATE TABLE EventStat
+(
+	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	EventID INT NOT NULL REFERENCES Event(ID),
+	IMin float NULL,
+	IMax float NULL,
+    VMin float NULL,
+	VMax float NULL,
+	I2t float NULL,
+	CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
+)
+GO
 
 ----- FUNCTIONS -----
 
@@ -3342,8 +3358,7 @@ GO
 
 -- Each user can update this to create their own scalar stat view in openSEE
 CREATE VIEW OpenSEEScalarStatView as
-SELECT 
-*
+SELECT TOP 1 *
 FROM
 (
 SELECT
@@ -3355,14 +3370,19 @@ SELECT
 	DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime)/1000.0 as FileDuration,
 	FaultSummary.Distance,
 	FaultSummary.DurationCycles,
-	FaultSummary.IsSelectedAlgorithm
+	FaultSummary.IsSelectedAlgorithm,
+	EventStat.I2t,
+	EventStat.VMax,
+	EventStat.VMin,
+	EventStat.IMax
 FROM
 	Event JOIN
 	Meter ON Event.MeterID = Meter.ID JOIN
 	MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
 	Line ON Event.LineID = Line.ID JOIN
 	EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
-	FaultSummary ON Event.ID = FaultSummary.EventID
+	FaultSummary ON Event.ID = FaultSummary.EventID LEFT JOIN
+	EventStat ON Event.ID = EventStat.EventID
 	)as sub
 Where IsSelectedAlgorithm IS NULL OR IsSelectedAlgorithm = 1
 GO
