@@ -3340,7 +3340,32 @@ FROM
     Phase ON Channel.PhaseID = Phase.ID
 GO
 
-
+-- Each user can update this to create their own scalar stat view in openSEE
+CREATE VIEW OpenSEEScalarStatView as
+SELECT 
+*
+FROM
+(
+SELECT
+	Event.ID as EventID,
+	MeterLocation.Name as Station,
+	Meter.Name as Meter,
+	Line.AssetKey as Line,
+	EventType.Name as EventType,
+	DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime)/1000.0 as FileDuration,
+	FaultSummary.Distance,
+	FaultSummary.DurationCycles,
+	FaultSummary.IsSelectedAlgorithm
+FROM
+	Event JOIN
+	Meter ON Event.MeterID = Meter.ID JOIN
+	MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
+	Line ON Event.LineID = Line.ID JOIN
+	EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
+	FaultSummary ON Event.ID = FaultSummary.EventID
+	)as sub
+Where IsSelectedAlgorithm IS NULL OR IsSelectedAlgorithm = 1
+GO
 ----- PROCEDURES -----
 
 CREATE PROCEDURE GetEventEmailRecipients
