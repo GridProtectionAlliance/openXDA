@@ -1277,7 +1277,7 @@ namespace openXDA
 
                     if (fileProcessorEventArgs.AlreadyProcessed)
                         Log.Debug(message, new FileSkippedException(message));
-                    else if (fileProcessorEventArgs.RetryCount >= 30)
+                    else if (fileProcessorEventArgs.RetryCount < 30)
                         fileProcessorEventArgs.Requeue = true;
                     else
                         throw new FileSkippedException(message);
