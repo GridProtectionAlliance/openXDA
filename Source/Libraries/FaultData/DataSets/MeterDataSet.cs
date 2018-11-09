@@ -25,10 +25,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Linq;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using openXDA.Model;
 
 namespace FaultData.DataSets
@@ -61,6 +63,32 @@ namespace FaultData.DataSets
             m_dataSeries = new List<DataSeries>();
             m_digitals = new List<DataSeries>();
             m_disturbanceStatistics = new List<ReportedDisturbance>();
+        }
+
+        public MeterDataSet(Event evt)
+        {
+            m_resources = new Dictionary<Type, object>();
+            m_configuration = new ConfigurationDataSet();
+            m_dataSeries = new List<DataSeries>();
+            m_digitals = new List<DataSeries>();
+            m_disturbanceStatistics = new List<ReportedDisturbance>();
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+                Meter = (new TableOperations<Meter>(connection)).QueryRecordWhere("ID = {0}", evt.MeterID);
+                Meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
+                CreateDbConnection = () => new AdoDataConnection("systemSettings");
+                ConnectionString = string.Empty;
+                FilePath = (new TableOperations<DataFile>(connection)).QueryRecordWhere("FileGroupID = {0}", evt.FileGroupID).FilePath;
+                FileGroup = (new TableOperations<FileGroup>(connection)).QueryRecordWhere("ID = {0}", evt.FileGroupID);
+                Configuration.LineLength = (new TableOperations<Line>(connection)).QueryRecordWhere("ID = {0}", evt.LineID).Length;
+                Configuration.X0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).X0;
+                Configuration.X1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).X1;
+                Configuration.R0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).R0;
+                Configuration.R1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).R1;
+                DataGroup dataGroup = ToDataGroup((new TableOperations<EventData>(connection)).QueryRecordWhere("ID = {0}", evt.EventDataID).TimeDomainData);
+                DataSeries = dataGroup.DataSeries.Where(ds=> ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
+                Digitals = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == "Digital").ToList();
+            }
         }
 
         #endregion
@@ -201,6 +229,13 @@ namespace FaultData.DataSets
             }
 
             return resource;
+        }
+
+        private DataGroup ToDataGroup(byte[] data)
+        {
+            DataGroup dataGroup = new DataGroup();
+            dataGroup.FromData(Meter, data);
+            return dataGroup;
         }
 
         #endregion

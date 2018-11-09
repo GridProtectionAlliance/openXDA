@@ -42,6 +42,8 @@ using FaultGroup = FaultData.DataAnalysis.FaultGroup;
 using Fault = FaultData.DataAnalysis.Fault;
 using GSF.Data;
 using GSF.Data.Model;
+using System.Data;
+using System.IO.Compression;
 
 namespace FaultData.DataWriters
 {
@@ -553,18 +555,21 @@ namespace FaultData.DataWriters
                 });
 
             // Get COMTRADE channel information for each fault curve
-            IEnumerable<COMTRADEChannelData> faultCurveChannelData = ToFaultCurves(eventDataSet.DataGroup, eventDataSet.Faults)
-                .Select(tuple => new { Algorithm = tuple.Item1, DataSeries = tuple.Item2 })
-                .Select((faultCurve, i) => new COMTRADEChannelData()
-                {
-                    GroupOrder = 1,
-                    LoadOrder = i,
-                    OriginalChannelIndex = -1,
-                    Name = faultCurve.Algorithm,
-                    Units = string.Empty,
-                    Data = faultCurve.DataSeries
-                });
-
+            IEnumerable<COMTRADEChannelData> faultCurveChannelData = new List<COMTRADEChannelData>();
+            if (eventDataSet.Faults != null && eventDataSet.Faults.Any())
+            {
+                faultCurveChannelData = ToFaultCurves(eventDataSet.DataGroup, eventDataSet.Faults)
+                    .Select(tuple => new { Algorithm = tuple.Item1, DataSeries = tuple.Item2 })
+                    .Select((faultCurve, i) => new COMTRADEChannelData()
+                    {
+                        GroupOrder = 1,
+                        LoadOrder = i,
+                        OriginalChannelIndex = -1,
+                        Name = faultCurve.Algorithm,
+                        Units = string.Empty,
+                        Data = faultCurve.DataSeries
+                    });
+            }
             // Get COMTRADE channel information for each cycle data series to be output to the file
             IEnumerable<COMTRADEChannelData> cycleChannelData = GetCycleChannelData(eventDataSet.VICycleDataGroup, eventDataSet.OutputChannels);
 
@@ -783,6 +788,293 @@ namespace FaultData.DataWriters
             return units;
         }
 
+        public void WriteResults(int meterID, int lineID, DateTime startTime, DateTime endTime, Stream returnStream)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                IEnumerable<Event> events = (new TableOperations<Event>(connection)).QueryRecordsWhere("StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(connection, endTime), ToDateTime2(connection, startTime), meterID, lineID);
+                Dictionary<string, byte[]> dict = new Dictionary<string, byte[]>();
+                foreach (Event evt in events)
+                {
+                    MeterDataSet meterDataSet = new MeterDataSet(evt);
+                    var returnDict = WriteResultsToStream(evt, meterDataSet);
+                    foreach(var kvp in returnDict)
+                    {
+                        if (!dict.ContainsKey(kvp.Key))
+                            dict.Add(kvp.Key, kvp.Value);
+                    };
+
+                }
+
+                using(MemoryStream memoryStream = new MemoryStream())
+                {
+                    using (ZipArchive zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                    {
+                        foreach (KeyValuePair<string, byte[]> kvp in dict)
+                        {
+                            ZipArchiveEntry zipArchiveEntry = zip.CreateEntry(kvp.Key);
+                            using (Stream stream = zipArchiveEntry.Open())
+                            {
+                                (new MemoryStream(kvp.Value)).CopyTo(stream);
+                            }
+                        }
+                    }
+                    memoryStream.WriteTo(returnStream);
+                }
+
+            }
+        }
+
+        public Dictionary<string, byte[]> WriteResultsToStream(Event evt, MeterDataSet meterDataSet)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                double freq = connection.ExecuteScalar<double?>("SELECT Value FROM Setting WHERE Name = 'SystemFrequency'") ?? 60.0D;
+                DefaultMeterTimeZone = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'DefaultMeterTimeZone'") ?? "UTC";
+                XDATimeZone = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'XDATimeZone'") ?? "UTC";
+                DataGroup dataGroup = ToDataGroup(meterDataSet.Meter, (new TableOperations<EventData>(connection)).QueryRecordWhere("ID = {0}", evt.EventDataID).TimeDomainData);
+                VICycleDataGroup viCycleDataGroup = Transform.ToVICycleDataGroup(new VIDataGroup(dataGroup), freq);
+
+                List<int> seriesIDs = dataGroup.DataSeries
+                .Select(series => series.SeriesInfo.ID)
+                .ToList();
+
+                EventDataSet eventDataSet = new EventDataSet()
+                {
+                    ResultsPath = string.Empty,
+                    MeterDataSet = meterDataSet,
+                    TimeZoneOffset = GetTimeZoneOffset(meterDataSet.Meter.TimeZone, dataGroup.StartTime),
+                    DataGroup = dataGroup,
+                    VICycleDataGroup = viCycleDataGroup,
+                    OutputChannels = (new TableOperations<OutputChannel>(connection)).QueryRecordsWhere($"SeriesID IN ({string.Join(",", seriesIDs)})").ToList(), 
+                    Faults = new List<Fault>()
+                };
+
+                return WriteResultsToStream(eventDataSet);
+            }
+        }
+
+        private Dictionary<string, byte[]> WriteResultsToStream(EventDataSet eventDataSet)
+        {
+            Dictionary<string, byte[]> dict = new Dictionary<string, byte[]>();
+
+            // Get structures containing the data to be written to the results files
+            COMTRADEData comtradeData = new COMTRADEData();
+
+            // If there are no waveforms to be written to the file, give up
+            if (!eventDataSet.OutputChannels.Any())
+                return new Dictionary<string, byte[]>();
+
+            comtradeData.StationName = eventDataSet.MeterDataSet.Meter.Name;
+            comtradeData.DeviceID = eventDataSet.MeterDataSet.Meter.AssetKey;
+            comtradeData.DataStartTime = eventDataSet.DataGroup.StartTime;
+            comtradeData.SampleCount = eventDataSet.DataGroup.Samples;
+            comtradeData.SamplingRate = eventDataSet.DataGroup.Samples / (eventDataSet.DataGroup.EndTime - eventDataSet.DataGroup.StartTime).TotalSeconds;
+
+            comtradeData.AnalogChannelData = GetAnalogChannelData(eventDataSet);
+            comtradeData.DigitalChannelData = GetDigitalChannelData(eventDataSet);
+
+            // Write data to the header file
+            WriteHeaderFile(eventDataSet, dict);
+
+            // Write data to the schema file
+            Schema schema = WriteSchemaFile(comtradeData, eventDataSet, dict);
+
+            // Write data to the data file
+            WriteDataFile(comtradeData, schema, eventDataSet, dict);
+
+            return dict;
+        }
+
+        private void WriteHeaderFile(EventDataSet eventDataSet, Dictionary<string, byte[]> dict)
+        {
+            // Date-time format used in the header file
+            const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.ffffff";
+
+            string lineName = eventDataSet.MeterDataSet.Meter.MeterLines
+                .Where(ml => ml.LineID == eventDataSet.DataGroup.Line.ID)
+                .Select(ml => ml.LineName)
+                .FirstOrDefault() ?? eventDataSet.DataGroup.Line.AssetKey;
+            using (MemoryStream memoryStream = new MemoryStream())
+            using (StreamWriter writer = new StreamWriter(memoryStream, Encoding.ASCII))
+            {
+                // Write out the original list of files containing
+                // the data used to generate this fault record
+                writer.WriteLine("Disturbance files:");
+
+                foreach (DataFile dataFile in eventDataSet.MeterDataSet.FileGroup.DataFiles)
+                    writer.WriteLine(dataFile.FilePath);
+
+                writer.WriteLine();
+
+                // Write the meter name to the header file
+                writer.WriteLine("Meter: " + eventDataSet.MeterDataSet.Meter.Name);
+
+                // Write out the name and length of the line on which the fault(s) occurred
+                writer.WriteLine("Line: {0} ({1} {2})", lineName, eventDataSet.DataGroup.Line.Length, LengthUnits);
+                writer.WriteLine();
+
+                // For each fault, write the distance, the most prominent fault type, the time of
+                // inception, the time of clearing, and the duration of the fault to the header file
+                for (int i = 0; i < eventDataSet.Faults.Count; i++)
+                {
+                    int faultNumber = i + 1;
+                    Fault fault = eventDataSet.Faults[i];
+
+                    if (fault.IsSuppressed || fault.Summaries.All(summary => !summary.IsValid))
+                        continue;
+
+                    DateTime startTime = fault.InceptionTime;
+                    DateTime endTime = fault.ClearingTime;
+                    int startSample = fault.StartSample;
+                    int endSample = fault.EndSample;
+                    double duration = fault.Duration.TotalSeconds;
+
+                    double distance = fault.Summaries
+                        .Where(summary => summary.IsSelectedAlgorithm)
+                        .Select(summary => summary.Distance)
+                        .DefaultIfEmpty(double.NaN)
+                        .First();
+
+                    writer.WriteLine("Fault {0}:", faultNumber);
+                    writer.WriteLine("[{0}]       Fault distance: {1:0.00} {2}", faultNumber, distance, LengthUnits);
+                    writer.WriteLine("[{0}] Prominent fault type: {1}", faultNumber, fault.Type);
+                    writer.WriteLine("[{0}]      Fault inception: {1} (sample #{2})", faultNumber, startTime.ToString(DateTimeFormat), startSample);
+                    writer.WriteLine("[{0}]       Fault clearing: {1} (sample #{2})", faultNumber, endTime.ToString(DateTimeFormat), endSample);
+                    writer.WriteLine("[{0}]       Fault duration: {1:0.0000} seconds ({2:0.00} cycles)", faultNumber, duration, duration * m_systemFrequency);
+                    writer.WriteLine();
+
+
+
+                }
+                writer.Flush();
+                dict.Add(Path.GetFileNameWithoutExtension(eventDataSet.MeterDataSet.FilePath) + ".hdr", memoryStream.ToArray());
+            }
+        }
+
+        private Schema WriteSchemaFile(COMTRADEData comtradeData, EventDataSet eventDataSet, Dictionary<string, byte[]> dict)
+        {
+            Schema schema = Writer.CreateSchema(new List<ChannelMetadata>(), comtradeData.StationName, comtradeData.DeviceID, comtradeData.DataStartTime, comtradeData.SampleCount, 1999, FileType.Binary, 1, comtradeData.SamplingRate, m_systemFrequency, false);
+            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
+            List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
+            int i = 1;
+
+            // Populate the analog channel list with analog channel metadata
+            foreach (COMTRADEChannelData channelData in comtradeData.AnalogChannelData)
+            {
+                AnalogChannel analogChannel = new AnalogChannel();
+
+                analogChannel.Index = i;
+                analogChannel.Name = channelData.Name;
+                analogChannel.MinValue = -short.MaxValue;
+                analogChannel.MaxValue = short.MaxValue;
+                analogChannel.Units = channelData.Units;
+
+                if ((object)channelData.OriginalAnalogChannel != null)
+                {
+                    analogChannel.PhaseID = channelData.OriginalAnalogChannel.PhaseID;
+                    analogChannel.CircuitComponent = channelData.OriginalAnalogChannel.CircuitComponent;
+                    analogChannel.Units = channelData.OriginalAnalogChannel.Units;
+                    analogChannel.Skew = channelData.OriginalAnalogChannel.Skew;
+                    analogChannel.PrimaryRatio = channelData.OriginalAnalogChannel.PrimaryRatio;
+                    analogChannel.SecondaryRatio = channelData.OriginalAnalogChannel.SecondaryRatio;
+                    analogChannel.ScalingIdentifier = channelData.OriginalAnalogChannel.ScalingIdentifier;
+
+                    if (analogChannel.Units.ToUpper().Contains("KA") || analogChannel.Units.ToUpper().Contains("KV"))
+                        channelData.Data = channelData.Data.Multiply(0.001);
+                }
+
+                analogChannel.Multiplier = (channelData.Data.Maximum - channelData.Data.Minimum) / (2 * short.MaxValue);
+                analogChannel.Adder = (channelData.Data.Maximum + channelData.Data.Minimum) / 2.0D;
+
+                analogChannels.Add(analogChannel);
+
+                i++;
+            }
+
+            i = 1;
+
+            // Populate the digital channel list with digital channel metadata
+            foreach (COMTRADEChannelData channelData in comtradeData.DigitalChannelData)
+            {
+                DigitalChannel digitalChannel = new DigitalChannel();
+
+                digitalChannel.Index = i;
+                digitalChannel.Name = channelData.Name;
+
+                if ((object)channelData.OriginalDigitalChannel != null)
+                {
+                    digitalChannel.PhaseID = channelData.OriginalDigitalChannel.PhaseID;
+                    digitalChannel.CircuitComponent = channelData.OriginalDigitalChannel.CircuitComponent;
+                    digitalChannel.NormalState = channelData.OriginalDigitalChannel.NormalState;
+                }
+
+                digitalChannels.Add(digitalChannel);
+
+                i++;
+            }
+
+            schema.AnalogChannels = analogChannels.ToArray();
+            schema.DigitalChannels = digitalChannels.ToArray();
+
+            using (MemoryStream memoryStream = new MemoryStream())
+            using (StreamWriter writer = new StreamWriter(memoryStream, Encoding.ASCII))
+            {
+                writer.Write(schema.FileImage);
+                writer.Flush();
+                dict.Add(Path.GetFileNameWithoutExtension(eventDataSet.MeterDataSet.FilePath) + ".cfg", memoryStream.ToArray());
+            }
+
+            // Return the schema
+            return schema;
+        }
+
+        private void WriteDataFile(COMTRADEData comtradeData, Schema schema, EventDataSet eventDataSet, Dictionary<string, byte[]> dict)
+        {
+            // Function to get the value at a given index from a data series
+            Func<DataSeries, int, double> valueAt = (series, i) =>
+                (i < series.DataPoints.Count)
+                ? series.DataPoints[i].Value
+                : series.DataPoints.Last().Value;
+
+            // Get the list of data series for every channel in the COMTRADE file
+            IEnumerable<DataSeries> digitalSeriesList = comtradeData.DigitalChannelData
+                .Select(channelData => channelData.Data)
+                .Select((series, index) => series.Multiply(Math.Pow(2.0D, index % 16)))
+                .Select((series, index) => Tuple.Create(index / 16, series))
+                .GroupBy(tuple => tuple.Item1)
+                .Select(group => group.Select(tuple => tuple.Item2))
+                .Select(group => group.Aggregate((sum, series) => sum.Add(series)));
+
+            List<DataSeries> allChannels = comtradeData.AnalogChannelData
+                .Select(channelData => channelData.Data)
+                .Concat(digitalSeriesList)
+                .ToList();
+
+            // Use the longest data series as the series
+            // from which time values will be used
+            DataSeries timeSeries = allChannels
+                .OrderByDescending(series => series.DataPoints.Count)
+                .First();
+
+            // Open the data file for writing
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                // Write the timestamp and values to each line of the data file
+                for (int i = 0; i < comtradeData.SampleCount; i++)
+                {
+                    Ticks timestamp = timeSeries.DataPoints[i].Time;
+
+                    double[] values = allChannels
+                        .Select(series => valueAt(series, i))
+                        .ToArray();
+
+                    Writer.WriteNextRecordBinary(memoryStream, schema, timestamp, values, (uint)i, false);
+                }
+                dict.Add(Path.GetFileNameWithoutExtension(eventDataSet.MeterDataSet.FilePath) + ".dat", memoryStream.ToArray());
+            }
+        }
+
         private TimeSpan GetTimeZoneOffset(string meterTimeZoneID, DateTime startTime)
         {
             TimeZoneInfo meterTimeZone;
@@ -793,6 +1085,24 @@ namespace FaultData.DataWriters
             meterTimeZone = TimeZoneInfo.FindSystemTimeZoneById(meterTimeZoneID);
 
             return m_xdaTimeZone.GetUtcOffset(startTime) - meterTimeZone.GetUtcOffset(startTime);
+        }
+
+        private IDbDataParameter ToDateTime2(AdoDataConnection connection, DateTime dateTime)
+        {
+            using (IDbCommand command = connection.Connection.CreateCommand())
+            {
+                IDbDataParameter parameter = command.CreateParameter();
+                parameter.DbType = DbType.DateTime2;
+                parameter.Value = dateTime;
+                return parameter;
+            }
+        }
+
+        private DataGroup ToDataGroup(Meter meter, byte[] data)
+        {
+            DataGroup dataGroup = new DataGroup();
+            dataGroup.FromData(meter, data);
+            return dataGroup;
         }
 
         #endregion
