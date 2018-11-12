@@ -69582,7 +69582,7 @@ var MeterInput = (function (_super) {
             var value = (_this.props.value ? _this.props.value : data[0].ID);
             var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.Name); });
             var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange({ meterID: e.target.value, measurementID: null }); }, defaultValue: value }, options);
-            _this.props.onChange(value);
+            _this.props.onChange({ meterID: value });
             _this.setState({ select: select });
         });
     };
@@ -70188,7 +70188,7 @@ var PeriodicDataDisplay = (function (_super) {
                 React.createElement("div", { className: "vertical-menu" },
                     React.createElement("div", { className: "form-group" },
                         React.createElement("label", null, "Meter: "),
-                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState({ meterID: obj }); } })),
+                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState(obj); } })),
                     React.createElement("div", { className: "form-group" },
                         React.createElement("label", null, "Time Range: "),
                         React.createElement(react_datetime_range_picker_1.default, { startDate: new Date(this.state.startDate), endDate: new Date(this.state.endDate), onChange: function (obj) { _this.setState({ startDate: moment(obj.start).format('YYYY-MM-DD'), endDate: moment(obj.end).format('YYYY-MM-DD') }); }, inputProps: { style: { width: '100px', margin: '5px' }, className: 'form-control' }, className: 'form', timeFormat: false })),

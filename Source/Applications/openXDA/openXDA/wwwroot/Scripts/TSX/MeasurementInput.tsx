@@ -31,6 +31,8 @@ import * as _ from "lodash";
 
 export default class MeasurementInput extends React.Component<any, any>{
     trendingDataDisplayService: TrendingDataDisplayService;
+    state: { select: Array<any> };
+    props: { value: number, meterID: number, onChange: Function };
     constructor(props) {
         super(props);
         this.state = {
@@ -55,8 +57,8 @@ export default class MeasurementInput extends React.Component<any, any>{
 
             var value = (this.props.value ? this.props.value : data[0].ID)
             var options = data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>);
-            var select = <select className='form-control' onChange={(e) => { this.props.onChange(e.target.value); }} defaultValue={value}>{options}</select>
-            this.props.onChange(value);
+            var select = <select className='form-control' onChange={(e) => { this.props.onChange({ measurementID: e.target.value }); }} defaultValue={value}>{options}</select>
+            this.props.onChange({ measurementID: value });
             this.setState({ select: select });
         });
 

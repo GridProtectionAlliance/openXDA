@@ -69631,7 +69631,7 @@ var MeterInput = (function (_super) {
             var value = (_this.props.value ? _this.props.value : data[0].ID);
             var options = data.map(function (d) { return React.createElement("option", { key: d.ID, value: d.ID }, d.Name); });
             var select = React.createElement("select", { className: 'form-control', onChange: function (e) { _this.props.onChange({ meterID: e.target.value, measurementID: null }); }, defaultValue: value }, options);
-            _this.props.onChange(value);
+            _this.props.onChange({ meterID: value });
             _this.setState({ select: select });
         });
     };
@@ -69976,7 +69976,7 @@ var DataQualitySummary = (function (_super) {
                 (this.state.level == "Channel" ?
                     React.createElement("div", { className: "form-group" },
                         React.createElement("label", null, "Meter: "),
-                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState({ meterID: obj }, _this.updateUrl); } })) : null),
+                        React.createElement(MeterInput_1.default, { value: this.state.meterID, onChange: function (obj) { return _this.setState(obj, _this.updateUrl); } })) : null),
                 React.createElement("div", { className: "form-group" },
                     React.createElement("div", { style: { float: 'left' }, ref: 'loader', hidden: true },
                         React.createElement("div", { style: { border: '5px solid #f3f3f3', WebkitAnimation: 'spin 1s linear infinite', animation: 'spin 1s linear infinite', borderTop: '5px solid #555', borderRadius: '50%', width: '25px', height: '25px' } }),

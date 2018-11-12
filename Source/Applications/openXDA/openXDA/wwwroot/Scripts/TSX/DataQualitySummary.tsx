@@ -107,7 +107,7 @@ export class DataQualitySummary extends React.Component<any, any>{
                     {( this.state.level == "Channel" ?
                         <div className="form-group">
                             <label>Meter: </label>
-                            <MeterInput value={this.state.meterID} onChange={(obj) => this.setState({ meterID: obj }, this.updateUrl)} />
+                            <MeterInput value={this.state.meterID} onChange={(obj) => this.setState(obj, this.updateUrl)} />
                         </div> : null
                     )}
                     <div className="form-group">

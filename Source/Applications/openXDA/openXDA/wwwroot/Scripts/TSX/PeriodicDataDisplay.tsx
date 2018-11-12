@@ -137,7 +137,7 @@ export class PeriodicDataDisplay extends React.Component<any, any>{
                 <div className="vertical-menu">
                     <div className="form-group">
                         <label>Meter: </label>
-                        <MeterInput value={this.state.meterID} onChange={(obj) => this.setState({ meterID: obj })} />
+                        <MeterInput value={this.state.meterID} onChange={(obj) => this.setState(obj)} />
                     </div>
                     <div className="form-group">
                         <label>Time Range: </label>
