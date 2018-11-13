@@ -26,6 +26,7 @@
 @using System.Threading
 @using GSF.Web
 @using GSF.Web.Model
+@using GSF.Data.Model
 @using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
@@ -63,12 +64,11 @@ new[] { "Location", "Site", "text-left"}
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddInputField<MeterAssetGroupView>("MeterName"))
+    @Raw(dataContext.AddSelectField<MeterAssetGroup, Meter>("MeterID", "ID", "Name", restriction: new RecordRestriction("ID NOT IN (SELECT MeterID FROM MeterAssetGroup)")))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
 {
-    <script src="@("/@GSF/Web/Model/Scripts/gsf.web.primeui.js")"></script>
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<MeterAssetGroup, DataHub>(ViewBag, "ID", null, groupID))
 
@@ -77,23 +77,6 @@ new[] { "Location", "Site", "text-left"}
         });
 
         $(function(){
-            $("#addNewEditDialog").on("shown.bs.modal", function () {
-                if (viewModel.dataHubIsConnected()) {
-                    function searchMeters(searchText, limit) {
-                        return dataHub.searchMeterAssetGroupByGroup(@groupID, searchText, limit);
-                    }
-
-                    initializeAutoCompleteLookupField("MeterName", searchMeters, false);
-
-                    $('#inputMeterName').puiautocomplete({
-                        select: function (event, item) {
-                            var id = Number(item.data("id"));
-                            viewModel.currentRecord().MeterID(id);
-                        }
-                    });
-                }
-            });
-
             $('#bodyContainer').removeClass("container theme-showcase");
             $('body').css({'paddingTop': '0px', 'overflow-y': 'hidden'});
         });
