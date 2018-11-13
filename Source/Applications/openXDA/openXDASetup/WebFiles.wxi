@@ -692,9 +692,6 @@
   <Component Id="wwwroot_Scripts_PQTrendingWebReport_js_map">
     <File Id="wwwroot_Scripts_PQTrendingWebReport.js.map" Name="PQTrendingWebReport.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PQTrendingWebReport.js.map" />
   </Component>
-  <Component Id="wwwroot_Scripts_PQTrendingWebReport_zip">
-    <File Id="wwwroot_Scripts_PQTrendingWebReport.zip" Name="PQTrendingWebReport.zip" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\PQTrendingWebReport.zip" />
-  </Component>
   <Component Id="wwwroot_Scripts_Report_js">
     <File Id="wwwroot_Scripts_Report.js" Name="Report.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Report.js" />
   </Component>
