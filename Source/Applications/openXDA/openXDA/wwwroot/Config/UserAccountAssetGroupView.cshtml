@@ -59,7 +59,7 @@ new[] { "Username", "Username", "text-Left" },
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddSelectField<UserAccountAssetGroup, UserAccount>("UserAccountID", "ID", "Name"@*, restriction: new GSF.Data.Model.RecordRestriction("ID NOT IN (SELECT UserAccountID FROM UserAccountAssetGroup)")*@))
+    @Raw(dataContext.AddSelectField<UserAccountAssetGroup, UserAccount>("UserAccountID", "ID", "Name", restriction: new GSF.Data.Model.RecordRestriction("ID NOT IN (SELECT UserAccountID FROM UserAccountAssetGroup)")))
 }
 @Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 @section Scripts
