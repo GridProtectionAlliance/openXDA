@@ -44,6 +44,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using System.Data;
 using System.IO.Compression;
+using Schema = GSF.COMTRADE.Schema;
 
 namespace FaultData.DataWriters
 {
