@@ -628,8 +628,8 @@ namespace FaultData.DataAnalysis
                 return true;
 
             return m_dataSeries
-                .Where(IsInstantaneous)
                 .Where(dataSeries => (object)dataSeries.SeriesInfo != null)
+                .Where(IsInstantaneous)
                 .Where(dataSeries => dataSeries.SeriesInfo.Channel.MeasurementType.Name != "Digital")
                 .Any();
         }
