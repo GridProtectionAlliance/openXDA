@@ -40,6 +40,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
+using log4net;
+using System.Configuration;
 
 namespace openXDA.Reports
 {
@@ -60,6 +62,11 @@ namespace openXDA.Reports
         {
             m_reportsSettings = new ReportsSettings();
             m_emailSettings = new EmailSettings();
+            Scheduler.Initialize();
+            Scheduler.Starting += Scheduler_Starting;
+            Scheduler.Started += Scheduler_Started;
+            Scheduler.ScheduleDue += Scheduler_ScheduleDue;
+            Scheduler.Disposed += Scheduler_Disposed;
         }
 
         public ReportsEngine(ReportsSettings settings)
@@ -96,97 +103,34 @@ namespace openXDA.Reports
         #endregion
 
         #region [ Static ]
-
-        public static event EventHandler<EventArgs<string>> LogStatusMessageEvent;
-
-        private static void OnLogStatusMessage(string message)
-        {
-            LogStatusMessageEvent?.Invoke(new object(), new EventArgs<string>(message));
-        }
-
-        public static event EventHandler<EventArgs<Exception>> LogExceptionMessage;
-
-        private static void OnLogExceptionMessage(Exception exception)
-        {
-            LogExceptionMessage?.Invoke(new object(), new EventArgs<Exception>(exception));
-        }
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ReportsEngine));
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
 
         #endregion
 
         #region [ Methods ]
 
-        public void Start()
+        public bool Start()
         {
-            //using (DataContext dataContext = new DataContext("systemSettings"))
-            //{
-            //    //DateTime today = DateTime.Parse("09/01/2016");
-            //    //DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
-            //    //DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
-
-            //    //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'Cal.Cal2'");
-
-            //    //createPDF(meter, firstOfMonth, endOfMonth, dataContext);
-
-            //    DateTime today = DateTime.Parse("08/01/2016");
-            //    DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
-            //    DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
-
-            //    //Meter meter = dataContext.Table<Meter>().QueryRecordWhere("Name = 'DR_Fortress'");
-            //    Meter meter = dataContext.Table<Meter>().QueryRecordWhere("AssetKey = 'Enphase_SI'");
-            //    PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
-
-            //    byte[] pdf = pQReport.createPDF();
-
-            //    try
-            //    {
-            //        Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
-
-            //        if (report != null)
-            //        {
-            //            report.MeterID = meter.ID;
-            //            report.Month = firstOfMonth.Month;
-            //            report.Year = firstOfMonth.Year;
-            //            report.Results = pQReport.Result;
-            //            report.PDF = pdf;
-
-            //            dataContext.Table<Model.Report>().UpdateRecord(report);
-
-            //        }
-            //        else
-            //        {
-            //            dataContext.Table<Model.Report>().AddNewRecord(new Model.Report()
-            //            {
-            //                MeterID = meter.ID,
-            //                Month = firstOfMonth.Month,
-            //                Year = firstOfMonth.Year,
-            //                Results = pQReport.Result,
-            //                PDF = pdf
-            //            });
-            //        }
-
-            //        EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
-            //        emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
-
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        OnLogExceptionMessage(ex);
-            //    }
-
-            //    OnLogStatusMessage("Completed test pdf.");
-            //}
-
-            if (!Running)
+            try
             {
-                Scheduler.Initialize();
-                Scheduler.Starting += Scheduler_Starting;
-                Scheduler.Started += Scheduler_Started;
-                Scheduler.ScheduleDue += Scheduler_ScheduleDue;
-                Scheduler.Disposed += Scheduler_Disposed;
-                Scheduler.AddSchedule("Reports", ReportsSettings.Frequency);
-                Scheduler.Start();
-                m_running = true;
+
+                if (ReportsSettings.Enabled && !Running)
+                {
+                    Scheduler.AddSchedule("Reports", ReportsSettings.Frequency);
+                    Scheduler.Start();
+                    m_running = true;
+                }
+
+                return true;
+
             }
+            catch(Exception ex)
+            {
+                Log.Error(ex.ToString(), ex);
+                return false;
+            }
+
         }
 
         public void Stop()
@@ -198,13 +142,19 @@ namespace openXDA.Reports
             }
         }
 
-        public void ReloadSystemSettings()
+        public void ReloadSystemSettings(string connectionString)
         {
+            ConnectionStringParser.ParseConnectionString(connectionString, this);
+
+            if (!Running) Start();
+            else if (!ReportsSettings.Enabled) Stop();
+
+            Scheduler.AddSchedule("Reports", ReportsSettings.Frequency, true);
         }
 
         private void Scheduler_Started(object sender, EventArgs e)
         {
-            OnLogStatusMessage("Reports Engine has started successfully...");
+            Log.Info("Reports Engine has started successfully...");
         }
 
         private void Scheduler_Starting(object sender, EventArgs e)
@@ -213,13 +163,13 @@ namespace openXDA.Reports
 
         private void Scheduler_Disposed(object sender, EventArgs e)
         {
-            OnLogStatusMessage("Reports Engine is disposed...");
+            Log.Info("Reports Engine is disposed...");
         }
 
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            OnLogStatusMessage(string.Format("Processing monthly reports..."));
+            Log.Info(string.Format("Processing monthly reports..."));
             ProcessMonthlyReports();
 
         }
@@ -235,12 +185,17 @@ namespace openXDA.Reports
                 // TODO: There is no EmailGroupAssetGroup
                 IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterAssetGroup WHERE AssetGroupID IN (SELECT AssetGroupID FROM EmailGroupAssetGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
                 foreach (Meter meter in meters) {
+                    Log.Info($"Starting monthly Report for {meter.Name}");
+
                     PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
+                    Log.Info($"Completed monthly Report for {meter.Name}");
 
                     byte[] pdf = pQReport.createPDF();
 
                     try
                     {
+                        Log.Info($"Loading monthly Report for {meter.Name}");
+
                         Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
 
                         if (report != null)
@@ -266,7 +221,7 @@ namespace openXDA.Reports
                         }
                     }
                     catch (Exception ex) {
-                        OnLogExceptionMessage(ex);
+                        Log.Error(ex.ToString(), ex);
                     }
 
                 }

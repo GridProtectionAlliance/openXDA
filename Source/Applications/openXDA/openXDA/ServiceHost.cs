@@ -336,10 +336,6 @@ namespace openXDA
             DataAggregationEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
             DataAggregationEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
 
-            //Set up DataAggregationEngine callbacks
-            ReportsEngine.LogExceptionMessage += (obj, Args) => LoggedExceptionHandler(obj, Args);
-            ReportsEngine.LogStatusMessageEvent += (obj, Args) => LogStatusMessage(Args.Argument);
-
             // Set up separate thread to start the engine
             m_startEngineThread = new Thread(() =>
             {
@@ -361,7 +357,7 @@ namespace openXDA
                     webUIStarted = webUIStarted || TryStartWebUI();
                     dataPusherEngineStarted = dataPusherEngineStarted || TryStartDataPusherEngine();
                     dataAggregationEngineStarted = dataAggregationEngineStarted || TryStartDataAggregationEngine();
-                    reportsEngineStarted = reportsEngineStarted || TryStartReportsEngine();
+                    reportsEngineStarted = m_reportsEngine.Start();
                     pqTrendingWebReportsEngineStarted = pqTrendingWebReportsEngineStarted || TryStartPQTrendingWebReportsEngine();
                     statChangeWebReportsEngineStarted = statChangeWebReportsEngineStarted || TryStartStepChangeWebReportsEngine();
 
@@ -490,32 +486,6 @@ namespace openXDA
 
                 // Log the exception
                 message = "Failed to start PQMark data aggregation engine due to exception: " + ex.Message;
-                HandleException(new InvalidOperationException(message, ex));
-
-                return false;
-            }
-        }
-
-
-        // Attempts to start the engine and logs startup errors.
-        private bool TryStartReportsEngine()
-        {
-            try
-            {
-                // Start the analysis engine
-                if (m_reportsEngine.ReportsSettings.Enabled)
-                    m_reportsEngine.Start();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                string message;
-
-                // Stop the analysis engine
-                m_reportsEngine.Stop();
-
-                // Log the exception
-                message = "Failed to start reports engine due to exception: " + ex.Message;
                 HandleException(new InvalidOperationException(message, ex));
 
                 return false;
@@ -752,8 +722,11 @@ namespace openXDA
         // Reloads system settings from the database.
         private void ReloadSystemSettingsRequestHandler(ClientRequestInfo requestInfo)
         {
+            string connectionString = LoadSystemSettings();
+
             m_extensibleDisturbanceAnalysisEngine.ReloadSystemSettings();
-            
+            m_reportsEngine.ReloadSystemSettings(connectionString);
+
             if (m_dataPusherEngine.Running && m_dataPusherEngine.DataPusherSettings.Enabled)
                 m_dataPusherEngine.ReloadSystemSettings();
             else if (!m_dataPusherEngine.DataPusherSettings.Enabled)

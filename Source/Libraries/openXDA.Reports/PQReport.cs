@@ -35,7 +35,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
-
+using log4net;
 namespace openXDA.Reports
 {
     public class PQReport : Root.Reports.Report
@@ -207,15 +207,26 @@ namespace openXDA.Reports
 
         #endregion
 
+        #region [ Static ]
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQReport));
+        #endregion
+
         #region [ Methods ]
         public byte[] createPDF()
         {
-            GenerateReport();
-
-            using (MemoryStream stream = new MemoryStream())
+            try
             {
-                this.formatter.Create(this, stream);
-                return stream.ToArray();
+                GenerateReport();
+
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    this.formatter.Create(this, stream);
+                    return stream.ToArray();
+                }
+            }
+            catch (Exception ex) {
+                Log.Error(ex.ToString(), ex);
+                return null;
             }
         }
 
