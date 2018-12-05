@@ -79,12 +79,15 @@ namespace openXDA
             hubConfig.EnableDetailedErrors = true;
 #endif
 
-            app.Use<AuthenticationMiddleware>(new AuthenticationOptions()
+            AuthenticationOptions authenticationOptions = new AuthenticationOptions()
             {
                 SessionToken = "session",
                 AuthFailureRedirectResourceExpression = "(?!)",
                 AnonymousResourceExpression = "^/api/(?:JSONApi|Grafana)"
-            });
+            };
+
+            app.Use<AuthenticationMiddleware>(authenticationOptions);
+            httpConfig.EnableSessions(authenticationOptions);
 
             string allowedDomainList = ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value;
 
