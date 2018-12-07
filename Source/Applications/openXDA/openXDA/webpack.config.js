@@ -8,7 +8,7 @@ module.exports = {
         DataQualitySummary: "./wwwroot/Scripts/TSX/DataQualitySummary.tsx",
         PQTrendingWebReport: "./wwwroot/Scripts/TSX/PQTrendingWebReport.tsx",
         StepChangeWebReport: "./wwwroot/Scripts/TSX/StepChangeWebReport.tsx",
-
+        SpectralDataDisplay: "./wwwroot/Scripts/TSX/SpectralDataDisplay.tsx"
     },
     output: {
         filename: "./wwwroot/Scripts/[name].js"

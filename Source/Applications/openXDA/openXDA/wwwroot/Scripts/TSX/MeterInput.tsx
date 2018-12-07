@@ -29,33 +29,49 @@ import * as queryString from "query-string";
 import * as moment from 'moment';
 import * as _ from "lodash";
 
+declare var meters: Array<{ ID: number, Name: string }>;
+
 export default class MeterInput extends React.Component<any, any>{
     periodicDataDisplayService: PeriodicDataDisplayService;
     props: { value: number, onChange: Function };
-    state: { select: Array<any> }
+    state: { select: JSX.Element }
     constructor(props) {
         super(props);
-        this.state = {
-            select: null
+
+        if (meters == undefined) {
+            this.state = {
+                select: null
+            }
+        }
+        else {
+            this.state = {
+                select: this.getSelect(meters)
+            }
         }
 
         this.periodicDataDisplayService = new PeriodicDataDisplayService();
     }
 
     componentDidMount() {
-        this.periodicDataDisplayService.getMeters().done(data => {
-            if (data.length == 0) return <select className='form-control'></select>;
+        if (meters != undefined) return;
 
-            var value = (this.props.value ? this.props.value : data[0].ID)
-            var options = data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>);
-            var select = <select className='form-control' onChange={(e) => { this.props.onChange({ meterID: e.target.value, measurementID: null }); }} defaultValue={value}>{options}</select>;
-            this.props.onChange({ meterID: value });
+        this.periodicDataDisplayService.getMeters().done(data => {
+            var select = this.getSelect(data);
             this.setState({ select: select });
         });
     }
 
     render() {
         return this.state.select;
+    }
+
+    getSelect(data) {
+        if (data.length == 0) return <select className='form-control'></select>;
+
+        var value = (this.props.value ? this.props.value : data[0].ID)
+        var options = data.map(d => <option key={d.ID} value={d.ID}>{d.Name}</option>);
+        this.props.onChange({ meterID: value });
+        return <select className='form-control' onChange={(e) => { this.props.onChange({ meterID: e.target.value, measurementID: null }); }} defaultValue={value}>{options}</select>;
     }
 
 }

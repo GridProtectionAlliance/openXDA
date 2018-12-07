@@ -133,6 +133,15 @@ namespace openXDA.Adapters
                 }
             );
 
+            config.Routes.MapHttpRoute(
+                name: "SpectralDataDisplay",
+                routeTemplate: "api/SpectralDataDisplay/{action}",
+                defaults: new
+                {
+                    controller = "SpectralDataDisplay"
+                }
+            );
+
             config.MapHttpAttributeRoutes();
 
         }

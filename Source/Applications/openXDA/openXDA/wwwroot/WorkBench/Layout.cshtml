@@ -203,6 +203,7 @@
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
+                            <li @Raw(pageTitle == "Spectral Data Display" ? "class=\"active\"" : "")><a href="SpectralDataDisplay.cshtml">Spectral Data</a></li>
                             <li @Raw(pageTitle == "Period Data Display" ? "class=\"active\"" : "")><a href="PeriodicDataDisplay.cshtml">Meter Periodic</a></li>
                             <li @Raw(pageTitle == "Trending Data Display" ? "class=\"active\"" : "")><a href="TrendingDataDisplay.cshtml">Trending Data</a></li>
                         </ul>
