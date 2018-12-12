@@ -3195,7 +3195,7 @@ BEGIN
 		Phase.Name AS phase,
         CASE Disturbance.PerUnitMagnitude
             WHEN -1E308 THEN 'NaN'
-            ELSE CAST(Disturbance.PerUnitMagnitude AS VARCHAR(8))
+            ELSE CAST(Disturbance.PerUnitMagnitude AS VARCHAR(MAX))
         END AS magnitude,
         CASE Disturbance.DurationSeconds
             WHEN -1E308 THEN 'NaN'
