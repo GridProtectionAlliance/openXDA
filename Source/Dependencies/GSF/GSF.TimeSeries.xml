@@ -9546,6 +9546,12 @@
             meta-data with its own database configuration.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.PersistConnectionForMetadata">
+            <summary>
+            Gets flag that indicates whether the connection will be persisted
+            even while the adapter is offline in order to synchronize metadata.
+            </summary>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.UseSourcePrefixNames">
             <summary>
             Gets or sets flag that determines if child devices associated with a subscription
@@ -9569,6 +9575,11 @@
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.UseMillisecondResolution">
             <summary>
             Gets or sets flag that informs publisher if base time-offsets can use millisecond resolution to conserve bandwidth.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.CommandChannelConnected">
+            <summary>
+            Gets flag that determines whether the command channel is connected.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.Authenticated">
@@ -9643,6 +9654,17 @@
             <see cref="P:GSF.TimeSeries.Transport.DataSubscriber.OperationalEncoding"/> of the communications stream.
             </summary>
         </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.SupportsRealTimeProcessing">
+            <summary>
+            Gets flag indicating if this adapter supports real-time processing.
+            </summary>
+            <remarks>
+            Setting this value to false indicates that the adapter should not be enabled unless it exists within a temporal session.
+            As an example, this flag can be used in a gateway system to set up two separate subscribers: one to the PDC for real-time
+            data streams and one to the historian for historical data streams. In this scenario, the assumption is that the PDC is
+            the data source for the historian, implying that only local data is destined for archival.
+            </remarks>
+        </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.SupportsTemporalProcessing">
             <summary>
             Gets the flag indicating if this adapter supports temporal processing.
@@ -9703,6 +9725,11 @@
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to this <see cref="T:GSF.TimeSeries.Transport.DataSubscriber"/>.
+            </summary>
+        </member>
+        <member name="P:GSF.TimeSeries.Transport.DataSubscriber.RequestedOutputMeasurementKeys">
+            <summary>
+            Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
             </summary>
         </member>
         <member name="P:GSF.TimeSeries.Transport.DataSubscriber.OutputMeasurements">
