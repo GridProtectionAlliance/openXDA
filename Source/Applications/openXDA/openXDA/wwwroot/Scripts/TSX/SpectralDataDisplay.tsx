@@ -216,7 +216,7 @@ export class SpectralDataDisplay extends React.Component{
             var oldMean = (dmax - dmin) / 2;
             var cmin = oldMean - span;
             var cmax = oldMean + span;
-            var colorScale = [[0, 'blue'], [parseInt(this.state.center)/100, 'grey'], [1, 'red']];
+            var colorScale = [[0, 'blue'], [parseInt(this.state.center)/100, 'yellow'], [1, 'red']];
             this.setState({ data: [{ type: 'surface', x: x, y: y, z: z, cmin: cmin, cmax: cmax, colorscale: colorScale }] }, () => {
                 $(this.refs.loader).hide();
              });
