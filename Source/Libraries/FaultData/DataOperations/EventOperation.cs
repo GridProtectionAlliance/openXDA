@@ -233,6 +233,8 @@ namespace FaultData.DataOperations
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
             SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
+            TransientDataResource transientDataResource = meterDataSet.GetResource<TransientDataResource>();
+
             List<DbDisturbance> dbDisturbances = new List<DbDisturbance>();
             List<Disturbance> disturbances;
 
@@ -261,6 +263,13 @@ namespace FaultData.DataOperations
                 foreach (Disturbance interruption in disturbances)
                     dbDisturbances.Add(GetDisturbanceRow(connection, interruption));
             }
+
+            if (transientDataResource.Transients.TryGetValue(dataGroup, out disturbances))
+            {
+                foreach (Disturbance transient in disturbances)
+                    dbDisturbances.Add(GetDisturbanceRow(connection, transient));
+            }
+
 
             return dbDisturbances;
         }

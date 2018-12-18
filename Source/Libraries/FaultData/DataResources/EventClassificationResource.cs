@@ -203,6 +203,7 @@ namespace FaultData.DataResources
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
             SwellDataResource swellDataResource = meterDataSet.GetResource<SwellDataResource>();
+            TransientDataResource transientDataResource = meterDataSet.GetResource<TransientDataResource>();
 
             if (interruptionDataResource.Interruptions.ContainsKey(dataGroup))
                 return EventClassification.Interruption;
@@ -212,6 +213,9 @@ namespace FaultData.DataResources
 
             if (swellDataResource.Swells.ContainsKey(dataGroup))
                 return EventClassification.Swell;
+
+            if (transientDataResource.Transients.ContainsKey(dataGroup))
+                return EventClassification.Transient;
 
             return EventClassification.Other;
         }
