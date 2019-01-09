@@ -3140,7 +3140,7 @@ namespace openXDA.Hubs
                         }
 
                         byte[] newTimeData = dataTimeGroup.ToData();
-                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {2}", newTimeData, record.EventDataID);
+                        DataContext.Connection.ExecuteNonQuery("Update EventData SET TimeDomainData = {0} WHERE ID = {1}", newTimeData, record.EventDataID);
 
                     }
 
