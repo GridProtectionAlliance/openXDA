@@ -139,7 +139,11 @@ namespace FaultData.DataResources
             List<Disturbance> disturbances = new List<Disturbance>();
             List<DataPoint> firstCycle = waveForm.DataPoints.Take(samplesPerCycle).ToList();
             List<DataPoint> fullWaveForm = waveForm.DataPoints.Select((dataPoint, index) => new DataPoint() { Time = dataPoint.Time, Value = Math.Abs(dataPoint.Value - firstCycle[index % samplesPerCycle].Value) }).ToList();
-            
+
+            double peakVoltage = waveForm.DataPoints.Select(x => Math.Abs(x.Value)).Max();
+            double nominalPeakVoltage = firstCycle.Select(x => Math.Abs(x.Value)).Max();
+            thresholdValue = nominalPeakVoltage * TransientThreshold / 100;
+
             IEnumerable<DataPoint> thresholdCrosses = fullWaveForm.Where(dataPoint => {
                 int index = fullWaveForm.IndexOf(dataPoint);
                 if (index == 0) return dataPoint.Value > thresholdValue;
@@ -172,8 +176,8 @@ namespace FaultData.DataResources
                     EndIndex = fullWaveForm.IndexOf(thresholdCrosses.Last()),
                     StartTime = thresholdCrosses.First().Time,
                     EndTime = thresholdCrosses.Last().Time,
-                    Magnitude = magnitude,
-                    PerUnitMagnitude = magnitude / (nominalVoltage * 1000)
+                    Magnitude = peakVoltage,
+                    PerUnitMagnitude = peakVoltage / nominalPeakVoltage
                 };
                 disturbances.Add(disturbance);
             }
