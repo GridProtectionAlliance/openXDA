@@ -72,7 +72,6 @@ namespace openXDA.Adapters
         }
         #endregion
 
-
         #region [ Methods ]
 
         /// <summary>
@@ -116,14 +115,17 @@ namespace openXDA.Adapters
             DataTable table;
 
             Dictionary<string, FlotSeries> dict = new Dictionary<string, FlotSeries>();
-            table = m_dataContext.Connection.RetrieveData("select ID from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(m_dataContext.Connection, endTime), ToDateTime2(m_dataContext.Connection, startTime), evt.MeterID, evt.LineID);
+            table = m_dataContext.Connection.RetrieveData("select ID, StartTime from Event WHERE StartTime <= {0} AND EndTime >= {1} and MeterID = {2} AND LineID = {3}", ToDateTime2(m_dataContext.Connection, endTime), ToDateTime2(m_dataContext.Connection, startTime), evt.MeterID, evt.LineID);
             foreach (DataRow row in table.Rows)
             {
+                int eventID = row.ConvertField<int>("ID");
+                DateTime eventStartTime = row.ConvertField<DateTime>("StartTime");
                 Dictionary<string, FlotSeries> temp;
+
                 if (dataType == "Time")
-                    temp = QueryEventData(int.Parse(row["ID"].ToString()), meter, type);
+                    temp = QueryEventData(eventID, eventStartTime, meter, type);
                 else
-                    temp = QueryFrequencyData(int.Parse(row["ID"].ToString()), meter, type);
+                    temp = QueryFrequencyData(eventID, eventStartTime, meter, type);
 
                 foreach (string key in temp.Keys)
                 {
@@ -414,10 +416,11 @@ namespace openXDA.Adapters
             public List<double[]> DataPoints = new List<double[]>();
         }
 
-        private Dictionary<string, FlotSeries> QueryEventData(int eventID, Meter meter, string type)
+        private Dictionary<string, FlotSeries> QueryEventData(int eventID, DateTime startTime, Meter meter, string type)
         {
-            string target = "DataGroup" + eventID.ToString() + type;
+            string target = $"DataGroup-{eventID}-{startTime.Ticks}-{type}";
             DataGroup dataGroup = (DataGroup)s_memoryCache.Get(target);
+
             if (dataGroup == null)
             {
 
@@ -425,14 +428,15 @@ namespace openXDA.Adapters
                 dataGroup = ToDataGroup(meter, timeDomainData);
                 s_memoryCache.Add(target, dataGroup, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
             }
+
             return GetDataLookup(dataGroup, type);
         }
 
-        private Dictionary<string, FlotSeries> QueryFrequencyData(int eventID, Meter meter, string type)
+        private Dictionary<string, FlotSeries> QueryFrequencyData(int eventID, DateTime startTime, Meter meter, string type)
         {
-            string target = "VICycleDataGroup" + eventID.ToString() + type;
-
+            string target = $"VICycleDataGroup-{eventID}-{startTime.Ticks}-{type}";
             VICycleDataGroup vICycleDataGroup = (VICycleDataGroup)s_memoryCache.Get(target);
+
             if (vICycleDataGroup == null)
             {
                 byte[] frequencyDomainData = m_dataContext.Connection.ExecuteScalar<byte[]>("SELECT TimeDomainData FROM EventData WHERE ID = (SELECT EventDataID FROM Event WHERE ID = {0})", eventID);
@@ -441,6 +445,7 @@ namespace openXDA.Adapters
                 vICycleDataGroup = Transform.ToVICycleDataGroup(new VIDataGroup(dataGroup), 60);
                 s_memoryCache.Add(target, vICycleDataGroup, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10.0D) });
             }
+
             return GetFrequencyDataLookup(vICycleDataGroup, type);
         }
 
