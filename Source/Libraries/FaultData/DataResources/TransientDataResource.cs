@@ -131,6 +131,8 @@ namespace FaultData.DataResources
         }
 
         private IEnumerable<Disturbance> DetectTransients(DataSeries waveForm, Phase phase, Func<double, double, double> thresholdFunc) {
+            if (waveForm == null) return new List<Disturbance>();
+
             waveForm.SeriesInfo.ConnectionFactory = () => new AdoDataConnection("systemSettings");
             double sampleRate = waveForm.SampleRate;
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm.SampleRate, SystemFrequency);
