@@ -89,7 +89,8 @@ namespace FaultData.DataResources
             waveForm.SeriesInfo.ConnectionFactory = () => new AdoDataConnection("systemSettings");
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm.SampleRate, systemFrequency);
             int numCycles = (int)Math.Floor((double)waveForm.DataPoints.Count / samplesPerCycle);
-            double[] points = waveForm.DataPoints.Select(x => x.Value).Take(numCycles * samplesPerCycle).ToArray();
+            int numPoints = numCycles * samplesPerCycle;
+            double[] points = waveForm.DataPoints.Select(x => x.Value/numPoints).Take(numPoints).ToArray();
             double[] frequencyScale = Fourier.FrequencyScale(points.Length, systemFrequency * samplesPerCycle);
 
             Complex[] result = FFT(points);
@@ -103,10 +104,10 @@ namespace FaultData.DataResources
                 int harmonic = (int)frequencyScale[i] / (int)systemFrequency;
                 if (harmonic <= 0) continue;
 
-                dict.Add($"H{harmonic}", new PhasorResult() { Angle = result[i].Phase * 180 / Math.PI, Magnitude = result[i].Magnitude });
+                dict.Add($"H{harmonic}", new PhasorResult() { Angle = result[i].Phase * 180 / Math.PI, Magnitude = result[i].Magnitude*2 / Math.Sqrt(2) });
             }
 
-            Snapshots.Add(waveForm.SeriesInfo.Channel, JsonConvert.SerializeObject(dict, Formatting.Indented));
+            Snapshots.Add(waveForm.SeriesInfo.Channel, JsonConvert.SerializeObject(dict, Formatting.None));
 
             //using (StreamWriter sw = new StreamWriter(waveForm.SeriesInfo.Channel.Meter.Name + waveForm.SeriesInfo.Channel.MeasurementType.Name + phase.ToString() + "snapshottest.txt"))
             //{
@@ -120,7 +121,7 @@ namespace FaultData.DataResources
                 .Select(sample => new Complex(sample, 0))
                 .ToArray();
 
-            Fourier.Forward(complexSamples, FourierOptions.Default);
+            Fourier.Forward(complexSamples, FourierOptions.NoScaling);
 
             return complexSamples;
         }
