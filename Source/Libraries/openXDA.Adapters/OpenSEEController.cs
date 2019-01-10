@@ -390,6 +390,48 @@ namespace openXDA.Adapters
             return returnDict;
         }
 
+        [HttpGet]
+        public Dictionary<string, string> GetScalarStats()
+        {
+            Dictionary<string, string> query = Request.QueryParameters();
+            int eventId = int.Parse(query["eventId"]);
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DataTable dataTable = connection.RetrieveData("SELECT * FROM OpenSEEScalarStatView WHERE EventID = {0}", eventId);
+                if (dataTable.Rows.Count == 0) return new Dictionary<string, string>();
+
+                DataRow row = dataTable.AsEnumerable().First();
+                return row.Table.Columns.Cast<DataColumn>().ToDictionary(c => c.ColumnName, c => row[c].ToString());
+
+            }
+        }
+
+        [HttpGet]
+        public DataTable GetHarmonics()
+        {
+            Dictionary<string, string> query = Request.QueryParameters();
+            int eventId = int.Parse(query["eventId"]);
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                DataTable dataTable = connection.RetrieveData(@"
+                    SELECT 
+                        MeasurementType.Name + ' ' + Phase.Name as Channel, 
+                        SpectralData 
+                    FROM 
+                        SnapshotHarmonics JOIN 
+                        Channel ON Channel.ID = SnapshotHarmonics.ChannelID JOIN
+                        MeasurementType ON Channel.MeasurementTypeID = MeasurementType.ID JOIN
+                        Phase ON Channel.PhaseID = Phase.ID
+                        WHERE EventID = {0}", eventId);
+
+                return dataTable;
+
+            }
+        }
+
+
         #endregion
 
         #region [ OpenSEE Table Operations ]

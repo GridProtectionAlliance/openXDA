@@ -103,7 +103,7 @@ namespace FaultData.DataResources
                 int harmonic = (int)frequencyScale[i] / (int)systemFrequency;
                 if (harmonic <= 0) continue;
 
-                dict.Add($"H{harmonic}", new PhasorResult() { Angle = result[i].Phase, Magnitude = result[i].Magnitude });
+                dict.Add($"H{harmonic}", new PhasorResult() { Angle = result[i].Phase * 180 / Math.PI, Magnitude = result[i].Magnitude });
             }
 
             Snapshots.Add(waveForm.SeriesInfo.Channel, JsonConvert.SerializeObject(dict, Formatting.Indented));
