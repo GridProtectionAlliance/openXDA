@@ -180,6 +180,10 @@ namespace FaultData.DataResources
 
         private EventClassification Classify(MeterDataSet meterDataSet, DataGroup dataGroup, VIDataGroup viDataGroup = null, FaultGroup faultGroup = null)
         {
+            SnapshotDataResource snapshotDataResource = meterDataSet.GetResource<SnapshotDataResource>();
+            if (snapshotDataResource.IsSnapshot)
+                return EventClassification.Snapshot;
+
             if ((object)viDataGroup != null)
             {
                 if (viDataGroup.DefinedNeutralVoltages == 0 && viDataGroup.DefinedLineVoltages == 0 && HasBreakerChannels(dataGroup))
@@ -200,10 +204,6 @@ namespace FaultData.DataResources
                         return EventClassification.RecloseIntoFault;
                 }
             }
-
-            SnapshotDataResource snapshotDataResource = meterDataSet.GetResource<SnapshotDataResource>();
-            if (snapshotDataResource.IsSnapshot)
-                return EventClassification.Snapshot;
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();
