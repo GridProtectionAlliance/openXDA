@@ -278,6 +278,9 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Breaker', 0)
 GO
 
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Snapshot', 1)
+GO
+
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Fault,#FF2800', 1)
 GO
 
@@ -303,6 +306,9 @@ INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Te
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Breaker,#A500FF', 1)
+GO
+
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChartColors', 'Snapshot,#9db087', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('DisturbancesChart', '5', 1)

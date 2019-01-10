@@ -97,7 +97,7 @@ namespace FaultData.DataOperations
                 dataGroups.AddRange(dataGroupsResource.DataGroups.Where(dataGroup => dataGroup.DataSeries.Count == 0));
 
                 List<Event> events = GetEvents(connection, meterDataSet, dataGroups, cycleDataResource.VICycleDataGroups, eventClassificationResource.Classifications);
-                LoadEvents(connection, events);
+                LoadEvents(connection, events, meterDataSet);
             }
         }
 
@@ -189,7 +189,7 @@ namespace FaultData.DataOperations
             return events;
         }
 
-        private void LoadEvents(AdoDataConnection connection, List<Event> events)
+        private void LoadEvents(AdoDataConnection connection, List<Event> events, MeterDataSet meterDataSet)
         {
             TableOperations<Event> eventTable = new TableOperations<Event>(connection);
             TableOperations<EventData> eventDataTable = new TableOperations<EventData>(connection);
@@ -225,6 +225,8 @@ namespace FaultData.DataOperations
                     IF dbo.EventHasImpactedComponents({0}) = 1
 	                    INSERT INTO PQIResult VALUES ({0})                
                 ".Trim(), evt.ID);
+
+                ProcessSnapshots(meterDataSet, evt.ID, connection);
             }
         }
 
@@ -341,6 +343,22 @@ namespace FaultData.DataOperations
                 parameter.DbType = DbType.DateTime2;
                 parameter.Value = dateTime;
                 return parameter;
+            }
+        }
+
+        private void ProcessSnapshots(MeterDataSet meterDataSet, int eventId, AdoDataConnection connection)
+        {
+            SnapshotDataResource snapshotDataResource = meterDataSet.GetResource<SnapshotDataResource>();
+
+            TableOperations<SnapshotHarmonics> table = new TableOperations<SnapshotHarmonics>(connection);
+            foreach(var kvp in snapshotDataResource.Snapshots)
+            {
+                table.AddNewRecord(new SnapshotHarmonics()
+                {
+                    EventID = eventId,
+                    ChannelID = kvp.Key.ID,
+                    SpectralData = kvp.Value
+                });
             }
         }
 

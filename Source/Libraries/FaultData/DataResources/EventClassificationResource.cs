@@ -46,7 +46,8 @@ namespace FaultData.DataResources
         Swell,
         Transient,
         Other,
-        Breaker
+        Breaker,
+        Snapshot
     }
 
     public class EventClassificationResource : DataResourceBase<MeterDataSet>
@@ -199,6 +200,10 @@ namespace FaultData.DataResources
                         return EventClassification.RecloseIntoFault;
                 }
             }
+
+            SnapshotDataResource snapshotDataResource = meterDataSet.GetResource<SnapshotDataResource>();
+            if (snapshotDataResource.IsSnapshot)
+                return EventClassification.Snapshot;
 
             InterruptionDataResource interruptionDataResource = meterDataSet.GetResource<InterruptionDataResource>();
             SagDataResource sagDataResource = meterDataSet.GetResource<SagDataResource>();

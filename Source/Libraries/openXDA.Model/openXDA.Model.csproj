@@ -76,6 +76,7 @@
     <Compile Include="ExceptionHandler.cs" />
     <Compile Include="LazyContext.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
+    <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
     <Compile Include="StepChangeWebReports\StepChangeStat.cs" />

@@ -984,6 +984,19 @@ CREATE NONCLUSTERED INDEX IX_EventSentEmail_EventID
 ON EventSentEmail(ID ASC)
 GO
 
+CREATE TABLE SnapshotHarmonics
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    ChannelID INT NOT NULL REFERENCES Channel(ID),
+	SpectralData varchar(max) NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_SnapshotHarmonics_EventID
+ON SnapshotHarmonics(EventID ASC)
+GO
+
 INSERT INTO EventType(Name, Description) VALUES ('Fault', 'Fault')
 GO
 
@@ -1009,6 +1022,9 @@ INSERT INTO EventType(Name, Description) VALUES ('Test', 'Test')
 GO
 
 INSERT INTO EventType(Name, Description) VALUES ('Breaker', 'Breaker')
+GO
+
+INSERT INTO EventType(Name, Description) VALUES ('Snapshot', 'Snapshot')
 GO
 
 INSERT INTO VoltageEnvelope(Name, Description) VALUES ('ITIC', 'ITI (CBEMA) Power Acceptability Curves - Tolerance curves for 120 V computer equipment')
