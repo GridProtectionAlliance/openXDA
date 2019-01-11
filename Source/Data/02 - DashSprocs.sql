@@ -372,6 +372,14 @@ FROM #TEMP ORDER BY Name desc
 DROP TABLE #TEMP
 
 SET @SQLStatement =
+' SELECT *                                                                                                   ' +
+' INTO #authMeters                                                                                           ' +
+' FROM authMeters(@username)                                                                                 ' +
+'                                                                                                            ' +
+' SELECT *                                                                                                   ' +
+' INTO #selectedMeters                                                                                       ' +
+' FROM String_To_Int_Table(@MeterID, '','')                                                                  ' +
+'                                                                                                            ' +
 ' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
 ' FROM (                                                                                                     ' +
 '   SELECT ' + @dateStatement + '  AS Date,                                                          ' +
@@ -380,8 +388,8 @@ SET @SQLStatement =
 '   FROM BreakerOperation JOIN                                                                               ' +
 '        BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN      ' +
 '        Event ON Event.ID = BreakerOperation.EventID                                                        ' +
-'   WHERE MeterID in (select * from authMeters(@username)) AND                                               ' +
-'         MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, '','')) AND                                ' +
+'   WHERE MeterID in (select * from #authMeters) AND                                                         ' +
+'         MeterID IN (SELECT * FROM #selectedMeters) AND                                                     ' +
 '         TripCoilEnergized >= @startDate AND TripCoilEnergized < @endDate                                   ' +
 '   GROUP BY ' + @groupByStatement + ', BreakerOperationType.Name                                        ' +
 ') as table1                                                                                                 ' +
@@ -958,6 +966,14 @@ DECLARE @ids varchar(max) = @MeterID
 DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@user)
+
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@ids, '','')
+
 SELECT DisturbanceDate as thedate, ' + @ReturnColumns + '
  FROM (																		 
 	SELECT                                                                       
@@ -973,9 +989,9 @@ SELECT DisturbanceDate as thedate, ' + @ReturnColumns + '
 	WHERE																		 
 		(																		 
 			@MeterID = ''0'' OR													 
-			MeterID IN (SELECT * FROM String_To_Int_Table(@ids, '',''))	     
+			MeterID IN (SELECT * FROM #selectedMeters)	     
 		) AND																	 
-		MeterID IN (SELECT * FROM authMeters(@user)) AND					 
+		MeterID IN (SELECT * FROM #authMeters) AND					 
 		Phase.Name = ''Worst'' AND
 		VoltageEnvelope.Name = COALESCE(@voltageEnvelope, ''ITIC'') AND										 
 		Disturbance.StartTime BETWEEN @start AND @end AND				 
@@ -1225,14 +1241,22 @@ DECLARE @ids varchar(max) = @MeterID
 DECLARE @start DateTime = @startDate
 DECLARE @end DateTime = @endDate
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@user)
+
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@ids, '','')
+
 SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) + '
 FROM (
 		SELECT ' + @dateStatement + ' as Date, COUNT(*) AS EventCount, EventType.Name as Name
 		FROM Event JOIN
 		EventType ON Event.EventTypeID = EventType.ID 
        WHERE 
-			MeterID in (select * from authMeters(@user)) AND 
-			MeterID IN (SELECT * FROM String_To_Int_Table( @ids,  '','')) AND 
+			MeterID in (select * from #authMeters) AND 
+			MeterID IN (SELECT * FROM #selectedMeters) AND 
 			 StartTime >= @start AND StartTime < @end  
        GROUP BY ' + @groupByStatement + ', EventType.Name 
        ) as ed 
@@ -1467,6 +1491,14 @@ FROM (Select Distinct Line.VoltageKV
         FROM Line) AS t
 
 SET @SQLStatement =
+' SELECT * ' +
+' INTO #authMeters ' +
+' FROM authMeters(@username) ' +
+' ' +
+' SELECT * ' +
+' INTO #selectedMeters ' +
+' FROM String_To_Int_Table(@MeterID, '','') ' +
+' ' +
 ' SELECT Date as thedate, ' + SUBSTRING(@ReturnColumns,0, LEN(@ReturnColumns)) +
 ' FROM ( ' +
 '       SELECT ' + @dateStatement + ' AS Date, Line.VoltageKV, COUNT(*) AS thecount ' +
@@ -1474,7 +1506,7 @@ SET @SQLStatement =
 '       EventType ON Event.EventTypeID = EventType.ID JOIN ' +
 '       Line ON Event.LineID = Line.ID ' +
 '       WHERE EventType.Name = ''Fault'' AND ' +
-'       MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND Event.StartTime >= @startDate AND Event.StartTime < @endDate  ' +
+'       MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #selectedMeters) AND Event.StartTime >= @startDate AND Event.StartTime < @endDate  ' +
 '       GROUP BY ' + @groupByStatement + ', EventType.Name, Line.VoltageKV ' +
 '       ) as eventtable ' +
 ' PIVOT( ' +
@@ -1995,6 +2027,10 @@ BEGIN
     INTO #authMeters
     FROM authMeters(@username)
 
+    SELECT *
+    INTO #selectedMeters
+    FROM String_To_Int_Table(@MeterIds, '','')
+
     SELECT Meter.ID,
              Meter.Name,
              MeterLocation.Longitude,
@@ -2022,7 +2058,7 @@ BEGIN
            ) as pvt On pvt.MeterID = meter.ID
     WHERE
         Meter.ID in (select * from #authMeters) AND
-        Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
+        Meter.ID IN (SELECT * FROM #selectedMeters)
 
     ORDER BY Meter.Name'
 
@@ -2218,6 +2254,10 @@ SELECT *
 INTO #authMeters
 FROM authMeters(@user)
 
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@ids, '','')
+
 SELECT Meter.ID, 
 		 Meter.Name,
 		 MeterLocation.Longitude,
@@ -2248,7 +2288,7 @@ FROM
 	   ) as pvt On pvt.MeterID = meter.ID
 	WHERE 
 		Meter.ID in (select * from #authMeters) AND 
-		Meter.ID IN (SELECT * FROM String_To_Int_Table( @ids,  '',''))  
+		Meter.ID IN (SELECT * FROM #selectedMeters)  
 
 Order By Name '
 
@@ -2327,6 +2367,10 @@ SELECT *
 INTO #authMeters
 FROM authMeters(@user)
 
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@ids, '','')
+
 SELECT Meter.ID, 
 		 Meter.Name,
 		 MeterLocation.Longitude,
@@ -2353,7 +2397,7 @@ FROM
 	   ) as pvt On pvt.MeterID = meter.ID
 WHERE 
 	Meter.ID in (select * from #authMeters) AND 
-	Meter.ID IN (SELECT * FROM String_To_Int_Table( @ids,  '',''))  
+	Meter.ID IN (SELECT * FROM #selectedMeters)  
 
 ORDER BY Meter.Name'
 
@@ -2435,6 +2479,10 @@ SET @SQLStatement =
 INTO #authMeters
 FROM authMeters(@username)
 
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@MeterIds, '','')
+
 SELECT Meter.ID,
          Meter.Name,
          MeterLocation.Longitude,
@@ -2462,7 +2510,7 @@ FROM
        ) as pvt On pvt.MeterID = meter.ID
     WHERE
         Meter.ID in (select * from #authMeters) AND
-        Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
+        Meter.ID IN (SELECT * FROM #selectedMeters)
 
 ORDER BY Meter.Name'
 
@@ -2787,6 +2835,10 @@ SET @SQLStatement =
 INTO #authMeters
 FROM authMeters(@username)
 
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@MeterIds, '','')
+
 SELECT Meter.ID,
          Meter.Name,
          MeterLocation.Longitude,
@@ -2803,7 +2855,7 @@ FROM
        ) as pvt On pvt.MeterID = meter.ID
 WHERE
     Meter.ID in (select * from #authMeters) AND
-    Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterIds,  '',''))
+    Meter.ID IN (SELECT * FROM #selectedMeters)
 
 ORDER BY Meter.Name
 
