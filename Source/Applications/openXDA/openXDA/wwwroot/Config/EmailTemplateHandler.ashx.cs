@@ -28,6 +28,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -175,6 +176,19 @@ namespace openXDA
             #endregion
         }
 
+        // Constants
+        private const string GetEventDetailSQL =
+            "SELECT EventDetailSQL " +
+            "FROM " +
+            "    EmailType JOIN " +
+            "    EventEmailParameters ON EventEmailParameters.EmailTypeID = EmailType.ID " +
+            "WHERE EmailType.XSLTemplateID = {0}";
+
+        private const string GetTemplateSQL =
+            "SELECT Template " +
+            "FROM XSLTemplate " +
+            "WHERE ID = {0}";
+
         // Fields
         private long m_contentHash;
         private int m_eventID;
@@ -216,10 +230,28 @@ namespace openXDA
             int eventID = Convert.ToInt32(parameters["EventID"]);
             int templateID = Convert.ToInt32(parameters["TemplateID"]);
 
-            using (DataContext context = new DataContext())
+            string eventDetail;
+            string template;
+
+            using (DataContext dataContext = new DataContext())
             {
-                m_contentHash = context.Connection.ExecuteScalar<long>("SELECT dbo.ComputeHash({0}, {1})", eventID, templateID);
-                return m_contentHash;
+                string eventDetailSQL = dataContext.Connection.ExecuteScalar<string>(GetEventDetailSQL, templateID);
+                eventDetail = dataContext.Connection.ExecuteScalar<string>(eventDetailSQL, eventID);
+                template = dataContext.Connection.ExecuteScalar<string>(GetTemplateSQL, templateID);
+            }
+
+            byte[] contentBytes = Encoding.UTF8.GetBytes(eventDetail + template);
+            m_contentHash = ComputeHash(contentBytes);
+            return m_contentHash;
+
+            long ComputeHash(byte[] data)
+            {
+                long hash = 17L;
+
+                foreach (byte b in data)
+                    hash = hash * 23L + b;
+
+                return hash;
             }
         }
 
@@ -235,7 +267,6 @@ namespace openXDA
                 try
                 {
                     NameValueCollection parameters = request.RequestUri.ParseQueryString();
-
                     m_eventID = Convert.ToInt32(parameters["EventID"]);
                     m_templateID = Convert.ToInt32(parameters["TemplateID"]);
 
@@ -312,15 +343,14 @@ namespace openXDA
 
         private string ApplyTemplate(HttpRequestMessage request)
         {
-            NameValueCollection parameters = request.RequestUri.ParseQueryString();
-
             string eventDetail;
             string emailTemplate;
 
             using (DataContext dataContext = new DataContext())
             {
-                eventDetail = dataContext.Connection.ExecuteScalar<string>("SELECT EventDetail FROM EventDetail WHERE EventID = {0}", m_eventID);
-                emailTemplate = dataContext.Connection.ExecuteScalar<string>("SELECT Template FROM XSLTemplate WHERE ID = {0}", m_templateID);
+                string eventDetailSQL = dataContext.Connection.ExecuteScalar<string>(GetEventDetailSQL, m_templateID);
+                eventDetail = dataContext.Connection.ExecuteScalar<string>(eventDetailSQL, m_eventID);
+                emailTemplate = dataContext.Connection.ExecuteScalar<string>(GetTemplateSQL, m_templateID);
             }
 
             return eventDetail.ApplyXSLTransform(emailTemplate);
