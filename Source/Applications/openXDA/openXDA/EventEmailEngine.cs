@@ -333,11 +333,14 @@ namespace openXDA
 
             while (events.Any())
             {
-                string templateData = parameters.GetEventDetail(events[0].ID);
+                int nextEventID = events[0].ID;
+                string templateData = parameters.GetEventDetail(nextEventID);
+
                 List<int> eventIDs = m_eventEmailService.GetEventIDs(templateData);
-                List<string> recipients = m_eventEmailService.GetRecipients(emailType, eventIDs);
+                eventIDs.Add(nextEventID);
                 events.RemoveAll(evt => eventIDs.Contains(evt.ID));
 
+                List<string> recipients = m_eventEmailService.GetRecipients(emailType, eventIDs);
                 XDocument htmlDocument = m_eventEmailService.ApplyTemplate(emailType, templateData);
                 List<Attachment> attachments = null;
 
