@@ -390,6 +390,18 @@ namespace openXDA
                         statusBuilder.AppendLine($"    {path}");
                 }
 
+                if (m_eventEmailEngine.EmailServiceEnabled)
+                {
+                    statusBuilder.AppendLine();
+                    statusBuilder.AppendLine("Event Email Status:");
+                    statusBuilder.AppendLine(new string('=', 50));
+                    statusBuilder.AppendLine($"       Tagged Emails: {m_eventEmailEngine.TaggedEmailCount}");
+                    statusBuilder.AppendLine($"   Tagged Recipients: {m_eventEmailEngine.TaggedRecipientCount}");
+                    statusBuilder.AppendLine($"     Max Email Count: {m_eventEmailEngine.MaxEmailCount}");
+                    statusBuilder.AppendLine($"      Max Email Span: {m_eventEmailEngine.MaxEmailSpan}");
+                    statusBuilder.AppendLine($"             Tripped: {m_eventEmailEngine.EmailServiceTripped}");
+                }
+
                 return statusBuilder.ToString().TrimEnd();
             }
         }
@@ -1127,6 +1139,14 @@ namespace openXDA
                     ProcessFailureCallback = processFailureCallback
                 });
             });
+        }
+
+        /// <summary>
+        /// Restores the event email engine to a working state after a trip has occurred.
+        /// </summary>
+        public void RestoreEventEmails()
+        {
+            m_eventEmailEngine.Restore();
         }
 
         /// <summary>

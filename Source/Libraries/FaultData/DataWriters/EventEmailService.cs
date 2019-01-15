@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -40,6 +41,19 @@ namespace FaultData.DataWriters
     {
         #region [ Members ]
 
+        // Nested Types
+        private class SentEmailTag
+        {
+            public SentEmailTag(DateTime timeSent, List<string> recipients)
+            {
+                TimeTagged = timeSent;
+                Recipients = recipients;
+            }
+
+            public DateTime TimeTagged { get; }
+            public List<string> Recipients { get; }
+        }
+
         // Fields
         private EmailService m_emailService;
 
@@ -50,6 +64,7 @@ namespace FaultData.DataWriters
         public EventEmailService()
         {
             m_emailService = new EmailService();
+            TaggedEmails = new ConcurrentQueue<SentEmailTag>();
         }
 
         #endregion
@@ -76,10 +91,32 @@ namespace FaultData.DataWriters
                 ? eventEmail.ParseKeyValuePairs()
                 : new Dictionary<string, string>();
 
+        public int MaxEmailCount =>
+            EventEmailSettings.TryGetValue(nameof(MaxEmailCount), out string setting) && int.TryParse(setting, out int maxEmailCount)
+                ? maxEmailCount
+                : 0;
+
+        public TimeSpan MaxEmailSpan =>
+            EventEmailSettings.TryGetValue(nameof(MaxEmailSpan), out string setting) && double.TryParse(setting, out double maxEmailSeconds)
+                ? TimeSpan.FromSeconds(maxEmailSeconds)
+                : TimeSpan.Zero;
+
         public bool Enabled =>
-            EventEmailSettings.TryGetValue("Enabled", out string enabled)
+            EventEmailSettings.TryGetValue(nameof(Enabled), out string enabled)
                 ? enabled.ParseBoolean()
                 : false;
+
+        public int TaggedEmailCount => TaggedEmails.Count;
+
+        public int TaggedRecipientCount => TaggedEmails
+            .ToArray()
+            .SelectMany(tag => tag.Recipients)
+            .Distinct()
+            .Count();
+
+        public bool Tripped { get; private set; }
+
+        private ConcurrentQueue<SentEmailTag> TaggedEmails { get; }
 
         #endregion
 
@@ -190,7 +227,7 @@ namespace FaultData.DataWriters
 
         public int LoadSentEmail(List<string> recipients, XDocument htmlDocument, List<int> eventIDs)
         {
-            if (!Enabled)
+            if (!Enabled || Tripped)
                 return 0;
 
             int sentEmailID = m_emailService.LoadSentEmail(recipients, htmlDocument);
@@ -200,10 +237,21 @@ namespace FaultData.DataWriters
 
         public void SendEmail(List<string> recipients, XDocument htmlDocument, List<Attachment> attachments)
         {
-            if (!Enabled)
+            if (!Enabled || Tripped)
+                return;
+
+            if (TripsMaxEmailThreshold(recipients))
                 return;
 
             m_emailService.SendEmail(recipients, htmlDocument, attachments);
+        }
+
+        public void Restore()
+        {
+            while (!TaggedEmails.IsEmpty)
+                TaggedEmails.TryDequeue(out SentEmailTag tag);
+
+            Tripped = false;
         }
 
         private void TransformEventDataElements(XDocument htmlDocument)
@@ -235,6 +283,30 @@ namespace FaultData.DataWriters
                     eventSentEmailTable.AddNewRecord(eventSentEmail);
                 }
             }
+        }
+
+        private bool TripsMaxEmailThreshold(List<string> recipients)
+        {
+            DateTime now = DateTime.UtcNow;
+            int maxEmailCount = MaxEmailCount;
+            TimeSpan maxEmailSpan = MaxEmailSpan;
+
+            if (maxEmailCount <= 0 || maxEmailSpan <= TimeSpan.Zero)
+                return false;
+
+            DateTime oldestTag = now - maxEmailSpan;
+
+            while (TaggedEmails.TryPeek(out SentEmailTag tag) && tag.TimeTagged < oldestTag)
+                TaggedEmails.TryDequeue(out tag);
+
+            if (TaggedEmails.Count < maxEmailCount)
+            {
+                TaggedEmails.Enqueue(new SentEmailTag(now, recipients));
+                return false;
+            }
+
+            Tripped = true;
+            return true;
         }
 
         #endregion

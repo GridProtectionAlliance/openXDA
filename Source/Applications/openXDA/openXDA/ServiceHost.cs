@@ -272,6 +272,7 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadSystemSettings", "Reloads system settings from the database", ReloadSystemSettingsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("EngineStatus", "Displays status information about the XDA engine", EngineStatusHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TweakFileProcessor", "Modifies the behavior of the file processor at runtime", TweakFileProcessorHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RestoreEventEmails", "Restores event email engine to a working state tripping", RestoreEventEmails));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PurgeData", "Deletes data from database beyond a sepecified date", PurgeDataHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcAD", "Creates aggregates for all data", OnProcessAllData));
@@ -789,6 +790,12 @@ namespace openXDA
             string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
             string message = m_extensibleDisturbanceAnalysisEngine.TweakFileProcessor(args);
             DisplayResponseMessage(requestInfo, message);
+        }
+
+        // Restores event email engine to a working state after a trip has occurred.
+        private void RestoreEventEmails(ClientRequestInfo obj)
+        {
+            m_extensibleDisturbanceAnalysisEngine.RestoreEventEmails();
         }
 
         private void PurgeDataHandler(ClientRequestInfo requestInfo)

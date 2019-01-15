@@ -232,6 +232,13 @@ namespace openXDA
 
         #region [ Properties ]
 
+        public int TaggedEmailCount => m_eventEmailService.TaggedEmailCount;
+        public int TaggedRecipientCount => m_eventEmailService.TaggedRecipientCount;
+        public int MaxEmailCount => m_eventEmailService.MaxEmailCount;
+        public TimeSpan MaxEmailSpan => m_eventEmailService.MaxEmailSpan;
+        public bool EmailServiceEnabled => m_eventEmailService.Enabled;
+        public bool EmailServiceTripped => m_eventEmailService.Tripped;
+
         private List<EventEmailType> EmailTypes
         {
             get => Interlocked.CompareExchange(ref m_emailTypes, null, null);
@@ -259,6 +266,11 @@ namespace openXDA
                         emailType.Process(evt);
                 }
             }
+        }
+
+        public void Restore()
+        {
+            m_eventEmailService.Restore();
         }
 
         public void StartTimer()
