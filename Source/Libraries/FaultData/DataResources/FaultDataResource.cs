@@ -1143,7 +1143,7 @@ namespace FaultData.DataResources
 
                 // Assume that unexpected return status indicates an error
                 // and therefore the analysis results should be trusted
-                if (expectedResults.Contains(result))
+                if (!expectedResults.Contains(result))
                 {
                     Log.Debug($"Unexpected eDNA return code: {result}");
                     return true;
