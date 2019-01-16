@@ -40,7 +40,7 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DefaultMeterTimeZone', 'UTC', 'UTC')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.ApprovalAddress', 'xda-admin@gridprotectionalliance.org', 'xda-admin@gridprotectionalliance.org')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.AdminAddress', 'xda-admin@gridprotectionalliance.org', 'xda-admin@gridprotectionalliance.org')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.EnableSSL', 'False', 'False')
