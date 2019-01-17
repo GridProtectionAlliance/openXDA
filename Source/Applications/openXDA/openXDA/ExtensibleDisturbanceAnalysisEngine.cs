@@ -396,7 +396,6 @@ namespace openXDA
                     statusBuilder.AppendLine("Event Email Status:");
                     statusBuilder.AppendLine(new string('=', 50));
                     statusBuilder.AppendLine($"       Tagged Emails: {m_eventEmailEngine.TaggedEmailCount}");
-                    statusBuilder.AppendLine($"   Tagged Recipients: {m_eventEmailEngine.TaggedRecipientCount}");
                     statusBuilder.AppendLine($"     Max Email Count: {m_eventEmailEngine.MaxEmailCount}");
                     statusBuilder.AppendLine($"      Max Email Span: {m_eventEmailEngine.MaxEmailSpan}");
                     statusBuilder.AppendLine($"             Tripped: {m_eventEmailEngine.EmailServiceTripped}");

@@ -33,6 +33,7 @@ namespace FaultData.Configuration
         #region [ Members ]
 
         // Fields
+        private string m_adminAddress;
         private string m_smtpServer;
         private string m_fromAddress;
         private string m_username;
@@ -42,6 +43,23 @@ namespace FaultData.Configuration
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the address used by the administrator of the email system.
+        /// </summary>
+        [Setting]
+        [DefaultValue("xda-admin@gridprotectionalliance.org")]
+        public string AdminAddress
+        {
+            get
+            {
+                return m_adminAddress;
+            }
+            set
+            {
+                m_adminAddress = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the hostname or IP address of the SMTP server to

@@ -182,6 +182,50 @@ namespace FaultData.DataWriters
             }
         }
 
+        public void SendAdminEmail(string subject, string message, List<string> replyToRecipients)
+        {
+            const int DefaultSMTPPort = 25;
+
+            EmailSettings emailSettings = GetEmailSettings();
+            string smtpServer = emailSettings.SMTPServer;
+
+            if (string.IsNullOrEmpty(smtpServer))
+                return;
+
+            string[] smtpServerParts = smtpServer.Split(':');
+            string host = smtpServerParts[0];
+            int port;
+
+            if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
+                port = DefaultSMTPPort;
+
+            using (SmtpClient smtpClient = new SmtpClient(host, port))
+            using (MailMessage emailMessage = new MailMessage())
+            {
+                string username = emailSettings.Username;
+                SecureString password = emailSettings.SecurePassword;
+
+                if (!string.IsNullOrEmpty(username) && (object)password != null)
+                    smtpClient.Credentials = new NetworkCredential(username, password);
+
+                smtpClient.EnableSsl = emailSettings.EnableSSL;
+
+                string fromAddress = emailSettings.FromAddress;
+                string toAddress = emailSettings.AdminAddress;
+                emailMessage.From = new MailAddress(fromAddress);
+                emailMessage.To.Add(toAddress);
+                emailMessage.Subject = subject;
+                emailMessage.Body = message;
+
+                // Add the specified To recipients for the email message
+                foreach (string replyToRecipient in replyToRecipients)
+                    emailMessage.ReplyToList.Add(replyToRecipient.Trim());
+
+                // Send the email
+                smtpClient.Send(emailMessage);
+            }
+        }
+
         private string GetSubject(XDocument htmlDocument)
         {
             const string DefaultSubject = "Email sent by openXDA";

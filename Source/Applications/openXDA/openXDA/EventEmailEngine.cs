@@ -24,8 +24,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net.Mail;
+using System.Text;
 using System.Threading;
 using System.Xml.Linq;
 using FaultData.DataSets;
@@ -224,7 +226,7 @@ namespace openXDA
 
         public EventEmailEngine()
         {
-            m_eventEmailService = new EventEmailService();
+            m_eventEmailService = new EventEmailService() { TripAction = SendTripNotification };
             EmailTypes = new List<EventEmailType>();
         }
 
@@ -233,7 +235,6 @@ namespace openXDA
         #region [ Properties ]
 
         public int TaggedEmailCount => m_eventEmailService.TaggedEmailCount;
-        public int TaggedRecipientCount => m_eventEmailService.TaggedRecipientCount;
         public int MaxEmailCount => m_eventEmailService.MaxEmailCount;
         public TimeSpan MaxEmailSpan => m_eventEmailService.MaxEmailSpan;
         public bool EmailServiceEnabled => m_eventEmailService.Enabled;
@@ -367,6 +368,46 @@ namespace openXDA
                     attachments?.ForEach(attachment => attachment.Dispose());
                 }
             }
+        }
+
+        private void SendTripNotification()
+        {
+            string subject = "openXDA email flooding detected";
+            StringBuilder message = new StringBuilder();
+            List<string> replyTo = new List<string>();
+
+            using (AdoDataConnection connection = m_eventEmailService.ConnectionFactory())
+            {
+                TableOperations<EmailType> emailTypeTable = new TableOperations<EmailType>(connection);
+                string emailTypeIDs = string.Join(",", m_emailTypes.Select(type => type.EmailTypeID));
+                int eventEmailCategoryID = connection.ExecuteScalar<int>("SELECT ID FROM EmailCategory WHERE Name = 'Event'");
+                IEnumerable<EmailType> emailTypes = emailTypeTable.QueryRecordsWhere($"ID IN ({emailTypeIDs}) AND EmailCategoryID = {eventEmailCategoryID}");
+
+                foreach (EmailType emailType in emailTypes)
+                {
+                    emailType.SMS = false;
+                    List<string> recipients = m_eventEmailService.GetAllRecipients(emailType);
+                    replyTo.AddRange(recipients);
+                }
+            }
+
+            int maxEmailCount = MaxEmailCount;
+            TimeSpan maxEmailSpan = MaxEmailSpan;
+            string maxEmailSpanText = maxEmailSpan.ToString();
+
+            if (maxEmailSpan.Ticks % TimeSpan.TicksPerDay == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Days} {(maxEmailSpan.Days == 1 ? "day" : "days")}";
+            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerHour == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Hours} {(maxEmailSpan.Hours == 1 ? "hour" : "hours")}";
+            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerMinute == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Minutes} {(maxEmailSpan.Minutes == 1 ? "minute" : "minutes")}";
+            else if (maxEmailSpan.Ticks % TimeSpan.TicksPerSecond == 0)
+                maxEmailSpanText = $"{maxEmailSpan.Seconds} {(maxEmailSpan.Seconds == 1 ? "second" : "seconds")}";
+
+            message.AppendLine($"openXDA has detected that over {maxEmailCount} emails were sent within {maxEmailSpanText}.");
+            message.AppendLine($"Email notifications have been disabled until further notice.");
+            message.AppendLine($"Reply to this message to send a message to all event email subscribers.");
+            m_eventEmailService.SendAdminEmail(subject, message.ToString(), replyTo);
         }
 
         #endregion
