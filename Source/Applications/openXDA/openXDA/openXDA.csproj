@@ -409,6 +409,7 @@
     <Content Include="wwwroot\DataPusher\RemoteXDAInstances.cshtml" />
     <None Include="wwwroot\Docs\openXDAsettings.pdf" />
     <Content Include="wwwroot\Config\EmailTypes.cshtml" />
+    <Content Include="wwwroot\RestoreEventEmail.cshtml" />
     <None Include="wwwroot\fonts\fontawesome-webfont.eot" />
     <None Include="wwwroot\fonts\fontawesome-webfont.ttf" />
     <None Include="wwwroot\fonts\fontawesome-webfont.woff" />
@@ -452,6 +453,7 @@
     <Content Include="wwwroot\Images\Analytics Coming Soon.png" />
     <Content Include="wwwroot\Images\dD Analytics.png" />
     <Content Include="wwwroot\Images\dd Assets.png" />
+    <Content Include="wwwroot\Images\dD Tools.png" />
     <Content Include="wwwroot\Images\dD Config.png" />
     <Content Include="wwwroot\Images\dD Analytics old.png" />
     <Content Include="wwwroot\Images\dD Assetolds.png" />
@@ -1017,6 +1019,7 @@
     <Content Include="wwwroot\Scripts\Report.js.map" />
     <Content Include="wwwroot\Scripts\StepChangeWebReport.js.map" />
     <Content Include="wwwroot\Scripts\TrendingDataDisplay.js.map" />
+    <Content Include="wwwroot\Layout.cshtml" />
     <None Include="wwwroot\Scripts\TSX\DistributionPlot.tsx" />
     <None Include="wwwroot\Scripts\TSX\Legend.tsx" />
     <None Include="wwwroot\Scripts\TSX\LineChart.tsx" />
