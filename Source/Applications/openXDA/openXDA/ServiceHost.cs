@@ -793,7 +793,7 @@ namespace openXDA
         }
 
         // Restores event email engine to a working state after a trip has occurred.
-        private void RestoreEventEmails(ClientRequestInfo obj)
+        private void RestoreEventEmails(ClientRequestInfo requestInfo)
         {
             m_extensibleDisturbanceAnalysisEngine.RestoreEventEmails();
         }
