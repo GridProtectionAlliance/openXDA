@@ -295,7 +295,6 @@ namespace openXDA
                 doc.TransformAll("pqi", (element) => PQIGenerator.GetPqiInformation(dataContext.Connection, element));
                 doc.TransformAll("structure", (element) => StructureLocationGenerator.GetStructureLocationInformation(element));
                 doc.TransformAll("lightning", (element) => LightningGenerator.GetLightningInfo(dataContext.Connection, element));
-                doc.TransformAll("treeProbability", (element) => TreeProbabilityGenerator.GetTreeProbability(element));
                 doc.TransformAll("faultType", (element) => FaultTypeGenerator.GetFaultType(element));
             }
 

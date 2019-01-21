@@ -257,7 +257,6 @@ namespace FaultData.DataWriters
                 htmlDocument.TransformAll("pqi", (element, index) => PQIGenerator.GetPqiInformation(connection, element));
                 htmlDocument.TransformAll("structure", (element, index) => StructureLocationGenerator.GetStructureLocationInformation(element));
                 htmlDocument.TransformAll("lightning", (element, index) => LightningGenerator.GetLightningInfo(connection, element));
-                htmlDocument.TransformAll("treeProbability", (element, index) => TreeProbabilityGenerator.GetTreeProbability(element));
                 htmlDocument.TransformAll("faultType", (element, index) => FaultTypeGenerator.GetFaultType(element));
             }
         }
