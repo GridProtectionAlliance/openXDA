@@ -1386,20 +1386,25 @@ namespace openXDA
                     {
                         if (retryCount < 8)
                             delay = 250;
-                        else if (retryCount < 23)
+                        else if (retryCount < 21)
                             delay = 1000;
-                        else if (retryCount < 32)
+                        else if (retryCount < 30)
                             delay = 5000;
-                        else
+                        else if (retryCount < 34)
                             delay = 60000;
+                        else
+                            throw new FileSkippedException($"Skipped file \"{state.FilePath}\" because the system has been unable to process the file for the maximum allotted time.");
 
                         delayAndProcess.DelayAndExecute(delay);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    try { state.ProcessFailureCallback(state); }
-                    catch (Exception ex) { OnProcessException(ex); }
+                    if (!IsFileSkippedException(ex))
+                    {
+                        try { state.ProcessFailureCallback(state); }
+                        catch (Exception inner) { OnProcessException(inner); }
+                    }
 
                     throw;
                 }
