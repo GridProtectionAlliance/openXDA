@@ -252,6 +252,9 @@ namespace openXDA
 
         public void Process(MeterDataSet meterDataSet)
         {
+            if (!m_eventEmailService.Enabled)
+                return;
+
             m_eventEmailService.ConnectionString = meterDataSet.ConnectionString;
             m_eventEmailService.ConnectionFactory = meterDataSet.CreateDbConnection;
             UpdateEmailTypes();
