@@ -395,6 +395,7 @@
     <Content Include="wwwroot\Config\ProblematicUserAccounts.cshtml" />
     <Content Include="wwwroot\Config\MeterAssetGroupView.cshtml" />
     <Content Include="wwwroot\Config\UserAccountAssetGroupView.cshtml" />
+    <Content Include="wwwroot\Config\LineAssetGroupView.cshtml" />
     <None Include="wwwroot\Content\bootstrap-theme.css.map" />
     <None Include="wwwroot\Content\bootstrap-theme.min.css.map" />
     <None Include="wwwroot\Config\DashSettings.cshtml" />

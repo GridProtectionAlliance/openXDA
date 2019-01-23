@@ -20,20 +20,17 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
 @using System.Collections.Generic
 @using System.Net.Http
-@using System.Security.Policy
-@using System.Threading
 @using GSF.Web
 @using GSF.Web.Model
-@using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
     <link rel="stylesheet" href="/Content/fullscreenselect/bootstrap-fullscreen-select.css" />
     <style>
+
 
         html, body {
             height: 100%;
@@ -57,25 +54,24 @@
         ViewBag.AssetGroupID = "-1";
     }
 
-
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
-new[] { "Name", "Name", "text-Left" },
-new[] { null, "Meters", "text-center valign-middle"},
-new[] {null, "Users", "text-center valign-middle"}
-
-};
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "Name", "Name", "text-Left" },
+        new[] { null, "Meters", "text-center valign-middle"},
+        new[] { null, "Lines", "text-center valign-middle"},
+        new[] {null, "Users", "text-center valign-middle"}
+    };
 
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.ShowSearchFilter = true;
-
 }
 @helper BodyRows()
 {
-    <td width="80%" class="text-left valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: Name, click: $parent.viewPageRecord"></button></td>
+    <td width="80%" class="text-left valign-middle" nowrap data-bind="text: Name"></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openLines.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getLineCount(ID, $($element)), attr: {id: 'lineCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
@@ -92,6 +88,10 @@ new[] {null, "Users", "text-center valign-middle"}
             <label>Meters:</label>
             <select id="meterSelect" class="form-control mobileSelect" multiple></select>
         </div>
+        <div id="linesSelectFrame" class="form-group">
+            <label>Lines:</label>
+            <select id="lineSelect" class="form-control mobileSelect" multiple></select>
+        </div>
         <div id="userSelectFrame" class="form-group">
             <label>Users:</label>
             <select id="userSelect" class="form-control mobileSelect" multiple></select>
@@ -104,6 +104,17 @@ new[] {null, "Users", "text-center valign-middle"}
             <div class="modal-body" style="overflow-y: hidden">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <iframe style="border: none; overflow-y: hidden" id="metersFrame" marginheight="0" marginwidth="0"></iframe>
+                <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="linesDialog" class="modal modal-wide fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body" style="overflow-y: hidden">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <iframe style="border: none; overflow-y: hidden" id="linesFrame" marginheight="0" marginwidth="0"></iframe>
                 <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
             </div>
         </div>
@@ -137,6 +148,16 @@ new[] {null, "Users", "text-center valign-middle"}
             return element.text();
         }
 
+        function getLineCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryLineAssetGroupViewCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
         function getUserCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryUserAccountAssetGroupCount(sourceID, null).done(function (count) {
@@ -155,6 +176,17 @@ new[] {null, "Users", "text-center valign-middle"}
             });
 
             $("#metersDialog").modal("show");
+        }
+
+        function openLines(record) {
+            //console.log(record);
+            $("#linesFrame").attr({
+                "src": "/Config/LineAssetGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
+                "height": ($(document).height() - 150) + "px",
+                "width": "100%"
+            });
+
+            $("#linesDialog").modal("show");
         }
 
         function openUsers(record) {
@@ -176,6 +208,14 @@ new[] {null, "Users", "text-center valign-middle"}
             $("#metersFrame").attr("src", "about:blank");
         });
 
+        $("#linesDialog").on("hidden.bs.modal", function () {
+            // Refresh page counts after editing tasks
+            viewModel.queryPageRecords();
+
+            // Clear frame page
+            $("#linesFrame").attr("src", "about:blank");
+        });
+
         $("#usersDialog").on("hidden.bs.modal", function () {
             // Refresh page counts after editing tasks
             viewModel.queryPageRecords();
@@ -187,13 +227,17 @@ new[] {null, "Users", "text-center valign-middle"}
         $(window).resize(function () {
             setTimeout(function () {
                 $("#metersFrame").attr("height", ($(document).height() - 150) + "px");
+                $("#linesFrame").attr("height", ($(document).height() - 150) + "px");
+                $("#usersFrame").attr("height", ($(document).height() - 150) + "px");
             }, 500);
         });
 
         var meters;
+        var lines;
         var users;
         $(viewModel).on('beforeSave', function (event, record) {
             meters = ($('#meterSelect').val() == null ? [] : $('#meterSelect').val());
+            lines = ($('#lineSelect').val() == null ? [] : $('#lineSelect').val());
             users = ($('#userSelect').val() == null ? [] : $('#userSelect').val());
         });
 
@@ -202,6 +246,7 @@ new[] {null, "Users", "text-center valign-middle"}
                 if (record.ID == 0) {
                     dataHub.getLastAssetGroupID().done(function (id) {
                         dataHub.updateMeters(meters, id);
+                        dataHub.updateLines(lines, id);
                         dataHub.updateUsers(users, id).done(function () {
                             viewModel.queryPageRecords();
                         })
@@ -209,6 +254,7 @@ new[] {null, "Users", "text-center valign-middle"}
                 }
                 else {
                     dataHub.updateMeters(meters, record.ID);
+                    dataHub.updateLines(lines, record.ID);
                     dataHub.updateUsers(users, record.ID).done(function () {
                         viewModel.queryPageRecords();
                     })
@@ -229,20 +275,18 @@ new[] {null, "Users", "text-center valign-middle"}
         $('#addNewEditDialog').on('shown.bs.modal', function () {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryMeters(-1, "Name", true, 1, 10000000, null).done(function (meters) {
-
                     $('#meterSelect').children().remove();
 
                     $.each(meters, function (i, d) {
                         $('#meterSelect').append(new Option(d.Name, d.ID));
                     });
 
-
                     if (viewModel.recordMode() === RecordMode.Edit) {
                         dataHub.queryGroupMeterViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (metersInGroup) {
-
                             $.each(metersInGroup, function (i, meter) {
                                 $('#meterSelect').find('option[value="' + meter.MeterID + '"]').attr('selected', true);
                             });
+
                             $('#meterSelect').mobileSelect(mobileSelectOptions);
                             $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -251,7 +295,6 @@ new[] {null, "Users", "text-center valign-middle"}
                                 event.preventDefault();
                                 $('#meterSelect').mobileSelect('show');
                             });
-
                         });
                     }
                     else {
@@ -263,9 +306,42 @@ new[] {null, "Users", "text-center valign-middle"}
                             event.preventDefault();
                             $('#meterSelect').mobileSelect('show');
                         });
-
                     }
+                });
 
+                dataHub.queryLines("AssetKey", true, 1, 10000000, null).done(function (lines) {
+                    $('#lineSelect').children().remove();
+
+                    $.each(lines, function (i, d) {
+                        $('#lineSelect').append(new Option(d.AssetKey, d.ID));
+                    });
+
+                    if (viewModel.recordMode() === RecordMode.Edit) {
+                        dataHub.queryLineAssetGroupViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (linesInGroup) {
+                            $.each(linesInGroup, function (i, line) {
+                                $('#lineSelect').find('option[value="' + line.LineID + '"]').attr('selected', true);
+                            });
+
+                            $('#lineSelect').mobileSelect(mobileSelectOptions);
+                            $('#linesSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                            $('#linesSelectFrame .btn-mobileSelect-gen').off('click');
+                            $('#linesSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                                event.preventDefault();
+                                $('#lineSelect').mobileSelect('show');
+                            });
+                        });
+                    }
+                    else {
+                        $('#lineSelect').mobileSelect(mobileSelectOptions);
+                        $('#linesSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                        $('#linesSelectFrame .btn-mobileSelect-gen').off('click');
+                        $('#linesSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                            event.preventDefault();
+                            $('#lineSelect').mobileSelect('show');
+                        });
+                    }
                 });
 
                 securityHub.queryUserAccounts("Name", true, 1, 1000000, null).done(function (users) {
@@ -281,6 +357,7 @@ new[] {null, "Users", "text-center valign-middle"}
                             $.each(usersInGroup, function (i, user) {
                                 $('#userSelect').find('option[value="' + user.UserAccountID + '"]').attr('selected', true);
                             });
+
                             $('#userSelect').mobileSelect(mobileSelectOptions);
                             $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -290,8 +367,6 @@ new[] {null, "Users", "text-center valign-middle"}
                                 $('#userSelect').mobileSelect('refresh');
                                 $('#userSelect').mobileSelect('show');
                             });
-
-
                         });
                     }
                     else {
@@ -314,11 +389,14 @@ new[] {null, "Users", "text-center valign-middle"}
                 $('#userSelect').mobileSelect('destroy');
             if ($('#meterSelect').mobileSelect('exists'))
                 $('#meterSelect').mobileSelect('destroy');
+            if ($('#lineSelect').mobileSelect('exists'))
+                $('#lineSelect').mobileSelect('destroy');
         });
 
         $(function () {
             viewModel.queryPageRecords();
             $("#metersDialog").modal({ show: false, backdrop: "static", keyboard: false });
+            $("#linesDialog").modal({ show: false, backdrop: "static", keyboard: false });
             $("#usersDialog").modal({ show: false, backdrop: "static", keyboard: false });
 
         });

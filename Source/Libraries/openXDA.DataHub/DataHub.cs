@@ -425,10 +425,10 @@ namespace openXDA.Hubs
             return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('AssetGroup')") ?? 0;
         }
 
-
-        public void UpdateMeters(List<string> meters, int groupID )
+        public void UpdateMeters(List<string> meters, int groupID)
         {
             IEnumerable<MeterAssetGroup> records = DataContext.Table<MeterAssetGroup>().QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID));
+
             foreach (MeterAssetGroup record in records)
             {
                 if (!meters.Contains(record.MeterID.ToString()))
@@ -438,15 +438,31 @@ namespace openXDA.Hubs
             foreach (string meter in meters)
             {
                 if (!records.Any(record => record.MeterID == int.Parse(meter)))
-                {
                     DataContext.Table<MeterAssetGroup>().AddNewRecord(new MeterAssetGroup() { AssetGroupID = groupID, MeterID = int.Parse(meter) });
-                }
+            }
+        }
+
+        public void UpdateLines(List<string> lines, int groupID)
+        {
+            IEnumerable<LineAssetGroup> records = DataContext.Table<LineAssetGroup>().QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID));
+
+            foreach (LineAssetGroup record in records)
+            {
+                if (!lines.Contains(record.LineID.ToString()))
+                    DataContext.Table<MeterAssetGroup>().DeleteRecord(record.ID);
+            }
+
+            foreach (string line in lines)
+            {
+                if (!records.Any(record => record.LineID == int.Parse(line)))
+                    DataContext.Table<MeterAssetGroup>().AddNewRecord(new MeterAssetGroup() { AssetGroupID = groupID, MeterID = int.Parse(line) });
             }
         }
 
         public void UpdateUsers(List<string> users, int groupID)
         {
             IEnumerable<UserAccountAssetGroup> records = DataContext.Table<UserAccountAssetGroup>().QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID));
+
             foreach (UserAccountAssetGroup record in records)
             {
                 if (!users.Contains(record.UserAccountID.ToString()))
@@ -456,12 +472,9 @@ namespace openXDA.Hubs
             foreach (string user in users)
             {
                 if (!records.Any(record => record.UserAccountID == Guid.Parse(user)))
-                {
                     DataContext.Table<UserAccountAssetGroup>().AddNewRecord(new UserAccountAssetGroup() { AssetGroupID = groupID, UserAccountID = Guid.Parse(user) });
-                }
             }
         }
-
 
         #endregion
 
@@ -2345,7 +2358,7 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(Line), RecordOperation.UpdateRecord)]
-        public void UpdateLines(Line record)
+        public void UpdateLine(Line record)
         {
             DataContext.Table<Line>().UpdateRecord(record);
         }
