@@ -417,7 +417,7 @@ namespace DeviceDefinitionsMigrator
                             lineImpedanceTable.AddNewOrUpdateRecord(lineImpedance);
 
                             if (lineImpedance.ID == 0)
-                                lineImpedance.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                                lineImpedance.ID = connection.ExecuteScalar<int>("SELECT ID FROM LineImpedance WHERE LineID = {0}", lineImpedance.LineID);
                         }
                     }
 
@@ -435,7 +435,7 @@ namespace DeviceDefinitionsMigrator
                             sourceImpedanceTable.AddNewOrUpdateRecord(localSourceImpedance);
 
                             if (localSourceImpedance.ID == 0)
-                                localSourceImpedance.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                                localSourceImpedance.ID = connection.ExecuteScalar<int>("SELECT ID FROM SourceImpedance WHERE MeterLocationLineID = {0}", localSourceImpedance.MeterLocationLineID);
                         }
                     }
 
@@ -568,7 +568,7 @@ namespace DeviceDefinitionsMigrator
             meterLocationTable.AddNewOrUpdateRecord(meterLocation);
 
             if (meterLocation.ID == 0)
-                meterLocation.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                meterLocation.ID = connection.ExecuteScalar<int>("SELECT ID FROM MeterLocation WHERE AssetKey = {0}", meterLocation.AssetKey);
         }
 
         private static void LoadRemoteMeterLocationAttributes(MeterLocation meterLocation, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
@@ -593,7 +593,7 @@ namespace DeviceDefinitionsMigrator
             meterLocationTable.AddNewOrUpdateRecord(meterLocation);
 
             if (meterLocation.ID == 0)
-                meterLocation.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                meterLocation.ID = connection.ExecuteScalar<int>("SELECT ID FROM MeterLocation WHERE AssetKey = {0}", meterLocation.AssetKey);
         }
 
         private static void LoadLineAttributes(Line line, XElement lineElement, LookupTables lookupTables, AdoDataConnection connection)
@@ -606,7 +606,7 @@ namespace DeviceDefinitionsMigrator
             lineTable.AddNewOrUpdateRecord(line);
 
             if (line.ID == 0)
-                line.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                line.ID = connection.ExecuteScalar<int>("SELECT ID FROM Line WHERE AssetKey = {0}", line.AssetKey);
         }
 
         private static MeterLine Link(Meter meter, Line line, XElement lineElement, Dictionary<Tuple<string, string>, MeterLine> meterLineLookup, AdoDataConnection connection)
@@ -625,7 +625,7 @@ namespace DeviceDefinitionsMigrator
 
                 TableOperations<MeterLine> meterLineTable = new TableOperations<MeterLine>(connection);
                 meterLineTable.AddNewRecord(meterLine);
-                meterLine.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                meterLine.ID = connection.ExecuteScalar<int>("SELECT ID FROM Meter WHERE AssetKey = {0}", meter.AssetKey);
 
                 meterLineLookup.Add(key, meterLine);
             }
@@ -648,7 +648,7 @@ namespace DeviceDefinitionsMigrator
 
                 TableOperations<MeterLocationLine> meterLocationLineTable = new TableOperations<MeterLocationLine>(connection);
                 meterLocationLineTable.AddNewRecord(meterLocationLine);
-                meterLocationLine.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                meterLocationLine.ID = connection.ExecuteScalar<int>("SELECT ID FROM MeterLocationLine WHERE MeterLocationID = {0} AND LineID = {1}", meterLocation.ID, line.ID);
 
                 meterLocationLineLookup.Add(key, meterLocationLine);
             }
@@ -674,7 +674,7 @@ namespace DeviceDefinitionsMigrator
             channelTable.AddNewOrUpdateRecord(channel);
 
             if (channel.ID == 0)
-                channel.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                channel.ID = connection.ExecuteScalar<int>("SELECT ID FROM Channel WHERE MeterID = {0} AND LineID = {1} AND MeasurementTypeID = {2} AND MeasurementCharacteristicID = {3} AND PhaseID = {4} AND HarmonicGroup={5}", channel.MeterID, channel.LineID, channel.MeasurementTypeID, channel.MeasurementCharacteristicID, channel.PhaseID, channel.HarmonicGroup);
         }
 
         private static void LoadSeriesAttributes(Channel channel, Series series, XElement channelElement, LookupTables lookupTables, AdoDataConnection connection)
@@ -687,7 +687,7 @@ namespace DeviceDefinitionsMigrator
             seriesTable.AddNewOrUpdateRecord(series);
 
             if (series.ID == 0)
-                series.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                series.ID = connection.ExecuteScalar<int>("SELECT ID FROM Series WHERE ChannelID = {0} AND SeriesTypeID = {1}", series.ChannelID, series.SeriesTypeID);
         }
 
         private static void LoadLineImpedanceAttributes(LineImpedance lineImpedance, XElement impedancesElement)
@@ -786,7 +786,7 @@ namespace DeviceDefinitionsMigrator
 
             TableOperations<SeriesType> seriesTypeTable = new TableOperations<SeriesType>(connection);
             seriesTypeTable.AddNewRecord(seriesType);
-            seriesType.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            seriesType.ID = connection.ExecuteScalar<int>("SELECT ID FROM SeriesType WHERE Name = {0}", seriesType.Name);
 
             return seriesType.ID;
         }
@@ -801,7 +801,7 @@ namespace DeviceDefinitionsMigrator
 
             TableOperations<MeasurementType> measurementTypeTable = new TableOperations<MeasurementType>(connection);
             measurementTypeTable.AddNewRecord(measurementType);
-            measurementType.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            measurementType.ID = connection.ExecuteScalar<int>("SELECT ID FROM MeasurementType WHERE Name = {0}", measurementTypeName);
 
             return measurementType.ID;
         }
@@ -816,7 +816,7 @@ namespace DeviceDefinitionsMigrator
 
             TableOperations<MeasurementCharacteristic> measurementCharacteristicTable = new TableOperations<MeasurementCharacteristic>(connection);
             measurementCharacteristicTable.AddNewRecord(measurementCharacteristic);
-            measurementCharacteristic.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            measurementCharacteristic.ID = connection.ExecuteScalar<int>("SELECT ID FROM MeasurementCharacteristic WHERE Name = {0}", measurementCharacteristicName);
 
             return measurementCharacteristic.ID;
         }
@@ -831,7 +831,7 @@ namespace DeviceDefinitionsMigrator
 
             TableOperations<Phase> phaseTable = new TableOperations<Phase>(connection);
             phaseTable.AddNewRecord(phase);
-            phase.ID = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+            phase.ID = connection.ExecuteScalar<int>("SELECT ID FROM Phase WHERE Name = {0}", phaseName);
 
             return phase.ID;
         }
