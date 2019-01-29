@@ -33,6 +33,8 @@ import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
 import * as Plot from 'react-plotly.js';
 import * as Plotly from 'plotly.js';
+import * as stats from 'stats-lite';
+
 
 declare var phases: Array<{ID: number, Name: string }>;
 declare var meters: Array<{ ID: number, Name: string }>;
@@ -207,8 +209,14 @@ export class SpectralDataDisplay extends React.Component{
     getData(): void {
         $(this.refs.loader).show();
         this.spectralDataDisplayService.getData(this.state.meterID, this.state.date, this.state.type, this.state.level, this.state.phase).done(data => {
-            var x = data[0];
-            var y = data.map(a => a[0]);
+            if (data.length < 2) {
+                this.setState({ data: [{ type: 'surface', x: [11, 12, 13], y: ["a", 'b', 'c'], z: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] }] }, () => {
+                    $(this.refs.loader).hide();
+                });
+                return;
+            } 
+            var x = data[0].filter((a,i) => i != 0);
+            var y = data.filter((a, i) => i != 0).map(a => a[0]);
             var z = data.filter((a,i) => i != 0).map((a,i) => a.filter((b,index) => index != 0));
             var dmin = Math.min(...z.map(a => Math.min(...a)));
             var dmax = Math.max(...z.map(a => Math.max(...a)));

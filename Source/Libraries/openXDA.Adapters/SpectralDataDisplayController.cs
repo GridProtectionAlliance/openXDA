@@ -136,10 +136,10 @@ namespace openXDA.Adapters
 
             switch (type)
             {
-                case "Interharmonic": recordRestriction2 = new RecordRestriction("Name LIKE '% Interharmonic %'"); break;
+                case "Interharmonic": recordRestriction2 = new RecordRestriction("Name LIKE '%Interharmonic%'"); break;
                 case "HighResolution": recordRestriction2 = new RecordRestriction("Name LIKE '%khz'"); break;
-                case "LowResolution": recordRestriction2 = new RecordRestriction("Name LIKE '% Bin %'"); break;
-                default: recordRestriction2 = new RecordRestriction("Name LIKE '% Harmonic %'"); break;
+                case "LowResolution": recordRestriction2 = new RecordRestriction("Name LIKE '%Bin%'"); break;
+                default: recordRestriction2 = new RecordRestriction("Name LIKE '% Harmonic%'"); break;
             }
 
             return recordRestriction + recordRestriction2;

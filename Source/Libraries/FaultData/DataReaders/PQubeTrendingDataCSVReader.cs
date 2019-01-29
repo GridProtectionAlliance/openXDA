@@ -188,6 +188,7 @@ namespace FaultData.DataReaders
                 channelName = channelName.Replace("max", "").Replace("Max", "");
             else if (channelName.ToLower().Contains("avg"))
                 channelName = channelName.Replace("avg", "").Replace("Avg", "");
+            channelName = channelName.Replace("  ", " ");
             return channelName.Trim();
         }
 
