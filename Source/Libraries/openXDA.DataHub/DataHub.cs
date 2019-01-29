@@ -354,7 +354,7 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserAccount), RecordOperation.UpdateRecord)]
-        public void UpdateEventEmailConfiguration(UserAccount record)
+        public void UpdateProblematicUserAccount(UserAccount record)
         {
         }
 
