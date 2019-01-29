@@ -28,6 +28,7 @@
 @using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
+@using System.Web.Helpers
 
 @inherits ExtendedTemplateBase<AppModel>
 @{
@@ -40,6 +41,7 @@
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
+    IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (select DISTINCT MeterID from MeterDataQualitySummary)").OrderBy(x => x.AssetKey);
 
 }
 @section StyleSheets {
@@ -93,5 +95,7 @@
  //       else
  //           return true;
  //   }
+
+    var meters = JSON.parse('@Raw(Json.Encode(meters))');
 </script>
 <script type="text/javascript" src="~/Scripts/PeriodicDataDisplay.js"></script>
