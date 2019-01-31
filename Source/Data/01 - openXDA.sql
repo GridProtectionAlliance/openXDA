@@ -3374,7 +3374,7 @@ GO
 
 -- Each user can update this to create their own scalar stat view in openSEE
 CREATE VIEW OpenSEEScalarStatView as
-SELECT TOP 1 *
+SELECT *
 FROM
 (
 SELECT
