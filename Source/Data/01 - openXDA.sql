@@ -3386,6 +3386,22 @@ SELECT
 	DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime)/1000.0 as FileDuration,
 	FaultSummary.Distance,
 	FaultSummary.DurationCycles,
+    (
+        SELECT TOP 1
+            (1 - Disturbance.PerUnitMagnitude) * 100 AS SagDepth
+        FROM
+            Disturbance JOIN
+            EventType ON
+                Disturbance.EventTypeID = EventType.ID AND
+                EventType.Name = 'Sag' JOIN
+            Phase ON
+                Disturbance.PhaseID = Phase.ID AND
+                Phase.Name = 'Worst'
+        WHERE
+            Disturbance.EventID = Event.ID AND
+            Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
+            Disturbance.EndTime >= FaultSummary.Inception
+    ) AS SagDepth,
 	FaultSummary.IsSelectedAlgorithm,
 	EventStat.I2t,
 	EventStat.VMax,
