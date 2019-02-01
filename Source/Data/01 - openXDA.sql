@@ -3406,7 +3406,14 @@ SELECT
 	EventStat.I2t,
 	EventStat.VMax,
 	EventStat.VMin,
-	EventStat.IMax
+	EventStat.IMax,
+    VAN.Mapping AS VAN,
+    VBN.Mapping AS VBN,
+    VCN.Mapping AS VCN,
+    IAN.Mapping AS IAN,
+    IBN.Mapping AS IBN,
+    ICN.Mapping AS ICN,
+    IR.Mapping AS IR
 FROM
 	Event JOIN
 	Meter ON Event.MeterID = Meter.ID JOIN
@@ -3414,7 +3421,56 @@ FROM
 	Line ON Event.LineID = Line.ID JOIN
 	EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
 	FaultSummary ON Event.ID = FaultSummary.EventID LEFT JOIN
-	EventStat ON Event.ID = EventStat.EventID
+	EventStat ON Event.ID = EventStat.EventID LEFT JOIN
+    ChannelDetail VAN ON
+        Event.MeterID = VAN.MeterID AND
+        Event.LineID = VAN.LineID AND
+        VAN.MeasurementType = 'Voltage' AND
+        VAN.Phase = 'AN' AND
+        VAN.MeasurementCharacteristic = 'Instantaneous' AND
+        VAN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+    ChannelDetail VBN ON
+        Event.MeterID = VBN.MeterID AND
+        Event.LineID = VBN.LineID AND
+        VBN.MeasurementType = 'Voltage' AND
+        VBN.Phase = 'BN' AND
+        VBN.MeasurementCharacteristic = 'Instantaneous' AND
+        VBN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+    ChannelDetail VCN ON
+        Event.MeterID = VCN.MeterID AND
+        Event.LineID = VCN.LineID AND
+        VCN.MeasurementType = 'Voltage' AND
+        VCN.Phase = 'CN' AND
+        VCN.MeasurementCharacteristic = 'Instantaneous' AND
+        VCN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+    ChannelDetail IAN ON
+        Event.MeterID = IAN.MeterID AND
+        Event.LineID = IAN.LineID AND
+        IAN.MeasurementType = 'Current' AND
+        IAN.Phase = 'AN' AND
+        IAN.MeasurementCharacteristic = 'Instantaneous' AND
+        IAN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+    ChannelDetail IBN ON
+        Event.MeterID = IBN.MeterID AND
+        Event.LineID = IBN.LineID AND
+        IBN.MeasurementType = 'Current' AND
+        IBN.Phase = 'BN' AND
+        IBN.MeasurementCharacteristic = 'Instantaneous' AND
+        IBN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+    ChannelDetail ICN ON
+        Event.MeterID = ICN.MeterID AND
+        Event.LineID = ICN.LineID AND
+        ICN.MeasurementType = 'Current' AND
+        ICN.Phase = 'CN' AND
+        ICN.MeasurementCharacteristic = 'Instantaneous' AND
+        ICN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+    ChannelDetail IR ON
+        Event.MeterID = IR.MeterID AND
+        Event.LineID = IR.LineID AND
+        IR.MeasurementType = 'Current' AND
+        IR.Phase = 'RES' AND
+        IR.MeasurementCharacteristic = 'Instantaneous' AND
+        IR.SeriesType IN ('Values', 'Instantaneous')
 	)as sub
 Where IsSelectedAlgorithm IS NULL OR IsSelectedAlgorithm = 1
 GO
