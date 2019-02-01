@@ -86,7 +86,7 @@ CREATE TABLE FileGroup
     ProcessingStartTime DATETIME2 NOT NULL,
     ProcessingEndTime DATETIME2 NOT NULL,
     Error INT NOT NULL DEFAULT 0,
-	FileHash INT
+    FileHash INT
 )
 GO
 
@@ -669,13 +669,13 @@ CREATE TABLE SavedViews
     ID INT IDENTITY(1, 1) PRIMARY KEY NOT NULL,
     UserAccount VARCHAR(500) NOT NULL,
     Name NVARCHAR(500) NOT NULL,
-	DateRange INT NOT NULL,
+    DateRange INT NOT NULL,
     FromDate DATETIME NOT NULL,
     ToDate DATETIME NOT NULL,
     Tab NVARCHAR(20) NOT NULL,
     DeviceFilterID INT NOT NULL,
     MapGrid NVARCHAR(5) NOT NULL,
-	IsDefault BIT NOT NULL
+    IsDefault BIT NOT NULL
 )
 GO
 
@@ -989,7 +989,7 @@ CREATE TABLE SnapshotHarmonics
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventID INT NOT NULL REFERENCES Event(ID),
     ChannelID INT NOT NULL REFERENCES Channel(ID),
-	SpectralData varchar(max) NULL
+    SpectralData varchar(max) NULL
 )
 GO
 
@@ -1839,38 +1839,38 @@ GO
 
 CREATE TABLE Unit
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(MAX) NOT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(MAX) NOT NULL
 )
 GO
 
 CREATE TABLE PQMeasurement
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	Name VARCHAR(MAX) NOT NULL,
-	Description VARCHAR(MAX) NULL,
-	UnitID INT NOT NULL REFERENCES Unit(ID),
-	MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
-	MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
-	PhaseID INT NOT NULL REFERENCES Phase(ID),
-	HarmonicGroup INT NOT NULL DEFAULT 0,
-	Enabled bit NOT NULL DEFAULT 1
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(MAX) NOT NULL,
+    Description VARCHAR(MAX) NULL,
+    UnitID INT NOT NULL REFERENCES Unit(ID),
+    MeasurementTypeID INT NOT NULL REFERENCES MeasurementType(ID),
+    MeasurementCharacteristicID INT NOT NULL REFERENCES MeasurementCharacteristic(ID),
+    PhaseID INT NOT NULL REFERENCES Phase(ID),
+    HarmonicGroup INT NOT NULL DEFAULT 0,
+    Enabled bit NOT NULL DEFAULT 1
 )
 GO
 
 CREATE TABLE PQTrendStat
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	MeterID INT NOT NULL REFERENCES Meter(ID),
-	PQMeasurementTypeID INT NOT NULL REFERENCES PQMeasurement(ID),
-	Date DATE NOT NULL,
-	Max FLOAT NULL,
-	CP99 FLOAT NULL,
-	CP95 FLOAT NULL,
-	Avg FLOAT NULL,
-	CP05 FLOAT NULL,
-	CP01 FLOAT NULL,
-	Min FLOAT NULL
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    PQMeasurementTypeID INT NOT NULL REFERENCES PQMeasurement(ID),
+    Date DATE NOT NULL,
+    Max FLOAT NULL,
+    CP99 FLOAT NULL,
+    CP95 FLOAT NULL,
+    Avg FLOAT NULL,
+    CP05 FLOAT NULL,
+    CP01 FLOAT NULL,
+    Min FLOAT NULL
 )
 GO
 
@@ -1909,9 +1909,9 @@ INSERT INTO Unit (Name) VALUES ('Percent')
 GO
 
 CREATE TABLE StepChangeMeasurement(
-	ID INT PRIMARY KEY IDENTITY(1,1),
-	PQMeasurementID INT FOREIGN KEY REFERENCES PQMeasurement(ID) NOT NULL,
-	Setting float NULL
+    ID INT PRIMARY KEY IDENTITY(1,1),
+    PQMeasurementID INT FOREIGN KEY REFERENCES PQMeasurement(ID) NOT NULL,
+    Setting float NULL
 )
 
 CREATE NONCLUSTERED INDEX IX_StepChangeMeasurement_PQMeasurement
@@ -1919,11 +1919,11 @@ ON StepChangeMeasurement(PQMeasurementID ASC)
 GO
 
 CREATE TABLE StepChangeStat(
-	ID INT PRIMARY KEY IDENTITY(1,1),
-	MeterID INT FOREIGN KEY REFERENCES Meter(ID) NOT NULL,
-	Date Date NOT NULL,
-	StepChangeMeasurementID INT FOREIGN KEY REFERENCES StepChangeMeasurement(ID) NOT NULL,
-	Value float NULL
+    ID INT PRIMARY KEY IDENTITY(1,1),
+    MeterID INT FOREIGN KEY REFERENCES Meter(ID) NOT NULL,
+    Date Date NOT NULL,
+    StepChangeMeasurementID INT FOREIGN KEY REFERENCES StepChangeMeasurement(ID) NOT NULL,
+    Value float NULL
 )
 
 CREATE NONCLUSTERED INDEX IX_StepChangeStat_Date
@@ -2206,7 +2206,7 @@ CREATE TABLE RemoteXDAInstance
     Name VARCHAR(200) NOT NULL,
     Address VARCHAR(200) NULL,
     Frequency VARCHAR(20) NOT NULL,
-	UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
+    UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
 GO
 
@@ -2266,7 +2266,7 @@ CREATE TABLE EASExtension
     ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     ServiceName VARCHAR(50) NOT NULL,
     HasResultFunction VARCHAR(50) NOT NULL,
-	WebPage VARCHAR(MAX) NOT NULL
+    WebPage VARCHAR(MAX) NOT NULL
 )
 GO
 
@@ -2484,26 +2484,26 @@ GO
 
 CREATE TABLE Report
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	MeterID INT NOT NULL REFERENCES Meter(ID),
-	Month INT NOT NULL,
-	Year INT NOT NULL,
-	Results VARCHAR(4) NOT NULL,
-	PDF VARBINARY(MAX) NOT NULL,
-	CONSTRAINT UC_Report UNIQUE(ID, MeterID, Month, Year)
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    Month INT NOT NULL,
+    Year INT NOT NULL,
+    Results VARCHAR(4) NOT NULL,
+    PDF VARBINARY(MAX) NOT NULL,
+    CONSTRAINT UC_Report UNIQUE(ID, MeterID, Month, Year)
 )
 GO
 
 CREATE TABLE EventStat
 (
-	ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-	EventID INT NOT NULL REFERENCES Event(ID),
-	IMin float NULL,
-	IMax float NULL,
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    IMin float NULL,
+    IMax float NULL,
     VMin float NULL,
-	VMax float NULL,
-	I2t float NULL,
-	CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
+    VMax float NULL,
+    I2t float NULL,
+    CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
 )
 GO
 
@@ -2822,22 +2822,22 @@ GO
 
 CREATE VIEW MeterDetail
 AS
-SELECT	Meter.ID,
-		Meter.AssetKey,
-		Meter.MeterLocationID,
-		MeterLocation.AssetKey AS LocationKey,
-		MeterLocation.Name AS Location,
-		MeterLocation.Latitude,
-		MeterLocation.Longitude,
+SELECT  Meter.ID,
+        Meter.AssetKey,
+        Meter.MeterLocationID,
+        MeterLocation.AssetKey AS LocationKey,
+        MeterLocation.Name AS Location,
+        MeterLocation.Latitude,
+        MeterLocation.Longitude,
         Meter.Name,
-		Meter.Alias,
-		Meter.ShortName,
-		Meter.Make,
-		Meter.Model,
-		CASE COALESCE (Meter.TimeZone, '')
-			WHEN '' THEN COALESCE (Setting.Value, 'UTC')
+        Meter.Alias,
+        Meter.ShortName,
+        Meter.Make,
+        Meter.Model,
+        CASE COALESCE (Meter.TimeZone, '')
+            WHEN '' THEN COALESCE (Setting.Value, 'UTC')
             ELSE Meter.TimeZone END AS TimeZone,
-		Meter.Description
+        Meter.Description
 FROM    Meter INNER JOIN
         MeterLocation ON Meter.MeterLocationID = MeterLocation.ID LEFT OUTER JOIN
         Setting ON Setting.Name = 'DefaultMeterTimeZone'
@@ -2999,7 +2999,7 @@ AS
 SELECT
     LineAssetGroup.ID,
     Line.AssetKey AS LineName,
-	(SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
+    (SELECT TOP 1 LineName FROM MeterLine Where LineID = Line.ID) AS LongLineName,
     Line.ID AS LineID,
     AssetGroupID
 FROM
@@ -3348,22 +3348,22 @@ GO
 CREATE VIEW ChannelsWithNormalLimits
 AS
 SELECT
-	Channel.Name,
-	Channel.ID,
-	Channel.MeterID,
-	AlarmType.Name AS AlarmTypeName,
+    Channel.Name,
+    Channel.ID,
+    Channel.MeterID,
+    AlarmType.Name AS AlarmTypeName,
     MeasurementCharacteristic.Name AS MeasurementCharacteristic,
-	MeasurementType.Name AS MeasurementType,
-	Channel.HarmonicGroup,
-	Phase.Name AS Phase,
-	High,
-	Low,
-	RangeInclusive,
-	PerUnit,
-	AlarmRangeLimit.Enabled,
-	IsDefault
+    MeasurementType.Name AS MeasurementType,
+    Channel.HarmonicGroup,
+    Phase.Name AS Phase,
+    High,
+    Low,
+    RangeInclusive,
+    PerUnit,
+    AlarmRangeLimit.Enabled,
+    IsDefault
 FROM
-	AlarmRangeLimit JOIN
+    AlarmRangeLimit JOIN
     Channel ON AlarmRangeLimit.ChannelID = Channel.ID JOIN
     AlarmType ON AlarmRangeLimit.AlarmTypeID = AlarmType.ID JOIN
     Meter ON Channel.MeterID = Meter.ID JOIN
@@ -3373,16 +3373,16 @@ FROM
 GO
 
 -- Each user can update this to create their own scalar stat view in openSEE
-CREATE VIEW OpenSEEScalarStatView as
+CREATE VIEW OpenSEEScalarStatView AS
 SELECT
-	Event.ID as EventID,
-	MeterLocation.Name as Station,
-	Meter.Name as Meter,
-	Line.AssetKey as Line,
-	EventType.Name as EventType,
-	DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime)/1000.0 as FileDuration,
-	FaultSummary.Distance,
-	FaultSummary.DurationCycles,
+    Event.ID AS EventID,
+    MeterLocation.Name AS Station,
+    Meter.Name AS Meter,
+    Line.AssetKey AS Line,
+    EventType.Name AS EventType,
+    DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime)/1000.0 AS FileDuration,
+    FaultSummary.Distance,
+    FaultSummary.DurationCycles,
     (
         SELECT TOP 1
             (1 - Disturbance.PerUnitMagnitude) * 100 AS SagDepth
@@ -3399,11 +3399,11 @@ SELECT
             Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
             Disturbance.EndTime >= FaultSummary.Inception
     ) AS SagDepth,
-	FaultSummary.IsSelectedAlgorithm,
-	EventStat.I2t,
-	EventStat.VMax,
-	EventStat.VMin,
-	EventStat.IMax,
+    FaultSummary.IsSelectedAlgorithm,
+    EventStat.I2t,
+    EventStat.VMax,
+    EventStat.VMin,
+    EventStat.IMax,
     VAN.Mapping AS VAN,
     VBN.Mapping AS VBN,
     VCN.Mapping AS VCN,
@@ -3412,58 +3412,58 @@ SELECT
     ICN.Mapping AS ICN,
     IR.Mapping AS IR
 FROM
-	Event JOIN
-	Meter ON Event.MeterID = Meter.ID JOIN
-	MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
-	Line ON Event.LineID = Line.ID JOIN
-	EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
+    Event JOIN
+    Meter ON Event.MeterID = Meter.ID JOIN
+    MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
+    Line ON Event.LineID = Line.ID JOIN
+    EventType ON Event.EventTypeID = EventType.ID LEFT OUTER JOIN
     FaultSummary ON
         Event.ID = FaultSummary.EventID AND
         FaultSummary.IsSelectedAlgorithm <> 0 AND
         FaultSummary.FaultNumber = 1 LEFT OUTER JOIN
-	EventStat ON Event.ID = EventStat.EventID LEFT JOIN
+    EventStat ON Event.ID = EventStat.EventID LEFT OUTER JOIN
     ChannelDetail VAN ON
         Event.MeterID = VAN.MeterID AND
         Event.LineID = VAN.LineID AND
         VAN.MeasurementType = 'Voltage' AND
         VAN.Phase = 'AN' AND
         VAN.MeasurementCharacteristic = 'Instantaneous' AND
-        VAN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+        VAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
     ChannelDetail VBN ON
         Event.MeterID = VBN.MeterID AND
         Event.LineID = VBN.LineID AND
         VBN.MeasurementType = 'Voltage' AND
         VBN.Phase = 'BN' AND
         VBN.MeasurementCharacteristic = 'Instantaneous' AND
-        VBN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+        VBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
     ChannelDetail VCN ON
         Event.MeterID = VCN.MeterID AND
         Event.LineID = VCN.LineID AND
         VCN.MeasurementType = 'Voltage' AND
         VCN.Phase = 'CN' AND
         VCN.MeasurementCharacteristic = 'Instantaneous' AND
-        VCN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+        VCN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
     ChannelDetail IAN ON
         Event.MeterID = IAN.MeterID AND
         Event.LineID = IAN.LineID AND
         IAN.MeasurementType = 'Current' AND
         IAN.Phase = 'AN' AND
         IAN.MeasurementCharacteristic = 'Instantaneous' AND
-        IAN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+        IAN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
     ChannelDetail IBN ON
         Event.MeterID = IBN.MeterID AND
         Event.LineID = IBN.LineID AND
         IBN.MeasurementType = 'Current' AND
         IBN.Phase = 'BN' AND
         IBN.MeasurementCharacteristic = 'Instantaneous' AND
-        IBN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+        IBN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
     ChannelDetail ICN ON
         Event.MeterID = ICN.MeterID AND
         Event.LineID = ICN.LineID AND
         ICN.MeasurementType = 'Current' AND
         ICN.Phase = 'CN' AND
         ICN.MeasurementCharacteristic = 'Instantaneous' AND
-        ICN.SeriesType IN ('Values', 'Instantaneous') LEFT JOIN
+        ICN.SeriesType IN ('Values', 'Instantaneous') LEFT OUTER JOIN
     ChannelDetail IR ON
         Event.MeterID = IR.MeterID AND
         Event.LineID = IR.LineID AND
