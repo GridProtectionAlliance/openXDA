@@ -3374,9 +3374,6 @@ GO
 
 -- Each user can update this to create their own scalar stat view in openSEE
 CREATE VIEW OpenSEEScalarStatView as
-SELECT *
-FROM
-(
 SELECT
 	Event.ID as EventID,
 	MeterLocation.Name as Station,
@@ -3420,7 +3417,10 @@ FROM
 	MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
 	Line ON Event.LineID = Line.ID JOIN
 	EventType ON Event.EventTypeID = EventType.ID LEFT JOIN
-	FaultSummary ON Event.ID = FaultSummary.EventID LEFT JOIN
+    FaultSummary ON
+        Event.ID = FaultSummary.EventID AND
+        FaultSummary.IsSelectedAlgorithm <> 0 AND
+        FaultSummary.FaultNumber = 1 LEFT OUTER JOIN
 	EventStat ON Event.ID = EventStat.EventID LEFT JOIN
     ChannelDetail VAN ON
         Event.MeterID = VAN.MeterID AND
@@ -3471,9 +3471,8 @@ FROM
         IR.Phase = 'RES' AND
         IR.MeasurementCharacteristic = 'Instantaneous' AND
         IR.SeriesType IN ('Values', 'Instantaneous')
-	)as sub
-Where IsSelectedAlgorithm IS NULL OR IsSelectedAlgorithm = 1
 GO
+
 ----- PROCEDURES -----
 
 CREATE PROCEDURE GetEventEmailRecipients
