@@ -438,6 +438,8 @@ GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.StatisticOperation', 10)
 GO
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataPusherOperation', 11)
+GO
 
 
 INSERT INTO AssetGroup(Name) VALUES('AllAssets')
