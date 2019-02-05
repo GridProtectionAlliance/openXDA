@@ -633,10 +633,15 @@ namespace openXDA.DataPusher
         private void AddMeterLine(string address, MetersToDataPush meter, LinesToDataPush selectedLine, UserAccount userAccount)
         {
             MeterLine remoteMeterLine = (MeterLine)WebAPIHub.GetRecordsWhere(address, "MeterLine", $"MeterID = {meter.RemoteXDAMeterID} AND LineID = {selectedLine.RemoteXDALineID}", userAccount).FirstOrDefault();
+            MeterLine localMeterLine = DataContext.Table<MeterLine>().QueryRecordWhere("MeterID = {0} and LineID = {1}", meter.LocalXDAMeterID, selectedLine.LocalXDALineID);
             MeterLine record = new MeterLine();
             record.MeterID = meter.RemoteXDAMeterID;
             record.LineID = selectedLine.RemoteXDALineID;
-            record.LineName = selectedLine.RemoteXDAAssetKey.ToString();
+
+            if (meter.Obsfucate)
+                record.LineName = selectedLine.RemoteXDAAssetKey.ToString();
+            else
+                record.LineName = localMeterLine.LineName;
 
             // if MeterLine association has not been previously made, make it
             if (remoteMeterLine == null)
