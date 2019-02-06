@@ -29,6 +29,7 @@
 @using openXDA.Model
 @using openXDA.Hubs
 @using RazorEngine.Templating
+@using openXDA.DataPusher
 
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
@@ -41,6 +42,7 @@
 @{
     DataContext dataContext = ViewBag.DataContext;
     HttpRequestMessage request = ViewBag.Request;
+    string companyName = WebAPIHub.CompanyName;
     Dictionary<string, string> parameters = request.QueryParameters();
     if (parameters.ContainsKey("XDAInstance"))
     {
@@ -91,7 +93,7 @@
     </div>
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAAssetKey", fieldLabel: "Local Asset Key", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAName", fieldLabel: "Remote Name"))
-    @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAAssetKey", fieldLabel: "Remote Asset Key", customDataBinding: "enable: false"))
+    @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAAssetKey", fieldLabel: "Remote Asset Key"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAMeterID", fieldLabel: "Local Meter ID", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAMeterID", fieldLabel: "Remote Meter ID", customDataBinding: "enable: false"))
     @Raw(dataContext.AddCheckBoxField<MetersToDataPush>("Obsfucate", customDataBinding: "click: handleObsfucateClick($element, $data)",fieldLabel: "Obsfucate meter information?"))
@@ -129,8 +131,8 @@
                                 viewModel.currentRecord().RemoteXDAName("Site" + id);
                             }
                             else {
-                                viewModel.currentRecord().RemoteXDAAssetKey(record.AssetKey);
-                                viewModel.currentRecord().RemoteXDAName(record.Name);
+                                viewModel.currentRecord().RemoteXDAAssetKey('@(companyName + "-")' + record.AssetKey);
+                                viewModel.currentRecord().RemoteXDAName('@(companyName + "-")' + record.Name);
                             }
                             viewModel.currentRecord().RemoteXDAMeterID(0);
 
@@ -148,8 +150,8 @@
                                 viewModel.currentRecord().RemoteXDAName("Site" + id);
                             }
                             else{
-                                viewModel.currentRecord().RemoteXDAAssetKey(record.AssetKey);
-                                viewModel.currentRecord().RemoteXDAName(record.Name);
+                                viewModel.currentRecord().RemoteXDAAssetKey('@(companyName + "-")' + record.AssetKey);
+                                viewModel.currentRecord().RemoteXDAName('@(companyName + "-")' + record.Name);
                             }
                             viewModel.currentRecord().RemoteXDAMeterID(0);
 

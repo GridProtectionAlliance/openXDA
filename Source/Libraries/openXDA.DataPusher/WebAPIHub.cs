@@ -179,6 +179,32 @@ namespace openXDA.DataPusher
             }
         }
 
+        public dynamic GetRecordWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        {
+            return GetRecordWhere(instance, tableName, ids, userAccount);
+        }
+
+        public static IEnumerable<dynamic> GetRecordWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        {
+            using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordWhere/" + tableName + "/" + ids).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+                return record.Result.ToObject(typeof(Meter).Assembly.GetType("openXDA.Model." + tableName));
+            }
+        }
 
 
         public dynamic GetChannelsHub(string instance, string ids, UserAccount userAccount)
@@ -291,6 +317,35 @@ namespace openXDA.DataPusher
 
                 dynamic r = response.Content.ReadAsAsync<dynamic>();
                 return (int)r.Result;
+            }
+        }
+
+        public HttpResponseMessage UpdateChannelHub(string instance, JObject record, UserAccount userAccount)
+        {
+            return UpdateChannel(instance, record, userAccount);
+        }
+
+        public static HttpResponseMessage UpdateChannel(string instance, JObject record, UserAccount userAccount)
+        {
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
+            using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/UpdateChannel", record).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                return response;
             }
         }
 

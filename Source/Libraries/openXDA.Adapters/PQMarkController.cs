@@ -117,6 +117,41 @@ namespace openXDA.Adapters
         /// </summary>
         /// <returns></returns>
         [HttpGet]
+        public IHttpActionResult GetRecordWhere(string id, string modelName)
+        {
+            object record;
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
+                    PQMarkRestrictedAttribute thing;
+
+                    if (type.TryGetAttribute(out thing))
+                    {
+                        record = dataContext.Table(type).QueryRecordWhere(id + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                    }
+                    else
+                    {
+                        record = dataContext.Table(type).QueryRecordWhere(id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(record);
+        }
+
+        /// <summary>
+        /// Return single Record
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
         public IHttpActionResult GetRecordsWhere(string id, string modelName)
         {
             object record;
@@ -386,6 +421,67 @@ namespace openXDA.Adapters
             Log.Info($"Added record to Channel table");
             return Ok(channelId);
         }
+
+        [HttpPost]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        public IHttpActionResult UpdateChannel([FromBody]JObject record)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    Channel channel = dataContext.Table<Channel>().QueryRecordWhere("ID = {0}", record["ID"].Value<int>());
+                    channel.Name = record["Name"].Value<string>();
+                    channel.SamplesPerHour = record["SamplesPerHour"].Value<float>();
+                    channel.PerUnitValue = record["PerUnitValue"].Value<double?>();
+                    channel.HarmonicGroup = record["HarmonicGroup"].Value<int>();
+                    channel.Description = record["Description"].Value<string>();
+                    channel.Enabled = record["Enabled"].Value<bool>();
+
+                    int measurementCharacteristicID = dataContext.Table<MeasurementCharacteristic>().QueryRecordWhere("Name = {0}", record["MeasurementCharacteristic"].Value<string>())?.ID ?? -1;
+                    int measurementTypeID = dataContext.Table<MeasurementType>().QueryRecordWhere("Name = {0}", record["MeasurementType"].Value<string>())?.ID ?? -1;
+                    int phaseID = dataContext.Table<Phase>().QueryRecordWhere("Name = {0}", record["Phase"].Value<string>())?.ID ?? -1;
+
+                    if (measurementCharacteristicID == -1)
+                    {
+                        dataContext.Table<MeasurementCharacteristic>().AddNewRecord(new MeasurementCharacteristic() { Name = record["MeasurementCharacteristic"].Value<string>(), Description = "", Display = false });
+                        measurementCharacteristicID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    }
+
+                    if (measurementTypeID == -1)
+                    {
+                        dataContext.Table<MeasurementType>().AddNewRecord(new MeasurementType() { Name = record["MeasurementType"].Value<string>(), Description = "" });
+                        measurementTypeID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    }
+
+                    if (phaseID == -1)
+                    {
+                        dataContext.Table<Phase>().AddNewRecord(new Phase() { Name = record["Phase"].Value<string>(), Description = "" });
+                        phaseID = dataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                    }
+
+                    channel.MeasurementTypeID = measurementTypeID;
+                    channel.MeasurementCharacteristicID = measurementCharacteristicID;
+                    channel.PhaseID = phaseID;
+
+                    dataContext.Table<Channel>().UpdateRecord(channel);
+
+                    PQMarkRestrictedAttribute attribute;
+                    if (typeof(Channel).TryGetAttribute(out attribute))
+                        dataContext.Connection.ExecuteNonQuery("INSERT INTO [PQMarkRestrictedTableUserAccount] (PrimaryID, TableName, UserAccount) VALUES ({0}, 'Channel', {1})", channel, Thread.CurrentPrincipal.Identity.Name);
+
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            Log.Info($"Added record to Channel table");
+            return Ok();
+        }
+
 
         [HttpPost]
         [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
