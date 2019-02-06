@@ -1125,6 +1125,14 @@ namespace FaultData.DataResources
 
             foreach (string point in points)
             {
+                var previousPoint = new
+                {
+                    Value = default(double),
+                    Time = default(DateTime),
+                    Status = default(string),
+                    Valid = false
+                };
+
                 int[] expectedResults =
                 {
                     (int)eDNAHistoryReturnStatus.END_OF_HISTORY,
@@ -1137,8 +1145,28 @@ namespace FaultData.DataResources
                 {
                     result = History.DnaGetNextHist(key, out double value, out DateTime time, out string status);
 
-                    if (result == 0 && value == breakerOpenValue)
-                        return true;
+                    if (result == 0)
+                    {
+                        // Verify that the data point represents a change
+                        // from closed to open within the queried time range
+                        bool trip =
+                            previousPoint.Valid &&
+                            previousPoint.Value != breakerOpenValue &&
+                            value == breakerOpenValue &&
+                            time >= startTime &&
+                            time <= endTime;
+
+                        if (trip)
+                            return true;
+
+                        previousPoint = new
+                        {
+                            Value = value,
+                            Time = time,
+                            Status = status,
+                            Valid = true
+                        };
+                    }
                 }
 
                 // Assume that unexpected return status indicates an error
