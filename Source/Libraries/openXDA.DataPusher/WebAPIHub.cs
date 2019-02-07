@@ -61,10 +61,7 @@ namespace openXDA.DataPusher
         {
             get
             {
-                using (DataContext dataContext = new DataContext("systemSettings"))
-                {
-                    return dataContext.Table<Setting>().QueryRecordWhere("Name = 'CompanyName'")?.Value ?? "Synced Remote Devices";
-                }
+                return ConfigurationFile.Open("openXDA.exe.config").Settings["systemSettings"]["CompanyAcronym"].Value;
             }
         }
 
@@ -184,7 +181,7 @@ namespace openXDA.DataPusher
             return GetRecordWhere(instance, tableName, ids, userAccount);
         }
 
-        public static IEnumerable<dynamic> GetRecordWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        public static dynamic GetRecordWhere(string instance, string tableName, string ids, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -202,6 +199,8 @@ namespace openXDA.DataPusher
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
                 dynamic record = response.Content.ReadAsAsync<dynamic>();
+                if (record.Result == null)
+                    return null;
                 return record.Result.ToObject(typeof(Meter).Assembly.GetType("openXDA.Model." + tableName));
             }
         }

@@ -89,7 +89,7 @@
 
 //}
     <div data-bind="visible: $parent.recordMode() == RecordMode.AddNew">
-        @Raw(dataContext.AddSelectField<MetersToDataPush, Meter>("MeterSelection", "ID", "AssetKey", fieldLabel: "Meter"))
+        @Raw(dataContext.AddSelectField<MetersToDataPush, Meter>("MeterSelection", "ID", "AssetKey", fieldLabel: "Meter", restriction: new GSF.Data.Model.RecordRestriction("ID NOT IN (SELECT LocalXDAMeterID FROM MetersToDataPush WHERE ID IN (SELECT MetersToDataPushID FROM RemoteXDAInstanceMeter WHERE RemoteXDAInstanceID = {0}))", int.Parse(ViewBag.XDAInstance))))
     </div>
     @Raw(dataContext.AddInputField<MetersToDataPush>("LocalXDAAssetKey", fieldLabel: "Local Asset Key", customDataBinding: "enable: false"))
     @Raw(dataContext.AddInputField<MetersToDataPush>("RemoteXDAName", fieldLabel: "Remote Name"))
