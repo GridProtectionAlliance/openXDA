@@ -22,13 +22,9 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as moment from 'moment';
 import * as _ from "lodash";
 import './../flot/jquery.flot.min.js';
-//import './../flot/jquery.flot.crosshair.min.js';
-//import './../flot/jquery.flot.navigate.min.js';
-//import './../flot/jquery.flot.selection.min.js';
 import './../flot/jquery.flot.time.min.js';
 
 export default class LineChart extends React.Component<any, any>{

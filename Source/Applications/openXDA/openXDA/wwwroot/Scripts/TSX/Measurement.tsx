@@ -22,12 +22,9 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from "lodash";
 import PeriodicDataDisplayService from './../TS/Services/PeriodicDataDisplay';
-import * as moment from 'moment';
 import Legend from "./Legend";
-import * as stats from 'stats-lite';
 import DistributionPlot from './DistributionPlot';
 import SummaryStat from './SummaryStat';
 import LineChart from './LineChart';

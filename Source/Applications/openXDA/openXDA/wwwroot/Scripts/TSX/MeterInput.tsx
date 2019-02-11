@@ -22,11 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import PeriodicDataDisplayService from './../TS/Services/PeriodicDataDisplay';
-import createHistory from "history/createBrowserHistory"
-import * as queryString from "query-string";
-import * as moment from 'moment';
 import * as _ from "lodash";
 
 declare var meters: Array<{ ID: number, Name: string }>;

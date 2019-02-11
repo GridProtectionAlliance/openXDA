@@ -32,8 +32,6 @@ import MeterInput from './MeterInput';
 import 'react-datetime/css/react-datetime.css';
 import * as DateTime from "react-datetime";
 import * as Plot from 'react-plotly.js';
-import * as Plotly from 'plotly.js';
-import * as stats from 'stats-lite';
 
 
 declare var phases: Array<{ID: number, Name: string }>;

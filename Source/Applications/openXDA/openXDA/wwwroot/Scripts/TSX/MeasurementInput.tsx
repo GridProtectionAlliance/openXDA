@@ -22,11 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import TrendingDataDisplayService from './../TS/Services/TrendingDataDisplay';
-import createHistory from "history/createBrowserHistory"
-import * as queryString from "query-string";
-import * as moment from 'moment';
 import * as _ from "lodash";
 
 export default class MeasurementInput extends React.Component<any, any>{

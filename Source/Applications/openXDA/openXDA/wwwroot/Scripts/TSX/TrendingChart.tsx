@@ -22,8 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import * as moment from 'moment';
+ import * as moment from 'moment';
 import * as _ from "lodash";
 import './../flot/jquery.flot.min.js';
 import './../flot/jquery.flot.crosshair.min.js';
