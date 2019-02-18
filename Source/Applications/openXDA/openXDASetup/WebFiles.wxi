@@ -3,6 +3,9 @@
   <Component Id="wwwroot_index_cshtml">
     <File Id="wwwroot_index.cshtml" Name="index.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\index.cshtml" />
   </Component>
+  <Component Id="wwwroot_Layout_cshtml">
+    <File Id="wwwroot_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Layout.cshtml" />
+  </Component>
   <Component Id="wwwroot_OpenSEE_cshtml">
     <File Id="wwwroot_OpenSEE.cshtml" Name="OpenSEE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEE.cshtml" />
   </Component>
@@ -11,6 +14,9 @@
   </Component>
   <Component Id="wwwroot_OpenSTE_cshtml">
     <File Id="wwwroot_OpenSTE.cshtml" Name="OpenSTE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSTE.cshtml" />
+  </Component>
+  <Component Id="wwwroot_RestoreEventEmail_cshtml">
+    <File Id="wwwroot_RestoreEventEmail.cshtml" Name="RestoreEventEmail.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\RestoreEventEmail.cshtml" />
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Assets_Components" Directory="wwwroot_ASSETSFOLDER">
@@ -108,6 +114,9 @@
   </Component>
   <Component Id="wwwroot_Config_Layout_cshtml">
     <File Id="wwwroot_Config_Layout.cshtml" Name="Layout.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Layout.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Config_LineAssetGroupView_cshtml">
+    <File Id="wwwroot_Config_LineAssetGroupView.cshtml" Name="LineAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\LineAssetGroupView.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_MeterAssetGroupView_cshtml">
     <File Id="wwwroot_Config_MeterAssetGroupView.cshtml" Name="MeterAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\MeterAssetGroupView.cshtml" />
@@ -485,6 +494,9 @@
   <Component Id="wwwroot_Images_dDReports_png">
     <File Id="wwwroot_Images_dDReports.png" Name="dD Reports.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Reports.png" />
   </Component>
+  <Component Id="wwwroot_Images_dDTools_png">
+    <File Id="wwwroot_Images_dDTools.png" Name="dD Tools.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Tools.png" />
+  </Component>
   <Component Id="wwwroot_Images_dDWorkbenchold_png">
     <File Id="wwwroot_Images_dDWorkbenchold.png" Name="dD Workbench old.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\dD Workbench old.png" />
   </Component>
@@ -712,6 +724,12 @@
   </Component>
   <Component Id="wwwroot_Scripts_Site_js">
     <File Id="wwwroot_Scripts_Site.js" Name="Site.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\Site.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_SpectralDataDisplay_js">
+    <File Id="wwwroot_Scripts_SpectralDataDisplay.js" Name="SpectralDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\SpectralDataDisplay.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_SpectralDataDisplay_js_map">
+    <File Id="wwwroot_Scripts_SpectralDataDisplay.js.map" Name="SpectralDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\SpectralDataDisplay.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_spin_js">
     <File Id="wwwroot_Scripts_spin.js" Name="spin.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\spin.js" />
@@ -3939,17 +3957,14 @@
   <Component Id="wwwroot_Scripts_TS_Services_DataQualitySummary_ts">
     <File Id="wwwroot_Scripts_TS_Services_DataQualitySummary.ts" Name="DataQualitySummary.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\DataQualitySummary.ts" />
   </Component>
-  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_js">
-    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_js_map">
-    <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.js.map" Name="PeriodicDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay_ts">
     <File Id="wwwroot_Scripts_TS_Services_PeriodicDataDisplay.ts" Name="PeriodicDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PeriodicDataDisplay.ts" />
   </Component>
   <Component Id="wwwroot_Scripts_TS_Services_PQTrendingWebReport_ts">
     <File Id="wwwroot_Scripts_TS_Services_PQTrendingWebReport.ts" Name="PQTrendingWebReport.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\PQTrendingWebReport.ts" />
+  </Component>
+  <Component Id="wwwroot_Scripts_TS_Services_SpectralDataDisplay_ts">
+    <File Id="wwwroot_Scripts_TS_Services_SpectralDataDisplay.ts" Name="SpectralDataDisplay.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\SpectralDataDisplay.ts" />
   </Component>
   <Component Id="wwwroot_Scripts_TS_Services_StepChangeWebReport_ts">
     <File Id="wwwroot_Scripts_TS_Services_StepChangeWebReport.ts" Name="StepChangeWebReport.ts" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TS\Services\StepChangeWebReport.ts" />
@@ -3968,38 +3983,14 @@
   <Component Id="wwwroot_Scripts_TSX_DateTimeRangePicker_tsx">
     <File Id="wwwroot_Scripts_TSX_DateTimeRangePicker.tsx" Name="DateTimeRangePicker.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DateTimeRangePicker.tsx" />
   </Component>
-  <Component Id="wwwroot_Scripts_TSX_DistributionPlot_js">
-    <File Id="wwwroot_Scripts_TSX_DistributionPlot.js" Name="DistributionPlot.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_DistributionPlot_js_map">
-    <File Id="wwwroot_Scripts_TSX_DistributionPlot.js.map" Name="DistributionPlot.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_TSX_DistributionPlot_tsx">
     <File Id="wwwroot_Scripts_TSX_DistributionPlot.tsx" Name="DistributionPlot.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\DistributionPlot.tsx" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_Legend_js">
-    <File Id="wwwroot_Scripts_TSX_Legend.js" Name="Legend.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_Legend_js_map">
-    <File Id="wwwroot_Scripts_TSX_Legend.js.map" Name="Legend.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_TSX_Legend_tsx">
     <File Id="wwwroot_Scripts_TSX_Legend.tsx" Name="Legend.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Legend.tsx" />
   </Component>
-  <Component Id="wwwroot_Scripts_TSX_LineChart_js">
-    <File Id="wwwroot_Scripts_TSX_LineChart.js" Name="LineChart.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\LineChart.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_LineChart_js_map">
-    <File Id="wwwroot_Scripts_TSX_LineChart.js.map" Name="LineChart.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\LineChart.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_TSX_LineChart_tsx">
     <File Id="wwwroot_Scripts_TSX_LineChart.tsx" Name="LineChart.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\LineChart.tsx" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_Measurement_js">
-    <File Id="wwwroot_Scripts_TSX_Measurement.js" Name="Measurement.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_Measurement_js_map">
-    <File Id="wwwroot_Scripts_TSX_Measurement.js.map" Name="Measurement.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_TSX_Measurement_tsx">
     <File Id="wwwroot_Scripts_TSX_Measurement.tsx" Name="Measurement.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Measurement.tsx" />
@@ -4007,20 +3998,8 @@
   <Component Id="wwwroot_Scripts_TSX_MeasurementInput_tsx">
     <File Id="wwwroot_Scripts_TSX_MeasurementInput.tsx" Name="MeasurementInput.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeasurementInput.tsx" />
   </Component>
-  <Component Id="wwwroot_Scripts_TSX_MeterInput_js">
-    <File Id="wwwroot_Scripts_TSX_MeterInput.js" Name="MeterInput.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeterInput.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_MeterInput_js_map">
-    <File Id="wwwroot_Scripts_TSX_MeterInput.js.map" Name="MeterInput.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeterInput.js.map" />
-  </Component>
   <Component Id="wwwroot_Scripts_TSX_MeterInput_tsx">
     <File Id="wwwroot_Scripts_TSX_MeterInput.tsx" Name="MeterInput.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\MeterInput.tsx" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_js">
-    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.js" Name="PeriodicDataDisplay.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_js_map">
-    <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.js.map" Name="PeriodicDataDisplay.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_TSX_PeriodicDataDisplay_tsx">
     <File Id="wwwroot_Scripts_TSX_PeriodicDataDisplay.tsx" Name="PeriodicDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\PeriodicDataDisplay.tsx" />
@@ -4034,14 +4013,11 @@
   <Component Id="wwwroot_Scripts_TSX_Select_tsx">
     <File Id="wwwroot_Scripts_TSX_Select.tsx" Name="Select.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\Select.tsx" />
   </Component>
+  <Component Id="wwwroot_Scripts_TSX_SpectralDataDisplay_tsx">
+    <File Id="wwwroot_Scripts_TSX_SpectralDataDisplay.tsx" Name="SpectralDataDisplay.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SpectralDataDisplay.tsx" />
+  </Component>
   <Component Id="wwwroot_Scripts_TSX_StepChangeWebReport_tsx">
     <File Id="wwwroot_Scripts_TSX_StepChangeWebReport.tsx" Name="StepChangeWebReport.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\StepChangeWebReport.tsx" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_SummaryStat_js">
-    <File Id="wwwroot_Scripts_TSX_SummaryStat.js" Name="SummaryStat.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.js" />
-  </Component>
-  <Component Id="wwwroot_Scripts_TSX_SummaryStat_js_map">
-    <File Id="wwwroot_Scripts_TSX_SummaryStat.js.map" Name="SummaryStat.js.map" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.js.map" />
   </Component>
   <Component Id="wwwroot_Scripts_TSX_SummaryStat_tsx">
     <File Id="wwwroot_Scripts_TSX_SummaryStat.tsx" Name="SummaryStat.tsx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\TSX\SummaryStat.tsx" />
@@ -4131,6 +4107,9 @@
   </Component>
   <Component Id="wwwroot_WorkBench_SiteSummary_cshtml">
     <File Id="wwwroot_WorkBench_SiteSummary.cshtml" Name="SiteSummary.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SiteSummary.cshtml" />
+  </Component>
+  <Component Id="wwwroot_WorkBench_SpectralDataDisplay_cshtml">
+    <File Id="wwwroot_WorkBench_SpectralDataDisplay.cshtml" Name="SpectralDataDisplay.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\SpectralDataDisplay.cshtml" />
   </Component>
   <Component Id="wwwroot_WorkBench_StepChangeWebReport_cshtml">
     <File Id="wwwroot_WorkBench_StepChangeWebReport.cshtml" Name="StepChangeWebReport.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\WorkBench\StepChangeWebReport.cshtml" />
