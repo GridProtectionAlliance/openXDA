@@ -449,13 +449,13 @@ namespace openXDA.Hubs
             foreach (LineAssetGroup record in records)
             {
                 if (!lines.Contains(record.LineID.ToString()))
-                    DataContext.Table<MeterAssetGroup>().DeleteRecord(record.ID);
+                    DataContext.Table<LineAssetGroup>().DeleteRecord(record.ID);
             }
 
             foreach (string line in lines)
             {
                 if (!records.Any(record => record.LineID == int.Parse(line)))
-                    DataContext.Table<MeterAssetGroup>().AddNewRecord(new MeterAssetGroup() { AssetGroupID = groupID, MeterID = int.Parse(line) });
+                    DataContext.Table<LineAssetGroup>().AddNewRecord(new LineAssetGroup() { AssetGroupID = groupID, LineID = int.Parse(line) });
             }
         }
 
