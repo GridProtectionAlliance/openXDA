@@ -40,6 +40,6 @@ namespace openXDA.Model
         public double? VMin { get; set; }
         public double? VMax { get; set; }
         public double? I2t { get; set; }
-
+        public double? InitialMW { get; set; }
     }
 }

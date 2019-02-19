@@ -101,6 +101,9 @@ namespace FaultData.DataOperations
                     double? vMin = voltageDataPoints.Min(dp => dp?.Value);
                     double? vMax = voltageDataPoints.Max(dp => dp?.Value);
                     double? i2t = null;
+                    double? initialMWA = (viCycleDataGroup.IA?.RMS.DataPoints.First().Value ?? 0 ) * (viCycleDataGroup.VA?.RMS.DataPoints.First().Value ?? 0);
+                    double? initialMWB = (viCycleDataGroup.IB?.RMS.DataPoints.First().Value ?? 0 ) * (viCycleDataGroup.VB?.RMS.DataPoints.First().Value ?? 0);
+                    double? initialMWC = (viCycleDataGroup.IC?.RMS.DataPoints.First().Value ?? 0 ) * (viCycleDataGroup.VC?.RMS.DataPoints.First().Value ?? 0);
 
                     if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out DataAnalysis.FaultGroup faultGroup))
                         i2t = CalcI2t(faultGroup, viCycleDataGroup);
@@ -112,7 +115,8 @@ namespace FaultData.DataOperations
                         IMin = iMin,
                         VMax = vMax,
                         VMin = vMin,
-                        I2t = i2t
+                        I2t = i2t,
+                        InitialMW = initialMWA + initialMWB + initialMWC
                     });
                 }
             }

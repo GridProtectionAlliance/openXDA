@@ -2505,6 +2505,7 @@ CREATE TABLE EventStat
     VMin float NULL,
     VMax float NULL,
     I2t float NULL,
+	InitialMW float NULL,
     CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
 )
 GO
