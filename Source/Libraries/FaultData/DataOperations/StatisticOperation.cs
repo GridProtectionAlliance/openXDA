@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Numerics;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -101,9 +102,7 @@ namespace FaultData.DataOperations
                     double? vMin = voltageDataPoints.Min(dp => dp?.Value);
                     double? vMax = voltageDataPoints.Max(dp => dp?.Value);
                     double? i2t = null;
-                    double? initialMWA = (viCycleDataGroup.IA?.RMS.DataPoints.First().Value ?? 0 ) * (viCycleDataGroup.VA?.RMS.DataPoints.First().Value ?? 0);
-                    double? initialMWB = (viCycleDataGroup.IB?.RMS.DataPoints.First().Value ?? 0 ) * (viCycleDataGroup.VB?.RMS.DataPoints.First().Value ?? 0);
-                    double? initialMWC = (viCycleDataGroup.IC?.RMS.DataPoints.First().Value ?? 0 ) * (viCycleDataGroup.VC?.RMS.DataPoints.First().Value ?? 0);
+                    double initialMW = CalcInitialMW(viCycleDataGroup);
 
                     if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out DataAnalysis.FaultGroup faultGroup))
                         i2t = CalcI2t(faultGroup, viCycleDataGroup);
@@ -116,7 +115,7 @@ namespace FaultData.DataOperations
                         VMax = vMax,
                         VMin = vMin,
                         I2t = i2t,
-                        InitialMW = initialMWA + initialMWB + initialMWC
+                        InitialMW = initialMW
                     });
                 }
             }
@@ -148,6 +147,17 @@ namespace FaultData.DataOperations
             }
 
             return (i2t != 0 ? i2t : (double?)null);
+        }
+
+        private double CalcInitialMW(VICycleDataGroup viCycleDataGroup) {
+            Complex va = Complex.FromPolarCoordinates(viCycleDataGroup.VA.RMS.DataPoints.First().Value, viCycleDataGroup.VA.Phase.DataPoints.First().Value);
+            Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.First().Value, viCycleDataGroup.IA.Phase.DataPoints.First().Value));
+            Complex vb = Complex.FromPolarCoordinates(viCycleDataGroup.VB.RMS.DataPoints.First().Value, viCycleDataGroup.VB.Phase.DataPoints.First().Value);
+            Complex ib = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IB.RMS.DataPoints.First().Value, viCycleDataGroup.IB.Phase.DataPoints.First().Value));
+            Complex vc = Complex.FromPolarCoordinates(viCycleDataGroup.VC.RMS.DataPoints.First().Value, viCycleDataGroup.VC.Phase.DataPoints.First().Value);
+            Complex ic = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IC.RMS.DataPoints.First().Value, viCycleDataGroup.IC.Phase.DataPoints.First().Value));
+
+            return (va*ia + vb*ib  + vc*ic).Real;
         }
     }
 
