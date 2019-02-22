@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataResources;
 using FaultData.DataSets;
@@ -58,7 +59,7 @@ namespace FaultData.DataOperations
 
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<EventStat> eventStatTable = new TableOperations<EventStat>(connection);
-
+                
                 for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
                 {
                     const string Filter =
@@ -103,9 +104,18 @@ namespace FaultData.DataOperations
                     double? vMax = voltageDataPoints.Max(dp => dp?.Value);
                     double? i2t = null;
                     double initialMW = CalcInitialMW(viCycleDataGroup);
-
                     if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out DataAnalysis.FaultGroup faultGroup))
                         i2t = CalcI2t(faultGroup, viCycleDataGroup);
+
+
+                    int? pqviewID = null;
+                    if (meterDataSet.FilePath.Contains("\\pqview4\\events\\")) {
+                        Regex pattern = new Regex(@"^\\pqview4\\events\\PQView4 \d+\\\d+T\d+-(?<PQViewID>\d+).pqd$");
+                        Match match = pattern.Match(meterDataSet.FilePath);
+                        string str = match.Groups["PQViewID"].Value;
+                        if(str != null)
+                            pqviewID = int.Parse(str);
+                    }
 
                     eventStatTable.AddNewRecord(new EventStat()
                     {
@@ -115,7 +125,8 @@ namespace FaultData.DataOperations
                         VMax = vMax,
                         VMin = vMin,
                         I2t = i2t,
-                        InitialMW = initialMW
+                        InitialMW = initialMW,
+                        PQViewID = pqviewID
                     });
                 }
             }
