@@ -147,7 +147,10 @@ namespace FaultData.DataOperations
                 if (eventTable.QueryRecordCountWhere("StartTime = {0} AND EndTime = {1} AND Samples = {2} AND MeterID = {3} AND LineID = {4}", startTime2, endTime2, dataGroup.Samples, meterDataSet.Meter.ID, line.ID) > 0)
                     continue;
 
-                EventType eventType = eventTypeTable.GetOrAdd(eventClassification.ToString());
+                TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
+                int maintenanceWindowCount = maintenanceWindowTable.QueryRecordCountWhere("MeterID = {0} AND (StartTime IS NULL OR StartTime <= {1}) AND (EndTime IS NULL OR EndTime >= {1})", meterDataSet.Meter.ID, DateTime.UtcNow);
+                string eventTypeName = (maintenanceWindowCount == 0) ? eventClassification.ToString() : "Test";
+                EventType eventType = eventTypeTable.GetOrAdd(eventTypeName);
 
                 Event evt = new Event()
                 {
