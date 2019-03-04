@@ -104,6 +104,8 @@ namespace FaultData.DataOperations
                     double? vMax = voltageDataPoints.Max(dp => dp?.Value);
                     double? i2t = null;
                     double initialMW = CalcInitialMW(viCycleDataGroup);
+                    double finalMW = CalcFinalMW(viCycleDataGroup);
+
                     if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out DataAnalysis.FaultGroup faultGroup))
                         i2t = CalcI2t(faultGroup, viCycleDataGroup);
 
@@ -126,6 +128,7 @@ namespace FaultData.DataOperations
                         VMin = vMin,
                         I2t = i2t,
                         InitialMW = initialMW,
+                        FinalMW = finalMW,
                         PQViewID = pqviewID
                     });
                 }
@@ -170,6 +173,19 @@ namespace FaultData.DataOperations
 
             return (va*ia + vb*ib  + vc*ic).Real;
         }
+
+        private double CalcFinalMW(VICycleDataGroup viCycleDataGroup)
+        {
+            Complex va = Complex.FromPolarCoordinates(viCycleDataGroup.VA.RMS.DataPoints.Last().Value, viCycleDataGroup.VA.Phase.DataPoints.Last().Value);
+            Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.Last().Value, viCycleDataGroup.IA.Phase.DataPoints.Last().Value));
+            Complex vb = Complex.FromPolarCoordinates(viCycleDataGroup.VB.RMS.DataPoints.Last().Value, viCycleDataGroup.VB.Phase.DataPoints.Last().Value);
+            Complex ib = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IB.RMS.DataPoints.Last().Value, viCycleDataGroup.IB.Phase.DataPoints.Last().Value));
+            Complex vc = Complex.FromPolarCoordinates(viCycleDataGroup.VC.RMS.DataPoints.Last().Value, viCycleDataGroup.VC.Phase.DataPoints.Last().Value);
+            Complex ic = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IC.RMS.DataPoints.Last().Value, viCycleDataGroup.IC.Phase.DataPoints.Last().Value));
+
+            return (va * ia + vb * ib + vc * ic).Real;
+        }
+
     }
 
 }

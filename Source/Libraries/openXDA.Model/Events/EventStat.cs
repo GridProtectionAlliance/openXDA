@@ -41,6 +41,7 @@ namespace openXDA.Model
         public double? VMax { get; set; }
         public double? I2t { get; set; }
         public double? InitialMW { get; set; }
+        public double? FinalMW { get; set; }
         public int? PQViewID { get; set; }
     }
 }
