@@ -195,22 +195,22 @@ namespace FaultData.DataOperations
 
         private double CalcInitialLLMW(VICycleDataGroup viCycleDataGroup)
         {
-            Complex vac = Complex.FromPolarCoordinates(viCycleDataGroup.VCA.RMS.DataPoints.First().Value, viCycleDataGroup.VCA.Phase.DataPoints.First().Value);
+            Complex vca = Complex.FromPolarCoordinates(viCycleDataGroup.VCA.RMS.DataPoints.First().Value, viCycleDataGroup.VCA.Phase.DataPoints.First().Value);
             Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.First().Value, viCycleDataGroup.IA.Phase.DataPoints.First().Value));
             Complex vbc = Complex.FromPolarCoordinates(viCycleDataGroup.VBC.RMS.DataPoints.First().Value, viCycleDataGroup.VBC.Phase.DataPoints.First().Value);
             Complex ib = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IB.RMS.DataPoints.First().Value, viCycleDataGroup.IB.Phase.DataPoints.First().Value));
 
-            return (vac * ia + vbc * ib).Real / 1E6;
+            return (-1*vca * ia + vbc * ib).Real / 1E6;
         }
 
         private double CalcFinalLLMW(VICycleDataGroup viCycleDataGroup)
         {
-            Complex vac = Complex.FromPolarCoordinates(viCycleDataGroup.VCA.RMS.DataPoints.Last().Value, viCycleDataGroup.VCA.Phase.DataPoints.Last().Value);
+            Complex vca = Complex.FromPolarCoordinates(viCycleDataGroup.VCA.RMS.DataPoints.Last().Value, viCycleDataGroup.VCA.Phase.DataPoints.Last().Value);
             Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.Last().Value, viCycleDataGroup.IA.Phase.DataPoints.Last().Value));
             Complex vbc = Complex.FromPolarCoordinates(viCycleDataGroup.VBC.RMS.DataPoints.Last().Value, viCycleDataGroup.VBC.Phase.DataPoints.Last().Value);
             Complex ib = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IB.RMS.DataPoints.Last().Value, viCycleDataGroup.IB.Phase.DataPoints.Last().Value));
 
-            return (vac * ia + vbc * ib).Real / 1E6;
+            return (-1 * vca * ia + vbc * ib).Real / 1E6;
         }
 
 
