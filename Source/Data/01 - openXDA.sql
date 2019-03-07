@@ -372,10 +372,10 @@ GO
 
 CREATE TABLE MaintenanceWindow
 (
-	ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-	MeterID INT NOT NULL REFERENCES Meter(ID),
-	StartTime DATETIME,
-	EndTime DATETIME
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    MeterID INT NOT NULL REFERENCES Meter(ID),
+    StartTime DATETIME,
+    EndTime DATETIME
 )
 GO
 
@@ -447,9 +447,9 @@ GO
 
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.StatisticOperation', 10)
 GO
+
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataPusherOperation', 11)
 GO
-
 
 INSERT INTO AssetGroup(Name) VALUES('AllAssets')
 GO
@@ -1922,8 +1922,9 @@ GO
 CREATE TABLE StepChangeMeasurement(
     ID INT PRIMARY KEY IDENTITY(1,1),
     PQMeasurementID INT FOREIGN KEY REFERENCES PQMeasurement(ID) NOT NULL,
-    Setting float NULL
+    Setting FLOAT NULL
 )
+GO
 
 CREATE NONCLUSTERED INDEX IX_StepChangeMeasurement_PQMeasurement
 ON StepChangeMeasurement(PQMeasurementID ASC)
@@ -1934,8 +1935,9 @@ CREATE TABLE StepChangeStat(
     MeterID INT FOREIGN KEY REFERENCES Meter(ID) NOT NULL,
     Date Date NOT NULL,
     StepChangeMeasurementID INT FOREIGN KEY REFERENCES StepChangeMeasurement(ID) NOT NULL,
-    Value float NULL
+    Value FLOAT NULL
 )
+GO
 
 CREATE NONCLUSTERED INDEX IX_StepChangeStat_Date
 ON StepChangeStat(Date ASC)
@@ -2514,8 +2516,8 @@ CREATE TABLE EventStat
     VMin float NULL,
     VMax float NULL,
     I2t float NULL,
-	InitialMW float NULL,
-	FinalMW float NULL,
+    InitialMW float NULL,
+    FinalMW float NULL,
     CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
 )
 GO

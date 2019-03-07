@@ -196,7 +196,6 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('StepChangeWebReport.Verbose', 'False', 'False')
 GO
 
-
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('SystemFrequency', '60.0', '60.0')
 GO
 
