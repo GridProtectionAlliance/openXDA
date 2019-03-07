@@ -2647,6 +2647,45 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ MaintenanceWindow Table Operations ]
+
+        public MaintenanceWindow GetMaintenanceWindow(int meterID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
+                maintenanceWindowTable.DeleteRecordWhere("EndTime IS NOT NULL AND EndTime < {0}", DateTime.UtcNow);
+                return maintenanceWindowTable.QueryRecordWhere("MeterID = {0}", meterID);
+            }
+        }
+
+        public void SetMaintenanceWindow(int meterID, DateTime? startTime, DateTime? endTime)
+        {
+            MaintenanceWindow maintenanceWindow = new MaintenanceWindow()
+            {
+                MeterID = meterID,
+                StartTime = startTime,
+                EndTime = endTime
+            };
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
+                maintenanceWindowTable.DeleteRecordWhere("MeterID = {0}", meterID);
+                maintenanceWindowTable.AddNewRecord(maintenanceWindow);
+            }
+        }
+
+        public void ClearMaintenanceWindow(int meterID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
+                maintenanceWindowTable.DeleteRecordWhere("MeterID = {0}", meterID);
+            }
+        }
+
+        #endregion
 
         #endregion
 
