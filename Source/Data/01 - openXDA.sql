@@ -3923,7 +3923,7 @@ SELECT
     FaultSummary.Distance AS SingleEndedDistance,
     DoubleEndedFaultSummary.Distance AS DoubleEndedDistance,
     DoubleEndedFaultSummary.Angle AS DoubleEndedAngle,
-    RIGHT(DataFile.FilePath, CHARINDEX(''\'', REVERSE(DataFile.FilePath)) - 1) AS FileName,
+    RIGHT(DataFile.FilePath, CHARINDEX(CHAR(92), REVERSE(DataFile.FilePath)) - 1) AS FileName,
     FaultSummary.EventID,
     Event.StartTime AS EventStartTime,
     SimpleSummary.Distance AS Simple,
