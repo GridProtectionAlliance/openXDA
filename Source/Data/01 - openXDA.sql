@@ -3915,8 +3915,8 @@ SELECT
     FaultSummary.Inception,
     FaultSummary.DurationCycles,
     FaultSummary.DurationSeconds * 1000.0 AS DurationMilliseconds,
-    FaultSummary.PrefaultCurrent,
-    FaultSummary.PostfaultCurrent,
+    CASE WHEN FaultSummary.PrefaultCurrent <> -1E308 THEN FORMAT(FaultSummary.PrefaultCurrent, ''0.##########'') ELSE ''NaN'' END AS PrefaultCurrent,
+    CASE WHEN FaultSummary.PostfaultCurrent <> -1E308 THEN FORMAT(FaultSummary.PostfaultCurrent, ''0.##########'') ELSE ''NaN'' END AS PostfaultCurrent,
     FaultSummary.ReactanceRatio,
     FaultSummary.CurrentMagnitude AS FaultCurrent,
     FaultSummary.Algorithm,
@@ -3932,10 +3932,12 @@ SELECT
 INTO #summaryData
 FROM
     #lineEvent Event JOIN
+    EventType ON
+        Event.EventTypeID = EventType.ID AND
+        EventType.Name = ''Fault'' JOIN
     FaultSummary ON
         FaultSummary.EventID = Event.ID AND
-        FaultSummary.IsSelectedAlgorithm <> 0 AND
-        FaultSummary.IsSuppressed = 0 LEFT OUTER JOIN
+        FaultSummary.IsSelectedAlgorithm <> 0 JOIN
     FaultSummary SimpleSummary ON
         FaultSummary.EventID = SimpleSummary.EventID AND
         FaultSummary.Inception = SimpleSummary.Inception AND
