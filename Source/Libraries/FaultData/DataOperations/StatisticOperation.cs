@@ -103,8 +103,8 @@ namespace FaultData.DataOperations
                     double? vMin = voltageDataPoints.Min(dp => dp?.Value);
                     double? vMax = voltageDataPoints.Max(dp => dp?.Value);
                     double? i2t = null;
-                    double initialMW = CalcMW(viCycleDataGroup, true);
-                    double finalMW = CalcMW(viCycleDataGroup, false);
+                    double? initialMW = CalcMW(viCycleDataGroup, true);
+                    double? finalMW = CalcMW(viCycleDataGroup, false);
 
                     if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out DataAnalysis.FaultGroup faultGroup))
                         i2t = CalcI2t(faultGroup, viCycleDataGroup);
@@ -163,14 +163,18 @@ namespace FaultData.DataOperations
             return (i2t != 0 ? i2t : (double?)null);
         }
 
-        private double CalcMW(VICycleDataGroup viCycleDataGroup, bool initial) {
+        private double? CalcMW(VICycleDataGroup viCycleDataGroup, bool initial) {
+            if (viCycleDataGroup.IA == null || viCycleDataGroup.IB == null || viCycleDataGroup.IC == null) return null;
+
             if (viCycleDataGroup.VA.RMS.DataPoints.Any() && initial) return CalcInitialLGMW(viCycleDataGroup);
             else if (!viCycleDataGroup.VA.RMS.DataPoints.Any() && initial) return CalcInitialLLMW(viCycleDataGroup);
             else if (viCycleDataGroup.VA.RMS.DataPoints.Any() && !initial) return CalcFinalLGMW(viCycleDataGroup);
             else return CalcFinalLLMW(viCycleDataGroup);
         }
 
-        private double CalcInitialLGMW(VICycleDataGroup viCycleDataGroup) {
+        private double? CalcInitialLGMW(VICycleDataGroup viCycleDataGroup) {
+            if (viCycleDataGroup.VA == null || viCycleDataGroup.VB == null || viCycleDataGroup.VC == null) return null;
+
             Complex va = Complex.FromPolarCoordinates(viCycleDataGroup.VA.RMS.DataPoints.First().Value, viCycleDataGroup.VA.Phase.DataPoints.First().Value);
             Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.First().Value, viCycleDataGroup.IA.Phase.DataPoints.First().Value));
             Complex vb = Complex.FromPolarCoordinates(viCycleDataGroup.VB.RMS.DataPoints.First().Value, viCycleDataGroup.VB.Phase.DataPoints.First().Value);
@@ -181,8 +185,10 @@ namespace FaultData.DataOperations
             return (va*ia + vb*ib  + vc*ic).Real / 1E6;
         }
 
-        private double CalcFinalLGMW(VICycleDataGroup viCycleDataGroup)
+        private double? CalcFinalLGMW(VICycleDataGroup viCycleDataGroup)
         {
+            if (viCycleDataGroup.VA == null || viCycleDataGroup.VB == null || viCycleDataGroup.VC == null) return null;
+
             Complex va = Complex.FromPolarCoordinates(viCycleDataGroup.VA.RMS.DataPoints.Last().Value, viCycleDataGroup.VA.Phase.DataPoints.Last().Value);
             Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.Last().Value, viCycleDataGroup.IA.Phase.DataPoints.Last().Value));
             Complex vb = Complex.FromPolarCoordinates(viCycleDataGroup.VB.RMS.DataPoints.Last().Value, viCycleDataGroup.VB.Phase.DataPoints.Last().Value);
@@ -193,8 +199,10 @@ namespace FaultData.DataOperations
             return (va * ia + vb * ib + vc * ic).Real / 1E6;
         }
 
-        private double CalcInitialLLMW(VICycleDataGroup viCycleDataGroup)
+        private double? CalcInitialLLMW(VICycleDataGroup viCycleDataGroup)
         {
+            if (viCycleDataGroup.VCA == null || viCycleDataGroup.VBC == null) return null;
+
             Complex vca = Complex.FromPolarCoordinates(viCycleDataGroup.VCA.RMS.DataPoints.First().Value, viCycleDataGroup.VCA.Phase.DataPoints.First().Value);
             Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.First().Value, viCycleDataGroup.IA.Phase.DataPoints.First().Value));
             Complex vbc = Complex.FromPolarCoordinates(viCycleDataGroup.VBC.RMS.DataPoints.First().Value, viCycleDataGroup.VBC.Phase.DataPoints.First().Value);
@@ -203,8 +211,10 @@ namespace FaultData.DataOperations
             return (-1*vca * ia + vbc * ib).Real / 1E6;
         }
 
-        private double CalcFinalLLMW(VICycleDataGroup viCycleDataGroup)
+        private double? CalcFinalLLMW(VICycleDataGroup viCycleDataGroup)
         {
+            if (viCycleDataGroup.VCA == null || viCycleDataGroup.VBC == null) return null;
+
             Complex vca = Complex.FromPolarCoordinates(viCycleDataGroup.VCA.RMS.DataPoints.Last().Value, viCycleDataGroup.VCA.Phase.DataPoints.Last().Value);
             Complex ia = Complex.Conjugate(Complex.FromPolarCoordinates(viCycleDataGroup.IA.RMS.DataPoints.Last().Value, viCycleDataGroup.IA.Phase.DataPoints.Last().Value));
             Complex vbc = Complex.FromPolarCoordinates(viCycleDataGroup.VBC.RMS.DataPoints.Last().Value, viCycleDataGroup.VBC.Phase.DataPoints.Last().Value);

@@ -2518,6 +2518,7 @@ CREATE TABLE EventStat
     I2t float NULL,
     InitialMW float NULL,
     FinalMW float NULL,
+	PQViewID int null,
     CONSTRAINT UC_EventStat_EventID UNIQUE(EventID)
 )
 GO
