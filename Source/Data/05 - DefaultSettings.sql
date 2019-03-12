@@ -88,6 +88,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.PrefaultTriggerAdjustment', '50.0', '50.0')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.FaultCalculationCycleMethod', 'MaxCurrent', 'MaxCurrent')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.UseDefaultFaultDetectionLogic', 'True', 'True')
 GO
 
