@@ -1243,22 +1243,24 @@ namespace FaultData.DataResources
 
         private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
         {
-            double ia;
-            double ib;
-            double ic;
-            double sum;
+            switch (FaultLocationSettings.FaultCalculationCycleMethod)
+            {
+                default:
+                case FaultCalculationCycleMethod.MaxCurrent:
+                    return GetCycleWithMaximumCurrent(fault, viCycleDataGroup, samplesPerCycle);
 
-            double max;
-            int maxIndex;
+                case FaultCalculationCycleMethod.LastFaultedCycle:
+                    return GetLastFaultedCycle(fault);
+            }
+        }
 
-            int startSample;
-            int endSample;
-
+        private int GetCycleWithMaximumCurrent(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
             if (!fault.Curves.Any())
                 return -1;
 
-            startSample = fault.StartSample + samplesPerCycle;
-            endSample = fault.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
+            int startSample = fault.StartSample + samplesPerCycle;
+            int endSample = fault.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
 
             if (startSample > endSample)
                 startSample = fault.StartSample;
@@ -1266,15 +1268,15 @@ namespace FaultData.DataResources
             if (startSample > endSample)
                 return -1;
 
-            max = double.MinValue;
-            maxIndex = -1;
+            double max = double.MinValue;
+            int maxIndex = -1;
 
             for (int i = startSample; i <= endSample; i++)
             {
-                ia = viCycleDataGroup.IA.RMS[i].Value;
-                ib = viCycleDataGroup.IB.RMS[i].Value;
-                ic = viCycleDataGroup.IC.RMS[i].Value;
-                sum = ia + ib + ic;
+                double ia = viCycleDataGroup.IA.RMS[i].Value;
+                double ib = viCycleDataGroup.IB.RMS[i].Value;
+                double ic = viCycleDataGroup.IC.RMS[i].Value;
+                double sum = ia + ib + ic;
 
                 if (sum > max)
                 {
@@ -1284,6 +1286,19 @@ namespace FaultData.DataResources
             }
 
             return maxIndex;
+        }
+
+        private int GetLastFaultedCycle(Fault fault)
+        {
+            if (!fault.Curves.Any())
+                return -1;
+
+            int minFaultCurveLength = fault.Curves.Min(curve => curve.Series.DataPoints.Count);
+
+            if (minFaultCurveLength == 0)
+                return -1;
+
+            return fault.StartSample + minFaultCurveLength - 1;
         }
 
         private double GetFaultCurrentMagnitude(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)

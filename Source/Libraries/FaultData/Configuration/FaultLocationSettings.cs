@@ -26,6 +26,12 @@ using System.Configuration;
 
 namespace FaultData.Configuration
 {
+    public enum FaultCalculationCycleMethod
+    {
+        MaxCurrent,
+        LastFaultedCycle
+    }
+
     public class FaultLocationSettings
     {
         #region [ Members ]
@@ -35,6 +41,7 @@ namespace FaultData.Configuration
         private double m_prefaultTriggerAdjustment;
         private double m_maxFaultDistanceMultiplier;
         private double m_minFaultDistanceMultiplier;
+        private FaultCalculationCycleMethod m_faultCalculationCycleMethod;
         private bool m_warnMissingDetectionLogic;
         private bool m_useDefaultFaultDetectionLogic;
 
@@ -95,6 +102,20 @@ namespace FaultData.Configuration
             set
             {
                 m_minFaultDistanceMultiplier = value;
+            }
+        }
+
+        [Setting]
+        [DefaultValue(FaultCalculationCycleMethod.MaxCurrent)]
+        public FaultCalculationCycleMethod FaultCalculationCycleMethod
+        {
+            get
+            {
+                return m_faultCalculationCycleMethod;
+            }
+            set
+            {
+                m_faultCalculationCycleMethod = value;
             }
         }
 
