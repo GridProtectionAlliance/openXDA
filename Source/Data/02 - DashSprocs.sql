@@ -3798,7 +3798,15 @@ BEGIN
 	DECLARE @voltageEnvelope varchar(max) = (SELECT TOP 1 Value FROM Setting WHERE Name = 'DefaultVoltageEnvelope')
 
 	SET @SQLStatement =
-	' SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate) 
+	'SELECT *
+    INTO #authMeters
+    FROM authMeters(@username)
+
+    SELECT *
+    INTO #meterSelections
+    FROM String_To_Int_Table(@MeterID, '','')
+
+    SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate)
 			 EventID, 
 			 MeterID, 
 			 Site, 
@@ -3815,8 +3823,8 @@ BEGIN
 			Phase ON Phase.ID = Disturbance.PhaseID JOIN
 			VoltageEnvelope ON VoltageEnvelope.ID = DisturbanceSeverity.VoltageEnvelopeID	
 		WHERE
-			Phase.Name = ''Worst'' AND 
-    		MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND 
+            Phase.Name = ''Worst'' AND
+            MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #meterSelections) AND
 			VoltageEnvelope.Name = COALESCE(@voltageEnvelope, ''ITIC'') AND										 
 			Event.StartTime >= @startDate AND Event.StartTime < @endDate  
 	    GROUP BY Event.MeterID,Meter.Name,SeverityCode
@@ -3878,7 +3886,15 @@ BEGIN
 	FROM (Select Name FROM EventType) AS t
 
 	SET @SQLStatement =
-	' SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate) 
+	'SELECT *
+    INTO #authMeters
+    FROM authMeters(@username)
+
+    SELECT *
+    INTO #meterSelections
+    FROM String_To_Int_Table(@MeterID, '','')
+
+    SELECT (SELECT TOP 1 ID FROM Event WHERE MeterID = pvt.MeterID AND StartTime >= @startDate AND StartTime < @endDate)
 			 EventID, 
 			 MeterID, 
 			 Site, 
@@ -3890,8 +3906,8 @@ BEGIN
 			EventType ON Event.EventTypeID = EventType.ID JOIN
 			Meter ON Event.MeterID = Meter.ID
 	       WHERE 
-    			MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '','')) AND 
-			 StartTime >= @startDate AND StartTime < @endDate  
+            MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #meterSelections) AND
+            StartTime >= @startDate AND StartTime < @endDate
 	       GROUP BY Event.MeterID,Meter.Name,EventType.Name 
 	       ) as ed 
 	 PIVOT( 
@@ -3982,6 +3998,13 @@ BEGIN
     if @context = 'second'
         SET @endDate = DATEADD(SECOND, 1, @startDate);
 
+    SELECT *
+    INTO #authMeters
+    FROM authMeters(@username)
+
+    SELECT *
+    INTO #meterSelections
+    FROM String_to_int_table(@MeterID, ',')
 
     ; WITH FaultDetail AS
     (
@@ -4011,8 +4034,8 @@ BEGIN
         WHERE
             EventType.Name = 'Fault' AND
             Event.StartTime >= @startDate AND Event.StartTime < @endDate AND
-            Meter.ID IN (SELECT * FROM  dbo.String_to_int_table(@MeterID, ',')) AND
-            Meter.ID IN (select * from authMeters(@username))
+            Meter.ID IN (SELECT * FROM #meterSelections) AND
+            Meter.ID IN (select * from #authMeters)
     )
     SELECT *
     FROM FaultDetail
@@ -4176,7 +4199,14 @@ BEGIN
     FROM (Select * FROM EASExtension) AS t
 
     SET @SQLStatement =
-    '
+    'SELECT *
+    INTO #authMeters
+    FROM authMeters(@username)
+
+    SELECT *
+    INTO #meterSelections
+    FROM String_To_Int_Table(@MeterID, '','')
+
     SELECT * INTO #temp
     FROM EVENT
     WHERE   StartTime Between @startDate AND @endDate AND
@@ -4196,7 +4226,7 @@ BEGIN
                 FOR ed.ServiceName IN(' + SUBSTRING(@PivotColumns,0, LEN(@PivotColumns)) + ')
          ) as pvt ON pvt.MeterID = Meter.ID
      WHERE
-        Meter.ID in (select * from authMeters(@username)) AND Meter.ID IN (SELECT * FROM String_To_Int_Table( @MeterID,  '',''))
+        Meter.ID in (select * from #authMeters) AND Meter.ID IN (SELECT * FROM #meterSelections)
 
      ORDER BY MeterID
      DROP Table #temp
