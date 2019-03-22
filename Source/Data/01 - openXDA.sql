@@ -3401,7 +3401,7 @@ SELECT
     FaultSummary.DurationCycles,
     (
         SELECT TOP 1
-            (1 - Disturbance.PerUnitMagnitude) * 100 AS SagDepth
+            Disturbance.PerUnitMagnitude * 100 AS SagVoltageMagnitude
         FROM
             Disturbance JOIN
             EventType ON
@@ -3414,7 +3414,7 @@ SELECT
             Disturbance.EventID = Event.ID AND
             Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
             Disturbance.EndTime >= FaultSummary.Inception
-    ) AS SagDepth,
+    ) AS SagVoltageMagnitude,
     FaultSummary.IsSelectedAlgorithm,
     EventStat.I2t,
     EventStat.VMax,
