@@ -3401,8 +3401,8 @@ SELECT
     FORMAT(FaultSummary.Distance, '0.##') + ' mi' AS [Fault Distance],
     FORMAT(FaultSummary.DurationSeconds * 1000.0, '0') + ' ms' AS [Fault Duration (ms)],
     FORMAT(FaultSummary.DurationCycles, '0.##') + ' cycles' AS [Fault Duration (c)],
-    Sag.MagnitudePercent AS [Voltage Magnitude (%)],
-    Sag.MagnitudeVolts + ' volts' AS [Voltage Magnitude (V)],
+    Sag.MagnitudePercent AS [Sag Magnitude (%)],
+    Sag.MagnitudeVolts + ' volts' AS [Sag Magnitude (V)],
     FaultSummary.Algorithm,
     EventStat.I2t,
     EventStat.VMax,
@@ -3478,7 +3478,7 @@ FROM
     (
         SELECT COALESCE(CONVERT(FLOAT,
         (
-            SELECT Value
+            SELECT TOP 1 Value
             FROM Setting
             WHERE Name = 'SystemFrequency'
         )), 60.0) AS Frequency
