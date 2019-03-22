@@ -3391,31 +3391,19 @@ GO
 -- Each user can update this to create their own scalar stat view in openSEE
 CREATE VIEW OpenSEEScalarStatView AS
 SELECT
-    Event.ID AS EventID,
+    Event.ID AS [Event ID],
     MeterLocation.Name AS Station,
     Meter.Name AS Meter,
     Line.AssetKey AS Line,
-    EventType.Name AS EventType,
-    DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime)/1000.0 AS FileDuration,
-    FaultSummary.Distance,
-    FaultSummary.DurationCycles,
-    (
-        SELECT TOP 1
-            Disturbance.PerUnitMagnitude * 100 AS SagVoltageMagnitude
-        FROM
-            Disturbance JOIN
-            EventType ON
-                Disturbance.EventTypeID = EventType.ID AND
-                EventType.Name = 'Sag' JOIN
-            Phase ON
-                Disturbance.PhaseID = Phase.ID AND
-                Phase.Name = 'Worst'
-        WHERE
-            Disturbance.EventID = Event.ID AND
-            Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
-            Disturbance.EndTime >= FaultSummary.Inception
-    ) AS SagVoltageMagnitude,
-    FaultSummary.IsSelectedAlgorithm,
+    EventType.Name AS [Event Type],
+    FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / 1000.0, '0.###') + ' seconds' AS [File Duration (s)],
+    FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / System.Frequency, '0.##') + ' cycles' AS [File Duration (c)],
+    FORMAT(FaultSummary.Distance, '0.##') + ' mi' AS [Fault Distance],
+    FORMAT(FaultSummary.DurationSeconds * 1000.0, '0') + ' ms' AS [Fault Duration (ms)],
+    FORMAT(FaultSummary.DurationCycles, '0.##') + ' cycles' AS [Fault Duration (c)],
+    Sag.MagnitudePercent AS [Voltage Magnitude (%)],
+    Sag.MagnitudeVolts + ' volts' AS [Voltage Magnitude (V)],
+    FaultSummary.Algorithm,
     EventStat.I2t,
     EventStat.VMax,
     EventStat.VMin,
@@ -3486,7 +3474,32 @@ FROM
         IR.MeasurementType = 'Current' AND
         IR.Phase = 'RES' AND
         IR.MeasurementCharacteristic = 'Instantaneous' AND
-        IR.SeriesType IN ('Values', 'Instantaneous')
+        IR.SeriesType IN ('Values', 'Instantaneous') CROSS JOIN
+    (
+        SELECT COALESCE(CONVERT(FLOAT,
+        (
+            SELECT Value
+            FROM Setting
+            WHERE Name = 'SystemFrequency'
+        )), 60.0) AS Frequency
+    ) System OUTER APPLY
+    (
+        SELECT TOP 1
+            FORMAT(Disturbance.PerUnitMagnitude * 100, '0.0') + '%' AS MagnitudePercent,
+            FORMAT(Disturbance.Magnitude, '0') AS MagnitudeVolts
+        FROM
+            Disturbance JOIN
+            EventType ON
+                Disturbance.EventTypeID = EventType.ID AND
+                EventType.Name = 'Sag' JOIN
+            Phase ON
+                Disturbance.PhaseID = Phase.ID AND
+                Phase.Name = 'Worst'
+        WHERE
+            Disturbance.EventID = Event.ID AND
+            Disturbance.StartTime <= dbo.AdjustDateTime2(FaultSummary.Inception, FaultSummary.DurationSeconds) AND
+            Disturbance.EndTime >= FaultSummary.Inception
+    ) Sag
 GO
 
 ----- PROCEDURES -----
