@@ -3391,7 +3391,7 @@ GO
 -- Each user can update this to create their own scalar stat view in openSEE
 CREATE VIEW OpenSEEScalarStatView AS
 SELECT
-    Event.ID AS [Event ID],
+    Event.ID AS EventID,
     MeterLocation.Name AS Station,
     Meter.Name AS Meter,
     Line.AssetKey AS Line,
