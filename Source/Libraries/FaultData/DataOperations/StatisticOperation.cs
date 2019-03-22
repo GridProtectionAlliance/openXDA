@@ -59,7 +59,7 @@ namespace FaultData.DataOperations
 
                 TableOperations<Event> eventTable = new TableOperations<Event>(connection);
                 TableOperations<EventStat> eventStatTable = new TableOperations<EventStat>(connection);
-                
+
                 for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
                 {
                     const string Filter =
@@ -69,6 +69,7 @@ namespace FaultData.DataOperations
                         "EndTime = {3}";
 
                     DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                    VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
                     VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
                     int fileGroupID = meterDataSet.FileGroup.ID;
                     int lineID = dataGroup.Line.ID;
@@ -80,53 +81,71 @@ namespace FaultData.DataOperations
                     if (evt == null)
                         continue;
 
-                    DataSeries[] currents = { viCycleDataGroup.IA?.RMS, viCycleDataGroup.IB?.RMS, viCycleDataGroup.IC?.RMS };
-                    DataSeries[] voltages = { viCycleDataGroup.VA?.RMS, viCycleDataGroup.VB?.RMS, viCycleDataGroup.VC?.RMS };
+                    double? vPeak = CalcVoltagePeak(viDataGroup);
+                    double? vaMax = CalcMax(viCycleDataGroup.VA?.RMS);
+                    double? vbMax = CalcMax(viCycleDataGroup.VB?.RMS);
+                    double? vcMax = CalcMax(viCycleDataGroup.VC?.RMS);
+                    double? vabMax = CalcMax(viCycleDataGroup.VAB?.RMS);
+                    double? vbcMax = CalcMax(viCycleDataGroup.VBC?.RMS);
+                    double? vcaMax = CalcMax(viCycleDataGroup.VCA?.RMS);
+                    double? vaMin = CalcMin(viCycleDataGroup.VA?.RMS);
+                    double? vbMin = CalcMin(viCycleDataGroup.VB?.RMS);
+                    double? vcMin = CalcMin(viCycleDataGroup.VC?.RMS);
+                    double? vabMin = CalcMin(viCycleDataGroup.VAB?.RMS);
+                    double? vbcMin = CalcMin(viCycleDataGroup.VBC?.RMS);
+                    double? vcaMin = CalcMin(viCycleDataGroup.VCA?.RMS);
 
-                    if (voltages.All(voltage => voltage == null))
-                        voltages = new[] { viCycleDataGroup.VAB?.RMS, viCycleDataGroup.VBC?.RMS, viCycleDataGroup.VCA?.RMS };
+                    double? iPeak = CalcPeak(new[] { viDataGroup.IA, viDataGroup.IB, viDataGroup.IC });
+                    double? iaMax = CalcMax(viCycleDataGroup.IA?.RMS);
+                    double? ibMax = CalcMax(viCycleDataGroup.IB?.RMS);
+                    double? icMax = CalcMax(viCycleDataGroup.IC?.RMS);
 
-                    List<DataPoint> currentDataPoints = currents
-                        .Where(ds => ds != null)
-                        .SelectMany(ds => ds.DataPoints)
-                        .DefaultIfEmpty(null)
-                        .ToList();
+                    double? ia2t = null;
+                    double? ib2t = null;
+                    double? ic2t = null;
 
-                    List<DataPoint> voltageDataPoints = voltages
-                        .Where(ds => ds != null)
-                        .SelectMany(ds => ds.DataPoints)
-                        .DefaultIfEmpty(null)
-                        .ToList();
-
-                    double? iMin = currentDataPoints.Min(dp => dp?.Value);
-                    double? iMax = currentDataPoints.Max(dp => dp?.Value);
-                    double? vMin = voltageDataPoints.Min(dp => dp?.Value);
-                    double? vMax = voltageDataPoints.Max(dp => dp?.Value);
-                    double? i2t = null;
                     double? initialMW = CalcMW(viCycleDataGroup, true);
                     double? finalMW = CalcMW(viCycleDataGroup, false);
 
                     if (faultDataResource.FaultLookup.TryGetValue(dataGroup, out DataAnalysis.FaultGroup faultGroup))
-                        i2t = CalcI2t(faultGroup, viCycleDataGroup);
-
+                    {
+                        ia2t = CalcI2t(faultGroup, viDataGroup.IA);
+                        ib2t = CalcI2t(faultGroup, viDataGroup.IB);
+                        ic2t = CalcI2t(faultGroup, viDataGroup.IC);
+                    }
 
                     int? pqviewID = null;
                     if (meterDataSet.FilePath.Contains("\\pqview4\\events\\")) {
                         Regex pattern = new Regex(@"^\\pqview4\\events\\PQView4 \d+\\\d+T\d+-(?<PQViewID>\d+).pqd$");
                         Match match = pattern.Match(meterDataSet.FilePath);
                         string str = match.Groups["PQViewID"].Value;
-                        if(str != null)
+                        if (str != null)
                             pqviewID = int.Parse(str);
                     }
 
                     eventStatTable.AddNewRecord(new EventStat()
                     {
                         EventID = evt.ID,
-                        IMax = iMax,
-                        IMin = iMin,
-                        VMax = vMax,
-                        VMin = vMin,
-                        I2t = i2t,
+                        VPeak = vPeak,
+                        VAMax = vaMax,
+                        VBMax = vbMax,
+                        VCMax = vcMax,
+                        VABMax = vabMax,
+                        VBCMax = vbcMax,
+                        VCAMax = vcaMax,
+                        VAMin = vaMin,
+                        VBMin = vbMin,
+                        VCMin = vcMin,
+                        VABMin = vabMin,
+                        VBCMin = vbcMin,
+                        VCAMin = vcaMin,
+                        IPeak = iPeak,
+                        IAMax = iaMax,
+                        IBMax = ibMax,
+                        ICMax = icMax,
+                        IA2t = ia2t,
+                        IB2t = ib2t,
+                        IC2t = ic2t,
                         InitialMW = initialMW,
                         FinalMW = finalMW,
                         PQViewID = pqviewID
@@ -135,32 +154,44 @@ namespace FaultData.DataOperations
             }
         }
 
-        private double? CalcI2t(DataAnalysis.FaultGroup faultGroup, VICycleDataGroup viCycleDataGroup)
+        private double? CalcVoltagePeak(VIDataGroup viDataGroup) => Enumerable.Empty<DataSeries[]>()
+            .Concat(new[] { new[] { viDataGroup.VA, viDataGroup.VB, viDataGroup.VC } })
+            .Concat(new[] { new[] { viDataGroup.VAB, viDataGroup.VBC, viDataGroup.VCA } })
+            .Where(voltageGrouping => voltageGrouping.Any(waveform => waveform != null))
+            .Select(CalcPeak)
+            .FirstOrDefault();
+
+        private double? CalcPeak(IEnumerable<DataSeries> waveforms) => waveforms
+            .Where(waveform => waveform != null)
+            .Select(CalcMax)
+            .DefaultIfEmpty(null)
+            .Max();
+
+        private double? CalcMax(DataSeries rms) => rms?.DataPoints
+            .Where(dataPoint => !double.IsNaN(dataPoint.Value))
+            .DefaultIfEmpty(null)
+            .Max(dataPoint => dataPoint?.Value);
+
+        private double? CalcMin(DataSeries rms) => rms?.DataPoints
+            .Where(dataPoint => !double.IsNaN(dataPoint.Value))
+            .DefaultIfEmpty(null)
+            .Min(dataPoint => dataPoint?.Value);
+
+        private double? CalcI2t(DataAnalysis.FaultGroup faultGroup, DataSeries waveform)
         {
-            double i2t = 0;
+            if (waveform == null)
+                return null;
 
-            foreach (DataAnalysis.Fault fault in faultGroup.Faults)
-            {
-                if (fault.IsSuppressed)
-                    continue;
+            double samplingInterval = 1.0D / waveform.SampleRate;
 
-                foreach (DataAnalysis.Fault.Summary faultSummary in fault.Summaries)
-                {
-                    if (!faultSummary.IsValid || !faultSummary.IsSelectedAlgorithm)
-                        continue;
-
-                    double samplingInterval = 1.0D / viCycleDataGroup.IA.RMS.SampleRate;
-
-                    i2t += new[] { viCycleDataGroup.IA?.RMS, viCycleDataGroup.IB?.RMS, viCycleDataGroup.IC?.RMS }
-                        .Where(ds => ds != null)
-                        .SelectMany(ds => ds.DataPoints)
-                        .Where(dp => dp.Time >= fault.InceptionTime && dp.Time <= fault.ClearingTime)
-                        .Select(dp => dp.Value * dp.Value * samplingInterval)
-                        .Sum();
-                }
-            }
-
-            return (i2t != 0 ? i2t : (double?)null);
+            return faultGroup.Faults
+                .Where(fault => !fault.IsSuppressed)
+                .Where(fault => fault.Summaries.Any(summary => summary.IsValid))
+                .Select(fault => waveform.ToSubSeries(fault.StartSample, fault.EndSample))
+                .SelectMany(faultSamples => faultSamples.DataPoints)
+                .Select(dataPoint => (double?)(dataPoint.Value * dataPoint.Value * samplingInterval))
+                .DefaultIfEmpty(null)
+                .Sum();
         }
 
         private double? CalcMW(VICycleDataGroup viCycleDataGroup, bool initial) {

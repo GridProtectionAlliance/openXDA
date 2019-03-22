@@ -35,11 +35,26 @@ namespace openXDA.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int EventID { get; set; }
-        public double? IMin { get; set; }
-        public double? IMax { get; set; }
-        public double? VMin { get; set; }
-        public double? VMax { get; set; }
-        public double? I2t { get; set; }
+        public double? VPeak { get; set; }
+        public double? VAMax { get; set; }
+        public double? VBMax { get; set; }
+        public double? VCMax { get; set; }
+        public double? VABMax { get; set; }
+        public double? VBCMax { get; set; }
+        public double? VCAMax { get; set; }
+        public double? VAMin { get; set; }
+        public double? VBMin { get; set; }
+        public double? VCMin { get; set; }
+        public double? VABMin { get; set; }
+        public double? VBCMin { get; set; }
+        public double? VCAMin { get; set; }
+        public double? IPeak { get; set; }
+        public double? IAMax { get; set; }
+        public double? IBMax { get; set; }
+        public double? ICMax { get; set; }
+        public double? IA2t { get; set; }
+        public double? IB2t { get; set; }
+        public double? IC2t { get; set; }
         public double? InitialMW { get; set; }
         public double? FinalMW { get; set; }
         public int? PQViewID { get; set; }
