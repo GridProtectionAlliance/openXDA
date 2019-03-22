@@ -3409,7 +3409,8 @@ SELECT
     Event.ID AS EventID,
     MeterLocation.Name AS Station,
     Meter.Name AS Meter,
-    Line.AssetKey AS Line,
+    Line.AssetKey AS LineKey,
+    MeterLine.LineName,
     EventType.Name AS [Event Type],
     FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / 1000.0, '0.###') + ' seconds' AS [File Duration (s)],
     FORMAT(DATEDIFF(MILLISECOND, Event.StartTime, Event.EndTime) / System.Frequency, '0.##') + ' cycles' AS [File Duration (c)],
@@ -3448,6 +3449,9 @@ SELECT
     IR.Mapping AS IR
 FROM
     Event JOIN
+    MeterLine ON
+        Event.MeterID = MeterLine.MeterID AND
+        Event.LineID = MeterLine.LineID JOIN
     Meter ON Event.MeterID = Meter.ID JOIN
     MeterLocation ON Meter.MeterLocationID = MeterLocation.ID JOIN
     Line ON Event.LineID = Line.ID JOIN
