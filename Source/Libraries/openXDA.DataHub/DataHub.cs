@@ -57,6 +57,7 @@ using MeterLocation = openXDA.Model.MeterLocation;
 using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 using GSF.Security;
+using Newtonsoft.Json.Linq;
 
 namespace openXDA.Hubs
 {
@@ -2201,7 +2202,7 @@ namespace openXDA.Hubs
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(Meter), RecordOperation.QueryRecords)]
-        public IEnumerable<MeterDetail> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        public IEnumerable<JObject> QueryMeters(int meterLocationID, string sortField, bool ascending, int page, int pageSize, string filterString)
         {
             TableOperations<MeterDetail> tableOperations = DataContext.Table<MeterDetail>();
             RecordRestriction restriction;
@@ -2210,7 +2211,24 @@ namespace openXDA.Hubs
             else
                 restriction = tableOperations.GetSearchRestriction(filterString);
 
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            List<JObject> meters = tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction).Select(meter => JObject.FromObject(meter)).ToList();
+
+            TableOperations<MaintenanceWindow> maintenanceWindowTable = DataContext.Table<MaintenanceWindow>();
+
+            Dictionary<int, MaintenanceWindow> maintenanceWindows = maintenanceWindowTable
+                .QueryRecords()
+                .GroupBy(window => window.MeterID)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.First());
+
+            foreach (dynamic meter in meters)
+            {
+                int meterID = meter.ID;
+
+                if (maintenanceWindows.TryGetValue(meterID, out MaintenanceWindow window))
+                    meter.MaintenanceWindow = JObject.FromObject(window);
+            }
+
+            return meters;
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -2218,7 +2236,6 @@ namespace openXDA.Hubs
         public void DeleteMeter(int id)
         {
             CascadeDelete("Meter", $"ID = {id}");
-
         }
 
         [AuthorizeHubRole("Administrator")]
@@ -2648,16 +2665,6 @@ namespace openXDA.Hubs
         #endregion
 
         #region [ MaintenanceWindow Table Operations ]
-
-        public MaintenanceWindow GetMaintenanceWindow(int meterID)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                TableOperations<MaintenanceWindow> maintenanceWindowTable = new TableOperations<MaintenanceWindow>(connection);
-                maintenanceWindowTable.DeleteRecordWhere("EndTime IS NOT NULL AND EndTime < {0}", DateTime.UtcNow);
-                return maintenanceWindowTable.QueryRecordWhere("MeterID = {0}", meterID);
-            }
-        }
 
         public void SetMaintenanceWindow(int meterID, DateTime? startTime, DateTime? endTime)
         {

@@ -22,17 +22,17 @@
 //*****************************************************************************************************@
 @using System.Collections.Generic
 @using System.Net.Http
-@using System.Text.RegularExpressions
+@using GSF.Data.Model
 @using GSF.Web
 @using GSF.Web.Model
-@using openXDA
+@using Newtonsoft.Json
 @using openXDA.Model
-@using RazorEngine.Templating
 @using openXDA.Hubs
 @inherits ExtendedTemplateBase<AppModel>
 @section StyleSheets {
     <link href="/Content/bootstrap-datetimepicker.css" rel="stylesheet" />
     <style>
+
         html, body {
             height: 100%;
         }
@@ -59,7 +59,6 @@
         meterLocationName = dataContext.Connection.ExecuteScalar<string>("SELECT Name FROM MeterLocation WHERE ID = {0}", ViewBag.MeterLocationID);
         ViewBag.CustomHeader = "Meters at <a href=\"/Assets/Sites.cshtml?Site=" + meterLocationName + "\">" + meterLocationName + "</a>";
         ViewBag.Title = "Meters at " + meterLocationName;
-
     }
 
     ViewBag.ParentKeys = ViewBag.MeterLocationID;
@@ -79,7 +78,6 @@
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.PageControlScripts.Insert(0, ExtendViewModel());
-
 }
 @helper BodyRows()
 {
@@ -90,7 +88,7 @@
     <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Assets/MeterLines.cshtml?LineID=-1&MeterID=' + ID + '&Title=' + Name }, enable: $parent.dataHubIsConnected" class="btn btn-default form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></a></td>
     <td width="5%" class="text-center valign-middle" nowrap>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
-        <button type="button" class="btn btn-xs" data-bind="click: $parent.showMaintenanceWindowDialog, enable: $parent.canEdit()"><span class="glyphicon glyphicon-time"></span></button>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.showMaintenanceWindowDialog, enable: $parent.canEdit(), style: { color: $parent.getMaintenanceWindowColor($data) }, attr: { title: $parent.getMaintenanceWindowTooltip($data) }"><span class="glyphicon glyphicon-time"></span></button>
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
@@ -127,18 +125,18 @@
                     <div class="form-group">
                         <label for="maintenanceWindowStartInput">Start:</label>
                         <div class="input-group date" id="maintenanceWindowStartDateTimePicker">
-                            <input type="text" class="form-control" placeholder="Now" id="maintenanceWindowStartInput" disabled />
+                            <input type="text" class="form-control" placeholder="Now" id="maintenanceWindowStartInput" />
                             <span class="input-group-addon">
-                                <span class="fa fa-spinner fa-spin"></span>
+                                <span class="glyphicon glyphicon-calendar"></span>
                             </span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="maintenanceWindowEndInput">End:</label>
                         <div class="input-group date" id="maintenanceWindowEndDateTimePicker">
-                            <input type="text" class="form-control" placeholder="Indefinite" id="maintenanceWindowEndInput" disabled />
+                            <input type="text" class="form-control" placeholder="Indefinite" id="maintenanceWindowEndInput" />
                             <span class="input-group-addon">
-                                <span class="fa fa-spinner fa-spin"></span>
+                                <span class="glyphicon glyphicon-calendar"></span>
                             </span>
                         </div>
                     </div>
@@ -159,9 +157,61 @@
         $(window).on('beforeApplyBindings', function (evt, data) {
             var self = data.viewModel;
 
+            self.getMaintenanceWindowColor = function (record) {
+                var maintenanceWindow = record.MaintenanceWindow;
+
+                if (maintenanceWindow) {
+                    var currentTime = moment.utc();
+                    var startTime = maintenanceWindow.StartTime;
+                    var endTime = maintenanceWindow.EndTime;
+
+                    var active =
+                        (!startTime || currentTime >= moment.utc(startTime)) &&
+                        (!endTime || currentTime <= moment.utc(endTime));
+
+                    var pending =
+                        (!startTime || currentTime < moment.utc(startTime)) &&
+                        !active;
+
+                    if (active)
+                        return "darkred";
+
+                    if (pending)
+                        return "darkblue";
+                }
+
+                return "";
+            };
+
+            self.getMaintenanceWindowTooltip = function (record) {
+                var maintenanceWindow = record.MaintenanceWindow;
+
+                if (maintenanceWindow) {
+                    var currentTime = moment.utc();
+                    var startTime = maintenanceWindow.StartTime;
+                    var endTime = maintenanceWindow.EndTime;
+
+                    var active =
+                        (!startTime || currentTime >= moment.utc(startTime)) &&
+                        (!endTime || currentTime <= moment.utc(endTime));
+
+                    var pending =
+                        (!startTime || currentTime < moment.utc(startTime)) &&
+                        !active;
+
+                    if (active)
+                        return "Under Maintenance";
+
+                    if (pending)
+                        return "Planned Maintenance";
+                }
+
+                return "No Planned Maintenance";
+            };
+
             self.showMaintenanceWindowDialog = function (record) {
-                viewModel.deriveObservableRecord(record).done(function (observableRecord) {
-                    viewModel.currentRecord(observableRecord);
+                self.deriveObservableRecord(record).done(function (observableRecord) {
+                    self.currentRecord(observableRecord);
                     $("#maintenanceWindowDialog").modal("show");
                 });
             };
@@ -183,12 +233,16 @@
                 else
                     endTime = null;
 
-                dataHub.setMaintenanceWindow(meterID, startTime, endTime);
+                dataHub.setMaintenanceWindow(meterID, startTime, endTime).done(function () {
+                    self.queryPageRecords();
+                });
             };
 
             self.clearMaintenanceWindow = function () {
                 var meterID = self.currentRecord().ID();
-                dataHub.clearMaintenanceWindow(meterID);
+                dataHub.clearMaintenanceWindow(meterID).done(function () {
+                    self.queryPageRecords();
+                });
             };
         });
     </script>
@@ -208,34 +262,25 @@
                 $('#maintenanceWindowStartDateTimePicker').datetimepicker({ showClear: true, showClose: true, useCurrent: false, format: DateTimeFormat });
                 $('#maintenanceWindowEndDateTimePicker').datetimepicker({ showClear: true, showClose: true, useCurrent: false, format: DateTimeFormat });
 
-                var meterID = viewModel.currentRecord().ID();
+                var maintenanceWindow = viewModel.currentRecord().MaintenanceWindow;
 
-                dataHub.getMaintenanceWindow(meterID).done(function (maintenanceWindow) {
-                    if (maintenanceWindow) {
-                        var startTime = maintenanceWindow.StartTime;
-                        var endTime = maintenanceWindow.EndTime;
+                if (maintenanceWindow) {
+                    var startTime = maintenanceWindow.StartTime();
+                    var endTime = maintenanceWindow.EndTime();
 
-                        if (startTime)
-                            startTime = moment.utc(startTime).local().format(DateTimeFormat);
-                        else
-                            startTime = "Now";
+                    if (startTime)
+                        startTime = moment.utc(startTime).local().format(DateTimeFormat);
+                    else
+                        startTime = "Now";
 
-                        if (endTime)
-                            endTime = moment.utc(endTime).local().format(DateTimeFormat);
-                        else
-                            endTime = "Indefinite";
+                    if (endTime)
+                        endTime = moment.utc(endTime).local().format(DateTimeFormat);
+                    else
+                        endTime = "Indefinite";
 
-                        $('#maintenanceWindowStartInput').val(startTime);
-                        $('#maintenanceWindowEndInput').val(endTime);
-                    }
-
-                    $('#maintenanceWindowStartInput,#maintenanceWindowEndInput').prop('disabled', false);
-
-                    $('#maintenanceWindowStartDateTimePicker,#maintenanceWindowEndDateTimePicker')
-                        .find('span.fa-spinner')
-                        .removeClass()
-                        .addClass('glyphicon glyphicon-calendar');
-                });
+                    $('#maintenanceWindowStartInput').val(startTime);
+                    $('#maintenanceWindowEndInput').val(endTime);
+                }
             });
 
             $('#addNewEditDialog').on('shown.bs.modal', function () {
