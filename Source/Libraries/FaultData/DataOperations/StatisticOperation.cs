@@ -197,9 +197,9 @@ namespace FaultData.DataOperations
         private double? CalcMW(VICycleDataGroup viCycleDataGroup, bool initial) {
             if (viCycleDataGroup.IA == null || viCycleDataGroup.IB == null || viCycleDataGroup.IC == null) return null;
 
-            if (viCycleDataGroup.VA.RMS.DataPoints.Any() && initial) return CalcInitialLGMW(viCycleDataGroup);
-            else if (!viCycleDataGroup.VA.RMS.DataPoints.Any() && initial) return CalcInitialLLMW(viCycleDataGroup);
-            else if (viCycleDataGroup.VA.RMS.DataPoints.Any() && !initial) return CalcFinalLGMW(viCycleDataGroup);
+            if (viCycleDataGroup.VA != null && initial) return CalcInitialLGMW(viCycleDataGroup);
+            else if (viCycleDataGroup.VA == null && initial) return CalcInitialLLMW(viCycleDataGroup);
+            else if (viCycleDataGroup.VA != null && !initial) return CalcFinalLGMW(viCycleDataGroup);
             else return CalcFinalLLMW(viCycleDataGroup);
         }
 
