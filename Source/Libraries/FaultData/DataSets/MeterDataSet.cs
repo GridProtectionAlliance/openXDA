@@ -81,10 +81,10 @@ namespace FaultData.DataSets
                 FilePath = (new TableOperations<DataFile>(connection)).QueryRecordWhere("FileGroupID = {0}", evt.FileGroupID).FilePath;
                 FileGroup = (new TableOperations<FileGroup>(connection)).QueryRecordWhere("ID = {0}", evt.FileGroupID);
                 Configuration.LineLength = (new TableOperations<Line>(connection)).QueryRecordWhere("ID = {0}", evt.LineID).Length;
-                Configuration.X0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).X0;
-                Configuration.X1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).X1;
-                Configuration.R0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).R0;
-                Configuration.R1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID).R1;
+                Configuration.X0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID)?.X0;
+                Configuration.X1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID)?.X1;
+                Configuration.R0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID)?.R0;
+                Configuration.R1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID)?.R1;
                 DataGroup dataGroup = ToDataGroup((new TableOperations<EventData>(connection)).QueryRecordWhere("ID = {0}", evt.EventDataID).TimeDomainData);
                 DataSeries = dataGroup.DataSeries.Where(ds=> ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
                 Digitals = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == "Digital").ToList();
