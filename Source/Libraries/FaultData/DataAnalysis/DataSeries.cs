@@ -301,6 +301,32 @@ namespace FaultData.DataAnalysis
 
         // Static Methods
 
+        public static DataSeries Merge(IEnumerable<DataSeries> dataSeriesList)
+        {
+            if (dataSeriesList == null)
+                throw new ArgumentNullException(nameof(dataSeriesList));
+
+            DataSeries mergedSeries = new DataSeries();
+            DateTime lastTime = default(DateTime);
+
+            IEnumerable<DataPoint> dataPoints = dataSeriesList
+                .Where(dataSeries => dataSeries != null)
+                .Where(dataSeries => dataSeries.DataPoints.Count != 0)
+                .OrderBy(dataSeries => dataSeries[0].Time)
+                .SelectMany(series => series.DataPoints);
+
+            foreach (DataPoint next in dataPoints)
+            {
+                if (mergedSeries.DataPoints.Count == 0 || next.Time > lastTime)
+                {
+                    mergedSeries.DataPoints.Add(next);
+                    lastTime = next.Time;
+                }
+            }
+
+            return mergedSeries;
+        }
+
         private static DataPoint Add(DataPoint point1, DataPoint point2)
         {
             return point1.Add(point2);
