@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FaultAlgorithms;
@@ -173,6 +174,13 @@ namespace FaultData.DataAnalysis
         {
             return new VICycleDataGroup(m_cycleDataGroups
                 .Select(cycleDataGroup => cycleDataGroup.ToSubGroup(startIndex, endIndex))
+                .ToList());
+        }
+
+        public VICycleDataGroup ToSubSet(DateTime startTime, DateTime endTime)
+        {
+            return new VICycleDataGroup(m_cycleDataGroups
+                .Select(cycleDataGroup => cycleDataGroup.ToSubGroup(startTime, endTime))
                 .ToList());
         }
 

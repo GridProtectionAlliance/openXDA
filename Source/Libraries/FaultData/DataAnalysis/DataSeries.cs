@@ -235,6 +235,20 @@ namespace FaultData.DataAnalysis
             return subSeries;
         }
 
+        public DataSeries ToSubSeries(DateTime startTime, DateTime endTime)
+        {
+            DataSeries subSeries = new DataSeries();
+
+            subSeries.SeriesInfo = m_seriesInfo;
+
+            subSeries.DataPoints = m_dataPoints
+                .SkipWhile(point => point.Time < startTime)
+                .TakeWhile(point => point.Time <= endTime)
+                .ToList();
+
+            return subSeries;
+        }
+
         public DataSeries Negate()
         {
             DataSeries negatedDataSeries = new DataSeries();

@@ -400,6 +400,16 @@ namespace FaultData.DataAnalysis
             return subGroup;
         }
 
+        public DataGroup ToSubGroup(DateTime startTime, DateTime endTime)
+        {
+            DataGroup subGroup = new DataGroup();
+
+            foreach (DataSeries dataSeries in m_dataSeries)
+                subGroup.Add(dataSeries.ToSubSeries(startTime, endTime));
+
+            return subGroup;
+        }
+
         public byte[] ToData()
         {
             var timeSeries = m_dataSeries[0].DataPoints

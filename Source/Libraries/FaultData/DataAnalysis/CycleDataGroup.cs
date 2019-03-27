@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+using System;
+
 namespace FaultData.DataAnalysis
 {
     public class CycleDataGroup
@@ -93,6 +95,11 @@ namespace FaultData.DataAnalysis
         public CycleDataGroup ToSubGroup(int startIndex, int endIndex)
         {
             return new CycleDataGroup(m_dataGroup.ToSubGroup(startIndex, endIndex));
+        }
+
+        public CycleDataGroup ToSubGroup(DateTime startTime, DateTime endTime)
+        {
+            return new CycleDataGroup(m_dataGroup.ToSubGroup(startTime, endTime));
         }
 
         #endregion

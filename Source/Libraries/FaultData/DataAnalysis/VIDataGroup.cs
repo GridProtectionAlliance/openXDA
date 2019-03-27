@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Linq;
 using GSF.Data;
 using GSF.Data.Model;
@@ -336,6 +337,26 @@ namespace FaultData.DataAnalysis
             subGroup.m_irIndex = m_irIndex;
 
             subGroup.m_dataGroup = m_dataGroup.ToSubGroup(startIndex, endIndex);
+
+            return subGroup;
+        }
+
+        public VIDataGroup ToSubGroup(DateTime startTime, DateTime endTime)
+        {
+            VIDataGroup subGroup = new VIDataGroup();
+
+            subGroup.m_vaIndex = m_vaIndex;
+            subGroup.m_vbIndex = m_vbIndex;
+            subGroup.m_vcIndex = m_vcIndex;
+            subGroup.m_vabIndex = m_vabIndex;
+            subGroup.m_vbcIndex = m_vbcIndex;
+            subGroup.m_vcaIndex = m_vcaIndex;
+            subGroup.m_iaIndex = m_iaIndex;
+            subGroup.m_ibIndex = m_ibIndex;
+            subGroup.m_icIndex = m_icIndex;
+            subGroup.m_irIndex = m_irIndex;
+
+            subGroup.m_dataGroup = m_dataGroup.ToSubGroup(startTime, endTime);
 
             return subGroup;
         }
