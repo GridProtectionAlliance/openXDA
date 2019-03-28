@@ -313,237 +313,44 @@ namespace FaultData.DataAnalysis
             #endregion
         }
 
-        // Fields
-        private int m_calculationCycle;
-
-        private FaultType m_type;
-
-        private int m_startSample;
-        private int m_endSample;
-        private DateTime m_inceptionTime;
-        private DateTime m_clearingTime;
-        private TimeSpan m_duration;
-
-        private double m_currentMagnitude;
-        private double m_currentLag;
-        private double m_prefaultCurrent;
-        private double m_postfaultCurrent;
-        private double m_reactanceRatio;
-
-        private bool m_isSuppressed;
-        private bool m_isReclose;
-
-        private List<Summary> m_summaries;
-        private List<Segment> m_segments;
-        private List<Curve> m_curves;
-
         #endregion
 
         #region [ Constructors ]
 
         public Fault()
         {
-            m_summaries = new List<Summary>();
-            m_segments = new List<Segment>();
-            m_curves = new List<Curve>();
+            Summaries = new List<Summary>();
+            Segments = new List<Segment>();
+            Curves = new List<Curve>();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public int CalculationCycle
-        {
-            get
-            {
-                return m_calculationCycle;
-            }
-            set
-            {
-                m_calculationCycle = value;
-            }
-        }
+        public int CalculationCycle { get; set; }
 
-        public FaultType Type
-        {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                m_type = value;
-            }
-        }
+        public FaultType Type { get; set; }
 
-        public int StartSample
-        {
-            get
-            {
-                return m_startSample;
-            }
-            set
-            {
-                m_startSample = value;
-            }
-        }
+        public int StartSample { get; set; }
+        public int EndSample { get; set; }
+        public DateTime InceptionTime { get; set; }
+        public DateTime ClearingTime { get; set; }
+        public TimeSpan Duration { get; set; }
 
-        public int EndSample
-        {
-            get
-            {
-                return m_endSample;
-            }
-            set
-            {
-                m_endSample = value;
-            }
-        }
+        public double CurrentMagnitude { get; set; }
+        public double CurrentLag { get; set; }
+        public double PrefaultCurrent { get; set; }
+        public double PostfaultCurrent { get; set; }
+        public double ReactanceRatio { get; set; }
 
-        public DateTime InceptionTime
-        {
-            get
-            {
-                return m_inceptionTime;
-            }
-            set
-            {
-                m_inceptionTime = value;
-            }
-        }
+        public bool IsSuppressed { get; set; }
+        public bool IsReclose { get; set; }
 
-        public DateTime ClearingTime
-        {
-            get
-            {
-                return m_clearingTime;
-            }
-            set
-            {
-                m_clearingTime = value;
-            }
-        }
+        public List<Summary> Summaries { get; }
+        public List<Segment> Segments { get; }
+        public List<Curve> Curves { get; }
 
-        public TimeSpan Duration
-        {
-            get
-            {
-                return m_duration;
-            }
-            set
-            {
-                m_duration = value;
-            }
-        }
-
-        public double CurrentMagnitude
-        {
-            get
-            {
-                return m_currentMagnitude;
-            }
-            set
-            {
-                m_currentMagnitude = value;
-            }
-        }
-
-        public double CurrentLag
-        {
-            get
-            {
-                return m_currentLag;
-            }
-            set
-            {
-                m_currentLag = value;
-            }
-        }
-
-        public double PrefaultCurrent
-        {
-            get
-            {
-                return m_prefaultCurrent;
-            }
-            set
-            {
-                m_prefaultCurrent = value;
-            }
-        }
-
-        public double PostfaultCurrent
-        {
-            get
-            {
-                return m_postfaultCurrent;
-            }
-            set
-            {
-                m_postfaultCurrent = value;
-            }
-        }
-
-        public double ReactanceRatio
-        {
-            get
-            {
-                return m_reactanceRatio;
-            }
-            set
-            {
-                m_reactanceRatio = value;
-            }
-        }
-
-
-        public bool IsSuppressed
-        {
-            get
-            {
-                return m_isSuppressed;
-            }
-            set
-            {
-                m_isSuppressed = value;
-            }
-        }
-
-        public bool IsReclose
-        {
-            get
-            {
-                return m_isReclose;
-            }
-            set
-            {
-                m_isReclose = value;
-            }
-        }
-
-        public List<Summary> Summaries
-        {
-            get
-            {
-                return m_summaries;
-            }
-        }
-
-        public List<Segment> Segments
-        {
-            get
-            {
-                return m_segments;
-            }
-        }
-
-        public List<Curve> Curves
-        {
-            get
-            {
-                return m_curves;
-            }
-        }
 
         #endregion
 
@@ -554,7 +361,7 @@ namespace FaultData.DataAnalysis
             return new Curve()
             {
                 Algorithm = algorithm,
-                StartIndex = m_startSample
+                StartIndex = StartSample
             };
         }
 
