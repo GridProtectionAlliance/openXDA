@@ -91,6 +91,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.FaultCalculationCycleMethod', 'MaxCurrent', 'MaxCurrent')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.FaultClearingAdjustmentSamples', '10', '10')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('FaultLocation.UseDefaultFaultDetectionLogic', 'True', 'True')
 GO
 

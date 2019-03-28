@@ -55,6 +55,10 @@ namespace FaultData.Configuration
         public FaultCalculationCycleMethod FaultCalculationCycleMethod { get; set; }
 
         [Setting]
+        [DefaultValue(10)]
+        public int FaultClearingAdjustmentSamples { get; set; }
+
+        [Setting]
         [DefaultValue(false)]
         public bool WarnMissingDetectionLogic { get; set; }
 

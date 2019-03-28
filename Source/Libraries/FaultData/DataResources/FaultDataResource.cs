@@ -1243,6 +1243,14 @@ namespace FaultData.DataResources
 
         private int GetCalculationCycle(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
         {
+            if (!fault.Curves.Any())
+                return -1;
+
+            int minFaultCurveLength = fault.Curves.Min(curve => curve.Series.DataPoints.Count);
+
+            if (minFaultCurveLength == 0)
+                return -1;
+
             switch (FaultLocationSettings.FaultCalculationCycleMethod)
             {
                 default:
@@ -1250,23 +1258,17 @@ namespace FaultData.DataResources
                     return GetCycleWithMaximumCurrent(fault, viCycleDataGroup, samplesPerCycle);
 
                 case FaultCalculationCycleMethod.LastFaultedCycle:
-                    return GetLastFaultedCycle(fault);
+                    return GetLastFaultedCycle(fault, samplesPerCycle);
             }
         }
 
         private int GetCycleWithMaximumCurrent(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
         {
-            if (!fault.Curves.Any())
-                return -1;
-
             int startSample = fault.StartSample + samplesPerCycle;
             int endSample = fault.StartSample + fault.Curves.Min(curve => curve.Series.DataPoints.Count) - 1;
 
             if (startSample > endSample)
                 startSample = fault.StartSample;
-
-            if (startSample > endSample)
-                return -1;
 
             double max = double.MinValue;
             int maxIndex = -1;
@@ -1288,17 +1290,64 @@ namespace FaultData.DataResources
             return maxIndex;
         }
 
-        private int GetLastFaultedCycle(Fault fault)
+        private int GetLastFaultedCycle(Fault fault, int samplesPerCycle)
         {
-            if (!fault.Curves.Any())
-                return -1;
+            int SelectEndSample()
+            {
+                int GetSampleCount(Fault.Segment segment)
+                {
+                    // The fault type algorithm gets applied to cycles that extend beyond the end of the fault,
+                    // so any segments with samples close to the end of the fault cannot be fully trusted
+                    int maxEndSample = fault.EndSample - (samplesPerCycle - 1);
+                    int startSample = segment.StartSample;
+                    int endSample = Math.Min(segment.EndSample, maxEndSample);
+                    return endSample - startSample + 1;
+                };
 
-            int minFaultCurveLength = fault.Curves.Min(curve => curve.Series.DataPoints.Count);
+                Fault.Segment lastValidSegment = fault.Segments
+                    .Where(segment => GetSampleCount(segment) >= samplesPerCycle)
+                    .LastOrDefault();
 
-            if (minFaultCurveLength == 0)
-                return -1;
+                switch (lastValidSegment?.FaultType)
+                {
+                    case FaultType.AN:
+                    case FaultType.BN:
+                    case FaultType.CN:
+                        // For single-phase faults, we can simply shift the
+                        // calculation cycle by a few samples to account for
+                        // minor errors in the clearing time logic
+                        return lastValidSegment.EndSample - m_faultLocationSettings.FaultClearingAdjustmentSamples;
 
-            return fault.StartSample + minFaultCurveLength - 1;
+                    default:
+                        // For multi-phase faults, the various phases will clear at different times.
+                        // On a three-phase system, there ought to be a maximum of two-thirds of a
+                        // cycle (240 degrees) between clearing times for individual phases.
+                        // Thus, shifting by a full cycle (360 degrees) will likely adjust for the
+                        // different clearing times as well as minor errors in the clearing time calculations
+                        return lastValidSegment.EndSample - samplesPerCycle;
+
+                    case null:
+                        // Not enough data in any individual segment
+                        // to identify a prominent fault type.
+                        // Assume multi-phase (360 degree adjustment),
+                        // but from the very end of the fault
+                        return fault.EndSample - samplesPerCycle;
+                }
+            }
+
+            // Adjustment to move from the very end of the fault
+            // or segment to the beginning of the selected cycle
+            int selectedCycle = SelectEndSample() - (samplesPerCycle - 1);
+
+            // If the selected cycle falls outside the valid range,
+            // simply select the very last valid cycle
+            int minCycle = fault.StartSample;
+            int maxCycle = fault.EndSample - (samplesPerCycle - 1);
+
+            if (selectedCycle < minCycle || selectedCycle > maxCycle)
+                selectedCycle = maxCycle;
+
+            return selectedCycle;
         }
 
         private double GetFaultCurrentMagnitude(VICycleDataGroup viCycleDataGroup, FaultType faultType, int cycle)
