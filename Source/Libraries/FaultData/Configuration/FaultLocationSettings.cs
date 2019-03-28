@@ -34,104 +34,29 @@ namespace FaultData.Configuration
 
     public class FaultLocationSettings
     {
-        #region [ Members ]
-
-        // Fields
-        private double m_prefaultTrigger;
-        private double m_prefaultTriggerAdjustment;
-        private double m_maxFaultDistanceMultiplier;
-        private double m_minFaultDistanceMultiplier;
-        private FaultCalculationCycleMethod m_faultCalculationCycleMethod;
-        private bool m_warnMissingDetectionLogic;
-        private bool m_useDefaultFaultDetectionLogic;
-
-        #endregion
-
-        #region [ Properties ]
-
         [Setting]
         [DefaultValue(5.0D)]
-        public double PrefaultTrigger
-        {
-            get
-            {
-                return m_prefaultTrigger;
-            }
-            set
-            {
-                m_prefaultTrigger = value;
-            }
-        }
+        public double PrefaultTrigger { get; set; }
 
         [Setting]
         [DefaultValue(50.0D)]
-        public double PrefaultTriggerAdjustment
-        {
-            get
-            {
-                return m_prefaultTriggerAdjustment;
-            }
-            set
-            {
-                m_prefaultTriggerAdjustment = value;
-            }
-        }
+        public double PrefaultTriggerAdjustment { get; set; }
 
         [Setting]
         [DefaultValue(1.05D)]
-        public double MaxFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_maxFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_maxFaultDistanceMultiplier = value;
-            }
-        }
+        public double MaxFaultDistanceMultiplier { get; set; }
 
         [Setting]
         [DefaultValue(-0.05D)]
-        public double MinFaultDistanceMultiplier
-        {
-            get
-            {
-                return m_minFaultDistanceMultiplier;
-            }
-            set
-            {
-                m_minFaultDistanceMultiplier = value;
-            }
-        }
+        public double MinFaultDistanceMultiplier { get; set; }
 
         [Setting]
         [DefaultValue(FaultCalculationCycleMethod.MaxCurrent)]
-        public FaultCalculationCycleMethod FaultCalculationCycleMethod
-        {
-            get
-            {
-                return m_faultCalculationCycleMethod;
-            }
-            set
-            {
-                m_faultCalculationCycleMethod = value;
-            }
-        }
+        public FaultCalculationCycleMethod FaultCalculationCycleMethod { get; set; }
 
         [Setting]
         [DefaultValue(false)]
-        public bool WarnMissingDetectionLogic
-        {
-            get
-            {
-                return m_warnMissingDetectionLogic;
-            }
-            set
-            {
-                m_warnMissingDetectionLogic = value;
-            }
-        }
+        public bool WarnMissingDetectionLogic { get; set; }
 
         /// <summary>
         /// Indicates whether to use the default fault detection logic
@@ -139,18 +64,6 @@ namespace FaultData.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(true)]
-        public bool UseDefaultFaultDetectionLogic
-        {
-            get
-            {
-                return m_useDefaultFaultDetectionLogic;
-            }
-            set
-            {
-                m_useDefaultFaultDetectionLogic = value;
-            }
-        }
-
-        #endregion
+        public bool UseDefaultFaultDetectionLogic { get; set; }
     }
 }
