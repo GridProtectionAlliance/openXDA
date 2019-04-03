@@ -123,12 +123,12 @@ namespace openXDA.DataPusher
             }
         }
 
-        public dynamic GetRecordIDsWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        public dynamic GetRecordIDsWhereHub<T>(string instance, string tableName, string ids, UserAccount userAccount)
         {
-            return GetRecordIDsWhere(instance, tableName, ids, userAccount);
+            return GetRecordIDsWhere<T>(instance, tableName, ids, userAccount);
         }
 
-        public static IEnumerable<dynamic> GetRecordIDsWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        public static IEnumerable<T> GetRecordIDsWhere<T>(string instance, string tableName, string ids, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -145,10 +145,9 @@ namespace openXDA.DataPusher
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
-                dynamic record = response.Content.ReadAsAsync<dynamic>();
-                Type modelType = typeof(Meter).Assembly.GetType($"openXDA.Model.{tableName}");
-                Type idType = modelType.GetProperty("ID").PropertyType;
+                Type idType = typeof(T);
                 Type listType = typeof(IEnumerable<>).MakeGenericType(idType);
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
                 return record.Result.ToObject(listType);
             }
         }
@@ -430,7 +429,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/AppendToFileBlob", record).Result;
+                HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/AppendToFileBlob", record).Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
