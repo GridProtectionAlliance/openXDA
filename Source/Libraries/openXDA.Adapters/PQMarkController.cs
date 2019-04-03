@@ -22,20 +22,22 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading;
 using System.Web.Http;
 using GSF;
+using GSF.Data;
+using GSF.Data.Model;
+using GSF.Reflection;
 using GSF.Web.Model;
+using GSF.Web.Security;
+using log4net;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
-using System.Threading;
-using GSF.Reflection;
-using System.Net.Http;
-using System.Net;
-using GSF.Web.Security;
-using System.Text;
-using System.Diagnostics.CodeAnalysis;
-using log4net;
 
 namespace openXDA.Adapters
 {
@@ -75,6 +77,91 @@ namespace openXDA.Adapters
             {
                 Content = new StringContent(Request.GenerateRequestVerficationHeaderToken(), Encoding.UTF8, "text/plain")
             };
+        }
+
+        /// <summary>
+        /// Return single Record ID
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IHttpActionResult GetRecordIDWhere(string id, string modelName)
+        {
+            object result;
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    Type type = typeof(Meter).Assembly.GetType($"openXDA.Model.{modelName}");
+                    ITableOperations tableOperations = dataContext.Table(type);
+
+                    string query =
+                        $"SELECT ID " +
+                        $"FROM {tableOperations.TableName} " +
+                        $"WHERE ({id})";
+
+                    object[] queryParameters = new object[0];
+
+                    if (type.TryGetAttribute(out PQMarkRestrictedAttribute thing))
+                    {
+                        query += " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})";
+                        queryParameters = new object[] { modelName, User.Identity.Name };
+                    }
+
+                    result = dataContext.Connection.ExecuteScalar(query, queryParameters);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Return multiple Record IDs
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IHttpActionResult GetRecordIDsWhere(string id, string modelName)
+        {
+            object collection;
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    Type type = typeof(Meter).Assembly.GetType($"openXDA.Model.{modelName}");
+                    ITableOperations tableOperations = dataContext.Table(type);
+
+                    string query =
+                        $"SELECT ID " +
+                        $"FROM {tableOperations.TableName} " +
+                        $"WHERE ({id})";
+
+                    object[] queryParameters = new object[0];
+
+                    if (type.TryGetAttribute(out PQMarkRestrictedAttribute thing))
+                    {
+                        query += " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})";
+                        queryParameters = new object[] { modelName, User.Identity.Name };
+                    }
+
+                    Type fieldType = tableOperations.GetFieldType("ID");
+
+                    collection = dataContext.Connection.RetrieveData(query, queryParameters).Select()
+                        .Select(row => row.ConvertField("ID", fieldType));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    return BadRequest(ex.ToString());
+                }
+            }
+
+            return Ok(collection);
         }
 
         /// <summary>
@@ -315,6 +402,27 @@ namespace openXDA.Adapters
                 }
             }
             Log.Info($"Updated {modelName} table with record...");
+            return Ok();
+        }
+
+        [HttpPut]
+        [ValidateRequestVerificationToken, SuppressMessage("Security", "SG0016", Justification = "CSRF vulnerability handled via ValidateRequestVerificationToken.")]
+        public IHttpActionResult AppendToFileBlob([FromBody]JObject record)
+        {
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                try
+                {
+                    FileBlob fileBlob = record.ToObject<FileBlob>();
+                    dataContext.Connection.ExecuteNonQuery("UPDATE FileBlob SET Blob = Blob + {0} WHERE ID = {1}", fileBlob.Blob, fileBlob.ID);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                    return BadRequest(ex.ToString());
+                }
+            }
+            Log.Info($"Appended to record in FileBlob table...");
             return Ok();
         }
 

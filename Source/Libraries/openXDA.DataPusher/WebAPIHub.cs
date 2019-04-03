@@ -32,7 +32,6 @@ using GSF.Configuration;
 using GSF.Net.Security;
 using GSF.Security.Model;
 using GSF.Web;
-using GSF.Web.Model;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
@@ -88,6 +87,69 @@ namespace openXDA.DataPusher
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
 
                 return response.Content.ReadAsStringAsync().Result;
+            }
+        }
+
+        public dynamic GetRecordIDWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        {
+            return GetRecordIDWhere(instance, tableName, ids, userAccount);
+        }
+
+        public static dynamic GetRecordIDWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        {
+            using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDWhere/{tableName}/{ids}").Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+
+                if (record.Result == null)
+                    return null;
+
+                Type modelType = typeof(Meter).Assembly.GetType($"openXDA.Model.{tableName}");
+                Type idType = modelType.GetProperty("ID").PropertyType;
+                return record.Result.ToObject(idType);
+            }
+        }
+
+        public dynamic GetRecordIDsWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        {
+            return GetRecordIDsWhere(instance, tableName, ids, userAccount);
+        }
+
+        public static IEnumerable<dynamic> GetRecordIDsWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        {
+            using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDsWhere/{tableName}/{ids}").Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                dynamic record = response.Content.ReadAsAsync<dynamic>();
+                Type modelType = typeof(Meter).Assembly.GetType($"openXDA.Model.{tableName}");
+                Type idType = modelType.GetProperty("ID").PropertyType;
+                Type listType = typeof(IEnumerable<>).MakeGenericType(idType);
+                return record.Result.ToObject(listType);
             }
         }
 
@@ -340,6 +402,35 @@ namespace openXDA.DataPusher
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
                 HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/UpdateChannel", record).Result;
+
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
+
+                return response;
+            }
+        }
+
+        public HttpResponseMessage AppendToFileBlobHub(string instance, JObject record, UserAccount userAccount)
+        {
+            return AppendToFileBlob(instance, record, userAccount);
+        }
+
+        public static HttpResponseMessage AppendToFileBlob(string instance, JObject record, UserAccount userAccount)
+        {
+            string antiForgeryToken = GenerateAntiForgeryToken(instance, userAccount);
+
+            using (WebRequestHandler handler = new WebRequestHandler())
+            using (HttpClient client = new HttpClient(handler))
+            {
+                handler.ServerCertificateValidationCallback += HandleCertificateValidation;
+
+                client.BaseAddress = new Uri(instance);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
+                client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
+
+                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/AppendToFileBlob", record).Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
