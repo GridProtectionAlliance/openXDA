@@ -154,7 +154,7 @@ namespace FaultData.DataResources
                 {
                     // Don't calculate fault distances for cycles at the end
                     // of a fault because these cycles include non-faulted data
-                    int endSample = fault.EndSample - SamplesPerCycle;
+                    int endSample = fault.EndSample - (SamplesPerCycle - 1);
 
                     // Initialize a fault curve for each algorithm
                     fault.Curves.AddRange(FaultLocationAlgorithms
@@ -1339,11 +1339,16 @@ namespace FaultData.DataResources
             // or segment to the beginning of the selected cycle
             int selectedCycle = SelectEndSample() - (samplesPerCycle - 1);
 
-            // If the selected cycle falls outside the valid range,
-            // simply select the very last valid cycle
             int minCycle = fault.StartSample;
             int maxCycle = fault.EndSample - (samplesPerCycle - 1);
 
+            // If the selected cycle falls outside the valid range,
+            // fall back on the single-phase adjustment from the very end of the fault
+            if (selectedCycle < minCycle || selectedCycle > maxCycle)
+                selectedCycle = maxCycle - m_faultLocationSettings.FaultClearingAdjustmentSamples;
+
+            // If even the single-phase adjustment is invalid,
+            // just pick the last valid cycle
             if (selectedCycle < minCycle || selectedCycle > maxCycle)
                 selectedCycle = maxCycle;
 
