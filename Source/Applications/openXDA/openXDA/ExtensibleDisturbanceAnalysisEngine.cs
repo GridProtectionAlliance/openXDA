@@ -1064,6 +1064,9 @@ namespace openXDA
                     // write them out to a temp directory so they can be processed
                     if (fileGroup.DataFiles.Any(dataFile => !File.Exists(dataFile.FilePath)))
                     {
+                        if (Directory.Exists(tempFolderPath))
+                            Directory.Delete(tempFolderPath, true);
+
                         string fileName = Path.GetFileName(filePath);
                         string tempFilePath = Path.Combine(tempFolderPath, fileName);
                         Directory.CreateDirectory(tempFolderPath);
@@ -1079,6 +1082,21 @@ namespace openXDA
                         filePath = tempFilePath;
                     }
                 }
+
+                Action<DataProcessorState> completeProcessingCallback = state =>
+                {
+                    try
+                    {
+                        CompleteProcessing(state);
+
+                        if (Directory.Exists(tempFolderPath))
+                            Directory.Delete(tempFolderPath, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(ex);
+                    }
+                };
 
                 Action<DataProcessorState> processFileCallback = state =>
                 {
@@ -1103,7 +1121,7 @@ namespace openXDA
 
                         // Set the processing end time of the file
                         // group and save it to the database
-                        CompleteProcessing(state);
+                        completeProcessingCallback(state);
                     }
                     finally
                     {
@@ -1120,7 +1138,7 @@ namespace openXDA
                     // then set the processing end time
                     // and save the file group to the database
                     state.FileGroup.Error = 1;
-                        CompleteProcessing(state);
+                    completeProcessingCallback(state);
                 };
 
                 // Set up the data processor state and enter the processing loop
