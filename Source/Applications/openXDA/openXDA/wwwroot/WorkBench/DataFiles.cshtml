@@ -95,12 +95,6 @@
             <div class="modal-body">
                 <div hidden="hidden" id="FileGroupID"></div>
                 <div hidden="hidden" id="DataFileID"></div>
-                <label>Reprocess From:</label>
-                <select id="processSource" class="form-control">
-                    <option value="true">File</option>
-                    <option value="false">File Blob</option>
-                </select>
-                <br />
                 <label for="eventList">Events in File:</label>
                 <ul id="eventList"></ul>
             </div>
@@ -248,9 +242,9 @@
                 Item1: $('#dateRange').data('daterangepicker').startDate._d, Item2: $('#dateRange').data('daterangepicker').endDate._d
             });
         }
-        
-        function reprocessSingleFileGroup(){
-            dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text(), $('#eventList').children().first().text().split(',')[1].split(':')[1].trim(), $('#processSource').val());
+
+        function reprocessSingleFileGroup() {
+            dataHub.reprocessFile($('#DataFileID').text(), $('#FileGroupID').text());
         }
         
         function selectAll(control) {

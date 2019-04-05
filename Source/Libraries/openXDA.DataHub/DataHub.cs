@@ -58,6 +58,7 @@ using MeterAssetGroup = openXDA.Model.MeterAssetGroup;
 using Setting = openXDA.Model.Setting;
 using GSF.Security;
 using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace openXDA.Hubs
 {
@@ -5763,14 +5764,39 @@ namespace openXDA.Hubs
             }
         }
 
-        public void ReprocessFile(int dataFileID, int fileGroupID, int meterID, bool useFile)
-        { 
+        public void ReprocessFile(int dataFileID, int fileGroupID)
+        {
+            AdoDataConnection connection = DataContext.Connection;
+            int? meterID = connection.ExecuteScalar<int?>("SELECT MeterID FROM Event WHERE FileGroupID = {0}", fileGroupID);
+
+            if (meterID == null)
+            {
+                string[] files = DataContext.Table<DataFile>()
+                    .QueryRecordsWhere("FileGroupID = {0}", fileGroupID)
+                    .Select(dataFile => dataFile.FilePath)
+                    .ToArray();
+
+                string filePattern = connection.ExecuteScalar<string>("SELECT Value FROM Setting WHERE Name = 'FilePattern'")
+                    ?? @"(?<AssetKey>[^\\]+)\\[^\\]+$";
+
+                string meterKey = files
+                    .Select(file => Regex.Match(file, filePattern))
+                    .Where(match => match.Success)
+                    .Select(match => match.Groups["AssetKey"]?.Value)
+                    .Where(assetKey => assetKey != null)
+                    .FirstOrDefault();
+
+                if (meterKey != null)
+                    meterID = connection.ExecuteScalar<int?>("SELECT ID FROM Meter WHERE AssetKey = {0}", meterKey);
+            }
+
+            if (meterID == null)
+                return;
+
             CascadeDelete("Event", $"FileGroupID = {fileGroupID}");
             CascadeDelete("EventData", $"FileGroupID = {fileGroupID}");
-            if (useFile)
-                CascadeDelete("FileBlob", $"DataFileID IN (SELECT ID FROM DataFile WHERE FileGroupID = {fileGroupID})");
 
-            OnReprocessFile(fileGroupID, meterID);
+            OnReprocessFile(fileGroupID, meterID.GetValueOrDefault());
         }
 
         #endregion
