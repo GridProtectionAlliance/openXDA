@@ -415,6 +415,7 @@ namespace openXDA.Adapters
                 {
                     FileBlob fileBlob = record.ToObject<FileBlob>();
                     dataContext.Connection.ExecuteNonQuery("UPDATE FileBlob SET Blob = Blob + {0} WHERE ID = {1}", fileBlob.Blob, fileBlob.ID);
+                    dataContext.Connection.ExecuteNonQuery("UPDATE DataFile SET FileSize = FileSize + {0} WHERE ID = {1}", fileBlob.Blob.Length, fileBlob.DataFileID);
                 }
                 catch (Exception ex)
                 {
