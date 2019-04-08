@@ -84,7 +84,7 @@ namespace openXDA.Adapters
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public IHttpActionResult GetRecordIDWhere(string id, string modelName)
+        public IHttpActionResult GetRecordIDWhere(string modelName)
         {
             object result;
 
@@ -92,13 +92,18 @@ namespace openXDA.Adapters
             {
                 try
                 {
+                    string whereClause = Request.GetQueryNameValuePairs()
+                        .Where(kvp => kvp.Key == "where")
+                        .Select(kvp => kvp.Value)
+                        .FirstOrDefault() ?? "1=1";
+
                     Type type = typeof(Meter).Assembly.GetType($"openXDA.Model.{modelName}");
                     ITableOperations tableOperations = dataContext.Table(type);
 
                     string query =
                         $"SELECT ID " +
                         $"FROM {tableOperations.TableName} " +
-                        $"WHERE ({id})";
+                        $"WHERE ({whereClause})";
 
                     object[] queryParameters = new object[0];
 
@@ -125,7 +130,7 @@ namespace openXDA.Adapters
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public IHttpActionResult GetRecordIDsWhere(string id, string modelName)
+        public IHttpActionResult GetRecordIDsWhere(string modelName)
         {
             object collection;
 
@@ -133,13 +138,18 @@ namespace openXDA.Adapters
             {
                 try
                 {
+                    string whereClause = Request.GetQueryNameValuePairs()
+                        .Where(kvp => kvp.Key == "where")
+                        .Select(kvp => kvp.Value)
+                        .FirstOrDefault() ?? "1=1";
+
                     Type type = typeof(Meter).Assembly.GetType($"openXDA.Model.{modelName}");
                     ITableOperations tableOperations = dataContext.Table(type);
 
                     string query =
                         $"SELECT ID " +
                         $"FROM {tableOperations.TableName} " +
-                        $"WHERE ({id})";
+                        $"WHERE ({whereClause})";
 
                     object[] queryParameters = new object[0];
 
@@ -204,7 +214,7 @@ namespace openXDA.Adapters
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public IHttpActionResult GetRecordWhere(string id, string modelName)
+        public IHttpActionResult GetRecordWhere(string modelName)
         {
             object record;
 
@@ -212,16 +222,21 @@ namespace openXDA.Adapters
             {
                 try
                 {
+                    string whereClause = Request.GetQueryNameValuePairs()
+                        .Where(kvp => kvp.Key == "where")
+                        .Select(kvp => kvp.Value)
+                        .FirstOrDefault() ?? "1=1";
+
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     PQMarkRestrictedAttribute thing;
 
                     if (type.TryGetAttribute(out thing))
                     {
-                        record = dataContext.Table(type).QueryRecordWhere(id + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                        record = dataContext.Table(type).QueryRecordWhere($"({whereClause}) AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {{0}} AND UserAccount = {{1}})", modelName, Thread.CurrentPrincipal.Identity.Name);
                     }
                     else
                     {
-                        record = dataContext.Table(type).QueryRecordWhere(id);
+                        record = dataContext.Table(type).QueryRecordWhere(whereClause);
                     }
                 }
                 catch (Exception ex)
@@ -239,7 +254,7 @@ namespace openXDA.Adapters
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public IHttpActionResult GetRecordsWhere(string id, string modelName)
+        public IHttpActionResult GetRecordsWhere(string modelName)
         {
             object record;
 
@@ -247,16 +262,21 @@ namespace openXDA.Adapters
             {
                 try
                 {
+                    string whereClause = Request.GetQueryNameValuePairs()
+                        .Where(kvp => kvp.Key == "where")
+                        .Select(kvp => kvp.Value)
+                        .FirstOrDefault() ?? "1=1";
+
                     Type type = typeof(Meter).Assembly.GetType("openXDA.Model." + modelName);
                     PQMarkRestrictedAttribute thing;
 
                     if (type.TryGetAttribute(out thing))
                     {
-                        record = dataContext.Table(type).QueryRecordsWhere( id + " AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {0} AND UserAccount = {1})", modelName, Thread.CurrentPrincipal.Identity.Name);
+                        record = dataContext.Table(type).QueryRecordsWhere($"({whereClause}) AND ID IN (SELECT PrimaryID FROM PQMarkRestrictedTableUserAccount WHERE TableName = {{0}} AND UserAccount = {{1}})", modelName, Thread.CurrentPrincipal.Identity.Name);
                     }
                     else
                     {
-                        record = dataContext.Table(type).QueryRecordsWhere(id);
+                        record = dataContext.Table(type).QueryRecordsWhere(whereClause);
                     }
                 }
                 catch (Exception ex)

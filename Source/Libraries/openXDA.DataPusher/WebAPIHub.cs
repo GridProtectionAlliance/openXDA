@@ -27,6 +27,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Web;
 using GSF;
 using GSF.Configuration;
 using GSF.Net.Security;
@@ -90,12 +91,12 @@ namespace openXDA.DataPusher
             }
         }
 
-        public dynamic GetRecordIDWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        public dynamic GetRecordIDWhereHub(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
-            return GetRecordIDWhere(instance, tableName, ids, userAccount);
+            return GetRecordIDWhere(instance, tableName, whereClause, userAccount);
         }
 
-        public static dynamic GetRecordIDWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        public static dynamic GetRecordIDWhere(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -106,8 +107,9 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDWhere/{tableName}/{ids}").Result;
+                
+                string urlEncodedWhereClause = HttpUtility.UrlEncode(whereClause);
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDWhere/{tableName}?where={urlEncodedWhereClause}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -123,12 +125,12 @@ namespace openXDA.DataPusher
             }
         }
 
-        public dynamic GetRecordIDsWhereHub<T>(string instance, string tableName, string ids, UserAccount userAccount)
+        public dynamic GetRecordIDsWhereHub<T>(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
-            return GetRecordIDsWhere<T>(instance, tableName, ids, userAccount);
+            return GetRecordIDsWhere<T>(instance, tableName, whereClause, userAccount);
         }
 
-        public static IEnumerable<T> GetRecordIDsWhere<T>(string instance, string tableName, string ids, UserAccount userAccount)
+        public static IEnumerable<T> GetRecordIDsWhere<T>(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -140,7 +142,8 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDsWhere/{tableName}/{ids}").Result;
+                string urlEncodedWhereClause = HttpUtility.UrlEncode(whereClause);
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordIDsWhere/{tableName}?where={urlEncodedWhereClause}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -169,7 +172,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecord/" + tableName + "/" + id).Result;
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecord/{tableName}/{id}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -196,7 +199,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecords/" + tableName + "/" + ids).Result;
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecords/{tableName}/{ids}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -208,12 +211,12 @@ namespace openXDA.DataPusher
             }
         }
 
-        public dynamic GetRecordsWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        public dynamic GetRecordsWhereHub(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
-            return GetRecordsWhere(instance, tableName, ids, userAccount);
+            return GetRecordsWhere(instance, tableName, whereClause, userAccount);
         }
 
-        public static IEnumerable<dynamic> GetRecordsWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        public static IEnumerable<dynamic> GetRecordsWhere(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -225,7 +228,8 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordsWhere/" + tableName + "/" + ids).Result;
+                string urlEncodedWhereClause = HttpUtility.UrlEncode(whereClause);
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordsWhere/{tableName}?where={urlEncodedWhereClause}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -237,12 +241,12 @@ namespace openXDA.DataPusher
             }
         }
 
-        public dynamic GetRecordWhereHub(string instance, string tableName, string ids, UserAccount userAccount)
+        public dynamic GetRecordWhereHub(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
-            return GetRecordWhere(instance, tableName, ids, userAccount);
+            return GetRecordWhere(instance, tableName, whereClause, userAccount);
         }
 
-        public static dynamic GetRecordWhere(string instance, string tableName, string ids, UserAccount userAccount)
+        public static dynamic GetRecordWhere(string instance, string tableName, string whereClause, UserAccount userAccount)
         {
             using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -254,7 +258,8 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetRecordWhere/" + tableName + "/" + ids).Result;
+                string urlEncodedWhereClause = HttpUtility.UrlEncode(whereClause);
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetRecordWhere/{tableName}?where={urlEncodedWhereClause}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -283,8 +288,8 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
-
-                HttpResponseMessage response = client.GetAsync("api/PQMark/GetChannels/channel/" + ids).Result;
+                
+                HttpResponseMessage response = client.GetAsync($"api/PQMark/GetChannels/channel/{ids}").Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -315,7 +320,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.PutAsJsonAsync("api/PQMark/UpdateRecord/" + tableName, record).Result;
+                HttpResponseMessage response = client.PutAsJsonAsync($"api/PQMark/UpdateRecord/{tableName}", record).Result;
                 return response;
             }
         }
@@ -340,7 +345,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.PostAsJsonAsync("api/PQMark/CreateRecord/" + tableName, record).Result;
+                HttpResponseMessage response = client.PostAsJsonAsync($"api/PQMark/CreateRecord/{tableName}", record).Result;
 
                 if (!response.IsSuccessStatusCode)
                     throw new InvalidOperationException($"Server returned status code {response.StatusCode}: {response.ReasonPhrase}");
@@ -485,7 +490,7 @@ namespace openXDA.DataPusher
                 client.DefaultRequestHeaders.Add("X-GSF-Verify", antiForgeryToken);
                 client.AddBasicAuthenticationHeader(userAccount.AccountName, userAccount.Password);
 
-                HttpResponseMessage response = client.DeleteAsync("api/PQMark/DeleteRecord/" + tableName + "/" + id).Result;
+                HttpResponseMessage response = client.DeleteAsync($"api/PQMark/DeleteRecord/{tableName}/{id}").Result;
                 return response;
             }
         }
