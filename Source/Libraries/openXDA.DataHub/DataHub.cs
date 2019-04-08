@@ -5650,43 +5650,61 @@ namespace openXDA.Hubs
         #region [ DataFile Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.QueryRecordCount)]
+        [RecordOperation(typeof(DataFile), RecordOperation.QueryRecordCount)]
         public int QueryDataFileCount(string filterString)
         {
-            IEnumerable<openXDA.Model.DataReader> dataReaders = DataContext.Table<openXDA.Model.DataReader>().QueryRecords();
-            TableOperations<openXDA.Model.DataFile> tableOperations = DataContext.Table<openXDA.Model.DataFile>();
-            RecordRestriction restriction;
-            restriction = tableOperations.GetSearchRestriction(filterString);
-            RecordRestriction innerRestriction = null;
-            foreach (var dataReader in dataReaders)
-            {
-                if(innerRestriction == null)
-                    innerRestriction = new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
-                else
-                    innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
-            }
-            restriction += innerRestriction;
-            return tableOperations.QueryRecordCount(restriction);
+            const string QueryFormat =
+                "SELECT COUNT(*) " +
+                "FROM " +
+                "( " +
+                "    SELECT DISTINCT FileGroupID " +
+                "    FROM DataFile " +
+                "    WHERE {0} " +
+                ") DataFile";
+
+            TableOperations<DataFile> dataFileTable = DataContext.Table<DataFile>();
+            RecordRestriction restriction = dataFileTable.GetSearchRestriction(filterString);
+            string query = string.Format(QueryFormat, restriction?.FilterExpression ?? "1=1");
+            return DataContext.Connection.ExecuteScalar<int>(query, restriction?.Parameters ?? new object[0]);
         }
 
         [AuthorizeHubRole("Administrator")]
-        [RecordOperation(typeof(openXDA.Model.DataFile), RecordOperation.QueryRecords)]
-        public IEnumerable<openXDA.Model.DataFile> QueryDataFiles(string sortField, bool ascending, int page, int pageSize, string filterString)
+        [RecordOperation(typeof(DataFile), RecordOperation.QueryRecords)]
+        public IEnumerable<DataFile> QueryDataFiles(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            IEnumerable<openXDA.Model.DataReader> dataReaders = DataContext.Table<openXDA.Model.DataReader>().QueryRecords();
-            TableOperations<openXDA.Model.DataFile> tableOperations = DataContext.Table<openXDA.Model.DataFile>();
-            RecordRestriction restriction;
-            restriction = tableOperations.GetSearchRestriction(filterString);
-            RecordRestriction innerRestriction = null;
-            foreach (var dataReader in dataReaders)
-            {
-                if (innerRestriction == null)
-                    innerRestriction = new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
-                else
-                    innerRestriction |= new RecordRestriction($"FilePath LIKE '%.{dataReader.FilePattern.Split('.')[dataReader.FilePattern.Split('.').Length - 1]}'");
-            }
-            restriction += innerRestriction;
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            const string IDQueryFormat =
+                "SELECT DataFile.ID " +
+                "FROM " +
+                "    FileGroup CROSS APPLY " +
+                "    ( " +
+                "        SELECT TOP 1 * " +
+                "        FROM DataFile " +
+                "        WHERE DataFile.FileGroupID = FileGroup.ID " +
+                "        ORDER BY FileSize DESC, FilePath " +
+                "    ) DataFile " +
+                "WHERE {0} " +
+                "ORDER BY {1}";
+
+            TableOperations<DataFile> dataFileTable = DataContext.Table<DataFile>();
+            RecordRestriction restriction = dataFileTable.GetSearchRestriction(filterString);
+            string whereClause = restriction?.FilterExpression ?? "1=1";
+            string sortOrder = ascending ? "ASC" : "DESC";
+            string orderByClause = $"{sortField} {sortOrder}";
+            string idQuery = string.Format(IDQueryFormat, whereClause, orderByClause);
+
+            int skipCount = (page - 1) * pageSize;
+            int takeCount = pageSize;
+
+            List<int> dataFileIDs = DataContext.Connection
+                .RetrieveData(idQuery, restriction?.Parameters ?? new object[0])
+                .AsEnumerable()
+                .Select(row => row.ConvertField<int>("ID"))
+                .Skip(skipCount)
+                .Take(takeCount)
+                .ToList();
+
+            string idList = string.Join(",", dataFileIDs);
+            return dataFileTable.QueryRecordsWhere($"ID IN ({idList})");
         }
 
         public IEnumerable<Event> GetEventsByDataFile (int dataFileId)
