@@ -114,6 +114,7 @@ namespace openXDA
         private class DataProcessorState
         {
             public string FilePath { get; set; }
+            public string FilePathOnDisk { get; set; }
             public string FileName => Path.GetFileName(FilePath);
             public FileWrapper FileWrapper { get; set; }
             public FileGroup FileGroup { get; set; }
@@ -985,6 +986,7 @@ namespace openXDA
                 EnterProcessingLoop(new DataProcessorState()
                 {
                     FilePath = filePath,
+                    FilePathOnDisk = filePath,
                     FileWrapper = fileWrapper,
                     FileGroup = fileGroup,
 
@@ -1055,6 +1057,7 @@ namespace openXDA
                 DateTime maxFileCreationTime = fileGroup.DataFiles.Max(dataFile => dataFile.CreationTime);
                 FileWrapper fileWrapper = new FileWrapper(filePath, maxFileCreationTime);
                 string tempFolderPath = Path.Combine(Path.GetTempPath(), "openXDA", "Reprocessor", meterKey);
+                string filePathOnDisk = filePath;
 
                 fileGroup.ProcessingEndTime = DateTime.MinValue;
 
@@ -1067,8 +1070,6 @@ namespace openXDA
                         if (Directory.Exists(tempFolderPath))
                             Directory.Delete(tempFolderPath, true);
 
-                        string fileName = Path.GetFileName(filePath);
-                        string tempFilePath = Path.Combine(tempFolderPath, fileName);
                         Directory.CreateDirectory(tempFolderPath);
 
                         foreach (DataFile dataFile in fileGroup.DataFiles)
@@ -1079,7 +1080,8 @@ namespace openXDA
                             File.WriteAllBytes(tempDataFilePath, dataFileBlob);
                         }
 
-                        filePath = tempFilePath;
+                        string fileName = Path.GetFileName(filePath);
+                        filePathOnDisk = Path.Combine(tempFolderPath, fileName);
                     }
                 }
 
@@ -1145,6 +1147,7 @@ namespace openXDA
                 EnterProcessingLoop(new DataProcessorState()
                 {
                     FilePath = filePath,
+                    FilePathOnDisk = filePathOnDisk,
                     FileWrapper = fileWrapper,
                     FileGroup = fileGroup,
 
@@ -1453,6 +1456,7 @@ namespace openXDA
         {
             string meterKey = state.MeterKey;
             string filePath = state.FilePath;
+            string filePathOnDisk = state.FilePathOnDisk;
 
             // Get the data reader that will be used to parse the file
             SystemSettings systemSettings = state.SystemSettings;
@@ -1486,18 +1490,18 @@ namespace openXDA
                 ConnectionStringParser.ParseConnectionString(state.ConnectionString, dataReader);
 
                 // Determine whether the dataReader can parse the file
-                state.Retry = !dataReader.CanParse(filePath, state.FileWrapper.GetMaxFileCreationTime());
+                state.Retry = !dataReader.CanParse(filePathOnDisk, state.FileWrapper.GetMaxFileCreationTime());
 
                 if (state.Retry)
                     return;
 
                 // Call the method to parse the file
-                state.MeterDataSet = ParseFile(dataReader, filePath);
+                state.MeterDataSet = ParseFile(dataReader, filePathOnDisk);
 
                 if ((object)state.MeterDataSet != null)
                 {
                     state.MeterDataSet.CreateDbConnection = () => CreateDbConnection(systemSettings);
-                    state.MeterDataSet.FilePath = filePath;
+                    state.MeterDataSet.FilePath = filePathOnDisk;
                     state.MeterDataSet.FileGroup = state.FileGroup;
                     state.MeterDataSet.ConnectionString = state.ConnectionString;
                     state.MeterDataSet.Meter.AssetKey = meterKey;
