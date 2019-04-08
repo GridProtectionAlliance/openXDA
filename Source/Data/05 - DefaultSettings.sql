@@ -277,7 +277,7 @@ GO
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Interruption', 1)
 GO
 
-INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Transient', 0)
+INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Transient', 1)
 GO
 
 INSERT INTO DashSettings (Name, Value, Enabled) VALUES ('EventsChart', 'Other', 1)
