@@ -164,14 +164,22 @@ namespace FaultData.DataWriters
 
                 string fromAddress = emailSettings.FromAddress;
                 emailMessage.From = new MailAddress(fromAddress);
-                emailMessage.To.Add(emailMessage.From);
                 emailMessage.Subject = GetSubject(htmlDocument);
                 emailMessage.Body = GetBody(htmlDocument);
                 emailMessage.IsBodyHtml = true;
 
-                // Add the specified To recipients for the email message
-                foreach (string toRecipient in recipients)
-                    emailMessage.Bcc.Add(toRecipient.Trim());
+                string blindCopyAddress = emailSettings.BlindCopyAddress;
+                string recipientList = string.Join(",", recipients.Select(recipient => recipient.Trim()));
+
+                if (string.IsNullOrEmpty(blindCopyAddress))
+                {
+                    emailMessage.To.Add(recipientList);
+                }
+                else
+                {
+                    emailMessage.To.Add(blindCopyAddress);
+                    emailMessage.Bcc.Add(recipientList);
+                }
 
                 // Create the image attachment for the email message
                 foreach (Attachment attachment in attachments)

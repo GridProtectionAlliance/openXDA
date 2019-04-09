@@ -43,6 +43,9 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.AdminAddress', 'xda-admin@gridprotectionalliance.org', 'xda-admin@gridprotectionalliance.org')
 GO
 
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.BlindCopyAddress', '', '')
+GO
+
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Email.EnableSSL', 'False', 'False')
 GO
 
