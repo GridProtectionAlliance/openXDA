@@ -55,6 +55,10 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\GSF\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
@@ -75,6 +79,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ControllerConfig.cs" />
+    <Compile Include="OpenSEEComtradeDownload.ashx.cs" />
+    <Compile Include="OpenSEECSVDownload.ashx.cs" />
     <Compile Include="SpectralDataDisplayController.cs" />
     <Compile Include="StepChangeWebReportController.cs" />
     <Compile Include="PQTrendingWebReportController.cs" />
