@@ -3074,9 +3074,30 @@ namespace openXDA.Hubs
             return newEvent;
         }
 
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventView), RecordOperation.QueryRecordCount)]
+        public int QueryEventViewCount(int filterId, string filterString) => QueryEventCount(filterId, filterString);
 
+        [AuthorizeHubRole("*")]
+        [RecordOperation(typeof(EventView), RecordOperation.QueryRecords)]
+        public IEnumerable<EventView> QueryEventViews(int filterId, string sortField, bool ascending, int page, int pageSize, string filterString) =>
+            QueryEvents(filterId, sortField, ascending, page, pageSize, filterString);
 
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventView), RecordOperation.DeleteRecord)]
+        public void DeleteEventView(int id) => DeleteEvent(id);
 
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventView), RecordOperation.CreateNewRecord)]
+        public EventView NewEventView() => NewEvent();
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventView), RecordOperation.AddNewRecord)]
+        public void AddNewEventView(Event record) => AddNewEvent(record);
+
+        [AuthorizeHubRole("Administrator, Engineer")]
+        [RecordOperation(typeof(EventView), RecordOperation.UpdateRecord)]
+        public bool UpdateEventView(EventView record, bool propagate) => UpdateEvent(record, propagate);
 
         #endregion
 

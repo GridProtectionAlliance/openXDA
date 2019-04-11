@@ -93,43 +93,15 @@ namespace openXDA.Model
     public class SingleEvent : EventView { }
 
     [TableName("EventView")]
-    public class EventView
+    public class EventView : Event
     {
         [Searchable(SearchType.LikeExpression)]
         [PrimaryKey(true)]
-        public int ID { get; set; }
-
-        public int FileGroupID { get; set; }
-
-        public int MeterID { get; set; }
-
-        public int LineID { get; set; }
-
-        public int EventTypeID { get; set; }
-
-        public int EventDataID { get; set; }
-
-        public string Name { get; set; }
-
-        public string Alias { get; set; }
-
-        public string ShortName { get; set; }
-
-        public DateTime StartTime { get; set; }
-
-        public DateTime EndTime { get; set; }
-
-        public int Samples { get; set; }
-
-        public int TimeZoneOffset { get; set; }
-
-        public int SamplesPerSecond { get; set; }
-
-        public int SamplesPerCycle { get; set; }
-
-        public string Description { get; set; }
-
-        public string UpdatedBy { get; set; }
+        public new int ID
+        {
+            get => base.ID;
+            set => base.ID = value;
+        }
 
         [Searchable]
         public string LineName { get; set; }

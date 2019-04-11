@@ -150,7 +150,7 @@
 @section Scripts {
     <script language="javascript" type="text/javascript" src="/Scripts/spin.js"></script>
     <script>
-        @Raw(dataContext.RenderViewModelConfiguration<Event, DataHub>(ViewBag, "ID", null, ViewBag.defaultFilter))
+        @Raw(dataContext.RenderViewModelConfiguration<EventView, DataHub>(ViewBag, "ID", null, ViewBag.defaultFilter))
         
         $('#addNewEditDialog').on('shown.bs.modal', function () {
         });
