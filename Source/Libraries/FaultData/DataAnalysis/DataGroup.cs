@@ -455,6 +455,8 @@ namespace FaultData.DataAnalysis
 
             foreach (DataSeries dataSeries in m_dataSeries)
             {
+                if (dataSeries.Calculated) continue;
+
                 const ushort NaNValue = ushort.MaxValue;
                 const ushort MaxCompressedValue = ushort.MaxValue - 1;
                 int seriesID = dataSeries.SeriesInfo?.ID ?? 0;

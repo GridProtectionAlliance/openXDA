@@ -210,6 +210,11 @@ namespace FaultData.DataAnalysis
             }
         }
 
+        /// <summary>
+        /// Flag that tells the DataGroup .ToData function not to add to data blob because this value is calculated.
+        /// </summary>
+        public bool Calculated { get; set; } = false;
+
         #endregion
 
         #region [ Methods ]

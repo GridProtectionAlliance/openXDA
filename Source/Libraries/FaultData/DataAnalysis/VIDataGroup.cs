@@ -109,6 +109,8 @@ namespace FaultData.DataAnalysis
                 else if (measurementType == "Current" && phase == "RES")
                     m_irIndex = i;
             }
+
+            CalculateMissingLLVoltageChannels();
         }
 
         private VIDataGroup()
@@ -315,6 +317,52 @@ namespace FaultData.DataAnalysis
 
             return missingSeries;
         }
+
+        public void CalculateMissingLLVoltageChannels()
+        {
+            Meter meter;
+            DataSeries missingSeries;
+
+            // If all line voltages are already present or there are not
+            // atleast 2 lines we will not perform line to line calculations
+            if ( DefinedLineVoltages == 3 || DefinedNeutralVoltages < 2 )
+                return;
+
+            // Get the meter associated with the channels in this data group
+            meter = (VA ?? VB ?? VC).SeriesInfo.Channel.Meter;
+
+            if (m_vabIndex == -1 && VA != null && VB != null)
+            {
+                // Calculate VAB = VA - VB
+                missingSeries = VA.Add(VB.Negate());
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "AB");
+                missingSeries.Calculated = true;
+                m_vabIndex = m_dataGroup.DataSeries.Count;
+                m_dataGroup.Add(missingSeries);
+            }
+
+            if (m_vbcIndex == -1 && VB != null && VC != null)
+            {
+                // Calculate VBC = VB - VC
+                missingSeries = VB.Add(VC.Negate());
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "BC");
+                missingSeries.Calculated = true;
+                m_vbcIndex = m_dataGroup.DataSeries.Count;
+                m_dataGroup.Add(missingSeries);
+            }
+
+            if (m_vcaIndex == -1 && VC != null && VA != null)
+            {
+                // Calculate VCA = VC - VA
+                missingSeries = VC.Add(VA.Negate());
+                missingSeries.SeriesInfo = GetSeriesInfo(meter, m_dataGroup, "Voltage", "CA");
+                missingSeries.Calculated = true;
+                m_vcaIndex = m_dataGroup.DataSeries.Count;
+                m_dataGroup.Add(missingSeries);
+            }
+
+        }
+
 
         public DataGroup ToDataGroup()
         {
