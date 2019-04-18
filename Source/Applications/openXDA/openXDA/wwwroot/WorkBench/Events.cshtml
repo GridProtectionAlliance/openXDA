@@ -55,7 +55,7 @@
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
-{   //    { "Field", "Label", "Classes" }
+    {   //    { "Field", "Label", "Classes" }
         new[] { "ID", "Event ID", "text-left"},
         new[] { "MeterName", "Meter Name", "text-left"},
         new[] { "LineName", "Line Name", "text-left"},
@@ -71,8 +71,7 @@
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.defaultFilter = dataContext.Connection.ExecuteScalar<int>("SELECT ID FROM WorkbenchFilter WHERE UserID = {0} AND IsDefault = 1", DataHub.GetCurrentUserID());
     ViewBag.HideAddNewButton = true;
-    ViewBag.ParentKeys = ViewBag.defaultFilter;
-
+    ViewBag.ParentKeys = "globalFilter";
 }
 
 @section StyleSheets{
@@ -222,6 +221,12 @@
                 viewModel.filterText = '@ViewBag.EventID';
                 viewModel.queryPageRecords();
             }
+
+            $("#exportCSVLink").click(function () {
+                var globalFilter = encodeURIComponent($("#globalFilter").val());
+                var href = this.href.replace("globalFilter", globalFilter);
+                $("#exportCSVLink").attr("href", href);
+            });
         });
         
         function getUpdatedBy(data) {
