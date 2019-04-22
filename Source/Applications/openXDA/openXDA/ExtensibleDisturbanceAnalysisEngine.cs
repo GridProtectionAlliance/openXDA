@@ -1497,21 +1497,26 @@ namespace openXDA
 
                 // Call the method to parse the file
                 state.MeterDataSet = ParseFile(dataReader, filePathOnDisk);
-
-                if ((object)state.MeterDataSet != null)
-                {
-                    state.MeterDataSet.CreateDbConnection = () => CreateDbConnection(systemSettings);
-                    state.MeterDataSet.FilePath = filePathOnDisk;
-                    state.MeterDataSet.FileGroup = state.FileGroup;
-                    state.MeterDataSet.ConnectionString = state.ConnectionString;
-                    state.MeterDataSet.Meter.AssetKey = meterKey;
-                }
             }
 
-            // Shift date/time values to the configured time zone and set the start and end time values on the file group
             MeterDataSet meterDataSet = state.MeterDataSet;
-            ShiftTime(meterDataSet, meterDataSet.Meter.GetTimeZoneInfo(systemSettings.DefaultMeterTimeZoneInfo), systemSettings.XDATimeZoneInfo);
-            SetDataTimeRange(meterDataSet);
+
+            if ((object)meterDataSet != null)
+            {
+                meterDataSet.CreateDbConnection = () => CreateDbConnection(systemSettings);
+                meterDataSet.FilePath = filePathOnDisk;
+                meterDataSet.FileGroup = state.FileGroup;
+                meterDataSet.ConnectionString = state.ConnectionString;
+                meterDataSet.Meter.AssetKey = meterKey;
+
+                using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
+                {
+                    // Shift date/time values to the configured time zone and set the start and end time values on the file group
+                    meterDataSet.Meter.TimeZone = connection.ExecuteScalar<string>("SELECT TimeZone FROM Meter WHERE AssetKey = {0}", new object[] { meterKey });
+                    ShiftTime(meterDataSet, meterDataSet.Meter.GetTimeZoneInfo(systemSettings.DefaultMeterTimeZoneInfo), systemSettings.XDATimeZoneInfo);
+                    SetDataTimeRange(meterDataSet);
+                }
+            }
         }
 
         // Processes the data that was parsed from the file.
