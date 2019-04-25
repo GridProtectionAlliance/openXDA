@@ -1568,6 +1568,30 @@ namespace FaultData.DataResources
                 .Min();
         }
 
+        // Insulation contamination
+        private double GetInceptionDistanceFromPeak(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            DataSeries angleSeries = new Func<DataSeries>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.VA?.Phase;
+                    case FaultType.BN: return viCycleDataGroup.VB?.Phase;
+                    case FaultType.CN: return viCycleDataGroup.VC?.Phase;
+                    default: return null;
+                }
+            })();
+
+            if (angleSeries == null)
+                return double.NaN;
+
+            int inceptionIndex = fault.StartSample;
+            double angle = angleSeries[inceptionIndex].Value * 180.0D / Math.PI;
+            double positiveDistance = Math.Abs(angle - 90.0D);
+            double negativeDistance = Math.Abs(angle + 90.0D);
+            return Math.Min(positiveDistance, negativeDistance);
+        }
+
         private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
         {
             Angle angle = cycleDataGroup.Phase[cycle].Value;
