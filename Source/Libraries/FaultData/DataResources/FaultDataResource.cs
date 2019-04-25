@@ -1489,6 +1489,71 @@ namespace FaultData.DataResources
             }
         }
 
+        // Tree in line
+        private double GetTreeFaultResistance(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup)
+        {
+            if (fault.CalculationCycle < 0)
+                return double.NaN;
+
+            if (!new[] { FaultType.AN, FaultType.BN, FaultType.CN }.Contains(fault.Type))
+                return double.NaN;
+
+            CycleDataGroup faultedVoltage = new Func<CycleDataGroup>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.VA;
+                    case FaultType.BN: return viCycleDataGroup.VB;
+                    case FaultType.CN: return viCycleDataGroup.VC;
+                    default: return null;
+                }
+            })();
+
+            CycleDataGroup faultedCurrent = new Func<CycleDataGroup>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.IA;
+                    case FaultType.BN: return viCycleDataGroup.IB;
+                    case FaultType.CN: return viCycleDataGroup.IC;
+                    default: return null;
+                }
+            })();
+
+            if (faultedVoltage == null || faultedCurrent == null)
+                return double.NaN;
+
+            ComplexNumber faultVoltage = ToComplexNumber(faultedVoltage, fault.CalculationCycle);
+            ComplexNumber faultCurrent = ToComplexNumber(faultedCurrent, fault.CalculationCycle);
+            ComplexNumber faultImpedance = faultVoltage / faultCurrent;
+
+            LineImpedance lineImpedance = new Func<LineImpedance>(() =>
+            {
+                using (AdoDataConnection connection = dataGroup.Line.ConnectionFactory())
+                {
+                    TableOperations<LineImpedance> lineImpedanceTable = new TableOperations<LineImpedance>(connection);
+                    return lineImpedanceTable.QueryRecordWhere("LineID = {0}", dataGroup.Line.ID);
+                }
+            })();
+
+            if (lineImpedance == null)
+                return double.NaN;
+
+            ComplexNumber z0 = new ComplexNumber(lineImpedance.R0, lineImpedance.X0);
+            ComplexNumber z1 = new ComplexNumber(lineImpedance.R1, lineImpedance.X1);
+            ComplexNumber loopImpedance = (z0 + 2.0D * z1) / 3.0D;
+
+            double zf = faultImpedance.Magnitude;
+            double xf = faultImpedance.Imaginary;
+            double rs = loopImpedance.Real;
+            double xs = loopImpedance.Imaginary;
+
+            double term1 = zf * zf;
+            double term2 = xf * xf;
+            double term3 = xf * rs / xs;
+            return (Math.Sqrt(term1 - term2) - term3);
+        }
+
         private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
         {
             Angle angle = cycleDataGroup.Phase[cycle].Value;
