@@ -1647,6 +1647,14 @@ namespace FaultData.DataResources
             return samples[3].Magnitude / samples[1].Magnitude;
         }
 
+        // Conductor slap
+        private double GetGroundCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup)
+        {
+            double faultMagnitude = fault.CurrentMagnitude;
+            double groundCurrent = viCycleDataGroup.IR?.RMS[fault.CalculationCycle].Value ?? double.NaN;
+            return groundCurrent / faultMagnitude;
+        }
+
         private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
         {
             Angle angle = cycleDataGroup.Phase[cycle].Value;
