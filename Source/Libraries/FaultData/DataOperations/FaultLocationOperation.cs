@@ -77,6 +77,7 @@ namespace FaultData.DataOperations
                     TableOperations<openXDA.Model.FaultGroup> faultGroupTable = new TableOperations<openXDA.Model.FaultGroup>(connection);
                     TableOperations<FaultSegment> faultSegmentTable = new TableOperations<FaultSegment>(connection);
                     TableOperations<FaultSummary> faultSummaryTable = new TableOperations<FaultSummary>(connection);
+                    TableOperations<FaultCauseMetrics> faultCauseMetricsTable = new TableOperations<FaultCauseMetrics>(connection);
 
                     Event evt = eventTable.GetEvent(MeterDataSet.FileGroup, DataGroup);
                     SegmentType faultSegmentType = segmentTypeTable.GetOrAdd("Fault");
@@ -108,6 +109,10 @@ namespace FaultData.DataOperations
                         {
                             faultSummaryTable.AddNewRecord(faultSummary);
                         }
+
+                        // Generate fault cause metrics for this fault
+                        FaultCauseMetrics faultCauseMetrics = CreateFaultCauseMetrics(evt.ID, faultIndex + 1, fault);
+                        faultCauseMetricsTable.AddNewRecord(faultCauseMetrics);
                     }
 
                     // Generate fault curves for each algorithm used to analyze the fault
@@ -212,6 +217,24 @@ namespace FaultData.DataOperations
                         IsSuppressed = fault.IsSuppressed
                     };
                 }
+            }
+
+            private FaultCauseMetrics CreateFaultCauseMetrics(int eventID, int faultNumber, Fault fault)
+            {
+                double? ToDBFloat(double num) =>
+                    !double.IsNaN(num) ? (double?)num : null;
+
+                return new FaultCauseMetrics()
+                {
+                    EventID = eventID,
+                    FaultNumber = faultNumber,
+                    TreeFaultResistance = ToDBFloat(fault.TreeFaultResistance),
+                    LightningMilliseconds = ToDBFloat(fault.LightningMilliseconds),
+                    InceptionDistanceFromPeak = ToDBFloat(fault.InceptionDistanceFromPeak),
+                    PrefaultThirdHarmonic = ToDBFloat(fault.PrefaultThirdHarmonic),
+                    GroundCurrentRatio = ToDBFloat(fault.GroundCurrentRatio),
+                    LowPrefaultCurrentRatio = ToDBFloat(fault.LowPrefaultCurrentRatio)
+                };
             }
 
             private FaultCurve CreateFaultCurve(int eventID, int curveIndex)
