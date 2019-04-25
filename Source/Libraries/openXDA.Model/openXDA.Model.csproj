@@ -70,6 +70,7 @@
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
     <Compile Include="Events\Disturbances\VoltageEnvelopeCurve.cs" />
     <Compile Include="Events\EventStat.cs" />
+    <Compile Include="Events\Faults\FaultCauseMetrics.cs" />
     <Compile Include="Events\Faults\FaultCurve.cs" />
     <Compile Include="Events\Faults\FaultDetectionLogic.cs" />
     <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
