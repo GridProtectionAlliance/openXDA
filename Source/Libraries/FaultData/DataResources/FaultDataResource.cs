@@ -1554,6 +1554,20 @@ namespace FaultData.DataResources
             return (Math.Sqrt(term1 - term2) - term3);
         }
 
+        // Lightning
+        private double GetLightningMilliseconds(Fault fault, List<ILightningStrike> lightningStrikes)
+        {
+            DateTime inception = TimeZoneInfo.ConvertTimeToUtc(fault.InceptionTime, XDATimeZone);
+
+            return lightningStrikes
+                .Select(strike => inception - strike.UTCTime)
+                .Select(span => span.TotalMilliseconds)
+                .Select(new Func<double, double>(Math.Round))
+                .Select(Math.Abs)
+                .DefaultIfEmpty(double.NaN)
+                .Min();
+        }
+
         private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
         {
             Angle angle = cycleDataGroup.Phase[cycle].Value;
