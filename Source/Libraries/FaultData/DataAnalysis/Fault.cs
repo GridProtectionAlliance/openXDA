@@ -344,13 +344,19 @@ namespace FaultData.DataAnalysis
         public double PostfaultCurrent { get; set; }
         public double ReactanceRatio { get; set; }
 
+        public double TreeFaultResistance { get; set; }
+        public double LightningMilliseconds { get; set; }
+        public double InceptionDistanceFromPeak { get; set; }
+        public double PrefaultThirdHarmonic { get; set; }
+        public double GroundCurrentRatio { get; set; }
+        public double LowPrefaultCurrentRatio { get; set; }
+
         public bool IsSuppressed { get; set; }
         public bool IsReclose { get; set; }
 
         public List<Summary> Summaries { get; }
         public List<Segment> Segments { get; }
         public List<Curve> Curves { get; }
-
 
         #endregion
 

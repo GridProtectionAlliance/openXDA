@@ -356,27 +356,9 @@ namespace FaultData.DataResources
 
         public override void Initialize(MeterDataSet meterDataSet)
         {
-            DataGroup dataGroup;
-            VIDataGroup viDataGroup;
-            VICycleDataGroup viCycleDataGroup;
-
-            List<Fault> faults;
-
+            Stopwatch stopwatch = new Stopwatch();
+            CycleDataResource cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
             List<FaultLocationAlgorithm> faultLocationAlgorithms;
-            FaultLocationDataSet faultLocationDataSet;
-            ImpedanceExtractor impedanceExtractor;
-            FaultCurveGenerator faultCurveGenerator;
-
-            CycleDataResource cycleDataResource;
-
-            bool? faultDetectionLogicResult;
-            bool defaultFaultDetectionLogicResult;
-            bool faultValidationLogicResult;
-
-            Stopwatch stopwatch;
-
-            stopwatch = new Stopwatch();
-            cycleDataResource = meterDataSet.GetResource<CycleDataResource>();
 
             using (AdoDataConnection connection = meterDataSet.CreateDbConnection())
             {
@@ -388,9 +370,9 @@ namespace FaultData.DataResources
 
             for (int i = 0; i < cycleDataResource.DataGroups.Count; i++)
             {
-                dataGroup = cycleDataResource.DataGroups[i];
-                viDataGroup = cycleDataResource.VIDataGroups[i];
-                viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
+                DataGroup dataGroup = cycleDataResource.DataGroups[i];
+                VIDataGroup viDataGroup = cycleDataResource.VIDataGroups[i];
+                VICycleDataGroup viCycleDataGroup = cycleDataResource.VICycleDataGroups[i];
 
                 // Defined channel checks
                 Log.Debug("Checking defined channels...");
@@ -426,13 +408,13 @@ namespace FaultData.DataResources
 
                 // Create the fault location data set and begin populating
                 // the properties necessary for calculating fault location
-                faultLocationDataSet = new FaultLocationDataSet();
+                FaultLocationDataSet faultLocationDataSet = new FaultLocationDataSet();
                 faultLocationDataSet.LineDistance = dataGroup.Line.Length;
                 faultLocationDataSet.PrefaultCycle = FirstCycle(viCycleDataGroup);
 
                 // Extract impedances from the database
                 // and into the fault location data set
-                impedanceExtractor = new ImpedanceExtractor();
+                ImpedanceExtractor impedanceExtractor = new ImpedanceExtractor();
                 impedanceExtractor.FaultLocationDataSet = faultLocationDataSet;
                 impedanceExtractor.Meter = meterDataSet.Meter;
                 impedanceExtractor.Line = dataGroup.Line;
@@ -444,6 +426,8 @@ namespace FaultData.DataResources
                 }
 
                 // Break into faults and segments
+                List<Fault> faults;
+
                 Log.Debug("Classifying data into faults and segments...");
 
                 try
@@ -461,8 +445,8 @@ namespace FaultData.DataResources
                 }
 
                 // Check the fault detection logic and the default fault detection logic
-                faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
-                defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
+                bool? faultDetectionLogicResult = CheckFaultDetectionLogic(meterDataSet, dataGroup);
+                bool defaultFaultDetectionLogicResult = CheckDefaultFaultDetectionLogic(faults);
 
                 // If the fault detection logic detects a fault and the default
                 // logic does not agree, treat the whole waveform as a fault
@@ -481,7 +465,7 @@ namespace FaultData.DataResources
                 Log.Debug("Generating fault curves...");
                 stopwatch.Restart();
 
-                faultCurveGenerator = new FaultCurveGenerator();
+                FaultCurveGenerator faultCurveGenerator = new FaultCurveGenerator();
                 faultCurveGenerator.SamplesPerCycle = Transform.CalculateSamplesPerCycle(viDataGroup.VA, m_systemFrequency);
                 faultCurveGenerator.CycleDataGroup = viCycleDataGroup;
                 faultCurveGenerator.Faults = faults;
@@ -493,11 +477,16 @@ namespace FaultData.DataResources
 
                 // Gather additional info about each fault
                 // based on the results of the above analysis
+                LightningDataResource lightningDataResource = meterDataSet.GetResource<LightningDataResource>();
+
+                if (!lightningDataResource.LightningStrikeLookup.TryGetValue(dataGroup, out List<ILightningStrike> lightningStrikes))
+                    lightningStrikes = new List<ILightningStrike>();
+
                 foreach (Fault fault in faults)
-                    PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup);
+                    PopulateFaultInfo(fault, dataGroup, viCycleDataGroup, viDataGroup, lightningStrikes);
 
                 // Create a fault group and add it to the lookup table
-                faultValidationLogicResult = CheckFaultValidationLogic(faults);
+                bool faultValidationLogicResult = CheckFaultValidationLogic(faults);
                 m_faultLookup.Add(dataGroup, new FaultGroup(faults, faultDetectionLogicResult, defaultFaultDetectionLogicResult, faultValidationLogicResult));
             }
         }
@@ -1010,7 +999,7 @@ namespace FaultData.DataResources
             return GetCycle(viCycleDataGroup, 0);
         }
 
-        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup)
+        private void PopulateFaultInfo(Fault fault, DataGroup dataGroup, VICycleDataGroup viCycleDataGroup, VIDataGroup viDataGroup, List<ILightningStrike> lightningStrikes)
         {
             int samplesPerCycle = Transform.CalculateSamplesPerCycle(dataGroup.SamplesPerSecond, m_systemFrequency);
             int calculationCycle = GetCalculationCycle(fault, viCycleDataGroup, samplesPerCycle);
@@ -1049,6 +1038,13 @@ namespace FaultData.DataResources
 
                 if (calculationCycle >= 0)
                 {
+                    fault.TreeFaultResistance = GetTreeFaultResistance(fault, dataGroup, viCycleDataGroup);
+                    fault.LightningMilliseconds = GetLightningMilliseconds(fault, lightningStrikes);
+                    fault.InceptionDistanceFromPeak = GetInceptionDistanceFromPeak(fault, viCycleDataGroup, samplesPerCycle);
+                    fault.PrefaultThirdHarmonic = GetPrefaultThirdHarmonic(fault, viDataGroup, viCycleDataGroup, samplesPerCycle);
+                    fault.GroundCurrentRatio = GetGroundCurrentRatio(fault, viCycleDataGroup);
+                    fault.LowPrefaultCurrentRatio = GetLowPrefaultCurrentRatio(fault, viCycleDataGroup, samplesPerCycle);
+
                     CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
                     ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
                     ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
