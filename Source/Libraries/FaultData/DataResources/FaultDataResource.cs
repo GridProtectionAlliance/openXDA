@@ -28,6 +28,7 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using FaultAlgorithms;
 using FaultData.Configuration;
@@ -42,6 +43,7 @@ using GSF.Parsing;
 using GSF.Units;
 using InStep.eDNA.EzDNAApiNet;
 using log4net;
+using MathNet.Numerics.IntegralTransforms;
 using openXDA.Model;
 using CycleData = FaultAlgorithms.CycleData;
 using Fault = FaultData.DataAnalysis.Fault;
@@ -1590,6 +1592,59 @@ namespace FaultData.DataResources
             double positiveDistance = Math.Abs(angle - 90.0D);
             double negativeDistance = Math.Abs(angle + 90.0D);
             return Math.Min(positiveDistance, negativeDistance);
+        }
+
+        // Lightning arrester failure
+        private double GetPrefaultThirdHarmonic(Fault fault, VIDataGroup viDataGroup, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            int startIndex = fault.StartSample - samplesPerCycle;
+
+            if (startIndex < 0)
+                return double.NaN;
+
+            DataSeries PeakSeries = new Func<DataSeries>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viCycleDataGroup.IA?.Peak;
+                    case FaultType.BN: return viCycleDataGroup.IB?.Peak;
+                    case FaultType.CN: return viCycleDataGroup.IC?.Peak;
+                    default: return null;
+                }
+            })();
+
+            if (PeakSeries == null)
+                return double.NaN;
+
+            // If there is no load current before the fault,
+            // then the FFT is invalid
+            if (PeakSeries[startIndex].Value <= BreakerSettings.OpenBreakerThreshold)
+                return double.NaN;
+
+            DataSeries faultedSeries = new Func<DataSeries>(() =>
+            {
+                switch (fault.Type)
+                {
+                    case FaultType.AN: return viDataGroup.IA;
+                    case FaultType.BN: return viDataGroup.IB;
+                    case FaultType.CN: return viDataGroup.IC;
+                    default: return null;
+                }
+            })();
+
+            if (faultedSeries == null)
+                return double.NaN;
+
+            int endIndex = startIndex + samplesPerCycle - 1;
+            DataSeries prefaultCycle = faultedSeries.ToSubSeries(startIndex, endIndex);
+
+            Complex[] samples = prefaultCycle.DataPoints
+                .Select(dataPoint => new Complex(dataPoint.Value, 0))
+                .ToArray();
+
+            Fourier.Forward(samples);
+
+            return samples[3].Magnitude / samples[1].Magnitude;
         }
 
         private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
