@@ -1655,6 +1655,29 @@ namespace FaultData.DataResources
             return groundCurrent / faultMagnitude;
         }
 
+        // Conductor Break
+        private double GetLowPrefaultCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup, int samplesPerCycle)
+        {
+            // Back up two cycles from the beginning of the fault
+            int prefaultCycleIndex = fault.StartSample - 2 * samplesPerCycle;
+
+            if (prefaultCycleIndex < 0)
+                return double.NaN;
+
+            double[] prefaultValues = new[] { viCycleDataGroup.IA, viCycleDataGroup.IB, viCycleDataGroup.IC }
+                .Where(cycleDataGroup => cycleDataGroup != null)
+                .Select(cycleDataGroup => cycleDataGroup.RMS[prefaultCycleIndex].Value)
+                .OrderBy(value => value)
+                .ToArray();
+
+            if (prefaultValues.Length < 2)
+                return double.NaN;
+
+            double min = prefaultValues[0];
+            double nextMin = prefaultValues[1];
+            return min / nextMin;
+        }
+
         private ComplexNumber ToComplexNumber(CycleDataGroup cycleDataGroup, int cycle)
         {
             Angle angle = cycleDataGroup.Phase[cycle].Value;
