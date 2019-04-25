@@ -1617,6 +1617,24 @@ CREATE NONCLUSTERED INDEX IX_FaultSummary_Inception
 ON FaultSummary(Inception ASC)
 GO
 
+CREATE TABLE FaultCauseMetrics
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+    FaultNumber INT NOT NULL,
+    TreeFaultResistance FLOAT NULL,
+    LightningMilliseconds FLOAT NULL,
+    InceptionDistanceFromPeak FLOAT NULL,
+    PrefaultThirdHarmonic FLOAT NULL,
+    GroundCurrentRatio FLOAT NULL,
+    LowPrefaultCurrentRatio FLOAT NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FaultCauseMetrics_EventID
+ON FaultCauseMetrics(EventID ASC)
+GO
+
 CREATE TABLE NearestStructure
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
