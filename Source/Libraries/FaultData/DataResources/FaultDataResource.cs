@@ -1035,16 +1035,15 @@ namespace FaultData.DataResources
 
                 fault.CurrentMagnitude = GetFaultCurrentMagnitude(viCycleDataGroup, fault.Type, calculationCycle);
                 fault.CurrentLag = GetFaultCurrentLag(viCycleDataGroup, fault.Type, calculationCycle);
+                fault.TreeFaultResistance = GetTreeFaultResistance(fault, dataGroup, viCycleDataGroup);
+                fault.LightningMilliseconds = GetLightningMilliseconds(fault, lightningStrikes);
+                fault.InceptionDistanceFromPeak = GetInceptionDistanceFromPeak(fault, viCycleDataGroup, samplesPerCycle);
+                fault.PrefaultThirdHarmonic = GetPrefaultThirdHarmonic(fault, viDataGroup, viCycleDataGroup, samplesPerCycle);
+                fault.GroundCurrentRatio = GetGroundCurrentRatio(fault, viCycleDataGroup);
+                fault.LowPrefaultCurrentRatio = GetLowPrefaultCurrentRatio(fault, viCycleDataGroup, samplesPerCycle);
 
                 if (calculationCycle >= 0)
                 {
-                    fault.TreeFaultResistance = GetTreeFaultResistance(fault, dataGroup, viCycleDataGroup);
-                    fault.LightningMilliseconds = GetLightningMilliseconds(fault, lightningStrikes);
-                    fault.InceptionDistanceFromPeak = GetInceptionDistanceFromPeak(fault, viCycleDataGroup, samplesPerCycle);
-                    fault.PrefaultThirdHarmonic = GetPrefaultThirdHarmonic(fault, viDataGroup, viCycleDataGroup, samplesPerCycle);
-                    fault.GroundCurrentRatio = GetGroundCurrentRatio(fault, viCycleDataGroup);
-                    fault.LowPrefaultCurrentRatio = GetLowPrefaultCurrentRatio(fault, viCycleDataGroup, samplesPerCycle);
-
                     CycleData reactanceRatioCycle = GetCycle(viCycleDataGroup, calculationCycle);
                     ComplexNumber voltage = FaultLocationAlgorithms.GetFaultVoltage(reactanceRatioCycle, fault.Type);
                     ComplexNumber current = FaultLocationAlgorithms.GetFaultCurrent(reactanceRatioCycle, fault.Type);
@@ -1646,8 +1645,14 @@ namespace FaultData.DataResources
         // Conductor slap
         private double GetGroundCurrentRatio(Fault fault, VICycleDataGroup viCycleDataGroup)
         {
+            if (fault.CalculationCycle < 0)
+                return double.NaN;
+
+            if (viCycleDataGroup.IR == null)
+                return double.NaN;
+
             double faultMagnitude = fault.CurrentMagnitude;
-            double groundCurrent = viCycleDataGroup.IR?.RMS[fault.CalculationCycle].Value ?? double.NaN;
+            double groundCurrent = viCycleDataGroup.IR.RMS[fault.CalculationCycle].Value;
             return groundCurrent / faultMagnitude;
         }
 

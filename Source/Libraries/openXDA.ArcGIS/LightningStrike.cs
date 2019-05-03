@@ -51,7 +51,10 @@ namespace openXDA.ArcGIS
                 long subsecond = utcTime.Ticks % TimeSpan.TicksPerSecond;
 
                 if (subsecond == 0 && DateTime.TryParse(DisplayTime, out DateTime displayTime))
-                    utcTime = utcTime.AddTicks(displayTime.Ticks % TimeSpan.TicksPerSecond);
+                {
+                    double timeZoneOffset = Math.Round(displayTime.Subtract(utcTime).TotalMinutes);
+                    utcTime = displayTime.AddMinutes(-timeZoneOffset);
+                }
 
                 UTCTime = utcTime;
             }
