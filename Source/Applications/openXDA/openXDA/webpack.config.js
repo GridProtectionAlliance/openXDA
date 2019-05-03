@@ -21,7 +21,7 @@ module.exports = {
         extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".css"]
     },
     module: {
-        loaders: [
+        rules: [
             // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
             { test: /\.tsx?$/, loader: "ts-loader" },
             {
@@ -37,14 +37,11 @@ module.exports = {
             { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=100000" }
         ]
     },
-    plugins: [
-        new webpack.ProvidePlugin({
-          $: 'jquery',
-          jQuery: 'jquery',
-        }),
-        //new webpack.DefinePlugin({
-        //    'process.env.NODE_ENV': JSON.stringify('production')
-        //}),
-        //new webpack.optimize.UglifyJsPlugin()
-    ]
+    externals: {
+        jquery: 'jQuery',
+        react: 'React',
+        'react-dom': 'ReactDOM',
+        moment: 'moment'
+
+    }
 };
