@@ -81,6 +81,9 @@ namespace openXDA.ArcGIS
             List<Geometry> lineGeometry = await QueryLineGeometry(lineKey);
             Geometry lightningBufferGeometry = ToLightningBufferGeometry(lineGeometry);
 
+            if (lightningBufferGeometry == null)
+                return Enumerable.Empty<ILightningStrike>();
+
             TimeZoneInfo xdaTimeZone = XDATimeZone;
             DateTime startUTC = TimeZoneInfo.ConvertTimeToUtc(start, xdaTimeZone);
             DateTime endUTC = TimeZoneInfo.ConvertTimeToUtc(end, xdaTimeZone);
@@ -114,7 +117,7 @@ namespace openXDA.ArcGIS
                 .Select(unit => (unit != null) ? LinearUnits.Miles.ConvertTo(unit, BufferMiles) : BufferMiles)
                 .ToList();
 
-            return GeometryEngine.Buffer(lineGeometry, distances, true).Single();
+            return GeometryEngine.Buffer(lineGeometry, distances, true).SingleOrDefault();
         }
 
         private async Task<List<ILightningStrike>> QueryLightningData(Geometry lightningBufferGeometry, DateTimeOffset startTime, DateTimeOffset endTime)
