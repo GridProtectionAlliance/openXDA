@@ -82,6 +82,9 @@ namespace FaultData.DataResources
             if (dataProvider == null)
                 return;
 
+            ConnectionStringParser<SettingAttribute, CategoryAttribute> connectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
+            connectionStringParser.ParseConnectionString(meterDataSet.ConnectionString, dataProvider);
+
             foreach (DataGroup dataGroup in cycleDataResource.DataGroups)
             {
                 string lineKey = dataGroup.Line.AssetKey;
