@@ -33,12 +33,7 @@
   <ItemGroup>
     <Reference Include="EzDNAApiNet64">
       <HintPath>..\..\Dependencies\eDNA\EzDNAApiNet64.dll</HintPath>
-    </Reference>
-    <Reference Include="EzDNAApiNetSecure64">
-      <HintPath>..\..\Dependencies\eDNA\EzDNAApiNetSecure64.dll</HintPath>
-    </Reference>
-    <Reference Include="EzDNAServApiNet64">
-      <HintPath>..\..\Dependencies\eDNA\EzDNAServApiNet64.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="GSF.COMTRADE">
       <HintPath>..\..\Dependencies\GSF\GSF.COMTRADE.dll</HintPath>
@@ -197,6 +192,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\Dependencies\eDNA\*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="DataWriters\DisturbanceEmailTemplate.xslt" />
     <Content Include="DataWriters\FaultEmailTemplate.xslt">
       <SubType>Designer</SubType>
