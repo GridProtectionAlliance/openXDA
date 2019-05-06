@@ -339,13 +339,6 @@
       <Project>{9f5bacf2-025c-4a54-94bd-ec0ceb618bf0}</Project>
       <Name>PQMark.DataAggregator</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\XDA.EMCB\XDA.EMCB.csproj">
-      <Project>{d755fab9-64d2-4c65-a765-9bd986cf8594}</Project>
-      <Name>XDA.EMCB</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <OutputItemType>Content</OutputItemType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="AppDebug.config">
