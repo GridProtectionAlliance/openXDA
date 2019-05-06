@@ -161,9 +161,6 @@ namespace DeviceDefinitionsMigrator
                 Console.Error.WriteLine("--- ERROR ---");
                 Console.Error.WriteLine(ex.ToString());
             }
-
-            Console.WriteLine("Press any key to finish...");
-            Console.ReadLine();
         }
 
         private class LookupTables

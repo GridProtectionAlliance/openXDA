@@ -244,7 +244,7 @@ GO
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsBreakers', 0)
 GO
 
-INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsExtensions', 1)
+INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsExtensions', 0)
 GO
 
 INSERT INTO DashSettings(Name, Value, Enabled) VALUES('DashTab', '#tabsTrending', 1)
