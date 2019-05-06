@@ -162,6 +162,9 @@
   <Component Id="wwwroot_Content_bootstrap_datepicker3_min_css">
     <File Id="wwwroot_Content_bootstrap_datepicker3.min.css" Name="bootstrap-datepicker3.min.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\bootstrap-datepicker3.min.css" />
   </Component>
+  <Component Id="wwwroot_Content_bootstrap_datetimepicker_css">
+    <File Id="wwwroot_Content_bootstrap_datetimepicker.css" Name="bootstrap-datetimepicker.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\bootstrap-datetimepicker.css" />
+  </Component>
   <Component Id="wwwroot_Content_bootstrap_sidebar_css">
     <File Id="wwwroot_Content_bootstrap_sidebar.css" Name="bootstrap-sidebar.css" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Content\bootstrap-sidebar.css" />
   </Component>
@@ -625,6 +628,9 @@
   </Component>
   <Component Id="wwwroot_Scripts_bootstrap_datepicker_min_js">
     <File Id="wwwroot_Scripts_bootstrap_datepicker.min.js" Name="bootstrap-datepicker.min.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\bootstrap-datepicker.min.js" />
+  </Component>
+  <Component Id="wwwroot_Scripts_bootstrap_datetimepicker_js">
+    <File Id="wwwroot_Scripts_bootstrap_datetimepicker.js" Name="bootstrap-datetimepicker.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\bootstrap-datetimepicker.js" />
   </Component>
   <Component Id="wwwroot_Scripts_bootstrap_toolkit_js">
     <File Id="wwwroot_Scripts_bootstrap_toolkit.js" Name="bootstrap-toolkit.js" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Scripts\bootstrap-toolkit.js" />
