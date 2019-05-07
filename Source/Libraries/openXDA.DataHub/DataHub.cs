@@ -5693,39 +5693,50 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(DataFile), RecordOperation.QueryRecords)]
         public IEnumerable<DataFile> QueryDataFiles(string sortField, bool ascending, int page, int pageSize, string filterString)
         {
-            const string IDQueryFormat =
-                "SELECT DataFile.ID " +
+            const string QueryFormat =
+                "SELECT DataFile.* " +
                 "FROM " +
-                "    FileGroup CROSS APPLY " +
+                "( " +
+                "    SELECT " +
+                "        ROW_NUMBER() OVER(ORDER BY {2}) AS RowNumber, " +
+                "        DataFile.* " +
+                "    FROM FileGroup CROSS APPLY " +
                 "    ( " +
                 "        SELECT TOP 1 * " +
                 "        FROM DataFile " +
                 "        WHERE DataFile.FileGroupID = FileGroup.ID " +
                 "        ORDER BY FileSize DESC, FilePath " +
                 "    ) DataFile " +
-                "WHERE {0} " +
-                "ORDER BY {1}";
+                "    WHERE {0} " +
+                ") DataFile " +
+                "WHERE {1} " +
+                "ORDER BY RowNumber";
 
             TableOperations<DataFile> dataFileTable = DataContext.Table<DataFile>();
-            RecordRestriction restriction = dataFileTable.GetSearchRestriction(filterString);
-            string whereClause = restriction?.FilterExpression ?? "1=1";
+
+            RecordRestriction searchRestriction = dataFileTable.GetSearchRestriction(filterString)
+                ?? new RecordRestriction("1=1");
+
+            string searchClause = searchRestriction.FilterExpression;
+
+            int paramIndex = searchRestriction.Parameters.Length;
+            string pageClause = $"RowNumber BETWEEN {{{paramIndex}}} AND {{{paramIndex + 1}}}";
+
             string sortOrder = ascending ? "ASC" : "DESC";
             string orderByClause = $"{sortField} {sortOrder}";
-            string idQuery = string.Format(IDQueryFormat, whereClause, orderByClause);
+            string query = string.Format(QueryFormat, searchClause, pageClause, orderByClause);
 
-            int skipCount = (page - 1) * pageSize;
-            int takeCount = pageSize;
+            int pageStart = (page - 1) * pageSize + 1;
+            int pageEnd = pageStart + pageSize - 1;
 
-            List<int> dataFileIDs = DataContext.Connection
-                .RetrieveData(idQuery, restriction?.Parameters ?? new object[0])
+            object[] parameters = searchRestriction.Parameters
+                .Concat(new object[] { pageStart, pageEnd })
+                .ToArray();
+
+            return DataContext.Connection
+                .RetrieveData(query, parameters)
                 .AsEnumerable()
-                .Select(row => row.ConvertField<int>("ID"))
-                .Skip(skipCount)
-                .Take(takeCount)
-                .ToList();
-
-            string idList = string.Join(",", dataFileIDs);
-            return dataFileTable.QueryRecordsWhere($"ID IN ({idList})");
+                .Select(dataFileTable.LoadRecord);
         }
 
         public IEnumerable<Event> GetEventsByDataFile (int dataFileId)
