@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Resources;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -34,3 +35,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("2.4.0.1")]
 [assembly: AssemblyVersion("2.4.0.1")]
 [assembly: AssemblyFileVersion("2.4.0.1")]
+

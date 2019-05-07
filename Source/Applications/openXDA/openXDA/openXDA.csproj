@@ -310,7 +310,7 @@
       <Project>{7f731255-fa83-4dbf-9e0f-c22ae4845e76}</Project>
       <Name>openHistorian.XDALink</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.DataHub\openXDA.Hubs.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Hubs\openXDA.Hubs.csproj">
       <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
       <Name>openXDA.Hubs</Name>
     </ProjectReference>

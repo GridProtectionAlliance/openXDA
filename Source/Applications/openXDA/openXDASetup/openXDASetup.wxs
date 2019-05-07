@@ -339,6 +339,10 @@
               </CreateFolder>
             </Component>
 
+            <Directory Id="ARCGISFOLDER" Name="ArcGISRuntime100.4">
+              <Directory Id="ARCGISCLIENTFOLDER" Name="client64" />
+            </Directory>
+
             <Directory Id="FILEWATCHERFOLDER" Name="FileWatcher" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
             <Directory Id="RESULTSFOLDER" Name="Results" />
@@ -355,6 +359,10 @@
                 <util:PermissionEx User="[SERVICENAME] Admins" CreateFile="yes" CreateChild="yes" GenericRead="yes" GenericWrite="yes" GenericExecute="yes" Delete="yes" DeleteChild="yes" />
               </CreateFolder>
             </Component>
+            
+            <Directory Id="ARCGISFOLDER" Name="ArcGISRuntime100.4">
+              <Directory Id="ARCGISCLIENTFOLDER" Name="client32" />
+            </Directory>
 
             <Directory Id="FILEWATCHERFOLDER" Name="FileWatcher" />
             <Directory Id="DEBUGFOLDER" Name="Debug" />
@@ -434,6 +442,8 @@
       <ComponentRef Id="FaultAlgorithms" />
       <ComponentRef Id="FaultData" />
       <ComponentRef Id="openXDA.Adapters" />
+      <ComponentRef Id="openXDA.ArcGIS" />
+      <ComponentRef Id="openXDA.EMCB" />
       <ComponentRef Id="openHistorian.XDALink" />
       <ComponentRef Id="openXDA.Hubs" />
       <ComponentRef Id="openXDA.Model" />
@@ -446,6 +456,11 @@
 
       <!-- DotNetZip Dependencies -->
       <ComponentRef Id="Ionic.Zlib" />
+      
+      <!-- ESRI.ArcGIS Dependencies -->
+      <ComponentRef Id="runtimecore" />
+      <ComponentRef Id="RuntimeCoreNet" />
+      <ComponentRef Id="Esri.ArcGISRuntime" />
 
       <!-- log4net Dependencies -->
       <ComponentRef Id="log4net" />
@@ -555,6 +570,12 @@
       <Component Id="openXDA.Adapters">
         <File Id="openXDA.Adapters.dll" Name="$(var.openXDA.Adapters.TargetFileName)" Source="$(var.openXDA.Adapters.TargetPath)" />
       </Component>
+      <Component Id="openXDA.ArcGIS">
+        <File Id="openXDA.ArcGIS.dll" Name="$(var.openXDA.ArcGIS.TargetFileName)" Source="$(var.openXDA.ArcGIS.TargetPath)" />
+      </Component>
+      <Component Id="openXDA.EMCB">
+        <File Id="openXDA.EMCB.dll" Name="$(var.openXDA.EMCB.TargetFileName)" Source="$(var.openXDA.EMCB.TargetPath)" />
+      </Component>
       <Component Id="openXDA.Hubs">
         <File Id="openXDA.Hubs.dll" Name="$(var.openXDA.Hubs.TargetFileName)" Source="$(var.openXDA.Hubs.TargetPath)" />
       </Component>
@@ -567,21 +588,15 @@
       <Component Id="openXDA.Reports">
         <File Id="openXDA.Reports.dll" Name="$(var.openXDA.Reports.TargetFileName)" Source="$(var.openXDA.Reports.TargetPath)" />
       </Component>
-
       <Component Id="openXDA.PQTrendingWebReport">
         <File Id="openXDA.PQTrendingWebReport.dll" Name="$(var.openXDA.PQTrendingWebReport.TargetFileName)" Source="$(var.openXDA.PQTrendingWebReport.TargetPath)" />
       </Component>
-
       <Component Id="openXDA.StepChangeWebReport">
         <File Id="openXDA.StepChangeWebReport.dll" Name="$(var.openXDA.StepChangeWebReport.TargetFileName)" Source="$(var.openXDA.StepChangeWebReport.TargetPath)" />
       </Component>
-
-
-
       <Component Id="PQMark.DataAggregator">
         <File Id="PQMark.DataAggregator.dll" Name="$(var.PQMark.DataAggregator.TargetFileName)" Source="$(var.PQMark.DataAggregator.TargetPath)" />
       </Component>
-
       <Component Id="openHistorian.XDALink">
         <File Id="openHistorian.XDALink.dll" Name="$(var.openHistorian.XDALink.TargetFileName)" Source="$(var.openHistorian.XDALink.TargetPath)" />
       </Component>
@@ -589,6 +604,11 @@
       <!-- DotNetZip Dependencies -->
       <Component Id="Ionic.Zlib">
         <File Id="Ionic.Zlib.dll" Name="Ionic.Zlib.dll" Source="$(var.SolutionDir)\Dependencies\DotNetZip\Ionic.Zlib.dll" />
+      </Component>
+      
+      <!-- ESRI.ArcGIS Dependencies -->
+      <Component Id="Esri.ArcGISRuntime">
+        <File Id="Esri.ArcGISRuntime.dll" Name="Esri.ArcGISRuntime.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461\Esri.ArcGISRuntime.dll" />
       </Component>
       
       <!-- log4net Dependencies -->
@@ -758,6 +778,25 @@
       <Component Id="System.Web.WebPages.Razor">
         <File Id="System.Web.WebPages.Razor.dll" Name="System.Web.WebPages.Razor.dll" Source="$(var.SolutionDir)\Dependencies\GSF\System.Web.WebPages.Razor.dll" />
       </Component>
+    </ComponentGroup>
+    
+    <!-- ESRI.ArcGIS Runtime Components-->
+    <ComponentGroup Id="ESRIArcGISRuntimeComponents" Directory="ARCGISCLIENTFOLDER">
+      <?if $(var.Platform) = x64 ?>
+      <Component Id="runtimecore">
+        <File Id="runtimecore.dll" Name="runtimecore.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461\arcgisruntime100.4\client64\runtimecore.dll" />
+      </Component>
+      <Component Id="RuntimeCoreNet">
+        <File Id="RuntimeCoreNet.dll" Name="RuntimeCoreNet.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461\arcgisruntime100.4\client64\RuntimeCoreNet.dll" />
+      </Component>
+      <?else ?>
+      <Component Id="runtimecore">
+        <File Id="runtimecore.dll" Name="runtimecore.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461\arcgisruntime100.4\client32\runtimecore.dll" />
+      </Component>
+      <Component Id="RuntimeCoreNet">
+        <File Id="RuntimeCoreNet.dll" Name="RuntimeCoreNet.dll" Source="$(var.SolutionDir)\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461\arcgisruntime100.4\client32\RuntimeCoreNet.dll" />
+      </Component>
+      <?endif ?>
     </ComponentGroup>
 
     <!-- File Watcher Service Components -->

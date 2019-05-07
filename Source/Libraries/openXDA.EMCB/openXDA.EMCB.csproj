@@ -7,8 +7,8 @@
     <ProjectGuid>{D755FAB9-64D2-4C65-A765-9BD986CF8594}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>XDA.EMCB</RootNamespace>
-    <AssemblyName>XDA.EMCB</AssemblyName>
+    <RootNamespace>openXDA.EMCB</RootNamespace>
+    <AssemblyName>openXDA.EMCB</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

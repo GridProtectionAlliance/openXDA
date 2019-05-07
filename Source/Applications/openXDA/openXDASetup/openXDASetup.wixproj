@@ -74,6 +74,22 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.ArcGIS\openXDA.ArcGIS.csproj">
+      <Name>openXDA.ArcGIS</Name>
+      <Project>{a74aebc8-4a3f-49df-a95b-b992ed8f6cef}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Libraries\openXDA.EMCB\openXDA.EMCB.csproj">
+      <Name>openXDA.EMCB</Name>
+      <Project>{d755fab9-64d2-4c65-a765-9bd986cf8594}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\openXDA.PQTrendingWebReport\openXDA.PQTrendingWebReport.csproj">
       <Name>openXDA.PQTrendingWebReport</Name>
       <Project>{2635efe2-ef6f-4110-9229-8d91f02df143}</Project>
@@ -98,7 +114,7 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Libraries\openXDA.DataHub\openXDA.Hubs.csproj">
+    <ProjectReference Include="..\..\..\Libraries\openXDA.Hubs\openXDA.Hubs.csproj">
       <Name>openXDA.Hubs</Name>
       <Project>{63e2953c-1c57-41c8-a51d-08e52780bf8a}</Project>
       <Private>True</Private>

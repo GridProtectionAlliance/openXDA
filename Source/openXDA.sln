@@ -112,7 +112,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Adapters", "Librari
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Model", "Libraries\openXDA.Model\openXDA.Model.csproj", "{A1A0BC13-50ED-4DC9-8C1E-3293B0B69281}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Hubs", "Libraries\openXDA.DataHub\openXDA.Hubs.csproj", "{63E2953C-1C57-41C8-A51D-08E52780BF8A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.Hubs", "Libraries\openXDA.Hubs\openXDA.Hubs.csproj", "{63E2953C-1C57-41C8-A51D-08E52780BF8A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.DataPusher", "Libraries\openXDA.DataPusher\openXDA.DataPusher.csproj", "{666EB8A6-FBA9-454C-8537-9113C2EE68D4}"
 EndProject
@@ -130,7 +130,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.PQTrendingWebReport
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.StepChangeWebReport", "Libraries\openXDA.StepChangeWebReport\openXDA.StepChangeWebReport.csproj", "{1F3B639C-6C49-480D-A184-AED1C86AD97B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XDA.EMCB", "Libraries\XDA.EMCB\XDA.EMCB.csproj", "{D755FAB9-64D2-4C65-A765-9BD986CF8594}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.EMCB", "Libraries\openXDA.EMCB\openXDA.EMCB.csproj", "{D755FAB9-64D2-4C65-A765-9BD986CF8594}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "openXDA.ArcGIS", "Libraries\openXDA.ArcGIS\openXDA.ArcGIS.csproj", "{A74AEBC8-4A3F-49DF-A95B-B992ED8F6CEF}"
 EndProject

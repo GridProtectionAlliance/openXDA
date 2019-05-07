@@ -33,7 +33,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using openXDA.Model;
 
-namespace XDA.EMCB
+namespace openXDA.EMCB
 {
     public class WaveformReader : IDataReader
     {

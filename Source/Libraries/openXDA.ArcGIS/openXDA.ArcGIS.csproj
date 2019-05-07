@@ -10,6 +10,7 @@
     <RootNamespace>openXDA.ArcGIS</RootNamespace>
     <AssemblyName>openXDA.ArcGIS</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <SupportedCultures>en-US</SupportedCultures>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
@@ -19,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Build\Output\Debug\Libraries\openXDA.ArcGIS\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -27,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\Build\Output\Release\Libraries\openXDA.ArcGIS\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -35,6 +36,7 @@
   <ItemGroup>
     <Reference Include="Esri.ArcGISRuntime, Version=100.4.0.0, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461\Esri.ArcGISRuntime.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="GSF.Core">
       <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
@@ -58,6 +60,23 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <PropertyGroup>
+    <ArcGISDependencyFolder>$(SolutionDir)\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\lib\net461</ArcGISDependencyFolder>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="$(ArcGISDependencyFolder)\Esri.ArcGISRuntime.dll" Visible="false">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(ArcGISDependencyFolder)\**\runtimecore.dll" Visible="false">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(ArcGISDependencyFolder)\**\RuntimeCoreNet.dll" Visible="false">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FaultData\FaultData.csproj">
       <Project>{11ae594d-2b2b-473c-8550-6bf62914c3e2}</Project>
@@ -70,6 +89,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\build\net461\Esri.ArcGISRuntime.WPF.targets" Condition="Exists('..\..\Dependencies\NuGet\Esri.ArcGISRuntime.WPF.100.4.0\build\net461\Esri.ArcGISRuntime.WPF.targets')" />
+  <ItemGroup>
+    <Content Update="$(ArcGISDependencyFolder)\**\*.cso">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
