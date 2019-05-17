@@ -316,7 +316,7 @@ CREATE TABLE MeterAssetGroup
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     MeterID INT NOT NULL REFERENCES Meter(ID),
-    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID)
+    AssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
 )
 GO
 
@@ -369,6 +369,23 @@ AS BEGIN
     WHERE AssetGroup.Name = 'AllAssets'
 END
 GO
+
+CREATE TABLE AssetGroupAssetGroup
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    ParentAssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
+    ChildAssetGroupID INT NOT NULL REFERENCES AssetGroup(ID),
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetGroupAssetGroup_ParentAssetGroupID
+ON AssetGroupAssetGroup(ParentAssetGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_AssetGroupAssetGroup_ChildAssetGroupID
+ON AssetGroupAssetGroup(ChildAssetGroupID ASC)
+GO
+
 
 CREATE TABLE MaintenanceWindow
 (
@@ -3055,6 +3072,21 @@ FROM
     LineAssetGroup JOIN
     Line ON LineAssetGroup.LineID = Line.ID
 GO
+
+CREATE VIEW AssetGroupAssetGroupView
+AS
+SELECT
+    AssetGroupAssetGroup.ID,
+	AssetGroupAssetGroup.ParentAssetGroupID,
+	AssetGroupAssetGroup.ChildAssetGroupID,
+    Parent.Name as ParentAssetGroupName,
+	Child.Name as ChildAssetGroupName
+FROM
+    AssetGroupAssetGroup JOIN
+    AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
+    AssetGroup as Child ON AssetGroupAssetGroup.ChildAssetGroupID = Child.ID
+GO
+
 
 CREATE VIEW UserAccountAssetGroupView
 AS

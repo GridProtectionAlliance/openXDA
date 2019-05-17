@@ -58,6 +58,7 @@
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { "Name", "Name", "text-Left" },
+        new[] { null, "Asset Groups", "text-center valign-middle"},
         new[] { null, "Meters", "text-center valign-middle"},
         new[] { null, "Lines", "text-center valign-middle"},
         new[] {null, "Users", "text-center valign-middle"}
@@ -69,7 +70,8 @@
 }
 @helper BodyRows()
 {
-    <td width="80%" class="text-left valign-middle" nowrap data-bind="text: Name"></td>
+    <td width="75%" class="text-left valign-middle" nowrap data-bind="text: Name"></td>
+    <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openAssetGroups.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Asset Groups&nbsp;&nbsp;<span class="badge" data-bind="text: getAssetGroupCount(ID, $($element)), attr: {id: 'assetGroupCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openMeters.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Meters&nbsp;&nbsp;<span class="badge" data-bind="text: getMeterCount(ID, $($element)), attr: {id: 'meterCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="newWindow" data-bind="click: openLines.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Lines&nbsp;&nbsp;<span class="badge" data-bind="text: getLineCount(ID, $($element)), attr: {id: 'lineCount' + ID}">0</span></button></td>
     <td width="5%" class="text-center valign-middle"><button type="button" id="userWindow" data-bind="click: openUsers.bind($data), enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Users&nbsp;&nbsp;<span class="badge" data-bind="text: getUserCount(ID, $($element)), attr: {id: 'userCount' + ID}">0</span></button></td>
@@ -84,6 +86,11 @@
         @Raw(dataContext.AddInputField<AssetGroup>("Name"))
     </div>
     <div data-bind="visible: $parent.recordMode()!==RecordMode.View">
+        <div id="assetGroupSelectFrame" class="form-group">
+            <label>Asset Groups:</label>
+            <select id="assetGroupSelect" class="form-control mobileSelect" multiple></select>
+        </div>
+
         <div id="metersSelectFrame" class="form-group">
             <label>Meters:</label>
             <select id="meterSelect" class="form-control mobileSelect" multiple></select>
@@ -98,6 +105,18 @@
         </div>
     </div>
 }
+<div id="assetGroupsDialog" class="modal modal-wide fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body" style="overflow-y: hidden">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <iframe style="border: none; overflow-y: hidden" id="assetGroupsFrame" marginheight="0" marginwidth="0"></iframe>
+                <button type="button" class="btn btn-default pull-right popup-ok-button" data-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="metersDialog" class="modal modal-wide fade" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -138,6 +157,16 @@
     <script>
         @Raw(dataContext.RenderViewModelConfiguration<AssetGroup, DataHub>(ViewBag, null, null, ViewBag.AssetGroupID))
 
+        function getAssetGroupCount(sourceID, element) {
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryGroupAssetGroupAssetGroupCount(sourceID, null).done(function (count) {
+                    $(element).text(count.toString());
+                });
+            }
+
+            return element.text();
+        }
+
         function getMeterCount(sourceID, element) {
             if (viewModel.dataHubIsConnected()) {
                 dataHub.queryGroupMeterViewCount(sourceID, null).done(function (count) {
@@ -166,6 +195,19 @@
             }
             return element.text();
         }
+
+        function openAssetGroups(record) {
+            //console.log(record);
+            $("#assetGroupsFrame").attr({
+                "src": "/Config/AssetGroupAssetGroupView.cshtml?GroupID=" + record.ID + "&Title=" + encodeURIComponent(record.Name),
+                "height": ($(document).height() - 150) + "px",
+                "width": "100%"
+            });
+
+            $("#assetGroupsDialog").modal("show");
+        }
+
+
 
         function openMeters(record) {
             //console.log(record);
@@ -200,6 +242,15 @@
             $("#usersDialog").modal("show");
         }
 
+        $("#assetGroupsDialog").on("hidden.bs.modal", function () {
+            // Refresh page counts after editing tasks
+            viewModel.queryPageRecords();
+
+            // Clear frame page
+            $("#assetGroupsFrame").attr("src", "about:blank");
+        });
+
+
         $("#metersDialog").on("hidden.bs.modal", function () {
             // Refresh page counts after editing tasks
             viewModel.queryPageRecords();
@@ -226,6 +277,7 @@
 
         $(window).resize(function () {
             setTimeout(function () {
+                $("#assetGroupsFrame").attr("height", ($(document).height() - 150) + "px");
                 $("#metersFrame").attr("height", ($(document).height() - 150) + "px");
                 $("#linesFrame").attr("height", ($(document).height() - 150) + "px");
                 $("#usersFrame").attr("height", ($(document).height() - 150) + "px");
@@ -235,7 +287,9 @@
         var meters;
         var lines;
         var users;
+        var assetGroups;
         $(viewModel).on('beforeSave', function (event, record) {
+            assetGroups = ($('#assetGroupSelect').val() == null ? [] : $('#assetGroupSelect').val());
             meters = ($('#meterSelect').val() == null ? [] : $('#meterSelect').val());
             lines = ($('#lineSelect').val() == null ? [] : $('#lineSelect').val());
             users = ($('#userSelect').val() == null ? [] : $('#userSelect').val());
@@ -245,6 +299,7 @@
             if (viewModel.dataHubIsConnected()) {
                 if (record.ID == 0) {
                     dataHub.getLastAssetGroupID().done(function (id) {
+                        dataHub.updateAssetGroups(assetGroups, id);
                         dataHub.updateMeters(meters, id);
                         dataHub.updateLines(lines, id);
                         dataHub.updateUsers(users, id).done(function () {
@@ -253,6 +308,7 @@
                     });
                 }
                 else {
+                    dataHub.updateAssetGroups(assetGroups, record.ID);
                     dataHub.updateMeters(meters, record.ID);
                     dataHub.updateLines(lines, record.ID);
                     dataHub.updateUsers(users, record.ID).done(function () {
@@ -274,6 +330,41 @@
 
         $('#addNewEditDialog').on('shown.bs.modal', function () {
             if (viewModel.dataHubIsConnected()) {
+                dataHub.queryGroups(-1, "Name", true, 1, 10000000, null).done(function (assetGroups) {
+                    $('#assetGroupSelect').children().remove();
+
+                    $.each(assetGroups, function (i, d) {
+                        $('#assetGroupSelect').append(new Option(d.Name, d.ID));
+                    });
+
+                    if (viewModel.recordMode() === RecordMode.Edit) {
+                        dataHub.queryAssetGroupAssetGroupViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (assetGroupsInGroup) {
+                            $.each(assetGroupsInGroup, function (i, assetGroup) {
+                                $('#assetGroupSelect').find('option[value="' + assetGroup.ChildAssetGroupID + '"]').attr('selected', true);
+                            });
+
+                            $('#assetGroupSelect').mobileSelect(mobileSelectOptions);
+                            $('#assetGroupSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                            $('#assetGroupSelectFrame .btn-mobileSelect-gen').off('click');
+                            $('#assetGroupSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                                event.preventDefault();
+                                $('#assetGroupSelect').mobileSelect('show');
+                            });
+                        });
+                    }
+                    else {
+                        $('#assetGroupSelect').mobileSelect(mobileSelectOptions);
+                        $('#assetGroupSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                        $('#assetGroupSelectFrame .btn-mobileSelect-gen').off('click');
+                        $('#assetGroupSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                            event.preventDefault();
+                            $('#assetGroupSelect').mobileSelect('show');
+                        });
+                    }
+                });
+
                 dataHub.queryMeters(-1, "Name", true, 1, 10000000, null).done(function (meters) {
                     $('#meterSelect').children().remove();
 

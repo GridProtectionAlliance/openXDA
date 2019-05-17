@@ -427,6 +427,23 @@ namespace openXDA.Hubs
             return DataContext.Connection.ExecuteScalar<int?>("SELECT IDENT_CURRENT('AssetGroup')") ?? 0;
         }
 
+        public void UpdateAssetGroups(List<string> assetGroups, int groupID)
+        {
+            IEnumerable<AssetGroupAssetGroup> records = DataContext.Table<AssetGroupAssetGroup>().QueryRecords(restriction: new RecordRestriction("ParentAssetGroupID = {0}", groupID));
+
+            foreach (AssetGroupAssetGroup record in records)
+            {
+                if (!assetGroups.Contains(record.ChildAssetGroupID.ToString()))
+                    DataContext.Table<AssetGroupAssetGroup>().DeleteRecord(record.ID);
+            }
+
+            foreach (string assetGroup in assetGroups)
+            {
+                if (!records.Any(record => record.ChildAssetGroupID == int.Parse(assetGroup)))
+                    DataContext.Table<AssetGroupAssetGroup>().AddNewRecord(new AssetGroupAssetGroup() { ParentAssetGroupID = groupID, ChildAssetGroupID = int.Parse(assetGroup) });
+            }
+        }
+
         public void UpdateMeters(List<string> meters, int groupID)
         {
             IEnumerable<MeterAssetGroup> records = DataContext.Table<MeterAssetGroup>().QueryRecords(restriction: new RecordRestriction("AssetGroupID = {0}", groupID));
@@ -477,6 +494,78 @@ namespace openXDA.Hubs
                     DataContext.Table<UserAccountAssetGroup>().AddNewRecord(new UserAccountAssetGroup() { AssetGroupID = groupID, UserAccountID = Guid.Parse(user) });
             }
         }
+
+        #endregion
+
+        #region [ AssetGroupAssetGroup Table Operations ]
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetGroupAssetGroup), RecordOperation.QueryRecordCount)]
+        public int QueryGroupAssetGroupAssetGroupCount(int groupID, string filterString)
+        {
+            TableOperations<AssetGroupAssetGroupView> tableOperations = DataContext.Table<AssetGroupAssetGroupView>();
+            RecordRestriction restriction;
+
+            if (groupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ParentAssetGroupID = {0}", groupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecordCount(restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetGroupAssetGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<AssetGroupAssetGroupView> QueryAssetGroupAssetGroupViews(int groupID, string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            TableOperations<AssetGroupAssetGroupView> tableOperations = DataContext.Table<AssetGroupAssetGroupView>();
+            RecordRestriction restriction;
+
+            if (groupID > 0)
+                restriction = tableOperations.GetSearchRestriction(filterString) + new RecordRestriction("ParentAssetGroupID = {0}", groupID);
+            else
+                restriction = tableOperations.GetSearchRestriction(filterString);
+
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetGroupAssetGroup), RecordOperation.DeleteRecord)]
+        public void DeleteAssetGroupAssetGroupView(int id)
+        {
+            DataContext.Table<AssetGroupAssetGroup>().DeleteRecord(id);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetGroupAssetGroup), RecordOperation.CreateNewRecord)]
+        public AssetGroupAssetGroupView NewAssetGroupAssetGroupView()
+        {
+            return new AssetGroupAssetGroupView();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetGroupAssetGroup), RecordOperation.AddNewRecord)]
+        public void AddNewAssetGroupAssetGroupView(AssetGroupAssetGroup record)
+        {
+            DataContext.Table<AssetGroupAssetGroup>().AddNewRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(AssetGroupAssetGroup), RecordOperation.UpdateRecord)]
+        public void UpdateAssetGroupAssetGroupView(AssetGroupAssetGroup record)
+        {
+            DataContext.Table<AssetGroupAssetGroup>().UpdateRecord(record);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        public IEnumerable<IDLabel> SearchAssetGroupAssetGroupByGroup(int groupID, string searchText, int limit = -1)
+        {
+            RecordRestriction restriction = new RecordRestriction("Name LIKE {0} AND ID NOT IN (SELECT MeterID FROM AssetGroupAssetGroup WHERE AssetGroupID = {1})", $"%{searchText}%", groupID);
+
+            return DataContext.Table<Meter>().QueryRecords("Name", restriction, limit)
+                .Select(meter => new IDLabel(meter.ID.ToString(), meter.Name));
+        }
+
 
         #endregion
 

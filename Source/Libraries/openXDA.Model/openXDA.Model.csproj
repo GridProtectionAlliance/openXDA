@@ -76,6 +76,7 @@
     <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
     <Compile Include="ExceptionHandler.cs" />
     <Compile Include="LazyContext.cs" />
+    <Compile Include="Links\AssetGroupAssetGroup.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
     <Compile Include="SnapshotHarmonics.cs" />

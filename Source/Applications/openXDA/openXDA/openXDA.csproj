@@ -359,6 +359,9 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="XDA.ico" />
+    <Content Include="wwwroot\Config\AssetGroupAssetGroupView.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
