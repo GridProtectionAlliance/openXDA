@@ -2604,28 +2604,52 @@ namespace openXDA.Hubs
         [RecordOperation(typeof(MeterLine), RecordOperation.DeleteRecord)]
         public void DeleteMeterLine(int id)
         {
-            DataContext.Table<MeterLine>().DeleteRecord(id);
+            CascadeDelete("MeterLine", $"ID = {id}");
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.CreateNewRecord)]
         public MeterLineDetail NewMeterLine()
         {
-            return new MeterLineDetail();
+            return DataContext.Table<MeterLineDetail>().NewRecord();
         }
 
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(MeterLine), RecordOperation.AddNewRecord)]
-        public void AddNewMeterLine(MeterLine record)
+        public void AddNewMeterLine(MeterLineDetail record)
         {
+
             DataContext.Table<MeterLine>().AddNewRecord(record);
+
+            if (record.FaultDetectionLogic != null) {
+                int id = DataContext.Connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                if (id != null)
+                    DataContext.Table<FaultDetectionLogic>().AddNewRecord(new FaultDetectionLogic() { MeterLineID = id, Expression = record.FaultDetectionLogic});
+            }
+
         }
 
         [AuthorizeHubRole("Administrator, Owner")]
         [RecordOperation(typeof(MeterLine), RecordOperation.UpdateRecord)]
-        public void UpdateMeterLine(MeterLine record)
+        public void UpdateMeterLine(MeterLineDetail record)
         {
             DataContext.Table<MeterLine>().UpdateRecord(record);
+            FaultDetectionLogic logic = DataContext.Table<FaultDetectionLogic>().QueryRecordWhere("MeterLineID = {0}", record.ID);
+
+            if (record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic == null)
+            {
+
+                    DataContext.Table<FaultDetectionLogic>().AddNewRecord(new FaultDetectionLogic() { MeterLineID = record.ID, Expression = record.FaultDetectionLogic });
+            }
+            else if(record.FaultDetectionLogic != null && record.FaultDetectionLogic != string.Empty && logic != null)
+            {
+                logic.Expression = record.FaultDetectionLogic;
+                DataContext.Table<FaultDetectionLogic>().UpdateRecord(logic);
+            }
+            else if((record.FaultDetectionLogic == null || record.FaultDetectionLogic == string.Empty) && logic != null) {
+                DataContext.Table<FaultDetectionLogic>().DeleteRecord(logic);
+            }
+
         }
 
         #endregion

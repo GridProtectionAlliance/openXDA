@@ -160,5 +160,7 @@ namespace openXDA.Model
 
         [Searchable]
         public string LineKey { get; set; }
+
+        public string FaultDetectionLogic { get; set; }
     }
 }

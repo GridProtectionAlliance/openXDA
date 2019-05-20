@@ -54,6 +54,7 @@
 new[] { "MeterID", "Meter", "text-left"},
 new[] { "LineID", "Line", "text-left" },
 new[] { "LineName", "Line Name", "text-left"},
+            new[] { "FaultDetectionLogic", "Logic", "text-left"},
 new[] { null, "Channel", "text-center valign-middle"},
 new[] { null, "Alarms", "text-center valign-middle"},
 
@@ -68,12 +69,13 @@ new[] { null, "Alarms", "text-center valign-middle"},
         // Define column headers, use null for field name to make column non-sortable
         ViewBag.HeaderColumns = new[]
         {   //    { "Field", "Label", "Classes" }
-new[] { "LineID", "Line", "text-left" },
-new[] { "MeterID", "Meter", "text-left"},
-new[] { "LineName", "Line Name", "text-left"},
-new[] { null, "Channels", "text-center valign-middle"},
-new[] { null, "Alarms", "text-center valign-middle"},
-};
+            new[] { "LineID", "Line", "text-left" },
+            new[] { "MeterID", "Meter", "text-left"},
+            new[] { "LineName", "Line Name", "text-left"},
+            new[] { "FaultDetectionLogic", "Logic", "text-left"},
+            new[] { null, "Channels", "text-center valign-middle"},
+            new[] { null, "Alarms", "text-center valign-middle"},
+        };
     }
 
     ViewBag.ParentKeys = ViewBag.meterID + "," + ViewBag.lineID;
@@ -93,7 +95,8 @@ new[] { null, "Alarms", "text-center valign-middle"},
             <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: LineKey, attr: { href: '/Assets/Lines.cshtml?Line=' + LineKey }"></a></td>
             <td width="20%" class="text-left valign-middle"><a class="btn btn-link" data-bind="text: MeterName, attr: { href: '/Assets/Meters.cshtml?Meter=' + MeterName }"></a></td>
         }
-        <td width="40%" class="text-left valign-middle" data-bind="text: LineName"></td>
+        <td width="20%" class="text-left valign-middle" data-bind="text: LineName"></td>
+        <td width="20%" class="text-left valign-middle" data-bind="text: FaultDetectionLogic"></td>
         <td width="5%" class="text-center valign-middle"><a id="newWindow" data-bind="attr: { href: '/Assets/Channels.cshtml?LineID=' + LineID + '&MeterID=' + MeterID }, enable: $parent.dataHubIsConnected" class="btn btn-default  form-control">Channels&nbsp;&nbsp;<span class="badge" data-bind="text: getChannelCount(MeterID, LineID, $($element)), attr: {id: 'channelCount' + ID}">0</span></a></td>
         <td width="5%" class="text-center valign-middle"><a data-bind="attr: { href: '/Config/ChannelsWithNormalLimits.cshtml?MeterID=' + MeterID + '&Name=' + LineName}, enable: $parent.dataHubIsConnected" target="_blank" class="btn btn-default  form-control">Alarms&nbsp;&nbsp;<span class="badge" data-bind="text: getAlarmCount(MeterID, LineID, $($element)), attr: {id: 'alarmCount' + ID}">0</span></a></td>
         <td width="5%" class="text-center valign-middle" nowrap>
@@ -103,9 +106,11 @@ new[] { null, "Alarms", "text-center valign-middle"},
 }
 @helper AddNewEditDialog(DataContext dataContext)
 {
-    @Raw(dataContext.AddSelectField<MeterLine, Line>("LineID", "ID", "AssetKey", fieldLabel: "Line Key"))
-    @Raw(dataContext.AddSelectField<MeterLine, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
-    @Raw(dataContext.AddInputField<MeterLine>("LineName"))
+    @Raw(dataContext.AddSelectField<MeterLineDetail, Line>("LineID", "ID", "AssetKey", fieldLabel: "Line Key"))
+    @Raw(dataContext.AddSelectField<MeterLineDetail, Meter>("MeterID", "ID", "AssetKey", fieldLabel: "Meter Name"))
+    @Raw(dataContext.AddInputField<MeterLineDetail>("LineName"))
+    @Raw(dataContext.AddInputField<MeterLineDetail>("FaultDetectionLogic", fieldLabel: "Detection Logic"))
+
 }
 <div id="channelsDialog" class="modal modal-wide fade" role="dialog">
     <div class="modal-dialog">

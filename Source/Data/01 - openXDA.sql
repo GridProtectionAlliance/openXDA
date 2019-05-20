@@ -2943,11 +2943,14 @@ SELECT
     Meter.Name AS MeterName,
     MeterLine.LineID,
     Line.AssetKey AS LineKey,
-    MeterLine.LineName
+    MeterLine.LineName,
+	FaultDetectionLogic.Expression as FaultDetectionLogic
 FROM
     MeterLine JOIN
     Meter ON MeterLine.MeterID = Meter.ID JOIN
-    Line ON MeterLIne.LineID = Line.ID
+    Line ON MeterLIne.LineID = Line.ID LEFT JOIN
+	FaultDetectionLogic ON FaultDetectionLogic.MeterLineID = MeterLine.ID
+
 GO
 
 CREATE VIEW ChannelDetail
