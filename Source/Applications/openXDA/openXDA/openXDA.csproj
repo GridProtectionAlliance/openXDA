@@ -358,6 +358,8 @@
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="wwwroot\Images\2-Line - 500.png" />
+    <Content Include="wwwroot\Images\openSEE - Waveform Viewer Header.png" />
     <Content Include="XDA.ico" />
     <Content Include="wwwroot\Config\AssetGroupAssetGroupView.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
