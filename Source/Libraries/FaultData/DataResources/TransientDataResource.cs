@@ -130,60 +130,72 @@ namespace FaultData.DataResources
             return transientList;
         }
 
-        private IEnumerable<Disturbance> DetectTransients(DataSeries waveForm, Phase phase, Func<double, double, double> thresholdFunc) {
-            if (waveForm == null) return new List<Disturbance>();
+        private IEnumerable<Disturbance> DetectTransients(DataSeries waveform, Phase phase, Func<double, double, double> thresholdFunc) {
+            if (waveform == null)
+                return Enumerable.Empty<Disturbance>();
 
-            waveForm.SeriesInfo.ConnectionFactory = () => new AdoDataConnection("systemSettings");
-            double sampleRate = waveForm.SampleRate;
-            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveForm.SampleRate, SystemFrequency);
-            double nominalVoltage = waveForm.SeriesInfo.Channel.Line.VoltageKV;
+            // Obtain a list of time gaps in the waveform
+            List<int> gapIndexes = Enumerable.Range(0, waveform.DataPoints.Count - 1)
+                .Where(index =>
+                {
+                    DataPoint p1 = waveform[index];
+                    DataPoint p2 = waveform[index + 1];
+                    double cycleDiff = (p2.Time - p1.Time).TotalSeconds * SystemFrequency;
+
+                    // Detect gaps larger than a quarter cycle.
+                    // Tolerance of 0.000062 calculated
+                    // assuming 3.999 samples per cycle
+                    return (cycleDiff > 0.250062);
+                })
+                .ToList();
+
+            double sampleRate = waveform.SampleRate;
+            int samplesPerCycle = Transform.CalculateSamplesPerCycle(waveform.SampleRate, SystemFrequency);
+            double nominalVoltage = waveform.SeriesInfo.Channel.Line.VoltageKV;
             double thresholdValue = thresholdFunc(nominalVoltage, TransientThreshold);
             List<Disturbance> disturbances = new List<Disturbance>();
-            List<DataPoint> firstCycle = waveForm.DataPoints.Take(samplesPerCycle).ToList();
-            List<DataPoint> fullWaveForm = waveForm.DataPoints.Select((dataPoint, index) => new DataPoint() { Time = dataPoint.Time, Value = Math.Abs(dataPoint.Value - firstCycle[index % samplesPerCycle].Value) }).ToList();
 
-            double peakVoltage = waveForm.DataPoints.Select(x => Math.Abs(x.Value)).Max();
-            double nominalPeakVoltage = firstCycle.Select(x => Math.Abs(x.Value)).Max();
-            thresholdValue = nominalPeakVoltage * TransientThreshold / 100;
-
-            IEnumerable<DataPoint> thresholdCrosses = fullWaveForm.Where(dataPoint => {
-                int index = fullWaveForm.IndexOf(dataPoint);
-                if (index == 0) return dataPoint.Value > thresholdValue;
-                else if (fullWaveForm[index - 1].Value < thresholdValue) return dataPoint.Value >= thresholdValue;
-                else if (fullWaveForm[index - 1].Value >= thresholdValue) return dataPoint.Value < thresholdValue;
-                else return false;
-            });
-
-            //Use this to output data for excel analysis.
-
-            //using (StreamWriter sw = new StreamWriter(waveForm.SeriesInfo.Channel.Meter.Name + phase.ToString() + "transtest.csv"))
-            //{
-            //    sw.WriteLine("ticks, waveform, 1 cycle, difference, threshold");
-
-            //    waveForm.DataPoints.ForEach(dataPoint =>
-            //    {
-            //        int index = waveForm.DataPoints.IndexOf(dataPoint);
-            //        sw.WriteLine($"{dataPoint.Time.Ticks},{dataPoint.Value}, {firstCycle[index % samplesPerCycle].Value},{Math.Abs(dataPoint.Value - firstCycle[index % samplesPerCycle].Value)}, {thresholdValue}");
-            //    });
-            //}
-
-            if (thresholdCrosses.Any())
-            {
-                double magnitude = fullWaveForm.Select(dataPoint => dataPoint.Value).Max();
-                Disturbance disturbance = new Disturbance()
+            List<int> detections = Enumerable.Range(0, waveform.DataPoints.Count)
+                .Select(index => new { P1 = index - samplesPerCycle, P2 = index, P3 = index + samplesPerCycle })
+                .Where(obj => obj.P1 >= 0 && obj.P3 < waveform.DataPoints.Count)
+                .Where(obj => !gapIndexes.Any(index => obj.P1 <= index && index < obj.P3))
+                .Where(obj =>
                 {
-                    EventType = EventClassification.Transient,
-                    Phase = phase,
-                    StartIndex = fullWaveForm.IndexOf(thresholdCrosses.First()),
-                    EndIndex = fullWaveForm.IndexOf(thresholdCrosses.Last()),
-                    StartTime = thresholdCrosses.First().Time,
-                    EndTime = thresholdCrosses.Last().Time,
-                    Magnitude = peakVoltage,
-                    PerUnitMagnitude = peakVoltage / nominalPeakVoltage
-                };
-                disturbances.Add(disturbance);
-            }
-            return disturbances;
+                    double p1 = waveform[obj.P1].Value;
+                    double p2 = waveform[obj.P2].Value;
+                    double p3 = waveform[obj.P3].Value;
+                    double p1Diff = Math.Abs(p2 - p1);
+                    double p3Diff = Math.Abs(p2 - p3);
+                    return p1Diff >= thresholdValue && p3Diff >= thresholdValue;
+                })
+                .Select(obj => obj.P2)
+                .ToList();
+
+            IEnumerable<Range<int>> ranges = detections
+                .Zip(detections.Skip(1), (p1, p2) => new Range<int>(p1, p2))
+                .Where(range => range.End - range.Start < samplesPerCycle);
+
+            return Range<int>.MergeAllOverlapping(ranges)
+                .Select(range =>
+                {
+                    DataSeries subSeries = waveform.ToSubSeries(range.Start, range.End);
+                    double max = Math.Abs(subSeries.Maximum);
+                    double min = Math.Abs(subSeries.Minimum);
+                    double peak = Math.Max(max, min);
+
+                    return new Disturbance()
+                    {
+                        EventType = EventClassification.Transient,
+                        Phase = phase,
+                        StartIndex = range.Start,
+                        EndIndex = range.End,
+                        StartTime = waveform[range.Start].Time,
+                        EndTime = waveform[range.End].Time,
+                        Magnitude = peak,
+                        PerUnitMagnitude = peak / nominalVoltage
+                    };
+                })
+                .ToList();
         }
 
         Func<double, double, double> lineToLineThreshold = (nominalKV, transientThreshold) =>
