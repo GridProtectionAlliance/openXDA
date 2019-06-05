@@ -682,34 +682,6 @@ CREATE NONCLUSTERED INDEX IX_FileBlob_DataFileID
 ON FileBlob(DataFileID ASC)
 GO
 
-CREATE TABLE DeviceFilter
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    UserAccount VARCHAR(500) NOT NULL,
-    Name NVARCHAR(500) NOT NULL,
-    FilterExpression NVARCHAR(MAX) NOT NULL,
-    AssetGroupID INT NOT NULL
-)
-GO
-
-CREATE TABLE SavedViews
-(
-    ID INT IDENTITY(1, 1) PRIMARY KEY NOT NULL,
-    UserAccount VARCHAR(500) NOT NULL,
-    Name NVARCHAR(500) NOT NULL,
-    DateRange INT NOT NULL,
-    FromDate DATETIME NOT NULL,
-    ToDate DATETIME NOT NULL,
-    Tab NVARCHAR(20) NOT NULL,
-    DeviceFilterID INT NOT NULL,
-    MapGrid NVARCHAR(5) NOT NULL,
-    IsDefault BIT NOT NULL
-)
-GO
-
-INSERT INTO SavedViews(UserAccount, Name, DateRange, FromDate, ToDate, Tab, DeviceFilterID, MapGrid, IsDefault) VALUES('Default', 'Home', 2, GETDATE(), GETDATE(), 'Events', 0, 'Grid', 'true')
-GO
-
 INSERT INTO XSLTemplate(Name, Template) VALUES('Default Daily', '')
 GO
 
