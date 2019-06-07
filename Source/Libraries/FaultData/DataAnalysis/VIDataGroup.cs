@@ -421,7 +421,7 @@ namespace FaultData.DataAnalysis
             string seriesTypeName = "Values";
 
             char typeDesignation = (measurementTypeName == "Current") ? 'I' : measurementTypeName[0];
-            char phaseDesignation = (phaseName == "RES") ? 'R' : phaseName[0];
+            string phaseDesignation = (phaseName == "RES") ? "R" : phaseName.TrimEnd('N');
             string channelName = string.Concat(typeDesignation, phaseDesignation);
 
             ChannelKey channelKey = new ChannelKey(lineID, 0, channelName, measurementTypeName, measurementCharacteristicName, phaseName);
