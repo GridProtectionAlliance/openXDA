@@ -106,6 +106,9 @@ namespace openXDA.EMCB
                 channel.Phase = new Phase() { Name = phase };
                 channel.HarmonicGroup = 0;
 
+                if (type == "Voltage")
+                    channel.PerUnitValue = 120.0D;
+
                 foreach (KeyValuePair<string, string> mapping in seriesMappings)
                 {
                     string path = mapping.Key;

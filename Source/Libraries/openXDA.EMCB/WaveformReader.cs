@@ -122,6 +122,9 @@ namespace openXDA.EMCB
                 channel.Description = channelName;
                 channel.HarmonicGroup = 0;
 
+                if (type == "Voltage")
+                    channel.PerUnitValue = 120.0D;
+
                 return dataSeries;
             }
 
