@@ -101,16 +101,15 @@ namespace openXDA.EMCB
                 const string SeriesType = "Values";
 
                 DataSeries dataSeries = new DataSeries();
-                dataSeries.SeriesInfo = new Series();
 
                 dataSeries.DataPoints = timeSeries
                     .Zip(valueSeries, (time, token) => new DataPoint() { Time = time, Value = token.Value<double>() })
                     .ToList();
 
                 // Convert from mV/mA to Volts/Amps
-                dataSeries.Multiply(1.0D / 1000.0D);
+                dataSeries = dataSeries.Multiply(1.0D / 1000.0D);
 
-                Series series = dataSeries.SeriesInfo;
+                Series series = dataSeries.SeriesInfo = new Series();
                 series.Channel = new Channel();
                 series.SeriesType = new SeriesType() { Name = SeriesType };
 
