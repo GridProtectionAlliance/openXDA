@@ -23,6 +23,7 @@
 @using System.Collections.Generic
 @using System.Net.Http
 @using GSF.Web
+@using GSF.Security.Model
 @using GSF.Web.Model
 @using openXDA.Model
 @using openXDA.Hubs
@@ -65,8 +66,15 @@
     };
 
     ViewBag.BodyRows = BodyRows().ToString();
-    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
     ViewBag.ShowSearchFilter = true;
+    IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecords();
+    IEnumerable<Line> lines = dataContext.Table<Line>().QueryRecords();
+    IEnumerable<UserAccount> users = dataContext.Table<UserAccount>().QueryRecords();
+    IEnumerable<AssetGroup> assetGroups = dataContext.Table<AssetGroup>().QueryRecords();
+
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext, meters, lines, users).ToString();
+
+
 }
 @helper BodyRows()
 {
@@ -80,7 +88,7 @@
         <button type="button" class="btn btn-xs" data-bind="click: $parent.removePageRecord, enable: $parent.canDelete() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-remove"></span></button>
     </td>
 }
-@helper AddNewEditDialog(DataContext dataContext)
+@helper AddNewEditDialog(DataContext dataContext, IEnumerable<Meter> meters, IEnumerable<Line> lines, IEnumerable<UserAccount> users)
 {
     <div>
         @Raw(dataContext.AddInputField<AssetGroup>("Name"))
@@ -93,15 +101,30 @@
 
         <div id="metersSelectFrame" class="form-group">
             <label>Meters:</label>
-            <select id="meterSelect" class="form-control mobileSelect" multiple></select>
+            <select id="meterSelect" class="form-control mobileSelect" multiple>
+                @foreach(Meter meter in meters)
+                {
+                    <option value="@meter.ID">@meter.Name</option>
+                }
+            </select>
         </div>
         <div id="linesSelectFrame" class="form-group">
             <label>Lines:</label>
-            <select id="lineSelect" class="form-control mobileSelect" multiple></select>
+            <select id="lineSelect" class="form-control mobileSelect" multiple>
+                @foreach(Line line in lines)
+                {
+                    <option value="@line.ID">@line.AssetKey</option>
+                }
+            </select>
         </div>
         <div id="userSelectFrame" class="form-group">
             <label>Users:</label>
-            <select id="userSelect" class="form-control mobileSelect" multiple></select>
+            <select id="userSelect" class="form-control mobileSelect" multiple>
+                @foreach(UserAccount user in users)
+                {
+                    <option value="@user.ID">@user.AccountName</option>
+                }
+            </select>
         </div>
     </div>
 }
@@ -288,6 +311,7 @@
         var lines;
         var users;
         var assetGroups;
+
         $(viewModel).on('beforeSave', function (event, record) {
             assetGroups = ($('#assetGroupSelect').val() == null ? [] : $('#assetGroupSelect').val());
             meters = ($('#meterSelect').val() == null ? [] : $('#meterSelect').val());
@@ -318,6 +342,7 @@
                 }
             }
         });
+
         var mobileSelectOptions = {
             filterable: true,
             padding: {
@@ -365,30 +390,12 @@
                     }
                 });
 
-                dataHub.queryMeters(-1, "Name", true, 1, 10000000, null).done(function (meters) {
-                    $('#meterSelect').children().remove();
-
-                    $.each(meters, function (i, d) {
-                        $('#meterSelect').append(new Option(d.Name, d.ID));
-                    });
-
-                    if (viewModel.recordMode() === RecordMode.Edit) {
-                        dataHub.queryGroupMeterViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (metersInGroup) {
-                            $.each(metersInGroup, function (i, meter) {
-                                $('#meterSelect').find('option[value="' + meter.MeterID + '"]').attr('selected', true);
-                            });
-
-                            $('#meterSelect').mobileSelect(mobileSelectOptions);
-                            $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                            $('#metersSelectFrame .btn-mobileSelect-gen').off('click');
-                            $('#metersSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
-                                event.preventDefault();
-                                $('#meterSelect').mobileSelect('show');
-                            });
+                if (viewModel.recordMode() === RecordMode.Edit) {
+                    dataHub.queryGroupMeterViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (metersInGroup) {
+                        $.each(metersInGroup, function (i, meter) {
+                            $('#meterSelect').find('option[value="' + meter.MeterID + '"]').attr('selected', true);
                         });
-                    }
-                    else {
+
                         $('#meterSelect').mobileSelect(mobileSelectOptions);
                         $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -397,33 +404,25 @@
                             event.preventDefault();
                             $('#meterSelect').mobileSelect('show');
                         });
-                    }
-                });
-
-                dataHub.queryLines("AssetKey", true, 1, 10000000, null).done(function (lines) {
-                    $('#lineSelect').children().remove();
-
-                    $.each(lines, function (i, d) {
-                        $('#lineSelect').append(new Option(d.AssetKey, d.ID));
                     });
+                }
+                else {
+                    $('#meterSelect').mobileSelect(mobileSelectOptions);
+                    $('#metersSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
-                    if (viewModel.recordMode() === RecordMode.Edit) {
-                        dataHub.queryLineAssetGroupViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (linesInGroup) {
-                            $.each(linesInGroup, function (i, line) {
-                                $('#lineSelect').find('option[value="' + line.LineID + '"]').attr('selected', true);
-                            });
+                    $('#metersSelectFrame .btn-mobileSelect-gen').off('click');
+                    $('#metersSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#meterSelect').mobileSelect('show');
+                    });
+                }
 
-                            $('#lineSelect').mobileSelect(mobileSelectOptions);
-                            $('#linesSelectFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                            $('#linesSelectFrame .btn-mobileSelect-gen').off('click');
-                            $('#linesSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
-                                event.preventDefault();
-                                $('#lineSelect').mobileSelect('show');
-                            });
+                if (viewModel.recordMode() === RecordMode.Edit) {
+                    dataHub.queryLineAssetGroupViews(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (linesInGroup) {
+                        $.each(linesInGroup, function (i, line) {
+                            $('#lineSelect').find('option[value="' + line.LineID + '"]').attr('selected', true);
                         });
-                    }
-                    else {
+
                         $('#lineSelect').mobileSelect(mobileSelectOptions);
                         $('#linesSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -432,35 +431,25 @@
                             event.preventDefault();
                             $('#lineSelect').mobileSelect('show');
                         });
-                    }
-                });
-
-                securityHub.queryUserAccounts("Name", true, 1, 1000000, null).done(function (users) {
-                    $('#userSelect').children().remove();
-                    $.each(users, function (i, d) {
-                        securityHub.sidToAccountName(d.Name).done(function (accountName) {
-                            $('#userSelect').append(new Option(accountName, d.ID));
-                        });
                     });
+                }
+                else {
+                    $('#lineSelect').mobileSelect(mobileSelectOptions);
+                    $('#linesSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
-                    if (viewModel.recordMode() === RecordMode.Edit) {
-                        dataHub.queryUserAccountAssetGroups(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (usersInGroup) {
-                            $.each(usersInGroup, function (i, user) {
-                                $('#userSelect').find('option[value="' + user.UserAccountID + '"]').attr('selected', true);
-                            });
+                    $('#linesSelectFrame .btn-mobileSelect-gen').off('click');
+                    $('#linesSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#lineSelect').mobileSelect('show');
+                    });
+                }
 
-                            $('#userSelect').mobileSelect(mobileSelectOptions);
-                            $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
-
-                            $('#userSelectFrame .btn-mobileSelect-gen').off('click');
-                            $('#userSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
-                                event.preventDefault();
-                                $('#userSelect').mobileSelect('refresh');
-                                $('#userSelect').mobileSelect('show');
-                            });
+                if (viewModel.recordMode() === RecordMode.Edit) {
+                    dataHub.queryUserAccountAssetGroups(viewModel.currentRecord().ID(), "ID", true, 1, 1000000, null).done(function (usersInGroup) {
+                        $.each(usersInGroup, function (i, user) {
+                            $('#userSelect').find('option[value="' + user.UserAccountID + '"]').attr('selected', true);
                         });
-                    }
-                    else {
+
                         $('#userSelect').mobileSelect(mobileSelectOptions);
                         $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
 
@@ -470,19 +459,30 @@
                             $('#userSelect').mobileSelect('refresh');
                             $('#userSelect').mobileSelect('show');
                         });
-                    }
-                });
+                    });
+                }
+                else {
+                    $('#userSelect').mobileSelect(mobileSelectOptions);
+                    $('#userSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    $('#userSelectFrame .btn-mobileSelect-gen').off('click');
+                    $('#userSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#userSelect').mobileSelect('refresh');
+                        $('#userSelect').mobileSelect('show');
+                    });
+                }
             }
         });
 
-        $('#addNewEditDialog').on('hidden.bs.modal', function () {
-            if($('#userSelect').mobileSelect('exists'))
-                $('#userSelect').mobileSelect('destroy');
-            if ($('#meterSelect').mobileSelect('exists'))
-                $('#meterSelect').mobileSelect('destroy');
-            if ($('#lineSelect').mobileSelect('exists'))
-                $('#lineSelect').mobileSelect('destroy');
-        });
+        //$('#addNewEditDialog').on('hidden.bs.modal', function () {
+        //    if($('#userSelect').mobileSelect('exists'))
+        //        $('#userSelect').mobileSelect('destroy');
+        //    if ($('#meterSelect').mobileSelect('exists'))
+        //        $('#meterSelect').mobileSelect('destroy');
+        //    if ($('#lineSelect').mobileSelect('exists'))
+        //        $('#lineSelect').mobileSelect('destroy');
+        //});
 
         $(function () {
             viewModel.queryPageRecords();
