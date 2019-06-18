@@ -23,12 +23,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using FaultData.Configuration;
 using FaultData.DataAnalysis;
+using FaultData.DataResources.GTC;
 using FaultData.DataSets;
 using GSF.COMTRADE;
+using GSF.Configuration;
+using GSF.Interop;
 using GSF.IO;
 using log4net;
 using openXDA.Model;
@@ -43,11 +47,6 @@ namespace FaultData.DataReaders
         #region [ Members ]
 
         // Fields
-        private TimeSpan m_minWaitTime;
-        private bool m_useRelaxedValidation;
-        private Parser m_parser;
-        private MeterDataSet m_meterDataSet;
-
         private bool m_disposed;
 
         #endregion
@@ -59,49 +58,24 @@ namespace FaultData.DataReaders
         /// </summary>
         public COMTRADEReader()
         {
-            m_meterDataSet = new MeterDataSet();
+            Settings = new COMTRADESettings();
+            MeterDataSet = new MeterDataSet();
         }
 
         #endregion
 
         #region [ Properties ]
 
-        [Setting]
-        public double COMTRADEMinWaitTime
-        {
-            get
-            {
-                return m_minWaitTime.TotalSeconds;
-            }
-            set
-            {
-                m_minWaitTime = TimeSpan.FromSeconds(value);
-            }
-        }
-
-        [Setting]
-        public bool COMTRADEUseRelaxedValidation
-        {
-            get
-            {
-                return m_useRelaxedValidation;
-            }
-            set
-            {
-                m_useRelaxedValidation = value;
-            }
-        }
+        [Category]
+        [SettingName("COMTRADE")]
+        public COMTRADESettings Settings { get; }
 
         /// <summary>
         /// Gets the data set produced by the Parse method of the data reader.
         /// </summary>
-        public MeterDataSet MeterDataSet
-        {
-            get
-            {
-                return m_meterDataSet;
-            }
-        }
+        public MeterDataSet MeterDataSet { get; }
+
+        private Parser Parser { get; set; }
 
         #endregion
 
@@ -109,28 +83,33 @@ namespace FaultData.DataReaders
 
         public bool CanParse(string filePath, DateTime fileCreationTime)
         {
-            string schemaFileName = Path.ChangeExtension(filePath, "cfg");
+            string schemaFilePath = Path.ChangeExtension(filePath, "cfg");
+            string infFilePath = Path.ChangeExtension(filePath, "inf");
             string extension = FilePath.GetExtension(filePath);
             string[] fileList = FilePath.GetFileList(Path.ChangeExtension(filePath, "*"));
             bool multipleDataFiles = !extension.Equals(".dat", StringComparison.OrdinalIgnoreCase);
+            bool minWaitTimePassed = (DateTime.UtcNow - fileCreationTime) >= Settings.MinWaitTime;
 
-            if (!File.Exists(schemaFileName))
+            if (!File.Exists(schemaFilePath))
+                return false;
+
+            if (Settings.WaitForINF && !minWaitTimePassed && !File.Exists(infFilePath))
                 return false;
 
             if (fileList.Any(file => !FilePath.TryGetReadLockExclusive(file)))
                 return false;
 
-            if (multipleDataFiles && DateTime.UtcNow - fileCreationTime < m_minWaitTime)
+            if (multipleDataFiles && !minWaitTimePassed)
                 return false;
 
             try
             {
-                m_parser = new Parser();
-                m_parser.Schema = new Schema(schemaFileName, m_useRelaxedValidation);
-                m_parser.FileName = filePath;
-                m_parser.InferTimeFromSampleRates = true;
-                m_parser.AdjustToUTC = false;
-                m_parser.OpenFiles();
+                Parser = new Parser();
+                Parser.Schema = new Schema(schemaFilePath, Settings.UseRelaxedValidation);
+                Parser.FileName = filePath;
+                Parser.InferTimeFromSampleRates = true;
+                Parser.AdjustToUTC = false;
+                Parser.OpenFiles();
             }
             catch (IOException)
             {
@@ -142,7 +121,7 @@ namespace FaultData.DataReaders
 
         public void Parse(string filePath)
         {
-            Schema schema = m_parser.Schema;
+            Schema schema = Parser.Schema;
 
             Meter meter = new Meter();
             meter.MeterLocation = new MeterLocation();
@@ -168,10 +147,10 @@ namespace FaultData.DataReaders
 
                 meter.Channels.Add(channel);
 
-                while (m_meterDataSet.DataSeries.Count <= analogChannel.Index)
-                    m_meterDataSet.DataSeries.Add(new DataSeries());
+                while (MeterDataSet.DataSeries.Count <= analogChannel.Index)
+                    MeterDataSet.DataSeries.Add(new DataSeries());
 
-                m_meterDataSet.DataSeries[analogChannel.Index] = dataSeries;
+                MeterDataSet.DataSeries[analogChannel.Index] = dataSeries;
             }
 
             foreach (DigitalChannel digitalChannel in schema.DigitalChannels)
@@ -184,29 +163,29 @@ namespace FaultData.DataReaders
 
                 meter.Channels.Add(channel);
 
-                while (m_meterDataSet.Digitals.Count <= digitalChannel.Index)
-                    m_meterDataSet.Digitals.Add(new DataSeries());
+                while (MeterDataSet.Digitals.Count <= digitalChannel.Index)
+                    MeterDataSet.Digitals.Add(new DataSeries());
 
-                m_meterDataSet.Digitals[digitalChannel.Index] = dataSeries;
+                MeterDataSet.Digitals[digitalChannel.Index] = dataSeries;
             }
 
             try
             {
-                while (m_parser.ReadNext())
+                while (Parser.ReadNext())
                 {
                     for (int i = 0; i < schema.AnalogChannels.Length; i++)
                     {
                         int seriesIndex = schema.AnalogChannels[i].Index;
                         string units = schema.AnalogChannels[i].Units.ToUpper();
                         double multiplier = (units.Contains("KA") || units.Contains("KV")) ? 1000.0D : 1.0D;
-                        m_meterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = multiplier * m_parser.PrimaryValues[i] });
+                        MeterDataSet.DataSeries[seriesIndex].DataPoints.Add(new DataPoint() { Time = Parser.Timestamp, Value = multiplier * Parser.PrimaryValues[i] });
                     }
 
                     for (int i = 0; i < schema.DigitalChannels.Length; i++)
                     {
                         int valuesIndex = schema.TotalAnalogChannels + i;
                         int seriesIndex = schema.DigitalChannels[i].Index;
-                        m_meterDataSet.Digitals[seriesIndex].DataPoints.Add(new DataPoint() { Time = m_parser.Timestamp, Value = m_parser.Values[valuesIndex] });
+                        MeterDataSet.Digitals[seriesIndex].DataPoints.Add(new DataPoint() { Time = Parser.Timestamp, Value = Parser.Values[valuesIndex] });
                     }
                 }
             }
@@ -215,7 +194,16 @@ namespace FaultData.DataReaders
                 Log.Warn(ex.Message, ex);
             }
 
-            m_meterDataSet.Meter = meter;
+            MeterDataSet.Meter = meter;
+
+            string infFilePath = Path.ChangeExtension(filePath, "inf");
+
+            if (File.Exists(infFilePath))
+            {
+                IniFile infFile = new IniFile(infFilePath);
+                INFDataSet infDataSet = new INFDataSet(infFile);
+                MeterDataSet.GetResource(() => new BreakerRestrikeResource(infDataSet));
+            }
         }
 
         public void Dispose()
@@ -224,10 +212,10 @@ namespace FaultData.DataReaders
             {
                 try
                 {
-                    if ((object)m_parser != null)
+                    if ((object)Parser != null)
                     {
-                        m_parser.Dispose();
-                        m_parser = null;
+                        Parser.Dispose();
+                        Parser = null;
                     }
                 }
                 finally

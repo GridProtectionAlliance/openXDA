@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using GSF.Data;
 using GSF.Data.Model;
 
 namespace openXDA.Model
@@ -50,5 +51,18 @@ namespace openXDA.Model
 
         [NonRecordField]
         public List<DataFile> DataFiles { get; set; } = new List<DataFile>();
+
+        public void AddFieldValue(AdoDataConnection connection, string name, string value, string description = null)
+        {
+            TableOperations<FileGroupField> fileGroupFieldTable = new TableOperations<FileGroupField>(connection);
+            FileGroupField fileGroupField = fileGroupFieldTable.GetOrAdd(name, description);
+
+            TableOperations<FileGroupFieldValue> fileGroupFieldValueTable = new TableOperations<FileGroupFieldValue>(connection);
+            FileGroupFieldValue fileGroupFieldValue = new FileGroupFieldValue();
+            fileGroupFieldValue.FileGroupID = ID;
+            fileGroupFieldValue.FileGroupFieldID = fileGroupField.ID;
+            fileGroupFieldValue.Value = value;
+            fileGroupFieldValueTable.AddNewRecord(fileGroupFieldValue);
+        }
     }
 }

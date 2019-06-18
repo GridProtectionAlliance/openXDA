@@ -23,15 +23,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using FaultData.DataAnalysis;
 using FaultData.DataSets;
 using GSF;
-using GSF.COMTRADE;
 using GSF.IO;
 using log4net;
 using openXDA.Model;
@@ -301,7 +298,7 @@ namespace FaultData.DataReaders
         #region [ Static ]
 
         // Static Fields
-        private static readonly ILog Log = LogManager.GetLogger(typeof(COMTRADEReader));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQubeTrendingDataCSVReader));
 
         #endregion
     }

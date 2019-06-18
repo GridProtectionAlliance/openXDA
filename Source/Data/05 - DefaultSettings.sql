@@ -16,10 +16,13 @@ GO
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('Breakers.OpenBreakerThreshold', '20.0', '20.0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADEMinWaitTime', '15.0', '15.0')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.MinWaitTime', '15.0', '15.0')
 GO
 
-INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADEUseRelaxedValidation', 'False', 'False')
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.UseRelaxedValidation', 'False', 'False')
+GO
+
+INSERT INTO Setting(Name, Value, DefaultValue) VALUES('COMTRADE.WaitForINF', 'False', 'False')
 GO
 
 INSERT INTO Setting(Name, Value, DefaultValue) VALUES('DataPusher.Enabled', 'False', 'False')

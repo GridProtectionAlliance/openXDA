@@ -64,8 +64,6 @@ namespace openXDA.Configuration
         private double m_interruptionThreshold;
 
         private string m_lengthUnits;
-        private double m_comtradeMinWaitTime;
-        private bool m_comtradeUseRelaxedValidation;
         private int m_processingThreadCount;
         private Guid m_fileProcessorID;
         private bool m_fileWatcherEnabled;
@@ -452,42 +450,6 @@ namespace openXDA.Configuration
             set
             {
                 m_lengthUnits = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the minimum amount of time to wait for additional data
-        /// files after the system detects the existence of a .D00 COMTRADE file.
-        /// </summary>
-        [Setting]
-        [DefaultValue(15.0D)]
-        public double COMTRADEMinWaitTime
-        {
-            get
-            {
-                return m_comtradeMinWaitTime;
-            }
-            set
-            {
-                m_comtradeMinWaitTime = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the flag that indicates whether to use
-        /// relaxed validation when parsing the COMTRADE schema file.
-        /// </summary>
-        [Setting]
-        [DefaultValue(false)]
-        public bool COMTRADEUseRelaxedValidation
-        {
-            get
-            {
-                return m_comtradeUseRelaxedValidation;
-            }
-            set
-            {
-                m_comtradeUseRelaxedValidation = value;
             }
         }
 

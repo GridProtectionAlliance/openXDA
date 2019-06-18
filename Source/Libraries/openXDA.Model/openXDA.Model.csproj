@@ -73,6 +73,8 @@
     <Compile Include="Events\Faults\FaultDetectionLogic.cs" />
     <Compile Include="Events\Faults\FaultLocationAlgorithm.cs" />
     <Compile Include="ExceptionHandler.cs" />
+    <Compile Include="Files\FileGroupField.cs" />
+    <Compile Include="Files\FileGroupFieldValue.cs" />
     <Compile Include="LazyContext.cs" />
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
