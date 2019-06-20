@@ -484,6 +484,14 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@username)
+
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@MeterID, ',')
+
 SELECT  Date as thedate, COALESCE(First, 0) AS '> 100%', COALESCE(Second, 0) AS '98% - 100%', COALESCE(Third, 0) AS '90% - 97%', COALESCE(Fourth, 0) AS '70% - 89%', COALESCE(Fifth, 0) AS '50% - 69%', COALESCE(Sixth, 0) AS '>0% - 49%'
 FROM
     (
@@ -503,7 +511,7 @@ FROM
             (
                 SELECT Date, 100.0 * CAST(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints AS FLOAT) / CAST(NULLIF(ExpectedPoints, 0) AS FLOAT) AS Completeness
                 FROM MeterDataQualitySummary
-                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND MeterID IN (SELECT * FROM authMeters(@username))
+                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters) AND MeterID IN (SELECT * FROM #authMeters)
             ) MeterDataQualitySummary
         ) MeterDataQualitySummary
         GROUP BY Date, CompletenessLevel
@@ -623,6 +631,14 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@username)
+
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@MeterID, ',')
+
 SELECT  Date as thedate, COALESCE(First, 0) AS '> 100%', COALESCE(Second, 0) AS '98% - 100%', COALESCE(Third, 0) AS '90% - 97%', COALESCE(Fourth, 0) AS '70% - 89%', COALESCE(Fifth, 0) AS '50% - 69%', COALESCE(Sixth, 0) AS '>0% - 49%'
 FROM
     (
@@ -642,7 +658,7 @@ FROM
             (
                 SELECT Date, 100.0 * CAST(GoodPoints AS FLOAT) / CAST(NULLIF(GoodPoints + LatchedPoints + UnreasonablePoints + NoncongruentPoints, 0) AS FLOAT) AS Correctness
                 FROM MeterDataQualitySummary
-                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND MeterID IN (SELECT * FROM authMeters(@username))
+                WHERE Date BETWEEN @startDate AND @endDate AND MeterID IN (SELECT * FROM #selectedMeters) AND MeterID IN (SELECT * FROM #authMeters)
             ) MeterDataQualitySummary
         ) MeterDataQualitySummary
         GROUP BY Date, CompletenessLevel
@@ -4683,13 +4699,21 @@ BEGIN
 DECLARE @startDate DATE = CAST(@EventDateFrom AS DATE)
 DECLARE @endDate DATE = DATEADD(DAY, 1, CAST(@EventDateTo AS DATE))
 
+SELECT *
+INTO #authMeters
+FROM authMeters(@username)
+
+SELECT *
+INTO #selectedMeters
+FROM String_To_Int_Table(@MeterID, ',')
+
 SELECT AlarmDate as thedate, COALESCE(OffNormal,0) as Offnormal, COALESCE(Alarm,0) as Alarm
 FROM(
     SELECT Date AS AlarmDate, AlarmType.Name, SUM(AlarmPoints) as AlarmPoints
     FROM ChannelAlarmSummary JOIN
          Channel ON ChannelAlarmSummary.ChannelID = Channel.ID JOIN
          AlarmType ON AlarmType.ID = ChannelAlarmSummary.AlarmTypeID
-    WHERE MeterID in (select * from authMeters(@username)) AND MeterID IN (SELECT * FROM String_To_Int_Table(@MeterID, ',')) AND Date >= @startDate AND Date < @endDate
+    WHERE MeterID in (select * from #authMeters) AND MeterID IN (SELECT * FROM #selectedMeters) AND Date >= @startDate AND Date < @endDate
     GROUP BY Date, AlarmType.Name
 ) AS table1
 PIVOT(

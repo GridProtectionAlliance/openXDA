@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\BreakerSettings.cs" />
+    <Compile Include="Configuration\COMTRADESettings.cs" />
     <Compile Include="Configuration\EDNASettings.cs" />
     <Compile Include="Configuration\EmailSettings.cs" />
     <Compile Include="Configuration\EMAXSettings.cs" />
@@ -104,6 +105,7 @@
     <Compile Include="DataAnalysis\VICycleDataGroup.cs" />
     <Compile Include="DataAnalysis\VIDataGroup.cs" />
     <Compile Include="DataOperations\AlarmOperation.cs" />
+    <Compile Include="DataOperations\BreakerRestrikeOperation.cs" />
     <Compile Include="DataOperations\BreakerTimingOperation.cs" />
     <Compile Include="DataOperations\ConfigurationOperation.cs" />
     <Compile Include="DataOperations\DailySummaryOperation.cs" />
@@ -118,6 +120,7 @@
     <Compile Include="DataReaders\IGridPQDIFReader.cs" />
     <Compile Include="DataReaders\PQViewDIFReader.cs" />
     <Compile Include="DataReaders\SELEVEReader.cs" />
+    <Compile Include="DataResources\GTC\BreakerRestrikeResource.cs" />
     <Compile Include="DataResources\CycleDataResource.cs" />
     <Compile Include="DataResources\EventClassificationResource.cs" />
     <Compile Include="DataResources\DataGroupsResource.cs" />
@@ -142,6 +145,7 @@
     <Compile Include="DataReaders\EMAXReader.cs" />
     <Compile Include="DataReaders\IDataReader.cs" />
     <Compile Include="DataReaders\PQDIFReader.cs" />
+    <Compile Include="DataSets\INFDataSet.cs" />
     <Compile Include="DataWriters\ChartGenerator.cs" />
     <Compile Include="DataWriters\COMTRADEWriter.cs" />
     <Compile Include="DataWriters\EmailService.cs" />

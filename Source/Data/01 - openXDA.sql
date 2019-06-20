@@ -115,6 +115,31 @@ CREATE NONCLUSTERED INDEX IX_DataFile_FilePathHash
 ON DataFile(FilePathHash ASC)
 GO
 
+CREATE TABLE FileGroupField
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL UNIQUE,
+    Description VARCHAR(MAX) NULL
+)
+GO
+
+CREATE TABLE FileGroupFieldValue
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    FileGroupID INT NOT NULL REFERENCES FileGroup(ID),
+    FileGroupFieldID INT NOT NULL REFERENCES FileGroupField(ID),
+    Value VARCHAR(MAX) NULL
+)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupID
+ON FileGroupFieldValue(FileGroupID ASC)
+GO
+
+CREATE NONCLUSTERED INDEX IX_FileGroupFieldValue_FileGroupFieldID
+ON FileGroupFieldValue(FileGroupFieldID ASC)
+GO
+
 CREATE TABLE MeterLocation
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -450,22 +475,25 @@ GO
 INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DoubleEndedFaultOperation', 5)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 6)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.BreakerRestrikeOperation', 6)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 7)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.TrendingDataSummaryOperation', 7)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 8)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DailySummaryOperation', 8)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 9)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataQualityOperation', 9)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.StatisticOperation', 10)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.AlarmOperation', 10)
 GO
 
-INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataPusherOperation', 11)
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.StatisticOperation', 11)
+GO
+
+INSERT INTO DataOperation(AssemblyName, TypeName, LoadOrder) VALUES('FaultData.dll', 'FaultData.DataOperations.DataPusherOperation', 12)
 GO
 
 INSERT INTO AssetGroup(Name) VALUES('AllAssets')

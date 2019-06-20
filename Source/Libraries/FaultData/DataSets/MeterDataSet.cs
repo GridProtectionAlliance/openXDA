@@ -37,43 +37,27 @@ namespace FaultData.DataSets
 {
     public class MeterDataSet : IDataSet
     {
-        #region [ Members ]
-
-        // Fields
-        private Func<AdoDataConnection> m_createDbConnection;
-        private string m_connectionString;
-        private Dictionary<Type, object> m_resources;
-
-        private string m_filePath;
-        private FileGroup m_fileGroup;
-        private Meter m_meter;
-        private ConfigurationDataSet m_configuration;
-        private List<DataSeries> m_dataSeries;
-        private List<DataSeries> m_digitals;
-        private List<ReportedDisturbance> m_disturbanceStatistics;
-
-        #endregion
-
         #region [ Constructors ]
 
         public MeterDataSet()
         {
-            m_resources = new Dictionary<Type, object>();
-            m_configuration = new ConfigurationDataSet();
-            m_dataSeries = new List<DataSeries>();
-            m_digitals = new List<DataSeries>();
-            m_disturbanceStatistics = new List<ReportedDisturbance>();
+            Resources = new Dictionary<Type, object>();
+            Configuration = new ConfigurationDataSet();
+            DataSeries = new List<DataSeries>();
+            Digitals = new List<DataSeries>();
+            ReportedDisturbances = new List<ReportedDisturbance>();
         }
 
         public MeterDataSet(Event evt)
         {
-            m_resources = new Dictionary<Type, object>();
-            m_configuration = new ConfigurationDataSet();
-            m_dataSeries = new List<DataSeries>();
-            m_digitals = new List<DataSeries>();
-            m_disturbanceStatistics = new List<ReportedDisturbance>();
+            Resources = new Dictionary<Type, object>();
+            Configuration = new ConfigurationDataSet();
+            DataSeries = new List<DataSeries>();
+            Digitals = new List<DataSeries>();
+            ReportedDisturbances = new List<ReportedDisturbance>();
 
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings")) {
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
                 Meter = (new TableOperations<Meter>(connection)).QueryRecordWhere("ID = {0}", evt.MeterID);
                 Meter.ConnectionFactory = () => new AdoDataConnection("systemSettings");
                 CreateDbConnection = () => new AdoDataConnection("systemSettings");
@@ -86,7 +70,7 @@ namespace FaultData.DataSets
                 Configuration.R0 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID)?.R0;
                 Configuration.R1 = (new TableOperations<LineImpedance>(connection)).QueryRecordWhere("LineID = {0}", evt.LineID)?.R1;
                 DataGroup dataGroup = ToDataGroup((new TableOperations<EventData>(connection)).QueryRecordWhere("ID = {0}", evt.EventDataID).TimeDomainData);
-                DataSeries = dataGroup.DataSeries.Where(ds=> ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
+                DataSeries = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name != "Digital").ToList();
                 Digitals = dataGroup.DataSeries.Where(ds => ds.SeriesInfo.Channel.MeasurementType.Name == "Digital").ToList();
             }
         }
@@ -95,109 +79,18 @@ namespace FaultData.DataSets
 
         #region [ Properties ]
 
-        public Func<AdoDataConnection> CreateDbConnection
-        {
-            get
-            {
-                return m_createDbConnection;
-            }
-            set
-            {
-                m_createDbConnection = value;
-            }
-        }
+        public Func<AdoDataConnection> CreateDbConnection { get; set; }
+        public string ConnectionString { get; set; }
+        public string FilePath { get; set; }
+        public FileGroup FileGroup { get; set; }
 
-        public string ConnectionString
-        {
-            get
-            {
-                return m_connectionString;
-            }
-            set
-            {
-                m_connectionString = value;
-            }
-        }
+        public Meter Meter { get; set; }
+        public ConfigurationDataSet Configuration { get; }
+        public List<DataSeries> DataSeries { get; set; }
+        public List<DataSeries> Digitals { get; set; }
+        public List<ReportedDisturbance> ReportedDisturbances { get; set; }
 
-        public string FilePath
-        {
-            get
-            {
-                return m_filePath;
-            }
-            set
-            {
-                m_filePath = value;
-            }
-        }
-
-        public FileGroup FileGroup
-        {
-            get
-            {
-                return m_fileGroup;
-            }
-            set
-            {
-                m_fileGroup = value;
-            }
-        }
-
-        public Meter Meter
-        {
-            get
-            {
-                return m_meter;
-            }
-            set
-            {
-                m_meter = value;
-            }
-        }
-
-        public ConfigurationDataSet Configuration
-        {
-            get
-            {
-                return m_configuration;
-            }
-        }
-
-        public List<DataSeries> DataSeries
-        {
-            get
-            {
-                return m_dataSeries;
-            }
-            set
-            {
-                m_dataSeries = value;
-            }
-        }
-
-        public List<DataSeries> Digitals
-        {
-            get
-            {
-                return m_digitals;
-            }
-            set
-            {
-                m_digitals = value;
-            }
-        }
-
-        public List<ReportedDisturbance> ReportedDisturbances
-        {
-            get
-            {
-                return m_disturbanceStatistics;
-            }
-            set
-            {
-                m_disturbanceStatistics = value;
-            }
-        }
+        private Dictionary<Type, object> Resources { get; set; }
 
         #endregion
 
@@ -216,16 +109,16 @@ namespace FaultData.DataSets
 
             type = typeof(T);
 
-            if (m_resources.TryGetValue(type, out obj))
+            if (Resources.TryGetValue(type, out obj))
             {
                 resource = (T)obj;
             }
             else
             {
                 resource = resourceFactory();
-                ConnectionStringParser.ParseConnectionString(m_connectionString, resource);
+                ConnectionStringParser.ParseConnectionString(ConnectionString ?? "", resource);
                 resource.Initialize(this);
-                m_resources.Add(type, resource);
+                Resources.Add(type, resource);
             }
 
             return resource;
