@@ -23,6 +23,8 @@
 @using System.Text
 @using openXDA.Model
 @using GSF.Web.Model
+@using GSF.Web.Security
+@using GSF.Web
 @using openXDA.Hubs
 
 @inherits ExtendedTemplateBase<AppModel>
@@ -36,6 +38,21 @@
     if (ViewBag.PageControlScripts == null) {
         ViewBag.PageControlScripts = new StringBuilder();
     }
+
+    ReadonlyAuthenticationOptions options = ViewBag.AuthenticationOptions;
+    string sessionToken = SessionHandler.DefaultSessionToken;
+    string loginPage = AuthenticationOptions.DefaultLoginPage;
+
+    if ((object)options != null)
+    {
+        sessionToken = options.SessionToken;
+
+        if (!string.IsNullOrWhiteSpace(options.LoginPage))
+        {
+            loginPage = options.LoginPage;
+        }
+    }
+
 
     // Define ViewBag.CustomTitle in page code for custom page titles
     string pageTitle = ViewBag.CustomTitle ?? ViewBag.Title;
@@ -195,7 +212,7 @@
                     <li @Raw(pageTitle == "Help" ? "class=\"active\"" : "")><a href="Help.cshtml">Help</a></li>
                 </ul>
                 <p class="nav navbar-text navbar-right">
-                    <button type="button" class="btn btn-sm btn-info disabled">Log Out</button>
+                    <button id="logoutButton"type="button" class="btn btn-sm btn-info" style="display:none">Log Out</button>
                     <a href="https://www.gridprotectionalliance.org/" target="_blank" style="padding-left: 10px">
                         <img alt="Grid Protection Alliance" src="/Images/gpa-smalllock.png">
                     </a>
@@ -243,6 +260,7 @@ else {
     <script src="/Scripts/bootstrap-toolkit@(min).js"></script>
     <script src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
     <script src="@("/@GSF/Web/Shared/Scripts/jquery.signalR.js")"></script>
+    <script src="@("/@GSF/Web/Shared/Scripts/js.cookie.js")"></script>
     <script src="@("/@GSF/Web/Shared/Scripts/gsf.web.client.js")"></script>
     <script src="/signalr/hubs"></script>
     <script src="/Scripts/jquery.jspanel-compiled@(min).js"></script>
@@ -251,5 +269,18 @@ else {
     <script src="/Scripts/Site.js"></script>
     @Raw(ViewBag.PageControlScripts.ToString())
     @RenderSection("Scripts", false)
+        <script>
+        $("#logoutButton").click(function() {
+            if (!hubIsConnected)
+                return;
+
+            securityHub.logout(Cookies.get("@sessionToken")).done(function(success) {
+                window.location = "@loginPage.JavaScriptEncode()?logout&sessionCleared=" + success;
+            });
+        });
+
+        $("#logoutButton").show();
+    </script>
+
 </body>
 </html>

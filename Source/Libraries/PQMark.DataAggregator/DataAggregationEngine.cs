@@ -630,6 +630,25 @@ namespace PQMark.DataAggregator
 
         }
 
+        private IEnumerable<DisturbanceData> GetDisturbanceDatas(DateTime startDate, DateTime endDate) {
+            using (DataContext dataContext = new DataContext("systemSettings")) {
+                IEnumerable<PQMarkCompanyMeter> meters = dataContext.Table<PQMarkCompanyMeter>().QueryRecordsWhere("Enabled = 1");
+
+                if (!meters.Any()) return null;
+
+                DataTable table = dataContext.Connection.RetrieveData(
+                    @"SELECT	Event.MeterID, Disturbance.PerUnitMagnitude, Disturbance.StartTime, Disturbance.EndTime, Disturbance.DurationSeconds, Disturbance.DurationCycles
+                  FROM  	Disturbance JOIN
+		                    Event ON Event.ID = Disturbance.EventID
+                  WHERE	    Disturbance.PhaseID = (SELECT ID FROM Phase WHERE Name = 'Worst') AND
+		                    Event.MeterID IN (" + string.Join(",", meters.Select(x => x.MeterID)) + @") AND
+                            Event.StartTime Between '" + startDate + @"' AND '" + endDate + @"'"
+                );
+                return table.Select().Select(row => dataContext.Table<DisturbanceData>().LoadRecord(row));
+            }
+
+        }
+
         public string GetHelpMessage(string command)
         {
             string newString = "";
@@ -660,5 +679,5 @@ namespace PQMark.DataAggregator
             return helpMessage.ToString();
         }
     #endregion
-}
+    }
 }

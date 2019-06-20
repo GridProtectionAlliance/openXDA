@@ -65,8 +65,8 @@ namespace openXDA
             using (new SecurityHub()) { }
 
             // Configuration Windows Authentication for self-hosted web service
-            HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
-            listener.AuthenticationSchemeSelectorDelegate = AuthenticationSchemeForClient;
+            //HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
+            //listener.AuthenticationSchemeSelectorDelegate = AuthenticationSchemeForClient;
 
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
@@ -79,15 +79,22 @@ namespace openXDA
             hubConfig.EnableDetailedErrors = true;
 #endif
 
-            AuthenticationOptions authenticationOptions = new AuthenticationOptions()
-            {
-                SessionToken = "session",
-                AuthFailureRedirectResourceExpression = "(?!)",
-                AnonymousResourceExpression = "^/api/(?:JSONApi|Grafana)"
-            };
+            //AuthenticationOptions authenticationOptions = new AuthenticationOptions()
+            //{
+            //    SessionToken = "session",
+            //    AuthFailureRedirectResourceExpression = "(?!)",
+            //    AnonymousResourceExpression = "^/api/(?:JSONApi|Grafana)"
+            //};
 
-            app.Use<AuthenticationMiddleware>(authenticationOptions);
-            httpConfig.EnableSessions(authenticationOptions);
+            //app.Use<AuthenticationMiddleware>(authenticationOptions);
+            //httpConfig.EnableSessions(authenticationOptions);
+
+            // Enable GSF session management
+            httpConfig.EnableSessions(AuthenticationOptions);
+
+            // Enable GSF role-based security authentication
+            app.UseAuthentication(AuthenticationOptions);
+
 
             string allowedDomainList = ConfigurationFile.Current.Settings["systemSettings"]["AllowedDomainList"]?.Value;
 
@@ -132,5 +139,11 @@ namespace openXDA
             // while the application is running as a domain account
             return AuthenticationSchemes.Ntlm;
         }
+
+        /// <summary>
+        /// Gets the authentication options used for the hosted web server.
+        /// </summary>
+        public static AuthenticationOptions AuthenticationOptions { get; } = new AuthenticationOptions();
+
     }
 }
