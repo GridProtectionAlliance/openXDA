@@ -1,0 +1,157 @@
+﻿@*//******************************************************************************************************
+//  XSLTemplate.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  12/12/2016 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+@using System.Net.Http
+@using GSF.Web
+@using GSF.Web.Model
+@using openXDA
+@using openXDA.Model
+@using openXDA.Hubs
+
+@inherits ExtendedTemplateBase<AppModel>
+
+@{
+    Layout = "Config/Layout.cshtml";
+
+    Dictionary<string,string> databases = new Dictionary<string, string> {
+        { "openXDA", "systemSettings" }
+    };
+}
+@section StyleSheets{
+    <style>
+ #editor { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+    </style>    
+}
+
+<select id="select" class="form-control">
+    @foreach (var db in databases)
+    {
+        <option value="@db.Value">@db.Key</option>
+    }
+</select>
+<div id="template" tabindex="0"></div>
+<div>
+    <button class="btn btn-primary" onclick="processQuery()">Execute<span id="executeSpinner"></span></button>
+    <button class="btn btn-primary" onclick="cancelQuery()">Cancel</button>
+    <button class="btn btn-primary" onclick="clearQuery()">Clear</button>
+</div>
+<div id="result" class="well" style="overflow-y: auto">
+    All querys truncated to top 100 Rows to not crash web page.
+</div>
+
+
+@section Scripts {
+    <script src="~/Scripts/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+        var ajaxHandle = null;
+
+        $('#pageHeader').hide();
+        $(function () {
+            document.addEventListener('keydown', function (event) {
+                if (event.keyCode == 116) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    processQuery();
+                }
+                else if (event.keyCode == 27) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    clearQuery();
+                }
+
+
+            }, true);
+            $('#pageContentWrapper').removeClass('container theme-showcase');
+            $('#pageContentWrapper').height(calculateRemainingBodyHeight());
+
+            $('#template').height(calculateRemainingBodyHeight() * .50);
+            $('#result').height(calculateRemainingBodyHeight() * .50);
+            $('#result').css('max-height', calculateRemainingBodyHeight() * .50);
+
+            var editor = ace.edit("template");
+            //editor.setTheme("ace/theme/monokai");
+            editor.getSession().setMode("ace/mode/sqlserver");
+            editor.setFontSize("14px");
+            $('.ace_text-input').focus();
+        });
+
+        function processQuery() {
+            var query = ace.edit('template').getValue();
+            $('#executeSpinner').addClass('fa fa-spinner')
+            ajaxHandle = $.post('@Url.Content("~/api/Config/Query/PostQuery")', { Query: query, SettingsCategory: $('#select').val() }, function (data) {
+                ajaxHandle = null;
+                var json = JSON.parse(data);
+                //console.log(json);
+                $('#result').append('<hr/>Query: ' + query + '<br>');
+
+                if (json.length == 0) {
+                    $('#result').append("No results found..."+ '<br>');
+                    return;
+                }
+
+                var str =
+                    '<table class="table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                Object.keys(json[0]).map(function (key) { return '<td>' + key + '</td>' }).join('') +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>'+ 
+                            json.map(function (row) { return '<tr>' + Object.keys(row).map(function (key) { return '<td>' + row[key] + '</td>' }).join('') +'</tr>'}).join('') +
+                        '</tbody>'+
+                    '</table><br>';
+                $('#result').append(str);
+                $('#result').scrollTop($('#result')[0].scrollHeight);
+                $('#executeSpinner').removeClass('fa fa-spinner')
+
+            }).fail(function(msg) { 
+                $('#result').append('<hr/>Query: ' + query + '<br>');
+                $('#result').append(msg.responseText + '<br>');
+                $('#result').scrollTop($('#result')[0].scrollHeight);
+                $('#executeSpinner').removeClass('fa fa-spinner')
+            });
+            $('.ace_text-input').focus();
+
+
+        }
+
+        function clearQuery() {
+            ace.edit('template').setValue('');
+            $('.ace_text-input').focus();
+        }
+
+        function cancelQuery() {
+            if (ajaxHandle != null && ajaxHandle.abort != undefined) {
+                $('#executeSpinner').removeClass('fa fa-spinner')
+                ajaxHandle.abort();
+            }
+        }
+    </script>
+}

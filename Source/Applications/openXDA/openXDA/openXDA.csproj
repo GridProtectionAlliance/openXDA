@@ -231,6 +231,7 @@
     <Compile Include="AppModel.cs" />
     <Compile Include="Configuration\CategorizedSetting.cs" />
     <Compile Include="Configuration\FileShare.cs" />
+    <Compile Include="Controllers\Config\QueryController.cs" />
     <Compile Include="DataObjectWrapper.cs" />
     <Compile Include="DebugHost.cs">
       <SubType>Form</SubType>
@@ -359,6 +360,9 @@
       <SubType>Designer</SubType>
     </None>
     <Content Include="XDA.ico" />
+    <Content Include="wwwroot\Config\Query.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />

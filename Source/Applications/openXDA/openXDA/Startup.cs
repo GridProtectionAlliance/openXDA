@@ -64,10 +64,6 @@ namespace openXDA
             // Load security hub in application domain before establishing SignalR hub configuration
             using (new SecurityHub()) { }
 
-            // Configuration Windows Authentication for self-hosted web service
-            //HttpListener listener = (HttpListener)app.Properties["System.Net.HttpListener"];
-            //listener.AuthenticationSchemeSelectorDelegate = AuthenticationSchemeForClient;
-
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
 
@@ -78,16 +74,6 @@ namespace openXDA
             // Enabled detailed client errors
             hubConfig.EnableDetailedErrors = true;
 #endif
-
-            //AuthenticationOptions authenticationOptions = new AuthenticationOptions()
-            //{
-            //    SessionToken = "session",
-            //    AuthFailureRedirectResourceExpression = "(?!)",
-            //    AnonymousResourceExpression = "^/api/(?:JSONApi|Grafana)"
-            //};
-
-            //app.Use<AuthenticationMiddleware>(authenticationOptions);
-            //httpConfig.EnableSessions(authenticationOptions);
 
             // Enable GSF session management
             httpConfig.EnableSessions(AuthenticationOptions);
@@ -112,8 +98,13 @@ namespace openXDA
             app.MapSignalR(hubConfig);
 
             // Set configuration to use reflection to setup routes
+            httpConfig.MapHttpAttributeRoutes();
+
+            // Set configuration to use reflection to setup routes
             ControllerConfig.Register(httpConfig);
 
+            // Load new GSF web page controllers app.UseWebPageController
+            
             // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);
 
@@ -121,23 +112,6 @@ namespace openXDA
 
             // Check for configuration issues before first request
             httpConfig.EnsureInitialized();
-        }
-
-        private static AuthenticationSchemes AuthenticationSchemeForClient(HttpListenerRequest request)
-        {
-            if (request.Url.PathAndQuery.StartsWith("/api/pqmark/", StringComparison.OrdinalIgnoreCase))
-                return AuthenticationSchemes.Basic;
-
-            if (request.Url.PathAndQuery.StartsWith("/api/JSONApi", StringComparison.OrdinalIgnoreCase))
-                return AuthenticationSchemes.Anonymous;
-
-            if (request.Url.PathAndQuery.StartsWith("/api/Grafana", StringComparison.OrdinalIgnoreCase))
-                return AuthenticationSchemes.Anonymous;
-
-            // Explicitly select NTLM, since Negotiate seems to fail
-            // when accessing the page using the system's domain name
-            // while the application is running as a domain account
-            return AuthenticationSchemes.Ntlm;
         }
 
         /// <summary>

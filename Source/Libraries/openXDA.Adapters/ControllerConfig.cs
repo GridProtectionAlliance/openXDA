@@ -142,8 +142,6 @@ namespace openXDA.Adapters
                 }
             );
 
-            config.MapHttpAttributeRoutes();
-
         }
     }
 }
