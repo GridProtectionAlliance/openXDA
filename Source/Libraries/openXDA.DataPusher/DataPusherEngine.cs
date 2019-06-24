@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using GSF;
+using GSF.Configuration;
 using GSF.Scheduling;
 using GSF.Security.Model;
 using GSF.Web.Model;
@@ -66,6 +67,7 @@ namespace openXDA.DataPusher
         public bool Running => m_running;
 
         [Category]
+        [SettingName("DataPusher")]
         public DataPusherSettings DataPusherSettings => m_dataPusherSettings;
         #endregion
 

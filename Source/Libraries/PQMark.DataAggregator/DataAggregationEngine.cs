@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF;
+using GSF.Configuration;
 using GSF.Scheduling;
 using GSF.Web.Model;
 using openHistorian.XDALink;
@@ -67,6 +68,7 @@ namespace PQMark.DataAggregator
         public bool Running => m_running;
 
         [Category]
+        [SettingName("PQMarkAggregation")]
         public PQMarkAggregationSettings PQMarkAggregationSettings => m_pqMarkAggregationSettings;
 
         #endregion
