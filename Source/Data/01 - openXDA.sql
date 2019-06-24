@@ -618,6 +618,10 @@ GO
 INSERT INTO ApplicationRole(Name, Description) VALUES('Developer', 'Developer Role')
 GO
 
+INSERT INTO ApplicationRole(Name, Description) VALUES('DataPusher', 'Data Pusher Role')
+GO
+
+
 
 -- ----- --
 -- Email --
@@ -2541,7 +2545,6 @@ CREATE TABLE Report
     Year INT NOT NULL,
     Results VARCHAR(4) NOT NULL,
     PDF VARBINARY(MAX) NOT NULL,
-    CONSTRAINT UC_Report UNIQUE(ID, MeterID, Month, Year)
 )
 GO
 

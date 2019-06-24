@@ -28,6 +28,7 @@ using openHistorian.XDALink;
 using openXDA.Model;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -65,13 +66,8 @@ namespace PQMark.DataAggregator
         private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
         public bool Running => m_running;
 
-        public PQMarkAggregationSettings PQMarkAggregationSettings
-        {
-            get
-            {
-                return m_pqMarkAggregationSettings;
-            }
-        }
+        [Category]
+        public PQMarkAggregationSettings PQMarkAggregationSettings => m_pqMarkAggregationSettings;
 
         #endregion
 

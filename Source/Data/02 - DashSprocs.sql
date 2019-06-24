@@ -4841,27 +4841,6 @@ where UserName = @username
 )
 GO
 
-CREATE FUNCTION [dbo].[RecursiveMeterSearch](@assetGroupID int)  
-RETURNS TABLE  
-AS  
-RETURN  
-	WITH   AssetGroupHeirarchy
-	AS     (	
-			SELECT ParentAssetGroupID, ChildAssetGroupID FROM AssetGroupAssetGroup WHERE ParentAssetGroupID = @assetGroupID  -- anchor member
-			UNION ALL
-			SELECT b.ParentAssetGroupID, a.ChildAssetGroupID -- recursive member
-			FROM   AssetGroupAssetGroup as a join
-				   AssetGroupHeirarchy as b ON b.ChildAssetGroupID = a.ParentAssetGroupID
-		   )
-	SELECT
-		Distinct MeterID as ID
-	FROM
-		MeterAssetGroup LEFT JOIN
-		AssetGroupHeirarchy ON MeterAssetGroup.AssetGroupID = AssetGroupHeirarchy.ChildAssetGroupID
-	WHERE
-		MeterAssetGroup.AssetGroupID = @assetGroupID OR MeterAssetGroup.AssetGroupID IN (SELECT ChildAssetGroupID FROM AssetGroupHeirarchy)
-
-GO
 
 
 CREATE PROCEDURE [dbo].[GetSiteSummaries]
