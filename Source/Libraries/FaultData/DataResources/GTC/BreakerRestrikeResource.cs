@@ -31,7 +31,7 @@ namespace FaultData.DataResources.GTC
 
         // Constants
         private const string APPSectionName = "APP FaultSummary";
-        private const string APPKey = "IsBreakerRestrike";
+        private const string APPKey = "BreakerRestrike";
         private const string USISectionName = "USI Quicksummary";
         private const string USIKey = "BrkrRestrike";
 
