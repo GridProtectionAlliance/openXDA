@@ -23,6 +23,7 @@
 @using System.Net.Http
 @using GSF.Web
 @using GSF.Web.Model
+@using GSF.Security
 @using openXDA
 @using openXDA.Model
 @using openXDA.Hubs
@@ -30,6 +31,7 @@
 @inherits ExtendedTemplateBase<AppModel>
 
 @{
+    SecurityPrincipal securityPrincipal = ViewBag.SecurityPrincipal;
     Layout = "Config/Layout.cshtml";
 
     Dictionary<string,string> databases = new Dictionary<string, string> {
@@ -105,7 +107,7 @@
         function processQuery() {
             var query = ace.edit('template').getValue();
             $('#executeSpinner').addClass('fa fa-spinner')
-            ajaxHandle = $.post('@Url.Content("~/api/Config/Query/PostQuery")', { Query: query, SettingsCategory: $('#select').val() }, function (data) {
+            ajaxHandle = $.post('@Url.Content("~/api/Config/Query")', { Query: query, SettingsCategory: $('#select').val() }, function (data) {
                 ajaxHandle = null;
                 var json = JSON.parse(data);
                 //console.log(json);

@@ -9,6 +9,12 @@
   <Component Id="wwwroot_OpenSEE_cshtml">
     <File Id="wwwroot_OpenSEE.cshtml" Name="OpenSEE.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEE.cshtml" />
   </Component>
+  <Component Id="wwwroot_OpenSEEComtradeDownload_ashx">
+    <File Id="wwwroot_OpenSEEComtradeDownload.ashx" Name="OpenSEEComtradeDownload.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEEComtradeDownload.ashx" />
+  </Component>
+  <Component Id="wwwroot_OpenSEECSVDownload_ashx">
+    <File Id="wwwroot_OpenSEECSVDownload.ashx" Name="OpenSEECSVDownload.ashx" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEECSVDownload.ashx" />
+  </Component>
   <Component Id="wwwroot_OpenSEEold_cshtml">
     <File Id="wwwroot_OpenSEEold.cshtml" Name="OpenSEEold.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\OpenSEEold.cshtml" />
   </Component>
@@ -54,6 +60,9 @@
   </Component>
   <Component Id="wwwroot_Config_AlarmViewer_cshtml">
     <File Id="wwwroot_Config_AlarmViewer.cshtml" Name="AlarmViewer.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AlarmViewer.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Config_AssetGroupAssetGroupView_cshtml">
+    <File Id="wwwroot_Config_AssetGroupAssetGroupView.cshtml" Name="AssetGroupAssetGroupView.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AssetGroupAssetGroupView.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_AssetGroups_cshtml">
     <File Id="wwwroot_Config_AssetGroups.cshtml" Name="AssetGroups.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\AssetGroups.cshtml" />
@@ -129,6 +138,9 @@
   </Component>
   <Component Id="wwwroot_Config_ProblematicUserAccounts_cshtml">
     <File Id="wwwroot_Config_ProblematicUserAccounts.cshtml" Name="ProblematicUserAccounts.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\ProblematicUserAccounts.cshtml" />
+  </Component>
+  <Component Id="wwwroot_Config_Query_cshtml">
+    <File Id="wwwroot_Config_Query.cshtml" Name="Query.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\Query.cshtml" />
   </Component>
   <Component Id="wwwroot_Config_RemoteConsole_cshtml">
     <File Id="wwwroot_Config_RemoteConsole.cshtml" Name="RemoteConsole.cshtml" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Config\RemoteConsole.cshtml" />
@@ -467,6 +479,9 @@
   </Component>
 </ComponentGroup>
 <ComponentGroup Id="wwwroot_Images_Components" Directory="wwwroot_IMAGESFOLDER">
+  <Component Id="wwwroot_Images_2_Line_500_png">
+    <File Id="wwwroot_Images_2_Line_500.png" Name="2-Line - 500.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\2-Line - 500.png" />
+  </Component>
   <Component Id="wwwroot_Images_AnalyticsComingSoon_png">
     <File Id="wwwroot_Images_AnalyticsComingSoon.png" Name="Analytics Coming Soon.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\Analytics Coming Soon.png" />
   </Component>
@@ -526,6 +541,9 @@
   </Component>
   <Component Id="wwwroot_Images_openMICBanner_png">
     <File Id="wwwroot_Images_openMICBanner.png" Name="openMICBanner.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openMICBanner.png" />
+  </Component>
+  <Component Id="wwwroot_Images_openSEE_WaveformViewerHeader_png">
+    <File Id="wwwroot_Images_openSEE_WaveformViewerHeader.png" Name="openSEE - Waveform Viewer Header.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openSEE - Waveform Viewer Header.png" />
   </Component>
   <Component Id="wwwroot_Images_openSEELogo_png">
     <File Id="wwwroot_Images_openSEELogo.png" Name="openSEELogo.png" Source="$(var.SolutionDir)Applications\openXDA\openXDA\wwwroot\Images\openSEELogo.png" />

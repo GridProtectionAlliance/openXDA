@@ -48,11 +48,6 @@ namespace openXDA.Controllers
     [RoutePrefix("api/Config/Query")]
     public class QueryController : ApiController
     {
-        [Route(Order = -1), HttpGet]
-        public HttpResponseMessage Get(CancellationToken token) {
-            return Request.CreateResponse(HttpStatusCode.OK);
-        }
-
         public class PostQueryForm
         {
             public string Query { get; set; }
@@ -63,7 +58,7 @@ namespace openXDA.Controllers
         [Route, HttpPost]
         public HttpResponseMessage Post(PostQueryForm form, CancellationToken token)
         {
-            if (!ValidateAdminRequestForRole("Developer")) return Request.CreateResponse(HttpStatusCode.Unauthorized);
+            if (!AppModel.ValidateAdminRequestForRole("Developer", User.Identity.Name)) return Request.CreateResponse(HttpStatusCode.Unauthorized);
 
             try
             {
@@ -98,28 +93,5 @@ namespace openXDA.Controllers
                 return Request.CreateResponse(HttpStatusCode.BadRequest, ex.InnerException.Message);
             }
         }
-
-        private bool ValidateAdminRequestForRole(string role)
-        {
-            string username = User.Identity.Name;
-            string userid = UserInfo.UserNameToSID(username);
-
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                bool isAdmin = connection.ExecuteScalar<int>(@"
-					select 
-						COUNT(*) 
-					from 
-						UserAccount JOIN 
-						ApplicationRoleUserAccount ON ApplicationRoleUserAccount.UserAccountID = UserAccount.ID JOIN
-						ApplicationRole ON ApplicationRoleUserAccount.ApplicationRoleID = ApplicationRole.ID
-					WHERE 
-						ApplicationRole.Name = 'Developer' AND UserAccount.Name = {0}
-                ", userid) > 0;
-
-                return isAdmin;
-            }
-        }
-
     }
 }

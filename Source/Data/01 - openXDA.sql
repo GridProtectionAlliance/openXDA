@@ -615,6 +615,9 @@ GO
 INSERT INTO ApplicationRole(Name, Description) VALUES('Viewer', 'Viewer Role')
 GO
 
+INSERT INTO ApplicationRole(Name, Description) VALUES('Developer', 'Developer Role')
+GO
+
 
 -- ----- --
 -- Email --

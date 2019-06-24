@@ -66,10 +66,6 @@ namespace openXDA
 
             HubConfiguration hubConfig = new HubConfiguration();
             HttpConfiguration httpConfig = new HttpConfiguration();
-
-            // Setup resolver for web page controller instances
-            httpConfig.DependencyResolver = WebPageController.GetDependencyResolver(WebServer.Default, Program.Host.DefaultWebPage, new AppModel(), typeof(AppModel));
-
 #if DEBUG
             // Enabled detailed client errors
             hubConfig.EnableDetailedErrors = true;
@@ -107,6 +103,9 @@ namespace openXDA
             
             // Load the WebPageController class and assign its routes
             app.UseWebApi(httpConfig);
+
+            // Setup resolver for web page controller instances
+            app.UseWebPageController(WebServer.Default, Program.Host.DefaultWebPage, Program.Host.Model, typeof(AppModel), AuthenticationOptions);
 
             httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
 

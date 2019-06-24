@@ -24,6 +24,7 @@
 using System.Text;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Identity;
 using GSF.Web;
 using GSF.Web.Model;
 
@@ -113,5 +114,28 @@ namespace openXDA.Model
 
         #endregion
 
+        #region [ Static  ]
+        public static bool ValidateAdminRequestForRole(string role, string userName)
+        {
+            string userid = UserInfo.UserNameToSID(userName);
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                bool isAdmin = connection.ExecuteScalar<int>(@"
+					select 
+						COUNT(*) 
+					from 
+						UserAccount JOIN 
+						ApplicationRoleUserAccount ON ApplicationRoleUserAccount.UserAccountID = UserAccount.ID JOIN
+						ApplicationRole ON ApplicationRoleUserAccount.ApplicationRoleID = ApplicationRole.ID
+					WHERE 
+						ApplicationRole.Name = 'Developer' AND UserAccount.Name = {0}
+                ", userid) > 0;
+
+                return isAdmin;
+            }
+        }
+
+        #endregion
     }
 }
