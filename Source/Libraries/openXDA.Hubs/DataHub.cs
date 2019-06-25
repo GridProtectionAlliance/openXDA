@@ -362,6 +362,112 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ UsersEmailTemplates Operations]
+
+        const string usersEmailTemplatesQuery = @"
+            SELECT 
+	            UserAccount.ID,
+	            UserAccount.Name,
+	            UserAccount.FirstName + ' ' + UserAccount.LastName as FullName,
+	            (SELECT COUNT(*) FROM UserAccountAssetGroup WHERE UserAccountAssetGroup.UserAccountID = UserAccount.ID) as AssetGroupCount,
+	            (SELECT COUNT(*) FROM UserAccountEmailType WHERE UserAccountEmailType.UserAccountID = UserAccount.ID) as EmailTypeCount
+            FROM
+	            UserAccount
+        ";
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserEmailTemplate), RecordOperation.QueryRecordCount)]
+        public int QueryUserEmailTemplateCount(string filterString)
+        {
+            IEnumerable<UserEmailTemplate> records = DataContext.Connection.RetrieveData(usersEmailTemplatesQuery).Select().Select(row => DataContext.Table<UserEmailTemplate>().LoadRecord(row)).Where(x => x.AccountName.ToLower().IndexOf(filterString.ToLower()) >= 0 || (x.FullName ?? "").ToLower().IndexOf(filterString.ToLower()) >= 0);
+
+            return records.Count();
+        }
+
+        public DataTable QueryAssetGroupsByUser(Guid userAccountID)
+        {
+            return DataContext.Connection.RetrieveData("SELECT * FROM UserAccountAssetGroup WHERE UserAccountAssetGroup.UserAccountID = {0}", userAccountID);
+        }
+
+        public DataTable QueryEmailTypesByUser(Guid userAccountID)
+        {
+            return DataContext.Connection.RetrieveData("SELECT * FROM UserAccountEmailType WHERE UserAccountEmailType.UserAccountID = {0}", userAccountID);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserEmailTemplate), RecordOperation.QueryRecords)]
+        public IEnumerable<UserEmailTemplate> QueryUserEmailTemplate(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            IEnumerable<UserEmailTemplate> records = DataContext.Connection.RetrieveData(usersEmailTemplatesQuery).Select().Select(row => DataContext.Table<UserEmailTemplate>().LoadRecord(row));
+            if (ascending)
+                return records.Where(x=> x.AccountName.ToLower().IndexOf(filterString.ToLower()) >= 0 || (x.FullName ?? "").ToLower().IndexOf(filterString.ToLower()) >= 0).OrderBy(x => sortField).Skip((page - 1) * pageSize).Take(pageSize);
+            else
+                return records.Where(x => x.AccountName.ToLower().IndexOf(filterString.ToLower()) >= 0 || (x.FullName ?? "").ToLower().IndexOf(filterString.ToLower()) >= 0).OrderByDescending(x => sortField).Skip((page - 1) * pageSize).Take(pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserEmailTemplate), RecordOperation.DeleteRecord)]
+        public void DeleteUserEmailTemplate(Guid id)
+        {
+            //CascadeDelete("UserAccount", $"ID = '{id}'");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserEmailTemplate), RecordOperation.CreateNewRecord)]
+        public UserEmailTemplate NewUserEmailTemplate()
+        {
+            return DataContext.Table<UserEmailTemplate>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserEmailTemplate), RecordOperation.AddNewRecord)]
+        public void AddNewUserEmailTemplate(UserEmailTemplate record)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserEmailTemplate), RecordOperation.UpdateRecord)]
+        public void UpdateUserEmailTemplate(UserEmailTemplate record)
+        {
+        }
+
+        public void UpdateAssetGroupsForEmailTypes(List<string> assetGroups, Guid userAccountID)
+        {
+            IEnumerable<UserAccountAssetGroup> records = DataContext.Table<UserAccountAssetGroup>().QueryRecordsWhere("UserAccountID = {0}", userAccountID);
+
+            foreach (UserAccountAssetGroup record in records)
+            {
+                if (!assetGroups.Contains(record.AssetGroupID.ToString()))
+                    DataContext.Table<UserAccountAssetGroup>().DeleteRecord(record.ID);
+            }
+
+            foreach (string assetGroup in assetGroups)
+            {
+                if (!records.Any(record => record.AssetGroupID == int.Parse(assetGroup)))
+                    DataContext.Table<UserAccountAssetGroup>().AddNewRecord(new UserAccountAssetGroup() { AssetGroupID = int.Parse(assetGroup), UserAccountID = userAccountID });
+            }
+        }
+
+        public void UpdateEmailTypesForEmailTypes(List<string> emailTypes, Guid userAccountID)
+        {
+            IEnumerable<UserAccountEmailType> records = DataContext.Table<UserAccountEmailType>().QueryRecordsWhere("UserAccountID = {0}", userAccountID);
+
+            foreach (UserAccountEmailType record in records)
+            {
+                if (!emailTypes.Contains(record.EmailTypeID.ToString()))
+                    DataContext.Table<UserAccountEmailType>().DeleteRecord(record.ID);
+            }
+
+            foreach (string emailType in emailTypes)
+            {
+                if (!records.Any(record => record.EmailTypeID == int.Parse(emailType)))
+                    DataContext.Table<UserAccountEmailType>().AddNewRecord(new UserAccountEmailType() { EmailTypeID = int.Parse(emailType), UserAccountID = userAccountID });
+            }
+        }
+
+
+        #endregion
+
         #region [ AssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]

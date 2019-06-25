@@ -1,0 +1,231 @@
+﻿@*//******************************************************************************************************
+//  UsersEmailTemplates.cshtml - Gbtc
+//
+//  Copyright © 2019, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  06/25/2019 - Billy Ernest
+//       Generated original version of source code.
+//
+//*******************************************************************************************************@
+
+@using GSF.Configuration
+@using GSF.Data.Model
+@using GSF.Security
+@using GSF.Security.Model
+@using GSF.Web.Model
+@using GSF.Web.Security
+@using openXDA.Hubs
+@using openXDA.Model
+@using System.Data
+@inherits ExtendedTemplateBase<AppModel>
+@{Layout = "Config/Layout.cshtml";}
+@section StyleSheets{
+    <style>
+
+
+        .account-feedback-wrapper {
+            position: relative;
+            display: table;
+        }
+
+        .account-feedback-message {
+            position: absolute;
+            vertical-align: middle;
+            display: table-cell;
+            left: 10px;
+            width: 425px;
+            display: none;
+        }
+
+        .account-feedback-icon {
+            font-size: large;
+            vertical-align: middle;
+            margin-top: -5px;
+        }
+    </style>
+}
+@{
+    // Layout will depend on rendering environment, so do not specify one
+    DataContext dataContext = ViewBag.DataContext;
+    ViewBag.Title = "Users - Email Templates";
+    ViewBag.ShowSearchFilter = true;
+
+    // Define column headers, use null for field name to make column non-sortable
+    ViewBag.HeaderColumns = new[]
+    {   //    { "Field", "Label", "Classes" }
+        new[] { "FullName", "Full&nbsp;Name", "text-center valign-middle" },
+        new[] { "AccountName", "User&nbsp;Name", "text-center valign-middle" },
+        new[] { "AssetGroupCount", "Asset&nbsp;Groups", "text-center valign-middle" },
+        new[] { "EmailTypeCount", "Email&nbsp;Types", "text-center valign-middle" }
+
+    };
+
+
+    IEnumerable<AssetGroup> assetGroups = dataContext.Table<AssetGroup>().QueryRecords();
+    DataTable emailTypes = dataContext.Connection.RetrieveData(@"
+        SELECT 
+	        EmailType.ID,
+	        XSLTemplate.Name as Template
+        FROM 
+	        EmailType JOIN
+	        EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID JOIN
+	        XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID
+    ");
+
+    ViewBag.BodyRows = BodyRows().ToString();
+    ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext, assetGroups, emailTypes).ToString();
+    ViewBag.AddNewEditTitle = "User - Email Templates";
+    ViewBag.HideAddNewButton = true;
+
+}
+@helper BodyRows()
+{
+    <td width="50%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: fullName($data)"></button></td>
+    <td width="35%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AccountName, attr: {title: Name}, click: $parent.viewPageRecord"></button></td>
+    <td width="5%" class="text-center valign-middle" data-bind="text: AssetGroupCount"></td>
+    <td width="5%" class="text-center valign-middle" data-bind="text: EmailTypeCount"></td>
+    <td width="5%" class="text-center valign-middle" nowrap>
+        <button type="button" class="btn btn-xs" data-bind="click: $parent.editPageRecord, enable: $parent.canEdit() && $parent.dataHubIsConnected()"><span class="glyphicon glyphicon-pencil"></span></button>
+    </td>
+}
+@helper AddNewEditDialog(DataContext dataContext, IEnumerable<AssetGroup> assetGroups, DataTable emailTypes)
+{
+    @Raw(dataContext.AddInputField<AssetGroup>("FullName", customDataBinding: "attr:{ disabled: true}"))
+    @Raw(dataContext.AddInputField<AssetGroup>("AccountName", customDataBinding: "attr:{ disabled: true}"))
+
+    <div id="assetGroupSelectFrame" class="form-group">
+        <label>Asset Groups:</label>
+        <select id="assetGroupSelect" class="form-control mobileSelect" multiple>
+            @foreach(AssetGroup assetGroup in assetGroups)
+            {
+                <option value="@assetGroup.ID">@assetGroup.Name</option>
+            }
+        </select>
+    </div>
+    <div id="emailTypeSelectFrame" class="form-group">
+        <label>Email Types:</label>
+        <select id="emailTypeSelect" class="form-control mobileSelect" multiple>
+            @foreach(DataRow emailType in emailTypes.Rows)
+            {
+                <option value="@emailType["ID"]">@emailType["Template"]</option>
+            }
+        </select>
+    </div>
+
+}
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
+@section Scripts {
+    <script type="text/javascript" src="/Scripts/fullscreenselect/bootstrap-fullscreen-select.js"></script>
+    <script>
+        "use strict";
+
+        @Raw(dataContext.RenderViewModelConfiguration<UserEmailTemplate, DataHub>(ViewBag))
+
+        function fullName(record) {
+            var firstName = notNull(record.FirstName);
+            var lastName = notNull(record.LastName);
+
+            if (lastName.length === 0)
+                return firstName;
+            else if (firstName.length === 0)
+                return lastName;
+            else
+                return lastName + ", " + firstName;
+        }
+
+        var emailTypes;
+        var assetGroups;
+
+        $(viewModel).on('beforeSave', function (event, record) {
+            assetGroups = ($('#assetGroupSelect').val() == null ? [] : $('#assetGroupSelect').val());
+            emailTypes = ($('#emailTypeSelect').val() == null ? [] : $('#emailTypeSelect').val());
+        });
+
+        $(viewModel).on('recordSaved', function (event, record) {
+            if (viewModel.dataHubIsConnected()) {
+                    dataHub.updateAssetGroupsForEmailTypes(assetGroups, record.ID);
+                    dataHub.updateEmailTypesForEmailTypes(emailTypes, record.ID).done(function () {
+                        viewModel.queryPageRecords();
+                    })
+            }
+        });
+
+
+        var mobileSelectOptions = {
+            filterable: true,
+            padding: {
+                top: '5%',
+                left: '15%',
+                right: '15%',
+                bottom: '5%'
+            }
+        };
+
+
+        $('#addNewEditDialog').on('shown.bs.modal', function () {
+
+            if (viewModel.dataHubIsConnected()) {
+                dataHub.queryAssetGroupsByUser(viewModel.currentRecord().ID()).done(function (assetGroupsInGroup) {
+                    $.each(assetGroupsInGroup, function (i, meter) {
+                        $('#assetGroupSelect').find('option[value="' + meter.AssetGroupID + '"]').attr('selected', true);
+                    });
+
+                    $('#assetGroupSelect').mobileSelect(mobileSelectOptions);
+                    $('#assetGroupSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    $('#assetGroupSelectFrame .btn-mobileSelect-gen').off('click');
+                    $('#assetGroupSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#assetGroupSelect').mobileSelect('show');
+                    });
+
+                });
+
+                dataHub.queryEmailTypesByUser(viewModel.currentRecord().ID()).done(function (typesInGroup) {
+                    $.each(typesInGroup, function (i, line) {
+                        $('#emailTypeSelect').find('option[value="' + line.EmailTypeID + '"]').attr('selected', true);
+                    });
+
+                    $('#emailTypeSelect').mobileSelect(mobileSelectOptions);
+                    $('#emailTypeSelectFrame .btn-mobileSelect-gen').addClass('form-control');
+
+                    $('#emailTypeSelectFrame .btn-mobileSelect-gen').off('click');
+                    $('#emailTypeSelectFrame .btn-mobileSelect-gen').on('click', function (event) {
+                        event.preventDefault();
+                        $('#emailTypeSelect').mobileSelect('show');
+                    });
+
+                });
+            }
+        });
+
+        $(viewModel).on("pageRecordsQueried", function(event, records) {
+        });
+
+        $(viewModel).on("newRecord", function(event, newRecord) {
+        });
+
+        $(viewModel).on("beforeEdit", function(event, observableRecord) {
+        });
+
+        $(viewModel).on("beforeSave", function(event, observableRecord, promises) {
+        });
+
+
+        $(function () {
+        });
+    </script>
+}

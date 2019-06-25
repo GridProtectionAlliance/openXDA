@@ -63,6 +63,7 @@
     <Compile Include="Alarms\AlarmLog.cs" />
     <Compile Include="Alarms\AlarmRangeLimit.cs" />
     <Compile Include="Alarms\AlarmType.cs" />
+    <Compile Include="Emails\UserEmailTemplate.cs" />
     <Compile Include="Emails\EmailType.cs" />
     <Compile Include="Emails\EventEmailParameters.cs" />
     <Compile Include="Events\Disturbances\VoltageCurve.cs" />
