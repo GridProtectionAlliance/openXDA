@@ -468,6 +468,90 @@ namespace openXDA.Hubs
 
         #endregion
 
+        #region [ EmailTemplatesUsers Operations]
+
+        const string EmailTemplatesUsersQuery = @"
+            SELECT 
+	            EmailType.ID as EmailTemplateID,
+	            XSLTemplate.Name as Template,
+	            (SELECT COUNT(*) FROM UserAccountEmailType WHERE UserAccountEmailType.EmailTypeID = EmailType.ID) as UserCount
+ 
+            FROM 
+	            EmailType JOIN
+	            EmailCategory ON EmailType.EmailCategoryID = EmailCategory.ID JOIN
+	            XSLTemplate ON EmailType.XSLTemplateID = XSLTemplate.ID
+        ";
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailTemplateUser), RecordOperation.QueryRecordCount)]
+        public int QueryEmailTemplatesUsersCount(string filterString)
+        {
+            IEnumerable<EmailTemplateUser> records = DataContext.Connection.RetrieveData(EmailTemplatesUsersQuery).Select().Select(row => DataContext.Table<EmailTemplateUser>().LoadRecord(row)).Where(x => x.Template.ToLower().IndexOf(filterString.ToLower()) >= 0);
+
+            return records.Count();
+        }
+
+        public DataTable QueryUsersByEmailType(int emailTypeID)
+        {
+            return DataContext.Connection.RetrieveData("SELECT * FROM UserAccountEmailType WHERE UserAccountEmailType.EmailTypeID = {0}", emailTypeID);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailTemplateUser), RecordOperation.QueryRecords)]
+        public IEnumerable<EmailTemplateUser> QueryEmailTemplatesUsers(string sortField, bool ascending, int page, int pageSize, string filterString)
+        {
+            IEnumerable<EmailTemplateUser> records = DataContext.Connection.RetrieveData(EmailTemplatesUsersQuery).Select().Select(row => DataContext.Table<EmailTemplateUser>().LoadRecord(row));
+            if (ascending)
+                return records.Where(x => x.Template.ToLower().IndexOf(filterString.ToLower()) >= 0).OrderBy(x => sortField).Skip((page - 1) * pageSize).Take(pageSize);
+            else
+                return records.Where(x => x.Template.ToLower().IndexOf(filterString.ToLower()) >= 0).OrderByDescending(x => sortField).Skip((page - 1) * pageSize).Take(pageSize);
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailTemplateUser), RecordOperation.DeleteRecord)]
+        public void DeleteEmailTemplatesUsers(Guid id)
+        {
+            //CascadeDelete("UserAccount", $"ID = '{id}'");
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailTemplateUser), RecordOperation.CreateNewRecord)]
+        public EmailTemplateUser NewUEmailTemplatesUsers()
+        {
+            return DataContext.Table<EmailTemplateUser>().NewRecord();
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailTemplateUser), RecordOperation.AddNewRecord)]
+        public void AddNewEmailTemplatesUsers(EmailTemplateUser record)
+        {
+        }
+
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(EmailTemplateUser), RecordOperation.UpdateRecord)]
+        public void UpdateEmailTemplatesUsers(EmailTemplateUser record)
+        {
+        }
+
+        public void UpdateUsersForEmailTypes(List<string> users, int emailTypeID)
+        {
+            IEnumerable<UserAccountEmailType> records = DataContext.Table<UserAccountEmailType>().QueryRecordsWhere("EmailTypeID = {0}", emailTypeID);
+
+            foreach (UserAccountEmailType record in records)
+            {
+                if (!users.Contains(record.UserAccountID.ToString()))
+                    DataContext.Table<UserAccountEmailType>().DeleteRecord(record.ID);
+            }
+
+            foreach (string assetGroup in users)
+            {
+                if (!records.Any(record => record.UserAccountID == Guid.Parse(assetGroup)))
+                    DataContext.Table<UserAccountEmailType>().AddNewRecord(new UserAccountEmailType() { UserAccountID = Guid.Parse(assetGroup), EmailTypeID = emailTypeID });
+            }
+        }
+
+        #endregion
+
         #region [ AssetGroup Table Operations ]
 
         [AuthorizeHubRole("Administrator")]
