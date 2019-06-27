@@ -277,6 +277,7 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RestoreEventEmails", "Restores event email engine to a working state tripping", RestoreEventEmails));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("MsgServiceMonitors", "Sends a message to all service monitors", MsgServiceMonitorsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PurgeData", "Deletes data from database beyond a sepecified date", PurgeDataHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQReport", "Issues a request to generate a monthly PQ report for a meter", PQReportHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcAD", "Creates aggregates for all data", OnProcessAllData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcED", "Creates aggregates for missing monthly data", OnProcessAllEmptyData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcMTD", "Creates aggregates for month to date data", OnProcessMonthToDateData));
@@ -859,6 +860,54 @@ namespace openXDA
             string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
             string message = m_extensibleDisturbanceAnalysisEngine.PurgeData(args);
             DisplayResponseMessage(requestInfo, message);
+        }
+
+        // Executes process to generate a monthly PQ report.
+        private void PQReportHandler(ClientRequestInfo requestInfo)
+        {
+            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
+
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || args.Length != 2)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Executes process to generate a monthly PQ report.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       PQReport <MeterKey> <Month>");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("       PQReport -?");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(25));
+                helpMessage.Append("Displays this help message");
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+
+            string meterKey = args[0];
+            string monthText = args[1];
+
+            if (!DateTime.TryParse(monthText, out DateTime month))
+                throw new FormatException($"Invalid date format: {monthText}");
+
+            Meter meter;
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                TableOperations<Meter> meterTable = new TableOperations<Meter>(connection);
+                meter = meterTable.QueryRecordWhere("AssetKey = {0}", meterKey);
+            }
+
+            if (meter == null)
+                throw new ArgumentException($"Unable to find meter \"{meterKey}\" in the database.");
+
+            m_reportsEngine.ProcessMonthlyReport(meter, month);
         }
 
 

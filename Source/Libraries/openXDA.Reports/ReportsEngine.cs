@@ -21,27 +21,17 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Text;
 using GSF;
 using GSF.Configuration;
 using GSF.Scheduling;
 using GSF.Web.Model;
-using openHistorian.XDALink;
-using openXDA.Model;
-using Root.Reports;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.DataVisualization.Charting;
-using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
 using log4net;
-using System.Configuration;
+using openXDA.Model;
 
 namespace openXDA.Reports
 {
@@ -49,19 +39,19 @@ namespace openXDA.Reports
     {
         #region [ Members ]
 
-        // Fields
-        private ScheduleManager m_scheduler;
-        private bool m_running = false;
-        private ReportsSettings m_reportsSettings;
-        private EmailSettings m_emailSettings;
+        // Constants
+        private const string ScheduleName = "Reports";
 
         #endregion
 
         #region [ Constructors ]
+
         public ReportsEngine()
         {
-            m_reportsSettings = new ReportsSettings();
-            m_emailSettings = new EmailSettings();
+            ReportsSettings = new ReportsSettings();
+            EmailSettings = new EmailSettings();
+
+            Scheduler = new ScheduleManager();
             Scheduler.Initialize();
             Scheduler.Starting += Scheduler_Starting;
             Scheduler.Started += Scheduler_Started;
@@ -69,76 +59,64 @@ namespace openXDA.Reports
             Scheduler.Disposed += Scheduler_Disposed;
         }
 
-        public ReportsEngine(ReportsSettings settings)
-        {
-            m_reportsSettings = settings;
-        }
-
         #endregion
 
         #region [ Properties ]
-        private ScheduleManager Scheduler => m_scheduler ?? (m_scheduler = new ScheduleManager());
-        public bool Running => m_running;
+
+        private ScheduleManager Scheduler { get; }
+
+        public bool Running { get; private set; }
 
         [Category]
         [SettingName("Reports")]
-        public ReportsSettings ReportsSettings
-        {
-            get
-            {
-                return m_reportsSettings;
-            }
-        }
+        public ReportsSettings ReportsSettings { get; }
 
         [Category]
         [SettingName("Email")]
-        public EmailSettings EmailSettings
-        {
-            get
-            {
-                return m_emailSettings;
-            }
-        }
-
-        #endregion
-
-        #region [ Static ]
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ReportsEngine));
-        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
+        public EmailSettings EmailSettings { get; }
 
         #endregion
 
         #region [ Methods ]
 
+        public void ProcessMonthlyReport(Meter meter, DateTime month)
+        {
+            DateTime firstOfMonth = month.AddDays(1 - month.Day);
+            DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+
+            using (DataContext dataContext = new DataContext("systemSettings"))
+            {
+                ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, dataContext);
+            }
+        }
+
         public bool Start()
         {
             try
             {
-
-                if (ReportsSettings.Enabled && !Running)
+                if (!Running)
                 {
-                    Scheduler.AddSchedule("Reports", ReportsSettings.Frequency);
+                    Scheduler.AddSchedule(ScheduleName, ReportsSettings.Frequency);
                     Scheduler.Start();
-                    m_running = true;
+                    Running = true;
                 }
 
                 return true;
-
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Error(ex.ToString(), ex);
                 return false;
             }
-
         }
 
         public void Stop()
         {
             if (Running)
             {
+                Scheduler.RemoveSchedule(ScheduleName);
                 Scheduler.Stop();
-                m_running = false;
+                Running = false;
             }
         }
 
@@ -146,10 +124,16 @@ namespace openXDA.Reports
         {
             ConnectionStringParser.ParseConnectionString(connectionString, this);
 
-            if (!Running) Start();
-            else if (!ReportsSettings.Enabled) Stop();
+            if (ReportsSettings.Enabled)
+                Start();
+            else if (!ReportsSettings.Enabled)
+                Stop();
 
             Scheduler.AddSchedule("Reports", ReportsSettings.Frequency, true);
+        }
+
+        private void Scheduler_Starting(object sender, EventArgs e)
+        {
         }
 
         private void Scheduler_Started(object sender, EventArgs e)
@@ -157,24 +141,18 @@ namespace openXDA.Reports
             Log.Info("Reports Engine has started successfully...");
         }
 
-        private void Scheduler_Starting(object sender, EventArgs e)
-        {
-        }
-
         private void Scheduler_Disposed(object sender, EventArgs e)
         {
             Log.Info("Reports Engine is disposed...");
         }
 
-
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
             Log.Info(string.Format("Processing monthly reports..."));
             ProcessMonthlyReports();
-
         }
 
-        public void ProcessMonthlyReports()
+        private void ProcessMonthlyReports()
         {
             DateTime today = DateTime.Now;
             DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
@@ -184,50 +162,55 @@ namespace openXDA.Reports
             {
                 // TODO: There is no EmailGroupAssetGroup
                 IEnumerable<Meter> meters = dataContext.Table<Meter>().QueryRecordsWhere("ID IN (SELECT MeterID FROM MeterAssetGroup WHERE AssetGroupID IN (SELECT AssetGroupID FROM EmailGroupAssetGroup WHERE EmailGroupID = (SELECT ID FROM EmailGroup WHERE Name = 'PQ Report')))");
-                foreach (Meter meter in meters) {
-                    Log.Info($"Starting monthly Report for {meter.Name}");
 
-                    PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
-                    Log.Info($"Completed monthly Report for {meter.Name}");
-
-                    byte[] pdf = pQReport.createPDF();
-
-                    try
-                    {
-                        Log.Info($"Loading monthly Report for {meter.Name}");
-
-                        Model.Report report = dataContext.Table<Model.Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
-
-                        if (report != null)
-                        {
-                            report.MeterID = meter.ID;
-                            report.Month = firstOfMonth.Month;
-                            report.Year = firstOfMonth.Year;
-                            report.Results = pQReport.Result;
-                            report.PDF = pdf;
-
-                            dataContext.Table<Model.Report>().UpdateRecord(report);
-
-                        }
-                        else {
-                            dataContext.Table<Model.Report>().AddNewRecord(new Model.Report()
-                            {
-                                MeterID = meter.ID,
-                                Month = firstOfMonth.Month,
-                                Year = firstOfMonth.Year,
-                                Results = pQReport.Result,
-                                PDF = pdf
-                            });
-                        }
-                    }
-                    catch (Exception ex) {
-                        Log.Error(ex.ToString(), ex);
-                    }
-
-                }
+                foreach (Meter meter in meters)
+                    ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, dataContext);
 
                 EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
                 emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
+            }
+        }
+
+        private void ProcessMonthlyReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
+        {
+            Log.Info($"Starting monthly Report for {meter.Name}");
+
+            PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
+            Log.Info($"Completed monthly Report for {meter.Name}");
+
+            byte[] pdf = pQReport.createPDF();
+
+            try
+            {
+                Log.Info($"Loading monthly Report for {meter.Name}");
+
+                Report report = dataContext.Table<Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
+
+                if (report != null)
+                {
+                    report.MeterID = meter.ID;
+                    report.Month = firstOfMonth.Month;
+                    report.Year = firstOfMonth.Year;
+                    report.Results = pQReport.Result;
+                    report.PDF = pdf;
+
+                    dataContext.Table<Report>().UpdateRecord(report);
+                }
+                else
+                {
+                    dataContext.Table<Report>().AddNewRecord(new Report()
+                    {
+                        MeterID = meter.ID,
+                        Month = firstOfMonth.Month,
+                        Year = firstOfMonth.Year,
+                        Results = pQReport.Result,
+                        PDF = pdf
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString(), ex);
             }
         }
 
@@ -252,7 +235,14 @@ namespace openXDA.Reports
 
             return helpMessage.ToString();
         }
+
         #endregion
 
+        #region [ Static ]
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ReportsEngine));
+        private static readonly ConnectionStringParser<SettingAttribute, CategoryAttribute> ConnectionStringParser = new ConnectionStringParser<SettingAttribute, CategoryAttribute>();
+
+        #endregion
     }
 }
