@@ -232,7 +232,6 @@ namespace openXDA.Reports
 
         private void GenerateReport()
         {
-
             DateTime now = DateTime.Now;
 
             // Build Report
@@ -372,11 +371,10 @@ namespace openXDA.Reports
             {
                 FontProp textProp = new FontProp(FontDefinition, 0);
                 textProp.rSizePoint = 8.0D;
-                tlm.rContainerHeightMM = 3 * 12;  // set height of table
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
-                tlm.eNewContainer += (oSender, ea) => NextTablePage(page, verticalMillimeters, ea);
+                tlm.eNewContainer += (oSender, ea) => verticalMillimeters = NextTablePage(page, verticalMillimeters, ea);
 
                 // define columns
                 TlmColumn col;
@@ -394,10 +392,12 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, row["Duration"].ToString()));
                 }
 
-                verticalMillimeters += tlm.rContainerHeightMM;
-                return verticalMillimeters;
+                tlm.Commit();
+
+                verticalMillimeters += tlm.rCurY_MM + 10;
             }
 
+            return verticalMillimeters;
         }
 
         private double CreateSagsPage( double verticalMillimeters)
@@ -441,11 +441,10 @@ namespace openXDA.Reports
             {
                 FontProp textProp = new FontProp(FontDefinition, 0);
                 textProp.rSizePoint = 8.0D;
-                tlm.rContainerHeightMM = 3 * 12;  // set height of table
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
-                tlm.eNewContainer += (oSender, ea) => NextTablePage(page, verticalMillimeters, ea);
+                tlm.eNewContainer += (oSender, ea) => verticalMillimeters = NextTablePage(page, verticalMillimeters, ea);
                 // define columns
                 TlmColumn col;
                 col = new TlmColumnMM(tlm, "Date", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.25);
@@ -462,8 +461,9 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, string.Format("{0:N3}", double.Parse(row["Duration"].ToString()))));
                 }
 
-                verticalMillimeters += tlm.rContainerHeightMM;
+                tlm.Commit();
 
+                verticalMillimeters += tlm.rCurY_MM + 10;
             }
 
             return verticalMillimeters;
@@ -511,11 +511,10 @@ namespace openXDA.Reports
             {
                 FontProp textProp = new FontProp(FontDefinition, 0);
                 textProp.rSizePoint = 8.0D;
-                tlm.rContainerHeightMM = 3 * 12;  // set height of table
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
-                tlm.eNewContainer += (oSender, ea) => NextTablePage(page, verticalMillimeters, ea);
+                tlm.eNewContainer += (oSender, ea) => verticalMillimeters = NextTablePage(page, verticalMillimeters, ea);
                 // define columns
                 TlmColumn col;
                 col = new TlmColumnMM(tlm, "Date", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.25);
@@ -532,11 +531,12 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, string.Format("{0:N3}", double.Parse(row["Duration"].ToString()))));
                 }
 
-                verticalMillimeters += tlm.rContainerHeightMM;
+                tlm.Commit();
 
+                verticalMillimeters += tlm.rCurY_MM + 10;
             }
-            return verticalMillimeters;
 
+            return verticalMillimeters;
         }
 
         private void CreateMagDurPage( )
@@ -611,11 +611,10 @@ namespace openXDA.Reports
             {
                 FontProp textProp = new FontProp(FontDefinition, 0);
                 textProp.rSizePoint = 8.0D;
-                tlm.rContainerHeightMM = 3 * 12;  // set height of table
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
-                tlm.eNewContainer += (oSender, ea) => NextTablePage(page, verticalMillimeters, ea);
+                tlm.eNewContainer += (oSender, ea) => verticalMillimeters = NextTablePage(page, verticalMillimeters, ea);
                 // define columns
                 TlmColumn col;
                 col = new TlmColumnMM(tlm, "Date", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.25);
@@ -632,11 +631,12 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, string.Format("{0:N3}", double.Parse(row["Duration"].ToString()))));
                 }
 
-                verticalMillimeters += tlm.rContainerHeightMM;
+                tlm.Commit();
 
+                verticalMillimeters += tlm.rCurY_MM + 10;
             }
-            return verticalMillimeters;
 
+            return verticalMillimeters;
         }
 
         private void CreateSummaryPage(Page page)
@@ -646,15 +646,15 @@ namespace openXDA.Reports
 
             FontProp headerProp = new FontProp(FontDefinition, 0);
             headerProp.rSizePoint = 10.0D;
+
             using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
             {
                 FontProp textProp = new FontProp(FontDefinition, 0);
                 textProp.rSizePoint = 8.0D;
-                tlm.rContainerHeightMM = 3 * 12;  // set height of table
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
-                tlm.eNewContainer += (oSender, ea) => NextTablePage(page, verticalMillimeters, ea);
+                tlm.eNewContainer += (oSender, ea) => verticalMillimeters = NextTablePage(page, verticalMillimeters, ea);
                 // define columns
                 TlmColumn col;
                 col = new TlmColumnMM(tlm, "Measurement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.35);
@@ -712,21 +712,19 @@ namespace openXDA.Reports
                 tlm.Add(3, new RepString(textProp, ""));
                 tlm.Add(4, new RepString(textProp, Summary.Harmonics.Compliance));
 
-                verticalMillimeters += tlm.rContainerHeightMM;
+                tlm.Commit();
 
+                verticalMillimeters += tlm.rCurY_MM + 10;
             }
-
-            verticalMillimeters += 20;
 
             using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
             {
                 FontProp textProp = new FontProp(FontDefinition, 0);
                 textProp.rSizePoint = 8.0D;
-                tlm.rContainerHeightMM = 3 * 12;  // set height of table
                 tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                 tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                 tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
-                tlm.eNewContainer += (oSender, ea) => NextTablePage(page, verticalMillimeters, ea);
+                tlm.eNewContainer += (oSender, ea) => verticalMillimeters = NextTablePage(page, verticalMillimeters, ea);
                 // define columns
                 TlmColumn col;
                 col = new TlmColumnMM(tlm, "Event Type", (PageWidthMillimeters / 2 - PageMarginMillimeters) * 0.65);
@@ -748,11 +746,10 @@ namespace openXDA.Reports
                 tlm.Add(0, new RepString(textProp, $"11. Faults"));
                 tlm.Add(1, new RepString(textProp, string.Format("{0}", Summary.Faults.Count)));
 
+                tlm.Commit();
 
-                verticalMillimeters += tlm.rContainerHeightMM;
-
+                verticalMillimeters += tlm.rCurY_MM + 10;
             }
-
         }
 
         // Creates a page and sets width and height to standard 8.5x11 inches.
@@ -816,13 +813,25 @@ namespace openXDA.Reports
         // Inserts the page footer onto the given page, which includes the time of report generation as well as the page number.
         private double InsertHeader(Page page)
         {
+            const string ReportIdentifier = "PQ Report - openXDA";
+
             FontProp font = new FontProp(FontDefinition, 0.0D);
             font.rSizePoint = 12.0D;
 
+            FontProp meterNameFont = new FontProp(FontDefinition, 0.0D);
+            meterNameFont.rSizePoint = 12.0D;
+
             int height = 6;
 
-            page.AddMM(PageMarginMillimeters, height, new RepString(font, Meter.Name));
-            page.AddMM(PageWidthMillimeters / 2 - font.rGetTextWidthMM("PQ Report - openXDA") / 2, height, new RepString(font, "PQ Report - openXDA"));
+            double reportIdentifierHorizontalPosition = PageWidthMillimeters / 2 - font.rGetTextWidthMM(ReportIdentifier) / 2;
+            double meterNameMaxWidth = reportIdentifierHorizontalPosition - PageMarginMillimeters - 4;
+            string meterName = Meter.Name;
+
+            while (meterNameFont.rGetTextWidthMM(meterName) > meterNameMaxWidth)
+                meterNameFont.rSizePoint -= 1.0D;
+
+            page.AddMM(PageMarginMillimeters, height, new RepString(meterNameFont, Meter.Name));
+            page.AddMM(reportIdentifierHorizontalPosition, height, new RepString(font, ReportIdentifier));
             page.AddMM(PageWidthMillimeters - PageMarginMillimeters - font.rGetTextWidthMM(FirstOfMonth.ToString("MMMM yyyy")), height, new RepString(font, FirstOfMonth.ToString("MMMM yyyy")));
             page.AddMM(0, 10, new RepRectMM(new BrushProp(this, Color.Black), PageWidthMillimeters, 0.1D));
 
@@ -860,19 +869,19 @@ namespace openXDA.Reports
             return font.rSizeMM + 5;
         }
 
-        private void NextTablePage(Page page,  double verticalMillimeters, TlmBase.NewContainerEventArgs ea)
+        private double NextTablePage(Page page,  double verticalMillimeters, TlmBase.NewContainerEventArgs ea)
         {
-
             if (verticalMillimeters > (PageHeightMillimeters * 0.75))
             {
                 page = CreatePage();
                 verticalMillimeters = InsertHeader(page);
                 verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 8: Sags (cont.)");
-
             }
+
             ea.container.rHeightMM = PageHeightMillimeters - verticalMillimeters - PageMarginMillimeters;
             page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
-            verticalMillimeters += ea.container.rHeightMM;
+
+            return verticalMillimeters;
         }
 
         private double InsertFrequencyPage(Page page, double verticalMillimeters)
@@ -928,7 +937,6 @@ namespace openXDA.Reports
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
-                    tlm.rContainerHeightMM = 3 * 12;  // set height of table
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
@@ -946,8 +954,8 @@ namespace openXDA.Reports
                     tlm.Add(0, new RepString(textProp, $"99.95% of the time: {string.Format("{0:N2}", lowThreshTwo)} Hz - {string.Format("{0:N2}", highThreshTwo)} Hz"));
                     tlm.Add(1, new RepString(textProp, (avg.Any() ? $"{string.Format("{0:N2}", twoList.First())} - {string.Format("{0:N2}", twoList.Last())}" : "No Data Provided")));
                     tlm.Add(2, new RepString(textProp, (testTwo ? "Pass" : "Fail")));
-                    verticalMillimeters += tlm.rContainerHeightMM;
-
+                    tlm.Commit();
+                    verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
@@ -1079,7 +1087,6 @@ namespace openXDA.Reports
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
-                    tlm.rContainerHeightMM = 3 * 12;  // set height of table
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
@@ -1106,8 +1113,9 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, (line3value9995Low != null ? $"{string.Format("{0:N1}", line3value9995Low)}V - {string.Format("{0:N1}", line3value9995High)}V" : "No data for time period")));
                     tlm.Add(4, new RepString(textProp, (test2 ? "Pass" : "Fail")));
 
-                    verticalMillimeters += tlm.rContainerHeightMM;
+                    tlm.Commit();
 
+                    verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
@@ -1151,10 +1159,7 @@ namespace openXDA.Reports
                 chart = GenerateBarChart("0", avg.Select(x => x.Value), maxValue, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
-
-
                 return verticalMillimeters;
-
             }
         }
 
@@ -1249,7 +1254,6 @@ namespace openXDA.Reports
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
-                    tlm.rContainerHeightMM = 3 * 12;  // set height of table
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
@@ -1276,8 +1280,9 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, (line3value9995Low != null ? $"{string.Format("{0:N2}", line3value9995Low)}V - {string.Format("{0:N2}", line3value9995High)}V" : "No data for time period")));
                     tlm.Add(4, new RepString(textProp, (test2 ? "Pass" : "Fail")));
 
-                    verticalMillimeters += tlm.rContainerHeightMM;
+                    tlm.Commit();
 
+                    verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
@@ -1318,8 +1323,6 @@ namespace openXDA.Reports
 
                 chart = GenerateBarChart("0", avg.Select(x => x.Value), maxValue, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
-
 
                 return verticalMillimeters;
 
@@ -1383,7 +1386,6 @@ namespace openXDA.Reports
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
-                    tlm.rContainerHeightMM = 3 * 12;  // set height of table
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
@@ -1401,8 +1403,8 @@ namespace openXDA.Reports
                     tlm.Add(2, new RepString(textProp, $"{string.Format("{0:N2}", line2value)}"));
                     tlm.Add(3, new RepString(textProp, $"{string.Format("{0:N2}", line3value)}"));
                     tlm.Add(4, new RepString(textProp, (test ? "Pass" : "Fail")));
-                    verticalMillimeters += tlm.rContainerHeightMM;
-
+                    tlm.Commit();
+                    verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
@@ -1438,10 +1440,7 @@ namespace openXDA.Reports
                 chart = GenerateBarChart("0.00", max.Select(x => x.Value), maxValue, 0);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
-
-
                 return verticalMillimeters;
-
             }
         }
 
@@ -1483,7 +1482,6 @@ namespace openXDA.Reports
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
-                    tlm.rContainerHeightMM = 3 * 12;  // set height of table
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
@@ -1497,8 +1495,8 @@ namespace openXDA.Reports
                     tlm.Add(0, new RepString(textProp, "99.95% of the time: 0% ~ 2% u2"));
                     tlm.Add(1, new RepString(textProp, $"{string.Format("{0:N2}", value)}"));
                     tlm.Add(2, new RepString(textProp, (test ? "Pass" : "Fail")));
-                    verticalMillimeters += tlm.rContainerHeightMM;
-
+                    tlm.Commit();
+                    verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
@@ -1521,10 +1519,7 @@ namespace openXDA.Reports
                 chart = GenerateBarChart("0.00", avg.Select(x => x.Value), value, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
-
-
                 return verticalMillimeters;
-
             }
         }
 
@@ -1591,7 +1586,6 @@ namespace openXDA.Reports
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
-                    tlm.rContainerHeightMM = 3 * 12;  // set height of table
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
@@ -1611,8 +1605,9 @@ namespace openXDA.Reports
                     tlm.Add(3, new RepString(textProp, (line3valueLow != null ? $"{string.Format("{0:N2}", line3valueLow)}V - {string.Format("{0:N2}", line3valueHigh)}V" : "No data for time period")));
                     tlm.Add(4, new RepString(textProp, (test1 ? "Pass" : "Fail")));
 
-                    verticalMillimeters += tlm.rContainerHeightMM;
+                    tlm.Commit();
 
+                    verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
@@ -1694,10 +1689,7 @@ namespace openXDA.Reports
                 chart = GenerateBarChart("0.00", data.Select(x => x.Value), maxValue, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
-
-
                 return verticalMillimeters;
-
             }
         }
 

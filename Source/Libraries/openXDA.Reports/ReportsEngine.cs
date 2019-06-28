@@ -173,17 +173,13 @@ namespace openXDA.Reports
 
         private void ProcessMonthlyReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
         {
-            Log.Info($"Starting monthly Report for {meter.Name}");
-
+            Log.Info($"Starting monthly Report for {meter.Name}...");
             PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
-            Log.Info($"Completed monthly Report for {meter.Name}");
-
             byte[] pdf = pQReport.createPDF();
+            Log.Info($"Completed monthly Report for {meter.Name}");
 
             try
             {
-                Log.Info($"Loading monthly Report for {meter.Name}");
-
                 Report report = dataContext.Table<Report>().QueryRecordWhere("MeterID = {0} AND Month = {1} AND Year = {2}", meter.ID, firstOfMonth.Month, firstOfMonth.Year);
 
                 if (report != null)
@@ -207,6 +203,8 @@ namespace openXDA.Reports
                         PDF = pdf
                     });
                 }
+
+                Log.Info($"Loaded monthly Report for {meter.Name}");
             }
             catch (Exception ex)
             {
