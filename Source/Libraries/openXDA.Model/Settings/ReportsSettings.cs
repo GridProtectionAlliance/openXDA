@@ -28,49 +28,78 @@ namespace openXDA.Model
 {
     public class ReportsSettings
     {
-        #region [ Members ]
-
-        // Fields
-        private bool m_enable;
-        private string m_frequency;
-
-        #endregion
-        #region [ Properties ]
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
         [Setting]
         [DefaultValue(false)]
-        public bool Enabled
-        {
-            get
-            {
-                return m_enable;
-            }
-            set
-            {
-                m_enable = value;
-            }
-        }
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Indicates whether operation is enabled.
         /// </summary>
         [Setting]
         [DefaultValue("0 0 2 * *")]  // Runs on second day of month to ensure all data is in
-        public string Frequency
-        {
-            get
-            {
-                return m_frequency;
-            }
-            set
-            {
-                m_frequency = value;
-            }
-        }
+        public string Schedule { get; set; }
 
-        #endregion
+        [Setting]
+        [DefaultValue(99.0D)]
+        public double FirstFrequencyPercentile { get; set; }
 
+        [Setting]
+        [DefaultValue(0.3D)]
+        public double FirstFrequencyDeviationLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(99.95D)]
+        public double SecondFrequencyPercentile { get; set; }
+
+        [Setting]
+        [DefaultValue(0.5D)]
+        public double SecondFrequencyDeviationLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(99.0D)]
+        public double FirstVoltagePercentile { get; set; }
+
+        [Setting]
+        [DefaultValue(3.0D)]
+        public double FirstVoltageDeviationLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(99.95D)]
+        public double SecondVoltagePercentile { get; set; }
+
+        [Setting]
+        [DefaultValue(5.0D)]
+        public double SecondVoltageDeviationLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(98.5D)]
+        public double FlickerPercentile { get; set; }
+
+        [Setting]
+        [DefaultValue(1.0D)]
+        public double FlickerHighLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(99.95D)]
+        public double VoltageUnbalancePercentile { get; set; }
+
+        [Setting]
+        [DefaultValue(2.0D)]
+        public double VoltageUnbalanceHighLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(0.0D)]
+        public double VoltageUnbalanceLowLimit { get; set; }
+
+        [Setting]
+        [DefaultValue(99.95D)]
+        public double VoltageTHDPercentile { get; set; }
+
+        [Setting]
+        [DefaultValue(8.0D)]
+        public double VoltageTHDHighLimit { get; set; }
     }
 }

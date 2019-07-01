@@ -36,6 +36,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms.DataVisualization.Charting;
 using ChartSeries = System.Windows.Forms.DataVisualization.Charting.Series;
 using log4net;
+using GSF;
+
 namespace openXDA.Reports
 {
     public class PQReport : Root.Reports.Report
@@ -148,8 +150,6 @@ namespace openXDA.Reports
             {
                 public int Count { get; set; }
             }
-
-
         }
 
         private class Curves
@@ -184,6 +184,8 @@ namespace openXDA.Reports
         #endregion
 
         #region [ Properties ]
+
+        public ReportsSettings ReportsSettings { get; set; }
         public Meter Meter { get; set; }
         public DateTime FirstOfMonth { get; set; }
         public DateTime EndOfMonth { get; set; }
@@ -191,27 +193,26 @@ namespace openXDA.Reports
         public string Result { get; set; }
         public FontDef FontDefinition { get; set; }
         private SummaryResults Summary { get; set; }
+
         #endregion
 
         #region [ Constructors ]
-        public PQReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
+
+        public PQReport(ReportsSettings reportsSettings, Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
         {
+            ReportsSettings = reportsSettings;
             Meter = meter;
             FirstOfMonth = firstOfMonth;
             EndOfMonth = endOfMonth;
             DataContext = dataContext;
             FontDefinition = new FontDef(this, "Helvetica");
             Summary = new SummaryResults();
-
         }
 
         #endregion
 
-        #region [ Static ]
-        private static readonly ILog Log = LogManager.GetLogger(typeof(PQReport));
-        #endregion
-
         #region [ Methods ]
+
         public byte[] createPDF()
         {
             try
@@ -243,7 +244,7 @@ namespace openXDA.Reports
             CreateFlickerPage();
             CreateImbalancePage();
             CreateTHDPage();
-            CreateHarmonicsPage();
+            //CreateHarmonicsPage();
             CreateMagDurPage();
             double verticalMillimeters = CreateInteruptionsPage();
             verticalMillimeters = CreateSagsPage(verticalMillimeters);
@@ -277,17 +278,16 @@ namespace openXDA.Reports
 
         }
 
-        private void CreateFrequencyPage( )
+        private void CreateFrequencyPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
             verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 1: Power Frequency");
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Frequency", "60.00", "Hz");
             verticalMillimeters += InsertFrequencyPage(page, verticalMillimeters);
-
         }
 
-        private void CreateVoltageLNPage( )
+        private void CreateVoltageLNPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -295,7 +295,7 @@ namespace openXDA.Reports
             verticalMillimeters += InsertVoltageLNPage(page, verticalMillimeters);
         }
 
-        private void CreateVoltageLLPage( )
+        private void CreateVoltageLLPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -304,7 +304,7 @@ namespace openXDA.Reports
 
         }
 
-        private void CreateFlickerPage( )
+        private void CreateFlickerPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -312,7 +312,7 @@ namespace openXDA.Reports
             verticalMillimeters += InsertFlickerPage(page, verticalMillimeters);
         }
 
-        private void CreateImbalancePage( )
+        private void CreateImbalancePage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -320,7 +320,7 @@ namespace openXDA.Reports
             verticalMillimeters += InsertImbalancePage(page, verticalMillimeters);
         }
 
-        private void CreateTHDPage( )
+        private void CreateTHDPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -328,14 +328,14 @@ namespace openXDA.Reports
             verticalMillimeters += InsertTHDPage(page, verticalMillimeters);
         }
 
-        private void CreateHarmonicsPage( )
+        private void CreateHarmonicsPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
             verticalMillimeters += InsertSectionHeader(page, verticalMillimeters, "Section 6: Harmonics");
         }
 
-        private double CreateInteruptionsPage( )
+        private double CreateInteruptionsPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -400,7 +400,7 @@ namespace openXDA.Reports
             return verticalMillimeters;
         }
 
-        private double CreateSagsPage( double verticalMillimeters)
+        private double CreateSagsPage(double verticalMillimeters)
         {
             Page page = page_Cur;
             if (verticalMillimeters > (PageHeightMillimeters * 0.75))
@@ -470,7 +470,7 @@ namespace openXDA.Reports
 
         }
 
-        private double CreateSwellsPage( double verticalMillimeters)
+        private double CreateSwellsPage(double verticalMillimeters)
         {
             Page page = page_Cur;
             if (verticalMillimeters > (PageHeightMillimeters * 0.75))
@@ -539,7 +539,7 @@ namespace openXDA.Reports
             return verticalMillimeters;
         }
 
-        private void CreateMagDurPage( )
+        private void CreateMagDurPage()
         {
             Page page = CreatePage();
             double verticalMillimeters = InsertHeader(page);
@@ -570,7 +570,7 @@ namespace openXDA.Reports
 
         }
 
-        private double CreateFaultsPage( double verticalMillimeters)
+        private double CreateFaultsPage(double verticalMillimeters)
         {
             Page page = page_Cur;
             if (verticalMillimeters > (PageHeightMillimeters * 0.75))
@@ -897,80 +897,96 @@ namespace openXDA.Reports
                 return verticalMillimeters;
             }
 
-
             double nominal = Summary.Frequency.Nominal = 60.0D;
-            double testOneMultiplier = 0.003;
-            double testTwoMultiplier = 0.005;
-
-            double lowThreshOne = nominal - (nominal * testOneMultiplier);
-            double highThreshOne = nominal + (nominal * testOneMultiplier);
-            double lowThreshTwo = nominal - (nominal * testTwoMultiplier);
-            double highThreshTwo = nominal + (nominal * testTwoMultiplier);
 
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
                 List<openHistorian.XDALink.TrendingDataPoint> points = historian.Read(channels.Select(x => x.ID), FirstOfMonth, EndOfMonth).ToList();
+
                 if (!points.Any())
                 {
                     verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No Frequency data during {FirstOfMonth.ToString("MM/dd/yyyy")} - {EndOfMonth.ToString("MM/dd/yyyy")}");
                     return verticalMillimeters;
                 }
 
-                List<openHistorian.XDALink.TrendingDataPoint> avg = points.Where(point => point.SeriesID == SeriesID.Average).OrderBy(point => point.Value).ToList();
+                List<double> avg = points
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
 
-                double maxValue = Summary.Frequency.Max = points.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
-                double minValue = Summary.Frequency.Min = points.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
-                double avgValue = Summary.Frequency.Avg = avg.Select(point => point.Value).Average();
+                int firstPercentileSkipCount = (int)(avg.Count * (100.0D - ReportsSettings.FirstFrequencyPercentile) / 100.0D / 2.0D);
+                double firstPercentileMinLimit = nominal * (100.0D - ReportsSettings.FirstFrequencyDeviationLimit) / 100.0D;
+                double firstPercentileMaxLimit = nominal * (100.0D + ReportsSettings.FirstFrequencyDeviationLimit) / 100.0D;
+                double firstPercentileMin = avg.Skip(firstPercentileSkipCount).FirstOrDefault();
+                double firstPercentileMax = avg.AsEnumerable().Reverse().Skip(firstPercentileSkipCount).FirstOrDefault();
 
-                bool testOne = (double)avg.Where(x => x.Value >= lowThreshOne && x.Value <= highThreshOne).Count() / (avg.Any() ? avg.Count() : 1) > 0.99;
-                bool testTwo = (double)avg.Where(x => x.Value >= lowThreshTwo && x.Value <= highThreshTwo).Count() / (avg.Any() ? avg.Count() : 1) > 0.9995;
+                bool firstTest =
+                    firstPercentileMin >= firstPercentileMinLimit &&
+                    firstPercentileMax <= firstPercentileMaxLimit;
 
-                Summary.Frequency.Compliance = (testOne && testTwo ? "Pass" : "Fail");
-                int oneCount = (avg.Count() - (int)(avg.Count() * 0.992)) / 2;
-                List<double> oneList = avg.Where((point, i) => i >= oneCount && i <= (avg.Count() - oneCount)).Select(point => point.Value).ToList();
-                int twoCount = (avg.Count() - (int)(avg.Count() * 0.9995)) / 2;
-                List<double> twoList = avg.Where((point, i) => i >= twoCount && i <= (avg.Count() - twoCount)).Select(point => point.Value).ToList();
+                int secondPercentileSkipCount = (int)(avg.Count * (100.0D - ReportsSettings.SecondFrequencyPercentile) / 100.0D / 2.0D);
+                double secondPercentileMinLimit = nominal * (100.0D - ReportsSettings.SecondFrequencyDeviationLimit) / 100.0D;
+                double secondPercentileMaxLimit = nominal * (100.0D + ReportsSettings.SecondFrequencyDeviationLimit) / 100.0D;
+                double secondPercentileMin = avg.Skip(secondPercentileSkipCount).FirstOrDefault();
+                double secondPercentileMax = avg.AsEnumerable().Reverse().Skip(secondPercentileSkipCount).FirstOrDefault();
+
+                bool secondTest =
+                    secondPercentileMin >= secondPercentileMinLimit &&
+                    secondPercentileMax <= secondPercentileMaxLimit;
+
+                Summary.Frequency.Compliance = (firstTest && secondTest ? "Pass" : "Fail");
 
                 FontProp headerProp = new FontProp(FontDefinition, 0);
                 headerProp.rSizePoint = 10.0D;
+
                 using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
                     textProp.rSizePoint = 8.0D;
+
                     tlm.tlmCellDef_Header.rAlignV = RepObj.rAlignCenter;  // set vertical alignment of all header cells
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
                     tlm.eNewContainer += (oSender, ea) => page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
+
                     // define columns
                     TlmColumn col;
                     col = new TlmColumnMM(tlm, "Monthly PQ Report Requirement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.40);
                     col = new TlmColumnMM(tlm, "Measured Frequency", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.40);
                     col = new TlmColumnMM(tlm, "Result", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.20);
+
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99% of the time: {string.Format("{0:N2}", lowThreshOne)} Hz - {string.Format("{0:N2}", highThreshOne)} Hz"));
-                    tlm.Add(1, new RepString(textProp, (avg.Any() ? $"{string.Format("{0:N2}", oneList.First())} - {string.Format("{0:N2}", oneList.Last())}" : "No Data Provided")));
-                    tlm.Add(2, new RepString(textProp, (testOne ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.FirstFrequencyPercentile:0.##}% of the time: {firstPercentileMinLimit:N2} Hz - {firstPercentileMaxLimit:N2} Hz"));
+                    tlm.Add(1, new RepString(textProp, (avg.Any() ? $"{firstPercentileMin:N2} - {firstPercentileMax:N2}" : "No Data Provided")));
+                    tlm.Add(2, new RepString(textProp, (firstTest ? "Pass" : "Fail")));
+
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99.95% of the time: {string.Format("{0:N2}", lowThreshTwo)} Hz - {string.Format("{0:N2}", highThreshTwo)} Hz"));
-                    tlm.Add(1, new RepString(textProp, (avg.Any() ? $"{string.Format("{0:N2}", twoList.First())} - {string.Format("{0:N2}", twoList.Last())}" : "No Data Provided")));
-                    tlm.Add(2, new RepString(textProp, (testTwo ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.SecondFrequencyPercentile:0.##}% of the time: {secondPercentileMinLimit:N2} Hz - {secondPercentileMaxLimit:N2} Hz"));
+                    tlm.Add(1, new RepString(textProp, (avg.Any() ? $"{secondPercentileMin:N2} - {secondPercentileMax:N2}" : "No Data Provided")));
+                    tlm.Add(2, new RepString(textProp, (secondTest ? "Pass" : "Fail")));
+
                     tlm.Commit();
+
                     verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "Frequency",
                     Color = Color.DarkBlue,
                     Data = points.Where(point => point.SeriesID == SeriesID.Average).ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "Frequency Max",
                     Color = Color.DarkGreen,
                     Data = points.Where(point => point.SeriesID == SeriesID.Maximum).ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "Frequency Min",
@@ -978,21 +994,20 @@ namespace openXDA.Reports
                     Data = points.Where(point => point.SeriesID == SeriesID.Minimum).ToList()
                 });
 
-                Chart chart = GenerateLineChart("Hz", pointGroups, highThreshTwo + (highThreshTwo - lowThreshTwo) * .10, lowThreshTwo - (highThreshTwo - lowThreshTwo) * .10, "MM/dd", "0.00", "Frequency", highThreshTwo, highThreshOne, lowThreshTwo, lowThreshOne, FirstOfMonth, EndOfMonth);
+                Chart chart = GenerateLineChart("Hz", pointGroups, secondPercentileMaxLimit + (secondPercentileMaxLimit - secondPercentileMinLimit) * .10, secondPercentileMinLimit - (secondPercentileMaxLimit - secondPercentileMinLimit) * .10, "MM/dd", "0.00", "Frequency", secondPercentileMaxLimit, firstPercentileMaxLimit, secondPercentileMinLimit, firstPercentileMinLimit, FirstOfMonth, EndOfMonth);
                 verticalMillimeters += 75;
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
                 verticalMillimeters += 75;
 
-                chart = GenerateBarChart("0.00 Hz", avg.Select(x => x.Value), maxValue, minValue);
+                double maxValue = Summary.Frequency.Max = avg.Max();
+                double minValue = Summary.Frequency.Min = avg.Min();
+                chart = GenerateBarChart("0.00 Hz", avg, maxValue, minValue);
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
                 return verticalMillimeters;
-
             }
-
         }
 
         private double InsertVoltageLNPage( Page page, double verticalMillimeters)
@@ -1005,84 +1020,107 @@ namespace openXDA.Reports
             Channel line3 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CN')", Meter.ID);
 
             int lineId;
+
             if (line1 == null && line2 == null && line3 == null)
             {
                 verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No L-N Voltage channels setup on this meter.");
                 Summary.VoltageLN.Compliance = "Pass";
                 return verticalMillimeters;
             }
-            else if (line1 != null) lineId = line1.LineID;
-            else if (line2 != null) lineId = line2.LineID;
-            else lineId = line3.LineID;
+
+            if (line1 != null)
+                lineId = line1.LineID;
+            else if (line2 != null)
+                lineId = line2.LineID;
+            else
+                lineId = line3.LineID;
 
             double nominal = Summary.VoltageLN.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Line WHERE ID = {0}", lineId) * 1000 / Math.Sqrt(3);
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Voltage", string.Format("{0:N0}", nominal), "V L-N");
 
-            double testOneMultiplier = 0.003;
-            double testTwoMultiplier = 0.005;
-
-            double lowThreshOne = nominal - (nominal * testOneMultiplier);
-            double highThreshOne = nominal + (nominal * testOneMultiplier);
-            double lowThreshTwo = nominal - (nominal * testTwoMultiplier);
-            double highThreshTwo = nominal + (nominal * testTwoMultiplier);
-
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                List<openHistorian.XDALink.TrendingDataPoint> data = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).ToList();
-                List<openHistorian.XDALink.TrendingDataPoint> avg = data.Where(x => x.SeriesID == SeriesID.Average).ToList();
+                List<openHistorian.XDALink.TrendingDataPoint> points = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).ToList();
 
-                if (!avg.Any())
+                List<double> avgLine1 = points
+                    .Where(point => point.ChannelID == line1.ID)
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+
+                List<double> avgLine2 = points
+                    .Where(point => point.ChannelID == line2.ID)
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+
+                List<double> avgLine3 = points
+                    .Where(point => point.ChannelID == line1.ID)
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+
+                if (!avgLine1.Any() && !avgLine2.Any() && !avgLine3.Any())
                 {
                     verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No L-N Voltage data during {FirstOfMonth.ToString("MM/dd/yyyy")} - {EndOfMonth.ToString("MM/dd/yyyy")}");
                     Summary.VoltageLN.Compliance = "Pass";
                     return verticalMillimeters;
                 }
 
-                Summary.VoltageLN.Min = data.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
-                Summary.VoltageLN.Avg = data.Where(point => point.SeriesID == SeriesID.Average).Select(point => point.Value).Average();
-                Summary.VoltageLN.Max = data.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
+                Summary.VoltageLN.Min = points.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
+                Summary.VoltageLN.Avg = points.Where(point => point.SeriesID == SeriesID.Average).Select(point => point.Value).Average();
+                Summary.VoltageLN.Max = points.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
 
+                double firstPercentileMinLimit = nominal * (100.0D - ReportsSettings.FirstVoltageDeviationLimit) / 100.0D;
+                double firstPercentileMaxLimit = nominal * (100.0D + ReportsSettings.FirstVoltageDeviationLimit) / 100.0D;
 
-                int oneCount = avg.Where(point => point.ChannelID == line1.ID).Count();
-                int oneIndex99 = (oneCount - (int)(oneCount * 0.99)) / 2;
-                int oneIndex9995 = (oneCount - (int)(oneCount * 0.99995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> oneData = avg.Where((point, index) => point.ChannelID == line1.ID).ToList();
-                double? line1value99High = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex99 && index <= oneCount - oneIndex99).Select(point => point.Value).Max() : (double?)null);
-                double? line1value99Low = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex99 && index <= oneCount - oneIndex99).Select(point => point.Value).Min() : (double?)null);
-                double? line1value9995High = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex9995 && index <= oneCount - oneIndex9995).Select(point => point.Value).Max() : (double?)null);
-                double? line1value9995Low = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex9995 && index <= oneCount - oneIndex9995).Select(point => point.Value).Min() : (double?)null);
-                bool test199 = (double)oneData.Where(point => point.Value >= lowThreshOne && point.Value <= highThreshOne).Count() / (oneData.Any() ? oneData.Count() : 1) > 0.99;
-                bool test19995 = (double)oneData.Where(point => point.Value >= lowThreshTwo && point.Value <= highThreshTwo).Count() / (oneData.Any() ? oneData.Count() : 1) > 0.9995;
+                int firstPercentileSkipCountLine1 = (int)(avgLine1.Count * (100.0D - ReportsSettings.FirstVoltagePercentile) / 100.0D / 2.0D);
+                int firstPercentileSkipCountLine2 = (int)(avgLine2.Count * (100.0D - ReportsSettings.FirstVoltagePercentile) / 100.0D / 2.0D);
+                int firstPercentileSkipCountLine3 = (int)(avgLine3.Count * (100.0D - ReportsSettings.FirstVoltagePercentile) / 100.0D / 2.0D);
+                double firstPercentileMinLine1 = avgLine1.Skip(firstPercentileSkipCountLine1).FirstOrDefault();
+                double firstPercentileMinLine2 = avgLine2.Skip(firstPercentileSkipCountLine2).FirstOrDefault();
+                double firstPercentileMinLine3 = avgLine3.Skip(firstPercentileSkipCountLine3).FirstOrDefault();
+                double firstPercentileMaxLine1 = avgLine1.AsEnumerable().Reverse().Skip(firstPercentileSkipCountLine1).FirstOrDefault();
+                double firstPercentileMaxLine2 = avgLine2.AsEnumerable().Reverse().Skip(firstPercentileSkipCountLine2).FirstOrDefault();
+                double firstPercentileMaxLine3 = avgLine3.AsEnumerable().Reverse().Skip(firstPercentileSkipCountLine3).FirstOrDefault();
 
-                int twoCount = avg.Where(point => point.ChannelID == line2.ID).Count();
-                int TwoIndex99 = (twoCount - (int)(twoCount * 0.99)) / 2;
-                int TwoIndex9995 = (twoCount - (int)(twoCount * 0.99995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> twoData = avg.Where((point, index) => point.ChannelID == line2.ID).ToList();
-                double? line2value99High = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex99 && index <= twoCount - TwoIndex99).Select(point => point.Value).Max() : (double?)null);
-                double? line2value99Low = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex99 && index <= twoCount - TwoIndex99).Select(point => point.Value).Min() : (double?)null);
-                double? line2value9995High = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex9995 && index <= twoCount - TwoIndex9995).Select(point => point.Value).Max() : (double?)null);
-                double? line2value9995Low = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex9995 && index <= twoCount - TwoIndex9995).Select(point => point.Value).Min() : (double?)null);
-                bool test299 = (double)twoData.Where(point => point.Value >= lowThreshOne && point.Value <= highThreshOne).Count() / (twoData.Any() ? twoData.Count() : 1) > 0.99;
-                bool test29995 = (double)twoData.Where(point => point.Value >= lowThreshTwo && point.Value <= highThreshTwo).Count() / (twoData.Any() ? twoData.Count() : 1) > 0.9995;
+                bool firstTest =
+                    firstPercentileMinLine1 >= firstPercentileMinLimit &&
+                    firstPercentileMaxLine1 <= firstPercentileMaxLimit &&
+                    firstPercentileMinLine2 >= firstPercentileMinLimit &&
+                    firstPercentileMaxLine2 <= firstPercentileMaxLimit &&
+                    firstPercentileMinLine3 >= firstPercentileMinLimit &&
+                    firstPercentileMaxLine3 <= firstPercentileMaxLimit;
 
-                int threeCount = avg.Where(point => point.ChannelID == line3.ID).Count();
-                int threeIndex99 = (threeCount - (int)(threeCount * 0.99)) / 2;
-                int threeIndex9995 = (threeCount - (int)(threeCount * 0.99995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> threeData = avg.Where((point, index) => point.ChannelID == line3.ID).ToList();
-                double? line3value99High = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex99 && index <= threeCount - threeIndex99).Select(point => point.Value).Max() : (double?)null);
-                double? line3value99Low = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex99 && index <= threeCount - threeIndex99).Select(point => point.Value).Min() : (double?)null);
-                double? line3value9995High = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex9995 && index <= threeCount - threeIndex9995).Select(point => point.Value).Max() : (double?)null);
-                double? line3value9995Low = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex9995 && index <= threeCount - threeIndex9995).Select(point => point.Value).Min() : (double?)null);
-                bool test399 = (double)threeData.Where(point => point.Value >= lowThreshOne && point.Value <= highThreshOne).Count() / (threeData.Any() ? threeData.Count() : 1) > 0.99;
-                bool test39995 = (double)threeData.Where(point => point.Value >= lowThreshTwo && point.Value <= highThreshTwo).Count() / (threeData.Any() ? threeData.Count() : 1) > 0.9995;
+                double secondPercentileMinLimit = nominal * (100.0D - ReportsSettings.SecondVoltageDeviationLimit) / 100.0D;
+                double secondPercentileMaxLimit = nominal * (100.0D + ReportsSettings.SecondVoltageDeviationLimit) / 100.0D;
 
-                bool test1 = test199 && test299 && test399;
-                bool test2 = test19995 && test29995 && test39995;
+                int secondPercentileSkipCountLine1 = (int)(avgLine1.Count * (100.0D - ReportsSettings.SecondVoltagePercentile) / 100.0D / 2.0D);
+                int secondPercentileSkipCountLine2 = (int)(avgLine2.Count * (100.0D - ReportsSettings.SecondVoltagePercentile) / 100.0D / 2.0D);
+                int secondPercentileSkipCountLine3 = (int)(avgLine3.Count * (100.0D - ReportsSettings.SecondVoltagePercentile) / 100.0D / 2.0D);
+                double secondPercentileMinLine1 = avgLine1.Skip(secondPercentileSkipCountLine1).FirstOrDefault();
+                double secondPercentileMinLine2 = avgLine2.Skip(secondPercentileSkipCountLine2).FirstOrDefault();
+                double secondPercentileMinLine3 = avgLine3.Skip(secondPercentileSkipCountLine3).FirstOrDefault();
+                double secondPercentileMaxLine1 = avgLine1.AsEnumerable().Reverse().Skip(secondPercentileSkipCountLine1).FirstOrDefault();
+                double secondPercentileMaxLine2 = avgLine2.AsEnumerable().Reverse().Skip(secondPercentileSkipCountLine2).FirstOrDefault();
+                double secondPercentileMaxLine3 = avgLine3.AsEnumerable().Reverse().Skip(secondPercentileSkipCountLine3).FirstOrDefault();
 
-                Summary.VoltageLN.Compliance = (test1 && test2 ? "Pass" : "Fail");
+                bool secondTest =
+                    secondPercentileMinLine1 >= secondPercentileMinLimit &&
+                    secondPercentileMaxLine1 <= secondPercentileMaxLimit &&
+                    secondPercentileMinLine2 >= secondPercentileMinLimit &&
+                    secondPercentileMaxLine2 <= secondPercentileMaxLimit &&
+                    secondPercentileMinLine3 >= secondPercentileMinLimit &&
+                    secondPercentileMaxLine3 <= secondPercentileMaxLimit;
+
+                Summary.VoltageLN.Compliance = (firstTest && secondTest ? "Pass" : "Fail");
 
                 FontProp headerProp = new FontProp(FontDefinition, 0);
                 headerProp.rSizePoint = 10.0D;
+
                 using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
@@ -1091,6 +1129,7 @@ namespace openXDA.Reports
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
                     tlm.eNewContainer += (oSender, ea) => page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
+
                     // define columns
                     TlmColumn col;
                     col = new TlmColumnMM(tlm, "Monthly PQ Report Requirement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.30);
@@ -1100,18 +1139,18 @@ namespace openXDA.Reports
                     col = new TlmColumnMM(tlm, "Result", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.10);
 
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99% of the time: {string.Format("{0:N1}", lowThreshOne)} V - {string.Format("{0:N1}", highThreshOne)} V"));
-                    tlm.Add(1, new RepString(textProp, (line1value99Low != null ? $"{string.Format("{0:N1}", line1value99Low)}V - {string.Format("{0:N1}", line1value99High)}V" : "No data for time period")));
-                    tlm.Add(2, new RepString(textProp, (line2value99Low != null ? $"{string.Format("{0:N1}", line2value99Low)}V - {string.Format("{0:N1}", line2value99High)}V" : "No data for time period")));
-                    tlm.Add(3, new RepString(textProp, (line3value99Low != null ? $"{string.Format("{0:N1}", line3value99Low)}V - {string.Format("{0:N1}", line3value99High)}V" : "No data for time period")));
-                    tlm.Add(4, new RepString(textProp, (test1 ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.FirstVoltagePercentile:0.###}% of the time: {firstPercentileMinLimit:N1} V - {firstPercentileMaxLimit:N1} V"));
+                    tlm.Add(1, new RepString(textProp, (avgLine1.Any() ? $"{firstPercentileMinLine1:N1}V - {firstPercentileMaxLine1:N1}V" : "No data for time period")));
+                    tlm.Add(2, new RepString(textProp, (avgLine2.Any() ? $"{firstPercentileMinLine2:N1}V - {firstPercentileMaxLine2:N2}V" : "No data for time period")));
+                    tlm.Add(3, new RepString(textProp, (avgLine3.Any() ? $"{firstPercentileMinLine3:N1}V - {firstPercentileMaxLine3:N2}V" : "No data for time period")));
+                    tlm.Add(4, new RepString(textProp, (firstTest ? "Pass" : "Fail")));
 
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99% of the time: {string.Format("{0:N1}", lowThreshOne)} V - {string.Format("{0:N1}", highThreshOne)} V"));
-                    tlm.Add(1, new RepString(textProp, (line1value9995Low != null ? $"{string.Format("{0:N1}", line1value9995Low)}V - {string.Format("{0:N1}", line1value9995High)}V" : "No data for time period")));
-                    tlm.Add(2, new RepString(textProp, (line2value9995Low != null ? $"{string.Format("{0:N1}", line2value9995Low)}V - {string.Format("{0:N1}", line2value9995High)}V" : "No data for time period")));
-                    tlm.Add(3, new RepString(textProp, (line3value9995Low != null ? $"{string.Format("{0:N1}", line3value9995Low)}V - {string.Format("{0:N1}", line3value9995High)}V" : "No data for time period")));
-                    tlm.Add(4, new RepString(textProp, (test2 ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.SecondVoltagePercentile:0.###}% of the time: {secondPercentileMinLimit:N1} V - {secondPercentileMaxLine1:N1} V"));
+                    tlm.Add(1, new RepString(textProp, (avgLine1.Any() ? $"{secondPercentileMinLine1:N1}V - {secondPercentileMaxLine1:N1}V" : "No data for time period")));
+                    tlm.Add(2, new RepString(textProp, (avgLine2.Any() ? $"{secondPercentileMinLine2:N1}V - {secondPercentileMaxLine2:N1}V" : "No data for time period")));
+                    tlm.Add(3, new RepString(textProp, (avgLine3.Any() ? $"{secondPercentileMinLine3:N1}V - {secondPercentileMaxLine3:N1}V" : "No data for time period")));
+                    tlm.Add(4, new RepString(textProp, (secondTest ? "Pass" : "Fail")));
 
                     tlm.Commit();
 
@@ -1119,44 +1158,56 @@ namespace openXDA.Reports
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L1-N",
                     Color = Color.DarkBlue,
-                    Data = oneData
+                    Data = points
+                        .Where(point => point.ChannelID == line1.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L2-N",
                     Color = Color.DarkGreen,
-                    Data = twoData
+                    Data = points
+                        .Where(point => point.ChannelID == line2.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L3-N",
                     Color = Color.Purple,
-                    Data = threeData
+                    Data = points
+                        .Where(point => point.ChannelID == line3.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
 
-                double maxValue = avg.Select(point => point.Value).Max();
-                double minValue = avg.Select(point => point.Value).Min();
+                List<double> avg = points
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .ToList();
 
-                double chartHigh = (maxValue > highThreshTwo ? maxValue : highThreshTwo);
-                double chartLow = (minValue < lowThreshTwo ? minValue : lowThreshTwo);
-
+                double maxValue = avg.Max();
+                double minValue = avg.Min();
+                double chartHigh = (maxValue > secondPercentileMaxLimit ? maxValue : secondPercentileMaxLimit);
+                double chartLow = (minValue < secondPercentileMinLimit ? minValue : secondPercentileMinLimit);
                 double chartMax = chartHigh + (chartHigh - chartLow) * .10;
                 double chartMin = chartLow - (chartHigh - chartLow) * .10;
 
-                Chart chart = GenerateLineChart("V", pointGroups, chartMax, chartMin, "MM/dd", "0.00", "Voltage L-L", highThreshTwo, highThreshOne, lowThreshTwo, lowThreshOne, FirstOfMonth, EndOfMonth);
+                Chart chart = GenerateLineChart("V", pointGroups, chartMax, chartMin, "MM/dd", "0.00", "Voltage L-L", secondPercentileMaxLimit, firstPercentileMaxLimit, secondPercentileMinLimit, firstPercentileMinLimit, FirstOfMonth, EndOfMonth);
                 verticalMillimeters += 75;
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
-                int numBuckets = 45;
-                double step = (maxValue - minValue) / numBuckets;
                 verticalMillimeters += 75;
 
-                chart = GenerateBarChart("0", avg.Select(x => x.Value), maxValue, minValue);
+                chart = GenerateBarChart("0", avg, maxValue, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
                 return verticalMillimeters;
@@ -1174,82 +1225,107 @@ namespace openXDA.Reports
             Channel line3 = DataContext.Table<Channel>().QueryRecordWhere("MeterID = {0} AND MeasurementCharacteristicID = (SELECT ID FROM MeasurementCharacteristic WHERE Name = 'RMS') AND MeasurementTypeID = (SELECT ID FROM MeasurementType WHERE Name = 'Voltage') AND PhaseID = (SELECT ID FROM Phase WHERE Name = 'CA')", Meter.ID);
 
             int lineId;
+
             if (line1 == null && line2 == null && line3 == null)
             {
                 verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No L-L Voltage channels setup on this meter.");
                 Summary.VoltageLL.Compliance = "Pass";
                 return verticalMillimeters;
             }
-            else if (line1 != null) lineId = line1.LineID;
-            else if (line2 != null) lineId = line2.LineID;
-            else lineId = line3.LineID;
+
+            if (line1 != null)
+                lineId = line1.LineID;
+            else if (line2 != null)
+                lineId = line2.LineID;
+            else
+                lineId = line3.LineID;
 
             double nominal = Summary.VoltageLL.Nominal = DataContext.Connection.ExecuteScalar<double>("SELECT VoltageKV FROM Line WHERE ID = {0}", lineId) * 1000;
             verticalMillimeters += InsertNominal(page, verticalMillimeters, "Voltage", string.Format("{0:N0}", nominal), "V L-L");
 
-            double testOneMultiplier = 0.003;
-            double testTwoMultiplier = 0.005;
-
-            double lowThreshOne = nominal - (nominal * testOneMultiplier);
-            double highThreshOne = nominal + (nominal * testOneMultiplier);
-            double lowThreshTwo = nominal - (nominal * testTwoMultiplier);
-            double highThreshTwo = nominal + (nominal * testTwoMultiplier);
-
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                List<openHistorian.XDALink.TrendingDataPoint> data = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).ToList();
-                List<openHistorian.XDALink.TrendingDataPoint> avg = data.Where(x => x.SeriesID == SeriesID.Average).ToList();
+                List<openHistorian.XDALink.TrendingDataPoint> points = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).ToList();
 
-                if (!avg.Any())
+                List<double> avgLine1 = points
+                    .Where(point => point.ChannelID == line1.ID)
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+
+                List<double> avgLine2 = points
+                    .Where(point => point.ChannelID == line2.ID)
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+
+                List<double> avgLine3 = points
+                    .Where(point => point.ChannelID == line1.ID)
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
+
+                if (!avgLine1.Any() && !avgLine2.Any() && !avgLine3.Any())
                 {
                     verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No L-L Voltage data during {FirstOfMonth.ToString("MM/dd/yyyy")} - {EndOfMonth.ToString("MM/dd/yyyy")}");
+                    Summary.VoltageLL.Compliance = "Pass";
                     return verticalMillimeters;
                 }
 
-                Summary.VoltageLL.Min = data.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
-                Summary.VoltageLL.Avg = data.Where(point => point.SeriesID == SeriesID.Average).Select(point => point.Value).Average();
-                Summary.VoltageLL.Max = data.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
+                Summary.VoltageLL.Min = points.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
+                Summary.VoltageLL.Avg = points.Where(point => point.SeriesID == SeriesID.Average).Select(point => point.Value).Average();
+                Summary.VoltageLL.Max = points.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
 
-                int oneCount = avg.Where(point => point.ChannelID == line1.ID).Count();
-                int oneIndex99 = (oneCount - (int)(oneCount * 0.99)) / 2;
-                int oneIndex9995 = (oneCount - (int)(oneCount * 0.99995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> oneData = avg.Where((point, index) => point.ChannelID == line1.ID).ToList();
-                double? line1value99High = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex99 && index <= oneCount - oneIndex99).Select(point => point.Value).Max() : (double?)null);
-                double? line1value99Low = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex99 && index <= oneCount - oneIndex99).Select(point => point.Value).Min() : (double?)null);
-                double? line1value9995High = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex9995 && index <= oneCount - oneIndex9995).Select(point => point.Value).Max() : (double?)null);
-                double? line1value9995Low = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex9995 && index <= oneCount - oneIndex9995).Select(point => point.Value).Min() : (double?)null);
-                bool test199 = (double)oneData.Where(point => point.Value >= lowThreshOne && point.Value <= highThreshOne).Count() / (oneData.Any() ? oneData.Count() : 1) > 0.99;
-                bool test19995 = (double)oneData.Where(point => point.Value >= lowThreshTwo && point.Value <= highThreshTwo).Count() / (oneData.Any() ? oneData.Count() : 1) > 0.9995;
+                double firstPercentileMinLimit = nominal * (100.0D - ReportsSettings.FirstVoltageDeviationLimit) / 100.0D;
+                double firstPercentileMaxLimit = nominal * (100.0D + ReportsSettings.FirstVoltageDeviationLimit) / 100.0D;
 
-                int twoCount = avg.Where(point => point.ChannelID == line2.ID).Count();
-                int TwoIndex99 = (twoCount - (int)(twoCount * 0.99)) / 2;
-                int TwoIndex9995 = (twoCount - (int)(twoCount * 0.99995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> twoData = avg.Where((point, index) => point.ChannelID == line2.ID).ToList();
-                double? line2value99High = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex99 && index <= twoCount - TwoIndex99).Select(point => point.Value).Max() : (double?)null);
-                double? line2value99Low = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex99 && index <= twoCount - TwoIndex99).Select(point => point.Value).Min() : (double?)null);
-                double? line2value9995High = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex9995 && index <= twoCount - TwoIndex9995).Select(point => point.Value).Max() : (double?)null);
-                double? line2value9995Low = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => index >= TwoIndex9995 && index <= twoCount - TwoIndex9995).Select(point => point.Value).Min() : (double?)null);
-                bool test299 = (double)twoData.Where(point => point.Value >= lowThreshOne && point.Value <= highThreshOne).Count() / (twoData.Any() ? twoData.Count() : 1) > 0.99;
-                bool test29995 = (double)twoData.Where(point => point.Value >= lowThreshTwo && point.Value <= highThreshTwo).Count() / (twoData.Any() ? twoData.Count() : 1) > 0.9995;
+                int firstPercentileSkipCountLine1 = (int)(avgLine1.Count * (100.0D - ReportsSettings.FirstVoltagePercentile) / 100.0D / 2.0D);
+                int firstPercentileSkipCountLine2 = (int)(avgLine2.Count * (100.0D - ReportsSettings.FirstVoltagePercentile) / 100.0D / 2.0D);
+                int firstPercentileSkipCountLine3 = (int)(avgLine3.Count * (100.0D - ReportsSettings.FirstVoltagePercentile) / 100.0D / 2.0D);
+                double firstPercentileMinLine1 = avgLine1.Skip(firstPercentileSkipCountLine1).FirstOrDefault();
+                double firstPercentileMinLine2 = avgLine2.Skip(firstPercentileSkipCountLine2).FirstOrDefault();
+                double firstPercentileMinLine3 = avgLine3.Skip(firstPercentileSkipCountLine3).FirstOrDefault();
+                double firstPercentileMaxLine1 = avgLine1.AsEnumerable().Reverse().Skip(firstPercentileSkipCountLine1).FirstOrDefault();
+                double firstPercentileMaxLine2 = avgLine2.AsEnumerable().Reverse().Skip(firstPercentileSkipCountLine2).FirstOrDefault();
+                double firstPercentileMaxLine3 = avgLine3.AsEnumerable().Reverse().Skip(firstPercentileSkipCountLine3).FirstOrDefault();
 
-                int threeCount = avg.Where(point => point.ChannelID == line3.ID).Count();
-                int threeIndex99 = (threeCount - (int)(threeCount * 0.99)) / 2;
-                int threeIndex9995 = (threeCount - (int)(threeCount * 0.99995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> threeData = avg.Where((point, index) => point.ChannelID == line3.ID).ToList();
-                double? line3value99High = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex99 && index <= threeCount - threeIndex99).Select(point => point.Value).Max() : (double?)null);
-                double? line3value99Low = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex99 && index <= threeCount - threeIndex99).Select(point => point.Value).Min() : (double?)null);
-                double? line3value9995High = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex9995 && index <= threeCount - threeIndex9995).Select(point => point.Value).Max() : (double?)null);
-                double? line3value9995Low = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex9995 && index <= threeCount - threeIndex9995).Select(point => point.Value).Min() : (double?)null);
-                bool test399 = (double)threeData.Where(point => point.Value >= lowThreshOne && point.Value <= highThreshOne).Count() / (threeData.Any() ? threeData.Count() : 1) > 0.99;
-                bool test39995 = (double)threeData.Where(point => point.Value >= lowThreshTwo && point.Value <= highThreshTwo).Count() / (threeData.Any() ? threeData.Count() : 1) > 0.9995;
+                bool firstTest =
+                    firstPercentileMinLine1 >= firstPercentileMinLimit &&
+                    firstPercentileMaxLine1 <= firstPercentileMaxLimit &&
+                    firstPercentileMinLine2 >= firstPercentileMinLimit &&
+                    firstPercentileMaxLine2 <= firstPercentileMaxLimit &&
+                    firstPercentileMinLine3 >= firstPercentileMinLimit &&
+                    firstPercentileMaxLine3 <= firstPercentileMaxLimit;
 
-                bool test1 = test199 && test299 && test399;
-                bool test2 = test19995 && test29995 && test39995;
+                double secondPercentileMinLimit = nominal * (100.0D - ReportsSettings.SecondVoltageDeviationLimit) / 100.0D;
+                double secondPercentileMaxLimit = nominal * (100.0D + ReportsSettings.SecondVoltageDeviationLimit) / 100.0D;
 
-                Summary.VoltageLL.Compliance = (test1 && test2 ? "Pass" : "Fail");
+                int secondPercentileSkipCountLine1 = (int)(avgLine1.Count * (100.0D - ReportsSettings.SecondVoltagePercentile) / 100.0D / 2.0D);
+                int secondPercentileSkipCountLine2 = (int)(avgLine2.Count * (100.0D - ReportsSettings.SecondVoltagePercentile) / 100.0D / 2.0D);
+                int secondPercentileSkipCountLine3 = (int)(avgLine3.Count * (100.0D - ReportsSettings.SecondVoltagePercentile) / 100.0D / 2.0D);
+                double secondPercentileMinLine1 = avgLine1.Skip(secondPercentileSkipCountLine1).FirstOrDefault();
+                double secondPercentileMinLine2 = avgLine2.Skip(secondPercentileSkipCountLine2).FirstOrDefault();
+                double secondPercentileMinLine3 = avgLine3.Skip(secondPercentileSkipCountLine3).FirstOrDefault();
+                double secondPercentileMaxLine1 = avgLine1.AsEnumerable().Reverse().Skip(secondPercentileSkipCountLine1).FirstOrDefault();
+                double secondPercentileMaxLine2 = avgLine2.AsEnumerable().Reverse().Skip(secondPercentileSkipCountLine2).FirstOrDefault();
+                double secondPercentileMaxLine3 = avgLine3.AsEnumerable().Reverse().Skip(secondPercentileSkipCountLine3).FirstOrDefault();
+
+                bool secondTest =
+                    secondPercentileMinLine1 >= secondPercentileMinLimit &&
+                    secondPercentileMaxLine1 <= secondPercentileMaxLimit &&
+                    secondPercentileMinLine2 >= secondPercentileMinLimit &&
+                    secondPercentileMaxLine2 <= secondPercentileMaxLimit &&
+                    secondPercentileMinLine3 >= secondPercentileMinLimit &&
+                    secondPercentileMaxLine3 <= secondPercentileMaxLimit;
+
+                Summary.VoltageLL.Compliance = (firstTest && secondTest ? "Pass" : "Fail");
 
                 FontProp headerProp = new FontProp(FontDefinition, 0);
                 headerProp.rSizePoint = 10.0D;
+
                 using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
@@ -1258,6 +1334,7 @@ namespace openXDA.Reports
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
                     tlm.eNewContainer += (oSender, ea) => page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
+
                     // define columns
                     TlmColumn col;
                     col = new TlmColumnMM(tlm, "Monthly PQ Report Requirement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.30);
@@ -1267,18 +1344,18 @@ namespace openXDA.Reports
                     col = new TlmColumnMM(tlm, "Result", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.10);
 
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99% of the time: {string.Format("{0:N2}", lowThreshOne)} V - {string.Format("{0:N2}", highThreshOne)} V"));
-                    tlm.Add(1, new RepString(textProp, (line1value99Low != null ? $"{string.Format("{0:N2}", line1value99Low)}V - {string.Format("{0:N2}", line1value99High)}V" : "No data for time period")));
-                    tlm.Add(2, new RepString(textProp, (line2value99Low != null ? $"{string.Format("{0:N2}", line2value99Low)}V - {string.Format("{0:N2}", line2value99High)}V" : "No data for time period")));
-                    tlm.Add(3, new RepString(textProp, (line3value99Low != null ? $"{string.Format("{0:N2}", line3value99Low)}V - {string.Format("{0:N2}", line3value99High)}V" : "No data for time period")));
-                    tlm.Add(4, new RepString(textProp, (test1 ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.FirstVoltagePercentile:0.###}% of the time: {firstPercentileMinLimit:N1} V - {firstPercentileMaxLimit:N1} V"));
+                    tlm.Add(1, new RepString(textProp, (avgLine1.Any() ? $"{firstPercentileMinLine1:N1}V - {firstPercentileMaxLine1:N1}V" : "No data for time period")));
+                    tlm.Add(2, new RepString(textProp, (avgLine2.Any() ? $"{firstPercentileMinLine2:N1}V - {firstPercentileMaxLine2:N1}V" : "No data for time period")));
+                    tlm.Add(3, new RepString(textProp, (avgLine3.Any() ? $"{firstPercentileMinLine3:N1}V - {firstPercentileMaxLine3:N1}V" : "No data for time period")));
+                    tlm.Add(4, new RepString(textProp, (firstTest ? "Pass" : "Fail")));
 
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99.95% of the time: {string.Format("{0:N2}", lowThreshTwo)} V - {string.Format("{0:N2}", highThreshTwo)} V"));
-                    tlm.Add(1, new RepString(textProp, (line1value9995Low != null ? $"{string.Format("{0:N2}", line1value9995Low)}V - {string.Format("{0:N2}", line1value9995High)}V" : "No data for time period")));
-                    tlm.Add(2, new RepString(textProp, (line2value9995Low != null ? $"{string.Format("{0:N2}", line2value9995Low)}V - {string.Format("{0:N2}", line2value9995High)}V" : "No data for time period")));
-                    tlm.Add(3, new RepString(textProp, (line3value9995Low != null ? $"{string.Format("{0:N2}", line3value9995Low)}V - {string.Format("{0:N2}", line3value9995High)}V" : "No data for time period")));
-                    tlm.Add(4, new RepString(textProp, (test2 ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.SecondVoltagePercentile:0.###}% of the time: {secondPercentileMinLimit:N1} V - {secondPercentileMaxLimit:N1} V"));
+                    tlm.Add(1, new RepString(textProp, (avgLine1.Any() ? $"{secondPercentileMinLine1:N1}V - {secondPercentileMaxLine1:N1}V" : "No data for time period")));
+                    tlm.Add(2, new RepString(textProp, (avgLine2.Any() ? $"{secondPercentileMinLine2:N1}V - {secondPercentileMaxLine2:N1}V" : "No data for time period")));
+                    tlm.Add(3, new RepString(textProp, (avgLine3.Any() ? $"{secondPercentileMinLine3:N1}V - {secondPercentileMaxLine3:N1}V" : "No data for time period")));
+                    tlm.Add(4, new RepString(textProp, (secondTest ? "Pass" : "Fail")));
 
                     tlm.Commit();
 
@@ -1290,42 +1367,54 @@ namespace openXDA.Reports
                 {
                     Name = "L1-L2",
                     Color = Color.DarkBlue,
-                    Data = oneData
+                    Data = points
+                        .Where(point => point.ChannelID == line1.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L2-L3",
                     Color = Color.DarkGreen,
-                    Data = twoData
+                    Data = points
+                        .Where(point => point.ChannelID == line2.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L3-L1",
                     Color = Color.Purple,
-                    Data = threeData
+                    Data = points
+                        .Where(point => point.ChannelID == line3.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
 
-                double maxValue = avg.Select(point => point.Value).Max();
-                double minValue = avg.Select(point => point.Value).Min();
+                List<double> avg = points
+                    .Where(point => point.SeriesID == SeriesID.Average)
+                    .Select(point => point.Value)
+                    .ToList();
 
-                double chartHigh = (maxValue > highThreshTwo ? maxValue : highThreshTwo);
-                double chartLow = (minValue < lowThreshTwo ? minValue : lowThreshTwo);
-
+                double maxValue = avg.Max();
+                double minValue = avg.Min();
+                double chartHigh = (maxValue > secondPercentileMaxLimit ? maxValue : secondPercentileMaxLimit);
+                double chartLow = (minValue < secondPercentileMinLimit ? minValue : secondPercentileMinLimit);
                 double chartMax = chartHigh + (chartHigh - chartLow) * .10;
                 double chartMin = chartLow - (chartHigh - chartLow) * .10;
 
-                Chart chart = GenerateLineChart("V", pointGroups, chartMax, chartMin, "MM/dd", "0.00", "Voltage L-L", highThreshTwo, highThreshOne, lowThreshTwo, lowThreshOne, FirstOfMonth, EndOfMonth);
+                Chart chart = GenerateLineChart("V", pointGroups, chartMax, chartMin, "MM/dd", "0.00", "Voltage L-L", secondPercentileMaxLimit, firstPercentileMaxLimit, secondPercentileMinLimit, firstPercentileMinLimit, FirstOfMonth, EndOfMonth);
                 verticalMillimeters += 75;
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
                 verticalMillimeters += 75;
 
-                chart = GenerateBarChart("0", avg.Select(x => x.Value), maxValue, minValue);
+                chart = GenerateBarChart("0", avg, maxValue, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
                 return verticalMillimeters;
-
             }
         }
 
@@ -1344,44 +1433,55 @@ namespace openXDA.Reports
                 return verticalMillimeters;
             }
 
-            double nominal = 1;
-
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                List<openHistorian.XDALink.TrendingDataPoint> max = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).Where(x => x.SeriesID == SeriesID.Maximum).ToList();
-                if (!max.Any())
+                List<openHistorian.XDALink.TrendingDataPoint> points = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).Where(x => x.SeriesID == SeriesID.Maximum).ToList();
+
+                if (!points.Any())
                 {
                     verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No Flicker data during {FirstOfMonth.ToString("MM/dd/yyyy")} - {EndOfMonth.ToString("MM/dd/yyyy")}");
                     return verticalMillimeters;
                 }
 
-                Summary.Flicker.Max = max.Select(point => point.Value).Max();
+                Summary.Flicker.Max = points.Max(point => point.Value);
 
+                List<double> maxLine1 = points
+                    .Where(point => point.ChannelID == line1.ID)
+                    .Select(point => point.Value)
+                    .OrderByDescending(value => value)
+                    .ToList();
 
-                int oneCount = max.Where(point => point.ChannelID == line1.ID).Count();
-                int oneIndex = (oneCount - (int)(oneCount * 0.985)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> oneData = max.Where((point, index) => point.ChannelID == line1.ID).ToList();
-                double line1value = oneData.OrderBy(point => point.Value).Where((point, index) => index >= oneIndex && index <= oneCount - oneIndex).Select(point => point.Value).Max();
-                bool test1 = (double)oneData.Where(point => point.Value <= nominal).Count() / (oneData.Any() ? oneData.Count() : 1) > 0.985;
+                List<double> maxLine2 = points
+                    .Where(point => point.ChannelID == line2.ID)
+                    .Select(point => point.Value)
+                    .OrderByDescending(value => value)
+                    .ToList();
 
-                int twoCount = max.Where(point => point.ChannelID == line2.ID).Count();
-                int twoIndex = (twoCount - (int)(twoCount * 0.985)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> twoData = max.Where((point, index) => point.ChannelID == line2.ID).ToList();
-                double line2value = twoData.OrderBy(point => point.Value).Where((point, index) => index >= twoIndex && index <= twoCount - twoIndex).Select(point => point.Value).Max();
-                bool test2 = (double)twoData.Where(point => point.Value <= nominal).Count() / (twoData.Any() ? twoData.Count() : 1) > 0.985;
+                List<double> maxLine3 = points
+                    .Where(point => point.ChannelID == line3.ID)
+                    .Select(point => point.Value)
+                    .OrderByDescending(value => value)
+                    .ToList();
 
-                int threeCount = max.Where(point => point.ChannelID == line3.ID).Count();
-                int threeIndex = (threeCount - (int)(threeCount * 0.985)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> threeData = max.Where((point, index) => point.ChannelID == line3.ID).ToList();
-                double line3value = threeData.OrderBy(point => point.Value).Where((point, index) => index >= threeIndex && index <= threeCount - threeIndex).Select(point => point.Value).Max();
-                bool test3 = (double)threeData.Where(point => point.Value <= nominal).Count() / (threeData.Any() ? threeData.Count() : 1) > 0.985;
+                double percentileMaxLimit = ReportsSettings.FlickerHighLimit;
 
-                bool test = test1 && test2 && test3;
+                int percentileSkipCountLine1 = (int)(maxLine1.Count * (100.0D - ReportsSettings.FlickerPercentile) / 100.0D);
+                int percentileSkipCountLine2 = (int)(maxLine2.Count * (100.0D - ReportsSettings.FlickerPercentile) / 100.0D);
+                int percentileSkipCountLine3 = (int)(maxLine3.Count * (100.0D - ReportsSettings.FlickerPercentile) / 100.0D);
+                double percentileMaxLine1 = maxLine1.Skip(percentileSkipCountLine1).FirstOrDefault();
+                double percentileMaxLine2 = maxLine2.Skip(percentileSkipCountLine2).FirstOrDefault();
+                double percentileMaxLine3 = maxLine3.Skip(percentileSkipCountLine3).FirstOrDefault();
+
+                bool test =
+                    percentileMaxLine1 <= percentileMaxLimit &&
+                    percentileMaxLine2 <= percentileMaxLimit &&
+                    percentileMaxLine3 <= percentileMaxLimit;
 
                 Summary.Flicker.Compliance = (test ? "Pass" : "Fail");
 
                 FontProp headerProp = new FontProp(FontDefinition, 0);
                 headerProp.rSizePoint = 10.0D;
+
                 using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
@@ -1390,6 +1490,7 @@ namespace openXDA.Reports
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
                     tlm.eNewContainer += (oSender, ea) => page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
+
                     // define columns
                     TlmColumn col;
                     col = new TlmColumnMM(tlm, "Monthly PQ Report Requirement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.30);
@@ -1397,47 +1498,56 @@ namespace openXDA.Reports
                     col = new TlmColumnMM(tlm, "Measured L2 Plt", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.20);
                     col = new TlmColumnMM(tlm, "Measured L3 Plt", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.20);
                     col = new TlmColumnMM(tlm, "Result", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.10);
+
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, "98.50% of the time: Plt <= 1"));
-                    tlm.Add(1, new RepString(textProp, $"{string.Format("{0:N2}", line1value)}"));
-                    tlm.Add(2, new RepString(textProp, $"{string.Format("{0:N2}", line2value)}"));
-                    tlm.Add(3, new RepString(textProp, $"{string.Format("{0:N2}", line3value)}"));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.FlickerPercentile:0.###}% of the time: Plt <= {ReportsSettings.FlickerHighLimit:0.###}"));
+                    tlm.Add(1, new RepString(textProp, $"{percentileMaxLine1:N2}"));
+                    tlm.Add(2, new RepString(textProp, $"{percentileMaxLine2:N2}"));
+                    tlm.Add(3, new RepString(textProp, $"{percentileMaxLine3:N2}"));
                     tlm.Add(4, new RepString(textProp, (test ? "Pass" : "Fail")));
+
                     tlm.Commit();
+
                     verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L1Max",
                     Color = Color.DarkBlue,
-                    Data = oneData
+                    Data = points
+                        .Where(point => point.ChannelID == line1.ID)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L2Max",
                     Color = Color.DarkGreen,
-                    Data = twoData
+                    Data = points
+                        .Where(point => point.ChannelID == line2.ID)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L3Max",
                     Color = Color.Purple,
-                    Data = threeData
+                    Data = points
+                        .Where(point => point.ChannelID == line3.ID)
+                        .ToList()
                 });
 
-                double maxValue = max.Select(point => point.Value).Max();
-                Chart chart = GenerateLineChart("", pointGroups, maxValue * 1.1, 0, "MM/dd", "0.00", "Flicker", 1, null, null, null, FirstOfMonth, EndOfMonth);
+                double maxValue = points.Select(point => point.Value).Max();
+                Chart chart = GenerateLineChart("", pointGroups, maxValue * 1.1, 0, "MM/dd", "0.00", "Flicker", ReportsSettings.FlickerHighLimit, null, null, null, FirstOfMonth, EndOfMonth);
                 verticalMillimeters += 75;
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
-                int numBuckets = 45;
-                double step = maxValue / numBuckets;
                 verticalMillimeters += 75;
 
-                chart = GenerateBarChart("0.00", max.Select(x => x.Value), maxValue, 0);
+                chart = GenerateBarChart("0.00", points.Select(x => x.Value), maxValue, 0);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
                 return verticalMillimeters;
@@ -1459,25 +1569,36 @@ namespace openXDA.Reports
 
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                List<openHistorian.XDALink.TrendingDataPoint> avg = historian.Read(new List<int>() { channel.ID }, FirstOfMonth, EndOfMonth).Where(x => x.SeriesID == SeriesID.Average).ToList();
-                if (!avg.Any())
+                List<openHistorian.XDALink.TrendingDataPoint> points = historian.Read(new List<int>() { channel.ID }, FirstOfMonth, EndOfMonth).Where(x => x.SeriesID == SeriesID.Average).ToList();
+
+                if (!points.Any())
                 {
                     verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No Imbalance data during {FirstOfMonth.ToString("MM/dd/yyyy")} - {EndOfMonth.ToString("MM/dd/yyyy")}");
                     return verticalMillimeters;
                 }
 
-                Summary.Imbalance.Avg = avg.Select(point => point.Value).Average();
+                List<double> avg = points
+                    .Select(point => point.Value)
+                    .OrderBy(value => value)
+                    .ToList();
 
-                int count = avg.Count();
-                int index = (count - (int)(count * 0.9995)) / 2;
-                double value = avg.OrderBy(point => point.Value).Where((point, i) => i >= index && i <= count - index).Select(point => point.Value).Max();
-                double minValue = avg.OrderBy(point => point.Value).Where((point, i) => i >= index && i <= count - index).Select(point => point.Value).Min();
-                bool test = (double)avg.Where(point => point.Value >= 0 && point.Value <= 2).Count() / (avg.Any() ? avg.Count() : 1) > 0.9995;
+                Summary.Imbalance.Avg = points.Select(point => point.Value).Average();
+
+                int percentileSkipCount = (int)(avg.Count * (100.0D - ReportsSettings.VoltageUnbalancePercentile) / 100.0D / 2.0D);
+                double percentileMinLimit = ReportsSettings.VoltageUnbalanceLowLimit;
+                double percentileMaxLimit = ReportsSettings.VoltageUnbalanceHighLimit;
+                double percentileMin = avg.Skip(percentileSkipCount).FirstOrDefault();
+                double percentileMax = avg.AsEnumerable().Reverse().Skip(percentileSkipCount).FirstOrDefault();
+
+                bool test =
+                    percentileMin >= percentileMinLimit &&
+                    percentileMax <= percentileMaxLimit;
 
                 Summary.Imbalance.Compliance = (test ? "Pass" : "Fail");
 
                 FontProp headerProp = new FontProp(FontDefinition, 0);
                 headerProp.rSizePoint = 10.0D;
+
                 using (TableLayoutManager tlm = new TableLayoutManager(headerProp))
                 {
                     FontProp textProp = new FontProp(FontDefinition, 0);
@@ -1486,37 +1607,39 @@ namespace openXDA.Reports
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
                     tlm.eNewContainer += (oSender, ea) => page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
+
                     // define columns
                     TlmColumn col;
                     col = new TlmColumnMM(tlm, "Monthly PQ Report Requirement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.40);
                     col = new TlmColumnMM(tlm, "Measured Unbalance u2", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.40);
                     col = new TlmColumnMM(tlm, "Result", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.20);
+
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, "99.95% of the time: 0% ~ 2% u2"));
-                    tlm.Add(1, new RepString(textProp, $"{string.Format("{0:N2}", value)}"));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.VoltageUnbalancePercentile:0.###}% of the time: {percentileMinLimit:0.###}% ~ {percentileMaxLimit:0.###}% u2"));
+                    tlm.Add(1, new RepString(textProp, $"{percentileMax:N2}"));
                     tlm.Add(2, new RepString(textProp, (test ? "Pass" : "Fail")));
+
                     tlm.Commit();
+
                     verticalMillimeters += tlm.rCurY_MM + 10;
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "Unbalance",
                     Color = Color.DarkBlue,
-                    Data = avg
+                    Data = points
                 });
 
-                Chart chart = GenerateLineChart("", pointGroups, (value > 2 ? value : 2) * 1.1, (minValue < 0 ? minValue * 0.9 : 0), "MM/dd", "0.00", "Flicker", 2, null, 0, null, FirstOfMonth, EndOfMonth);
+                Chart chart = GenerateLineChart("", pointGroups, Math.Max(percentileMax, percentileMaxLimit) * 1.1, Math.Min(percentileMin, percentileMinLimit), "MM/dd", "0.00", "Flicker", percentileMaxLimit, null, percentileMinLimit, null, FirstOfMonth, EndOfMonth);
                 verticalMillimeters += 75;
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
-                int numBuckets = 45;
-                double step = (value - minValue) / numBuckets;
                 verticalMillimeters += 75;
 
-                chart = GenerateBarChart("0.00", avg.Select(x => x.Value), value, minValue);
+                chart = GenerateBarChart("0.00", avg, percentileMax, percentileMin);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
                 return verticalMillimeters;
@@ -1539,44 +1662,57 @@ namespace openXDA.Reports
                 return verticalMillimeters;
             }
 
-            double nominal = 8;
-
             using (Historian historian = new Historian(historianServer, historianInstance))
             {
-                List<openHistorian.XDALink.TrendingDataPoint> data = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).ToList();
+                List<openHistorian.XDALink.TrendingDataPoint> points = historian.Read(new List<int>() { line1.ID, line2.ID, line3.ID }, FirstOfMonth, EndOfMonth).ToList();
 
-                if (!data.Any())
+                if (!points.Any())
                 {
                     verticalMillimeters += InsertItalicText(page, verticalMillimeters, $"   No THD data during {FirstOfMonth.ToString("MM/dd/yyyy")} - {EndOfMonth.ToString("MM/dd/yyyy")}");
                     return verticalMillimeters;
                 }
 
-                Summary.THD.Min = data.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
-                Summary.THD.Avg = data.Where(point => point.SeriesID == SeriesID.Average).Select(point => point.Value).Average();
-                Summary.THD.Max = data.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
+                Summary.THD.Min = points.Where(point => point.SeriesID == SeriesID.Minimum).Select(point => point.Value).Min();
+                Summary.THD.Avg = points.Where(point => point.SeriesID == SeriesID.Average).Select(point => point.Value).Average();
+                Summary.THD.Max = points.Where(point => point.SeriesID == SeriesID.Maximum).Select(point => point.Value).Max();
 
-                int oneCount = data.Where(point => point.SeriesID == SeriesID.Maximum && point.ChannelID == line1.ID).Count();
-                int oneIndex = (oneCount - (int)(oneCount * 0.9995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> oneData = data.Where((point, index) => point.ChannelID == line1.ID).ToList();
-                double? line1valueHigh = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => point.SeriesID == SeriesID.Maximum && index >= oneIndex && index <= oneCount - oneIndex).Select(point => point.Value).Max() : (double?)null);
-                double? line1valueLow = (oneData.Any() ? oneData.OrderBy(point => point.Value).Where((point, index) => point.SeriesID == SeriesID.Maximum && index >= oneIndex && index <= oneCount - oneIndex).Select(point => point.Value).Min() : (double?)null);
-                bool test1 = (double)oneData.Where(point => point.SeriesID == SeriesID.Maximum && point.Value <= nominal).Count() / (oneData.Where(point => point.SeriesID == SeriesID.Maximum).Any() ? oneData.Where(point => point.SeriesID == SeriesID.Maximum).Count() : 1) > 0.9995;
+                List<double> maxLine1 = points
+                    .Where(point => point.ChannelID == line1.ID)
+                    .Where(point => point.SeriesID == SeriesID.Maximum)
+                    .Select(point => point.Value)
+                    .OrderByDescending(value => value)
+                    .ToList();
 
-                int twoCount = data.Where(point => point.SeriesID == SeriesID.Maximum && point.ChannelID == line2.ID).Count();
-                int TwoIndex = (twoCount - (int)(twoCount * 0.9995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> twoData = data.Where((point, index) => point.ChannelID == line2.ID).ToList();
-                double? line2valueHigh = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => point.SeriesID == SeriesID.Maximum && index >= TwoIndex && index <= twoCount - TwoIndex).Select(point => point.Value).Max() : (double?)null);
-                double? line2valueLow = (twoData.Any() ? twoData.OrderBy(point => point.Value).Where((point, index) => point.SeriesID == SeriesID.Maximum && index >= TwoIndex && index <= twoCount - TwoIndex).Select(point => point.Value).Min() : (double?)null);
-                bool test2 = (double)twoData.Where(point => point.SeriesID == SeriesID.Maximum && point.Value <= nominal).Count() / (twoData.Where(point => point.SeriesID == SeriesID.Maximum).Any() ? twoData.Where(point => point.SeriesID == SeriesID.Maximum).Count() : 1) > 0.9995;
+                List<double> maxLine2 = points
+                    .Where(point => point.ChannelID == line2.ID)
+                    .Where(point => point.SeriesID == SeriesID.Maximum)
+                    .Select(point => point.Value)
+                    .OrderByDescending(value => value)
+                    .ToList();
 
-                int threeCount = data.Where(point => point.SeriesID == SeriesID.Maximum && point.ChannelID == line3.ID).Count();
-                int threeIndex = (threeCount - (int)(threeCount * 0.9995)) / 2;
-                List<openHistorian.XDALink.TrendingDataPoint> threeData = data.Where((point, index) => point.ChannelID == line3.ID).ToList();
-                double? line3valueHigh = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => point.SeriesID == SeriesID.Maximum && index >= threeIndex && index <= threeCount - threeIndex).Select(point => point.Value).Max() : (double?)null);
-                double? line3valueLow = (threeData.Any() ? threeData.OrderBy(point => point.Value).Where((point, index) => point.SeriesID == SeriesID.Maximum && index >= threeIndex && index <= threeCount - threeIndex).Select(point => point.Value).Min() : (double?)null);
-                bool test3 = (double)threeData.Where(point => point.SeriesID == SeriesID.Maximum && point.Value <= nominal).Count() / (threeData.Where(point => point.SeriesID == SeriesID.Maximum).Any() ? threeData.Where(point => point.SeriesID == SeriesID.Maximum).Count() : 1) > 0.9995;
+                List<double> maxLine3 = points
+                    .Where(point => point.ChannelID == line3.ID)
+                    .Where(point => point.SeriesID == SeriesID.Maximum)
+                    .Select(point => point.Value)
+                    .OrderByDescending(value => value)
+                    .ToList();
 
-                bool test = test1 && test2 && test3;
+                double percentileMaxLimit = ReportsSettings.VoltageTHDHighLimit;
+
+                int percentileSkipCountLine1 = (int)(maxLine1.Count * (100.0D - ReportsSettings.VoltageTHDPercentile) / 100.0D);
+                int percentileSkipCountLine2 = (int)(maxLine2.Count * (100.0D - ReportsSettings.VoltageTHDPercentile) / 100.0D);
+                int percentileSkipCountLine3 = (int)(maxLine3.Count * (100.0D - ReportsSettings.VoltageTHDPercentile) / 100.0D);
+                double percentileMinLine1 = maxLine1.Last();
+                double percentileMaxLine1 = maxLine1.Skip(percentileSkipCountLine1).FirstOrDefault();
+                double percentileMinLine2 = maxLine2.Last();
+                double percentileMaxLine2 = maxLine2.Skip(percentileSkipCountLine2).FirstOrDefault();
+                double percentileMinLine3 = maxLine3.Last();
+                double percentileMaxLine3 = maxLine3.Skip(percentileSkipCountLine3).FirstOrDefault();
+
+                bool test =
+                    percentileMaxLine1 <= percentileMaxLimit &&
+                    percentileMaxLine2 <= percentileMaxLimit &&
+                    percentileMaxLine3 <= percentileMaxLimit;
 
                 Summary.THD.Compliance = (test ? "Pass" : "Fail");
 
@@ -1590,6 +1726,7 @@ namespace openXDA.Reports
                     tlm.tlmCellDef_Default.penProp_LineBottom = new PenProp(this, 0.05, Color.LightGray);  // set bottom line for all cells
                     tlm.tlmHeightMode = TlmHeightMode.AdjustLast;
                     tlm.eNewContainer += (oSender, ea) => page.AddMM(PageMarginMillimeters, verticalMillimeters, ea.container);
+
                     // define columns
                     TlmColumn col;
                     col = new TlmColumnMM(tlm, "Monthly PQ Report Requirement", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.30);
@@ -1599,11 +1736,11 @@ namespace openXDA.Reports
                     col = new TlmColumnMM(tlm, "Result", (PageWidthMillimeters - 2 * PageMarginMillimeters) * 0.10);
 
                     tlm.NewRow();
-                    tlm.Add(0, new RepString(textProp, $"99.95% of the time: THD <= 8%"));
-                    tlm.Add(1, new RepString(textProp, (line1valueLow != null ? $"{string.Format("{0:N2}", line1valueLow)}V - {string.Format("{0:N2}", line1valueHigh)}V" : "No data for time period")));
-                    tlm.Add(2, new RepString(textProp, (line2valueLow != null ? $"{string.Format("{0:N2}", line2valueLow)}V - {string.Format("{0:N2}", line2valueHigh)}V" : "No data for time period")));
-                    tlm.Add(3, new RepString(textProp, (line3valueLow != null ? $"{string.Format("{0:N2}", line3valueLow)}V - {string.Format("{0:N2}", line3valueHigh)}V" : "No data for time period")));
-                    tlm.Add(4, new RepString(textProp, (test1 ? "Pass" : "Fail")));
+                    tlm.Add(0, new RepString(textProp, $"{ReportsSettings.VoltageTHDPercentile:0.###}% of the time: THD <= {percentileMaxLimit:0.###}%"));
+                    tlm.Add(1, new RepString(textProp, (maxLine1.Any() ? $"{percentileMinLine1:N2}% - {percentileMaxLine1:N2}%" : "No data for time period")));
+                    tlm.Add(2, new RepString(textProp, (maxLine2.Any() ? $"{percentileMinLine2:N2}% - {percentileMaxLine2:N2}%" : "No data for time period")));
+                    tlm.Add(3, new RepString(textProp, (maxLine3.Any() ? $"{percentileMinLine3:N2}% - {percentileMaxLine3:N2}%" : "No data for time period")));
+                    tlm.Add(4, new RepString(textProp, (test ? "Pass" : "Fail")));
 
                     tlm.Commit();
 
@@ -1611,82 +1748,111 @@ namespace openXDA.Reports
                 }
 
                 List<PointGroup> pointGroups = new List<PointGroup>();
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L1",
                     Color = Color.DarkBlue,
-                    Data = oneData.Where(point => point.SeriesID == SeriesID.Average).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line1.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L2",
                     Color = Color.DarkGreen,
-                    Data = twoData.Where(point => point.SeriesID == SeriesID.Average).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line2.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L3",
                     Color = Color.DarkMagenta,
-                    Data = threeData.Where(point => point.SeriesID == SeriesID.Average).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line3.ID)
+                        .Where(point => point.SeriesID == SeriesID.Average)
+                        .ToList()
                 });
 
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L1-Max",
                     Color = Color.Blue,
-                    Data = oneData.Where(point => point.SeriesID == SeriesID.Maximum).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line1.ID)
+                        .Where(point => point.SeriesID == SeriesID.Maximum)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L2-Max",
                     Color = Color.Green,
-                    Data = twoData.Where(point => point.SeriesID == SeriesID.Maximum).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line2.ID)
+                        .Where(point => point.SeriesID == SeriesID.Maximum)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L3-Max",
                     Color = Color.Magenta,
-                    Data = threeData.Where(point => point.SeriesID == SeriesID.Maximum).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line3.ID)
+                        .Where(point => point.SeriesID == SeriesID.Maximum)
+                        .ToList()
                 });
 
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L1-Min",
                     Color = Color.LightBlue,
-                    Data = oneData.Where(point => point.SeriesID == SeriesID.Minimum).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line1.ID)
+                        .Where(point => point.SeriesID == SeriesID.Minimum)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L2-Min",
                     Color = Color.LightGreen,
-                    Data = twoData.Where(point => point.SeriesID == SeriesID.Minimum).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line2.ID)
+                        .Where(point => point.SeriesID == SeriesID.Minimum)
+                        .ToList()
                 });
+
                 pointGroups.Add(new PointGroup()
                 {
                     Name = "L3-Min",
                     Color = Color.LightPink,
-                    Data = threeData.Where(point => point.SeriesID == SeriesID.Minimum).ToList()
+                    Data = points
+                        .Where(point => point.ChannelID == line3.ID)
+                        .Where(point => point.SeriesID == SeriesID.Minimum)
+                        .ToList()
                 });
 
-                double maxValue = data.Select(point => point.Value).Max();
-                double minValue = data.Select(point => point.Value).Min();
-
+                double maxValue = points.Select(point => point.Value).Max();
+                double minValue = points.Select(point => point.Value).Min();
                 double chartHigh = (maxValue > 8 ? maxValue : 8);
                 double chartLow = (minValue < 0 ? minValue : 0);
-
                 double chartMax = chartHigh + (chartHigh - chartLow) * .10;
                 double chartMin = chartLow - (chartHigh - chartLow) * .10;
 
-                Chart chart = GenerateLineChart("V", pointGroups, chartMax, chartMin, "MM/dd", "0.00", "Voltage L-L", 8, null, null, null, FirstOfMonth, EndOfMonth);
+                Chart chart = GenerateLineChart("V", pointGroups, chartMax, chartMin, "MM/dd", "0.00", "Voltage L-L", percentileMaxLimit, null, null, null, FirstOfMonth, EndOfMonth);
                 verticalMillimeters += 75;
 
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
-
-                int numBuckets = 45;
-                double step = (maxValue - 0) / numBuckets;
                 verticalMillimeters += 75;
 
-                chart = GenerateBarChart("0.00", data.Select(x => x.Value), maxValue, minValue);
+                chart = GenerateBarChart("0.00", points.Select(x => x.Value), maxValue, minValue);
                 page.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
                 return verticalMillimeters;
@@ -1747,47 +1913,34 @@ namespace openXDA.Reports
 
         private Chart GenerateBarChart(string units, IEnumerable<double> points, double max, double min)
         {
-            double step = (max - min) / NumBuckets;
-            Chart chart;
-            ChartArea area;
-            ChartSeries series;
-            area = new ChartArea();
+            ChartArea area = new ChartArea();
             area.AxisX.MajorGrid.Enabled = false;
             area.AxisY.Enabled = AxisEnabled.False;
-            //area.AxisX.LabelStyle.Format = units;
             area.AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
             area.AxisX.LabelAutoFitStyle = LabelAutoFitStyles.DecreaseFont;
-            chart = new Chart();
+
+            Chart chart = new Chart();
             chart.Width = 1200;
             chart.Height = 500;
             chart.ChartAreas.Add(area);
 
-            IEnumerable<IGrouping<int, double>> groups = points.GroupBy(x => (int)(x / step)).Where(x => x.Key > 0).OrderBy(x => x.Key);
-
-            double index = min;
-            Dictionary<string, int> buckets = new Dictionary<string, int>();
-            while (index < max)
-            {
-                IGrouping<int, double> group = groups.Where(x => x.Key * step <= index && x.Key * step + step > index).FirstOrDefault();
-
-                buckets.Add(index.ToString(units), group?.Count() ?? 0);
-                index += step;
-            }
-
-            series = new ChartSeries("bars");
+            ChartSeries series = new ChartSeries("bars");
             series.ChartType = SeriesChartType.Column;
             series.BorderWidth = 20;
             series.Color = Color.DarkBlue;
 
-            foreach (var key in buckets)
-            {
-                series.Points.AddXY(key.Key, key.Value);
-            }
+            double step = (max - min) / NumBuckets;
+
+            Dictionary<string, int> buckets = Enumerable.Range(0, NumBuckets)
+                .GroupJoin(points, key => key, point => (int)((point - min) / step), (Key, grouping) => new { Key, Val = grouping.Count() })
+                .ToDictionary(obj => (obj.Key * step + min).ToString(units), obj => obj.Val);
+
+            foreach (var kvp in buckets)
+                series.Points.AddXY(kvp.Key, kvp.Value);
 
             chart.Series.Add(series);
 
             return chart;
-
         }
 
         private Chart GenerateMagDurChart(List<Tuple<double, double>> events, string xFormat, string yFormat)
@@ -1872,6 +2025,12 @@ namespace openXDA.Reports
             stream.Position = 0;
             return stream;
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        private static readonly ILog Log = LogManager.GetLogger(typeof(PQReport));
 
         #endregion
     }

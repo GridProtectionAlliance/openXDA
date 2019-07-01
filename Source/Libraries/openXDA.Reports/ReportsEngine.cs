@@ -96,7 +96,7 @@ namespace openXDA.Reports
             {
                 if (!Running)
                 {
-                    Scheduler.AddSchedule(ScheduleName, ReportsSettings.Frequency);
+                    Scheduler.AddSchedule(ScheduleName, ReportsSettings.Schedule);
                     Scheduler.Start();
                     Running = true;
                 }
@@ -129,7 +129,7 @@ namespace openXDA.Reports
             else if (!ReportsSettings.Enabled)
                 Stop();
 
-            Scheduler.AddSchedule("Reports", ReportsSettings.Frequency, true);
+            Scheduler.AddSchedule("Reports", ReportsSettings.Schedule, true);
         }
 
         private void Scheduler_Starting(object sender, EventArgs e)
@@ -174,7 +174,7 @@ namespace openXDA.Reports
         private void ProcessMonthlyReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
         {
             Log.Info($"Starting monthly Report for {meter.Name}...");
-            PQReport pQReport = new PQReport(meter, firstOfMonth, endOfMonth, dataContext);
+            PQReport pQReport = new PQReport(ReportsSettings, meter, firstOfMonth, endOfMonth, dataContext);
             byte[] pdf = pQReport.createPDF();
             Log.Info($"Completed monthly Report for {meter.Name}");
 
