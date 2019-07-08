@@ -2950,13 +2950,12 @@ SELECT
     MeterLine.LineID,
     Line.AssetKey AS LineKey,
     MeterLine.LineName,
-	FaultDetectionLogic.Expression as FaultDetectionLogic
+    FaultDetectionLogic.Expression as FaultDetectionLogic
 FROM
     MeterLine JOIN
     Meter ON MeterLine.MeterID = Meter.ID JOIN
     Line ON MeterLIne.LineID = Line.ID LEFT JOIN
-	FaultDetectionLogic ON FaultDetectionLogic.MeterLineID = MeterLine.ID
-
+    FaultDetectionLogic ON FaultDetectionLogic.MeterLineID = MeterLine.ID
 GO
 
 CREATE VIEW ChannelDetail
@@ -3086,10 +3085,10 @@ CREATE VIEW AssetGroupAssetGroupView
 AS
 SELECT
     AssetGroupAssetGroup.ID,
-	AssetGroupAssetGroup.ParentAssetGroupID,
-	AssetGroupAssetGroup.ChildAssetGroupID,
+    AssetGroupAssetGroup.ParentAssetGroupID,
+    AssetGroupAssetGroup.ChildAssetGroupID,
     Parent.Name as ParentAssetGroupName,
-	Child.Name as ChildAssetGroupName
+    Child.Name as ChildAssetGroupName
 FROM
     AssetGroupAssetGroup JOIN
     AssetGroup as Parent ON AssetGroupAssetGroup.ParentAssetGroupID = Parent.ID JOIN
@@ -3596,27 +3595,28 @@ FROM
     ) Sag
 GO
 
-CREATE FUNCTION [dbo].[RecursiveMeterSearch](@assetGroupID int)  
-RETURNS TABLE  
-AS  
-RETURN  
-	WITH   AssetGroupHeirarchy
-	AS     (	
-			SELECT ParentAssetGroupID, ChildAssetGroupID FROM AssetGroupAssetGroup WHERE ParentAssetGroupID = @assetGroupID  -- anchor member
-			UNION ALL
-			SELECT b.ParentAssetGroupID, a.ChildAssetGroupID -- recursive member
-			FROM   AssetGroupAssetGroup as a join
-				   AssetGroupHeirarchy as b ON b.ChildAssetGroupID = a.ParentAssetGroupID
-		   )
-	SELECT
-		Distinct MeterID as ID
-	FROM
-		MeterAssetGroup LEFT JOIN
-		AssetGroupHeirarchy ON MeterAssetGroup.AssetGroupID = AssetGroupHeirarchy.ChildAssetGroupID
-	WHERE
-		MeterAssetGroup.AssetGroupID = @assetGroupID OR MeterAssetGroup.AssetGroupID IN (SELECT ChildAssetGroupID FROM AssetGroupHeirarchy)
-
-
+CREATE FUNCTION RecursiveMeterSearch(@assetGroupID int)
+RETURNS TABLE
+AS
+RETURN
+    WITH AssetGroupHeirarchy AS
+    (
+        SELECT ParentAssetGroupID, ChildAssetGroupID
+        FROM AssetGroupAssetGroup
+        WHERE ParentAssetGroupID = @assetGroupID  -- anchor member
+        UNION ALL
+        SELECT b.ParentAssetGroupID, a.ChildAssetGroupID -- recursive member
+        FROM
+            AssetGroupAssetGroup AS a JOIN
+            AssetGroupHeirarchy AS b ON b.ChildAssetGroupID = a.ParentAssetGroupID
+    )
+    SELECT DISTINCT MeterID AS ID
+    FROM
+        MeterAssetGroup LEFT JOIN
+        AssetGroupHeirarchy ON MeterAssetGroup.AssetGroupID = AssetGroupHeirarchy.ChildAssetGroupID
+    WHERE
+        MeterAssetGroup.AssetGroupID = @assetGroupID OR
+        MeterAssetGroup.AssetGroupID IN (SELECT ChildAssetGroupID FROM AssetGroupHeirarchy)
 GO
 
 
