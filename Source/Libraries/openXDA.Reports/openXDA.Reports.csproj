@@ -58,6 +58,8 @@
   <ItemGroup>
     <Compile Include="EmailSettings.cs" />
     <Compile Include="EmailWriter.cs" />
+    <Compile Include="AllBreakersReport.cs" />
+    <Compile Include="IndividualBreakerReport.cs" />
     <Compile Include="PQReport.cs" />
     <Compile Include="ReportsEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
