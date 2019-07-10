@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.IO;
+using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Configuration;
@@ -38,18 +40,15 @@ namespace openXDA.Reports
     public class ReportsEngine
     {
         #region [ Members ]
-
-        // Constants
-        private const string ScheduleName = "Reports";
-
         #endregion
 
         #region [ Constructors ]
 
         public ReportsEngine()
         {
-            ReportsSettings = new ReportsSettings();
+            PQReportsSettings = new PQReportsSettings();
             EmailSettings = new EmailSettings();
+            BreakerReportsSettings = new BreakerReportsSettings();
 
             Scheduler = new ScheduleManager();
             Scheduler.Initialize();
@@ -68,8 +67,12 @@ namespace openXDA.Reports
         public bool Running { get; private set; }
 
         [Category]
-        [SettingName("Reports")]
-        public ReportsSettings ReportsSettings { get; }
+        [SettingName("PQReports")]
+        public PQReportsSettings PQReportsSettings { get; }
+
+        [Category]
+        [SettingName("BreakerReports")]
+        public BreakerReportsSettings BreakerReportsSettings { get; }
 
         [Category]
         [SettingName("Email")]
@@ -96,9 +99,23 @@ namespace openXDA.Reports
             {
                 if (!Running)
                 {
-                    Scheduler.AddSchedule(ScheduleName, ReportsSettings.Schedule);
-                    Scheduler.Start();
-                    Running = true;
+                    bool scheduled = false;
+
+                    if (PQReportsSettings.Enabled) {
+                        Scheduler.AddSchedule("PQReports", PQReportsSettings.Schedule);
+                        scheduled = true;
+                    }
+                    if (BreakerReportsSettings.Enabled)
+                    {
+                        Scheduler.AddSchedule("BreakerReports", PQReportsSettings.Schedule);
+                        scheduled = true;
+                    }
+
+                    if (scheduled)
+                    {
+                        Scheduler.Start();
+                        Running = true;
+                    }
                 }
 
                 return true;
@@ -112,11 +129,21 @@ namespace openXDA.Reports
 
         public void Stop()
         {
-            if (Running)
+            if (Scheduler.IsRunning)
             {
-                Scheduler.RemoveSchedule(ScheduleName);
-                Scheduler.Stop();
-                Running = false;
+                bool scheduled1 = false;
+                bool scheduled2 = false;
+
+                if (!PQReportsSettings.Enabled)
+                    scheduled1 = Scheduler.RemoveSchedule("PQReports");
+                if (!BreakerReportsSettings.Enabled)
+                    scheduled2 = Scheduler.RemoveSchedule("BreakerReports");
+
+                if (scheduled1 && scheduled2 )
+                {
+                    Scheduler.Stop();
+                    Running = false;
+                }
             }
         }
 
@@ -124,12 +151,14 @@ namespace openXDA.Reports
         {
             ConnectionStringParser.ParseConnectionString(connectionString, this);
 
-            if (ReportsSettings.Enabled)
+            Scheduler.AddSchedule("PQReports", PQReportsSettings.Schedule, true);
+            Scheduler.AddSchedule("BreakerReports", BreakerReportsSettings.Schedule, true);
+
+            if (PQReportsSettings.Enabled || BreakerReportsSettings.Enabled)
                 Start();
-            else if (!ReportsSettings.Enabled)
+            else if (!PQReportsSettings.Enabled || !BreakerReportsSettings.Enabled)
                 Stop();
 
-            Scheduler.AddSchedule("Reports", ReportsSettings.Schedule, true);
         }
 
         private void Scheduler_Starting(object sender, EventArgs e)
@@ -148,11 +177,39 @@ namespace openXDA.Reports
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            Log.Info(string.Format("Processing monthly reports..."));
-            ProcessMonthlyReports();
+            Log.Info(string.Format($"Processing {e.Argument.Name}..."));
+            if (e.Argument.Name == "PQReports")
+                ProcessPQReports();
+            else if (e.Argument.Name == "BreakerReports")
+                ProcessBreakerReports();
         }
 
-        private void ProcessMonthlyReports()
+        private void ProcessBreakerReports() {
+            DateTime today = DateTime.Now;
+            DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
+            DateTime endOfMonth = firstOfMonth.AddMonths(1).AddDays(-1);
+
+            AllBreakersReport report = new AllBreakersReport(firstOfMonth, endOfMonth);
+            byte[] pdf = report.createPDF();
+            if (pdf == null) return;
+
+            using (MemoryStream stream = new MemoryStream(pdf))
+            {
+                string fileName = "AllBreakersReport_" + firstOfMonth.ToString("MM_dd_yyyy") + "_" + endOfMonth.ToString("MM_dd_yyyy") + ".pdf";
+                string contentType = "application/pdf";
+
+                using(DataContext dataConext = new DataContext("systemSettings"))
+                {
+                    EmailWriter emailWriter = new EmailWriter(dataConext, PQReportsSettings, EmailSettings);
+
+                    emailWriter.SendEmailWithAttachment(BreakerReportsSettings.EmailList.Split(',').ToList(), $"Breaker Report for {fileName}", "", stream, fileName, contentType);
+                }
+
+            }
+
+        }
+
+        private void ProcessPQReports()
         {
             DateTime today = DateTime.Now;
             DateTime firstOfMonth = today.AddDays(1 - today.Day).AddMonths(-1);
@@ -166,7 +223,7 @@ namespace openXDA.Reports
                 foreach (Meter meter in meters)
                     ProcessMonthlyReport(meter, firstOfMonth, endOfMonth, dataContext);
 
-                EmailWriter emailWriter = new EmailWriter(dataContext, ReportsSettings, EmailSettings);
+                EmailWriter emailWriter = new EmailWriter(dataContext, PQReportsSettings, EmailSettings);
                 emailWriter.Execute(firstOfMonth.Month, firstOfMonth.Year);
             }
         }
@@ -174,7 +231,7 @@ namespace openXDA.Reports
         private void ProcessMonthlyReport(Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
         {
             Log.Info($"Starting monthly Report for {meter.Name}...");
-            PQReport pQReport = new PQReport(ReportsSettings, meter, firstOfMonth, endOfMonth, dataContext);
+            PQReport pQReport = new PQReport(PQReportsSettings, meter, firstOfMonth, endOfMonth, dataContext);
             byte[] pdf = pQReport.createPDF();
             Log.Info($"Completed monthly Report for {meter.Name}");
 
@@ -234,6 +291,27 @@ namespace openXDA.Reports
             return helpMessage.ToString();
         }
 
+        private DateTime GetPreviousMatch(Schedule schedule, DateTime now)
+        {
+            bool match = false;
+
+            while (!match)
+            {
+                now = now.AddMinutes(-1);
+
+                match = schedule.MinutePart.Matches(now);
+                match &= schedule.HourPart.Matches(now);
+                match &= schedule.DayPart.Matches(now);
+                match &= schedule.MonthPart.Matches(now);
+                match &= schedule.DaysOfWeekPart.Matches(now);
+            }
+
+            return now;
+        }
+
+        public void ProcessBreakerReportCommand() {
+            ProcessBreakerReports();
+        }
         #endregion
 
         #region [ Static ]

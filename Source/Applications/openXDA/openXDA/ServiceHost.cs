@@ -283,6 +283,7 @@ namespace openXDA
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQMarkProcMTD", "Creates aggregates for month to date data", OnProcessMonthToDateData));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("PQTrendingProcess", "Processes data for PQTrending Web Report", OnProcessPQTrending));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("StepChangeProcess", "Processes data for Step Change Web Report", OnProcessStepChange));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("BreakerReportProcess", "Processes data for Breaker Report", OnProcessProcessBreakerReport));
 
             m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
             m_serviceHelper.LoggedException += LoggedExceptionHandler;
@@ -1070,6 +1071,10 @@ namespace openXDA
                 SendResponseWithAttachment(requestInfo, false, null, "Step Change Web Report is not running.");
         }
 
+        public void OnProcessProcessBreakerReport(ClientRequestInfo requestInfo)
+        {
+            m_reportsEngine.ProcessBreakerReportCommand();
+        }
 
         // Send a message to the service monitors on request.
         private void MsgServiceMonitorsRequestHandler(ClientRequestInfo requestInfo)

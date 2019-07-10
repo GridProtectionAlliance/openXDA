@@ -39,6 +39,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,7 +60,7 @@ namespace openXDA.Reports
 
         #region [ Constructors ]
 
-        public EmailWriter(DataContext dataContext, ReportsSettings reportsSettings, EmailSettings emailSettings)
+        public EmailWriter(DataContext dataContext, PQReportsSettings reportsSettings, EmailSettings emailSettings)
         {
             ReportSettings = reportsSettings;
             DataContext = dataContext;
@@ -71,7 +72,7 @@ namespace openXDA.Reports
 
         #region [ Properties ]
         public EmailSettings EmailSettings { get; }
-        public ReportsSettings ReportSettings { get; }
+        public PQReportsSettings ReportSettings { get; }
         public DataContext DataContext { get; }
         public TimeZoneInfo XDATimeZone { get; }
         #endregion
@@ -161,6 +162,43 @@ namespace openXDA.Reports
                 emailMessage.Subject = subject;
                 emailMessage.Body = body;
                 emailMessage.IsBodyHtml = true;
+
+                // Add the specified To recipients for the email message
+                foreach (string toRecipient in recipients)
+                    emailMessage.To.Add(toRecipient.Trim());
+
+                // Send the email
+                smtpClient.Send(emailMessage);
+            }
+        }
+
+        public void SendEmailWithAttachment(List<string> recipients, string subject, string body, MemoryStream memoryStream, string name, string mediaType)
+        {
+            const int DefaultSMTPPort = 25;
+
+            if (string.IsNullOrEmpty(EmailSettings.SMTPServer))
+                return;
+
+            string[] smtpServerParts = EmailSettings.SMTPServer.Split(':');
+            string host = smtpServerParts[0];
+            int port;
+
+            if (smtpServerParts.Length <= 1 || !int.TryParse(smtpServerParts[1], out port))
+                port = DefaultSMTPPort;
+
+            using (SmtpClient smtpClient = new SmtpClient(host, port))
+            using (MailMessage emailMessage = new MailMessage())
+            {
+                if (!string.IsNullOrEmpty(EmailSettings.Username) && (object)EmailSettings.SecurePassword != null)
+                    smtpClient.Credentials = new NetworkCredential(EmailSettings.Username, EmailSettings.SecurePassword);
+
+                smtpClient.EnableSsl = EmailSettings.EnableSSL;
+
+                emailMessage.From = new MailAddress(EmailSettings.FromAddress);
+                emailMessage.Subject = subject;
+                emailMessage.Body = body;
+                emailMessage.IsBodyHtml = true;
+                emailMessage.Attachments.Add(new Attachment(memoryStream, name, mediaType));
 
                 // Add the specified To recipients for the email message
                 foreach (string toRecipient in recipients)

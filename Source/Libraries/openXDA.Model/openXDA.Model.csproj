@@ -81,6 +81,7 @@
     <Compile Include="Links\AssetGroupAssetGroup.cs" />
     <Compile Include="Links\UserAccountEmailType.cs" />
     <Compile Include="Meters\MaintenanceWindow.cs" />
+    <Compile Include="Settings\BreakerReportsSettings.cs" />
     <Compile Include="SnapshotHarmonics.cs" />
     <Compile Include="PQMarkRestrictedAttribute.cs" />
     <Compile Include="StepChangeWebReports\StepChangeMeasurement.cs" />
@@ -94,7 +95,7 @@
     <Compile Include="Settings\PQMarkAggregationSettings.cs" />
     <Compile Include="Settings\StepChangeWebReportSettings.cs" />
     <Compile Include="Settings\PQTrendingWebReportSettings.cs" />
-    <Compile Include="Settings\ReportsSettings.cs" />
+    <Compile Include="Settings\PQReportsSettings.cs" />
     <Compile Include="System\AuditLog.cs" />
     <Compile Include="System\ConfigurationLoader.cs" />
     <Compile Include="System\DataReader.cs" />

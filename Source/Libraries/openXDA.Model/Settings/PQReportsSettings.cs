@@ -26,7 +26,7 @@ using System.Configuration;
 
 namespace openXDA.Model
 {
-    public class ReportsSettings
+    public class PQReportsSettings
     {
         /// <summary>
         /// Indicates whether operation is enabled.

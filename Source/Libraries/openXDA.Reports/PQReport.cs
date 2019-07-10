@@ -185,7 +185,7 @@ namespace openXDA.Reports
 
         #region [ Properties ]
 
-        public ReportsSettings ReportsSettings { get; set; }
+        public PQReportsSettings ReportsSettings { get; set; }
         public Meter Meter { get; set; }
         public DateTime FirstOfMonth { get; set; }
         public DateTime EndOfMonth { get; set; }
@@ -198,7 +198,7 @@ namespace openXDA.Reports
 
         #region [ Constructors ]
 
-        public PQReport(ReportsSettings reportsSettings, Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
+        public PQReport(PQReportsSettings reportsSettings, Meter meter, DateTime firstOfMonth, DateTime endOfMonth, DataContext dataContext)
         {
             ReportsSettings = reportsSettings;
             Meter = meter;
