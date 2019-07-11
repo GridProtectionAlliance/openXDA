@@ -45,8 +45,8 @@ namespace openXDA.Reports
     {
         #region [ Members ]
         public class Point {
-            public DateTime Time;
-            public double Value;
+            public DateTime Time { get; set; }
+            public double? Value { get; set; }
         }
         // Constants
         private const double PageMarginMillimeters = 25.4D;             // 1-inch margin
@@ -65,7 +65,13 @@ namespace openXDA.Reports
 	                    BreakerOperation.BreakerNumber,
 	                    MeterLine.LineName,
 	                    Phase.Name as Phase,
-	                    BreakerOperation.BreakerTiming as WaveformTiming,
+	                    BreakerOperation.BreakerTiming,
+						CASE
+							WHEN Phase.Name = 'AN' THEN CAST(BreakerOperation.APhaseBreakerTiming as varchar(max))
+							WHEN Phase.Name = 'BN' THEN CAST(BreakerOperation.BPhaseBreakerTiming as varchar(max))
+							WHEN Phase.Name = 'CN' THEN CAST(BreakerOperation.CPhaseBreakerTiming as varchar(max))
+							ELSE 'N/A'
+						END as WaveformTiming,
 	                    BreakerOperation.StatusTiming as StatusTiming,
 	                    MaximoBreaker.BreakerSpeed,
 	                    MaximoBreaker.BreakerSpeed * 1.12 as SpeedBandwidth,
@@ -106,7 +112,11 @@ namespace openXDA.Reports
 	                    MaximoBreaker.MfrYear,
 	                    MaximoBreaker.ModelNum,
 	                    MaximoBreaker.InterruptCurrentRating,
-	                    MaximoBreaker.ContinuousAmpRating
+	                    MaximoBreaker.ContinuousAmpRating,
+						BreakerOperation.APhaseBreakerTiming,
+						BreakerOperation.BPhaseBreakerTiming, 
+						BreakerOperation.CPhaseBreakerTiming
+
                     ORDER BY
                         Time
                 ";
@@ -126,7 +136,6 @@ namespace openXDA.Reports
         @"
             SELECT DISTINCT
 	            MaximoBreaker.BreakerNum as [Breaker Number],
-	            MeterLine.LineName as [Line Name],
 	            MaximoBreaker.BreakerSpeed as [Breaker Mfr Speed],
 	            MaximoBreaker.BreakerSpeed * 1.12 as [Speed Bandwidth],
 	            MaximoBreaker.BreakerSpeed * 0.12 as [12% Speed Bandwidth],
@@ -137,15 +146,21 @@ namespace openXDA.Reports
 	            MaximoBreaker.InterruptCurrentRating as [Interrupt Current Rating (A)],
 	            MaximoBreaker.ContinuousAmpRating as [Continuous Amp Rating (A)]
             FROM
-	            MaximoBreaker LEFT JOIN
-	            BreakerChannel ON SUBSTRING(MaximoBreaker.BreakerNum, PATINDEX('%[^0]%', MaximoBreaker.BreakerNum + '.'), LEN(MaximoBreaker.BreakerNum)) = BreakerChannel.BreakerNumber LEFT JOIN
-	            Channel ON BreakerChannel.ChannelID = Channel.ID LEFT JOIN
-	            MeterLINE ON Channel.MeterID = MeterLine.MeterID AND Channel.LineID = MeterLine.LineID
+	            MaximoBreaker 
                 ";
 
         private const string testInfoQuery = @"
             SELECT 
-                * 
+	            [Breaker Number],
+	            [Breaker Mfr Speed],
+	            [Speed Bandwidth],
+	            [12% Speed Bandwidth],
+	            Manufacturer,
+	            [Serial Number],
+	            [Mfr Year],
+	            [Model Number],
+	            [Interrupt Current Rating (A)],
+	            [ Continuous Amp Rating (A)]
             FROM 
                 MaximoBreakerInfo 
             WHERE
@@ -163,8 +178,12 @@ namespace openXDA.Reports
         public DataTable TimingDataTable { get; set; }
         public DataTable InfoDataTable { get; set; }
         public List<Point> TimingPoints { get; set; }
-        public double SpeedBandwidth { get; set; }
-        public double Speed { get; set; }
+        public List<Point> MaxCurrentPoints { get; set; }
+
+        public double? SpeedBandwidth { get; set; }
+        public double? Speed { get; set; }
+        public double? InterruptCurrentRating { get; set; }
+
         #endregion
 
         #region [ Constructors ]
@@ -183,22 +202,42 @@ namespace openXDA.Reports
                 TimingDataTable = connection.RetrieveData(timingQuery, breakerId, startTime, endTime);
 #endif
 
-                TimingPoints = TimingDataTable.Select().Select(x => new Point() { Time = DateTime.Parse(x["Time"].ToString()), Value = double.Parse(x["WaveformTiming"].ToString()) }).OrderBy(x => x.Time).ToList();
+                TimingPoints = TimingDataTable.Select().Select(x => {
+                    double r;
+                    bool s = double.TryParse(x["BreakerTiming"].ToString(), out r);
+                    return new Point { Time = DateTime.Parse(x["Time"].ToString()), Value = (s ? (double?)r : null) };
+                }).OrderBy(x => x.Time).ToList();
+
+                MaxCurrentPoints = TimingDataTable.Select().Select(x => {
+                    double r;
+                    bool s = double.TryParse(x["MaxCurrent"].ToString(), out r);
+                    return new Point { Time = DateTime.Parse(x["Time"].ToString()), Value = (s ? (double?)r : null) };
+                }).OrderBy(x => x.Time).ToList();
+
 
 #if DEBUG
                 InfoDataTable = connection.RetrieveData(testInfoQuery, breakerId, startTime, endTime);
 #else
                 InfoDataTable = connection.RetrieveData(infoQuery, breakerId, startTime, endTime);
 #endif
-                Speed = double.Parse(InfoDataTable.Select().FirstOrDefault()?["Breaker Mfr Speed"].ToString() ?? "0");
-                SpeedBandwidth = double.Parse(InfoDataTable.Select().FirstOrDefault()?["Speed Bandwidth"].ToString() ?? "0");
+
+                double result;
+                bool success = double.TryParse(InfoDataTable.Select().FirstOrDefault()?["Breaker Mfr Speed"].ToString(), out result);
+                Speed = (success ? (double?)result : null);
+
+                success = double.TryParse(InfoDataTable.Select().FirstOrDefault()?["Speed Bandwidth"].ToString(), out result);
+                SpeedBandwidth = (success ? (double?)result : null);
+
+                success = double.TryParse(InfoDataTable.Select().FirstOrDefault()?["Interrupt Current Rating (A)"].ToString(), out result);
+                InterruptCurrentRating = (success ? (double?)result : null);
+
 
             }
         }
 
-#endregion
+        #endregion
 
-#region [ Methods ]
+        #region [ Methods ]
 
         public byte[] createPDF()
         {
@@ -232,10 +271,22 @@ namespace openXDA.Reports
                 verticalMillimeters = InsertHeader();
             }
 
-            Chart chart = GenerateLineChart();
+            Chart chart = GenerateTimingLineChart();
             verticalMillimeters += 75;
 
             if(chart != null)
+                page_Cur.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
+
+            if (verticalMillimeters > (PageHeightMillimeters * 0.75))
+            {
+                CreatePage();
+                verticalMillimeters = InsertHeader();
+            }
+
+            chart = GenerateMaxCurrentLineChart();
+            verticalMillimeters += 75;
+
+            if (chart != null)
                 page_Cur.AddMM(PageMarginMillimeters, verticalMillimeters, new RepImageMM(ChartToImage(chart), PageWidthMillimeters - 2 * PageMarginMillimeters, 75));
 
             foreach (Page page in enum_Page)
@@ -290,7 +341,19 @@ namespace openXDA.Reports
         private double CreateTimingTable(double verticalMillimeters)
         {
 
-            string[] notInfo = { "Time", "Phase", "WaveformTiming", "StatusTiming", "OperationTiming" };
+
+            List<dynamic> columns = new List<dynamic>()
+                {
+                    new { Name = "Time", Column = "Time", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters)*.1 },
+                    new { Name = "Line", Column = "LineName", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters)*.2 },
+                    new { Name = "Phase", Column = "Phase", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters) * .1 },
+                    new { Name = "Timing (br)", Column = "BreakerTiming", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters) * .1 },
+                    new { Name = "Timing (wf)", Column = "WaveformTiming", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters) * .1},
+                    new { Name = "Timing (sp)", Column = "StatusTiming", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters) * .1 },
+                    new { Name = "Classification", Column = "OperationTiming", Width = (PageWidthMillimeters - 2 * PageMarginMillimeters) * .1 },
+                    new { Name = "Prefault Current",  Column = "PrefaultCurrent", Width =(PageWidthMillimeters - 2 * PageMarginMillimeters) * .1 },
+                    new { Name = "Max Current",  Column = "MaxCurrent", Width =(PageWidthMillimeters - 2 * PageMarginMillimeters) * .1 },
+                };
 
             if (TimingDataTable.Rows.Count == 0)
             {
@@ -315,8 +378,8 @@ namespace openXDA.Reports
 
 
                 // define columns
-                foreach (string column in notInfo) {
-                    new TlmColumnMM(tlm, column, (PageWidthMillimeters - 2 * PageMarginMillimeters)/ notInfo.Count());
+                foreach (var column in columns) {
+                    new TlmColumnMM(tlm, column.Name, column.Width);
                 }
 
 
@@ -324,11 +387,20 @@ namespace openXDA.Reports
                 {
                     tlm.NewRow();
                     int index = 0;
-                    foreach (string column in notInfo) {
-                        if(column == "Time")
-                            tlm.Add(index++, new RepString(textProp, DateTime.Parse(row[column].ToString()).ToString("MM/dd/yyyy HH:mm:ss")));
-                        else
-                            tlm.Add(index++, new RepString(textProp, row[column].ToString()));
+                    foreach (var column in columns) {
+                if (column.Column == "Time")
+                {
+                    string date = DateTime.Parse(row[column.Column].ToString()).ToString("MM/dd/yyyy");
+                    string time = DateTime.Parse(row[column.Column].ToString()).ToString("HH:mm:ss");
+                    tlm.Add(index, new RepString(textProp, date));
+                    tlm.NewLine(index);
+                    tlm.Add(index++, new RepString(textProp, time));
+
+                }
+                else if (column.Column == "LineName")
+                    AddDataColumn(tlm, index++, row[column.Column].ToString(), textProp, column.Width);
+                else
+                    tlm.Add(index++, new RepString(textProp, row[column.Column].ToString()));
                     }
                 }
 
@@ -339,6 +411,32 @@ namespace openXDA.Reports
 
             return verticalMillimeters;
         }
+
+        private void AddDataColumn(TlmBase tlm, int index, string value, FontProp fontProp, double width)
+        {
+            double initialWidth = fontProp.rGetTextWidthMM(value);
+            string remainingString = value.Trim();
+            while (initialWidth > width)
+            {
+                string[] tokens = remainingString.Split(' ');
+                string splitValue = tokens.First();
+
+                foreach (string token in tokens.Skip(1))
+                {
+                    if (fontProp.rGetTextWidthMM(splitValue + token) < width)
+                        splitValue = splitValue + ' ' + token;
+                    else
+                        break;
+                }
+
+                remainingString = remainingString.Replace(splitValue, "");
+                tlm.Add(index, new RepString(fontProp, splitValue));
+                tlm.NewLine(index);
+                initialWidth = fontProp.rGetTextWidthMM(remainingString);
+            }
+            tlm.Add(index, new RepString(fontProp, remainingString));
+        }
+
 
         // Creates a page and sets width and height to standard 8.5x11 inches.
         private Page CreatePage()
@@ -405,14 +503,16 @@ namespace openXDA.Reports
             return verticalMillimeters;
         }
 
-        private Chart GenerateLineChart()
+        private Chart GenerateTimingLineChart()
         {
-            Chart chart;
-
             if (TimingPoints.Count == 0)
             {
                 return null;
             }
+
+            Chart chart;
+            double timingMax = Math.Ceiling(TimingPoints.Select(x => (x.Value == null ? 0 : (double)x.Value)).Max());
+            double bandwidthMax = Math.Ceiling((SpeedBandwidth == null ? 0 : (double)SpeedBandwidth));
 
             ChartArea area;
             ChartSeries series;
@@ -423,23 +523,25 @@ namespace openXDA.Reports
             area.AxisX.IsLabelAutoFit = false;
             //area.AxisX.LabelAutoFitMinFontSize = 20;
             //area.AxisX.LabelStyle.Format = "MM/dd/yyyy";
-            area.AxisX.LabelStyle.Font = new Font(FontFamily.GenericSansSerif, 20);
+            area.AxisX.LabelStyle.Font = new Font(FontFamily.GenericSansSerif, 15);
             area.AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
-            area.AxisX.Maximum = TimingPoints.Count - 1;
+            area.AxisX.Maximum = TimingPoints.Count + 1;
             area.AxisX.Minimum = 0;
-            area.AxisX.Interval = 1;
-            area.AxisX.MajorTickMark.Interval = 1;
+            //area.AxisX.Interval = 1;
+            //area.AxisX.MajorTickMark.Interval = 1;
             area.AxisX.TextOrientation = TextOrientation.Rotated90;
             area.AxisX.LabelStyle.Angle = -45;
-            area.AxisX.LabelStyle.IsEndLabelVisible = true;
+            //area.AxisX.LabelStyle.IsEndLabelVisible = true;
+            //area.AxisX.LabelStyle.IsStaggered = true;
 
             // style y axis
             //area.AxisY.MajorGrid.LineColor = Color.LightGray;
-            area.AxisY.Maximum = (Math.Ceiling(SpeedBandwidth) > Math.Ceiling(TimingPoints.Select(x => x.Value).Max()) ? Math.Ceiling(SpeedBandwidth) : Math.Ceiling(TimingPoints.Select(x => x.Value).Max()));
+            area.AxisY.Maximum = (bandwidthMax > timingMax ? bandwidthMax : timingMax);
             area.AxisY.Minimum = 0;
             area.AxisY.Interval = 1;
-            area.AxisY.LabelAutoFitMinFontSize = 20;
-            area.AxisY.LabelStyle.Format = "0.00";
+            area.AxisY.LabelAutoFitMinFontSize = 15;
+            area.AxisY.LabelStyle.Format = "0";
+
 
             //create chart
             chart = new Chart();
@@ -458,24 +560,109 @@ namespace openXDA.Reports
             series.BorderWidth = 2;
             series.Color = Color.Black;
             series.IsValueShownAsLabel = true;
-            
-            int index = 0;
+
+            int index = 1;
             foreach (var point in TimingPoints)
             {
                 area.AxisX.CustomLabels.Add(index, index +.9, point.Time.ToString("MM/dd/yyyy"));
-                DataPoint dataPoint = new DataPoint(index++, point.Value);
-     
+
+                if (point.Value == null) {
+                    //series.Points.AddY(index++);
+                }
+                else {
+                    DataPoint dataPoint = new DataPoint(index++, (double)point.Value);
+
+                    series.Points.Add(dataPoint);
+                }
+            }
+
+
+            chart.Series.Add(series);
+
+            if(SpeedBandwidth != null)
+                chart.Series.Add(MakeLimitSeries((double)SpeedBandwidth, Color.Red, "12% Bandwidth", 0, TimingPoints.Count+1));
+            if (Speed != null)
+                chart.Series.Add(MakeLimitSeries((double)Speed, Color.Orange, "MFR Speed", 0, TimingPoints.Count+1));
+
+            return chart;
+
+        }
+
+        private Chart GenerateMaxCurrentLineChart()
+        {
+            var nonNullPoints = MaxCurrentPoints.Where(x => x.Value != null);
+
+            if (!nonNullPoints.Any())
+            {
+                return null;
+            }
+
+            Chart chart;
+            double max = Math.Ceiling(nonNullPoints.Select(x => (x.Value == null ? 0 : (double)x.Value)).Max());
+            double icrMax = Math.Ceiling((InterruptCurrentRating == null ? 0 : (double)InterruptCurrentRating));
+
+
+            ChartArea area;
+            ChartSeries series;
+            area = new ChartArea();
+            // style x axis
+            area.AxisX.MajorGrid.Enabled = false;
+            area.AxisX.IsLabelAutoFit = false;
+            //area.AxisX.LabelAutoFitMinFontSize = 20;
+            //area.AxisX.LabelStyle.Format = "MM/dd/yyyy";
+            area.AxisX.LabelStyle.Font = new Font(FontFamily.GenericSansSerif, 15);
+            area.AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
+            area.AxisX.Maximum = nonNullPoints.Count() + 1;
+            area.AxisX.Minimum = 0;
+            area.AxisX.Interval = 1;
+            area.AxisX.MajorTickMark.Interval = 1;
+            area.AxisX.TextOrientation = TextOrientation.Rotated90;
+            area.AxisX.LabelStyle.Angle = -45;
+            area.AxisX.LabelStyle.IsEndLabelVisible = true;
+
+            // style y axis
+            //area.AxisY.MajorGrid.LineColor = Color.LightGray;
+            area.AxisY.Maximum = (icrMax > max ? icrMax : max);
+            area.AxisY.LabelAutoFitMinFontSize = 15;
+            area.AxisY.LabelStyle.Format = "0";
+
+            //create chart
+            chart = new Chart();
+            chart.Width = 1200;
+            chart.Height = 500;
+            chart.Name = "Max Current";
+
+            Legend legend = new Legend("Legend");
+            legend.Font = new Font(FontFamily.GenericSansSerif, 15);
+            chart.Legends.Add(legend);
+            chart.ChartAreas.Add(area);
+
+
+            series = new ChartSeries("Max Current");
+            series.ChartType = SeriesChartType.Line;
+            series.BorderWidth = 2;
+            series.Color = Color.Black;
+            series.IsValueShownAsLabel = true;
+
+            int index = 1;
+            foreach (var point in nonNullPoints)
+            {
+                area.AxisX.CustomLabels.Add(index, index + .9, point.Time.ToString("MM/dd/yyyy"));
+
+                DataPoint dataPoint = new DataPoint(index++, (double)point.Value);
+
                 series.Points.Add(dataPoint);
             }
 
             chart.Series.Add(series);
 
-            chart.Series.Add(MakeLimitSeries(SpeedBandwidth, Color.Red, "12% Bandwidth", 0, TimingPoints.Count-1));
-            chart.Series.Add(MakeLimitSeries(Speed, Color.Orange, "MFR Speed", 0, TimingPoints.Count-1));
+            if(InterruptCurrentRating != null)
+                chart.Series.Add(MakeLimitSeries((double)InterruptCurrentRating, Color.Red, "ICR", 0, nonNullPoints.Count() + 1));
 
             return chart;
 
         }
+
 
         private ChartSeries MakeLimitSeries(double value, Color color, string name, int start, int end)
         {
@@ -497,12 +684,12 @@ namespace openXDA.Reports
             return stream;
         }
 
-#endregion
+        #endregion
 
-#region [ Static ]
+        #region [ Static ]
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(PQReport));
+                private static readonly ILog Log = LogManager.GetLogger(typeof(PQReport));
 
-#endregion
+        #endregion
     }
 }
