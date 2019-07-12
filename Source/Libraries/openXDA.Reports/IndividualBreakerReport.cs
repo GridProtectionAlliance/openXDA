@@ -58,7 +58,7 @@ namespace openXDA.Reports
 
         private const string TitleText = "Individual Breaker Report";
 
-        private const string timingQuery =
+        public const string timingQuery =
         @"
                     SELECT
 	                    BreakerOperation.TripCoilEnergized as Time,
@@ -84,7 +84,12 @@ namespace openXDA.Reports
 	                    MaximoBreaker.InterruptCurrentRating,
 	                    MaximoBreaker.ContinuousAmpRating,
 	                    MIN(ROUND(FaultSummary.PrefaultCurrent, 0)) as PrefaultCurrent,
-	                    MAX(ROUND(FaultSummary.CurrentMagnitude, 0)) as MaxCurrent
+                        CASE
+							WHEN EventStat.IAMax >= EventStat.IBMax AND EventStat.IAMax >= EventStat.ICMax THEN Round(EventStat.IAMax, 0)
+							WHEN EventStat.IBMax > EventStat.IAMax AND EventStat.IAMax > EventStat.ICMax THEN Round(EventStat.IAMax, 0)
+							WHEN EventStat.ICMax > EventStat.IAMax AND EventStat.IAMax > EventStat.IBMax THEN Round(EventStat.IAMax, 0)
+							ELSE NULL						 
+						END as MaxCurrent                    
                     FROM
 	                    BreakerOperation JOIN
 	                    BreakerOperationType ON BreakerOperation.BreakerOperationTypeID = BreakerOperationType.ID JOIN
@@ -92,7 +97,8 @@ namespace openXDA.Reports
 	                    Event ON BreakerOperation.EventID = Event.ID JOIN
 	                    MeterLINE ON Event.MeterID = MeterLine.MeterID AND Event.LineID = MeterLine.LineID JOIN
 	                    MaximoBreaker ON BreakerOperation.BreakerNumber = SUBSTRING(MaximoBreaker.BreakerNum, PATINDEX('%[^0]%', MaximoBreaker.BreakerNum + '.'), LEN(MaximoBreaker.BreakerNum)) LEFT JOIN
-	                    FaultSummary ON Event.ID = FaultSummary.EventID AND FaultSummary.IsSelectedAlgorithm = 1
+	                    FaultSummary ON Event.ID = FaultSummary.EventID AND FaultSummary.IsSelectedAlgorithm = 1 LEFT JOIN
+                        EventStat ON Event.ID = EventStat.EventID
                     WHERE
 	                    BreakerOperation.BreakerNumber = {0} AND
                         CAST(BreakerOperation.TripCoilEnergized as Date) BETWEEN {1} AND {2}
@@ -116,7 +122,9 @@ namespace openXDA.Reports
 						BreakerOperation.APhaseBreakerTiming,
 						BreakerOperation.BPhaseBreakerTiming, 
 						BreakerOperation.CPhaseBreakerTiming
-
+                        EventStat.IAMax,
+						EventStat.IBMax,
+						EventStat.ICMax
                     ORDER BY
                         Time
                 ";
