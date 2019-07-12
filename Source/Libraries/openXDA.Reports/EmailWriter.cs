@@ -172,7 +172,8 @@ namespace openXDA.Reports
             }
         }
 
-        public void SendEmailWithAttachment(List<string> recipients, string subject, string body, MemoryStream memoryStream, string name, string mediaType)
+
+        public void SendEmailWithAttachment(List<string> recipients, string subject, string body, List<Attachment> attachments)
         {
             const int DefaultSMTPPort = 25;
 
@@ -198,7 +199,7 @@ namespace openXDA.Reports
                 emailMessage.Subject = subject;
                 emailMessage.Body = body;
                 emailMessage.IsBodyHtml = true;
-                emailMessage.Attachments.Add(new Attachment(memoryStream, name, mediaType));
+                attachments.ForEach(x => emailMessage.Attachments.Add(x));
 
                 // Add the specified To recipients for the email message
                 foreach (string toRecipient in recipients)
