@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/06/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  07/10/2019 - Christoph Lackner
+//       Added trip coil currents.
 //
 //******************************************************************************************************
 
@@ -655,6 +657,7 @@ namespace DeviceDefinitionsMigrator
 
         private static void LoadChannelAttributes(Meter meter, Line line, MeterLocation remoteMeterLocation, Channel channel, string channelKey, LookupTables lookupTables, AdoDataConnection connection)
         {
+           
             if ((object)remoteMeterLocation != null)
                 channel.Name = string.Format("{0}({1}) {2}", remoteMeterLocation.Name, line.AssetKey, channelKey);
             else
@@ -663,7 +666,8 @@ namespace DeviceDefinitionsMigrator
             channel.MeterID = meter.ID;
             channel.LineID = line.ID;
             channel.MeasurementTypeID = GetOrAddMeasurementType(GetMeasurementTypeName(channelKey), lookupTables, connection);
-            channel.MeasurementCharacteristicID = GetOrAddMeasurementCharacteristic("Instantaneous", lookupTables, connection);
+            channel.MeasurementCharacteristicID = GetOrAddMeasurementCharacteristic(GetCharacteristicName(channelKey), lookupTables, connection);
+
             channel.PhaseID = GetOrAddPhase(GetPhaseName(channelKey), lookupTables, connection);
             channel.HarmonicGroup = 0;
 
@@ -747,6 +751,30 @@ namespace DeviceDefinitionsMigrator
             return phaseName;
         }
 
+        private static string GetCharacteristicName(string channelName)
+        {
+            string characName;
+
+            if (!MeasurementCharacteristicNameLookup.TryGetValue(channelName, out characName))
+                characName = "Unknown";
+
+            return characName;
+        }
+
+        private static readonly Dictionary<string, string> MeasurementCharacteristicNameLookup = new Dictionary<string, string>()
+        {
+            { "VA", "Instantaneous" },
+            { "VB", "Instantaneous" },
+            { "VC", "Instantaneous" },
+            { "IA", "Instantaneous" },
+            { "IB", "Instantaneous" },
+            { "IC", "Instantaneous" },
+            { "IR", "Instantaneous" },
+            { "IN", "Instantaneous" },
+            { "IG", "Instantaneous" },
+            { "TCE", "TCE" }
+        };
+
         private static readonly Dictionary<string, string> MeasurementTypeNameLookup = new Dictionary<string, string>()
         {
             { "VA", "Voltage" },
@@ -757,7 +785,8 @@ namespace DeviceDefinitionsMigrator
             { "IC", "Current" },
             { "IR", "Current" },
             { "IN", "Current" },
-            { "IG", "Current" }
+            { "IG", "Current" },
+            { "TCE", "Current" }
         };
 
         private static readonly Dictionary<string, string> PhaseNameLookup = new Dictionary<string, string>()
@@ -770,7 +799,8 @@ namespace DeviceDefinitionsMigrator
             { "IC", "CN" },
             { "IR", "RES" },
             { "IN", "NG" },
-            { "IG", "NG" }
+            { "IG", "NG" },
+            { "TCE", "None" }
         };
 
         private static int GetOrAddSeriesType(LookupTables lookupTables, AdoDataConnection connection)

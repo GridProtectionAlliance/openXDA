@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/01/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  07/09/2019 - Christoph Lackner
+//       Added value comparison.
 //
 //******************************************************************************************************
 
@@ -77,6 +79,16 @@ namespace FaultData.DataAnalysis
                 Time = Time,
                 Value = Value * value
             };
+        }
+
+        public Boolean LargerThan(double comparison)
+        {
+            return (Value > comparison);
+        }
+
+        public Boolean LargerThan(DataPoint point)
+        {
+            return (LargerThan(point.Value));
         }
     }
 }

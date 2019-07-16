@@ -2579,6 +2579,21 @@ CREATE TABLE EventStat
 )
 GO
 
+CREATE TABLE RelayPerformance
+(
+    ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    EventID INT NOT NULL REFERENCES Event(ID),
+	ChannelID INT NOT NULL REFERENCES Channel(ID),
+	Imax1 FLOAT NULL,
+	Imax2 FLOAT NULL,
+    TripInitiate DATETIME NULL,
+	TripTime INT NULL,
+	PickupTime INT NULL,
+	TripCoilCondition FLOAT NULL,
+)
+GO
+
+
 ----- FUNCTIONS -----
 
 CREATE FUNCTION ComputeHash

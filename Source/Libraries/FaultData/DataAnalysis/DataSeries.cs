@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  05/15/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  07/09/2019 - Christoph Lackner
+//       Added length property and Threshhold method.
 //
 //******************************************************************************************************
 
@@ -44,6 +46,7 @@ namespace FaultData.DataAnalysis
         private double? m_minimum;
         private double? m_maximum;
         private double? m_average;
+        private double? m_length;
 
         #endregion
 
@@ -87,6 +90,7 @@ namespace FaultData.DataAnalysis
             {
                 m_dataPoints = value ?? new List<DataPoint>();
                 m_duration = null;
+                m_length = null;
                 m_sampleRate = null;
                 m_minimum = null;
                 m_maximum = null;
@@ -110,6 +114,25 @@ namespace FaultData.DataAnalysis
                 m_duration = m_dataPoints.Last().Time.Subtract(m_dataPoints.First().Time).TotalSeconds;
 
                 return m_duration.Value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Length of the series, in datapoints.
+        /// </summary>
+        public double Length
+        {
+            get
+            {
+                if (m_length.HasValue)
+                    return m_length.Value;
+
+                if (!m_dataPoints.Any())
+                    return double.NaN;
+
+                m_length = m_dataPoints.Count;
+
+                return m_length.Value;
             }
         }
 
@@ -298,6 +321,11 @@ namespace FaultData.DataAnalysis
         public DataSeries Copy()
         {
             return Multiply(1.0D);
+        }
+
+        public int Threshhold(double value)
+        {
+            return m_dataPoints.FindIndex(x => x.LargerThan(value));
         }
 
         #endregion
