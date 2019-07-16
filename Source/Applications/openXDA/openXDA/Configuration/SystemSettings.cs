@@ -40,38 +40,10 @@ namespace openXDA.Configuration
     {
         #region [ Members ]
 
-        // Fields
-        private string m_dbConnectionString;
-        private int m_dbTimeout;
-
         private string m_watchDirectories;
-        private string m_filePattern;
-
-        private double m_timeTolerance;
-        private string m_defaultMeterTimeZone;
         private string m_xdaTimeZone;
-        private double m_maxTimeOffset;
-        private double m_minTimeOffset;
-        private double m_maxFileDuration;
-        private double m_maxFileCreationTimeOffset;
-        private bool m_skipOnCRCHashMatch;
-
-        private double m_systemFrequency;
-        private double m_maxVoltage;
-        private double m_maxCurrent;
-        private double m_sagThreshold;
-        private double m_swellThreshold;
-        private double m_interruptionThreshold;
-
-        private string m_lengthUnits;
         private int m_processingThreadCount;
-        private Guid m_fileProcessorID;
-        private bool m_fileWatcherEnabled;
-        private FileEnumerationStrategy m_fileWatcherEnumerationStrategy;
-        private bool m_fileWatcherOrderedEnumeration;
-        private int m_fileWatcherMaxFragmentation;
         private int m_fileWatcherInternalThreadCount;
-        private int m_fileWatcherBufferSize;
         private string m_fileShares;
 
         private TimeZoneInfo m_defaultMeterTimeZoneInfo;
@@ -109,17 +81,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue("Data Source=localhost; Initial Catalog=openXDA; Integrated Security=SSPI")]
-        public string DbConnectionString
-        {
-            get
-            {
-                return m_dbConnectionString;
-            }
-            set
-            {
-                m_dbConnectionString = value;
-            }
-        }
+        public string DbConnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the amount of time each database
@@ -127,17 +89,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(120)]
-        public int DbTimeout
-        {
-            get
-            {
-                return m_dbTimeout;
-            }
-            set
-            {
-                m_dbTimeout = value;
-            }
-        }
+        public int DbTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets the list of directories to watch for files.
@@ -165,17 +117,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(@"(?<AssetKey>[^\\]+)\\[^\\]+$")]
-        public string FilePattern
-        {
-            get
-            {
-                return m_filePattern;
-            }
-            set
-            {
-                m_filePattern = value;
-            }
-        }
+        public string FilePattern { get; set; }
 
         /// <summary>
         /// Gets or sets the time zone identifier for the time zone
@@ -183,17 +125,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue("UTC")]
-        public string DefaultMeterTimeZone
-        {
-            get
-            {
-                return m_defaultMeterTimeZone;
-            }
-            set
-            {
-                m_defaultMeterTimeZone = value;
-            }
-        }
+        public string DefaultMeterTimeZone { get; set; }
 
         /// <summary>
         /// Gets or sets the time zone identifier for the
@@ -227,17 +159,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.5D)]
-        public double TimeTolerance
-        {
-            get
-            {
-                return m_timeTolerance;
-            }
-            set
-            {
-                m_timeTolerance = value;
-            }
-        }
+        public double TimeTolerance { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of hours beyond the current system time
@@ -245,17 +167,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
-        public double MaxTimeOffset
-        {
-            get
-            {
-                return m_maxTimeOffset;
-            }
-            set
-            {
-                m_maxTimeOffset = value;
-            }
-        }
+        public double MaxTimeOffset { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of hours prior to the current system time
@@ -263,17 +175,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
-        public double MinTimeOffset
-        {
-            get
-            {
-                return m_minTimeOffset;
-            }
-            set
-            {
-                m_minTimeOffset = value;
-            }
-        }
+        public double MinTimeOffset { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum duration, in seconds,
@@ -281,17 +183,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
-        public double MaxFileDuration
-        {
-            get
-            {
-                return m_maxFileDuration;
-            }
-            set
-            {
-                m_maxFileDuration = value;
-            }
-        }
+        public double MaxFileDuration { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of hours prior to the current system time
@@ -299,51 +191,21 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.0D)]
-        public double MaxFileCreationTimeOffset
-        {
-            get
-            {
-                return m_maxFileCreationTimeOffset;
-            }
-            set
-            {
-                m_maxFileCreationTimeOffset = value;
-            }
-        }
+        public double MaxFileCreationTimeOffset { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean to skip on crc hash match.
         /// </summary>
         [Setting]
         [DefaultValue(true)]
-        public bool SkipOnCRCHashMatch
-        {
-            get
-            {
-                return m_skipOnCRCHashMatch;
-            }
-            set
-            {
-                m_skipOnCRCHashMatch = value;
-            }
-        }
+        public bool SkipOnCRCHashMatch { get; set; }
 
         /// <summary>
         /// Gets or sets the system frequency.
         /// </summary>
         [Setting]
         [DefaultValue(60.0D)]
-        public double SystemFrequency
-        {
-            get
-            {
-                return m_systemFrequency;
-            }
-            set
-            {
-                m_systemFrequency = value;
-            }
-        }
+        public double SystemFrequency { get; set; }
 
         /// <summary>
         /// Gets or sets the per-unit threshold at which the
@@ -351,17 +213,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(2.0D)]
-        public double MaxVoltage
-        {
-            get
-            {
-                return m_maxVoltage;
-            }
-            set
-            {
-                m_maxVoltage = value;
-            }
-        }
+        public double MaxVoltage { get; set; }
 
         /// <summary>
         /// Gets or sets the threshold, in amps, at which the
@@ -369,17 +221,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(1000000.0D)]
-        public double MaxCurrent
-        {
-            get
-            {
-                return m_maxCurrent;
-            }
-            set
-            {
-                m_maxCurrent = value;
-            }
-        }
+        public double MaxCurrent { get; set; }
 
         /// <summary>
         /// Gets or sets the threshold, in amps, at which the
@@ -387,17 +229,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.9D)]
-        public double SagThreshold
-        {
-            get
-            {
-                return m_sagThreshold;
-            }
-            set
-            {
-                m_sagThreshold = value;
-            }
-        }
+        public double SagThreshold { get; set; }
 
         /// <summary>
         /// Gets or sets the threshold, in amps, at which the
@@ -405,17 +237,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(1.1D)]
-        public double SwellThreshold
-        {
-            get
-            {
-                return m_swellThreshold;
-            }
-            set
-            {
-                m_swellThreshold = value;
-            }
-        }
+        public double SwellThreshold { get; set; }
 
         /// <summary>
         /// Gets or sets the threshold, in amps, at which the
@@ -423,17 +245,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(0.1D)]
-        public double InterruptionThreshold
-        {
-            get
-            {
-                return m_interruptionThreshold;
-            }
-            set
-            {
-                m_interruptionThreshold = value;
-            }
-        }
+        public double InterruptionThreshold { get; set; }
 
         /// <summary>
         /// Gets or sets the units of measure to use
@@ -441,17 +253,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue("miles")]
-        public string LengthUnits
-        {
-            get
-            {
-                return m_lengthUnits;
-            }
-            set
-            {
-                m_lengthUnits = value;
-            }
-        }
+        public string LengthUnits { get; set; }
 
         /// <summary>
         /// Gets or sets the number of threads used
@@ -488,11 +290,11 @@ namespace openXDA.Configuration
         {
             get
             {
-                return m_fileProcessorID.ToString();
+                return FileProcessorID.ToString();
             }
             set
             {
-                m_fileProcessorID = Guid.Parse(value);
+                FileProcessorID = Guid.Parse(value);
             }
         }
 
@@ -501,34 +303,14 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(true)]
-        public bool FileWatcherEnabled
-        {
-            get
-            {
-                return m_fileWatcherEnabled;
-            }
-            set
-            {
-                m_fileWatcherEnabled = value;
-            }
-        }
+        public bool FileWatcherEnabled { get; set; }
 
         /// <summary>
         /// Gets or sets the strategy used for enumeration of files in the file watcher.
         /// </summary>
         [Setting]
         [DefaultValue(FileProcessor.DefaultEnumerationStrategy)]
-        public FileEnumerationStrategy FileWatcherEnumerationStrategy
-        {
-            get
-            {
-                return m_fileWatcherEnumerationStrategy;
-            }
-            set
-            {
-                m_fileWatcherEnumerationStrategy = value;
-            }
-        }
+        public FileEnumerationStrategy FileWatcherEnumerationStrategy { get; set; }
 
         /// <summary>
         /// Gets or sets the flag that determines whether the file watcher
@@ -536,17 +318,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(false)]
-        public bool FileWatcherOrderedEnumeration
-        {
-            get
-            {
-                return m_fileWatcherOrderedEnumeration;
-            }
-            set
-            {
-                m_fileWatcherOrderedEnumeration = value;
-            }
-        }
+        public bool FileWatcherOrderedEnumeration { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum amount of fragmentation allowed before
@@ -554,17 +326,7 @@ namespace openXDA.Configuration
         /// </summary>
         [Setting]
         [DefaultValue(FileProcessor.DefaultMaxFragmentation)]
-        public int FileWatcherMaxFragmentation
-        {
-            get
-            {
-                return m_fileWatcherMaxFragmentation;
-            }
-            set
-            {
-                m_fileWatcherMaxFragmentation = value;
-            }
-        }
+        public int FileWatcherMaxFragmentation { get; set; }
 
         /// <summary>
         /// Gets or sets the number of threads used
@@ -597,17 +359,7 @@ namespace openXDA.Configuration
         /// <seealso cref="FileSystemWatcher.InternalBufferSize"/>
         [Setting]
         [DefaultValue(65536)]
-        public int FileWatcherBufferSize
-        {
-            get
-            {
-                return m_fileWatcherBufferSize;
-            }
-            set
-            {
-                m_fileWatcherBufferSize = value;
-            }
-        }
+        public int FileWatcherBufferSize { get; set; }
 
         /// <summary>
         /// Gets or sets a list of parameters used
@@ -636,13 +388,7 @@ namespace openXDA.Configuration
         /// Gets the ID of the file processor which determines
         /// the name of the file backed lookup table.
         /// </summary>
-        public Guid FileProcessorID
-        {
-            get
-            {
-                return m_fileProcessorID;
-            }
-        }
+        public Guid FileProcessorID { get; private set; }
 
         /// <summary>
         /// Gets the <see cref="TimeZoneInfo"/> for the time zone
@@ -653,7 +399,7 @@ namespace openXDA.Configuration
             get
             {
                 if ((object)m_defaultMeterTimeZoneInfo == null)
-                    m_defaultMeterTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(m_defaultMeterTimeZone);
+                    m_defaultMeterTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(DefaultMeterTimeZone);
 
                 return m_defaultMeterTimeZoneInfo;
             }
